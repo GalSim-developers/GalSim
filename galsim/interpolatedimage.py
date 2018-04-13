@@ -326,7 +326,7 @@ class InterpolatedImage(GSObject):
         # Figure out the offset to apply based on the original image (not the padded one).
         # We will apply this below in _sbp.
         offset = self._parse_offset(offset)
-        self._offset = self._fix_offset(self._image.bounds, offset, use_true_center)
+        self._offset = self._adjust_offset(self._image.bounds, offset, use_true_center)
 
         im_cen = image.true_center if use_true_center else image.center
         self._wcs = self._image.wcs.local(image_pos=im_cen)
@@ -517,7 +517,7 @@ class InterpolatedImage(GSObject):
         # terms of physical scale, e.g., for images that have a scale length of 0.1 arcsec, the
         # stepK and maxK should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
         # units required by the C++ layer below.  Also note that profile recentering for even-sized
-        # images (see the ._fix_offset step below) leads to automatic reduction of stepK slightly
+        # images (see the ._adjust_offset step below) leads to automatic reduction of stepK slightly
         # below what is provided here, while maxK is preserved.
         if _force_stepk > 0.:
             return _force_stepk
@@ -700,7 +700,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     ret._gsparams = GSParams.check(gsparams)
 
     offset = ret._parse_offset(offset)
-    ret._offset = ret._fix_offset(ret._image.bounds, offset, use_true_center)
+    ret._offset = ret._adjust_offset(ret._image.bounds, offset, use_true_center)
     im_cen = ret._image.true_center if use_true_center else ret._image.center
     ret._wcs = ret._image.wcs.local(image_pos = im_cen)
     ret._pad_factor = 1.

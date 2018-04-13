@@ -18,17 +18,16 @@
  */
 
 #include "PyBind11Helper.h"
-#include "SBVonKarman.h"
+#include "SBSecondKick.h"
 
 namespace galsim {
 
-    void pyExportSBVonKarman(PY_MODULE& _galsim)
+    void pyExportSBSecondKick(PY_MODULE& _galsim)
     {
-        py::class_<SBVonKarman, BP_BASES(SBProfile)>(GALSIM_COMMA "SBVonKarman" BP_NOINIT)
-            .def(py::init<double,double,double,double,double,bool,GSParams>())
-            .def("getDelta", &SBVonKarman::getDelta)
-            .def("getHalfLightRadius", &SBVonKarman::getHalfLightRadius)
-            .def("structureFunction", &SBVonKarman::structureFunction)
+        py::class_<SBSecondKick, BP_BASES(SBProfile)>(GALSIM_COMMA "SBSecondKick" BP_NOINIT)
+            .def(py::init<double,double,double,GSParams>())
+            .def("getDelta", &SBSecondKick::getDelta)
+            .def("structureFunction", &SBSecondKick::structureFunction)
             ;
     }
 

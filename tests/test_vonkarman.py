@@ -135,7 +135,7 @@ def test_vk_ne():
 def test_vk_eq_kolm():
     lam = 500.0
     r0 = 0.2
-    L0 = 3e5  # Need to make this surprisingly large to make vk -> kolm.
+    L0 = 1e10  # Need to make this surprisingly large to make vk -> kolm.
     flux = 3.3
     kolm = galsim.Kolmogorov(lam=lam, r0=r0, flux=flux)
     vk = galsim.VonKarman(lam=lam, r0=r0, L0=L0, flux=flux)
@@ -144,7 +144,7 @@ def test_vk_eq_kolm():
 
     kolm_img = kolm.drawImage(nx=24, ny=24, scale=0.2)
     vk_img = vk.drawImage(nx=24, ny=24, scale=0.2)
-    np.testing.assert_allclose(kolm_img.array, vk_img.array, atol=flux*1e-5, rtol=0)
+    np.testing.assert_allclose(kolm_img.array, vk_img.array, atol=flux*4e-5, rtol=0)
 
 
 @timer

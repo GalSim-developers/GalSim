@@ -87,6 +87,7 @@ def test_OpticalPSF_flux():
     do_pickle(optics_test._psf)
     do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     check_basic(optics_test, "OpticalPSF")
+    assert optics_test._screens.r0_500_effective is None
 
 
 @timer
@@ -832,9 +833,9 @@ def test_geometric_shoot():
         np.testing.assert_allclose(
             shoot_moments.moments_centroid.y, fft_moments.moments_centroid.y, rtol=0, atol=0.025,
             err_msg="")
-        # 1% size tolerance
+        # 2% size tolerance
         np.testing.assert_allclose(
-            shoot_moments.moments_sigma, fft_moments.moments_sigma, rtol=0.01, atol=0,
+            shoot_moments.moments_sigma, fft_moments.moments_sigma, rtol=0.02, atol=0,
             err_msg="")
         # Not amazing ellipticity consistency at the moment.  0.01 tolerance.
         print(fft_moments.observed_shape)

@@ -17,10 +17,10 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GalSim_SBVonKarman_H
-#define GalSim_SBVonKarman_H
+#ifndef GalSim_SBSecondKick_H
+#define GalSim_SBSecondKick_H
 /**
- * @file SBVonKarman.h @brief SBProfile for von Karman turbulence PSF.
+ * @file SBSecondKick.h @brief SBProfile for second kick.
  */
 
 #include "SBProfile.h"
@@ -28,54 +28,49 @@
 namespace galsim {
 
     namespace sbp {
-        // How many VonKarman profiles to save in the cache
-        const int max_vonKarman_cache = 100;
+        // How many SecondKick profiles to save in the cache
+        const int max_SK_cache = 100;
     }
 
-    class SBVonKarman : public SBProfile
+    class SBSecondKick : public SBProfile
     {
     public:
         /**
          * @brief Constructor.
          *
-         * @param[in] lam          Wavelength in nm.
-         * @param[in] r0           Fried parameter in m (at given wavelength lam).
-         * @param[in] L0           Outer scale in m.
+         * @param[in] lam_over_r0  lambda/r0, equivalent to the same in SBKolmogorov
+         * @param[in] kcrit        Critical turbulence Fourier mode in units of r0.
          * @param[in] flux         Flux.
-         * @param[in] scale        Scale of 'x' in xValue in arcsec.
-         * @param[in] doDelta      Whether or not to include delta-function contribution to
-                                   encircled energy when computing stepk/maxk/HLR.
          * @param[in] gsparams     GSParams.
          */
-        SBVonKarman(double lam, double r0, double L0, double flux,
-                    double scale, bool doDelta, const GSParams& gsparams);
+        SBSecondKick(double lam_over_r0, double kcrit, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor
-        SBVonKarman(const SBVonKarman& rhs);
+        SBSecondKick(const SBSecondKick& rhs);
 
         /// @brief Destructor.
-        ~SBVonKarman();
+        ~SBSecondKick();
 
         /// Getters
-        double getLam() const;
-        double getR0() const;
-        double getL0() const;
-        double getScale() const;
-        bool getDoDelta() const;
+        double getLamOverR0() const;
+        double getKCrit() const;
         double getDelta() const;
-        double getHalfLightRadius() const;
+        /// Alternate versions of x/k Value for testing purposes
+        double kValue(double) const;
+        double kValueRaw(double) const;
+        double xValue(double) const;
+        double xValueRaw(double) const;
+        double xValueExact(double) const;
 
         double structureFunction(double) const;
 
-        friend class VKXIntegrand;
-
     protected:
 
-        class SBVonKarmanImpl;
+        class SBSecondKickImpl;
 
     private:
         // op= is undefined
-        void operator=(const SBVonKarman& rhs);
+        void operator=(const SBSecondKick& rhs);
     };
 }
 

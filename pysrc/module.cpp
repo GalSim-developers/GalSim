@@ -44,6 +44,7 @@ namespace galsim {
     void pyExportSBInclinedExponential(PY_MODULE&);
     void pyExportSBInclinedSersic(PY_MODULE&);
     void pyExportSBVonKarman(PY_MODULE&);
+    void pyExportSBSecondKick(PY_MODULE&);
     void pyExportRandom(PY_MODULE&);
     void pyExportTable(PY_MODULE&);
     void pyExportInterpolant(PY_MODULE&);
@@ -93,6 +94,7 @@ PYBIND11_MODULE(_galsim, _galsim)
     galsim::pyExportSBInclinedExponential(_galsim);
     galsim::pyExportSBInclinedSersic(_galsim);
     galsim::pyExportSBVonKarman(_galsim);
+    galsim::pyExportSBSecondKick(_galsim);
     galsim::pyExportRandom(_galsim);
     galsim::pyExportTable(_galsim);
     galsim::pyExportInterpolant(_galsim);

@@ -1175,6 +1175,8 @@ def test_distfunction():
                   x_min = 1.)
     foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
     assert_raises(ValueError, foo.val, -1.)
+    assert_raises(ValueError, galsim.DistDeviate, function = lambda x : -1, x_min=dmin, x_max=dmax)
+    assert_raises(ValueError, galsim.DistDeviate, function = lambda x : x**2-1, x_min=dmin, x_max=dmax)
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
@@ -1191,6 +1193,21 @@ def test_distfunction():
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated from serialize')
+
+    # Check val() method
+    # pdf(x) = x^2
+    # cdf(x) = (x/2)^3
+    # val(y) = 2 y^(1/3)
+    np.testing.assert_almost_equal(d.val(0), 0, 4)
+    np.testing.assert_almost_equal(d.val(1), 2, 4)
+    np.testing.assert_almost_equal(d.val(0.125), 1, 4)
+    np.testing.assert_almost_equal(d.val(0.027), 0.6, 4)
+    np.testing.assert_almost_equal(d.val(0.512), 1.6, 4)
+    u = galsim.UniformDeviate(testseed)
+    testResult = (d.val(u()), d.val(u()), d.val(u()))
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate sequence using d.val(u())')
 
     # Check that the mean and variance come out right
     vals = [d() for i in range(nvals)]
@@ -1330,9 +1347,12 @@ def test_distfunction():
 def test_distLookupTable():
     """Test distribution-defined random number generator with a LookupTable
     """
-    d = galsim.DistDeviate(testseed, function=dLookupTable)
+    precision = 9
+    # Note: 256 used to be the default, so this is a regression test
+    # We check below that it works with the default npoints=None
+    d = galsim.DistDeviate(testseed, function=dLookupTable, npoints=256)
     d2 = d.duplicate()
-    d3 = galsim.DistDeviate(d.serialize(), function=dLookupTable)
+    d3 = galsim.DistDeviate(d.serialize(), function=dLookupTable, npoints=256)
     np.testing.assert_equal(
             d.x_min, dLookupTable.x_min,
             err_msg='DistDeviate and the LookupTable passed to it have different lower bounds')
@@ -1375,6 +1395,14 @@ def test_distLookupTable():
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence for LookupTable with 5 points')
 
+    # And it should also work if npoints is None
+    d = galsim.DistDeviate(testseed, function=dLookupTable)
+    testResult = (d(), d(), d())
+    assert len(dLookupTable.x) == len(d._inverse_cdf.x)
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence for LookupTable with npoints=None')
+
     # Also read these values from a file
     d = galsim.DistDeviate(testseed, function=dLookupTableFile, interpolant='linear')
     testResult = (d(), d(), d())
@@ -1388,6 +1416,38 @@ def test_distLookupTable():
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence for LookupTable with default '
             'interpolant')
+
+    # Test generate
+    d.seed(testseed)
+    test_array = np.empty(3)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
+
+    # Test filling an image
+    d.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage.addNoise(galsim.DeviateNoise(d))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
+
+    # Test generate
+    d.seed(testseed)
+    test_array = np.empty(3)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
+
+    # Test generate with a float32 array
+    d.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dLookupTableResult), precisionF,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
 
     # Test a case with nearly flat probabilities
     # x and p arrays with and without a small (epsilon) step
@@ -1415,21 +1475,11 @@ def test_distLookupTable():
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
 
-    # Test generate
-    d.seed(testseed)
-    test_array = np.empty(3)
-    d.generate(test_array)
-    np.testing.assert_array_almost_equal(
-            test_array, np.array(dLookupTableResult), precision,
-            err_msg='Wrong DistDeviate random number sequence from generate.')
-
-    # Test generate with a float32 array
-    d.seed(testseed)
-    test_array = np.empty(3, dtype=np.float32)
-    d.generate(test_array)
-    np.testing.assert_array_almost_equal(
-            test_array, np.array(dLookupTableResult), precisionF,
-            err_msg='Wrong DistDeviate random number sequence from generate.')
+    # And that they generate the same values
+    ar1 = np.empty(100); d1.generate(ar1)
+    ar2 = np.empty(100); d2.generate(ar2)
+    np.testing.assert_array_almost_equal(ar1, ar2, precision,
+            err_msg='Two DistDeviates with near-flat probabilities generated different values.')
 
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))

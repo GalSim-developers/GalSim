@@ -99,9 +99,7 @@ class VonKarman(GSObject):
         if L0 > 1e10:
             L0 = 1e10
 
-        if scale_unit is None:
-            self._scale_unit = arcsec
-        elif isinstance(scale_unit, str):
+        if isinstance(scale_unit, str):
             self._scale_unit = AngleUnit.from_name(scale_unit)
         else:
             self._scale_unit = scale_unit
@@ -120,16 +118,16 @@ class VonKarman(GSObject):
     def _sbvk(self):
         sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0, self._flux,
                                    self._scale, self._do_delta, self._gsparams._gsp)
-        self._delta_amp = sbvk.getDeltaAmplitude()
+        self._delta = sbvk.getDelta()
         if not self._suppress:
-            if self._delta_amp > self._gsparams.maxk_threshold:
+            if self._delta > self._gsparams.maxk_threshold:
                 import warnings
                 warnings.warn("VonKarman delta-function component is larger than maxk_threshold.  "
                               "Please see docstring for information about this component and how "
                               "to toggle it.")
         if self._do_delta:
             sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0,
-                                       self._flux-self._delta_amp, self._scale,
+                                       self._flux-self._delta, self._scale,
                                        self._do_delta, self._gsparams._gsp)
         return sbvk
 
@@ -138,7 +136,7 @@ class VonKarman(GSObject):
         # Add in a delta function with appropriate amplitude if requested.
         if self._do_delta:
             sbvk = self._sbvk
-            sbdelta = _galsim.SBDeltaFunction(self._delta_amp, self._gsparams._gsp)
+            sbdelta = _galsim.SBDeltaFunction(self._delta, self._gsparams._gsp)
             return _galsim.SBAdd([sbvk, sbdelta], self._gsparams._gsp)
         else:
             return self._sbvk
@@ -169,12 +167,15 @@ class VonKarman(GSObject):
 
     @property
     def delta_amplitude(self):
-        self._sbvk  # This is where _delta_amp is calculated.
-        return self._delta_amp
+        self._sbvk  # This is where _delta is calculated.
+        return self._delta
 
     @property
     def half_light_radius(self):
         return self._sbvk.getHalfLightRadius()
+
+    def _structure_function(self, rho):
+        return self._sbvk.structureFunction(rho)
 
     def __eq__(self, other):
         return (isinstance(other, VonKarman) and

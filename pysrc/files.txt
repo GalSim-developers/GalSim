@@ -22,6 +22,7 @@ SBSpergel.cpp
 SBInclinedExponential.cpp
 SBInclinedSersic.cpp
 SBVonKarman.cpp
+SBSecondKick.cpp
 Random.cpp
 HSM.cpp
 Integ.cpp

@@ -41,6 +41,8 @@ install:
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
     - travis_wait 30 pip install -U -r test_requirements.txt
+    # astroplan isn't available on 2.7
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.

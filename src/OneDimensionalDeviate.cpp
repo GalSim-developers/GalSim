@@ -308,6 +308,14 @@ namespace galsim {
         double totalAbsoluteFlux = _positiveFlux + _negativeFlux;
         dbg<<"totFlux = "<<totalAbsoluteFlux<<std::endl;
 
+        if (totalAbsoluteFlux == 0.) {
+            // The below calculation will crash, so do something trivial that works.
+            Interval segment(fluxDensity, range[0], range[1], _isRadial, _gsparams);
+            _pt.push_back(segment);
+            _pt.buildTree();
+            return;
+        }
+
         // Now break each range into Intervals
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
             // See if there is an extremum to split this range:

@@ -108,9 +108,9 @@ class LookupTable(object):
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
+        x = np.asarray(x, dtype=float)
+        f = np.asarray(f, dtype=float)
         s = np.argsort(x)
-        x = np.array(x, dtype=float)
-        f = np.array(f, dtype=float)
         self.x = np.ascontiguousarray(x[s])
         self.f = np.ascontiguousarray(f[s])
 
@@ -163,25 +163,26 @@ class LookupTable(object):
 
         # Handle the log(x) if necessary
         if self.x_log:
-            if np.any(np.array(x) <= 0.):
+            if np.any(np.asarray(x) <= 0.):
                 raise ValueError("Cannot interpolate x<=0 when using log(x) interpolation.")
             x = np.log(x)
 
-        # option 1: a NumPy array
-        if isinstance(x, np.ndarray):
-            xx = np.ascontiguousarray(x.ravel(), dtype=float)
-            f = np.empty_like(xx, dtype=float)
-            self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
-            f = f.reshape(x.shape)
-        # option 2: a tuple or list
-        elif isinstance(x, (tuple, list)):
-            xx = np.ascontiguousarray(x, dtype=float)
-            f = np.empty_like(xx, dtype=float)
-            self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
-        # option 3: a single value
+        x = np.asarray(x)
+        if x.shape == ():
+            f = self._tab.interp(float(x))
         else:
-            xx = float(x)
-            f = self._tab.interp(xx)
+            dimen = len(x.shape)
+            if dimen > 2:
+                raise ValueError("Arrays with dimension larger than 2 not allowed!")
+            elif dimen == 2:
+                f = np.empty_like(x.ravel(), dtype=float)
+                xx = x.astype(float,copy=False).ravel()
+                self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+                f = f.reshape(x.shape)
+            else:
+                f = np.empty_like(x, dtype=float)
+                xx = x.astype(float,copy=False)
+                self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
 
         # Handle the log(f) if necessary
         if self.f_log:
