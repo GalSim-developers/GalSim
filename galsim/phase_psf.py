@@ -837,10 +837,12 @@ class PhaseScreenList(object):
             return self._layers[0]._wavefront(u, v, t, theta)
 
     def _wavefront_gradient(self, u, v, t, theta):
-        if len(self._layers) > 1:
-            return np.sum([layer._wavefront_gradient(u, v, t, theta) for layer in self], axis=0)
-        else:
-            return self._layers[0]._wavefront_gradient(u, v, t, theta)
+        gradx, grady = self._layers[0]._wavefront_gradient(u, v, t, theta)
+        for layer in self._layers[1:]:
+            gx, gy = layer._wavefront_gradient(u, v, t, theta)
+            gradx[...] += gx
+            grady[...] += gy
+        return gradx, grady
 
     def makePSF(self, lam, **kwargs):
         """Create a PSF from the current PhaseScreenList.
