@@ -79,6 +79,8 @@ install:
     # if it's not in the cache yet.
     - travis_wait 30 pip install numpy astropy future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.0 scipy pandas coverage
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install simplejson ordereddict; fi
+    # astroplan is not available for 2.7
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan; fi
 
 script:
     # This lets scons work even on Python 3 builds

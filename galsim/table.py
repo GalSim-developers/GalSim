@@ -141,7 +141,9 @@ class LookupTable(object):
         # table is the thing the does the actual work.  It is a C++ Table object, wrapped
         # as _LookupTable.  Note x must be sorted.
         s = np.argsort(x)
-        self.table = _galsim._LookupTable(x[s], f[s], interpolant)
+        x = np.ascontiguousarray(x[s])
+        f = np.ascontiguousarray(f[s])
+        self.table = _galsim._LookupTable(x, f, interpolant)
 
         # Get the min/max x values, making sure to account properly for x_log.
         self._x_min = self.table.argMin()
@@ -176,36 +178,26 @@ class LookupTable(object):
         """
         # first, keep track of whether interpolation was done in x or log(x)
         if self.x_log:
-            if np.any(np.array(x) <= 0.):
+            if np.any(np.asarray(x) <= 0.):
                 raise ValueError("Cannot interpolate x<=0 when using log(x) interpolation.")
             x = np.log(x)
 
-        # figure out what we received, and return the same thing
-        # option 1: a NumPy array
-        if isinstance(x, np.ndarray):
+        x = np.asarray(x)
+        if x.shape == ():
+            f = self.table(float(x))
+        else:
             dimen = len(x.shape)
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
                 f = np.empty_like(x.ravel(), dtype=float)
-                self.table.interpMany(x.astype(float,copy=False).ravel(),f)
+                xx = x.astype(float,copy=False).ravel()
+                self.table.interpMany(xx,f)
                 f = f.reshape(x.shape)
             else:
                 f = np.empty_like(x, dtype=float)
-                self.table.interpMany(x.astype(float,copy=False),f)
-        # option 2: a tuple
-        elif isinstance(x, tuple):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float),f)
-            f = tuple(f)
-        # option 3: a list
-        elif isinstance(x, list):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float),f)
-            f = list(f)
-        # option 4: a single value
-        else:
-            f = self.table(x)
+                xx = x.astype(float,copy=False)
+                self.table.interpMany(xx,f)
 
         if self.f_log:
             f = np.exp(f)

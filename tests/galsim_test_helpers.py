@@ -51,7 +51,7 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 
-def printval(image1, image2):
+def printval(image1, image2, show=False):
     print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
     print("Sum of values: ", np.sum(image1.array, dtype=float), np.sum(image2.array, dtype=float))
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
@@ -68,7 +68,7 @@ def printval(image1, image2):
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
     print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
-    if False:
+    if show:
         import matplotlib.pylab as plt
         ax1 = plt.subplot(121)
         ax2 = plt.subplot(122)
@@ -389,6 +389,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object, and start
         # truncating the output for relatively small size arrays.  So we temporarily bump up the
         # precision and truncation threshold for testing.
+        #print(repr(obj1))
         with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
         f5 = func(obj5)
@@ -523,7 +524,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         desired = obj.SED(wave)
         # Since InterpolatedChromaticObject.evaluateAtWavelength involves actually drawing an
         # image, which implies flux can be lost off of the edges of the image, we don't expect
-        # it's accuracy to be nearly as good as for other objects.
+        # its accuracy to be nearly as good as for other objects.
         decimal = 2 if obj.interpolated else 7
         np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).flux, desired,
                                        decimal)
@@ -543,6 +544,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
             # Also try manipulating exptime and area.
             np.testing.assert_allclose(
                     calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(dtype=float), rtol=1e-2)
+
 
 def funcname():
     import inspect

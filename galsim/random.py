@@ -25,6 +25,7 @@ from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviat
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 from .utilities import set_func_doc
 import numpy as np
+import weakref
 
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
@@ -234,7 +235,8 @@ class DistDeviate(_galsim.BaseDeviate):
                         passed alongside a callable function).  Options are given in the
                         documentation for LookupTable. [default: 'linear']
     @param npoints      Number of points DistDeviate should create for its internal interpolation
-                        tables. [default: 256]
+                        tables. [default: 256, unless the function is a non-log LookupTable, in
+                        which case it uses the table's x values]
 
     Calling
     -------
@@ -248,7 +250,7 @@ class DistDeviate(_galsim.BaseDeviate):
     -0.00909781188974034
     """
     def __init__(self, seed=0, function=None, x_min=None,
-                 x_max=None, interpolant=None, npoints=256, _init=True, lseed=None):
+                 x_max=None, interpolant=None, npoints=None, lseed=None):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
@@ -258,9 +260,6 @@ class DistDeviate(_galsim.BaseDeviate):
             seed = lseed
         import galsim
 
-        # Special internal "private" constructor option that doesn't do any initialization.
-        if not _init: return
-
         # Set up the PRNG
         _galsim.BaseDeviate.__init__(self,seed)
         self._ud = galsim.UniformDeviate(self)
@@ -269,7 +268,6 @@ class DistDeviate(_galsim.BaseDeviate):
         if not function:
             raise TypeError('You must pass a function to DistDeviate!')
 
-        self._function = function # Save the inputs to be used in repr
         self._interpolant = interpolant
         self._npoints = npoints
         self._xmin = x_min
@@ -277,7 +275,7 @@ class DistDeviate(_galsim.BaseDeviate):
 
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
-            input_function = function
+            self.__function = function # Save the inputs to be used in repr
             import os.path
             if os.path.isfile(function):
                 if interpolant is None:
@@ -301,9 +299,10 @@ class DistDeviate(_galsim.BaseDeviate):
                     raise ValueError(
                         "String function must either be a valid filename or something that "+
                         "can eval to a function of x.\n"+
-                        "Input provided: {0}\n".format(input_function)+
+                        "Input provided: {0}\n".format(self.__function)+
                         "Caught error: {0}".format(e))
         else:
+            self.__function = weakref.ref(function) # Save the inputs to be used in repr
             # Check that the function is actually a function
             if not (isinstance(function, galsim.LookupTable) or hasattr(function,'__call__')):
                 raise TypeError('Keyword function must be a callable function or a string')
@@ -320,55 +319,40 @@ class DistDeviate(_galsim.BaseDeviate):
                     raise TypeError('Must provide x_min and x_max when function argument is a '+
                                     'regular python callable function')
 
-        # Compute the cumulative distribution function
-        xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
-        # cdf is the cumulative distribution function--just easier to type!
-        dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
-        cdf = [sum(dcdf[0:i]) for i in range(npoints)]
+        # Compute the probability distribution function, pdf(x)
+        if (npoints is None and isinstance(function, galsim.LookupTable) and
+            not function.x_log and not function.f_log):
+            xarray = np.array(function.x, dtype=float)
+            pdf = np.array(function.f, dtype=float)
+            # Set up pdf, so cumsum basically does a cumulative trapz integral
+            # On Python 3.4, doing pdf[1:] += pdf[:-1] the last value gets messed up.
+            # Writing it this way works.  (Maybe slightly slower though, so if we stop
+            # supporting python 3.4, consider switching to the += version.)
+            pdf[1:] = pdf[1:] + pdf[:-1]
+            pdf[1:] *= np.diff(xarray)
+            pdf[0] = 0.
+        else:
+            if npoints is None: npoints = 256
+            xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
+            # Integrate over the range of x in case the function is doing something weird here.
+            pdf = [0] + [galsim.integ.int1d(function, xarray[i], xarray[i+1])
+                         for i in range(npoints - 1)]
+            pdf = np.array(pdf)
+
+        # Check that the probability is nonnegative
+        if not np.all(pdf >= 0.):
+            raise ValueError('Negative probability passed to DistDeviate: %s'%function)
+
+        # Compute the cumulative distribution function = int(pdf(x),x)
+        cdf = np.cumsum(pdf)
+
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability = cdf[-1]
-        cdf = np.array(cdf)/totalprobability
-        # Recompute delta CDF in case of floating-point differences in near-flat probabilities
-        dcdf = np.diff(cdf)
-        # Check that the probability is nonnegative
-        if not np.all(dcdf >= 0):
+        if totalprobability < 0.:
             raise ValueError('Negative probability passed to DistDeviate: %s'%function)
-        # Now get rid of points with dcdf == 0
-        elif not np.all(dcdf > 0.):
-            # Remove consecutive dx=0 points, except endpoints
-            zeroindex = np.where(dcdf==0)[0]
-            # numpy.where returns a tuple containing 1 array, which tends to be annoying for
-            # indexing, so the [0] returns the actual array of interest (indices of dcdf==0).
-            # Now, we want to remove consecutive dcdf=0 points, leaving the lower end.
-            # Zeroindex contains the indices of all the dcdf=0 points, so we look for ones that are
-            # only 1 apart; this tells us the *lower* of the two points, but we want to remove the
-            # *upper*, so we add 1 to the resultant array.
-            dindex = np.where(np.diff(zeroindex)==1)[0]+1
-            # So dindex contains the indices of the elements of array zeroindex, which tells us the
-            # indices that we might want to delete from cdf and xarray, so we delete
-            # zeroindex[dindex].
-            cdf = np.delete(cdf,zeroindex[dindex])
-            xarray = np.delete(xarray,zeroindex[dindex])
-            dcdf = np.diff(cdf)
-            # Tweak the edges of dx=0 regions so function is always increasing
-            for index in np.where(dcdf == 0)[0][::-1]:  # reverse in case we need to delete
-                if index+2 < len(cdf):
-                    # get epsilon, the smallest element where 1+eps>1
-                    eps = np.finfo(cdf[index+1].dtype).eps
-                    if cdf[index+2]-cdf[index+1] > eps:
-                        cdf[index+1] += eps
-                    else:
-                        cdf = np.delete(cdf, index+1)
-                        xarray = np.delete(xarray, index+1)
-                else:
-                    cdf = cdf[:-1]
-                    xarray = xarray[:-1]
-            dcdf = np.diff(cdf)
-            if not (np.all(dcdf>0)):
-                raise RuntimeError(
-                    'Cumulative probability in DistDeviate is too flat for program to fix')
+        cdf /= totalprobability
 
-        self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant='linear')
+        self._inverse_cdf = galsim.LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
         self.x_max = x_max
 
@@ -380,15 +364,22 @@ class DistDeviate(_galsim.BaseDeviate):
         if p<0 or p>1:
             raise ValueError('Cannot request cumulative probability value from DistDeviate for '
                              'p<0 or p>1!  You entered: %f'%p)
-        return self._inverseprobabilitytable(p)
+        return self._inverse_cdf(p)
 
     # This is the private function that is required to make DistDeviate work as a derived
     # class of BaseDeviate.  See pysrc/Random.cpp.
     def _val(self):
-        return self.val(self._ud())
+        return self._inverse_cdf(self._ud())
 
     def __call__(self):
         return self._val()
+
+    def generate(self, array):
+        """Generate many pseudo-random values, filling in the values of a numpy array.
+        """
+        p = np.empty_like(array)
+        self._ud.generate(p)  # Fill with unform deviate values
+        np.copyto(array, self._inverse_cdf(p)) # Convert from p -> x
 
     def seed(self, seed=0):
         _galsim.BaseDeviate.seed(self,seed)
@@ -401,10 +392,15 @@ class DistDeviate(_galsim.BaseDeviate):
         self._ud.reset(self)
 
     def duplicate(self):
-        dup = DistDeviate(_init=False)
+        cls = self.__class__
+        dup = cls.__new__(cls)
         dup.__dict__.update(self.__dict__)
         dup._ud = self._ud.duplicate()
         return dup
+
+    @property
+    def _function(self):
+        return  self.__function if isinstance(self.__function, str) else self.__function()
 
     def __copy__(self):
         return self.duplicate()

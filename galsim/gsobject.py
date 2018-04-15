@@ -1039,7 +1039,7 @@ class GSObject(object):
         else:
             return galsim.BoundsI()
 
-    def _fix_center(self, new_bounds, offset, use_true_center, reverse):
+    def _adjust_offset(self, new_bounds, offset, use_true_center):
         # Note: this assumes self is in terms of image coordinates.
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
@@ -1052,15 +1052,7 @@ class GSObject(object):
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
             offset = galsim.PositionD(dx,dy)
-
-        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse:
-            offset = -offset
-
-        if offset == galsim.PositionD(0,0):
-            return self
-        else:
-            return self._shift(offset)
+        return offset
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
         # Determine the correct wcs given the input scale, wcs and image.
@@ -1502,6 +1494,12 @@ class GSObject(object):
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = local_wcs.toImage(self)
 
+        # Apply the offset, and possibly fix the centering for even-sized images
+        offset = self._adjust_offset(new_bounds, offset, use_true_center)
+        if offset != galsim.PositionD(0,0):
+            prof = prof._shift(offset)
+            local_wcs = local_wcs.withOrigin(offset)
+
         # Account for area and exptime.
         flux_scale = area * exptime
         # For surface brightness normalization, also scale by the pixel area.
@@ -1526,9 +1524,6 @@ class GSObject(object):
             prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0, gsparams=self.gsparams),
                                    real_space=real_space, gsparams=self.gsparams)
 
-        # Apply the offset, and possibly fix the centering for even-sized images
-        prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
-
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, wmult=wmult)
         image.wcs = wcs
@@ -1546,7 +1541,8 @@ class GSObject(object):
         if method == 'phot':
             added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
                                                    n_photons, rng, max_extra_noise, poisson_flux,
-                                                   sensor, surface_ops, maxN, orig_center)
+                                                   sensor, surface_ops, maxN,
+                                                   orig_center, local_wcs)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
@@ -1562,7 +1558,6 @@ class GSObject(object):
                             prof_no_pixel,
                             galsim.Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
                             real_space=real_space, gsparams=self.gsparams)
-                    prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
                 elif n_subsample != 1:
                     # We can't just pull off the pixel-free version, so we need to deconvolve
                     # by the original pixel and reconvolve by the smaller one.
@@ -1586,7 +1581,7 @@ class GSObject(object):
                 ud = galsim.UniformDeviate(rng)
                 photons = galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
                 for op in surface_ops:
-                    op.applyTo(photons)
+                    op.applyTo(photons, local_wcs)
                 if imview.dtype in [np.float32, np.float64]:
                     added_photons = sensor.accumulate(photons, imview, orig_center)
                 else:
@@ -1903,7 +1898,8 @@ class GSObject(object):
 
     def drawPhot(self, image, gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, surface_ops=(), maxN=None, orig_center=galsim.PositionI(0,0)):
+                 sensor=None, surface_ops=(), maxN=None, orig_center=galsim.PositionI(0,0),
+                 local_wcs=None):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1963,8 +1959,11 @@ class GSObject(object):
                             [default: None, which means no limit]
         @param orig_center  The position of the image center in the original image coordinates.
                             [default: (0,0)]
+        @param local_wcs    The local wcs in the original image. [default: None]
 
-        @returns The total flux of photons that landed inside the image bounds.
+        @returns (nphotons, photons) where
+            nphotons is the total flux of photons that landed inside the image bounds, and
+            photons is the PhotonArray that was applied to the image.
         """
         # Make sure the type of n_photons is correct and has a valid value:
         if n_photons < 0.:
@@ -2030,7 +2029,7 @@ class GSObject(object):
                 photons.scaleXY(1./image.scale)  # Convert x,y to image coords if necessary
 
             for op in surface_ops:
-                op.applyTo(photons)
+                op.applyTo(photons, local_wcs)
 
             if image.dtype in [np.float32, np.float64]:
                 added_flux += sensor.accumulate(photons, image, orig_center)
