@@ -48,8 +48,7 @@ namespace galsim
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target) const;
 
-        void calculateConversionDepth(const PhotonArray& photons,
-                                      std::vector<double>& depth, UniformDeviate ud) const;
+        double calculateConversionDepth(const PhotonArray& photons, int i, UniformDeviate ud) const;
 
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);

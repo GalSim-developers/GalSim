@@ -37,6 +37,7 @@
 // Uncomment this for debugging output
 //#define DEBUGLOGGING
 
+#include "Std.h"
 #include "Silicon.h"
 #include "Image.h"
 #include "PhotonArray.h"
@@ -284,45 +285,42 @@ namespace galsim {
     // Helper function to calculate how far down into the silicon the photon converts into
     // an electron.
 
-    void Silicon::calculateConversionDepth(const PhotonArray& photons, std::vector<double>& depth,
-                                           UniformDeviate ud) const
+    double Silicon::calculateConversionDepth(const PhotonArray& photons, int i,
+                                             UniformDeviate ud) const
     {
-        const int nphotons = photons.size();
-        for (int i=0; i<nphotons; ++i) {
-            // Determine the distance the photon travels into the silicon
-            double si_length;
-            if (photons.hasAllocatedWavelengths()) {
-                double lambda = photons.getWavelength(i); // in nm
-                // Lookup the absorption length in the imported table
-                double abs_length = _abs_length_table.lookup(lambda); // in microns
-                si_length = -abs_length * log(1.0 - ud()); // in microns
+        // Determine the distance the photon travels into the silicon
+        double si_length;
+        if (photons.hasAllocatedWavelengths()) {
+            double lambda = photons.getWavelength(i); // in nm
+            // Lookup the absorption length in the imported table
+            double abs_length = _abs_length_table.lookup(lambda); // in microns
+            si_length = -abs_length * log(1.0 - ud()); // in microns
 #ifdef DEBUGLOGGING
-                if (i % 1000 == 0) {
-                    dbg<<"lambda = "<<lambda<<std::endl;
-                    dbg<<"si_length = "<<si_length<<std::endl;
-                }
-#endif
-            } else {
-                // If no wavelength info, assume conversion takes place near the top.
-                si_length = 1.0;
+            if (i % 1000 == 0) {
+                xdbg<<"lambda = "<<lambda<<std::endl;
+                xdbg<<"si_length = "<<si_length<<std::endl;
             }
+#endif
+        } else {
+            // If no wavelength info, assume conversion takes place near the top.
+            si_length = 1.0;
+        }
 
-            // Next we partition the si_length into x,y,z.  Assuming dz is positive downward
-            if (photons.hasAllocatedAngles()) {
-                double dxdz = photons.getDXDZ(i);
-                double dydz = photons.getDYDZ(i);
-                double dz = si_length / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz); // in microns
-                depth[i] = std::min(_sensorThickness - 1.0, dz);  // max 1 micron from bottom
+        // Next we partition the si_length into x,y,z.  Assuming dz is positive downward
+        if (photons.hasAllocatedAngles()) {
+            double dxdz = photons.getDXDZ(i);
+            double dydz = photons.getDYDZ(i);
+            double dz = si_length / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz); // in microns
 #ifdef DEBUGLOGGING
-                if (i % 1000 == 0) {
-                    dbg<<"dxdz = "<<dxdz<<std::endl;
-                    dbg<<"dydz = "<<dydz<<std::endl;
-                    dbg<<"dz = "<<dz<<std::endl;
-                }
-#endif
-            } else {
-                depth[i] = si_length;
+            if (i % 1000 == 0) {
+                xdbg<<"dxdz = "<<dxdz<<std::endl;
+                xdbg<<"dydz = "<<dydz<<std::endl;
+                xdbg<<"dz = "<<dz<<std::endl;
             }
+#endif
+            return std::min(_sensorThickness - 1.0, dz);  // max 1 micron from bottom
+        } else {
+            return si_length;
         }
     }
 
@@ -398,8 +396,6 @@ namespace galsim {
         const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
 
         const int nphotons = photons.size();
-        std::vector<double> depth(nphotons);
-        calculateConversionDepth(photons, depth, ud);
 
         GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
 
@@ -424,8 +420,9 @@ namespace galsim {
             // Get the location where the photon strikes the silicon:
             double x0 = photons.getX(i); // in pixels
             double y0 = photons.getY(i); // in pixels
+            xdbg<<"x0,y0 = "<<x0<<','<<y0;
 
-            double dz = depth[i];  // microns
+            double dz = calculateConversionDepth(photons, i, ud);
             if (photons.hasAllocatedAngles()) {
                 double dxdz = photons.getDXDZ(i);
                 double dydz = photons.getDYDZ(i);
@@ -433,6 +430,7 @@ namespace galsim {
                 x0 += dxdz * dz_pixel; // dx in pixels
                 y0 += dydz * dz_pixel; // dy in pixels
             }
+            xdbg<<" => "<<x0<<','<<y0;
             // This is the reverse of depth. zconv is how far above the substrate the e- converts.
             double zconv = _sensorThickness - dz;
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
@@ -444,11 +442,12 @@ namespace galsim {
                 x0 += diffStep * gd();
                 y0 += diffStep * gd();
             }
+            xdbg<<" => "<<x0<<','<<y0<<std::endl;
             double flux = photons.getFlux(i);
 
 #ifdef DEBUGLOGGING
             if (i % 1000 == 0) {
-                xdbg<<"diffStep = "<<diffStep<<std::endl;
+                xdbg<<"diffStep = "<<_diffStep<<std::endl;
                 xdbg<<"zconv = "<<zconv<<std::endl;
                 xdbg<<"x0 = "<<x0<<std::endl;
                 xdbg<<"y0 = "<<y0<<std::endl;
