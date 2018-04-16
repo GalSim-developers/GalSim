@@ -484,6 +484,7 @@ def add_dirs(builder, output=False):
     # Finally, add pybind11's include dir
     import pybind11
     print('PyBind11 is version ',pybind11.__version__)
+    print('Looking for pybind11 header files: ')
     for user in [True, False, None]:
         if user is None:
             # Last time through, raise an error.
@@ -494,10 +495,13 @@ def add_dirs(builder, output=False):
             raise OSError("Could not find PyBind11")
 
         try_dir = pybind11.get_include(user=user)
+        print('  ',try_dir,end='')
         if os.path.isfile(os.path.join(try_dir, 'pybind11/pybind11.h')):
-            print('Include files for pybind11 are in',try_dir)
+            print('  (yes)')
             builder.include_dirs.append(try_dir)
             break
+        else:
+            print('  (no)')
 
 def parse_njobs(njobs, task=None, command=None, maxn=4):
     """Helper function to parse njobs, which may be None (use ncpu) or an int.
