@@ -439,6 +439,8 @@ namespace galsim {
         dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
         double next_recalc;
         if (resume) {
+            // These two tests are now done at the python layer.
+#if 0
             // _resume_next_recalc initialized to -1, so this is our sign that we haven't run
             // accumulate yet.
             if (_resume_next_recalc < 0)
@@ -451,6 +453,9 @@ namespace galsim {
                 throw std::runtime_error(
                     "Silicon::accumulate called with resume, but image is not the same shape as "
                     "the previous run.");
+#endif
+            assert(_resume_next_recalc >= 0);
+            assert(_imagepolys.size() == nxny);
 
             next_recalc = _resume_next_recalc;
             // We already added delta to target.  But to get the right values when we next

@@ -58,6 +58,8 @@ class Sensor(object):
         @param resume       Resume accumulating on the same image as a previous call to accumulate.
                             In the base class, this has no effect, but it can provide an efficiency
                             gain for some derived classes. [default: False]
+
+        @returns the total flux that fell onto the image.
         """
         return photons.addTo(image)
 
@@ -134,6 +136,7 @@ class SiliconSensor(Sensor):
         self.nrecalc = nrecalc
         self.treering_func = treering_func
         self.treering_center = treering_center
+        self._last_image = None
 
         self.config_file = name + '.cfg'
         self.vertex_file = name + '.dat'
@@ -215,6 +218,7 @@ class SiliconSensor(Sensor):
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['_silicon']
+        d['_last_image'] = None  # Don't save this through a serialization.
         return d
 
     def __setstate__(self, d):
@@ -234,7 +238,17 @@ class SiliconSensor(Sensor):
                             accumulation to see what flux is already on the image, which can
                             be more efficient, especially when the number of pixels is large.
                             [default: False]
+
+        @returns the total flux that fell onto the image.
         """
+        if resume and image is not self._last_image:
+            if self._last_image is None:
+                raise RuntimeError("accumulate called with resume, but accumulate has not "
+                                   "been been run yet.")
+            else:
+                raise RuntimeError("accumulate called with resume, but provided image does "
+                                   "not match one used in the previous accumulate call.")
+        self._last_image = image
         return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center, resume)
 
     def _read_config_file(self, filename):

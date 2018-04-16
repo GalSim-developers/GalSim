@@ -739,6 +739,14 @@ def test_resume():
     sensor3.accumulate(all_photons, im3)
     np.testing.assert_array_equal(im2.array, im3.array)
 
+    # If resume is used either with the wrong image or on the first call to accumulate, then
+    # this should raise an exception.
+    assert_raises(RuntimeError, sensor3.accumulate, all_photons, im1, resume=True)
+    sensor4 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+    assert_raises(RuntimeError, sensor4.accumulate, all_photons, im1, resume=True)
+
+
 if __name__ == "__main__":
     test_simple()
     test_silicon()
