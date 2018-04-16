@@ -125,12 +125,6 @@ namespace galsim {
         return inside;
     }
 
-    bool Polygon::triviallyContains(const Point& point) const
-    { return _inner.includes(point); }
-
-    bool Polygon::mightContain(const Point& point) const
-    { return _outer.includes(point); }
-
     void Polygon::scale(const Polygon& refpoly, const Polygon& emptypoly, double factor)
     {
         for (int i=0; i<_npoints; ++i) {

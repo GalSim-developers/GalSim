@@ -62,8 +62,11 @@ namespace galsim {
         bool contains(const Point& point) const;
 
         // Two functions that check whether the point is trivially inside or outside.
-        bool triviallyContains(const Point& point) const;
-        bool mightContain(const Point& point) const;
+        inline bool triviallyContains(const Point& point) const
+        { return _inner.includes(point); }
+
+        inline bool mightContain(const Point& point) const
+        { return _outer.includes(point); }
 
         // Some methods that let Polygon act (in some ways) like a vector<Point>
         size_t size() const { return _points.size(); }

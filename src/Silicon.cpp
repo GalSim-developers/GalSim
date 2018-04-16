@@ -282,10 +282,6 @@ namespace galsim {
         xdbg<<"index = "<<index<<std::endl;
         const Polygon& poly = _imagepolys[index];
         xdbg<<"p = "<<x<<','<<y<<std::endl;
-        xxdbg<<"poly = \n";
-        for(int i=0;i<poly.size();++i) {
-            xxdbg<<"  "<<poly[i].x<<"  "<<poly[i].y<<std::endl;
-        }
         xdbg<<"inner = "<<poly.getInnerBounds()<<std::endl;
         xdbg<<"outer = "<<poly.getOuterBounds()<<std::endl;
 
