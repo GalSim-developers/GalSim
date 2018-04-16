@@ -66,8 +66,8 @@ namespace galsim
         mutable Polygon _testpoly;
         std::vector<Polygon> _distortions;
         std::vector<Polygon> _imagepolys;
-        int _numVertices, _nx, _ny, _nv, _nrecalc;
-        double _qDist, _diffStep, _pixelSize, _sensorThickness;
+        int _numVertices, _nx, _ny, _nv, _qDist;
+        double _nrecalc, _diffStep, _pixelSize, _sensorThickness;
         Table<double, double> _tr_radial_table;
         Position<double> _treeRingCenter;
         Table<double, double> _abs_length_table;

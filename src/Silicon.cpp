@@ -82,8 +82,8 @@ namespace galsim {
                      const Table<double, double>& tr_radial_table,
                      Position<double> treeRingCenter,
                      const Table<double, double>& abs_length_table) :
-        _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
-        _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
+        _numVertices(numVertices), _nx(nx), _ny(ny), _qDist(qDist),
+        _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
         _abs_length_table(abs_length_table)
