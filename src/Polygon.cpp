@@ -151,18 +151,18 @@ namespace galsim {
         _outer = Bounds<double>();
         for (int i=0; i<_npoints; ++i) _outer += _points[i];
         dbg<<"outer = "<<_outer<<std::endl;
+        Position<double> center = _outer.center();
 
-        // The inner bounds need to be done manually.  We rely on the fact that the center of the
-        // polygon is (0.5,0.5).  Then the right side of the inner bounds is the smallest
-        // x value from points with x-0.5 >= |y-0.5|.  Likewise the other 3 sides.
+        // The inner bounds need to be done manually. Then the right side of the inner bounds is
+        // the smallest x value from points with x-cenx >= |y-ceny|.  Likewise the other 3 sides.
         _inner = _outer;
         for (int i=0; i<_npoints; ++i) {
             double x = _points[i].x;
             double y = _points[i].y;
-            if (x-0.5 >= std::abs(y-0.5) && x < _inner.getXMax()) _inner.setXMax(x);
-            if (x-0.5 <= -std::abs(y-0.5) && x > _inner.getXMin()) _inner.setXMin(x);
-            if (y-0.5 >= std::abs(x-0.5) && y < _inner.getYMax()) _inner.setYMax(y);
-            if (y-0.5 <= -std::abs(x-0.5) && y > _inner.getYMin()) _inner.setYMin(y);
+            if (x-center.x >= std::abs(y-center.y) && x < _inner.getXMax()) _inner.setXMax(x);
+            if (x-center.x <= -std::abs(y-center.y) && x > _inner.getXMin()) _inner.setXMin(x);
+            if (y-center.y >= std::abs(x-center.x) && y < _inner.getYMax()) _inner.setYMax(y);
+            if (y-center.y <= -std::abs(x-center.x) && y > _inner.getYMin()) _inner.setYMin(y);
         }
         dbg<<"inner = "<<_inner<<std::endl;
 
