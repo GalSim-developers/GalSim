@@ -151,6 +151,7 @@ namespace galsim {
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
+        dbg<<"updatePixelDistortions\n";
         // This updates the pixel distortions in the _imagepolys
         // pixel list based on the amount of additional charge in each pixel
         // This distortion assumes the electron is created at the
@@ -188,6 +189,7 @@ namespace galsim {
                         for (int n=0; n<_nv; n++) {
                             double dx = _distortions[dist_index][n].x * charge;
                             double dy = _distortions[dist_index][n].y * charge;
+                            xdbg<<"  "<<i<<','<<j<<','<<di<<','<<dj<<','<<n<<"  "<<dx<<','<<dy<<std::endl;
                             _imagepolys[index][n].x += dx;
                             _imagepolys[index][n].y += dy;
                         }
@@ -204,39 +206,47 @@ namespace galsim {
     template <typename T>
     void Silicon::addTreeRingDistortions(ImageView<T> target, Position<int> orig_center)
     {
+        if (_tr_radial_table.size() == 2) {
+            // The no tree rings case is indicated with a table of size 2, which
+            // wouldn't make any sense as a user input.
+            return;
+        }
+        dbg<<"addTreeRings\n";
         // This updates the pixel distortions in the _imagepolys
         // pixel list based on a model of tree rings.
         // The coordinates _treeRingCenter are the coordinates
         // of the tree ring center, shifted to compensate for the
         // fact that target has its origin shifted to (0,0).
         Bounds<int> b = target.getBounds();
-        int minx = b.getXMin();
-        int miny = b.getYMin();
-        int maxx = b.getXMax();
-        int maxy = b.getYMax();
+        int i1 = b.getXMin();
+        int j1 = b.getYMin();
+        int i2 = b.getXMax();
+        int j2 = b.getYMax();
         double shift = 0.0;
         // Now we cycle through the pixels in the target image and add
         // the (small) distortions due to tree rings
         std::vector<bool> changed(_imagepolys.size(), false);
-        for (int i=minx; i<maxx; ++i) {
-            for (int j=miny; j<maxy; ++j) {
-                int index = (i - minx) * (maxy - miny + 1) + (j - miny);
+        for (int i=i1; i<=i2; ++i) {
+            for (int j=j1; j<=j2; ++j) {
+                int index = (i - i1) * (j2 - j1 + 1) + (j - j1);
                 for (int n=0; n<_nv; n++) {
+                    xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
+                        _imagepolys[index][n].x <<"  "<< _imagepolys[index][n].y<<std::endl;
                     double tx = (double)i + _imagepolys[index][n].x - _treeRingCenter.x +
                         (double)orig_center.x;
                     double ty = (double)j + _imagepolys[index][n].y - _treeRingCenter.y +
                         (double)orig_center.y;
+                    xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
                     double r = sqrt(tx * tx + ty * ty);
-                    if (_tr_radial_table.size() > 2) {
-                        // The no tree rings case is indicated with a table of size 2, which
-                        // wouldn't make any sense as a user input.
-                        shift = _tr_radial_table.lookup(r);
-                        // Shifts are along the radial vector in direction of the doping gradient
-                        double dx = shift * tx / r;
-                        double dy = shift * ty / r;
-                        _imagepolys[index][n].x += dx;
-                        _imagepolys[index][n].y += dy;
-                    }
+                    shift = _tr_radial_table.lookup(r);
+                    xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+                    // Shifts are along the radial vector in direction of the doping gradient
+                    double dx = shift * tx / r;
+                    double dy = shift * ty / r;
+                    xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+                    _imagepolys[index][n].x += dx;
+                    _imagepolys[index][n].y += dy;
+                    xdbg<<"    x,y => "<<_imagepolys[index][n].x <<"  "<< _imagepolys[index][n].y;
                 }
                 changed[index] = true;
             }
