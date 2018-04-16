@@ -48,6 +48,7 @@ namespace galsim {
     // Helper function used in a few places below.
     void buildEmptyPoly(Polygon& poly, int numVertices)
     {
+        dbg<<"buildEmptyPoly\n";
         double dtheta = M_PI / (2.0 * (numVertices + 1.0));
         double theta0 = - M_PI / 4.0;
 
@@ -89,6 +90,7 @@ namespace galsim {
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
         _abs_length_table(abs_length_table)
     {
+        dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
         // as a function of charge in the surrounding pixels.
@@ -106,22 +108,16 @@ namespace galsim {
 
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
         for (int index=0; index < _nv*_nx*_ny; index++) {
-            int n = (index % (_ny * _nv)) % _nv;
-            int j = (index - n) / _nv;
-            int i = (index - n - j * _nv) / (_ny * _nv);
+            xdbg<<"index = "<<index<<std::endl;
+            int n = index % _nv;
+            int j = (index / _nv) % _ny;
+            int i = index / (_nv * _ny);
+            assert(index == (i * _ny + j) * _nv + n);
             double x0 = vertex_data[5*index+0];
             double y0 = vertex_data[5*index+1];
             double th = vertex_data[5*index+2];
             double x1 = vertex_data[5*index+3];
             double y1 = vertex_data[5*index+4];
-#ifdef DEBUGLOGGING
-            if (index == 73) { // Test print out of read in
-                dbg<<"Successfully reading the Pixel vertex file\n";
-                //dbg<<"line = "<<line<<std::endl;
-                dbg<<"n = "<<n<<", i = "<<i<<", j = "<<j<<", x0 = "<<x0<<", y0 = "<<y0
-                    <<", th = "<<th<<", x1 = "<<x1<<", y1 = "<<y1<<std::endl;
-            }
-#endif
 
             // The following captures the pixel displacement. These are translated into
             // coordinates compatible with (x,y). These are per electron.
@@ -131,6 +127,15 @@ namespace galsim {
             double y = _distortions[i * _ny + j][n].y;
             y = ((y1 - y0) / _pixelSize + 0.5 - y) / numElec;
             _distortions[i * _ny + j][n].y = y;
+#ifdef DEBUGLOGGING
+            if (index == 73) { // Test print out of read in
+                dbg<<"Successfully reading the Pixel vertex file\n";
+                //dbg<<"line = "<<line<<std::endl;
+                dbg<<"n = "<<n<<", i = "<<i<<", j = "<<j<<", x0 = "<<x0<<", y0 = "<<y0
+                    <<", th = "<<th<<", x1 = "<<x1<<", y1 = "<<y1<<std::endl;
+                dbg<<"x,y = "<<x<<','<<y<<std::endl;
+            }
+#endif
         }
 #ifdef DEBUGLOGGING
         //Test print out of distortion for central pixel
