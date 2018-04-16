@@ -38,11 +38,11 @@ namespace {
         static void wrapTemplates(W & wrapper)
         {
             typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-                                                     ImageView<U>, Position<int>);
+                                                     ImageView<U>, Position<int>, bool);
             wrapper
                 .def("accumulate",
                      (accumulate_fn)&Silicon::accumulate,
-                     (bp::args("photons", "rng", "image", "orig_center")),
+                     (bp::args("photons", "rng", "image", "orig_center", "resume")),
                      "Accumulate photons in image")
                 ;
         }

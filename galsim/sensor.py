@@ -40,7 +40,7 @@ class Sensor(object):
     def __init__(self):
         pass
 
-    def accumulate(self, photons, image, orig_center=None):
+    def accumulate(self, photons, image, orig_center=None, resume=False):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
@@ -55,6 +55,9 @@ class Sensor(object):
         @param image        The image into which the photons should be accumuated.
         @param orig_center  The position of the image center in the original image coordinates.
                             [default: (0,0)]
+        @param resume       Resume accumulating on the same image as a previous call to accumulate.
+                            In the base class, this has no effect, but it can provide an efficiency
+                            gain for some derived classes. [default: False]
         """
         return photons.addTo(image)
 
@@ -218,7 +221,7 @@ class SiliconSensor(Sensor):
         self.__dict__ = d
         self._init_silicon()  # Build the _silicon object.
 
-    def accumulate(self, photons, image, orig_center=galsim.PositionI(0,0)):
+    def accumulate(self, photons, image, orig_center=galsim.PositionI(0,0), resume=False):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
@@ -226,8 +229,13 @@ class SiliconSensor(Sensor):
         @param image        The image into which the photons should be accumuated.
         @param orig_center  The position of the image center in the original image coordinates.
                             [default: (0,0)]
+        @param resume       Resume accumulating on the same image as a previous call to accumulate.
+                            This skips an initial (slow) calculation at the start of the
+                            accumulation to see what flux is already on the image, which can
+                            be more efficient, especially when the number of pixels is large.
+                            [default: False]
         """
-        return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center)
+        return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center, resume)
 
     def _read_config_file(self, filename):
         # This reads the Poisson simulator config file for

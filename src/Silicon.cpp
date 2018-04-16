@@ -88,7 +88,7 @@ namespace galsim {
         _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
-        _abs_length_table(abs_length_table)
+        _abs_length_table(abs_length_table), _resume_next_recalc(-1)
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
@@ -418,7 +418,7 @@ namespace galsim {
 
     template <typename T>
     double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target,
-                               Position<int> orig_center)
+                               Position<int> orig_center, bool resume)
     {
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
@@ -441,13 +441,47 @@ namespace galsim {
         const int ny = b.getYMax() - b.getYMin() + 1;
         const int nxny = nx * ny;
         dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-        _imagepolys.resize(nxny);
-        for (int i=0; i<nxny; ++i)
-            _imagepolys[i] = _emptypoly;
-        dbg<<"Built poly list\n";
-        // Now we add in the tree ring distortions
-        addTreeRingDistortions(target, orig_center);
+        double next_recalc;
+        if (resume) {
+            // _resume_next_recalc initialized to -1, so this is our sign that we haven't run
+            // accumulate yet.
+            if (_resume_next_recalc < 0)
+                throw std::runtime_error(
+                    "Silicon::accumulate called with resume, but accumulate hasn't been run yet.");
 
+            // This isn't a complete check that it is the same image.  But it prevents
+            // seg faults if the user messes up.
+            if (_imagepolys.size() != nxny)
+                throw std::runtime_error(
+                    "Silicon::accumulate called with resume, but image is not the same shape as "
+                    "the previous run.");
+
+            next_recalc = _resume_next_recalc;
+            // We already added delta to target.  But to get the right values when we next
+            // updatePixelDistortions, we want delta to have everything that's been added since
+            // the last update.  The easiest way to do that is to just subtract off what has
+            // been added so far now and just keep adding to the existing _delta image.
+            // It will all be added back at the end of this call to accumulate.
+            target -= _delta;
+            dbg<<"resume=True.  Use saved next_recalc = "<<next_recalc<<std::endl;
+        } else {
+            _imagepolys.resize(nxny);
+            for (int i=0; i<nxny; ++i)
+                _imagepolys[i] = _emptypoly;
+            dbg<<"Built poly list\n";
+            // Now we add in the tree ring distortions
+            addTreeRingDistortions(target, orig_center);
+
+            // Start with the correct distortions for the initial image as it is already
+            dbg<<"Initial updatePixelDistortions\n";
+            updatePixelDistortions(target);
+            next_recalc = _nrecalc;
+
+            // Keep track of the charge we are accumulating on a separate image for efficiency
+            // of the distortion updates.
+            _delta.resize(b);
+            _delta.setZero();
+        }
         const double invPixelSize = 1./_pixelSize; // pixels/micron
         const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
 
@@ -455,21 +489,14 @@ namespace galsim {
 
         GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
 
-        // Start with the correct distortions for the initial image as it is already
-        updatePixelDistortions(target);
-
-        // Keep track of the charge we are accumulating on a separate image for efficiency
-        // of the distortion updates.
-        ImageAlloc<T> delta(b, 0.);
-
         double addedFlux = 0.;
-        double next_recalc = _nrecalc;
         for (int i=0; i<nphotons; i++) {
             // Update shapes every _nrecalc electrons
             if (addedFlux > next_recalc) {
-                updatePixelDistortions(delta.view());
-                target += delta;
-                delta.setZero();
+                dbg<<"updatePixelDistortions because "<<addedFlux<<" > "<<next_recalc<<std::endl;
+                updatePixelDistortions(_delta.view());
+                target += _delta;
+                _delta.setZero();
                 next_recalc = addedFlux + _nrecalc;
             }
 
@@ -585,12 +612,14 @@ namespace galsim {
                 rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
                 Irr0 += flux * rsq;
 #endif
-                delta(ix,iy) += flux;
+                _delta(ix,iy) += flux;
                 addedFlux += flux;
             }
         }
         // No need to update the distortions again, but we do need to add the delta image.
-        target += delta;
+        target += _delta;
+        _resume_next_recalc = next_recalc - addedFlux;
+        dbg<<"All done.  Added flux "<<addedFlux<<".  Save next_recalc = "<<_resume_next_recalc<<std::endl;
 
 #ifdef DEBUGLOGGING
         Irr /= addedFlux;
@@ -617,8 +646,10 @@ namespace galsim {
                                                   Position<int> orig_center);
 
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
-                                        ImageView<double> target, Position<int> orig_center);
+                                        ImageView<double> target, Position<int> orig_center,
+                                        bool resume);
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
-                                        ImageView<float> target, Position<int> orig_center);
+                                        ImageView<float> target, Position<int> orig_center,
+                                        bool resume);
 
 } // namespace galsim

@@ -58,7 +58,7 @@ namespace galsim
 
         template <typename T>
         double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target,
-                          Position<int> orig_center);
+                          Position<int> orig_center, bool resume);
 
     private:
         Polygon _emptypoly;
@@ -70,6 +70,8 @@ namespace galsim
         Table<double, double> _tr_radial_table;
         Position<double> _treeRingCenter;
         Table<double, double> _abs_length_table;
+        double _resume_next_recalc;
+        ImageAlloc<double> _delta;
     };
 }
 

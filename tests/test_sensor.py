@@ -20,6 +20,7 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
+import time
 
 from galsim_test_helpers import *
 
@@ -638,6 +639,106 @@ def test_treerings():
             np.testing.assert_almost_equal(ref_mom['My'] + treering_amplitude * center[1] / 1000,
                                            mom['My'], decimal=1)
 
+@timer
+def test_resume():
+    """Test that the resume option for accumulate works properly.
+    """
+    rng = galsim.UniformDeviate(314159)
+
+    if __name__ == "__main__":
+        flux_per_pixel = 40
+        nx = 200
+        ny = 200
+        block_size = int(1.3e5)
+        nrecalc = 1.e6
+    else:
+        flux_per_pixel = 40
+        nx = 20
+        ny = 20
+        block_size = int(1.3e3)
+        nrecalc = 1.e4
+
+    expected_num_photons = nx * ny * flux_per_pixel
+    pd = galsim.PoissonDeviate(rng, mean=expected_num_photons)
+    num_photons = int(pd())  # Poisson realization of the given expected number of photons.
+    #nrecalc = num_photons / 2  # Only recalc once.
+    flux_per_photon = 1
+    print('num_photons = ',num_photons,' .. expected = ',expected_num_photons)
+
+    # Use treerings to make sure that aspect of the setup is preserved properly on resume
+    treering_func = galsim.SiliconSensor.simple_treerings(0.5, 250.)
+    treering_center = galsim.PositionD(-1000,0)
+    sensor1 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+    sensor2 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+    sensor3 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+
+    waves = galsim.WavelengthSampler(sed = galsim.SED('1', 'nm', 'fphotons'),
+                                     bandpass = galsim.Bandpass('LSST_r.dat', 'nm'),
+                                     rng=rng)
+    angles = galsim.FRatioAngles(1.2, 0.4, rng)
+
+    im1 = galsim.ImageF(nx,ny)  # Will not use resume
+    im2 = galsim.ImageF(nx,ny)  # Will use resume
+    im3 = galsim.ImageF(nx,ny)  # Will run all photons in one pass
+
+    t_resume = 0
+    t_no_resume = 0
+
+    all_photons = galsim.PhotonArray(num_photons)
+    n_added = 0
+
+    first = True
+    while num_photons > 0:
+        print(num_photons,'photons left. image min/max =',im1.array.min(),im1.array.max())
+        nphot = min(block_size, num_photons)
+        num_photons -= nphot
+
+        t0 = time.time()
+        photons = galsim.PhotonArray(int(nphot))
+        rng.generate(photons.x) # 0..1 so far
+        photons.x *= nx
+        photons.x += 0.5  # Now from xmin-0.5 .. xmax+0.5
+        rng.generate(photons.y)
+        photons.y *= ny
+        photons.y += 0.5
+        photons.flux = flux_per_photon
+        waves.applyTo(photons)
+        angles.applyTo(photons)
+
+        all_photons.x[n_added:n_added+nphot] = photons.x
+        all_photons.y[n_added:n_added+nphot] = photons.y
+        all_photons.flux[n_added:n_added+nphot] = photons.flux
+        all_photons.dxdz[n_added:n_added+nphot] = photons.dxdz
+        all_photons.dydz[n_added:n_added+nphot] = photons.dydz
+        all_photons.wavelength[n_added:n_added+nphot] = photons.wavelength
+        n_added += nphot
+
+        t1 = time.time()
+        sensor1.accumulate(photons, im1)
+
+        t2 = time.time()
+        sensor2.accumulate(photons, im2, resume = not first)
+        first = False
+        t3 = time.time()
+        print('Times = ',t1-t0,t2-t1,t3-t2)
+        t_resume += t3-t2
+        t_no_resume += t2-t1
+
+    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    print('max rel diff = ',np.max(np.abs(im1.array - im2.array)/np.abs(im2.array)))
+    np.testing.assert_almost_equal(im2.array/expected_num_photons, im1.array/expected_num_photons,
+                                   decimal=5)
+    print('Time with resume = ',t_resume)
+    print('Time without resume = ',t_no_resume)
+    assert t_resume < t_no_resume
+
+    # The resume path should be exactly the same as doing all the photons at once.
+    sensor3.accumulate(all_photons, im3)
+    np.testing.assert_array_equal(im2.array, im3.array)
+
 if __name__ == "__main__":
     test_simple()
     test_silicon()
@@ -645,3 +746,4 @@ if __name__ == "__main__":
     test_sensor_wavelengths_and_angles()
     test_bf_slopes()
     test_treerings()
+    test_resume()
