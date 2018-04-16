@@ -79,6 +79,9 @@ namespace galsim {
         // sure you do this any time you update the positions of the points.
         void updateBounds();
 
+        const Bounds<double>& getInnerBounds() const { return _inner; }
+        const Bounds<double>& getOuterBounds() const { return _outer; }
+
     private:
 
         bool _sorted;

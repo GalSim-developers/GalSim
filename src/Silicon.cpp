@@ -258,7 +258,7 @@ namespace galsim {
 
     template <typename T>
     bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-                              ImageView<T> target) const
+                              ImageView<T> target, bool* off_edge) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
         // at which the electron is created, and then tests to see if the delivered
@@ -267,34 +267,72 @@ namespace galsim {
         // photon within the pixel, with (0,0) in the lower left
 
         // If test pixel is off the image, return false.  (Avoids seg faults!)
-        if (!target.getBounds().includes(Position<int>(ix,iy))) return false;
+        if (!target.getBounds().includes(Position<int>(ix,iy))) {
+            if (off_edge) *off_edge = true;
+            return false;
+        }
+        xdbg<<"insidePixel: "<<ix<<','<<iy<<','<<x<<','<<y<<','<<off_edge<<std::endl;
 
-        const int minx = target.getXMin();
-        const int miny = target.getYMin();
-        const int maxx = target.getXMax();
-        const int maxy = target.getYMax();
+        const int i1 = target.getXMin();
+        const int j1 = target.getYMin();
+        const int i2 = target.getXMax();
+        const int j2 = target.getYMax();
 
-        int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
+        int index = (ix - i1) * (j2 - j1 + 1) + (iy - j1);
+        xdbg<<"index = "<<index<<std::endl;
+        const Polygon& poly = _imagepolys[index];
+        xdbg<<"p = "<<x<<','<<y<<std::endl;
+        xxdbg<<"poly = \n";
+        for(int i=0;i<poly.size();++i) {
+            xxdbg<<"  "<<poly[i].x<<"  "<<poly[i].y<<std::endl;
+        }
+        xdbg<<"inner = "<<poly.getInnerBounds()<<std::endl;
+        xdbg<<"outer = "<<poly.getOuterBounds()<<std::endl;
 
         // First do some easy checks if the point isn't terribly close to the boundary.
         Point p(x,y);
-        if (_imagepolys[index].triviallyContains(p)) return true;
-        if (!_imagepolys[index].mightContain(p)) return false;
+        bool inside;
+        if (poly.triviallyContains(p)) {
+            xdbg<<"trivial\n";
+            inside = true;
+        } else if (!poly.mightContain(p)) {
+            xdbg<<"trivially not\n";
+            inside = false;
+        } else {
+            xdbg<<"maybe\n";
+            // OK, it must be near the boundary, so now be careful.
+            // The term zfactor decreases the pixel shifts as we get closer to the bottom
+            // It is an empirical fit to the Poisson solver simulations, and only matters
+            // when we get quite close to the bottom.  This could be more accurate by making
+            // the Vertices files have an additional look-up variable (z), but this doesn't
+            // seem necessary at this point
+            const double zfit = 12.0;
+            const double zfactor = std::tanh(zconv / zfit);
 
-        // OK, it must be near the boundary, so now be careful.
-        // The term zfactor decreases the pixel shifts as we get closer to the bottom
-        // It is an empirical fit to the Poisson solver simulations, and only matters
-        // when we get quite close to the bottom.  This could be more accurate by making
-        // the Vertices files have an additional look-up variable (z), but this doesn't
-        // seem necessary at this point
-        const double zfit = 12.0;
-        const double zfactor = std::tanh(zconv / zfit);
+            // Scale the testpoly vertices by zfactor
+            _testpoly.scale(poly, _emptypoly, zfactor);
 
-        // Scale the testpoly vertices by zfactor
-        _testpoly.scale(_imagepolys[index], _emptypoly, zfactor);
+            // Now test to see if the point is inside
+            inside = _testpoly.contains(p);
+        }
 
-        // Now test to see if the point is inside
-        return _testpoly.contains(p);
+        // If the nominal pixel is on the edge of the image and the photon misses in the
+        // direction of falling off the image, (possibly) report that in off_edge.
+        if (!inside && off_edge) {
+            xdbg<<"Check for off_edge\n";
+            xdbg<<"inner = "<<poly.getInnerBounds()<<std::endl;
+            xdbg<<"ix,i1,i2 = "<<ix<<','<<i1<<','<<i2<<std::endl;
+            xdbg<<"iy,j1,j2 = "<<iy<<','<<j1<<','<<j2<<std::endl;
+            *off_edge = false;
+            xdbg<<"ix == i1 ? "<<(ix == i1)<<std::endl;
+            xdbg<<"x < inner.xmin? "<<(x < _testpoly.getInnerBounds().getXMin())<<std::endl;
+            if ((ix == i1) && (x < poly.getInnerBounds().getXMin())) *off_edge = true;
+            if ((ix == i2) && (x > poly.getInnerBounds().getXMax())) *off_edge = true;
+            if ((iy == j1) && (y < poly.getInnerBounds().getYMin())) *off_edge = true;
+            if ((iy == j2) && (y > poly.getInnerBounds().getYMax())) *off_edge = true;
+            xdbg<<"off_edge = "<<*off_edge<<std::endl;
+        }
+        return inside;
     }
 
     // Helper function to calculate how far down into the silicon the photon converts into
@@ -348,6 +386,7 @@ namespace galsim {
     bool searchNeighbors(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
                          ImageView<T> target, int& step)
     {
+        xdbg<<"searchNeighbors for "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
         // The following code finds which pixel we are in given
         // pixel distortion due to the brighter-fatter effect
         // The following are set up to start the search in the undistorted pixel, then
@@ -357,11 +396,13 @@ namespace galsim {
         else if ((x < y) && (x > 1.0 - y)) step = 3;
         else step = 5;
         int n=step;
+        xdbg<<"step = "<<step<<std::endl;
         for (int m=1; m<9; m++) {
             int ix_off = ix + xoff[n];
             int iy_off = iy + yoff[n];
             double x_off = x - xoff[n];
             double y_off = y - yoff[n];
+            xdbg<<n<<"  "<<ix_off<<"  "<<iy_off<<"  "<<x_off<<"  "<<y_off<<std::endl;
             if (silicon.insidePixel(ix_off, iy_off, x_off, y_off, zconv, target)) {
                 xdbg<<"Found in pixel "<<n<<", ix = "<<ix<<", iy = "<<iy
                     <<", x="<<x<<", y = "<<y<<", target(ix,iy)="<<target(ix,iy)<<std::endl;
@@ -484,10 +525,16 @@ namespace galsim {
             // (x,y) are the coordinates within the pixel, centered at the lower left
 
             // First check the obvious choice, since this will usually work.
-            bool foundPixel = insidePixel(ix, iy, x, y, zconv, target);
+            bool off_edge;
+            bool foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
 #ifdef DEBUGLOGGING
             if (foundPixel) ++zerocount;
 #endif
+
+            // If the nominal position is on the edge of the image, off_edge reports whether
+            // the photon has fallen off the edge of the image. In this case, we won't find it in
+            // any of the neighbors either.  Just let the photon fall off the edge in this case.
+            if (!foundPixel && off_edge) continue;
 
             // Then check neighbors
             int step;  // We might need this below, so let searchNeighbors return it.
@@ -502,14 +549,21 @@ namespace galsim {
             // If we do arrive here due to roundoff error of the pixel boundary, put the electron
             // in the undistorted pixel or the nearest neighbor with equal probability.
             if (!foundPixel) {
-                xdbg<<"Not found in any pixel\n";
-                xdbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
+#ifdef DEBUGLOGGING
+                dbg<<"Not found in any pixel\n";
+                dbg<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
+                dbg<<"b = "<<b<<std::endl;
+                dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
+                set_verbose(2);
+                bool off_edge;
+                insidePixel(ix, iy, x, y, zconv, target, &off_edge);
+                searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
+                set_verbose(1);
+                ++misscount;
+#endif
                 int n = (ud() > 0.5) ? 0 : step;
                 ix = ix + xoff[n];
                 iy = iy + yoff[n];
-#ifdef DEBUGLOGGING
-                ++misscount;
-#endif
             }
 #if 0
             // (ix, iy) now give the actual pixel which will receive the charge
@@ -550,9 +604,9 @@ namespace galsim {
     }
 
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-                                       ImageView<double> target) const;
+                                       ImageView<double> target, bool*) const;
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-                                       ImageView<float> target) const;
+                                       ImageView<float> target, bool*) const;
 
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);
