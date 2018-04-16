@@ -75,6 +75,9 @@ namespace galsim {
         // Make the Polygon a scaled version of a reference one (relative to an empty Polygon).
         void scale(const Polygon& refpoly, const Polygon& emptypoly, double factor);
 
+        // Distort positions by a scaled version of a reference polgon
+        void distort(const Polygon& refpoly, double factor);
+
         // Update the inner and outer bounds approximations of the polygon.  Need to make
         // sure you do this any time you update the positions of the points.
         void updateBounds();

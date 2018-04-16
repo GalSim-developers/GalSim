@@ -140,6 +140,13 @@ namespace galsim {
         updateBounds();
     }
 
+    void Polygon::distort(const Polygon& refpoly, double factor)
+    {
+        std::vector<Point>::iterator it = _points.begin();
+        std::vector<Point>::const_iterator ref = refpoly._points.begin();
+        for (int n=_npoints; n; --n) *it++ += *ref++ * factor;
+    }
+
     void Polygon::updateBounds()
     {
         dbg<<"Start updateBounds:\n";

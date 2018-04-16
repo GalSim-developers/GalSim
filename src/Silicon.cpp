@@ -162,37 +162,37 @@ namespace galsim {
         int nyCenter = (_ny - 1) / 2;
 
         // Now add in the displacements
-        int minx = target.getXMin();
-        int miny = target.getYMin();
-        int maxx = target.getXMax();
-        int maxy = target.getYMax();
+        const int i1 = target.getXMin();
+        const int j1 = target.getYMin();
+        const int i2 = target.getXMax();
+        const int j2 = target.getYMax();
+        const int skip = target.getNSkip();
+        const int step = target.getStep();
+        const T* ptr = target.getData();
 
         // Now we cycle through the pixels in the target image and update any affected
         // pixel shapes.
         std::vector<bool> changed(_imagepolys.size(), false);
-        for (int i=minx; i<maxx; ++i) {
-            for (int j=miny; j<maxy; ++j) {
-                double charge = target(i,j);
+        for (int j=j1; j<=j2; ++j, ptr+=skip) {
+            for (int i=i1; i<=i2; ++i, ptr+=step) {
+                double charge = *ptr;
                 if (charge == 0.0) continue;
 
-                for (int di=-_qDist; di<=_qDist; ++di) {
-                    for (int dj=-_qDist; dj<=_qDist; ++dj) {
-                        int polyi = i + di;
-                        int polyj = j + dj;
-                        if ((polyi < minx) || (polyi > maxx) || (polyj < miny) || (polyj > maxy))
-                            continue;
-                        int index = (polyi - minx) * (maxy - miny + 1) + (polyj - miny);
+                int polyi1 = std::max(i - _qDist, i1);
+                int polyi2 = std::min(i + _qDist, i2);
+                int disti = nxCenter - _qDist;
 
-                        int disti = nxCenter + di;
-                        int distj = nyCenter + dj;
-                        int dist_index = disti * _ny + distj;
-                        for (int n=0; n<_nv; n++) {
-                            double dx = _distortions[dist_index][n].x * charge;
-                            double dy = _distortions[dist_index][n].y * charge;
-                            xdbg<<"  "<<i<<','<<j<<','<<di<<','<<dj<<','<<n<<"  "<<dx<<','<<dy<<std::endl;
-                            _imagepolys[index][n].x += dx;
-                            _imagepolys[index][n].y += dy;
-                        }
+                for (int polyi=polyi1; polyi<=polyi2; ++polyi, ++disti) {
+                    int polyj1 = std::max(j - _qDist, j1);
+                    int polyj2 = std::min(j + _qDist, j2);
+                    int distj = nyCenter - _qDist;
+                    int index = (polyi - i1) * (j2 - j1 + 1) + (polyj1 - j1);
+                    int dist_index = disti * _ny + distj;
+
+                    for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++distj, ++index, ++dist_index) {
+                        Polygon& distortion = _distortions[dist_index];
+                        Polygon& imagepoly = _imagepolys[index];
+                        imagepoly.distort(distortion, charge);
                         changed[index] = true;
                     }
                 }
