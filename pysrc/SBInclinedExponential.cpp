@@ -17,20 +17,16 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBInclinedExponential.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBInclinedExponential()
+    void pyExportSBInclinedExponential(PY_MODULE& _galsim)
     {
-        bp::class_<SBInclinedExponential,bp::bases<SBProfile> >(
-            "SBInclinedExponential", bp::no_init)
-            .def(bp::init<double,double,double,double, GSParams>());
+        py::class_<SBInclinedExponential, BP_BASES(SBProfile)>(
+            GALSIM_COMMA "SBInclinedExponential" BP_NOINIT)
+            .def(py::init<double,double,double,double, GSParams>());
     }
 
 } // namespace galsim

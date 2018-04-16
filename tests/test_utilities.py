@@ -21,14 +21,8 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-import galsim.utilities
 
 testshape = (512, 512)  # shape of image arrays for all tests
 decimal = 6     # Last decimal place used for checking equality of float arrays, see

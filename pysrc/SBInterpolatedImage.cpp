@@ -17,40 +17,35 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBInterpolatedImage.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
     template <typename T, typename W>
-    static void WrapTemplates(W& wrapper)
+    static void WrapTemplates(PY_MODULE& _galsim, W& wrapper)
     {
-        wrapper
-            .def(bp::init<const BaseImage<T> &, const Bounds<int>&, const Bounds<int>&,
-                 const Interpolant&, const Interpolant&,
-                 double, double, GSParams>());
+        wrapper.def(py::init<const BaseImage<T> &, const Bounds<int>&, const Bounds<int>&,
+                    const Interpolant&, const Interpolant&,
+                    double, double, GSParams>());
 
         typedef double (*cscf_func_type)(const BaseImage<T>&, double);
-        bp::def("CalculateSizeContainingFlux", cscf_func_type(&CalculateSizeContainingFlux));
+        GALSIM_DOT def("CalculateSizeContainingFlux", cscf_func_type(&CalculateSizeContainingFlux));
     }
 
-    void pyExportSBInterpolatedImage()
+    void pyExportSBInterpolatedImage(PY_MODULE& _galsim)
     {
-        bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
-            "SBInterpolatedImage", bp::no_init);
+        py::class_<SBInterpolatedImage, BP_BASES(SBProfile)> pySBInterpolatedImage(
+            GALSIM_COMMA "SBInterpolatedImage" BP_NOINIT);
         pySBInterpolatedImage
             .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK);
-        WrapTemplates<float>(pySBInterpolatedImage);
-        WrapTemplates<double>(pySBInterpolatedImage);
+        WrapTemplates<float>(_galsim, pySBInterpolatedImage);
+        WrapTemplates<double>(_galsim, pySBInterpolatedImage);
 
-        bp::class_< SBInterpolatedKImage, bp::bases<SBProfile> > pySBInterpolatedKImage(
-            "SBInterpolatedKImage", bp::no_init);
+        py::class_<SBInterpolatedKImage, BP_BASES(SBProfile)> pySBInterpolatedKImage(
+            GALSIM_COMMA "SBInterpolatedKImage" BP_NOINIT);
         pySBInterpolatedKImage
-            .def(bp::init<const BaseImage<std::complex<double> > &,
+            .def(py::init<const BaseImage<std::complex<double> > &,
                  double, const Interpolant&, GSParams>());
     }
 

@@ -27,15 +27,10 @@ from __future__ import print_function
 import os
 import numpy as np
 
+import galsim
 from galsim_test_helpers import *
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
-try:
-    import galsim
-except ImportError:
-    import sys
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 TESTDIR=os.path.join(path, "table_comparison_files")
 

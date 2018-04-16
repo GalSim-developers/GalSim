@@ -1,0 +1,245 @@
+Guildelines for GalSim developers:
+
+1. Style
+
+For C++, we roughly adhere to the LSST C++ style.  At this point, the best bet for new
+C++ developers would be to look at some of the existing code and try to make your code
+have a similar style.
+
+For Python, we mostly adhere to PEP8, although please pay attention to the first rule:
+"A Foolish Consistency is the Hobgoblin of Little Minds".  In other words, please do
+break the "rules" if it improves readability.
+
+Biggish things to highlight/add/modify are...
+
+* 4 space indentation, rather than 2 space.
+
+* No tabs.  Just spaces.
+
+* No using statements.  Now all namespaces (especially std::) are explicit (equvalent will be
+  adopted in Python, i.e. no "import * from moduleX" or "from moduleY import Z").
+
+* Use C++ std library when possible.  e.g. MAX -> std::max, Assert -> assert, PI -> M_PI, etc.
+
+* Will be readable at 100 character width (this is a departure from LSST style, which specifies
+  120 but is slightly annoying for laptop use).
+
+* We adhere to the Zen of Python; open python, type "import this", hit enter.
+
+* We use all lowercase letters for all Python packages.  That's a bit of a Python convention, 
+  and while it's mostly aimed at compatibility with case-insensitive filesystems, we think we 
+  should stick with it anyway.
+
+* We will adopt the SBProfile capitalization style wherever sensible for code filenames, as it's by 
+  far the most significant chunk of C/C++ we are currently using.  This makes include/*.h files
+  capitalized.  
+
+* Overall capitalization rules:
+  * File names are CamelCase**
+  * Classes (and structs) are CamelCase
+  * Free functions are CamelCase
+  * Member functions are camelCase
+  * Public variables (including function parameters and kwargs) are lower_case
+  * Private variables are _lower_case
+  * Local scope variables/functions can be whatever the author prefers.
+  * Note that when using camelCase or CamelCase, acronyms should still be capitalized, i.e. CCD and
+    PSF, not Ccd and Psf.
+
+* Python unit testing modules are placed in tests/, and called test_<Module>.py.
+
+* C++ unit tests are also in tests/, called test_<function>*.cpp.
+
+
+For vim users, Mike Jarvis has put the c.vim file in the devutils/ directory.  If you put that 
+in  .vim/ftplugin/ and add the line "filetype plugin on" in your .vimrc file, then you will 
+automatically get the formatting to match what is currently in SBProfile.  We don't (yet) 
+have a corresponding file for emacs.  (Sorry.)
+
+LSST Style Guides available here --
+http://dev.lsstcorp.org/trac/wiki/DocumentationStandards
+http://dev.lsstcorp.org/trac/wiki/PythonCodeStandards
+http://dev.lsstcorp.org/trac/wiki/C%2B%2BStandard
+
+
+2. Workflow
+
+Prior to version 2.0, SCons was our only build option.  It is still available, but we
+don't recommend it for end users.  It remains to be seen which build system is more convenient
+for developers, so we have kept it around for the 2.x series.
+
+With setup.py, the work flow is as follows:
+
+    1. Edit code
+    2. python setup.py install
+    3. python test_whatever.py  # Check if your code works on the unit tests for this module.
+    4. If errors, goto 1
+    5. python setup.py test     # Check that the new code didn't break any other tests.
+    6. If errors, goto 1
+    7. git add -p               # Add only the code changes that are relevant. (Not debugging, etc.)
+    8. git commit -m "Summary of changes"
+    9. git push or goto 1 if still more to do.
+
+With SCons, the build steps are slightly different.
+
+    2. scons install
+    5. scons tests
+
+Note that SCons only remakes files that have changed, so it's not too time consuming to rebuild
+each time.  However, setup.py does not have that feature.  So, with the setup.py workflow, we
+highly recommend installing ccache.  This keeps track of which cc commands have been run
+previously and stores the results, which vastly speeds up builds using setup.py.
+
+You can download ccache from
+
+https://ccache.samba.org/
+
+
+3. Commits
+
+Please do your best to have each commit be atomic.
+
+That is, the commit should, as far as possible, be a single conceptual change in the code,
+complete with whatever additional unit tests are necessary to test it.  Ideally all tests
+should pass for every commit.  This makes cherry-picking and bisecting much easier.
+
+Sometimes when working on some change, you may notice something else you want to change as well.
+Maybe a typo, or a semi-related change that occurs to you because of your work on something else.
+
+In any case, go ahead and make the change.  But when committing, use `git add -p` to select
+the lines that go together to make a single atomic change.  Commit them, and then go back and
+do it again to add the other conceptual change as a separate commit.
+
+This is also a useful command to let you notice any debugging lines that you might have left in
+the code, which you don't want to include in the commit.
+
+Another useful git command to become familiar with is `git stash`.  This temporarily stores any
+local changes, so you can (for instance) run the unit tests on the current committed version
+to make sure they all pass before adding more items as the next commit.  To bring the stashed
+changes back, just do `git stash pop`.
+
+
+4. Array/pixel indexing:
+
+Numpy arrays in Python use the (matrix-style) indexing [y, x], whereas the SBProfile class and the
+more arguably natural ordering is (x, y).  PyFITS, and a number of other Numpy-dependent Python
+libraries have also adopted the [y, x] paradigm, as well as a number of astronomers who do a lot in
+Python.
+
+We will write our Python classes to accept arguments in the (x, y) order, particularly the
+galsim.Image class.  However, it will be possible to create an Image using a Numpy array, and also
+to get a Numpy view into an image.
+
+This places the boundary between our classes and NumPy.  Our classes would be (x,y) in both C++ and
+Python, but we wouldn't make any effort to fit NumPy into that paradigm.
+
+Jim gives a couple more reasons on why this is a good place to put the boundary:
+- Square brackets will consistently be [y,x], and parentheses will consistently be (x,y), due to 
+  the (usually annoying) fact that you can't overload operator[] with two argument in C++.
+
+- Even in Python, [y,x] is really only used for NumPy arrays - note that matplotlib's plot 
+  function takes 1-d x and y arrays in that order, for instance, even though matplotlib expects 
+  arrays used as images to be [y,x].
+
+Jim gives a nice example of this functionality for what he has in mind for the Python API of the
+galsim.Image class:
+
+>>> import galsim
+>>> import numpy
+>>> arr1 = numpy.arange(6).reshape(2,3)
+>>> print arr1
+[[0 1 2]
+[3 4 5]]
+>>> im1 = galsim.ImageD(arr1, x0=10, y0=100)  # im shares data with arr1
+>>> arr2 = im1.array
+>>> assert(arr2 is arr1)
+>>> print im1(12, 101) # (x, y); includes offsets passed in constructor
+5
+>>> im2 = galsim.ImageD(x0=1, y0=2, w=3, h=4)
+>>> arr3 = im2.array   # arr3 shares data with m3
+>>> print arr3.shape   # shape is (h, w)
+(4, 3)
+>>> arr4 = arr1.transpose()    # arr4 is column-major
+>>> im3 = galsim.ImageD(arr4)  # can't do this
+Traceback (most recent call last):
+ File "<stdin>", line 1, in <module>
+ValueError: Cannot create image from noncontiguous array.
+
+This last point is important: Numpy arrays must be kept in c_contiguous storage order, i.e. row-
+major.  Some of numpy's array routines invisibly change arrays to Fortran-style (i.e. column-major)
+storage, or disrupt contiguous storage altogether.  While developing, keep track of this using
+
+>>> array.flags
+
+in particular ensure that
+
+>>> array.flags.c_contiguous == True
+
+Check out the np.copy() function in Numpy, or array.copy() method to see how to make a c_contiguous
+array, also see np.ascontiguousarray() or the array.transpose() method.
+
+Finally, the FITS standard is to begin indexing all arrays at (1, 1), and this is the convention
+SBProfile currently adopts.  However, we think that our image objects will also carry around an
+attribute for the coordinate origin, so this should not be too much of a headache at the interface 
+with Python/Numpy (famous last words).
+
+
+5. Compiler warning flags
+
+One of the SCons defaults is WARN=false.  This is recommended for end users, so we don't 
+saddle them with a bunch of warning messages if they use a new compiler that we haven't
+tested on yet.
+
+However, developers should always run with WARN=true to help catch bugs.  This tends to 
+catch a lot of things that cause portability issues as we use the code on different systems
+as well as outright bugs in the coding that are otherwise missed.  Not all of the things 
+that come up are bugs per se, but it catches enough things that really are bugs that we feel 
+it worthwhile to make that the default.  Developers are expected to fix their code to get rid 
+of all these warnings before committing.  Even if you know the warning is benign, please fix it.
+We want all compilations to be warning-free on as many compilers as possible.  
+
+Note: because SCons automatically caches all parameters you pass it, you will only need
+to do `scons WARN=true` once, and then it will be set that way for all future scons 
+commands.
+
+The setup.py build always shows all these warnings, so you don't need to do anything special
+to turn that on.
+
+Even if everyone does this, it is possible that you might come across warnings from someone
+else's code.  e.g. They may use a different compiler that warns about somewhat different things.
+If you know how to fix the problem, go ahead and do so.  If you don't, please email the 
+person responsible (or go to our GitHub page and comment on the commit that causes the problem) 
+to ask them to fix it.  Basically the same thing you would do if code failed to compile for a 
+non-warning compiler error.
+
+
+6. Branch names
+
+When starting work on an issue, create a branch with the same name as the issue.
+In particular, include the # before the number.  E.g. when working on Issue #999,
+the branch you make should be called #999.
+
+git checkout -b "#999"
+
+Note the quotes around "#999".  This is because bash uses the # symbol for comments, so
+if you don't include the quotes, the command won't work.
+
+If you want, it is permissible to add extra text after the issue number.
+
+git checkout -b "#999-some_cool_new_stuff"
+
+We don't normally do this, but sometimes it is useful to help remember which issue is which
+(and therefore which branch you want to switch to).
+
+Why do we do this?  Especially given the annoying quotes thing?  Because if you follow the
+instructions in the file .git/hooks/commit_msg, then git will add the branch name to the
+ends of your commit messages automatically.  This in turn lets GitHub know that the commit
+is connected with that issue, so it shows up in the issue thread.  This is often quite useful.
+
+The instructions in commit-msg repeated here for convenience:
+
+  Copy this file to .git/hooks/commit-msg to enable automatically appending the 
+  branch name to commit messages (when on a branch).  Ensure it remains executable.
+  Branches should usually be named according to the issue number they are for.
+  e.g. "#12" for a branch that works on issue 12.
+  Then commits will automatically be linked in the comments for that issue.
+

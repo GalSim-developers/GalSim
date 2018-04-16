@@ -183,8 +183,7 @@ namespace galsim {
                 shared_ptr<Value> value(LRUCacheHelper<Value,Key>::NewValue(key));
                 // Remove items from the cache as necessary.
                 while (_entries.size() >= _nmax) {
-                    bool erased = _cache.erase(_entries.back().first);
-                    assert(erased);
+                    _cache.erase(_entries.back().first);
                     _entries.pop_back();
                 }
                 // Add the new value to the front.

@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include "Test.h"
+#include <iostream>
 
 extern void TestImage();
 extern void TestInteg();
@@ -30,10 +31,14 @@ extern void TestVersion();
 int main()
 {
     try {
+        std::cout<<"Start C++ tests.\n";
         // Run them all here:
         TestImage();
+        std::cout<<"TestImage passed all tests.\n";
         TestInteg();
+        std::cout<<"TestInteg passed all tests.\n";
         TestVersion();
+        std::cout<<"TestVersion passed all tests.\n";
 
     } catch (std::exception& e) {
         std::cerr<<e.what()<<std::endl;

@@ -17,22 +17,17 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBBox.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBBox()
+    void pyExportSBBox(PY_MODULE& _galsim)
     {
-        bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
-            .def(bp::init<double,double,double,GSParams>());
-
-        bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
-            .def(bp::init<double,double,GSParams>());
+        py::class_<SBBox, BP_BASES(SBProfile)>(GALSIM_COMMA "SBBox" BP_NOINIT)
+            .def(py::init<double,double,double,GSParams>());
+        py::class_<SBTopHat, BP_BASES(SBProfile)>(GALSIM_COMMA "SBTopHat" BP_NOINIT)
+            .def(py::init<double,double,GSParams>());
     }
 
 } // namespace galsim

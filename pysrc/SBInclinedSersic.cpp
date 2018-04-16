@@ -17,19 +17,16 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBInclinedSersic.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBInclinedSersic()
+    void pyExportSBInclinedSersic(PY_MODULE& _galsim)
     {
-        bp::class_<SBInclinedSersic,bp::bases<SBProfile> >("SBInclinedSersic", bp::no_init)
-            .def(bp::init<double,double,double,double,double,double, GSParams>());
+        py::class_<SBInclinedSersic, BP_BASES(SBProfile)>(
+            GALSIM_COMMA "SBInclinedSersic" BP_NOINIT)
+            .def(py::init<double,double,double,double,double,double, GSParams>());
     }
 
 } // namespace galsim

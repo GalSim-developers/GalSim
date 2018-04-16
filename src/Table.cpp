@@ -19,15 +19,16 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#include "TMV.h"
-#include "TMV_SymBand.h"
-#include "Table.h"
 #include <cmath>
 #include <vector>
-
 #include <iostream>
+
+#ifdef USE_TMV
+#include "TMV.h"
+#include "TMV_SymBand.h"
+#endif
+
+#include "Table.h"
 
 namespace galsim {
 
@@ -60,7 +61,7 @@ namespace galsim {
 
     ArgVec::ArgVec(const double* vec, int n): _vec(vec), _n(n)
     {
-        xdbg<<"Make ArgVec from: "<<tmv::VectorViewOf(vec, n)<<std::endl;
+        xdbg<<"Make ArgVec from vector starting with: "<<vec[0]<<std::endl;
         const double tolerance = 0.01;
         _da = (back() - front()) / (_n-1);
         _equalSpaced = true;
@@ -75,9 +76,6 @@ namespace galsim {
     // Look up an index.  Use STL binary search.
     int ArgVec::upperIndex(double a) const
     {
-        xdbg<<"Start upperIndex: _vec = "<<tmv::VectorViewOf(_vec, _n)<<std::endl;
-        xdbg<<"front, back = "<<front()<<','<<back()<<std::endl;
-        xdbg<<"a = "<<a<<std::endl;
         // check for slop
         if (a < front()) return 1;
         if (a > back()) return _n-1;
@@ -223,6 +221,7 @@ namespace galsim {
 
         } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
 
+#ifdef USE_TMV
             tmv::SymBandMatrix<double> M(_n-2, 1);
             for (int i=1; i<=_n-3; i++){
                 M(i, i-1) = _args[i+1] - _args[i];
@@ -235,9 +234,35 @@ namespace galsim {
             }
             tmv::Vector<double> solution(_n-2);
             solution = rhs / M;   // solve the tridiagonal system of equations
-            for (int i=1; i<=_n-2; i++){
+            for (int i=1; i<=_n-2; i++) {
                 _y2[i] = solution[i-1];
             }
+#else
+            // Eigen doesn't have a BandMatrix class (at least not one that is functional)
+            // But in this case, the band matrix is so simple and stable (diagonal dominant)
+            // that we can just use the Thomas algorithm to solve it directly.
+            // https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
+            std::vector<double> c(_n-3);  // Just need a single temporary vector.
+            for (int i=1; i<=_n-2; i++) {
+                _y2[i] = 6. * ( (_vals[i+1] - _vals[i]) / (_args[i+1] - _args[i]) -
+                                (_vals[i] - _vals[i-1]) / (_args[i] - _args[i-1]) );
+            }
+            double bb = 2. * (_args[2] - _args[0]);
+            for (int i=1; i<=_n-2; ++i) {
+                _y2[i] /= bb;
+                if (i == _n-2) break;
+                double a = _args[i+1] - _args[i];
+                c[i-1] = a;
+                c[i-1] /= bb;
+                bb = 2. * (_args[i+2] - _args[i]);
+                bb -= a * c[i-1];
+                _y2[i+1] -= a * _y2[i];
+            }
+            for (int i=_n-3; i>0; --i) {
+                _y2[i] -= c[i-1] * _y2[i+1];
+            }
+#endif
+
         }
 
     }

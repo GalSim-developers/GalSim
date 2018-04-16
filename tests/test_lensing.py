@@ -23,14 +23,9 @@ import os
 import sys
 import warnings
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 refdir = os.path.join(".", "lensing_reference_data") # Directory containing the reference
 

@@ -23,17 +23,11 @@ import sys
 import math
 import coord
 
+import galsim
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images.
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # We'll use these a lot, so just import them.
 from numpy import sin, cos, tan, arcsin, arccos, arctan, sqrt, pi

@@ -84,13 +84,15 @@ opts.Add(PathVariable('FINAL_PREFIX',
          '', PathVariable.PathAccept))
 opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
 
+opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
+opts.Add('EIGEN_DIR','Explicitly give the Eigen prefix','')
+
+opts.Add(BoolVariable('USE_TMV','Use TMV for linear algebra, rather than Eigen',False))
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
-opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
+
+opts.Add(BoolVariable('USE_BOOST','Use boost python for the wrapping, rather than pybind11',False))
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
-opts.Add(BoolVariable('USE_BOOST',
-         'Use the local boost installation for optional boost header files',
-         False))
 
 opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
          'Extra paths for header files (separated by : if more than 1)',
@@ -171,7 +173,6 @@ def ClearCache():
         shutil.rmtree(".sconf_temp")
 
 def GetMacVersion():
-    print('Mac version is',platform.mac_ver()[0])
     ver = platform.mac_ver()[0].split('.')
     if len(ver) >= 2:
         return ver[:2]
@@ -276,6 +277,7 @@ def ErrorExit(*args, **kwargs):
     if sys.platform.find('darwin') != -1:
         major, minor = GetMacVersion()
         if int(major) > 10 or int(minor) >= 11:
+            print('Mac version is %s.%s'%(major,minor))
             print()
             print('Starting with El Capitan (OSX 10.11), Apple instituted a new policy called')
             print('"System Integrity Protection" (SIP) where they strip "dangerous" environment')
@@ -392,7 +394,7 @@ def BasicCCFlags(env):
             else:
                 env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
-            env.Append(CCFLAGS=['-std=c++98','-fno-strict-aliasing'])
+            env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
             #env.Append(CCFLAGS=['-ftree-vectorize'])
@@ -411,7 +413,6 @@ def BasicCCFlags(env):
             else:
                 env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
-            env.Append(CCFLAGS=['-std=c++98'])
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
@@ -421,7 +422,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
 
         elif compiler == 'icpc':
-            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
             if version >= 10:
                 env.Append(CCFLAGS=['-vec-report0'])
@@ -532,19 +533,6 @@ def AddOpenMPFlag(env):
         flag = ['-mp','--exceptions']
         ldflag = ['-mp']
         xlib = ['pthread']
-    elif compiler == 'cl':
-        #flag = ['/openmp']
-        #ldflag = ['/openmp']
-        #xlib = []
-        # The Express edition, which is the one I have, doesn't come with
-        # the file omp.h, which we need.  So I am unable to test TMV's
-        # OpenMP with cl.
-        # I believe the Professional edition has full OpenMP support,
-        # so if you have that, the above lines might work for you.
-        # Just uncomment those, and commend the below three lines.
-        print('No OpenMP support for cl')
-        env['WITH_OPENMP'] = False
-        return
     else:
         print('\nWARNING: No OpenMP support for compiler ',compiler,'\n')
         env['WITH_OPENMP'] = False
@@ -717,7 +705,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['BOOST', 'TMV', 'FFTW']
+    types = ['BOOST', 'TMV', 'EIGEN', 'FFTW']
 
     for t in types:
         dirtag = t+'_DIR'
@@ -727,9 +715,13 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
                 print('WARNING: could not find specified %s = %s'%(dirtag,env[dirtag]))
             continue
 
-        AddPath(bin_paths, os.path.join(tdir, 'bin'))
-        AddPath(lib_paths, os.path.join(tdir, 'lib'))
-        AddPath(cpp_paths, os.path.join(tdir, 'include'))
+        if t == 'EIGEN':
+            # Eigen doesn't put its header files in an include subdirectory.
+            AddPath(cpp_paths, tdir)
+        else:
+            AddPath(bin_paths, os.path.join(tdir, 'bin'))
+            AddPath(lib_paths, os.path.join(tdir, 'lib'))
+            AddPath(cpp_paths, os.path.join(tdir, 'include'))
 
 
 def AddExtraPaths(env):
@@ -910,6 +902,15 @@ def TryRunResult(config,text,name):
     return ok
 
 
+def CheckFlags(context,try_flags,source_file):
+    init_flags = context.env['CCFLAGS']
+    context.env.PrependUnique(CCFLAGS=try_flags)
+    result = context.TryCompile(source_file,'.cpp')
+    if not result:
+        context.env.Replace(CCFLAGS=init_flags)
+    return result
+
+
 def CheckLibsSimple(config,try_libs,source_file,prepend=True):
     init_libs = []
     if 'LIBS' in config.env._dict.keys():
@@ -1031,16 +1032,26 @@ int main()
     config.Message('Checking for correct FFTW linkage... ')
     if not config.TryCompile(fftw_source_file,'.cpp'):
         ErrorExit(
-            'Error: fftw file failed to compile.',
-            'Check that the correct location is specified for FFTW_DIR')
+            'Error: fftw file failed to compile.')
 
     result = (
         CheckLibsFull(config,[''],fftw_source_file) or
         CheckLibsFull(config,['fftw3'],fftw_source_file) )
     if not result:
+        # Try to get the correct library location from pyfftw3
+        try:
+            import fftw3
+            config.env.Append(LIBPATH=fftw3.lib.libdir)
+            result = CheckLibsFull(config,[fftw3.lib.libbase],fftw_source_file)
+        except ImportError:
+            pass
+    if not result:
         ErrorExit(
             'Error: fftw file failed to link correctly',
-            'Check that the correct location is specified for FFTW_DIR')
+            'You should either specify the location of fftw3 as FFTW_DIR=... '
+            'or install pyfftw3 using: \n'
+            '    pip install pyfftw3\n'
+            'which can often find it automatically.')
 
     config.Result(1)
     return 1
@@ -1090,6 +1101,76 @@ int main()
   return 0;
 }
 """
+    tmv_version_file = """
+#include <iostream>
+#include "TMV.h"
+int main()
+{ std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
+"""
+    ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
+    print('TMV version is',tmv_version.strip())
+
+    tmv_link_file = FindTmvLinkFile(config)
+
+    print('Using TMV_LINK file:',tmv_link_file)
+    try:
+        tmv_link = open(tmv_link_file).read().strip()
+    except:
+        ErrorExit('Could not open TMV link file: ',tmv_link_file)
+    print('    ',tmv_link)
+
+    if sys.platform.find('darwin') != -1:
+        # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
+        # is thread-unsafe for Mac OS 10.7+ prior to XCode 5.1.  Try to give an appropriate warning
+        # if we can tell that this is what the TMV library is using.
+        # Update: Even after 5.1, it still seems to have problems for some systems.
+        major, minor = GetMacVersion()
+        print('Mac version is %s.%s'%(major,minor))
+        try:
+            p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
+            xcode_version = p.stdout.readlines()[0].decode().split()[1]
+            print('XCode version is',xcode_version)
+        except:
+            # Don't require the user to have xcode installed.
+            xcode_version = None
+            print('Unable to determine XCode version')
+        if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
+                ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
+            print('WARNING: The Apple BLAS library has been found not to be thread safe on')
+            print('         Mac OS versions 10.7+, even across multiple processes (i.e. not')
+            print('         just multiple threads in the same process.)  The symptom is that')
+            print('         `scons tests` may hang when running pytest using multiple')
+            print('         processes.')
+            if xcode_version is None:
+                # If we couldn't run xcodebuild, then don't give any more information about this.
+                pass
+            elif xcode_version < '5.1':
+                print('         This seems to have been partially fixed with XCode 5.1, so we')
+                print('         recommend upgrading to the latest XCode version.  However, even')
+                print('         with 5.1, some systems still seem to have problems.')
+                env['BAD_BLAS'] = True
+            else:
+                print('         This seems to have been partially fixed with XCode 5.1, so there')
+                print('         is a good chance you will not have any problems.  But there are')
+                print('         still occasional systems that fail when using multithreading with')
+                print('         programs or modules that link to the BLAS library (such as GalSim).')
+                print('         If you do have problems, the solution is to recompile TMV with')
+                print('         the SCons option "WITH_BLAS=false".')
+
+    # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
+    # puts it into CCFLAGS instead.  Move it over to LINKFLAGS before
+    # merging everything.
+    tmv_link_dict = config.env.ParseFlags(tmv_link)
+    config.env.Append(LIBS=tmv_link_dict['LIBS'])
+    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['LINKFLAGS'])
+    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['CCFLAGS'])
+    config.env.AppendUnique(LIBPATH=tmv_link_dict['LIBPATH'])
+
+    compiler = config.env['CXXTYPE']
+    if compiler == 'g++' and '-openmp' in config.env['LINKFLAGS']:
+        config.env['LINKFLAGS'].remove('-openmp')
+        config.env.AppendUnique(LINKFLAGS='-fopenmp')
+
     print('Checking for correct TMV linkage... (this may take a little while)')
     config.Message('Checking for correct TMV linkage... ')
 
@@ -1517,6 +1598,87 @@ PyMODINIT_FUNC initcheck_tmv(void)
     return 1
 
 
+def CheckEigen(config):
+    eigen_source_file = """
+#include "Python.h"
+#include "Eigen/Core"
+#include "Eigen/Cholesky"
+
+static void useEigen() {
+    Eigen::MatrixXd S(10,10);
+    S.setConstant(4.);
+    S.diagonal().array() += 50.;
+    Eigen::MatrixXd m(10,3);
+    m.setConstant(2.);
+    S.llt().solveInPlace(m);
+}
+
+static PyObject* run(PyObject* self, PyObject* args)
+{
+    useEigen();
+    return Py_BuildValue("i", 23);
+}
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "check_eigen",
+    NULL,
+    -1,
+    Methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC PyInit_check_eigen(void)
+
+#else
+
+PyMODINIT_FUNC initcheck_eigen(void)
+
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+    return PyModule_Create(&moduledef);
+#else
+    Py_InitModule("check_eigen", Methods);
+#endif
+}
+"""
+    config.Message('Checking if we can build module using Eigen... ')
+
+    result = config.TryCompile(eigen_source_file,'.cpp')
+    if not result:
+        ErrorExit('Unable to compile a module using eigen')
+
+    result = CheckModuleLibs(config,[],eigen_source_file,'check_eigen')
+    if not result:
+        ErrorExit('Unable to build a python loadable module that uses eigen')
+
+    config.Result(1)
+
+    eigen_version_file = """
+#include <iostream>
+#include "Eigen/Core"
+int main() {
+    std::cout<<EIGEN_WORLD_VERSION<<"."<<EIGEN_MAJOR_VERSION<<"."<<EIGEN_MINOR_VERSION<<std::endl;
+    return 0;
+}
+"""
+    ok, eigen_version = AltTryRun(config,eigen_version_file,'.cpp')
+    print('Eigen version is %s'%eigen_version)
+
+    return 1
+
+
 def CheckNumPy(config):
     numpy_source_file = """
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -1647,6 +1809,46 @@ def CheckCoord(config):
 
     return 1
 
+def CheckPyBind11(config):
+    config.Message('Checking for pybind11... ')
+
+    result, output = TryScript(config,"import pybind11",python)
+    config.Result(result)
+    if not result:
+        ErrorExit("Unable to import pybind11 using the python executable:\n" + python)
+
+    result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
+    print('pybind11 version is',pybind11_ver)
+
+    config.Message('Checking if we can build against PyBind11... ')
+
+    result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
+    result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
+    config.env.Append(CPPPATH=[dir1,dir2])
+
+    pb_source_file = """
+#include <pybind11/pybind11.h>
+
+int check_pb_run() { return 23; }
+
+PYBIND11_MODULE(check_pb, check_pb) {
+    check_pb.def("run",&check_pb_run);
+}
+"""
+    result = (CheckFlags(config, '', pb_source_file) or
+              CheckFlags(config, '-std=c++14', pb_source_file) or
+              CheckFlags(config, '-std=c++11', pb_source_file))
+    if not result:
+        ErrorExit("Unable to compile C++ source code using pybind11:\n" + python)
+
+    result = CheckModuleLibs(config,[''],pb_source_file,'check_pb')
+    if not result:
+        ErrorExit("Unable to make a python module with pybind11:\n" + python)
+
+    config.Result(result)
+    return result
+
+
 def CheckBoostPython(config):
     bp_source_file = """
 
@@ -1670,7 +1872,8 @@ BOOST_PYTHON_MODULE(check_bp) {
 """
     config.Message('Checking if we can build against Boost.Python... ')
 
-    result = config.TryCompile(bp_source_file,'.cpp')
+    result = (CheckFlags(config, '-std=c++98', bp_source_file) or
+              CheckFlags(config, '', bp_source_file))
     if not result:
         ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
@@ -1697,6 +1900,7 @@ BOOST_PYTHON_MODULE(check_bp) {
     config.Result(1)
     return 1
 
+
 # If the compiler is incompatible with the compiler that was used to build python,
 # then there can be problems with the exception passing between the C++ layer and the
 # python layer.  We don't know any solution to this, but it's worth letting the user
@@ -1712,16 +1916,26 @@ def CheckPythonExcept(config):
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
 #include <stdexcept>
 
+#ifdef USE_BOOST
+#define BOOST_NO_CXX11_SMART_PTR
+#include "boost/python.hpp"
+#else
+#include <pybind11/pybind11.h>
+#endif
 
 void run_throw() { throw std::runtime_error("test error handling"); }
 
+#ifdef USE_BOOST
 BOOST_PYTHON_MODULE(test_throw) {
-    boost::python::def("run",&run_throw);
+    boost::python::def("run", &run_throw);
 }
+#else
+PYBIND11_MODULE(test_throw, test_throw) {
+    test_throw.def("run", &run_throw);
+}
+#endif
 """
     py_source_file = """
 import test_throw
@@ -1842,118 +2056,64 @@ def DoCppChecks(config):
     Check for some headers and libraries.
     """
 
-    #####
-    # Check for fftw3:
-
-    # First do a simple check that the library and header are in the path.
+    # FFTW
     if not config.CheckHeader('fftw3.h',language='C++'):
-        ErrorExit(
-            'fftw3.h not found',
-            'You should specify the location of fftw3 as FFTW_DIR=...')
-
+        # We have our own version of fftw3.h in case it's not easy to find this.
+        # (The library location is often accessible via pyffw3 if it is installed somewhere.)
+        print('Using local fftw3.h file in GalSim/include/fftw3')
+        config.env.Append(CPPPATH='#include/fftw3')
     config.CheckFFTW()
 
-    #####
-    # Check for boost:
-    config.CheckBoost()
+    # Boost
+    if config.env['USE_BOOST']:
+        config.env.AppendUnique(CPPDEFINES=['USE_BOOST'])
+        config.CheckBoost()
 
-    #####
-    # Check for tmv:
+    # TMV
+    if config.env['USE_TMV']:
+        config.env.AppendUnique(CPPDEFINES=['USE_TMV'])
+        if not config.CheckHeader('TMV.h',language='C++'):
+            ErrorExit(
+                'TMV.h not found',
+                'You should specify the location of TMV as TMV_DIR=...')
+        config.CheckTMV()
 
-    # First do a simple check that the library and header are in the path.
-    # We check the linking with the BLAS library below.
-    if not config.CheckHeader('TMV.h',language='C++'):
-        ErrorExit(
-            'TMV.h not found',
-            'You should specify the location of TMV as TMV_DIR=...')
-
-    tmv_version_file = """
-#include <iostream>
-#include "TMV.h"
-int main()
-{ std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
-"""
-    ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
-    print('TMV version is',tmv_version.strip())
-
-    compiler = config.env['CXXTYPE']
-    version = config.env['CXXVERSION_NUMERICAL']
-
-    if 'LIBS' not in config.env :
-        config.env['LIBS'] = []
-
-    tmv_link_file = FindTmvLinkFile(config)
-
-    print('Using TMV_LINK file:',tmv_link_file)
-    try:
-        tmv_link = open(tmv_link_file).read().strip()
-    except:
-        ErrorExit('Could not open TMV link file: ',tmv_link_file)
-    print('    ',tmv_link)
-
-    if sys.platform.find('darwin') != -1:
-        # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
-        # is thread-unsafe for Mac OS 10.7+ prior to XCode 5.1.  Try to give an appropriate warning
-        # if we can tell that this is what the TMV library is using.
-        # Update: Even after 5.1, it still seems to have problems for some systems.
-        major, minor = GetMacVersion()
-        try:
-            p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
-            xcode_version = p.stdout.readlines()[0].decode().split()[1]
-            print('XCode version is',xcode_version)
-        except:
-            # Don't require the user to have xcode installed.
-            xcode_version = None
-            print('Unable to determine XCode version')
-        if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
-                ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
-            print('WARNING: The Apple BLAS library has been found not to be thread safe on')
-            print('         Mac OS versions 10.7+, even across multiple processes (i.e. not')
-            print('         just multiple threads in the same process.)  The symptom is that')
-            print('         `scons tests` may hang when running pytest using multiple')
-            print('         processes.')
-            if xcode_version is None:
-                # If we couldn't run xcodebuild, then don't give any more information about this.
+    # Eigen
+    else:
+        ok = config.CheckHeader('Eigen/Core',language='C++')
+        if not ok:
+            # Try to get the correct include directory from eigency
+            try:
+                import eigency
+                print('Trying eigency installation: ',eigency.get_includes()[2])
+                config.env.Append(CPPPATH=eigency.get_includes()[2])
+                ok = config.CheckHeader('Eigen/Core',language='C++')
+            except ImportError:
                 pass
-            elif xcode_version < '5.1':
-                print('         This seems to have been partially fixed with XCode 5.1, so we')
-                print('         recommend upgrading to the latest XCode version.  However, even')
-                print('         with 5.1, some systems still seem to have problems.')
-                env['BAD_BLAS'] = True
-            else:
-                print('         This seems to have been partially fixed with XCode 5.1, so there')
-                print('         is a good chance you will not have any problems.  But there are')
-                print('         still occasional systems that fail when using multithreading with')
-                print('         programs or modules that link to the BLAS library (such as GalSim).')
-                print('         If you do have problems, the solution is to recompile TMV with')
-                print('         the SCons option "WITH_BLAS=false".')
+        if not ok:
+            ErrorExit(
+                'Eigen/Core not found',
+                'You should either specify the location of Eigen as EIGEN_DIR=... '
+                'or install eigency using: \n'
+                '    pip install git+git://github.com/wouterboomsma/eigency.git')
 
-    # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
-    # puts it into CCFLAGS instead.  Move it over to LINKFLAGS before
-    # merging everything.
-    tmv_link_dict = config.env.ParseFlags(tmv_link)
-    config.env.Append(LIBS=tmv_link_dict['LIBS'])
-    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['LINKFLAGS'])
-    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['CCFLAGS'])
-    config.env.AppendUnique(LIBPATH=tmv_link_dict['LIBPATH'])
-
-    if compiler == 'g++' and '-openmp' in config.env['LINKFLAGS']:
-        config.env['LINKFLAGS'].remove('-openmp')
-        config.env.AppendUnique(LINKFLAGS='-fopenmp')
-
-    # Finally, do the tests for the TMV library linkage:
-    config.CheckTMV()
 
 def DoPyChecks(config):
     # These checks are only relevant for the pysrc compilation:
 
     config.CheckPython()
-    config.CheckPyTMV()
+    if config.env['USE_TMV']:
+        config.CheckPyTMV()
+    else:
+        config.CheckEigen()
     config.CheckNumPy()
     config.CheckPyFITS()
     config.CheckFuture()
     config.CheckCoord()
-    config.CheckBoostPython()
+    if config.env['USE_BOOST']:
+        config.CheckBoostPython()
+    else:
+        config.CheckPyBind11()
     config.CheckPythonExcept()
 
 
@@ -2010,13 +2170,9 @@ def DoConfig(env):
         print('Debugging turned off')
         env.AppendUnique(CPPDEFINES=['NDEBUG'])
     else:
-        if env['TMV_DEBUG']:
+        if env['USE_TMV'] and env['TMV_DEBUG']:
             print('TMV Extra Debugging turned on')
             env.AppendUnique(CPPDEFINES=['TMV_EXTRA_DEBUG'])
-
-    if env['USE_BOOST']:
-        print('Using local boost header files')
-        env.AppendUnique(CPPDEFINES=['USE_BOOST'])
 
     # Don't bother with checks if doing scons -c
     if not env.GetOption('clean'):
@@ -2040,17 +2196,25 @@ def DoConfig(env):
         config = pyenv.Configure(custom_tests = {
             'CheckPython' : CheckPython ,
             'CheckPyTMV' : CheckPyTMV ,
+            'CheckEigen' : CheckEigen ,
             'CheckNumPy' : CheckNumPy ,
             'CheckPyFITS' : CheckPyFITS ,
             'CheckFuture' : CheckFuture ,
             'CheckCoord' : CheckCoord ,
+            'CheckPyBind11' : CheckPyBind11 ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPythonExcept' : CheckPythonExcept ,
             })
         DoPyChecks(config)
         pyenv = config.Finish()
-        env['final_messages'] = pyenv['final_messages']
 
+        # Make sure any -std= compiler flags required for pysrc get propagated back to the
+        # main environment.
+        for flag in pyenv['CCFLAGS']:
+            if 'std=' in flag:
+                env.AppendUnique(CCFLAGS=[flag])
+
+        env['final_messages'] = pyenv['final_messages']
         env['pyenv'] = pyenv
 
         # Turn the cache back on now, since we always want it for the main compilation steps.

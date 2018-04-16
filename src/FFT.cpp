@@ -33,6 +33,26 @@
 
 namespace galsim {
 
+    template <typename T>
+    void FFTW_Array<T>::resize(size_t n)
+    {
+        if (_n != n) {
+            _n = n;
+            // cf. BaseImage::allocateMem, which uses the same code.
+            char* mem = new char[_n * sizeof(T) + sizeof(char*) + 15];
+            _p = reinterpret_cast<T*>( (uintptr_t)(mem + sizeof(char*) + 15) & ~(size_t) 0x0F );
+            ((char**)_p)[-1] = mem;
+        }
+    }
+
+    template <typename T>
+    FFTW_Array<T>::~FFTW_Array()
+    {
+        if (_p) {
+            delete [] ((char**)_p)[-1];
+        }
+    }
+
     KTable::KTable(int N, double dk, std::complex<double> value) : _dk(dk), _invdk(1./dk)
     {
         if (N<=0) throw FFTError("KTable size <=0");
@@ -1113,5 +1133,7 @@ namespace galsim {
         return kt;
     }
 
+    template class FFTW_Array<double>;
+    template class FFTW_Array<std::complex<double> >;
 
 }

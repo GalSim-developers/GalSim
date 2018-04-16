@@ -20,16 +20,9 @@ from __future__ import print_function
 import time
 import numpy as np
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    import os
-    import sys
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # Use a deterministic random number generator so we don't fail tests because of rare flukes
 # in the random numbers.

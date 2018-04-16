@@ -12,8 +12,12 @@ Dependency Changes
   GalSim as the Angle and CelestialCoord classes.  We moved it to a separate
   repo so people could more easily use this functionality without requiring all
   of GalSim as a dependency. (#809b)
-- Removed dependency on boost.
-- Added dependency on (pybind11 or cffi...)
+- Removed dependency on boost. (#809)
+- Removed dependency on TMV. (#809)
+- Added dependency on pybind11. (#809)
+- Added dependency on Eigen. (#809)
+- FFTW is now the only dependency that pip cannot handle automatically. (#809)
+- Officially no longer support Python 2.6. (Pretty sure no one cares.)
 
 
 API Changes
@@ -43,6 +47,8 @@ API Changes
   InclinedSersic has been changed to disk_half_light_radius, since it does
   not really correspond to the realized half-light radius of the inclined
   profile (unless the inclination angle is 0 degrees). (#809f)
+- Removed galsim_yaml and galsim_json scripts, which were essentially just
+  aliases for galsim -f yaml and galsim -f json respectively. (#809f)
 
 
 Bug Fixes

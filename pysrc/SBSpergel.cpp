@@ -17,23 +17,19 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBSpergel.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBSpergel()
+    void pyExportSBSpergel(PY_MODULE& _galsim)
     {
-        bp::class_<SBSpergel,bp::bases<SBProfile> >("SBSpergel",bp::no_init)
-            .def(bp::init<double,double,double, GSParams>())
+        py::class_<SBSpergel, BP_BASES(SBProfile)>(GALSIM_COMMA "SBSpergel" BP_NOINIT)
+            .def(py::init<double,double,double, GSParams>())
             .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux)
             .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius);
 
-        bp::def("SpergelCalculateHLR", &SpergelCalculateHLR);
+        GALSIM_DOT def("SpergelCalculateHLR", &SpergelCalculateHLR);
     }
 
 } // namespace galsim

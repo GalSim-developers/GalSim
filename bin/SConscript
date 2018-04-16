@@ -7,7 +7,7 @@ RunUninstall = env['_RunUninstall']
 
 install_subdir = 'bin'
 
-scripts = [ 'galsim' , 'galsim_yaml', 'galsim_json', 'galsim_download_cosmos' ]
+scripts = [ 'galsim' , 'galsim_download_cosmos' ]
 targets = [ env.ExecScript(script, script + '.py') for script in scripts ]
 
 AlwaysBuild(targets)

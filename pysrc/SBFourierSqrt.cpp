@@ -17,19 +17,15 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBFourierSqrt.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBFourierSqrt()
+    void pyExportSBFourierSqrt(PY_MODULE& _galsim)
     {
-        bp::class_< SBFourierSqrt, bp::bases<SBProfile> >("SBFourierSqrt", bp::no_init)
-            .def(bp::init<const SBProfile &, GSParams>());
+        py::class_<SBFourierSqrt, BP_BASES(SBProfile)>(GALSIM_COMMA "SBFourierSqrt" BP_NOINIT)
+            .def(py::init<const SBProfile &, GSParams>());
     }
 
 } // namespace galsim

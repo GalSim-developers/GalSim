@@ -17,22 +17,18 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBSecondKick.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBSecondKick()
+    void pyExportSBSecondKick(PY_MODULE& _galsim)
     {
-        bp::class_<SBSecondKick,bp::bases<SBProfile> >("SBSecondKick", bp::no_init)
-            .def(bp::init<double,double,double,GSParams>())
+        py::class_<SBSecondKick, BP_BASES(SBProfile)>(GALSIM_COMMA "SBSecondKick" BP_NOINIT)
+            .def(py::init<double,double,double,GSParams>())
             .def("getDelta", &SBSecondKick::getDelta)
             .def("structureFunction", &SBSecondKick::structureFunction)
             ;
-    };
+    }
 
 } // namespace galsim

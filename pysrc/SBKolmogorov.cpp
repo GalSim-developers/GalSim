@@ -17,19 +17,15 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBKolmogorov.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBKolmogorov()
+    void pyExportSBKolmogorov(PY_MODULE& _galsim)
     {
-        bp::class_<SBKolmogorov,bp::bases<SBProfile> >("SBKolmogorov", bp::no_init)
-            .def(bp::init<double,double,GSParams>());
+        py::class_<SBKolmogorov, BP_BASES(SBProfile)>(GALSIM_COMMA "SBKolmogorov" BP_NOINIT)
+            .def(py::init<double,double,GSParams>());
     }
 
 } // namespace galsim

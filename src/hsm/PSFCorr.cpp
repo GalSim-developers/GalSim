@@ -47,12 +47,21 @@ damages of any kind.
 
 #include <cstring>
 #include <string>
+
+#ifdef USE_TMV
 #define TMV_NDEBUG
 #include "TMV.h"
-#include "hsm/PSFCorr.h"
+typedef tmv::Matrix<double> MatrixXd;
+typedef tmv::Vector<double> VectorXd;
+#else
+#include "Eigen/Dense"
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
+#endif
 
-#include "FFT.h"
+#include "hsm/PSFCorr.h"
 #include "math/Nan.h"
+#include "FFT.h"
 
 namespace galsim {
 namespace hsm {
@@ -69,7 +78,7 @@ namespace hsm {
 
     void find_mom_2(
         ConstImageView<double> data,
-        tmv::Matrix<double>& moments, int max_order,
+        MatrixXd& moments, int max_order,
         double& x0, double& y0, double& sigma, double convergence_threshold, int& num_iter,
         const HSMParams& hsmparams);
 
@@ -262,7 +271,7 @@ namespace hsm {
             results.moments_status = 0;
         } else {
             dbg<<"About to get moments using find_mom_2"<<std::endl;
-            tmv::Matrix<double> moments(3,3);
+            MatrixXd moments(3,3);
             double sig = guess_sig;
             find_mom_2(masked_object_image_cview, moments, 2,
                        results.moments_centroid.x, results.moments_centroid.y, sig,
@@ -439,7 +448,7 @@ namespace hsm {
      */
 
     void qho1d_wf_1(long nx, double xmin, double xstep, long Nmax, double sigma,
-                    tmv::Matrix<double>& psi)
+                    MatrixXd& psi)
     {
 
         double beta, beta2__2, norm0;
@@ -509,7 +518,7 @@ namespace hsm {
      */
     void find_mom_1(
         ConstImageView<double> data,
-        tmv::Matrix<double>& moments, int max_order,
+        MatrixXd& moments, int max_order,
         double x0, double y0, double sigma)
     {
 
@@ -520,14 +529,21 @@ namespace hsm {
         int ny = data.getNRow();
         int sx = data.getStep();
         int sy = data.getStride();
-        tmv::Matrix<double> psi_x(nx, max_order+1);
-        tmv::Matrix<double> psi_y(ny, max_order+1);
+        MatrixXd psi_x(nx, max_order+1);
+        MatrixXd psi_y(ny, max_order+1);
 
         /* Compute wavefunctions */
         qho1d_wf_1(nx, (double)xmin - x0, 1., max_order, sigma, psi_x);
         qho1d_wf_1(ny, (double)ymin - y0, 1., max_order, sigma, psi_y);
 
+#ifdef USE_TMV
         tmv::ConstMatrixView<double> mdata(data.getData(),nx,ny,sx,sy,tmv::NonConj);
+#else
+        using Eigen::Dynamic;
+        using Eigen::Stride;
+        Eigen::Map<const MatrixXd,0,Stride<Dynamic,Dynamic> > mdata(
+            data.getData(),nx,ny, Stride<Dynamic,Dynamic>(sy,sx));
+#endif
 
         moments = psi_x.transpose() * mdata * psi_y;
     }
@@ -553,7 +569,7 @@ namespace hsm {
 
     void find_mom_2(
         ConstImageView<double> data,
-        tmv::Matrix<double>& moments, int max_order,
+        MatrixXd& moments, int max_order,
         double& x0, double& y0, double& sigma, double convergence_threshold, int& num_iter,
         const HSMParams& hsmparams)
     {
@@ -562,7 +578,7 @@ namespace hsm {
         double convergence_factor = 1; /* Ensure at least one iteration. */
 
         num_iter = 0;
-        tmv::Matrix<double> iter_moments(hsmparams.adapt_order+1,hsmparams.adapt_order+1);
+        MatrixXd iter_moments(hsmparams.adapt_order+1,hsmparams.adapt_order+1);
 
 #ifdef N_CHECKVAL
         if (convergence_threshold <= 0) {
@@ -664,7 +680,7 @@ namespace hsm {
         double Inv2Minv_xx = 0.5/Minv_xx; // Will be useful later...
 
         /* Generate Minv_xx__x_x0__x_x0 array */
-        tmv::Vector<double> Minv_xx__x_x0__x_x0(xmax-xmin+1);
+        VectorXd Minv_xx__x_x0__x_x0(xmax-xmin+1);
         for(int x=xmin;x<=xmax;x++) Minv_xx__x_x0__x_x0[x-xmin] = Minv_xx*(x-x0)*(x-x0);
 
         /* Now let's initialize the outputs and then sum
@@ -725,7 +741,11 @@ namespace hsm {
             const double* imageptr = data.getPtr(ix1,y);
             const int step = data.getStep();
             double x_x0 = ix1 - x0;
+#ifdef USE_TMV
             const double* mxxptr = Minv_xx__x_x0__x_x0.cptr() + ix1-xmin;
+#else
+            const double* mxxptr = Minv_xx__x_x0__x_x0.data() + ix1-xmin;
+#endif
             for(int x=ix1;x<=ix2;++x,x_x0+=1.,imageptr+=step) {
                 /* Compute displacement from weight centroid, then
                  * get elliptical radius and weight.
@@ -916,9 +936,20 @@ namespace hsm {
         dbg<<"image3: "<<nx3<<','<<ny3<<','<<sx3<<','<<sy3<<std::endl;
 
         // Convenient matrix views into the images:
+#ifdef USE_TMV
         tmv::ConstMatrixView<double> mIm1(image1.getData(),nx1,ny1,sx1,sy1,tmv::NonConj);
         tmv::ConstMatrixView<double> mIm2(image2.getData(),nx2,ny2,sx2,sy2,tmv::NonConj);
         tmv::MatrixView<double> mIm3(image_out.getData(),nx3,ny3,sx3,sy3,tmv::NonConj);
+#else
+        using Eigen::Dynamic;
+        using Eigen::Stride;
+        Eigen::Map<const MatrixXd,0,Stride<Dynamic,Dynamic> > mIm1(
+            image1.getData(),nx1,ny1, Stride<Dynamic,Dynamic>(sy1,sx1));
+        Eigen::Map<const MatrixXd,0,Stride<Dynamic,Dynamic> > mIm2(
+            image2.getData(),nx2,ny2, Stride<Dynamic,Dynamic>(sy2,sx2));
+        Eigen::Map<MatrixXd,0,Stride<Dynamic,Dynamic> > mIm3(
+            image_out.getData(),nx3,ny3, Stride<Dynamic,Dynamic>(sy3,sx3));
+#endif
         dbg<<"mIm1 = "<<mIm1<<std::endl;
         dbg<<"mIm2 = "<<mIm2<<std::endl;
         dbg<<"mIm3 = "<<mIm3<<std::endl;
@@ -938,10 +969,18 @@ namespace hsm {
 
         // Make an XTable for image1:
         XTable xtab(N,1.);
+#ifdef USE_TMV
         tmv::MatrixView<double> mxt(xtab.getArray(),N,N,1,N,tmv::NonConj);
+#else
+        Eigen::Map<MatrixXd> mxt(xtab.getArray(),N,N);
+#endif
         int offset_x1 = N/4;
         int offset_y1 = N/4;
+#ifdef USE_TMV
         mxt.subMatrix(offset_x1,offset_x1+nx1, offset_y1,offset_y1+ny1) = mIm1;
+#else
+        mxt.block(offset_x1,offset_y1,nx1,ny1) = mIm1;
+#endif
         dbg<<"mxt = "<<mxt<<std::endl;
 
         // Do the FFT:
@@ -951,7 +990,11 @@ namespace hsm {
         mxt.setZero();
         int offset_x2 = N/4;
         int offset_y2 = N/4;
+#ifdef USE_TMV
         mxt.subMatrix(offset_x2,offset_x2+nx2, offset_y2,offset_y2+ny2) = mIm2;
+#else
+        mxt.block(offset_x2,offset_y2,nx2,ny2) = mIm2;
+#endif
         dbg<<"mxt = "<<mxt<<std::endl;
 
         // Do the second FFT and multiply:
@@ -987,10 +1030,14 @@ namespace hsm {
         dbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
         dbg<<"mi1,mi2,mj1,mj2 = "<<mi1<<','<<mi2<<','<<mj1<<','<<mj2<<std::endl;
 
+#ifdef USE_TMV
         dbg<<"Add portion: "<<mxt.subMatrix(mi1,mi2,mj1,mj2)<<std::endl;;
         dbg<<"Add to: "<<mIm3.subMatrix(i1,i2,j1,j2)<<std::endl;
         mIm3.subMatrix(i1,i2,j1,j2) += mxt.subMatrix(mi1,mi2,mj1,mj2);
 #else
+        mIm3.block(i1,j1,i2-i1,j2-j1) += mxt.block(mi1,mj1,mi2-mi1,mj2-mj1);
+#endif
+#else  // Old code.  Not used.
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
         double xr,xi,yr,yi;
         long i,i_conj,j,k,ii,ii_conj;
@@ -1011,11 +1058,11 @@ namespace hsm {
         dim4 = dim3 << 1;
 
         /* Allocate & initialize memory */
-        tmv::Matrix<double> m1(dim1,dim1,0.);
-        tmv::Matrix<double> m2(dim1,dim1,0.);
-        tmv::Matrix<double> mout(dim1,dim1,0.);
-        tmv::Vector<double> Ax(dim4,0.);
-        tmv::Vector<double> Bx(dim4,0.);
+        MatrixXd m1(dim1,dim1,0.);
+        MatrixXd m2(dim1,dim1,0.);
+        MatrixXd mout(dim1,dim1,0.);
+        VectorXd Ax(dim4,0.);
+        VectorXd Bx(dim4,0.);
 
         /* Build input maps */
         for(int x=image1.getXMin();x<=image1.getXMax();x++)
@@ -1075,8 +1122,13 @@ namespace hsm {
                 image_out(i,j) += mout(i-out_xref,j-out_yref);
 #endif
         dbg<<"Done: mIm3 => "<<mIm3<<std::endl;
+#ifdef USE_TMV
         dbg<<"maximum is "<<mIm3.maxAbsElement()<<std::endl;
         dbg<<"Center is "<<mIm3.subMatrix(nx3/2-2,nx3/2+2,ny3/2-2,ny3/2+2)<<std::endl;
+#else
+        dbg<<"maximum is "<<mIm3.array().abs().maxCoeff()<<std::endl;
+        dbg<<"Center is "<<mIm3.block(nx3/2-2,ny3/2-2,4,4)<<std::endl;
+#endif
     }
 
     void matrix22_invert(double& a, double& b, double& c, double& d)
@@ -1287,8 +1339,8 @@ namespace hsm {
          */
         e1 = e2 = R = hsmparams.failed_moments;
 
-        tmv::Matrix<double> moments(hsmparams.ksb_moments_max+1,hsmparams.ksb_moments_max+1);
-        tmv::Matrix<double> psfmoms(hsmparams.ksb_moments_max+1,hsmparams.ksb_moments_max+1);
+        MatrixXd moments(hsmparams.ksb_moments_max+1,hsmparams.ksb_moments_max+1);
+        MatrixXd psfmoms(hsmparams.ksb_moments_max+1,hsmparams.ksb_moments_max+1);
 
         /* Determine the adaptive centroid and variance of the measured galaxy */
         x0 = x0_gal;

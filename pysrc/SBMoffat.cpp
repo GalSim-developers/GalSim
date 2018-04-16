@@ -17,22 +17,18 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBMoffat.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBMoffat()
+    void pyExportSBMoffat(PY_MODULE& _galsim)
     {
-        bp::class_<SBMoffat,bp::bases<SBProfile> >("SBMoffat", bp::no_init)
-            .def(bp::init<double,double,double,double, GSParams>())
+        py::class_<SBMoffat, BP_BASES(SBProfile)>(GALSIM_COMMA "SBMoffat" BP_NOINIT)
+            .def(py::init<double,double,double,double, GSParams>())
             .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius);
 
-        bp::def("MoffatCalculateSRFromHLR", &MoffatCalculateScaleRadiusFromHLR);
+        GALSIM_DOT def("MoffatCalculateSRFromHLR", &MoffatCalculateScaleRadiusFromHLR);
     }
 
 } // namespace galsim

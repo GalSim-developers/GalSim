@@ -34,7 +34,11 @@
 
 #elif defined(BOOST_ENABLE_ASSERT_HANDLER)
 
+#ifdef USE_BOOST
 #include <boost/current_function.hpp>
+#else
+#include "galsim/boost1_48_0/current_function.hpp"
+#endif
 
 namespace boost
 {
@@ -63,8 +67,6 @@ namespace boost
 
 #elif defined(BOOST_ENABLE_ASSERT_HANDLER)
 
-  #include <boost/current_function.hpp>
-
   namespace boost
   {
     void assertion_failed_msg(char const * expr, char const * msg,
@@ -80,7 +82,6 @@ namespace boost
     #define BOOST_ASSERT_HPP
     #include <cstdlib>
     #include <iostream>
-    #include <boost/current_function.hpp>
 
     //  IDE's like Visual Studio perform better if output goes to std::cout or
     //  some other stream, so allow user to configure output stream:

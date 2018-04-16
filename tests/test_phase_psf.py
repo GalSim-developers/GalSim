@@ -19,16 +19,9 @@
 from __future__ import print_function
 import os
 import numpy as np
+
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-
-except ImportError:
-    import sys
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.

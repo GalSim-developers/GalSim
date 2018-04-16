@@ -17,16 +17,12 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp" // header that includes Python.h always needs to come first
-
+#include "PyBind11Helper.h"
 #include "Table.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    static Table* makeTable(size_t iargs, size_t ivals, int N, const char* interp_c)
+    static Table* MakeTable(size_t iargs, size_t ivals, int N, const char* interp_c)
     {
         const double* args = reinterpret_cast<double*>(iargs);
         const double* vals = reinterpret_cast<double*>(ivals);
@@ -41,14 +37,14 @@ namespace galsim {
         return new Table(args, vals, N, i);
     }
 
-    static void interpMany(const Table& table, size_t iargs, size_t ivals, int N)
+    static void InterpMany(const Table& table, size_t iargs, size_t ivals, int N)
     {
         const double* args = reinterpret_cast<const double*>(iargs);
         double* vals = reinterpret_cast<double*>(ivals);
         table.interpMany(args, vals, N);
     }
 
-    static Table2D* makeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
+    static Table2D* MakeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
                                 const char* interp_c)
     {
         const double* x = reinterpret_cast<const double*>(ix);
@@ -64,7 +60,7 @@ namespace galsim {
         return new Table2D(x, y, vals, Nx, Ny, i);
     }
 
-    static void interpMany2D(const Table2D& table2d, size_t ix, size_t iy, size_t ivals, int N)
+    static void InterpMany2D(const Table2D& table2d, size_t ix, size_t iy, size_t ivals, int N)
     {
         const double* x = reinterpret_cast<const double*>(ix);
         const double* y = reinterpret_cast<const double*>(iy);
@@ -88,19 +84,17 @@ namespace galsim {
         table2d.gradientMany(x, y, dfdx, dfdy, N);
     }
 
-    void pyExportTable()
+    void pyExportTable(PY_MODULE& _galsim)
     {
-        bp::class_<Table > pyTable("_LookupTable", bp::no_init);
-        pyTable
-            .def("__init__", bp::make_constructor(&makeTable, bp::default_call_policies()))
+        py::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
+            .def(PY_INIT(&MakeTable))
             .def("interp", &Table::lookup)
-            .def("interpMany", &interpMany);
+            .def("interpMany", &InterpMany);
 
-        bp::class_<Table2D > pyTable2D("_LookupTable2D", bp::no_init);
-        pyTable2D
-            .def("__init__", bp::make_constructor(&makeTable2D, bp::default_call_policies()))
+        py::class_<Table2D >(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
+            .def(PY_INIT(&MakeTable2D))
             .def("interp", &Table2D::lookup)
-            .def("interpMany", &interpMany2D)
+            .def("interpMany", &InterpMany2D)
             .def("gradient", &Gradient)
             .def("gradientMany", &GradientMany);
     }

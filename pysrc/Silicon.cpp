@@ -17,13 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp" // header that includes Python.h always needs to come first
-
+#include "PyBind11Helper.h"
 #include "Silicon.h"
 #include "Random.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
@@ -31,31 +27,27 @@ namespace galsim {
     static void WrapTemplates(W& wrapper) {
         typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
                                                  ImageView<T>, Position<int>);
-        wrapper
-            .def("accumulate", (accumulate_fn)&Silicon::accumulate);
+        wrapper.def("accumulate", (accumulate_fn)&Silicon::accumulate);
     }
 
-
-    static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
-                                double Nrecalc, double DiffStep, double PixelSize,
-                                double SensorThickness, size_t idata,
-                                const Table& treeRingTable,
-                                const Position<double>& treeRingCenter,
-                                const Table& abs_length_table)
+    static Silicon* MakeSilicon(
+        int NumVertices, double NumElect, int Nx, int Ny, int QDist,
+        double Nrecalc, double DiffStep, double PixelSize,
+        double SensorThickness, size_t idata,
+        const Table& treeRingTable,
+        const Position<double>& treeRingCenter,
+        const Table& abs_length_table)
     {
         double* data = reinterpret_cast<double*>(idata);
-        int NumPolys = Nx * Ny + 2;
-        int Nv = 4 * NumVertices + 4;
         return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                            Nrecalc, DiffStep, PixelSize, SensorThickness, data,
                            treeRingTable, treeRingCenter, abs_length_table);
     }
 
-    void pyExportSilicon()
+    void pyExportSilicon(PY_MODULE& _galsim)
     {
-        bp::class_<Silicon> pySilicon("Silicon", bp::no_init);
-        pySilicon
-            .def("__init__", bp::make_constructor(&MakeSilicon, bp::default_call_policies()));
+        py::class_<Silicon> pySilicon(GALSIM_COMMA "Silicon" BP_NOINIT);
+        pySilicon.def(PY_INIT(&MakeSilicon));
 
         WrapTemplates<double>(pySilicon);
         WrapTemplates<float>(pySilicon);

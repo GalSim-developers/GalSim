@@ -17,35 +17,36 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBConvolve.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    static SBConvolve* construct(const bp::list& slist, bool real_space, GSParams gsparams)
+#ifdef USE_BOOST
+    static SBConvolve* construct(
+        const py::object& iterable, bool real_space, GSParams gsparams)
     {
+        py::stl_input_iterator<SBProfile> iter(iterable), end;
         std::list<SBProfile> plist;
-        int n = len(slist);
-        for(int i=0; i<n; ++i) {
-            plist.push_back(bp::extract<const SBProfile&>(slist[i]));
-        }
+        for(; iter != end; ++iter) plist.push_back(*iter);
         return new SBConvolve(plist, real_space, gsparams);
     }
-
-    void pyExportSBConvolve()
+#else
+    static SBConvolve* construct(
+        const std::list<SBProfile>& plist, bool real_space, GSParams gsparams)
     {
-        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
-            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
+        return new SBConvolve(plist, real_space, gsparams);
+    }
+#endif
 
-        bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
-            .def(bp::init<const SBProfile&, bool, GSParams>());
-
-        bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
-            .def(bp::init<const SBProfile&, bool, GSParams>());
+    void pyExportSBConvolve(PY_MODULE& _galsim)
+    {
+        py::class_<SBConvolve, BP_BASES(SBProfile)>(GALSIM_COMMA "SBConvolve" BP_NOINIT)
+            .def(PY_INIT(&construct));
+        py::class_<SBAutoConvolve, BP_BASES(SBProfile)>(GALSIM_COMMA "SBAutoConvolve" BP_NOINIT)
+            .def(py::init<const SBProfile&, bool, GSParams>());
+        py::class_<SBAutoCorrelate, BP_BASES(SBProfile)>(GALSIM_COMMA "SBAutoCorrelate" BP_NOINIT)
+            .def(py::init<const SBProfile&, bool, GSParams>());
     }
 
 } // namespace galsim

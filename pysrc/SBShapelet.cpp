@@ -17,12 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBShapelet.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
@@ -35,24 +31,26 @@ namespace galsim {
 
         double* data = reinterpret_cast<double*>(idata);
         int size = PQIndex::size(order);
-        tmv::VectorView<double> v = tmv::VectorViewOf(data, size);
-        v = bvec.rVector();
+        for (int i=0; i<size; ++i) data[i] = bvec.rVector()[i];
     }
 
-    static SBShapelet* construct(double sigma, int order, size_t idata, GSParams gsparams)
+    static SBShapelet* construct(
+        double sigma, int order, size_t idata, GSParams gsparams)
     {
         double* data = reinterpret_cast<double*>(idata);
         int size = PQIndex::size(order);
-        LVector bvec(order, tmv::VectorViewOf(data, size));
+        VectorXd v(size);
+        for (int i=0; i<size; ++i) v[i] = data[i];
+        LVector bvec(order, v);
         return new SBShapelet(sigma, bvec, gsparams);
     }
 
-    void pyExportSBShapelet()
+    void pyExportSBShapelet(PY_MODULE& _galsim)
     {
-        bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
-            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
+        py::class_<SBShapelet, BP_BASES(SBProfile)>(GALSIM_COMMA "SBShapelet" BP_NOINIT)
+            .def(PY_INIT(&construct));
 
-        bp::def("ShapeletFitImage", &fit);
+        GALSIM_DOT def("ShapeletFitImage", &fit);
     }
 
 } // namespace galsim

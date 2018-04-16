@@ -17,12 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include <boost/python.hpp> // header that includes Python.h always needs to come first
-
+#include "PyBind11Helper.h"
 #include "PhotonArray.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
@@ -47,11 +43,11 @@ namespace galsim {
         return new PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
     }
 
-    void pyExportPhotonArray()
+    void pyExportPhotonArray(PY_MODULE& _galsim)
     {
-        bp::class_<PhotonArray> pyPhotonArray("PhotonArray", bp::no_init);
+        py::class_<PhotonArray> pyPhotonArray(GALSIM_COMMA "PhotonArray" BP_NOINIT);
         pyPhotonArray
-            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()))
+            .def(PY_INIT(&construct))
             .def("convolve", &PhotonArray::convolve);
         WrapTemplates<double>(pyPhotonArray);
         WrapTemplates<float>(pyPhotonArray);

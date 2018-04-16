@@ -17,19 +17,15 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBDeltaFunction.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBDeltaFunction()
+    void pyExportSBDeltaFunction(PY_MODULE& _galsim)
     {
-        bp::class_<SBDeltaFunction,bp::bases<SBProfile> >("SBDeltaFunction", bp::no_init)
-            .def(bp::init<double, GSParams>());
+        py::class_<SBDeltaFunction, BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeltaFunction" BP_NOINIT)
+            .def(py::init<double, GSParams>());
     }
 
 } // namespace galsim

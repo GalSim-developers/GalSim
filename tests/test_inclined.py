@@ -24,17 +24,11 @@ from __future__ import print_function
 from copy import deepcopy
 import os
 import sys
-
-from galsim_test_helpers import *
 import numpy as np
 
+import galsim
+from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # Save images used in regression testing for manual inspection?
 save_profiles = False

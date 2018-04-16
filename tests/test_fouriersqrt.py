@@ -21,17 +21,12 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images.
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.

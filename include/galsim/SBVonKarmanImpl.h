@@ -45,7 +45,7 @@ namespace galsim {
 
         double stepK() const { return _stepk; }
         double maxK() const { return _maxk; }
-        double getDeltaAmplitude() const { return _deltaAmplitude; }
+        double getDelta() const { return _delta; }
         double getHalfLightRadius() const { return _hlr; }
 
         double kValue(double) const;
@@ -66,8 +66,8 @@ namespace galsim {
         double _L053; // (r0/L0)^(-5/3)
         double _stepk;
         double _maxk;
-        double _deltaAmplitude;
-        double _deltaScale;  // 1/(1-_deltaAmplitude)
+        double _delta;
+        double _deltaScale;  // 1/(1-_delta)
         double _lam_arcsec;  // _lam * ARCSEC2RAD / 2pi
         bool _doDelta;
         double _hlr; // half-light-radius
@@ -102,7 +102,7 @@ namespace galsim {
 
         double maxK() const;
         double stepK() const;
-        double getDeltaAmplitude() const;
+        double getDelta() const;
         double getHalfLightRadius() const;
 
         Position<double> centroid() const { return Position<double>(0., 0.); }

@@ -21,16 +21,10 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 testshape = (512, 512)  # shape of image arrays for all tests

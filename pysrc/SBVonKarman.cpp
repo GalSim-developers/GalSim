@@ -17,20 +17,16 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBVonKarman.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBVonKarman()
+    void pyExportSBVonKarman(PY_MODULE& _galsim)
     {
-        bp::class_<SBVonKarman,bp::bases<SBProfile> >("SBVonKarman", bp::no_init)
-            .def(bp::init<double,double,double,double,double,bool,GSParams>())
-            .def("getDeltaAmplitude", &SBVonKarman::getDeltaAmplitude)
+        py::class_<SBVonKarman, BP_BASES(SBProfile)>(GALSIM_COMMA "SBVonKarman" BP_NOINIT)
+            .def(py::init<double,double,double,double,double,bool,GSParams>())
+            .def("getDelta", &SBVonKarman::getDelta)
             .def("getHalfLightRadius", &SBVonKarman::getHalfLightRadius)
             .def("structureFunction", &SBVonKarman::structureFunction)
             ;

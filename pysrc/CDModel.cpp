@@ -17,29 +17,25 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "CDModel.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
     template <typename T>
-    static void WrapTemplates()
+    static void WrapTemplates(PY_MODULE& _galsim)
     {
         typedef void (*ApplyCD_func)(ImageView<T>& , const BaseImage<T>& ,
                                      const BaseImage<double>& , const BaseImage<double>& ,
                                      const BaseImage<double>& , const BaseImage<double>& ,
                                      const int , const double );
-        bp::def("_ApplyCD", ApplyCD_func(&ApplyCD));
+        GALSIM_DOT def("_ApplyCD", ApplyCD_func(&ApplyCD));
     }
 
-    void pyExportCDModel()
+    void pyExportCDModel(PY_MODULE& _galsim)
     {
-        WrapTemplates<float>();
-        WrapTemplates<double>();
+        WrapTemplates<float>(_galsim);
+        WrapTemplates<double>(_galsim);
     }
 
 } // namespace galsim

@@ -73,14 +73,6 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        // The above functions just build a list of (x,y) values and then call these:
-        void fillXValue(tmv::MatrixView<double> val,
-                        const tmv::Matrix<double>& x,
-                        const tmv::Matrix<double>& y) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        const tmv::Matrix<double>& kx,
-                        const tmv::Matrix<double>& ky) const;
-
         std::string serialize() const;
 
     private:
