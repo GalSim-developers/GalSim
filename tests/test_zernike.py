@@ -404,6 +404,9 @@ def test_gradient():
                 Z.evalCartesianGrad(x, y),
                 rtol=1e-5, atol=1e-5)
 
+    # Make sure the gradient of the zero-Zernike works
+    Z = galsim.zernike.Zernike([0,0])
+    assert Z == Z.gradX == Z.gradX.gradX == Z.gradY == Z.gradY.gradY
 
 if __name__ == "__main__":
     test_Zernike_orthonormality()

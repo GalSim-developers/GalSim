@@ -265,10 +265,7 @@ def __noll_coef_array_xy_gradx(jmax, obscuration):
     out = np.zeros(shape, dtype=np.float64)
     for j in range(1, jmax+1):
         out[:,:,j-1] = _xycoef_gradx(_rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2]), shape=shape[0:2])
-    if jmax > 1:
-        return out[:-1, :-1, :]
-    else:
-        return out
+    return out[:-1, :-1, :]
 _noll_coef_array_xy_gradx = LRU_Cache(__noll_coef_array_xy_gradx)
 
 
@@ -289,10 +286,7 @@ def __noll_coef_array_xy_grady(jmax, obscuration):
     out = np.zeros(shape, dtype=np.float64)
     for j in range(1, jmax+1):
         out[:,:,j-1] = _xycoef_grady(_rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2]), shape=shape[0:2])
-    if jmax > 1:
-        return out[:-1,:-1,:]
-    else:
-        return out
+    return out[:-1, :-1, :]
 _noll_coef_array_xy_grady = LRU_Cache(__noll_coef_array_xy_grady)
 
 
