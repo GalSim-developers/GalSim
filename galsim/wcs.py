@@ -877,13 +877,13 @@ class UniformWCS(EuclideanWCS):
     def isUniform(self): return True
 
     # These can also just pass through to the _localwcs attribute.
-    def _u(self, x, y, color):
+    def _u(self, x, y, color=None):
         return self._local_wcs._u(x,y)
-    def _v(self, x, y, color):
+    def _v(self, x, y, color=None):
         return self._local_wcs._v(x,y)
-    def _x(self, u, v, color):
+    def _x(self, u, v, color=None):
         return self._local_wcs._x(u,v)
-    def _y(self, u, v, color):
+    def _y(self, u, v, color=None):
         return self._local_wcs._y(u,v)
 
     # For UniformWCS, the local WCS is an attribute.  Just return it.

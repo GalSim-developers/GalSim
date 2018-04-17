@@ -13,6 +13,8 @@ API Changes
   PowerSpectrum methods.  Now they either return a single value if the input
   `pos` is a single Position or a numpy array if multiple positions were
   provided. (#855)
+- When using LookupTable, SED or Bandpass as a function only return either a
+  float or a numpy array. (#955)
 
 
 Dependency Changes
@@ -46,6 +48,8 @@ New Features
   geometric photon shooting. (#864)
 - Add option to use circular weight function in HSM adaptive moments code. (#917)
 - Add VonKarman profile GSObject. (#940)
+- Add PhotonDCR surface op to apply DCR for photon shooting. (#955)
+- Allow astropy units as wave_type in Bandpass. (#955)
 
 
 New config features

@@ -833,22 +833,22 @@ def test_tabulated():
     assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, units=True)
     assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, bandlimit='none')
 
-    # check that when calling LookupTable, the outputs have the same form as inputs
+    # check that when calling LookupTable, you can provide a scalar, list, tuple or array
     tab = galsim.LookupTable(k_arr, p_arr)
     k = 0.5
     assert type(tab(k)) == float
     k = (0.5, 1.5)
     result = tab(k)
-    assert type(result) == tuple and len(result) == len(k)
+    assert len(result) == len(k)
     k = list(k)
     result = tab(k)
-    assert type(result) == list and len(result) == len(k)
+    assert len(result) == len(k)
     k = np.array(k)
     result = tab(k)
-    assert type(result) == np.ndarray and len(result) == len(k)
+    assert len(result) == len(k)
     k = 0.01+np.zeros((2,2))
     result = tab(k)
-    assert type(result) == np.ndarray and result.shape == k.shape
+    assert result.shape == k.shape
 
     # check for expected behavior with log interpolation
     k = (1., 2., 3.)

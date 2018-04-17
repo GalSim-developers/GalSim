@@ -1137,14 +1137,17 @@ def combine_wave_list(*args):
     red_limit = np.inf
     wave_list = np.array([], dtype=float)
     for obj in args:
-        if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
+        if hasattr(obj, 'blue_limit'):
             blue_limit = max(blue_limit, obj.blue_limit)
-        if hasattr(obj, 'red_limit') and obj.red_limit is not None:
+        if hasattr(obj, 'red_limit'):
             red_limit = min(red_limit, obj.red_limit)
         wave_list = np.union1d(wave_list, obj.wave_list)
     wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
     if blue_limit > red_limit:
         raise RuntimeError("Empty wave_list intersection.")
+    # Make sure both limits are included.
+    if len(wave_list) > 0 and (wave_list[0] != blue_limit or wave_list[-1] != red_limit):
+        wave_list = np.union1d([blue_limit, red_limit], wave_list)
     return wave_list, blue_limit, red_limit
 
 def functionize(f):
@@ -1434,3 +1437,13 @@ def nCr(n, r):
         return factorial(n) // (factorial(r) * factorial(n-r))
     else:
         return 0
+
+# From http://code.activestate.com/recipes/81253-weakmethod/
+class WeakMethod(object):
+    def __init__(self, f):
+        self.f = f.__func__
+        self.c = weakref.ref(f.__self__)
+    def __call__(self, *args):
+        if self.c() is None :
+            raise TypeError('Method called on dead object')
+        return self.f(self.c(), *args)

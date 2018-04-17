@@ -1308,6 +1308,7 @@ class ChromaticAtmosphere(ChromaticObject):
     @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
     def __init__(self, base_obj, base_wavelength, scale_unit=galsim.arcsec, **kwargs):
+        from .dcr import parse_dcr_angles
 
         self.separable = False
         self.interpolated = False
@@ -1321,41 +1322,18 @@ class ChromaticAtmosphere(ChromaticObject):
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
-
         self.alpha = kwargs.pop('alpha', -0.2)
-        # Determine zenith_angle and parallactic_angle from kwargs
-        if 'zenith_angle' in kwargs:
-            self.zenith_angle = kwargs.pop('zenith_angle')
-            self.parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
-            if not isinstance(self.zenith_angle, galsim.Angle) or \
-                    not isinstance(self.parallactic_angle, galsim.Angle):
-                raise TypeError("zenith_angle and parallactic_angle must be galsim.Angles!")
-        elif 'obj_coord' in kwargs:
-            obj_coord = kwargs.pop('obj_coord')
-            if 'zenith_coord' in kwargs:
-                zenith_coord = kwargs.pop('zenith_coord')
-                self.zenith_angle, self.parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, zenith_coord=zenith_coord)
-            else:
-                if 'HA' not in kwargs or 'latitude' not in kwargs:
-                    raise TypeError("ChromaticAtmosphere requires either zenith_coord or (HA, "
-                                    +"latitude) when obj_coord is specified!")
-                HA = kwargs.pop('HA')
-                latitude = kwargs.pop('latitude')
-                self.zenith_angle, self.parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, HA=HA, latitude=latitude)
-        else:
-            raise TypeError("Need to specify zenith_angle and parallactic_angle!")
+
+        self.zenith_angle, self.parallactic_angle, self.kw = parse_dcr_angles(**kwargs)
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
-        for kw in kwargs:
+        for kw in self.kw:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
-        self.kw = kwargs
 
         self.base_refraction = galsim.dcr.get_refraction(self.base_wavelength, self.zenith_angle,
-                                                         **kwargs)
+                                                         **self.kw)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticAtmosphere) and
