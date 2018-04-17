@@ -2007,6 +2007,7 @@ class GSObject(object):
         # Nleft is the number of photons remaining to shoot.
         Nleft = Ntot
         photons = None  # Just in case Nleft is already 0.
+        resume = False
         while Nleft > 0:
             # Shoot at most maxN at a time
             thisN = min(maxN, Nleft)
@@ -2032,7 +2033,8 @@ class GSObject(object):
                 op.applyTo(photons, local_wcs)
 
             if image.dtype in [np.float32, np.float64]:
-                added_flux += sensor.accumulate(photons, image, orig_center)
+                added_flux += sensor.accumulate(photons, image, orig_center, resume=resume)
+                resume = True  # Resume from this point if there are any further iterations.
             else:
                 # Need a temporary
                 im1 = galsim.ImageD(bounds=image.bounds)
