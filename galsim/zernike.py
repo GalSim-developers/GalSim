@@ -435,27 +435,21 @@ class Zernike(object):
     # It can be deleted in version 2.0.
     @lazy_property
     def _coef_array(self):
-        _coef_array = np.dot(
-            _noll_coef_array(len(self.coef)-1, self.R_inner/self.R_outer),
-            self.coef[1:]
-        )
+        arr = _noll_coef_array(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
 
         if self.R_outer != 1.0:
-            shape = _coef_array.shape
-            _coef_array /= self.R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
-        return _coef_array
+            shape = arr.shape
+            arr /= self.R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+        return arr
 
     @lazy_property
     def _coef_array_xy(self):
-        _coef_array_xy = np.dot(
-            _noll_coef_array_xy(len(self.coef)-1, self.R_inner/self.R_outer),
-            self.coef[1:]
-        )
+        arr = _noll_coef_array_xy(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
 
         if self.R_outer != 1.0:
-            shape = _coef_array_xy.shape
-            _coef_array_xy /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0))
-        return _coef_array_xy
+            shape = arr.shape
+            arr /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0))
+        return arr
 
     @lazy_property
     def gradX(self):
@@ -464,10 +458,7 @@ class Zernike(object):
         j = len(self.coef)-1
         newCoef = np.hstack([
             [0],
-            np.dot(
-                _noll_coef_array_gradx(j, self.R_inner/self.R_outer),
-                self.coef[1:]
-            )
+            _noll_coef_array_gradx(j, self.R_inner/self.R_outer).dot(self.coef[1:])
         ])
         # Handle R_outer with
         # df/dx = df/d(x/R) * d(x/R)/dx = df/d(x/R) * 1/R
@@ -481,10 +472,7 @@ class Zernike(object):
         j = len(self.coef)-1
         newCoef = np.hstack([
             [0],
-            np.dot(
-                _noll_coef_array_grady(j, self.R_inner/self.R_outer),
-                self.coef[1:]
-            )
+            _noll_coef_array_grady(j, self.R_inner/self.R_outer).dot(self.coef[1:])
         ])
         # Handle R_outer with
         # df/dy = df/d(y/R) * d(y/R)/dy = df/d(y/R) * 1/R
@@ -527,7 +515,7 @@ class Zernike(object):
         """
 
         M = zernikeRotMatrix(len(self.coef)-1, theta)
-        return Zernike(np.dot(M, self.coef), self.R_outer, self.R_inner)
+        return Zernike(M.dot(self.coef), self.R_outer, self.R_inner)
 
     def __eq__(self, other):
         return (isinstance(other, Zernike) and
@@ -556,7 +544,7 @@ def zernikeRotMatrix(jmax, theta):
 
         >>> Z = Zernike(coefs)
         >>> R = zernikeRotMatrix(jmax, theta)
-        >>> rotCoefs = np.dot(R, coefs)
+        >>> rotCoefs = R.dot(coefs)
         >>> Zrot = Zernike(rotCoefs)
         >>> Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)
 
@@ -618,7 +606,7 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
 
         or equivalently
 
-        >>> resids = np.dot(basis.T, coefs).T - z
+        >>> resids = basis.T.dot(coefs).T - z
 
     Note that since we follow the Noll indexing scheme for Zernike polynomials, which begins at 1,
     but python sequences are indexed from 0, the length of the leading dimension in the result is
