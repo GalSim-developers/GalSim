@@ -163,9 +163,10 @@ namespace galsim {
 
         // Now add in the displacements
         const int i1 = target.getXMin();
-        const int j1 = target.getYMin();
         const int i2 = target.getXMax();
+        const int j1 = target.getYMin();
         const int j2 = target.getYMax();
+        const int ny = j2-j1+1;
         const int skip = target.getNSkip();
         const int step = target.getStep();
         const T* ptr = target.getData();
@@ -186,7 +187,7 @@ namespace galsim {
                     int polyj1 = std::max(j - _qDist, j1);
                     int polyj2 = std::min(j + _qDist, j2);
                     int distj = nyCenter - _qDist;
-                    int index = (polyi - i1) * (j2 - j1 + 1) + (polyj1 - j1);
+                    int index = (polyi - i1) * ny + (polyj1 - j1);
                     int dist_index = disti * _ny + distj;
 
                     for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++distj, ++index, ++dist_index) {
@@ -218,17 +219,18 @@ namespace galsim {
         // of the tree ring center, shifted to compensate for the
         // fact that target has its origin shifted to (0,0).
         Bounds<int> b = target.getBounds();
-        int i1 = b.getXMin();
-        int j1 = b.getYMin();
-        int i2 = b.getXMax();
-        int j2 = b.getYMax();
+        const int i1 = b.getXMin();
+        const int i2 = b.getXMax();
+        const int j1 = b.getYMin();
+        const int j2 = b.getYMax();
+        const int ny = j2-j1+1;
         double shift = 0.0;
         // Now we cycle through the pixels in the target image and add
         // the (small) distortions due to tree rings
         std::vector<bool> changed(_imagepolys.size(), false);
         for (int i=i1; i<=i2; ++i) {
             for (int j=j1; j<=j2; ++j) {
-                int index = (i - i1) * (j2 - j1 + 1) + (j - j1);
+                int index = (i - i1) * ny + (j - j1);
                 for (int n=0; n<_nv; n++) {
                     xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
                         _imagepolys[index][n].x <<"  "<< _imagepolys[index][n].y<<std::endl;
@@ -274,8 +276,8 @@ namespace galsim {
         xdbg<<"insidePixel: "<<ix<<','<<iy<<','<<x<<','<<y<<','<<off_edge<<std::endl;
 
         const int i1 = target.getXMin();
-        const int j1 = target.getYMin();
         const int i2 = target.getXMax();
+        const int j1 = target.getYMin();
         const int j2 = target.getYMax();
 
         int index = (ix - i1) * (j2 - j1 + 1) + (iy - j1);
@@ -413,6 +415,44 @@ namespace galsim {
     }
 
     template <typename T>
+    void Silicon::fillWithPixelAreas(ImageView<T> target, Position<int> orig_center)
+    {
+        Bounds<int> b = target.getBounds();
+        if (!b.isDefined())
+            throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
+                                     " undefined Bounds");
+
+        const int i1 = b.getXMin();
+        const int i2 = b.getXMax();
+        const int j1 = b.getYMin();
+        const int j2 = b.getYMax();
+        const int nx = i2-i1+1;
+        const int ny = j2-j1+1;
+        const int nxny = nx * ny;
+        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
+
+        _imagepolys.resize(nxny);
+        for (int i=0; i<nxny; ++i)
+            _imagepolys[i] = _emptypoly;
+
+        // Set up the pixel information according to the current flux in the image.
+        addTreeRingDistortions(target, orig_center);
+        updatePixelDistortions(target);
+
+        // Fill target with the area in each pixel.
+        const int skip = target.getNSkip();
+        const int step = target.getStep();
+        T* ptr = target.getData();
+
+        for (int j=j1; j<=j2; ++j, ptr+=skip) {
+            for (int i=i1; i<=i2; ++i, ptr+=step) {
+                int index = (i - i1) * ny + (j - j1);
+                *ptr = _imagepolys[index].area();
+            }
+        }
+    }
+
+    template <typename T>
     double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target,
                                Position<int> orig_center, bool resume)
     {
@@ -421,7 +461,6 @@ namespace galsim {
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " undefined Bounds");
 
-        // Factor to turn flux into surface brightness in an Image pixel
 #ifdef DEBUGLOGGING
         dbg<<"In Silicon::accumulate\n";
         dbg<<"bounds = "<<b<<std::endl;
@@ -652,5 +691,8 @@ namespace galsim {
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                                         ImageView<float> target, Position<int> orig_center,
                                         bool resume);
+
+    template void Silicon::fillWithPixelAreas(ImageView<double> target, Position<int> orig_center);
+    template void Silicon::fillWithPixelAreas(ImageView<float> target, Position<int> orig_center);
 
 } // namespace galsim

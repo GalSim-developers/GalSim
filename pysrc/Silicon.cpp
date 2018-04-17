@@ -39,11 +39,17 @@ namespace {
         {
             typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
                                                      ImageView<U>, Position<int>, bool);
+            typedef void (Silicon::*area_fn)(ImageView<U>, Position<int>);
+
             wrapper
                 .def("accumulate",
                      (accumulate_fn)&Silicon::accumulate,
                      (bp::args("photons", "rng", "image", "orig_center", "resume")),
                      "Accumulate photons in image")
+                .def("fill_with_pixel_areas",
+                     (area_fn)&Silicon::fillWithPixelAreas,
+                     (bp::args("image", "orig_center")),
+                     "Fill image with pixel areas")
                 ;
         }
 

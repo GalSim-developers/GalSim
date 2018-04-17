@@ -60,6 +60,9 @@ namespace galsim
         double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target,
                           Position<int> orig_center, bool resume);
 
+        template <typename T>
+        void fillWithPixelAreas(ImageView<T> target, Position<int> orig_center);
+
     private:
         Polygon _emptypoly;
         mutable Polygon _testpoly;

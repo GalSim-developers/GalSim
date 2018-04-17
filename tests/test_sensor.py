@@ -385,6 +385,31 @@ def test_silicon_fft():
     print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), 2.*sigma_r))
     assert r1-r3 > 2.*sigma_r
 
+@timer
+def test_silicon_area():
+    """Test the Silicon class calculate_pixel_areas() function.
+    """
+    # Draw a smallish but very bright Gaussian image
+    obj = galsim.Gaussian(flux=3.539e5, sigma=0.2)
+    im = obj.drawImage(nx=17, ny=17, scale=0.3, dtype=float)
+    im.setCenter(0,0)
+
+    print('im min = ',im.array.min())
+    print('im max = ',im.array.max())
+    print('im(0,0) = ',im(0,0))
+    assert im(0,0) == im.array.max()
+    np.testing.assert_almost_equal(im(0,0), 105789.2529082777)
+
+    rng = galsim.BaseDeviate(5678)
+    silicon = galsim.SiliconSensor(rng=rng)
+    area_image = silicon.calculate_pixel_areas(im)
+    print('area min = ',area_image.array.min())
+    print('area max = ',area_image.array.max())
+    print('area(0,0) = ',area_image(0,0))
+    assert area_image(0,0) == area_image.array.min()
+    # Regression test based on values current for GalSim version 1.6.
+    np.testing.assert_almost_equal(area_image(0,0), 0.9259718051642439)
+    np.testing.assert_almost_equal(area_image.array.max(), 1.0079597347083216)
 
 @timer
 def test_sensor_wavelengths_and_angles():
@@ -751,6 +776,7 @@ if __name__ == "__main__":
     test_simple()
     test_silicon()
     test_silicon_fft()
+    test_silicon_area()
     test_sensor_wavelengths_and_angles()
     test_bf_slopes()
     test_treerings()

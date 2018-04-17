@@ -83,6 +83,7 @@ namespace galsim {
     {
         if (_area == 0.) {
             dbg<<"Start Poly area"<<std::endl;
+            assert(_sorted);
             // Calculates the area of a polygon using the shoelace algorithm
             for (int i=0; i<_npoints; i++) {
                 int j = (i + 1) % _npoints;
@@ -143,10 +144,12 @@ namespace galsim {
 
     void Polygon::updateBounds()
     {
+#ifdef DEBUGGING
         dbg<<"Start updateBounds:\n";
         for (int i=0; i<_npoints; ++i) {
             dbg<<"   "<<_points[i]<<std::endl;
         }
+#endif
 
         // The outer bounds are easy.  Just use the regular Bounds += operator.
         _outer = Bounds<double>();

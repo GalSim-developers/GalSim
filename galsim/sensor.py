@@ -251,6 +251,29 @@ class SiliconSensor(Sensor):
         self._last_image = image
         return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center, resume)
 
+    def calculate_pixel_areas(self, image, orig_center=galsim.PositionI(0,0)):
+        """Create an image with the corresponding pixel areas according to the Silicon model.
+
+        The input image gives the flux values used to set the current levels of the brighter-fatter
+        distortions.
+
+        The returned image will have the same size and bounds as the input image, and will have
+        for its flux values the net pixel area for each pixel according to the Silicon model.
+
+        Note: The areas here are in units of the nominal pixel area.  This does not account for
+        any conversion from pixels to sky units using the image wcs (if any).
+
+        @param image        The image with the current flux values.
+        @param orig_center  The position of the image center in the original image coordinates.
+                            [default: (0,0)]
+
+        @returns a galsim.Image with the pixel areas
+        """
+        area_image = image.copy()
+        area_image.wcs = galsim.PixelScale(1.0)
+        self._silicon.fill_with_pixel_areas(area_image._image.view(), orig_center)
+        return area_image
+
     def _read_config_file(self, filename):
         # This reads the Poisson simulator config file for
         # the settings that were run
