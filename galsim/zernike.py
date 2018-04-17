@@ -464,7 +464,9 @@ class Zernike(object):
         return _coef_array_xy
 
     @lazy_property
-    def _gradX(self):
+    def gradX(self):
+        """The x-derivative of this Zernike as a new Zernike object.
+        """
         j = len(self.coef)-1
         newCoef = np.hstack([
             [0],
@@ -479,7 +481,9 @@ class Zernike(object):
         return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
 
     @lazy_property
-    def _gradY(self):
+    def gradY(self):
+        """The y-derivative of this Zernike as a new Zernike object.
+        """
         j = len(self.coef)-1
         newCoef = np.hstack([
             [0],
@@ -514,21 +518,7 @@ class Zernike(object):
         return horner2d(x, y, self._coef_array_xy)
 
     def evalCartesianGrad(self, x, y):
-        return self.gradX().evalCartesian(x, y), self.gradY().evalCartesian(x, y)
-
-    def gradX(self):
-        """Compute the x-derivative of this Zernike.
-
-        @returns  d(Zernike)/dx as new Zernike object.
-        """
-        return self._gradX
-
-    def gradY(self):
-        """Compute the y-derivative of this Zernike.
-
-        @returns  d(Zernike)/dy as new Zernike object.
-        """
-        return self._gradY
+        return self.gradX.evalCartesian(x, y), self.gradY.evalCartesian(x, y)
 
     def rotate(self, theta):
         """Return new Zernike polynomial series rotated by angle theta.  For example:
