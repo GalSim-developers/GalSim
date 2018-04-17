@@ -510,7 +510,8 @@ class Zernike(object):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
 
         @param rho    radial coordinate of evaluation points.  Can be list-like.
-        @param theta  azimuthal coordinate in radians of evaluation points.  Can be list-like.
+        @param theta  azimuthal coordinate in radians (or as Angle object) of evaluation points.
+                      Can be list-like.
         @returns  Series evaluations as numpy array.
         """
         x = rho * np.cos(theta)
