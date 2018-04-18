@@ -77,6 +77,7 @@ for n in range(nflats):
         # temp is the additional flux we will add to the image in this iteration.
         # Start with the right area due to the sensor effects.
         temp = sensor.calculate_pixel_areas(image)
+        temp /= temp.mean()  # Normalize to unit mean.
         temp.write('sensor_area.fits')
 
         # Multiply by the base image to get the right mean level and wcs effects

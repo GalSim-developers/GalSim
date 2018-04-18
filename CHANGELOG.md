@@ -29,6 +29,7 @@ Bug Fixes
   galsim_extra FocalPlane output type. (#928)
 - Fixed python3 unicode/str mismatches in tests/SConscript (#932)
 - Fixed memory leak when drawing PhaseScreenPSFs using photon-shooting (#942)
+- Fixed a few minor bugs in the Silicon code. (#963)
 
 
 Deprecated Features
@@ -49,6 +50,8 @@ New Features
 - Add VonKarman profile GSObject. (#940)
 - Add PhotonDCR surface op to apply DCR for photon shooting. (#955)
 - Allow astropy units as wave_type in Bandpass. (#955)
+- Added ability to get net pixel areas from the Silicon code for a given flux
+  image. (#963)
 
 
 New config features
