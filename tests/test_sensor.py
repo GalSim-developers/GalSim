@@ -668,6 +668,8 @@ def test_treerings():
 def test_resume():
     """Test that the resume option for accumulate works properly.
     """
+    # Note: This test is based on a script devel/lsst/treering_skybg_check.py
+
     rng = galsim.UniformDeviate(314159)
 
     if __name__ == "__main__":
@@ -771,6 +773,134 @@ def test_resume():
                                    treering_func=treering_func, treering_center=treering_center)
     assert_raises(RuntimeError, sensor4.accumulate, all_photons, im1, resume=True)
 
+@timer
+def test_flat():
+    """Test building a flat field image using the Silicon class.
+    """
+    # Note: This test is based on a script devel/lsst/treering_flat.py
+
+    if __name__ == '__main__':
+        nx = 200
+        ny = 200
+        nflats = 20
+        niter = 50
+        toler = 0.01
+    else:
+        nx = 50
+        ny = 50
+        nflats = 3
+        niter = 20  # Seem to really need 20 or more iterations to get covariances close.
+        toler = 0.05
+
+    counts_total = 80.e3
+    counts_per_iter = counts_total / niter
+
+    # Silicon sensor with tree rings
+    seed = 31415
+    rng = galsim.UniformDeviate(seed)
+    treering_func = galsim.SiliconSensor.simple_treerings(0.26, 47)
+    treering_center = galsim.PositionD(0,0)
+    sensor = galsim.SiliconSensor(rng=rng,
+                                   treering_func=treering_func, treering_center=treering_center)
+
+    # Use a non-trivial WCS to make sure that works properly.
+    wcs = galsim.FitsWCS('fits_files/tnx.fits')
+    # We add on a border of 2 pixels, since the outer row/col get a little messed up by photons
+    # falling off the edge, but not coming on from the other direction.
+    # We do 2 rows/cols rather than just 1 to be safe, since I think diffusion can probably go
+    # 2 pixels, even though the deficit is only really evident on the outer pixel.
+    nborder = 2
+    base_image = galsim.ImageF(nx+2*nborder, ny+2*nborder, wcs=wcs)
+    base_image.wcs.makeSkyImage(base_image, sky_level=1.)
+    base_image.write('wcs_area.fits')
+
+    # Rescale so that the mean sky level per pixel is skyCounts
+    mean_pixel_area = base_image.array.mean()
+    sky_level_per_iter = counts_per_iter / mean_pixel_area  # in ADU/arcsec^2 now.
+    base_image *= sky_level_per_iter
+
+    # The base_image now has the right level to account for the WCS distortion, but not any sensor
+    # effects.
+    # This is the noise-free level that we want to add each iteration modulated by the sensor.
+
+    noise = galsim.PoissonNoise(rng)
+    flats = []
+
+    for n in range(nflats):
+        print('n = ',n)
+        # image is the image that we will build up in steps.
+        image = galsim.ImageF(nx+2*nborder, ny+2*nborder, wcs=wcs)
+
+        for i in range(niter):
+            # temp is the additional flux we will add to the image in this iteration.
+            # Start with the right area due to the sensor effects.
+            temp = sensor.calculate_pixel_areas(image)
+            temp /= temp.array.mean()
+
+            # Multiply by the base image to get the right mean level and wcs effects
+            temp *= base_image
+
+            # Finally, add noise.  What we have here so far is the expectation value in each pixel.
+            # We need to realize this according to Poisson statistics with these means.
+            temp.addNoise(noise)
+
+            # Add this to the image we are building up.
+            image += temp
+
+        # Cut off the outer border where things don't work quite right.
+        image = image.subImage(galsim.BoundsI(1+nborder,nx+nborder,1+nborder,ny+nborder))
+        flats.append(image.array)
+
+    # These are somewhat noisy, so compute for all pairs and average them.
+    mean = var = cov01 = cov10 = cov11a = cov11b = cov02 = cov20 = 0
+    n = len(flats)
+    npairs = 0
+
+    for i in range(n):
+        flati = flats[i]
+        print('mean ',i,' = ',flati.mean())
+        mean += flati.mean()
+        for j in range(i+1,n):
+            flatj = flats[j]
+            diff = flati - flatj
+            var += diff.var()/2
+            cov01 += np.mean(diff[1:,:] * diff[:-1,:])
+            cov10 += np.mean(diff[:,1:] * diff[:,:-1])
+            cov11a += np.mean(diff[1:,1:] * diff[:-1,:-1])
+            cov11b += np.mean(diff[1:,:-1] * diff[:-1,1:])
+            cov02 += np.mean(diff[2:,:] * diff[:-2,:])
+            cov20 += np.mean(diff[:,2:] * diff[:,:-2])
+            npairs += 1
+    mean /= n
+    var /= npairs
+    cov01 /= npairs
+    cov10 /= npairs
+    cov11a /= npairs
+    cov11b /= npairs
+    cov02 /= npairs
+    cov20 /= npairs
+
+    print('var(diff)/2 = ',var, 0.93*counts_total)
+    print('cov01 = ',cov01, 0.03*counts_total)   # Note: I don't actually know if these are
+    print('cov10 = ',cov10, 0.015*counts_total)  # the right covariances...
+    print('cov11a = ',cov11a, cov11a/counts_total)
+    print('cov11b = ',cov11b, cov11b/counts_total)
+    print('cov02 = ',cov02, cov02/counts_total)
+    print('cov20 = ',cov20, cov20/counts_total)
+
+    # Mean should be close to target counts
+    np.testing.assert_allclose(mean, counts_total, rtol=toler)
+    # Variance is a bit less than the mean due to B/F.
+    np.testing.assert_allclose(var, 0.93 * counts_total, rtol=toler)
+    # 01 and 10 covariances are significant.
+    np.testing.assert_allclose(cov01, 0.03 * counts_total, rtol=30*toler)
+    np.testing.assert_allclose(cov10, 0.015 * counts_total, rtol=60*toler)
+    # The rest are small
+    np.testing.assert_allclose(cov11a / counts_total, 0., atol=2*toler)
+    np.testing.assert_allclose(cov11b / counts_total, 0., atol=2*toler)
+    np.testing.assert_allclose(cov20 / counts_total, 0., atol=2*toler)
+    np.testing.assert_allclose(cov02 / counts_total, 0., atol=2*toler)
+
 
 if __name__ == "__main__":
     test_simple()
@@ -781,3 +911,4 @@ if __name__ == "__main__":
     test_bf_slopes()
     test_treerings()
     test_resume()
+    test_flat()
