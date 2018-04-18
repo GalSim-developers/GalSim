@@ -181,12 +181,12 @@ namespace galsim {
 
                 int polyi1 = std::max(i - _qDist, i1);
                 int polyi2 = std::min(i + _qDist, i2);
-                int disti = nxCenter - _qDist;
+                int polyj1 = std::max(j - _qDist, j1);
+                int polyj2 = std::min(j + _qDist, j2);
+                int disti = nxCenter + polyi1 - i;
 
                 for (int polyi=polyi1; polyi<=polyi2; ++polyi, ++disti) {
-                    int polyj1 = std::max(j - _qDist, j1);
-                    int polyj2 = std::min(j + _qDist, j2);
-                    int distj = nyCenter - _qDist;
+                    int distj = nyCenter + polyj1 - j;
                     int index = (polyi - i1) * ny + (polyj1 - j1);
                     int dist_index = disti * _ny + distj;
 
