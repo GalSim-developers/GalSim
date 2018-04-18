@@ -49,7 +49,7 @@ image.addNoise(noise)
 t1 = time.time()
 print('Time to make sky image = ',t1-t0)
 
-image.write('test.fits')
+image.write('sky.fits')
 
 # Check that the photons follow Poisson statistics
 import matplotlib.pyplot as plt
