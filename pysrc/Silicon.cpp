@@ -59,7 +59,8 @@ namespace {
                                     double SensorThickness, const bp::object& array,
                                     const Table<double, double>& treeRingTable,
                                     const Position<double>& treeRingCenter,
-                                    const Table<double, double>& abs_length_table)
+                                    const Table<double, double>& abs_length_table,
+                                    bool transpose)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -78,7 +79,7 @@ namespace {
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                                Nrecalc, DiffStep, PixelSize, SensorThickness, data,
-                               treeRingTable, treeRingCenter, abs_length_table);
+                               treeRingTable, treeRingCenter, abs_length_table, transpose);
         }
 
         static void wrap()
@@ -91,7 +92,7 @@ namespace {
                                   "Nrecalc", "DiffStep", "PixelSize",
                                   "SensorThickness", "vertex_data",
                                   "treeRingTable", "treeRingCenter",
-                                  "abs_length_table"))))
+                                  "abs_length_table", "transpose"))))
                 .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);

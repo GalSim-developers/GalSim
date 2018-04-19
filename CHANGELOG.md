@@ -52,6 +52,7 @@ New Features
 - Allow astropy units as wave_type in Bandpass. (#955)
 - Added ability to get net pixel areas from the Silicon code for a given flux
   image. (#963)
+- Added ability to transpose the meaning of (x,y) in the Silicon class. (#963)
 
 
 New config features

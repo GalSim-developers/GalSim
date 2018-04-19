@@ -40,9 +40,8 @@ namespace galsim
     public:
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                 double diffStep, double pixelSize, double sensorThickness, double* vertex_data,
-                const Table<double, double>& tr_radial_table,
-                Position<double> treeRingCenter,
-                const Table<double, double>& abs_length_table);
+                const Table<double, double>& tr_radial_table, Position<double> treeRingCenter,
+                const Table<double, double>& abs_length_table, bool transpose);
 
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
@@ -73,6 +72,7 @@ namespace galsim
         Table<double, double> _tr_radial_table;
         Position<double> _treeRingCenter;
         Table<double, double> _abs_length_table;
+        bool _transpose;
         double _resume_next_recalc;
         ImageAlloc<double> _delta;
     };

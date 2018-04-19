@@ -36,19 +36,19 @@ namespace galsim {
 
     void Polygon::add(const Point& point)
     {
-        dbg<<"Current size = "<<_points.size()<<" = "<<_npoints<<std::endl;
-        dbg<<"add point "<<point.x<<','<<point.y<<std::endl;
+        xdbg<<"Current size = "<<_points.size()<<" = "<<_npoints<<std::endl;
+        xdbg<<"add point "<<point.x<<','<<point.y<<std::endl;
         _points.push_back(point);
         ++_npoints;
         _sorted = false;
         _area = 0.0;
-        dbg<<"Done add."<<std::endl;
+        xdbg<<"Done add."<<std::endl;
     }
 
     void Polygon::sort()
     {
         if (!_sorted && size() >= 3) {
-            dbg<<"Start Poly sort"<<std::endl;
+            xdbg<<"Start Poly sort"<<std::endl;
             // calculate centroid of the polygon
             double cx = 0.0;
             double cy = 0.0;
@@ -82,7 +82,7 @@ namespace galsim {
     double Polygon::area() const
     {
         if (_area == 0.) {
-            dbg<<"Start Poly area"<<std::endl;
+            xdbg<<"Start Poly area"<<std::endl;
             assert(_sorted);
             // Calculates the area of a polygon using the shoelace algorithm
             for (int i=0; i<_npoints; i++) {
@@ -145,16 +145,16 @@ namespace galsim {
     void Polygon::updateBounds()
     {
 #ifdef DEBUGGING
-        dbg<<"Start updateBounds:\n";
+        xdbg<<"Start updateBounds:\n";
         for (int i=0; i<_npoints; ++i) {
-            dbg<<"   "<<_points[i]<<std::endl;
+            xdbg<<"   "<<_points[i]<<std::endl;
         }
 #endif
 
         // The outer bounds are easy.  Just use the regular Bounds += operator.
         _outer = Bounds<double>();
         for (int i=0; i<_npoints; ++i) _outer += _points[i];
-        dbg<<"outer = "<<_outer<<std::endl;
+        xdbg<<"outer = "<<_outer<<std::endl;
         Position<double> center = _outer.center();
 
         // The inner bounds need to be done manually. Then the right side of the inner bounds is
@@ -168,7 +168,7 @@ namespace galsim {
             if (y-center.y >= std::abs(x-center.x) && y < _inner.getYMax()) _inner.setYMax(y);
             if (y-center.y <= -std::abs(x-center.x) && y > _inner.getYMin()) _inner.setYMin(y);
         }
-        dbg<<"inner = "<<_inner<<std::endl;
+        xdbg<<"inner = "<<_inner<<std::endl;
 
         // Mark the area as wrong if it was saved.
         _area = 0.;

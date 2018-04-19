@@ -94,12 +94,22 @@ class SiliconSensor(Sensor):
                         pixel boundaries.  (This file is still somewhat preliminary and may be
                         updated in the future.)
 
+    The Silicon model is asymmetric in the behavior along rows and columns in the CCD.
+    The traditional meaning of (x,y) is (col,row), and the brighter-fatter effect is stronger
+    along the columns than across the rows, since charge flows more easily in the readout
+    direction.
+
+    Note that there is an option to transpose the effect if your definition of the image is to
+    have the readout "columns" along the x direction.  E.g. to conform with the LSST Camera
+    Coordinate System definitions of x,y, which are transposed relative to the usual FITS meanings.
+
     There is also an option to include "tree rings" in the Silicon model, which add small
     distortions to the sensor pixel positions due to non-uniform background doping in the silicon
     sensor.  The tree rings are defined by a center and a radial amplitude function.  The radial
     function needs to be a galsim.LookupTable instance.  Note that if you just want a simple cosine
     radial function, you can use the helper class method `SiliconSensor.simple_treerings` to
     build the LookupTable for you.
+
 
     @param name             The base name of the files which contains the sensor information,
                             presumably calculated from the Poisson_CCD simulator, which may
@@ -125,17 +135,21 @@ class SiliconSensor(Sensor):
     @param treering_center  A PositionD object with the center of the tree ring pattern in pixel
                             coordinates, which may be outside the pixel region. [default: None;
                             required if treering_func is provided]
+    @param transpose        Transpose the meaning of (x,y) so the brighter-fatter effect is
+                            stronger along the x direction. [default: False]
     """
     def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000, treering_func=None, treering_center=galsim.PositionD(0,0)):
+                 nrecalc=10000, treering_func=None, treering_center=galsim.PositionD(0,0),
+                 transpose=False):
         self.name = name
-        self.strength = strength
+        self.strength = float(strength)
         self.rng = galsim.UniformDeviate(rng)
-        self.diffusion_factor = diffusion_factor
-        self.qdist = qdist
-        self.nrecalc = nrecalc
+        self.diffusion_factor = float(diffusion_factor)
+        self.qdist = int(qdist)
+        self.nrecalc = float(nrecalc)
         self.treering_func = treering_func
         self.treering_center = treering_center
+        self.transpose = bool(transpose)
         self._last_image = None
 
         self.config_file = name + '.cfg'
@@ -186,21 +200,22 @@ class SiliconSensor(Sensor):
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
                                                diff_step, PixelSize, SensorThickness, vertex_data,
                                                self.treering_func.table, self.treering_center,
-                                               self.abs_length_table.table)
+                                               self.abs_length_table.table, self.transpose)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.name
         if self.strength != 1.: s += ', strength=%f'%self.strength
         if self.diffusion_factor != 1.: s += ', diffusion_factor=%f'%self.diffusion_factor
+        if self.transpose: s += ', transpose=True'
         s += ')'
         return s
 
     def __repr__(self):
         return ('galsim.SiliconSensor(name=%r, strength=%f, rng=%r, diffusion_factor=%f, '
-                'qdist=%d, nrecalc=%f, treering_func=%r, treering_center=%r)')%(
+                'qdist=%d, nrecalc=%f, treering_func=%r, treering_center=%r, transpose=%r)')%(
                         self.name, self.strength, self.rng,
                         self.diffusion_factor, self.qdist, self.nrecalc,
-                        self.treering_func, self.treering_center)
+                        self.treering_func, self.treering_center, self.transpose)
 
     def __eq__(self, other):
         return (isinstance(other, SiliconSensor) and
@@ -211,7 +226,8 @@ class SiliconSensor(Sensor):
                 self.qdist == other.qdist and
                 self.nrecalc == other.nrecalc and
                 self.treering_func == other.treering_func and
-                self.treering_center == other.treering_center)
+                self.treering_center == other.treering_center and
+                self.transpose == other.transpose)
 
     __hash__ = None
 

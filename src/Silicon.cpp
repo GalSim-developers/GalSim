@@ -83,12 +83,12 @@ namespace galsim {
                      double sensorThickness, double* vertex_data,
                      const Table<double, double>& tr_radial_table,
                      Position<double> treeRingCenter,
-                     const Table<double, double>& abs_length_table) :
+                     const Table<double, double>& abs_length_table, bool transpose) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _qDist(qDist),
         _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
-        _abs_length_table(abs_length_table), _resume_next_recalc(-1)
+        _abs_length_table(abs_length_table), _transpose(transpose), _resume_next_recalc(-1)
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
@@ -107,6 +107,8 @@ namespace galsim {
             _distortions[i] = _emptypoly;  // These will accumulated the distortions over time.
 
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
+        if (_transpose) std::swap(_nx,_ny);
+
         for (int index=0; index < _nv*_nx*_ny; index++) {
             xdbg<<"index = "<<index<<std::endl;
             int n = index % _nv;
@@ -118,6 +120,14 @@ namespace galsim {
             double th = vertex_data[5*index+2];
             double x1 = vertex_data[5*index+3];
             double y1 = vertex_data[5*index+4];
+            if (_transpose) {
+                xdbg<<"Original i,j,n = "<<i<<','<<j<<','<<n<<std::endl;
+                std::swap(i,j);
+                std::swap(x0,y0);
+                std::swap(x1,y1);
+                n = (_numVertices - n + _nv) % _nv;
+                xdbg<<"    => "<<i<<','<<j<<','<<n<<std::endl;
+            }
 
             // The following captures the pixel displacement. These are translated into
             // coordinates compatible with (x,y). These are per electron.

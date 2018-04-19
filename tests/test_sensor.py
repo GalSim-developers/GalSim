@@ -300,7 +300,7 @@ def test_silicon():
     assert_raises(IOError, galsim.SiliconSensor, name='junk')
     assert_raises(IOError, galsim.SiliconSensor, name='output')
     assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
-    assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', 'hello')
+    assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', rng1)
 
 
 @timer
@@ -390,7 +390,7 @@ def test_silicon_area():
     """Test the Silicon class calculate_pixel_areas() function.
     """
     # Draw a smallish but very bright Gaussian image
-    obj = galsim.Gaussian(flux=3.539e5, sigma=0.2)
+    obj = galsim.Gaussian(flux=5.e5, sigma=0.2)
     im = obj.drawImage(nx=17, ny=17, scale=0.3, dtype=float)
     im.setCenter(0,0)
 
@@ -398,7 +398,7 @@ def test_silicon_area():
     print('im max = ',im.array.max())
     print('im(0,0) = ',im(0,0))
     assert im(0,0) == im.array.max()
-    np.testing.assert_almost_equal(im(0,0), 105789.2529082777)
+    np.testing.assert_almost_equal(im(0,0), 149462.06966413918)
 
     rng = galsim.BaseDeviate(5678)
     silicon = galsim.SiliconSensor(rng=rng)
@@ -408,8 +408,63 @@ def test_silicon_area():
     print('area(0,0) = ',area_image(0,0))
     assert area_image(0,0) == area_image.array.min()
     # Regression test based on values current for GalSim version 1.6.
-    np.testing.assert_almost_equal(area_image(0,0), 0.9259718051642439)
-    np.testing.assert_almost_equal(area_image.array.max(), 1.0079597347083216)
+    np.testing.assert_almost_equal(area_image(0,0), 0.8962292034379046)
+    np.testing.assert_almost_equal(area_image.array.max(), 1.0112006254350212)
+
+    # The Silicon code is asymmetric.  Charge flows more easily along columns than rows.
+    # It's not completely intuitive, since there are competing effects in play, but the net
+    # result on the areas for this image is that the pixels above and below the central pixel
+    # are slightly larger than the ones to the left and right.
+    print('+- 1 along column: ',area_image(0,1),area_image(0,-1))
+    print('+- 1 along row:    ',area_image(1,0),area_image(-1,0))
+    np.testing.assert_almost_equal((area_image(0,1) + area_image(0,-1))/2., 0.9789158236482416)
+    np.testing.assert_almost_equal((area_image(1,0) + area_image(-1,0))/2., 0.9686605382489861)
+
+    # Just to confirm that the bigger effect really is along the column directions, draw the
+    # object with the silicon sensor in play.
+    im2 = obj.drawImage(nx=17, ny=17, scale=0.3, method='phot', sensor=silicon, rng=rng)
+    im2.setCenter(0,0)
+    print('im min = ',im2.array.min())
+    print('im max = ',im2.array.max())
+    print('im(0,0) = ',im2(0,0))
+    print('+- 1 along column: ',im2(0,1),im2(0,-1))
+    print('+- 1 along row:    ',im2(1,0),im2(-1,0))
+    assert im2(0,0) == im2.array.max()
+    assert im2(0,1) + im2(0,-1) > im2(1,0) + im2(-1,0)
+    np.testing.assert_almost_equal(im2(0,0), 133749)
+    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 58784.5)
+    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 58477.5)
+
+    # Repeat with transpose=True to check that things are transposed properly.
+    siliconT = galsim.SiliconSensor(rng=rng, transpose=True)
+    area_imageT = siliconT.calculate_pixel_areas(im)
+    print('with transpose=True:')
+    print('area min = ',area_imageT.array.min())
+    print('area max = ',area_imageT.array.max())
+    print('area(0,0) = ',area_imageT(0,0))
+    print('+- 1 along column: ',area_imageT(0,1),area_imageT(0,-1))
+    print('+- 1 along row:    ',area_imageT(1,0),area_imageT(-1,0))
+    np.testing.assert_almost_equal(area_imageT(0,0), 0.8962292034379046)
+    np.testing.assert_almost_equal((area_imageT(0,1) + area_imageT(0,-1))/2., 0.9686605382489861)
+    np.testing.assert_almost_equal((area_imageT(1,0) + area_imageT(-1,0))/2., 0.9789158236482416)
+    np.testing.assert_almost_equal(area_imageT.array, area_image.array.T, decimal=15)
+
+    im2T = obj.drawImage(nx=17, ny=17, scale=0.3, method='phot', sensor=siliconT, rng=rng)
+    im2T.setCenter(0,0)
+    print('im min = ',im2T.array.min())
+    print('im max = ',im2T.array.max())
+    print('im(0,0) = ',im2T(0,0))
+    print('+- 1 along column: ',im2T(0,1),im2T(0,-1))
+    print('+- 1 along row:    ',im2T(1,0),im2T(-1,0))
+    assert im2T(0,0) == im2T.array.max()
+    assert im2T(0,1) + im2T(0,-1) < im2T(1,0) + im2T(-1,0)
+    # Actual values are different, since rng is in different state. But qualitatively transposed.
+    np.testing.assert_almost_equal(im2T(0,0), 134220)
+    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58216.5)
+    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59255)
+
+    do_pickle(siliconT)
+
 
 @timer
 def test_sensor_wavelengths_and_angles():
@@ -812,7 +867,6 @@ def test_flat():
     nborder = 2
     base_image = galsim.ImageF(nx+2*nborder, ny+2*nborder, wcs=wcs)
     base_image.wcs.makeSkyImage(base_image, sky_level=1.)
-    base_image.write('wcs_area.fits')
 
     # Rescale so that the mean sky level per pixel is skyCounts
     mean_pixel_area = base_image.array.mean()
