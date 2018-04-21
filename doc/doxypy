@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -44,7 +44,7 @@ __author__ = (
 
 __licenseName__ = "BSD"
 __license__ = """
-Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
 
 Redistribution and use in source and binary forms, with or without
