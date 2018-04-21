@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -1485,6 +1485,6 @@ class WeakMethod(object):
         self.f = f.__func__
         self.c = weakref.ref(f.__self__)
     def __call__(self, *args):
-        if self.c() == None :
+        if self.c() is None :
             raise TypeError('Method called on dead object')
         return self.f(self.c(), *args)

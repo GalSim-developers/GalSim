@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -465,7 +465,7 @@ class FRatioAngles(object):
         dydz[:] = tantheta * np.cos(phi)
 
 class PhotonDCR(object):
-    """A surface-layer operator that applies the effect of differential chromatic aberration (DCR)
+    """A surface-layer operator that applies the effect of differential chromatic refraction (DCR)
     and optionally the chromatic dilation due to atmospheric seeing.
 
     Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence

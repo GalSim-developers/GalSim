@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -136,7 +136,7 @@ class Bandpass(object):
                     self.wave_type = 'Angstrom'
                     self.wave_factor = 10.
             except units.UnitConversionError:
-                # Unline in SED, we require a distance unit for wave_type
+                # Unlike in SED, we require a distance unit for wave_type
                 raise ValueError("Unknown wave_type '{0}'".format(wave_type))
 
         # Convert string input into a real function (possibly a LookupTable)

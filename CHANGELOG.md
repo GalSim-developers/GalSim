@@ -1,4 +1,4 @@
-Changes from v1.5 to v2.0
+Changes from v1.6 to v2.0
 =========================
 
 The principal change in GalSim 2.0 is that it is now pip installable.
@@ -65,7 +65,6 @@ Deprecated Features
 
 New Features
 ------------
-
 
 
 New config features
