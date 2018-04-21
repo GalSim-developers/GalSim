@@ -86,6 +86,7 @@ opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', Fal
 
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('EIGEN_DIR','Explicitly give the Eigen prefix','')
+opts.Add('PYBIND11_DIR','Explicitly give the PyBind11 prefix','')
 
 opts.Add(BoolVariable('USE_TMV','Use TMV for linear algebra, rather than Eigen',False))
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
@@ -705,7 +706,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['BOOST', 'TMV', 'EIGEN', 'FFTW']
+    types = ['BOOST', 'TMV', 'EIGEN', 'FFTW', 'PYBIND11']
 
     for t in types:
         dirtag = t+'_DIR'
@@ -1839,7 +1840,9 @@ PYBIND11_MODULE(check_pb, check_pb) {
               CheckFlags(config, '-std=c++14', pb_source_file) or
               CheckFlags(config, '-std=c++11', pb_source_file))
     if not result:
-        ErrorExit("Unable to compile C++ source code using pybind11:\n" + python)
+        ErrorExit("Unable to compile C++ source code using pybind11.\n"
+                  "You may need to explicitly specify the location of the pybind11\n"
+                  "source directory using PYBIND11_DIR=... \n")
 
     result = CheckModuleLibs(config,[''],pb_source_file,'check_pb')
     if not result:
