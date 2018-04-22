@@ -480,9 +480,9 @@ class ExtraOutputBuilder(object):
         """
         n = len(self.data)
         if n == 0:
-            raise RuntimeError("No %s images were created."%self._extra_output_key)
+            raise galsim.GalSimError("No %s images were created."%self._extra_output_key)
         elif n > 1:
-            raise RuntimeError(
+            raise galsim.GalSimError(
                     "%d %s images were created, but expecting only 1."%(n,self._extra_output_key))
         return self.data[0]
 

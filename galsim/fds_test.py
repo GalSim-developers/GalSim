@@ -40,8 +40,8 @@ You can also keep track of the number of open files and pipes with:
 """
 
 from __future__ import print_function
-
 import builtins
+
 openfiles = set()
 oldfile = builtins.file
 class newfile(oldfile):

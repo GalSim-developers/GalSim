@@ -378,7 +378,7 @@ def test_combine_wave_list():
         np.testing.assert_equal(wave_list, c.wave_list)
         np.testing.assert_equal(blue_limit, c.blue_limit)
         np.testing.assert_equal(red_limit, c.red_limit)
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         galsim.utilities.combine_wave_list(a, d)
 
 

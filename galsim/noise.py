@@ -23,7 +23,9 @@ layer.
 
 import numpy as np
 import math
+
 from .image import Image, ImageD
+from .errors import GalSimError
 
 
 def addNoise(self, noise):
@@ -547,13 +549,13 @@ class DeviateNoise(BaseNoise):
         image.array[:,:] += noise_array.reshape(image.array.shape).astype(image.dtype)
 
     def _getVariance(self):
-        raise RuntimeError("No single variance value for DeviateNoise")
+        raise GalSimError("No single variance value for DeviateNoise")
 
     def _withVariance(self, variance):
-        raise RuntimeError("Changing the variance is not allowed for DeviateNoise")
+        raise GalSimError("Changing the variance is not allowed for DeviateNoise")
 
     def _withScaledVariance(self, variance):
-        raise RuntimeError("Changing the variance is not allowed for DeviateNoise")
+        raise GalSimError("Changing the variance is not allowed for DeviateNoise")
 
     def copy(self, rng=None):
         """Returns a copy of the Deviate noise model.
@@ -643,15 +645,15 @@ class VariableGaussianNoise(BaseNoise):
         return VariableGaussianNoise(rng, self.var_image)
 
     def _getVariance(self):
-        raise RuntimeError("No single variance value for VariableGaussianNoise")
+        raise GalSimError("No single variance value for VariableGaussianNoise")
 
     def _withVariance(self, variance):
-        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
+        raise GalSimError("Changing the variance is not allowed for VariableGaussianNoise")
 
     def _withScaledVariance(self, variance):
         # This one isn't undefined like withVariance, but it's inefficient.  Better to
         # scale the values in the image before constructing VariableGaussianNoise.
-        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
+        raise GalSimError("Changing the variance is not allowed for VariableGaussianNoise")
 
     def __repr__(self):
         return 'galsim.VariableGaussianNoise(rng=%r, var_image%r)'%(self.rng, self.var_image)

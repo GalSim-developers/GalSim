@@ -157,7 +157,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
 
     # Are we allowed to look here?
     if not allowedPos(world_pos, date):
-        raise RuntimeError("Error, WFIRST cannot look at this position on this date!")
+        raise galsim.GalSimError("Error, WFIRST cannot look at this position on this date!")
 
     # If position angle was not given, then get the optimal one:
     if PA is None:
@@ -447,8 +447,8 @@ def _parse_sip_file(file):
     for later calculations.
     """
     if not os.path.exists(file):
-        raise RuntimeError("Error, cannot find file that should have WFIRST SIP"
-                           " coefficients: %s"%file)
+        raise galsim.GalSimError("Error, cannot find file that should have WFIRST SIP"
+                                 " coefficients: %s"%file)
 
     # Parse the file, which comes from wfi_wcs_sip_gen_0.1.c provided by Jeff Kruk.
     data = np.loadtxt(file, usecols=[0, 3, 4, 5, 6, 7]).transpose()

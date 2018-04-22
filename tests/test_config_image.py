@@ -372,12 +372,12 @@ def test_reject():
     # If we lower the number of retries, we'll max out and abort the image
     config['stamp']['retry_failures'] = 10
     galsim.config.RemoveCurrent(config)
-    with assert_raises((ValueError, IndexError, RuntimeError)):
+    with assert_raises((ValueError, IndexError, galsim.GalSimError)):
         galsim.config.BuildStamps(nimages, config, do_noise=False)
     try:
         with CaptureLog() as cl:
             galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
-    except (ValueError,IndexError,RuntimeError):
+    except (ValueError,IndexError,galsim.GalSimError):
         pass
     #print(cl.output)
     assert "Object 0: Too many exceptions/rejections for this object. Aborting." in cl.output
@@ -388,7 +388,7 @@ def test_reject():
     try:
         with CaptureLog() as cl:
             galsim.config.BuildImages(nimages, config, logger=cl.logger)
-    except (ValueError,IndexError,RuntimeError):
+    except (ValueError,IndexError,galsim.GalSimError):
         pass
     #print(cl.output)
     assert "Exception caught when building image" in cl.output
@@ -398,7 +398,7 @@ def test_reject():
     try:
         with CaptureLog() as cl:
             galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
-    except (ValueError,IndexError,RuntimeError):
+    except (ValueError,IndexError,galsim.GalSimError):
         pass
     #print(cl.output)
     assert re.search("Process-.: Exception caught when building stamp",cl.output)
@@ -406,7 +406,7 @@ def test_reject():
     try:
         with CaptureLog() as cl:
             galsim.config.BuildImages(nimages, config, logger=cl.logger)
-    except (ValueError,IndexError,RuntimeError):
+    except (ValueError,IndexError,galsim.GalSimError):
         pass
     #print(cl.output)
     assert re.search("Process-.: Exception caught when building image",cl.output)

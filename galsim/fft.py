@@ -35,6 +35,7 @@ in the numpy version, feel free to post a feature request on our GitHub page.
 """
 
 import numpy as np
+
 from . import _galsim
 from .image import Image, ImageD, ImageCD
 from .bounds import BoundsI

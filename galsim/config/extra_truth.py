@@ -86,7 +86,7 @@ class TruthBuilder(ExtraOutputBuilder):
                          base['obj_num'])
             logger.error("Types for current object = %s",repr(types))
             logger.error("Expecting types = %s",repr(self.scratch['types']))
-            raise RuntimeError("Type mismatch found when building truth catalog.")
+            raise galsim.GalSimError("Type mismatch found when building truth catalog.")
         self.scratch[obj_num] = row
 
     # The function to call at the end of building each file to finalize the truth catalog

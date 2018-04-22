@@ -58,6 +58,7 @@ import math
 from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
+from .errors import GalSimError
 
 
 class GSObject(object):
@@ -683,7 +684,7 @@ class GSObject(object):
 
         Not all GSObject classes can use this method.  Classes like Convolution that require a
         Discrete Fourier Transform to determine the real space values will not do so for a single
-        position.  Instead a RuntimeError will be raised.  The xValue() method is available if and
+        position.  Instead a GalSimError will be raised.  The xValue() method is available if and
         only if `obj.is_analytic_x == True`.
 
         Users who wish to use the xValue() method for an object that is the convolution of other
@@ -1765,7 +1766,7 @@ class GSObject(object):
             Nk = int(np.ceil(maxk/dk)) * 2
 
         if Nk > self.gsparams.maximum_fft_size:
-            raise RuntimeError(
+            raise GalSimError(
                 "drawFFT requires an FFT that is too large: %s. "%Nk +
                 "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
 
@@ -2087,7 +2088,7 @@ class GSObject(object):
 
             try:
                 photons = self.shoot(thisN, ud)
-            except RuntimeError:  # pragma: no cover
+            except GalSimError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
                 import warnings

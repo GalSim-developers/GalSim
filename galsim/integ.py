@@ -20,9 +20,11 @@ Includes a Python layer version of the C++ int1d() function in galim::integ,
 and python image integrators for use in galsim.chromatic
 """
 
-from . import _galsim
 import numpy as np
 from functools import reduce
+
+from . import _galsim
+from .errors import GalSimError
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
@@ -55,7 +57,7 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     if success:
         return result
     else:
-        raise RuntimeError(result)
+        raise GalSimError(result)
 
 def midpt(fvals, x):
     """Midpoint rule for integration.

@@ -103,7 +103,8 @@ class RingBuilder(StampBuilder):
         else:
             # Grab the saved first galaxy.
             if not hasattr(self, 'first'):
-                raise RuntimeError("Building Ring after the first item, but no first gal stored.")
+                raise galsim.GalSimError(
+                    "Building Ring after the first item, but no first gal stored.")
             gal = self.first
             full_rot = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
             dtheta = full_rot / num

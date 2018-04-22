@@ -20,6 +20,7 @@ A few adjustments to the Bounds class at the Python layer.
 """
 
 import math
+
 from . import _galsim
 from .position import Position, PositionI, PositionD
 

@@ -32,12 +32,14 @@ page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGa
 """
 
 
+import os
+import numpy as np
+
 from .gsobject import GSObject
 from .chromatic import ChromaticSum
 from .position import PositionD
-import os
-import numpy as np
 from .utilities import doc_inherit
+from .errors import GalSimError
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
 
@@ -846,7 +848,7 @@ def _parse_files_dirs(file_name, image_dir, sample):
                                      'COSMOS_'+use_sample+'_training_sample')
         full_file_name = os.path.join(image_dir,file_name)
         if not os.path.isfile(full_file_name):
-            raise RuntimeError('No RealGalaxy catalog found in %s.  '%image_dir +
+            raise GalSimError('No RealGalaxy catalog found in %s.  '%image_dir +
                                'Run the program galsim_download_cosmos -s %s '%use_sample +
                                'to download catalog and accompanying image files.')
     elif image_dir is None:

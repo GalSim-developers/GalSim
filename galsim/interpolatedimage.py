@@ -34,6 +34,7 @@ from .utilities import convert_interpolant, lazy_property, doc_inherit
 from .random import BaseDeviate
 from . import _galsim
 from . import fits
+from .errors import GalSimError
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -338,7 +339,7 @@ class InterpolatedImage(GSObject):
         # I think the only things that will mess up if flux == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
         if (calculate_stepk or calculate_maxk or flux is not None) and self._image_flux == 0.:
-            raise RuntimeError("This input image has zero total flux. "
+            raise GalSimError("This input image has zero total flux. "
                                "It does not define a valid surface brightness profile.")
 
         # Process the different options for flux, stepk, maxk

@@ -48,10 +48,12 @@ each one.
 """
 
 import numpy as np
+
 from .gsobject import GSObject
 from .position import PositionI, PositionD
 from .celestial import CelestialCoord
 from .shear import Shear
+from .errors import GalSimError
 
 class BaseWCS(object):
     """The base class for all other kinds of WCS transformations.
@@ -1500,7 +1502,7 @@ class JacobianWCS(LocalWCS):
         # First we need to see whether or not the transformation includes a flip.  The evidence
         # for a flip is that the determinant is negative.
         if self._det == 0.:
-            raise RuntimeError("Transformation is singular")
+            raise GalSimError("Transformation is singular")
         elif self._det < 0.:
             flip = True
             scale = math.sqrt(-self._det)

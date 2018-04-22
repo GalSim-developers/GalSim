@@ -268,7 +268,7 @@ class GaussianNoiseBuilder(NoiseBuilder):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                         base.get('image_num',0),base.get('obj_num',0),var,current_var)
             if var < current_var:
-                raise RuntimeError(
+                raise galsim.GalSimError(
                     "Whitening already added more noise than the requested Gaussian noise.")
             var -= current_var
 
@@ -324,7 +324,7 @@ class PoissonNoiseBuilder(NoiseBuilder):
             else:
                 test = (total_sky < current_var)
             if test:
-                raise RuntimeError(
+                raise galsim.GalSimError(
                     "Whitening already added more noise than the requested Poisson noise.")
             total_sky -= current_var
             extra_sky -= current_var
@@ -428,7 +428,7 @@ class CCDNoiseBuilder(NoiseBuilder):
                              target_var, current_var)
                 test = target_var < current_var
             if test:
-                raise RuntimeError(
+                raise galsim.GalSimError(
                     "Whitening already added more noise than the requested CCD noise.")
             if read_noise_var_adu >= current_var:
                 # First try to take away from the read_noise, since this one is actually Gaussian.
@@ -540,7 +540,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          base.get('image_num',0),base.get('obj_num',0), var, current_var)
             if var < current_var:
-                raise RuntimeError(
+                raise galsim.GalSimError(
                     "Whitening already added more noise than the requested COSMOS noise.")
             cn -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=cn.wcs)
 

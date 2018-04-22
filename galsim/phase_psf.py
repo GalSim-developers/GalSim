@@ -80,6 +80,7 @@ from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
+from .errors import GalSimError
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -312,7 +313,7 @@ class Aperture(object):
         else:
             maximum_fft_size = GSParams().maximum_fft_size
         if self.npix > maximum_fft_size:
-            raise RuntimeError("Created pupil plane array that is too large, {0} "
+            raise GalSimError("Created pupil plane array that is too large, {0} "
                                "If you can handle the large FFT, you may update "
                                "gsparams.maximum_fft_size".format(self.npix))
 

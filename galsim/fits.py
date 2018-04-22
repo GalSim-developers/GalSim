@@ -26,7 +26,9 @@ from future.utils import iteritems, iterkeys, itervalues
 from past.builtins import basestring
 import os
 import numpy as np
+
 from .image import Image
+from .errors import GalSimError
 
 
 ##############################################################################################
@@ -216,7 +218,7 @@ class _ReadFile:
                 except: # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
-            raise RuntimeError("None of the options for gunzipping were successful.")
+            raise GalSimError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
             with open(file) as fid: pass
             while self.bz2_index < len(self.bz2_methods):
@@ -227,7 +229,7 @@ class _ReadFile:
                 except: # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
-            raise RuntimeError("None of the options for bunzipping were successful.")
+            raise GalSimError("None of the options for bunzipping were successful.")
         else:
             raise ValueError("Unknown file_compression")
 _read_file = _ReadFile()
@@ -393,7 +395,7 @@ class _WriteFile:
                 except:  # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
-            raise RuntimeError("None of the options for gunzipping were successful.")
+            raise GalSimError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
             while self.bz2_index < len(self.bz2_methods):
                 try:
@@ -403,7 +405,7 @@ class _WriteFile:
                 except:  # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
-            raise RuntimeError("None of the options for bunzipping were successful.")
+            raise GalSimError("None of the options for bunzipping were successful.")
         else:
             raise ValueError("Unknown file_compression")
 

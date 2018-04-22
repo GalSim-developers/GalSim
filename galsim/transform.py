@@ -22,6 +22,7 @@ A class that handles affine tranformations of a profile including a possible flu
 import numpy as np
 import math
 import cmath
+
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams

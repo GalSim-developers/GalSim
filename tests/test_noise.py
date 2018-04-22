@@ -91,9 +91,9 @@ def test_deviate_noise():
     assert_raises(NotImplementedError, galsim.BaseNoise().withScaledVariance, 23)
     assert_raises(TypeError, noise.applyTo, 23)
     assert_raises(NotImplementedError, galsim.BaseNoise().applyTo, testimage)
-    assert_raises(RuntimeError, noise.getVariance)
-    assert_raises(RuntimeError, noise.withVariance, 23)
-    assert_raises(RuntimeError, noise.withScaledVariance, 23)
+    assert_raises(galsim.GalSimError, noise.getVariance)
+    assert_raises(galsim.GalSimError, noise.withVariance, 23)
+    assert_raises(galsim.GalSimError, noise.withScaledVariance, 23)
 
 
 @timer
@@ -367,9 +367,9 @@ def test_variable_gaussian_noise():
 
     assert_raises(TypeError, vgn.applyTo, 23)
     assert_raises(ValueError, vgn.applyTo, galsim.ImageF(3,3))
-    assert_raises(RuntimeError, vgn.getVariance)
-    assert_raises(RuntimeError, vgn.withVariance, 23)
-    assert_raises(RuntimeError, vgn.withScaledVariance, 23)
+    assert_raises(galsim.GalSimError, vgn.getVariance)
+    assert_raises(galsim.GalSimError, vgn.withVariance, 23)
+    assert_raises(galsim.GalSimError, vgn.withScaledVariance, 23)
 
 
 @timer
