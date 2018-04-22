@@ -26,7 +26,9 @@ import numbers
 
 from . import _galsim
 from .utilities import lazy_property
-from .errors import GalSimRangeError
+from .position import PositionD
+from .bounds import BoundsD
+from .errors import GalSimRangeError, GalSimBoundsError
 
 class LookupTable(object):
     """
@@ -481,9 +483,14 @@ class LookupTable2D(object):
         return ((x-self.x[0]) % self.xperiod + self.x[0],
                 (y-self.y[0]) % self.yperiod + self.y[0])
 
+    @property
+    def _bounds(self):
+        return BoundsD(self.x[0], self.x[-1], self.y[0], self.y[-1])
+
     def _call_raise(self, x, y):
         if not self._inbounds(x, y):
-            raise ValueError("Extrapolating beyond input range.")
+            raise GalSimBoundsError("Extrapolating beyond input range.",
+                                    PositionD(x,y), self._bounds)
 
         if isinstance(x, numbers.Real):
             return self._tab.interp(x, y)
@@ -529,7 +536,8 @@ class LookupTable2D(object):
 
     def _gradient_raise(self, x, y):
         if not self._inbounds(x, y):
-            raise ValueError("Extrapolating beyond input range.")
+            raise GalSimBoundsError("Extrapolating beyond input range.",
+                                    PositionD(x,y), self._bounds)
 
         if isinstance(x, numbers.Real):
             grad = np.empty(2, dtype=float)
