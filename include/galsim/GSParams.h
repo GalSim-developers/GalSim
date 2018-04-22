@@ -123,7 +123,7 @@ namespace galsim {
          */
         GSParams() :
             minimum_fft_size(128),
-            maximum_fft_size(4096),
+            maximum_fft_size(8192),
             folding_threshold(5.e-3),
             stepk_minimum_hlr(5.),
             maxk_threshold(1.e-3),

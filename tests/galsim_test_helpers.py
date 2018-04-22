@@ -34,6 +34,21 @@ except ImportError:
 # This file has some helper functions that are used by tests from multiple files to help
 # avoid code duplication.
 
+# These are the default GSParams used when unspecified.  We'll check that specifying
+# these explicitly produces the same results.
+default_params = galsim.GSParams(
+        minimum_fft_size = 128,
+        maximum_fft_size = 8192,
+        folding_threshold = 5.e-3,
+        maxk_threshold = 1.e-3,
+        kvalue_accuracy = 1.e-5,
+        xvalue_accuracy = 1.e-5,
+        shoot_accuracy = 1.e-5,
+        realspace_relerr = 1.e-4,
+        realspace_abserr = 1.e-6,
+        integration_relerr = 1.e-6,
+        integration_abserr = 1.e-8)
+
 def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     """Helper function to check that two GSObjects are equivalent
     """
