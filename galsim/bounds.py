@@ -23,6 +23,7 @@ import math
 
 from . import _galsim
 from .position import Position, PositionI, PositionD
+from .errors import GalSimUndefinedBoundsError
 
 class Bounds(object):
     """A class for representing image bounds as 2D rectangles.
@@ -189,7 +190,7 @@ class Bounds(object):
         For a BoundsD, this is equivalent to true_center.
         """
         if not self.isDefined():
-            raise ValueError("center is invalid for an undefined Bounds")
+            raise GalSimUndefinedBoundsError("center is invalid for an undefined Bounds")
         return self._center
 
     @property
@@ -200,7 +201,7 @@ class Bounds(object):
         this may not necessarily be an integer PositionI.
         """
         if not self.isDefined():
-            raise ValueError("true_center is invalid for an undefined Bounds")
+            raise GalSimUndefinedBoundsError("true_center is invalid for an undefined Bounds")
         return PositionD((self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2.)
 
     def includes(self, *args):

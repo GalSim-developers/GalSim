@@ -240,7 +240,7 @@ def test_exceptions():
     # Image must have bounds defined
     im = galsim.ImageF()
     im.scale = 1.
-    with assert_raises(ValueError):
+    with assert_raises(galsim.GalSimUndefinedBoundsError):
         galsim.InterpolatedImage(im)
     # Weird flux normalization
     im = galsim.ImageF(5, 5, scale=1.)

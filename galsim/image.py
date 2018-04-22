@@ -28,6 +28,7 @@ from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from . import utilities
 from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
+from .errors import GalSimUndefinedBoundsError
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -866,7 +867,8 @@ class Image(object):
             raise GalSimValueError("calculate_fft requires that the image has a PixelScale wcs.",
                                    self.wcs)
         if not self.bounds.isDefined():
-            raise ValueError("calculate_fft requires that the image have defined bounds.")
+            raise GalSimUndefinedBoundsError("calculate_fft requires that the image have defined "
+                                             "bounds.")
 
         No2 = max(-self.bounds.xmin, self.bounds.xmax+1, -self.bounds.ymin, self.bounds.ymax+1)
 
@@ -914,7 +916,8 @@ class Image(object):
             raise GalSimValueError("calculate_inverse_fft requires that the image has a "
                                    "PixelScale wcs.", self.wcs)
         if not self.bounds.isDefined():
-            raise ValueError("calculate_inverse_fft requires that the image have defined bounds.")
+            raise GalSimUndefinedBoundsError("calculate_inverse_fft requires that the image have "
+                                             "defined bounds.")
         if not self.bounds.includes(0,0):
             raise GalSimBoundsError("calculate_inverse_fft requires that the image includes (0,0)",
                                     PositionI(0,0), self.bounds)
@@ -1252,7 +1255,7 @@ class Image(object):
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
-            raise ValueError("Attempt to set value of an undefined image")
+            raise GalSimUndefinedBoundsError("Attempt to set value of an undefined image")
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
@@ -1272,7 +1275,7 @@ class Image(object):
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
-            raise ValueError("Attempt to set values of an undefined image")
+            raise GalSimUndefinedBoundsError("Attempt to set values of an undefined image")
         self._fill(value)
 
     def _fill(self, value):
@@ -1297,7 +1300,7 @@ class Image(object):
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
-            raise ValueError("Attempt to set values of an undefined image")
+            raise GalSimUndefinedBoundsError("Attempt to set values of an undefined image")
         self._invertSelf()
 
     def _invertSelf(self):

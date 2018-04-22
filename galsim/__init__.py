@@ -103,7 +103,7 @@ from .table import LookupTable, LookupTable2D
 
 # Exception and Warning classes
 from .errors import GalSimError, GalSimRangeError, GalSimValueError
-from .errors import GalSimImmutableError
+from .errors import GalSimImmutableError, GalSimUndefinedBoundsError
 from .errors import GalSimSEDError, GalSimHSMError
 from .errors import GalSimWarning
 

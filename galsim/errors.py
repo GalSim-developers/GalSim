@@ -79,6 +79,13 @@ class GalSimBoundsError(GalSimError, ValueError):
         self.bounds = bounds
 
 
+class GalSimUndefinedBoundsError(GalSimError):
+    """A GalSim-specific exception class indicating an attempt to access the range of bounds
+    that have not yet been defined.
+    """
+    pass
+
+
 class GalSimSEDError(GalSimError):
     """A GalSim-specific exception class indicating an attempt to do something invalid for the
     kind of SED that is present.  Typically involving a dimensionless SED where a spectral SED

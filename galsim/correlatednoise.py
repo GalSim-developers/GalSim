@@ -26,7 +26,8 @@ from .image import Image
 from .random import BaseDeviate
 from .gsobject import GSObject
 from . import utilities
-from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimUndefinedBoundsError
+from .errors import GalSimWarning
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -215,7 +216,7 @@ class _BaseCorrelatedNoise(object):
         if not isinstance(image, Image):
             raise TypeError("Input image argument must be a galsim.Image.")
         if not image.bounds.isDefined():
-            raise ValueError("Input image argument must have defined bounds.")
+            raise GalSimUndefinedBoundsError("Input image argument must have defined bounds.")
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.
@@ -312,7 +313,7 @@ class _BaseCorrelatedNoise(object):
         if not isinstance(image, Image):
             raise TypeError("Input image not a galsim.Image object")
         if not image.bounds.isDefined():
-            raise ValueError("Input image argument must have defined bounds.")
+            raise GalSimUndefinedBoundsError("Input image argument must have defined bounds.")
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.
@@ -396,7 +397,7 @@ class _BaseCorrelatedNoise(object):
         if not isinstance(image, Image):
             raise TypeError("Input image not a galsim.Image object")
         if not image.bounds.isDefined():
-            raise ValueError("Input image argument must have defined bounds.")
+            raise GalSimUndefinedBoundsError("Input image argument must have defined bounds.")
 
         # Check that the input is square in shape.
         if image.array.shape[0] != image.array.shape[1]:
