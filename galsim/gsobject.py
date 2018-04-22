@@ -58,7 +58,7 @@ import math
 from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 
 class GSObject(object):
@@ -1510,7 +1510,8 @@ class GSObject(object):
                     "handle the Pixel convolution for you.  If you want to handle the Pixel "
                     "convolution yourself, you can use method=no_pixel.  Or if you really meant "
                     "for your profile to include the Pixel and also have GalSim convolve by "
-                    "an _additional_ Pixel, you can suppress this warning by using method=fft.")
+                    "an _additional_ Pixel, you can suppress this warning by using method=fft.",
+                    GalSimWarning)
 
         # Some parameters are only relevant for method == 'phot'
         if method != 'phot' and sensor is None:
@@ -1961,7 +1962,7 @@ class GSObject(object):
                           "flux = %s  "%self.flux +
                           "poisson_flux = %s  "%poisson_flux +
                           "max_extra_noise = %s  "%max_extra_noise +
-                          "g = %s  "%g)
+                          "g = %s  "%g, GalSimWarning)
             return 0, 1.
 
         return iN, g
@@ -2052,7 +2053,8 @@ class GSObject(object):
             import warnings
             warnings.warn(
                     "Warning: drawImage for object with flux == 1, area == 1, and "
-                    "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
+                    "exptime == 1, but n_photons == 0.  This will only shoot a single photon.",
+                    GalSimWarning)
 
         ud = UniformDeviate(rng)
 
@@ -2094,7 +2096,8 @@ class GSObject(object):
                 import warnings
                 warnings.warn(
                     "Unable to draw this GSObject with photon shooting.  Perhaps it is a "+
-                    "Deconvolve or is a compound including one or more Deconvolve objects.")
+                    "Deconvolve or is a compound including one or more Deconvolve objects.",
+                    GalSimWarning)
                 raise
 
             if g != 1. or thisN != Ntot:

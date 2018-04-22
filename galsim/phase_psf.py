@@ -80,7 +80,7 @@ from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -289,7 +289,7 @@ class Aperture(object):
                     warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
                                   "Consider decreasing pupil_plane_scale by a factor %f, and/or "
                                   "check PhaseScreenPSF outputs for signs of folding in real "
-                                  "space."%(1./ratio))
+                                  "space."%(1./ratio), GalSimWarning)
             else:
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
@@ -300,7 +300,8 @@ class Aperture(object):
                     warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
                                   "sampling.\n"
                                   "Consider increasing pupil_plane_size by a factor %f, and/or "
-                                  "check PhaseScreenPSF outputs for signs of undersampling."%ratio)
+                                  "check PhaseScreenPSF outputs for signs of undersampling."%ratio,
+                                  GalSimWarning)
             else:
                 pupil_plane_size = good_pupil_size
             self._generate_pupil_plane(circular_pupil,
@@ -425,7 +426,8 @@ class Aperture(object):
             ratio = self.pupil_plane_scale / good_pupil_scale
             warnings.warn("Input pupil plane image may not be sampled well enough!\n"
                           "Consider increasing sampling by a factor %f, and/or check "
-                          "PhaseScreenPSF outputs for signs of folding in real space."%ratio)
+                          "PhaseScreenPSF outputs for signs of folding in real space."%ratio,
+                          GalSimWarning)
 
         if pupil_angle.rad == 0.:
             self._illuminated = pp_arr.astype(bool)
@@ -1290,7 +1292,7 @@ class PhaseScreenPSF(GSObject):
                     "The calculated stepk (%g) for PhaseScreenPSF is smaller "%observed_stepk +
                     "than what was used to build the wavefront (%g). "%specified_stepk +
                     "This could lead to aliasing problems. " +
-                    "Increasing pad_factor is recommended.")
+                    "Increasing pad_factor is recommended.", GalSimWarning)
 
     @property
     def _sbp(self):

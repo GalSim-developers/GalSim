@@ -1085,7 +1085,7 @@ def test_uncorrelated_noise_tracking():
     # Convolving two objects with noise works fine, but accessing the resulting noise attribute
     # leads to a warning.
     conv_obj = galsim.Convolve(int_im, int_im)
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         noise = conv_obj.noise
     # The noise should be correlated, not just the original UncorrelatedNoise
     assert isinstance(noise, galsim.correlatednoise._BaseCorrelatedNoise)

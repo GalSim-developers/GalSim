@@ -74,7 +74,7 @@ def test_vk_delta():
     """Test a VonKarman with a significant delta-function amplitude"""
     kwargs = {'lam':1100.0, 'r0':0.8, 'L0':5.0, 'flux':2.2}
     # Try to see if we can catch the warning first
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         vk = galsim.VonKarman(**kwargs)
 
     kwargs['suppress_warning'] = True

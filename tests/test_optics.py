@@ -297,7 +297,7 @@ def test_OpticalPSF_aberrations_kwargs():
     with assert_raises(ValueError):
         galsim.OpticalPSF(lod, aberrations=[0.0]*2)
     # The first element must be 0. (Just a warning!)
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         galsim.OpticalPSF(lod, aberrations=[0.3]*8)
     # Cannot provide both aberrations and specific ones by name.
     with assert_raises(TypeError):

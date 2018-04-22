@@ -29,7 +29,7 @@ from .position import PositionD, PositionI
 from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 #########################################################################################
 #
@@ -1698,7 +1698,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
         # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
         if not suppress_warning:
             warnings.warn("All the fits WCS types failed to read "+file_name+".  " +
-                        "Using AffineTransform instead, which will not really be correct.")
+                          "Using AffineTransform instead, which will not really be correct.",
+                          GalSimWarning)
         wcs = AffineTransform._readHeader(header)
         return wcs
 

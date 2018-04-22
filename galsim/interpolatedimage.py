@@ -34,7 +34,7 @@ from .utilities import convert_interpolant, lazy_property, doc_inherit
 from .random import BaseDeviate
 from . import _galsim
 from . import fits
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -877,7 +877,8 @@ class InterpolatedKImage(GSObject):
         elif stepk < kimage.scale:
             import warnings
             warnings.warn(
-                "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
+                "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.",
+                GalSimWarning)
             self._stepk = kimage.scale
         else:
             self._stepk = stepk

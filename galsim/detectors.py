@@ -22,7 +22,9 @@ failure, interpixel capacitance, etc.
 
 import numpy as np
 import sys
+
 from .image import Image
+from .errors import GalSimWarning
 
 def applyNonlinearity(self, NLfunc, *args):
     """
@@ -140,7 +142,8 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
 
     if np.any(self.array<0):
         import warnings
-        warnings.warn("One or more pixel values are negative and will be set as 'nan'.")
+        warnings.warn("One or more pixel values are negative and will be set as 'nan'.",
+                      GalSimWarning)
 
     p0 = exp_time*base_flux
     a = alpha/np.log(10)
@@ -217,7 +220,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
         if abs(ipc_kernel.sum() - 1.0) > 10.*np.finfo(ipc_kernel.dtype.type).eps:
             import warnings
             warnings.warn("The entries in the IPC kernel did not sum to 1. Scaling the kernel to "\
-                +"ensure correct normalization.")
+                +"ensure correct normalization.", GalSimWarning)
             IPC_kernel = IPC_kernel/ipc_kernel.sum()
 
     # edge_treatment can be 'extend', 'wrap' or 'crop'

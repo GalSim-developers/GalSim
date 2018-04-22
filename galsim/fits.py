@@ -28,7 +28,7 @@ import os
 import numpy as np
 
 from .image import Image
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 
 ##############################################################################################
@@ -474,7 +474,8 @@ def _check_hdu(hdu, pyfits_compress):
                     'installed.')
             elif isinstance(hdu, pyfits.ImageHDU):
                 import warnings
-                warnings.warn("Expecting a CompImageHDU, but found an uncompressed ImageHDU")
+                warnings.warn("Expecting a CompImageHDU, but found an uncompressed ImageHDU",
+                              GalSimWarning)
             else:
                 raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
     else:
@@ -864,8 +865,8 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
             data = hdu.data
         else:
             import warnings
-            warnings.warn("No C++ Image template instantiation for data type %s" % dt)
-            warnings.warn("   Using numpy.float64 instead.")
+            warnings.warn("No C++ Image template instantiation for data type %s" % dt +
+                          "   Using numpy.float64 instead.", GalSimWarning)
             data = hdu.data.astype(np.float64)
 
         image = Image(array=data)
@@ -1012,8 +1013,8 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
             data = hdu.data
         else:
             import warnings
-            warnings.warn("No C++ Image template instantiation for data type %s" % dt)
-            warnings.warn("   Using numpy.float64 instead.")
+            warnings.warn("No C++ Image template instantiation for data type %s" % dt +
+                          "   Using numpy.float64 instead.", GalSimWarning)
             data = hdu.data.astype(np.float64)
 
         nimages = data.shape[0]
