@@ -100,6 +100,19 @@ class GalSimHSMError(GalSimError):
     pass
 
 
+class GalSimImmutableError(GalSimError):
+    """A GalSim-specific exception class indicating an attempt to modify an immutable image.
+
+    Attrubutes:
+
+        image = the image that the user attempted to modify
+    """
+    def __init__(self, message, image):
+        message += " Image: {0!s}".format(image)
+        super().__init__(message)
+        self.image = image
+
+
 class GalSimWarning(UserWarning):
     """The base class for GalSim-emitted warnings.
     """

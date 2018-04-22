@@ -27,7 +27,7 @@ from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from . import utilities
-from .errors import GalSimError, GalSimBoundsError, GalSimValueError
+from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -582,7 +582,7 @@ class Image(object):
                         which means keep the existing wcs]
         """
         if self.isconst:
-            raise ValueError("Cannot modify an immutable Image")
+            raise GalSimImmutableError("Cannot modify an immutable Image", self)
         if not isinstance(bounds, BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         self._array = self._make_empty(shape=bounds.numpyShape(), dtype=self.dtype)
@@ -613,7 +613,7 @@ class Image(object):
         This is equivalent to self[bounds] = rhs
         """
         if self.isconst:
-            raise ValueError("Cannot modify the values of an immutable Image")
+            raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         self.subImage(bounds).copyFrom(rhs)
 
     def __getitem__(self, *args):
@@ -960,7 +960,7 @@ class Image(object):
         """Copy the contents of another image
         """
         if self.isconst:
-            raise ValueError("Cannot modify the values of an immutable Image")
+            raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if self.bounds.numpyShape() != rhs.bounds.numpyShape():
             raise ValueError("Trying to copy images that are not the same shape (%s -> %s)"%(
                              rhs.bounds, self.bounds))
@@ -1225,7 +1225,7 @@ class Image(object):
         This is equivalent to self[x,y] = rhs
         """
         if self.isconst:
-            raise ValueError("Cannot modify the values of an immutable Image")
+            raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
             raise GalSimError("Attempt to set value of an undefined image")
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
@@ -1250,7 +1250,7 @@ class Image(object):
         This is equivalent to self[x,y] += rhs
         """
         if self.isconst:
-            raise ValueError("Cannot modify the values of an immutable Image")
+            raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
             raise ValueError("Attempt to set value of an undefined image")
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
@@ -1270,7 +1270,7 @@ class Image(object):
         """Set all pixel values to the given `value`
         """
         if self.isconst:
-            raise ValueError("Cannot modify the values of an immutable Image")
+            raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
             raise ValueError("Attempt to set values of an undefined image")
         self._fill(value)
@@ -1285,7 +1285,7 @@ class Image(object):
         """Set all pixel values to zero.
         """
         if self.isconst:
-            raise ValueError("Cannot modify the values of an immutable Image")
+            raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         self._fill(0)  # This might be made faster with a C++ call to use memset
 
     def invertSelf(self):
@@ -1295,7 +1295,7 @@ class Image(object):
         on the output, rather than turning into inf.
         """
         if self.isconst:
-            raise ValueError("Cannot modify the values of an immutable Image")
+            raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
             raise ValueError("Attempt to set values of an undefined image")
         self._invertSelf()

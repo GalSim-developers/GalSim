@@ -271,11 +271,11 @@ def test_Image_basic():
         assert_raises(galsim.GalSimError,im1.view().__call__,ncol+1,nrow+1)
 
         # Also, setting values in something that should be const
-        assert_raises(ValueError,im1.view(make_const=True).setValue,1,1,1)
-        assert_raises(ValueError,im1.view(make_const=True).real.setValue,1,1,1)
-        assert_raises(ValueError,im1.view(make_const=True).imag.setValue,1,1,1)
+        assert_raises(galsim.GalSimImmutableError,im1.view(make_const=True).setValue,1,1,1)
+        assert_raises(galsim.GalSimImmutableError,im1.view(make_const=True).real.setValue,1,1,1)
+        assert_raises(galsim.GalSimImmutableError,im1.view(make_const=True).imag.setValue,1,1,1)
         if tchar[i][0] != 'C':
-            assert_raises(ValueError,im1.imag.setValue,1,1,1)
+            assert_raises(galsim.GalSimImmutableError,im1.imag.setValue,1,1,1)
 
         # Finally check for the wrong number of arguments in get/setitem
         assert_raises(TypeError,im1.__getitem__,1)
@@ -1888,55 +1888,35 @@ def test_ConstImage_array_constness():
     """
     for i in range(ntypes):
         image = galsim.Image(ref_array.astype(types[i]), make_const=True)
-        try:
-            image.array[1, 2] = 666
-            assert False, "Setting values in a const image.array should have raised an error."
-        # Apparently older numpy versions might raise a GalSimError, a ValueError, or a TypeError
+        # Apparently older numpy versions might raise a RuntimeError, a ValueError, or a TypeError
         # when trying to write to arrays that have writeable=False.
         # From the numpy 1.7.0 release notes:
         #     Attempting to write to a read-only array (one with
         #     ``arr.flags.writeable`` set to ``False``) used to raise either a
-        #     GalSimError, ValueError, or TypeError inconsistently, depending on
+        #     RuntimeError, ValueError, or TypeError inconsistently, depending on
         #     which code path was taken. It now consistently raises a ValueError.
-        except (galsim.GalSimError, ValueError, TypeError):
-            pass
-        except:
-            assert False, "Unexpected error: "+str(sys.exc_info()[0])
+        with assert_raises((RuntimeError, ValueError, TypeError)):
+            image.array[1, 2] = 666
 
-        # Native image operations that are invalid just raise ValueError
-        try:
+        # Native image operations that are invalid just raise GalSimImmutableError
+        with assert_raises(galsim.GalSimImmutableError):
             image[1, 2] = 666
-            assert False, "Setting values in a const image should have raised an error."
-        except ValueError:
-            pass
-        except:
-            assert False, "Unexpected error: "+str(sys.exc_info()[0])
 
-        try:
+        with assert_raises(galsim.GalSimImmutableError):
             image.setValue(1,2,666)
-            assert False, "Calling setValue on a const image should have raised an error."
-        except ValueError:
-            pass
-        except:
-            assert False, "Unexpected error: "+str(sys.exc_info()[0])
 
-        try:
+        with assert_raises(galsim.GalSimImmutableError):
             image[image.bounds] = image
-            assert False, "Setting subImage of a const image should have raised an error."
-        except ValueError:
-            pass
-        except:
-            assert False, "Unexpected error: "+str(sys.exc_info()[0])
 
         # The rest are functions, so just use assert_raises.
-        assert_raises(ValueError, image.setValue, 1, 2, 666)
-        assert_raises(ValueError, image.setSubImage, image.bounds, image)
-        assert_raises(ValueError, image.addValue, 1, 2, 666)
-        assert_raises(ValueError, image.copyFrom, image)
-        assert_raises(ValueError, image.resize, image.bounds)
-        assert_raises(ValueError, image.fill, 666)
-        assert_raises(ValueError, image.setZero)
-        assert_raises(ValueError, image.invertSelf)
+        assert_raises(galsim.GalSimImmutableError, image.setValue, 1, 2, 666)
+        assert_raises(galsim.GalSimImmutableError, image.setSubImage, image.bounds, image)
+        assert_raises(galsim.GalSimImmutableError, image.addValue, 1, 2, 666)
+        assert_raises(galsim.GalSimImmutableError, image.copyFrom, image)
+        assert_raises(galsim.GalSimImmutableError, image.resize, image.bounds)
+        assert_raises(galsim.GalSimImmutableError, image.fill, 666)
+        assert_raises(galsim.GalSimImmutableError, image.setZero)
+        assert_raises(galsim.GalSimImmutableError, image.invertSelf)
 
         do_pickle(image)
 
