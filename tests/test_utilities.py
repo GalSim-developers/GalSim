@@ -306,10 +306,10 @@ def test_bounds():
     assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
     assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
 
-    assert_raises(ValueError, getattr, galsim.BoundsI(), 'center')
-    assert_raises(ValueError, getattr, galsim.BoundsD(), 'center')
-    assert_raises(ValueError, getattr, galsim.BoundsI(), 'true_center')
-    assert_raises(ValueError, getattr, galsim.BoundsD(), 'true_center')
+    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'center')
+    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'center')
+    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsI(), 'true_center')
+    assert_raises(galsim.GalSimUndefinedBoundsError, getattr, galsim.BoundsD(), 'true_center')
 
     do_pickle(bi1)
     do_pickle(bd1)

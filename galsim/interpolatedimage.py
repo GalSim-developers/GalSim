@@ -34,7 +34,8 @@ from .utilities import convert_interpolant, lazy_property, doc_inherit
 from .random import BaseDeviate
 from . import _galsim
 from . import fits
-from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
+from .errors import GalSimWarning
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -288,7 +289,7 @@ class InterpolatedImage(GSObject):
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
         if not image.bounds.isDefined():
-            raise ValueError("Supplied image does not have bounds defined!")
+            raise GalSimUndefinedBoundsError("Supplied image does not have bounds defined.")
 
         # check what normalization was specified for the image: is it an image of surface
         # brightness, or flux?
