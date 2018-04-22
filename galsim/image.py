@@ -27,7 +27,7 @@ from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from . import utilities
-from .errors import GalSimError
+from .errors import GalSimError, GalSimRangeError
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -1206,7 +1206,8 @@ class Image(object):
         if not self.bounds.isDefined():
             raise GalSimError("Attempt to access values of an undefined image")
         if not self.bounds.includes(x,y):
-            raise GalSimError("Attempt to access position %s,%s, not in bounds %s"%(x,y,self.bounds))
+            raise GalSimRangeError("Attempt to access position %s,%s, not in bounds %s"%(
+                    x,y,self.bounds))
         return self._getValue(x,y)
 
     def _getValue(self, x, y):
@@ -1230,7 +1231,7 @@ class Image(object):
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
-            raise GalSimError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
+            raise GalSimRangeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
         self._setValue(pos.x,pos.y,value)
 
     def _setValue(self, x, y, value):
@@ -1254,7 +1255,7 @@ class Image(object):
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
-            raise GalSimError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
+            raise GalSimRangeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
         self._addValue(pos.x,pos.y,value)
 
     def _addValue(self, x, y, value):

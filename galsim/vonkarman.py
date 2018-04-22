@@ -27,7 +27,7 @@ from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
 from .angle import arcsec, AngleUnit
-from .errors import GalSimWarning
+from .errors import GalSimError, GalSimWarning
 
 
 class VonKarman(GSObject):
@@ -117,8 +117,14 @@ class VonKarman(GSObject):
 
     @lazy_property
     def _sbvk(self):
-        sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0, self._flux,
-                                   self._scale, self._do_delta, self._gsparams._gsp)
+        try:
+            sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0, self._flux,
+                                       self._scale, self._do_delta, self._gsparams._gsp)
+        except RuntimeError as err:  # pragma: no cover
+            # There are apparently a couple possible failure modes that can be found in the
+            # C++ layer.  Turn them into GalSimErrors.
+            raise GalSimError(std(err))
+
         self._delta = sbvk.getDelta()
         if not self._suppress:
             if self._delta > self._gsparams.maxk_threshold:

@@ -966,8 +966,8 @@ class GSFitsWCS(CelestialWCS):
             flip = False
         else:
             raise GalSimError("The WCS read in does not define a pair of celestial axes. "
-                               "Expecting CTYPE1,2 to start with RA--- and DEC--.  Got %s, %s"%(
-                               ctype1, ctype2))
+                              "Expecting CTYPE1,2 to start with RA--- and DEC--.  Got %s, %s"%(
+                              ctype1, ctype2))
         if ctype1[5:] != ctype2[5:]:
             raise GalSimError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
@@ -1335,12 +1335,18 @@ class GSFitsWCS(CelestialWCS):
 
     def _invert_pv(self, u, v):
         # Do this in C++ layer for speed.
-        return _galsim.InvertPV(u, v, self.pv.ctypes.data)
+        try:
+            return _galsim.InvertPV(u, v, self.pv.ctypes.data)
+        except RuntimeError as err:  # pragma: no cover
+            raise GalSimError(str(err))
 
     def _invert_ab(self, x, y):
         # Do this in C++ layer for speed.
         abp_data = 0 if self.abp is None else self.abp.ctypes.data
-        return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
+        try:
+            return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
+        except RuntimeError as err:  # pragma: no cover
+            raise GalSimError(str(err))
 
     def _xy(self, ra, dec, color=None):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)

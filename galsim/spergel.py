@@ -24,6 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
+from .errors import GalSimRangeError
 
 
 class Spergel(GSObject):
@@ -103,11 +104,23 @@ class Spergel(GSObject):
     _is_analytic_x = True
     _is_analytic_k = True
 
+    # Constrain range of allowed Spergel index nu.  Spergel (2010) Table 1 lists values of nu
+    # from -0.9 to +0.85. We found that nu = -0.9 is too tricky for the GKP integrator to
+    # handle, however, so the lower limit is -0.85 instead.  The upper limit is set by the
+    # cyl_bessel_k function, which runs into overflow errors for nu larger than about 4.0.
+    _minimum_nu = -0.85
+    _maximum_nu = 4.0
+
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
         self._nu = float(nu)
         self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)
+
+        if self._nu < Spergel._minimum_nu:
+            raise GalSimRangeError("Requested Spergel index, %s, is too small"%self._nu)
+        if self._nu > Spergel._maximum_nu:
+            raise GalSimRangeError("Requested Spergel index, %s, is too large"%self._nu)
 
         # Parse the radius options
         if half_light_radius is not None:

@@ -849,8 +849,8 @@ def _parse_files_dirs(file_name, image_dir, sample):
         full_file_name = os.path.join(image_dir,file_name)
         if not os.path.isfile(full_file_name):
             raise GalSimError('No RealGalaxy catalog found in %s.  '%image_dir +
-                               'Run the program galsim_download_cosmos -s %s '%use_sample +
-                               'to download catalog and accompanying image files.')
+                              'Run the program galsim_download_cosmos -s %s '%use_sample +
+                              'to download catalog and accompanying image files.')
     elif image_dir is None:
         full_file_name = file_name
         image_dir = os.path.dirname(file_name)
