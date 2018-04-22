@@ -28,7 +28,7 @@ from . import _galsim
 from .utilities import lazy_property
 from .position import PositionD
 from .bounds import BoundsD
-from .errors import GalSimRangeError, GalSimBoundsError
+from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
 
 class LookupTable(object):
     """
@@ -98,17 +98,18 @@ class LookupTable(object):
         if interpolant is None:
             interpolant = 'spline'
         else:
-            if interpolant not in ['spline', 'linear', 'ceil', 'floor', 'nearest']:
-                raise ValueError("Unknown interpolant: %s" % interpolant)
+            if interpolant not in ('spline', 'linear', 'ceil', 'floor', 'nearest'):
+                raise GalSimValueError("Unknown interpolant", interpolant,
+                                       ('spline', 'linear', 'ceil', 'floor', 'nearest'))
         self.interpolant = interpolant
 
         # Sanity checks
         if len(x) != len(f):
             raise ValueError("Input array lengths don't match")
         if interpolant == 'spline' and len(x) < 3:
-            raise ValueError("Input arrays too small to spline interpolate")
+            raise GalSimValueError("Input arrays too small to spline interpolate", x)
         if interpolant in ['linear', 'ceil', 'floor', 'nearest'] and len(x) < 2:
-            raise ValueError("Input arrays too small to interpolate")
+            raise GalSimValueError("Input arrays too small to interpolate", x)
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
@@ -121,11 +122,11 @@ class LookupTable(object):
         self._x_min = self.x[0]
         self._x_max = self.x[-1]
         if self._x_min == self._x_max:
-            raise ValueError("All x values are equal")
+            raise GalSimValueError("All x values are equal", x)
         if self.x_log and self.x[0] <= 0.:
-            raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
+            raise GalSimValueError("Cannot interpolate in log(x) when table contains x<=0.", x)
         if self.f_log and np.any(self.f <= 0.):
-            raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
+            raise GalSimValueError("Cannot interpolate in log(f) when table contains f<=0.", f)
 
     @lazy_property
     def _tab(self):
@@ -168,7 +169,8 @@ class LookupTable(object):
         # Handle the log(x) if necessary
         if self.x_log:
             if np.any(np.asarray(x) <= 0.):
-                raise ValueError("Cannot interpolate x<=0 when using log(x) interpolation.")
+                raise GalSimValueError("Cannot interpolate x<=0 when using log(x) interpolation.",
+                                       x)
             x = np.log(x)
 
         x = np.asarray(x)
@@ -177,7 +179,7 @@ class LookupTable(object):
         else:
             dimen = len(x.shape)
             if dimen > 2:
-                raise ValueError("Arrays with dimension larger than 2 not allowed!")
+                raise GalSimValueError("Arrays with dimension larger than 2 not allowed.", x)
             elif dimen == 2:
                 f = np.empty_like(x.ravel(), dtype=float)
                 xx = x.astype(float,copy=False).ravel()
@@ -282,7 +284,8 @@ class LookupTable(object):
         except (ImportError, AttributeError, CParserError): # pragma: no cover
             data = np.loadtxt(file_name).transpose()
         if data.shape[0] != 2:
-            raise ValueError("File %s provided for LookupTable does not have 2 columns"%file_name)
+            raise GalSimValueError("File provided for LookupTable does not have 2 columns",
+                                   file_name)
         x=data[0]
         f=data[1]
         if amplitude != 1.0:
@@ -418,8 +421,8 @@ class LookupTable2D(object):
                           `edge_mode='constant'`.  [default: 0]
     """
     def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
-        if edge_mode not in ['raise', 'wrap', 'constant']:
-            raise ValueError("Unknown edge_mode: {:0}".format(edge_mode))
+        if edge_mode not in ('raise', 'wrap', 'constant'):
+            raise GalSimValueError("Unknown edge_mode.", edge_mode, ('raise', 'wrap', 'constant'))
 
         self.x = np.ascontiguousarray(x, dtype=float)
         self.y = np.ascontiguousarray(y, dtype=float)
@@ -428,15 +431,18 @@ class LookupTable2D(object):
         dx = np.diff(self.x)
         dy = np.diff(self.y)
 
-        if not (all(dx > 0) and all(dy > 0)):
-            raise ValueError("x and y input grids are not strictly increasing.")
+        if not all(dx > 0):
+            raise GalSimValueError("x input grids is not strictly increasing.", x)
+        if not all(dy > 0):
+            raise GalSimValueError("y input grids is not strictly increasing.", y)
 
         fshape = self.f.shape
         if fshape != (len(x), len(y)):
             raise ValueError("Shape of `f` must be (len(`x`), len(`y`)).")
 
-        if interpolant not in ['linear', 'ceil', 'floor', 'nearest']:
-            raise ValueError("Unknown interpolant: %s" % interpolant)
+        if interpolant not in ('linear', 'ceil', 'floor', 'nearest'):
+            raise GalSimValueError("Unknown interpolant.", interpolant,
+                                   ('linear', 'ceil', 'floor', 'nearest'))
         self.interpolant = interpolant
 
 

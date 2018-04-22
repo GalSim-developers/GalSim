@@ -25,7 +25,7 @@ from builtins import range, object
 import weakref
 import numpy as np
 
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimWarning
 
 
 def roll2d(image, shape):
@@ -293,7 +293,8 @@ def _convertPositions(pos, units, func):
         # if the string is invalid, this raises a reasonable error message.
         units = AngleUnit.from_name(units)
     if not isinstance(units, AngleUnit):
-        raise ValueError("units must be either an AngleUnit or a string")
+        raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                               ('arcsec', 'arcmin', 'degree', 'hour', 'radian'))
 
     # Convert pos to arcsec
     if units != arcsec:
@@ -395,7 +396,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     if rel_err <= 0 or rel_err >= 1:
         raise GalSimRangeError("rel_err must be between 0 and 1", rel_err, 0., 1.)
     if not (np.diff(x) >= 0).all():
-        raise ValueError("input x is not sorted.")
+        raise GalSimValueError("input x is not sorted.", x)
 
     # Check for trivial noop.
     if len(x) <= 2:
@@ -493,7 +494,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
     if rel_err <= 0 or rel_err >= 1:
         raise GalSimRangeError("rel_err must be between 0 and 1", rel_err, 0., 1.)
     if not (np.diff(x) >= 0).all():
-        raise ValueError("input x is not sorted.")
+        raise GalSimValueError("input x is not sorted.", x)
 
     # Check for trivial noop.
     if len(x) <= 2:
@@ -1033,7 +1034,7 @@ class LRU_Cache:
                     root[1][0] = link
                     root[1] = link
             else:
-                raise ValueError("Invalid maxsize: {0:}".format(maxsize))
+                raise GalSimValueError("Invalid maxsize.", maxsize)
 
 
 # http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
@@ -1332,9 +1333,9 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     # Note: we do not require that the type be an int, as long as the value is consistent with
     # an integer value (i.e., it could be a float 1.0 or 1).
     if not n-int(n) == 0 or n < 1:
-        raise ValueError("n must be an integer >= 1.")
+        raise GalSimValueError("n must be an integer >= 1.", n)
     if not n_choices-int(n_choices) == 0 or n_choices < 1:
-        raise ValueError("n_choices must be an integer >= 1.")
+        raise GalSimValueError("n_choices must be an integer >= 1.", n_choices)
 
     # Sanity check the input weight.
     if weight is not None:
@@ -1344,7 +1345,8 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
                                  (len(weight), n_choices))
         if np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or \
                 np.any(np.isinf(weight)):
-            raise ValueError("Supplied weights include values outside [0,1] or inf/NaN values!")
+            raise GalSimValueError("Supplied weights include values outside [0,1] or inf/NaN.",
+                                   weight)
 
     # We first make a random list of integer indices.
     index = np.zeros(n)

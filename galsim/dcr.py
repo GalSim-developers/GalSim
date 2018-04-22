@@ -94,8 +94,7 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
     from .angle import degrees
     if zenith_coord is None:
         if HA is None or latitude is None:
-            raise ValueError("Need to provide either zenith_coord or (HA, latitude) to"
-                             +"zenith_parallactic_angles()")
+            raise TypeError("Must provide either zenith_coord or (HA, latitude).")
         zenith_coord = CelestialCoord(HA + obj_coord.ra, latitude)
     zenith_angle = obj_coord.distanceTo(zenith_coord)
     NCP = CelestialCoord(0.0*degrees, 90*degrees)

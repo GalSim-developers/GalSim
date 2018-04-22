@@ -356,7 +356,8 @@ class Convolution(GSObject):
                 raise NotImplementedError(
                     "At least one profile in %s does not implement real-space convolution"%self)
         else:
-            raise ValueError("Cannot use real_space convolution for >2 profiles")
+            # XXX Not sure if this code is reachable...
+            raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
     @doc_inherit
     def _kValue(self, pos):
@@ -374,7 +375,8 @@ class Convolution(GSObject):
                 raise NotImplementedError(
                     "At least one profile in %s does not implement real-space convolution"%self)
         else:
-            raise ValueError("Cannot use real_space convolution for >2 profiles")
+            # XXX Not sure if this code is reachable...
+            raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
     @doc_inherit
     def _shoot(self, photons, ud):

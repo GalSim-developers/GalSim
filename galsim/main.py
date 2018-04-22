@@ -26,7 +26,7 @@ import os
 import logging
 import pprint
 
-from .errors import GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimWarning
 
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
@@ -161,7 +161,7 @@ def ParseVariables(variables, logger):
     for v in variables:
         logger.debug('Parsing additional variable: %s',v)
         if '=' not in v:
-            raise ValueError('Improper variable specification.  Use field.item=value.')
+            raise GalSimError('Improper variable specification.  Use field.item=value.')
         key, value = v.split('=',1)
         # Try to evaluate the value string to allow people to input things like
         # gal.rotate='{type : Rotate}'
@@ -194,11 +194,11 @@ def main():
     args = parse_args()
 
     if args.njobs < 1:
-        raise ValueError("Invalid number of jobs %d"%args.njobs)
+        raise GalSimValueError("Invalid number of jobs", args.njobs)
     if args.job < 1:
-        raise ValueError("Invalid job number %d.  Must be >= 1"%args.job)
+        raise GalSimRangeError("Invalid job number.  Must be >= 1", args.job, 1, args.njobs)
     if args.job > args.njobs:
-        raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(args.job,args.njobs))
+        raise GalSimRangeError("Invalid job number.  Must be <= njobs",args.job, 1, args.njobs)
 
     # Parse the integer verbosity level from the command line args into a logging_level string
     logging_levels = { 0: logging.CRITICAL, 

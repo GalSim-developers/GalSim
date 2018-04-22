@@ -24,7 +24,7 @@ import numpy as np
 import weakref
 
 from . import _galsim
-from .errors import GalSimRangeError
+from .errors import GalSimRangeError, GalSimValueError
 
 class BaseDeviate(object):
     """Base class for all the various random deviates.
@@ -700,11 +700,10 @@ class DistDeviate(BaseDeviate):
                         # but we'd like to throw reasonable errors in that case anyway
                         function(0.6) # A value unlikely to be a singular point of a function
                 except Exception as e:
-                    raise ValueError(
+                    raise GalSimValueError(
                         "String function must either be a valid filename or something that "+
                         "can eval to a function of x.\n"+
-                        "Input provided: {0}\n".format(self.__function)+
-                        "Caught error: {0}".format(e))
+                        "Caught error: {0}".format(e), self.__function)
         else:
             self.__function = weakref.ref(function) # Save the inputs to be used in repr
             # Check that the function is actually a function
@@ -745,7 +744,7 @@ class DistDeviate(BaseDeviate):
 
         # Check that the probability is nonnegative
         if not np.all(pdf >= 0.):
-            raise ValueError('Negative probability passed to DistDeviate: %s'%function)
+            raise GalSimValueError('Negative probability found in DistDeviate.',function)
 
         # Compute the cumulative distribution function = int(pdf(x),x)
         cdf = np.cumsum(pdf)
@@ -753,7 +752,7 @@ class DistDeviate(BaseDeviate):
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability = cdf[-1]
         if totalprobability < 0.:
-            raise ValueError('Negative probability passed to DistDeviate: %s'%function)
+            raise GalSimValueError('Negative probability found in DistDeviate.',function)
         cdf /= totalprobability
 
         self._inverse_cdf = LookupTable(cdf, xarray, interpolant='linear')

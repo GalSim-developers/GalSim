@@ -32,7 +32,7 @@ from .table import LookupTable
 from . import utilities
 from . import integ
 from . import _galsim
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimWarning
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -170,7 +170,7 @@ class PowerSpectrum(object):
     def __init__(self, e_power_function=None, b_power_function=None, delta2=False, units=arcsec):
         # Check that at least one power function is not None
         if e_power_function is None and b_power_function is None:
-            raise AttributeError(
+            raise ValueError(
                 "At least one of e_power_function or b_power_function must be provided.")
 
         self.e_power_function = e_power_function
@@ -191,7 +191,8 @@ class PowerSpectrum(object):
             # if the string is invalid, this raises a reasonable error message.
             units = AngleUnit.from_name(units)
         if not isinstance(units, AngleUnit):
-            raise ValueError("units must be either an AngleUnit or a string")
+            raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                                   ('arcsec', 'arcmin', 'degree', 'hour', 'radian'))
 
         if units == arcsec:
             self.scale = 1
@@ -231,7 +232,8 @@ class PowerSpectrum(object):
             # if the string is invalid, this raises a reasonable error message.
             units = AngleUnit.from_name(units)
         if not isinstance(units, AngleUnit):
-            raise ValueError("units must be either an AngleUnit or a string")
+            raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                                   ('arcsec', 'arcmin', 'degree', 'hour', 'radian'))
         return units / arcsec
 
     def _get_bandlimit_func(self, bandlimit):
@@ -242,7 +244,8 @@ class PowerSpectrum(object):
         elif bandlimit is None:
             return lambda k, kmax: 1.0
         else:
-            raise ValueError("Unrecognized option for band limit!")
+            raise GalSimValueError("Unrecognized option for band limit!", bandlimit,
+                                   (None, 'soft', 'hard'))
 
     def _get_pk(self, power_function, k_max, bandlimit_func):
         if power_function is None:
@@ -265,7 +268,7 @@ class PowerSpectrum(object):
         else:
             return lambda k : power_function(k) * bandlimit_func(k, k_max)
 
-    def buildGrid(self, grid_spacing=None, ngrid=None, rng=None, interpolant=None,
+    def buildGrid(self, grid_spacing, ngrid, rng=None, interpolant=None,
                   center=PositionD(0,0), units=arcsec, get_convergence=False,
                   kmax_factor=1, kmin_factor=1, bandlimit="hard", variance=None):
         """Generate a realization of the current power spectrum on the specified grid.
@@ -461,26 +464,24 @@ class PowerSpectrum(object):
         @returns the tuple (g1,g2[,kappa]), where each is a 2-d NumPy array and kappa is included
                  iff `get_convergence` is set to True.
         """
-        # Check problem cases for regular grid of points
-        if grid_spacing is None or ngrid is None:
-            raise ValueError("Both a spacing and a size are required for buildGrid.")
         # Check for validity of integer values
         if not isinstance(ngrid, int):
             if ngrid != int(ngrid):
-                raise ValueError("ngrid must be an integer")
+                raise GalSimValueError("ngrid must be an integer", ngrid)
             ngrid = int(ngrid)
         if not isinstance(kmin_factor, int):
             if kmin_factor != int(kmin_factor):
-                raise ValueError("kmin_factor must be an integer")
+                raise GalSimValueError("kmin_factor must be an integer", kmin_factor)
             kmin_factor = int(kmin_factor)
         if not isinstance(kmax_factor, int):
             if kmax_factor != int(kmax_factor):
-                raise ValueError("kmax_factor must be an integer")
+                raise GalSimValueError("kmax_factor must be an integer", kmax_factor)
             kmax_factor = int(kmax_factor)
 
         # Check if center is a PositionD
         if not isinstance(center, PositionD):
-            raise ValueError("center argument for buildGrid must be a PositionD instance")
+            raise GalSimValueError("center argument for buildGrid must be a PositionD instance",
+                                   center)
 
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
@@ -588,11 +589,10 @@ class PowerSpectrum(object):
                     pf = utilities.math_eval('lambda k : ' + pf)
                     pf(1.0)
                 except Exception as e:
-                    raise ValueError(
+                    raise GalSimValueError(
                         "String %s must either be a valid filename or something that "%pf_str+
                         "can eval to a function of k.\n"+
-                        "Input provided: {0}\n".format(origpf)+
-                        "Caught error: {0}".format(e))
+                        "Caught error: {0}".format(e), origpf)
 
         # Check that the function is sane.
         # Note: Only try tests below if it's not a LookupTable.
@@ -1482,15 +1482,15 @@ class PowerSpectrumRealizer(object):
             mink = np.min(k)
             maxk = np.max(k)
             if mink < power_function.x_min or maxk > power_function.x_max:
-                raise ValueError(
-                    "LookupTable P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
+                raise GalSimRangeError("LookupTable P(k) is not defined for full k range on grid",
+                                       k, mink, maxk)
         P_k = np.empty_like(k)
         P_k[:,:] = power_function(k)
 
         # Now fix the k=0 value of power to zero
         P_k[0,0] = type(P_k[0,1])(0.)
         if np.any(P_k < 0):
-            raise ValueError("Negative power found for some values of k!")
+            raise GalSimError("Negative power found for some values of k!")
 
         power_array[self.iky, self.ikx] = P_k
         power_array[self.ikyn, self.ikx] = P_k[self.ikyp, self.ikx]

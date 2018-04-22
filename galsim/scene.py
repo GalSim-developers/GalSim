@@ -26,7 +26,7 @@ import math
 import os
 
 from .real import RealGalaxy, RealGalaxyCatalog
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimWarning
 
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
@@ -172,8 +172,9 @@ class COSMOSCatalog(object):
         from .real import _parse_files_dirs
         self.use_real = use_real
 
-        if exclusion_level not in ['none', 'bad_stamp', 'bad_fits', 'marginal']:
-            raise ValueError("Invalid value of exclusion_level: %s"%exclusion_level)
+        if exclusion_level not in ('none', 'bad_stamp', 'bad_fits', 'marginal'):
+            raise GalSimValueError("Invalid value of exclusion_level.", exclusion_level,
+                                   ('none', 'bad_stamp', 'bad_fits', 'marginal'))
 
         # Start by parsing the file name
         full_file_name, _, self.use_sample = _parse_files_dirs(file_name, dir, sample)
@@ -483,8 +484,8 @@ class COSMOSCatalog(object):
             if gal_type is None:
                 gal_type = 'real'
 
-        if gal_type not in ['real', 'parametric']:
-            raise ValueError("Invalid galaxy type %r"%gal_type)
+        if gal_type not in ('real', 'parametric'):
+            raise GalSimValueError("Invalid galaxy type %r", gal_type, ('real', 'parametric'))
 
         # We'll set these up if and when we need them.
         self._bandpass = None
@@ -873,8 +874,8 @@ class COSMOSCatalog(object):
             elif gal_type != 'parametric':
                 raise ValueError("Only 'parametric' galaxy type is allowed when use_real == False")
 
-        if gal_type not in ['real', 'parametric']:
-            raise ValueError("Invalid galaxy type %r"%gal_type)
+        if gal_type not in ('real', 'parametric'):
+            raise GalSimValueError("Invalid galaxy type", gal_type, ('real', 'parametric'))
 
         if gal_type == 'real' and rng is None:
             rng = BaseDeviate()

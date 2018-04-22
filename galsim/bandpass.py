@@ -29,7 +29,7 @@ from . import utilities
 from . import integ
 from . import meta_data
 from .utilities import WeakMethod, combine_wave_list
-from .errors import GalSimRangeError
+from .errors import GalSimRangeError, GalSimValueError
 
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
@@ -120,14 +120,14 @@ class Bandpass(object):
 
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
-            if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
+            if wave_type.lower() in ('nm', 'nanometer', 'nanometers'):
                 self.wave_type = 'nm'
                 self.wave_factor = 1.
-            elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
+            elif wave_type.lower() in ('a', 'ang', 'angstrom', 'angstroms'):
                 self.wave_type = 'Angstrom'
                 self.wave_factor = 10.
             else:
-                raise ValueError("Unknown wave_type '{0}'".format(wave_type))
+                raise GalSimValueError("Invalid wave_type.", wave_type, ('nm', 'Angstrom'))
         else:
             self.wave_type = wave_type
             try:
@@ -139,7 +139,7 @@ class Bandpass(object):
                     self.wave_factor = 10.
             except units.UnitConversionError:
                 # Unlike in SED, we require a distance unit for wave_type
-                raise ValueError("Unknown wave_type '{0}'".format(wave_type))
+                raise GalSimValueError("Invalid wave_type.  Must be a distance.", wave_type)
 
         # Convert string input into a real function (possibly a LookupTable)
         self._initialize_tp()
@@ -226,16 +226,16 @@ class Bandpass(object):
                     self._tp = utilities.math_eval('lambda wave : ' + self._orig_tp)
                     test_value = self._tp(test_wave)
                 except Exception as e:
-                    raise ValueError(
+                    raise GalSimValueError(
                         "String throughput must either be a valid filename or something that "+
-                        "can eval to a function of wave.\n" +
-                        "Input provided: {0!r}\n".format(self._orig_tp) +
-                        "Caught error: {0}".format(e))
+                        "can eval to a function of wave.\n Caught error: %s."%(e),
+                        self._orig_tp)
                 from numbers import Real
                 if not isinstance(test_value, Real):
-                    raise ValueError("The given throughput function, %r, did not return a valid"
-                                     " number at test wavelength %s: got %s"%(
-                                     self._orig_tp, test_wave, test_value))
+                    raise GalSimValueError(
+                        "The given throughput function did not return a valid "
+                        "number at test wavelength %s: got %s."%(test_wave, test_value),
+                        self._orig_tp)
         else:
             self._tp = self._orig_tp
 
@@ -400,7 +400,8 @@ class Bandpass(object):
                 vegafile = os.path.join(meta_data.share_dir, "SEDs", "vega.txt")
                 sed = SED(vegafile, wave_type='nm', flux_type='flambda')
             else:
-                raise ValueError("Unrecognized Zeropoint string {0}.".format(zeropoint))
+                raise GalSimValueError("Unrecognized Zeropoint string.", zeropoint,
+                                       ('AB', 'ST', 'VEGA'))
             zeropoint = sed
 
         # Convert `zeropoint` from galsim.SED to float
@@ -471,7 +472,7 @@ class Bandpass(object):
             else: preserve_zp = False
         # Check for weird input
         if preserve_zp is not True and preserve_zp is not False:
-            raise ValueError("Unrecognized input for preserve_zp: %s"%preserve_zp)
+            raise GalSimValueError("Unrecognized input for preserve_zp.",preserve_zp)
 
         if blue_limit is None:
             blue_limit = self.blue_limit

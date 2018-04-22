@@ -374,7 +374,7 @@ class BoundsD(Bounds):
         self._parse_args(*args, **kwargs)
         if (self.xmin != float(self.xmin) or self.xmax != float(self.xmax) or
             self.ymin != float(self.ymin) or self.ymax != float(self.ymax)):
-            raise ValueError("BoundsD must be initialized with float values")
+            raise TypeError("BoundsD must be initialized with float values")
         self.xmin = float(self.xmin)
         self.xmax = float(self.xmax)
         self.ymin = float(self.ymin)
@@ -392,7 +392,7 @@ class BoundsD(Bounds):
             if x == float(x): return
         except (TypeError, ValueError):
             pass
-        raise ValueError("%s must be a float value"%name)
+        raise TypeError("%s must be a float value"%name)
 
     def _area(self):
         return (self.xmax - self.xmin) * (self.ymax - self.ymin)
@@ -415,7 +415,7 @@ class BoundsI(Bounds):
         self._parse_args(*args, **kwargs)
         if (self.xmin != int(self.xmin) or self.xmax != int(self.xmax) or
             self.ymin != int(self.ymin) or self.ymax != int(self.ymax)):
-            raise ValueError("BoundsI must be initialized with integer values")
+            raise TypeError("BoundsI must be initialized with integer values")
         # Now make sure they are all ints
         self.xmin = int(self.xmin)
         self.xmax = int(self.xmax)
@@ -431,7 +431,7 @@ class BoundsI(Bounds):
             if x == int(x): return
         except (TypeError, ValueError):
             pass
-        raise ValueError("%s must be a integer value"%name)
+        raise TypeError("%s must be a integer value"%name)
 
     def numpyShape(self):
         "A simple utility function to get the numpy shape that corresponds to this Bounds object."

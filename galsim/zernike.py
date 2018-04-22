@@ -22,6 +22,7 @@ Module contains code for evaluating and fitting Zernike polynomials
 import numpy as np
 
 from .utilities import LRU_Cache, binomial, horner2d, nCr, lazy_property
+from .errors import GalSimValueError
 
 # Some utilities for working with Zernike polynomials
 
@@ -101,7 +102,7 @@ def _zern_coef_array(n, m, obscuration, shape):
     elif obscuration == 0:
         coefs = np.array(_zern_rho_coefs(n, m), dtype=np.complex128)
     else:
-        raise ValueError("Illegal obscuration: {}".format(obscuration))
+        raise GalSimRangeError("Invalid obscuration.", obscuration, 0., 1.)
     coefs /= _zern_norm(n, m)
     if m < 0:
         coefs *= -1j
@@ -576,7 +577,7 @@ def zernikeRotMatrix(jmax, theta):
     if m_jmax != 0:
         n_jmaxp1, m_jmaxp1 = noll_to_zern(jmax+1)
         if n_jmax == n_jmaxp1 and abs(m_jmaxp1) == abs(m_jmax):
-            raise ValueError("Cannot construct Zernike rotation matrix for jmax={}".format(jmax))
+            raise GalSimValueError("Cannot construct Zernike rotation matrix for this jmax.", jmax)
 
     R = np.zeros((jmax+1, jmax+1), dtype=np.float64)
     R[0, 0] = 1.0

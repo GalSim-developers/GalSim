@@ -34,7 +34,7 @@ from .utilities import convert_interpolant, lazy_property, doc_inherit
 from .random import BaseDeviate
 from . import _galsim
 from . import fits
-from .errors import GalSimError, GalSimRangeError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimWarning
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -283,7 +283,8 @@ class InterpolatedImage(GSObject):
 
         # make sure image is really an image and has a float type
         if image.dtype != np.float32 and image.dtype != np.float64:
-            raise ValueError("Supplied image does not have dtype of float32 or float64!")
+            raise GalSimValueError("Supplied image must have dtype = float32 or float64.",
+                                   image.dtype)
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
         if not image.bounds.isDefined():
@@ -292,8 +293,8 @@ class InterpolatedImage(GSObject):
         # check what normalization was specified for the image: is it an image of surface
         # brightness, or flux?
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                              "'f', 'surface brightness', or 'sb'.") % normalization)
+            raise GalSimValueError("Invalid normalization requested.", normalization,
+                                   ('flux', 'f', 'surface brightness', 'sb'))
 
         # set up the interpolants if none was provided by user, or check that the user-provided ones
         # are of a valid type
@@ -395,9 +396,10 @@ class InterpolatedImage(GSObject):
             else:
                 pad_image = pad_image._view()
             if not isinstance(pad_image, Image):
-                raise ValueError("Supplied pad_image is not an Image!")
+                raise GalSimValueError("Supplied pad_image must be an Image.", pad_image)
             if pad_image.dtype != np.float32 and pad_image.dtype != np.float64:
-                raise ValueError("Supplied pad_image is not one of the allowed types!")
+                raise GalSimValueError("Invalid dtype for Supplied pad_image.", pad_image.dtype,
+                                       (np.float32, np.float64))
 
         if pad_factor <= 0.:
             raise GalSimRangeError("Invalid pad_factor <= 0 in InterpolatedImage", pad_factor, 0.)
@@ -482,9 +484,9 @@ class InterpolatedImage(GSObject):
                 if use_cache:
                     InterpolatedImage._cache_noise_pad[noise_pad] = noise
             else:
-                raise ValueError(
+                raise GalSimValueError(
                     "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
-                    "containing an image to use to make a CorrelatedNoise!")
+                    "containing an image to use to make a CorrelatedNoise.", noise_pad)
 
         else:
             if noise_pad < 0.:
@@ -841,9 +843,9 @@ class InterpolatedKImage(GSObject):
             # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are
             # congruent.
             if not isinstance(real_kimage, Image):
-                raise ValueError("Supplied real_kimage is not an Image instance")
+                raise GalSimValueError("Supplied real_kimage is not an Image instance", real_kimage)
             if not isinstance(imag_kimage, Image):
-                raise ValueError("Supplied imag_kimage is not an Image instance")
+                raise GalSimValueError("Supplied imag_kimage is not an Image instance", imag_kimage)
             if real_kimage.bounds != imag_kimage.bounds:
                 raise ValueError("Real and Imag kimages must have same bounds.")
             if real_kimage.wcs != imag_kimage.wcs:
@@ -854,11 +856,11 @@ class InterpolatedKImage(GSObject):
             if real_kimage is not None or imag_kimage is not None:
                 raise ValueError("Cannot provide both kimage and real_kimage/imag_kimage")
             if not kimage.iscomplex:
-                raise ValueError("Supplied kimage is not complex")
+                raise GalSimValueError("Supplied kimage is not complex", kimage)
 
         # Make sure wcs is a PixelScale.
         if kimage.wcs is not None and not kimage.wcs.isPixelScale():
-            raise ValueError("kimage wcs must be PixelScale or None.")
+            raise GalSimValueError("kimage wcs must be PixelScale or None.", kimage.wcs)
 
         self._kimage = kimage.copy()
         self._gsparams = GSParams.check(gsparams)

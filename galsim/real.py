@@ -39,7 +39,7 @@ from .gsobject import GSObject
 from .chromatic import ChromaticSum
 from .position import PositionD
 from .utilities import doc_inherit
-from .errors import GalSimError
+from .errors import GalSimError, GalSimValueError
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
 
@@ -220,11 +220,11 @@ class RealGalaxy(GSObject):
             # Get the index to use in the catalog
             if index is not None:
                 if id is not None or random:
-                    raise AttributeError('Too many methods for selecting a galaxy!')
+                    raise ValueError('Too many methods for selecting a galaxy!')
                 use_index = index
             elif id is not None:
                 if random:
-                    raise AttributeError('Too many methods for selecting a galaxy!')
+                    raise ValueError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalog.getIndexForID(id)
             elif random:
                 ud = UniformDeviate(self.rng)
@@ -237,7 +237,7 @@ class RealGalaxy(GSObject):
                         # Pick another one to try.
                         use_index = int(real_galaxy_catalog.nobjects * ud())
             else:
-                raise AttributeError('No method specified for selecting a galaxy!')
+                raise ValueError('No method specified for selecting a galaxy!')
             if logger:
                 logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
 
@@ -629,7 +629,7 @@ class RealGalaxyCatalog(object):
         if id in self.ident:
             return self.ident.index(id)
         else:
-            raise ValueError('ID %s not found in list of IDs'%id)
+            raise GalSimValueError('ID not found in list of IDs',id, self.ident)
 
     def preload(self):
         """Preload the files into memory.
@@ -687,9 +687,9 @@ class RealGalaxyCatalog(object):
         try:
             bp = real_galaxy_bandpasses[self.band[0].upper()]
         except KeyError:
-            raise ValueError("Bandpass not found.  To use bandpass '{0}', please add an entry to "
-                             "the galsim.real.real_galaxy_bandpasses "
-                             "dictionary.".format(self.band[0]))
+            raise GalSimValueError("Bandpass not found.  To use this bandpass, please add an entry "
+                                   "to the galsim.real.real_galaxy_bandpasses dictionary.",
+                                   self.band[0], real_galaxy_bandpasses.keys())
         return Bandpass(bp[0], wave_type='nm', zeropoint=bp[1])
 
     def getGalImage(self, i):
@@ -836,8 +836,8 @@ def _parse_files_dirs(file_name, image_dir, sample):
             use_sample = None
     else:
         use_sample = sample
-        if use_sample != '25.2' and use_sample != '23.5':
-            raise ValueError("Sample name not recognized: %s"%use_sample)
+        if use_sample not in ('23.5', '25.2'):
+            raise GalSimValueError("Sample name not recognized.",use_sample, ('23.5', '25.2'))
     # after that piece of code, use_sample is either "23.5", "25.2" (if using one of the default
     # catalogs) or it is still None, if a file_name was given.
 
@@ -1000,7 +1000,7 @@ class ChromaticRealGalaxy(ChromaticSum):
     There are no additional methods for ChromaticRealGalaxy beyond the usual ChromaticObject
     methods.
     """
-    def __init__(self, real_galaxy_catalogs=None, index=None, id=None, random=False, rng=None,
+    def __init__(self, real_galaxy_catalogs, index=None, id=None, random=False, rng=None,
                  gsparams=None, logger=None, **kwargs):
         from .random import BaseDeviate, UniformDeviate
         from .bounds import BoundsI
@@ -1013,23 +1013,20 @@ class ChromaticRealGalaxy(ChromaticSum):
                             "is not a BaseDeviate")
         self.rng = rng
 
-        if real_galaxy_catalogs is None:
-            raise ValueError("No RealGalaxyCatalog(s) specified!")
-
         # Get the index to use in the catalog
         if index is not None:
             if id is not None or random:
-                raise AttributeError('Too many methods for selecting a galaxy!')
+                raise ValueError('Too many methods for selecting a galaxy!')
             use_index = index
         elif id is not None:
             if random:
-                raise AttributeError('Too many methods for selecting a galaxy!')
+                raise ValueError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalogs[0].getIndexForID(id)
         elif random:
             uniform_deviate = UniformDeviate(self.rng)
             use_index = int(real_galaxy_catalogs[0].nobjects * uniform_deviate())
         else:
-            raise AttributeError('No method specified for selecting a galaxy!')
+            raise ValueError('No method specified for selecting a galaxy!')
         if logger:
             logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
                          use_index)

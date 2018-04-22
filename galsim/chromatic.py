@@ -213,7 +213,7 @@ class ChromaticObject(object):
             if prof0.flux != 0:
                 return w, prof0
 
-        raise ValueError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
+        raise GalSimError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
 
     def __eq__(self, other):
         return (isinstance(other, ChromaticObject) and
@@ -416,7 +416,7 @@ class ChromaticObject(object):
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, integ.SampleIntegrator):
             if len(wave_list) < 2:
-                raise AttributeError(
+                raise ValueError(
                     "Cannot use SampleIntegrator when Bandpass and SED are both "
                     "analytic.")
             bandpass = Bandpass(LookupTable(wave_list, bandpass(wave_list),
@@ -1724,7 +1724,7 @@ class ChromaticSum(ChromaticObject):
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
             # exception instead.
-            raise ValueError("Must provide at least one GSObject or ChromaticObject.")
+            raise TypeError("Must provide at least one GSObject or ChromaticObject.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject, ChromaticObject or a list of these.
             if isinstance(args[0], (GSObject, ChromaticObject)):
@@ -1902,7 +1902,7 @@ class ChromaticConvolution(ChromaticObject):
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
             # exception instead.
-            raise ValueError("Must provide at least one GSObject or ChromaticObject")
+            raise TypeError("Must provide at least one GSObject or ChromaticObject")
         elif len(args) == 1:
             if isinstance(args[0], (GSObject, ChromaticObject)):
                 args = [args[0]]

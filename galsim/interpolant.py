@@ -26,6 +26,7 @@ from past.builtins import basestring
 from . import _galsim
 from .gsparams import GSParams
 from .utilities import lazy_property
+from .errors import GalSimValueError
 
 class Interpolant(object):
     """A base class that defines how interpolation should be done.
@@ -77,8 +78,8 @@ class Interpolant(object):
             try:
                 n = int(name[7:])
             except:
-                raise ValueError("Invalid Lanczos specification %s.  "%name +
-                                 "Should look like lanczosN, where N is an integer")
+                raise GalSimValueError("Invalid Lanczos specification. Should look like "
+                                       "lanczosN, where N is an integer", name)
             return Lanczos(n, conserve_dc, tol, gsparams)
         elif name.lower() == 'linear':
             return Linear(tol, gsparams)
@@ -91,7 +92,9 @@ class Interpolant(object):
         elif name.lower() == 'sinc':
             return SincInterpolant(tol, gsparams)
         else:
-            raise ValueError("Invalid Interpolant name %s."%name)
+            raise GalSimValueError("Invalid Interpolant name %s.",name,
+                                   ('linear', 'cubic', 'quintic', 'lanczosN', 'nearest', 'delta',
+                                    'sinc'))
 
     def __getstate__(self):
         d = self.__dict__.copy()

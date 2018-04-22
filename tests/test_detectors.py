@@ -494,7 +494,7 @@ def test_Persistence_basic():
 
     # Test for different lengths of imgs and coeffs
     im_new = im.copy()
-    with assert_raises(TypeError):
+    with assert_raises(ValueError):
         im_new.applyPersistence(im_prev, [0.2, 0.3])
 
     # Test for a single image and coeffs as a float
