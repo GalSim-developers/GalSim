@@ -31,7 +31,7 @@ from . import utilities
 from . import integ
 from . import dcr
 from .utilities import WeakMethod, lazy_property, combine_wave_list
-from .errors import GalSimError, GalSimValueError, GalSimRangeError
+from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimSEDError
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -301,7 +301,7 @@ class SED(object):
         self._const = False
         if isinstance(self._orig_spec, (int, float)):
             if not self.dimensionless:
-                raise ValueError("Attempt to set spectral SED using float or integer.")
+                raise GalSimSEDError("Attempt to set spectral SED using float or integer.", self)
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
         elif isinstance(self._orig_spec, basestring):

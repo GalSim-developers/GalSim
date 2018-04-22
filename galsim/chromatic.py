@@ -35,7 +35,7 @@ from .position import PositionD, PositionI
 from .utilities import lazy_property
 from . import utilities
 from . import integ
-from .errors import GalSimError, GalSimRangeError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimWarning
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -395,7 +395,7 @@ class ChromaticObject(object):
         # Store the last bandpass used and any extra kwargs.
         self._last_bp = bandpass
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
 
         # setup output image using fiducial profile
         wave0, prof0 = self._fiducial_profile(bandpass)
@@ -470,7 +470,7 @@ class ChromaticObject(object):
         from .table import LookupTable
 
         if self.SED.dimensionless:
-            raise ValueError("Can only drawK ChromaticObjects with spectral SEDs.")
+            raise GalSimSEDError("Can only drawK ChromaticObjects with spectral SEDs.", self.SED)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
@@ -671,7 +671,8 @@ class ChromaticObject(object):
         @returns the flux through the bandpass.
         """
         if self.SED.dimensionless:
-            raise ValueError("Cannot calculate flux of dimensionless ChromaticObject.")
+            raise GalSimSEDError("Cannot calculate flux of dimensionless ChromaticObject.",
+                                 self.SED)
         return self.SED.calculateFlux(bandpass)
 
     def calculateMagnitude(self, bandpass):
@@ -687,7 +688,8 @@ class ChromaticObject(object):
         @returns the bandpass magnitude.
         """
         if self.SED.dimensionless:
-            raise ValueError("Cannot calculate magnitude of dimensionless ChromaticObject.")
+            raise GalSimSEDError("Cannot calculate magnitude of dimensionless ChromaticObject.",
+                                 self.SED)
         return self.SED.calculateMagnitude(bandpass)
 
     # Add together `ChromaticObject`s and/or `GSObject`s
@@ -1247,7 +1249,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
 
         int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
         image = int_im.drawImage(image=image, **kwargs)
@@ -1648,7 +1650,7 @@ class ChromaticTransformation(ChromaticObject):
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
         if isinstance(self.original, InterpolatedChromaticObject):
             # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
             # where it will be used to reweight the stored images.
@@ -1845,7 +1847,7 @@ class ChromaticSum(ChromaticObject):
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
         add_to_image = kwargs.pop('add_to_image', False)
         # Use given add_to_image for the first one, then add_to_image=False for the rest.
         image = self.obj_list[0].drawImage(
@@ -2064,7 +2066,7 @@ class ChromaticConvolution(ChromaticObject):
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
+            raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
         # `ChromaticObject.drawImage()` can just as efficiently handle separable cases.
         if self.separable:
             image = ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
@@ -2223,7 +2225,7 @@ class ChromaticDeconvolution(ChromaticObject):
     """
     def __init__(self, obj, **kwargs):
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot deconvolve by spectral ChromaticObject.")
+            raise GalSimSEDError("Cannot deconvolve by spectral ChromaticObject.", obj.SED)
         self._obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
@@ -2279,7 +2281,7 @@ class ChromaticAutoConvolution(ChromaticObject):
     """
     def __init__(self, obj, **kwargs):
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot autoconvolve spectral ChromaticObject.")
+            raise GalSimSEDError("Cannot autoconvolve spectral ChromaticObject.", obj.SED)
         self._obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
@@ -2336,7 +2338,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
     """
     def __init__(self, obj, **kwargs):
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot autocorrelate spectral ChromaticObject.")
+            raise GalSimSEDError("Cannot autocorrelate spectral ChromaticObject.", obj.SED)
         self._obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
@@ -2402,7 +2404,7 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
     def __init__(self, obj, **kwargs):
         import math
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot take Fourier sqrt of spectral ChromaticObject.")
+            raise GalSimSEDError("Cannot take Fourier sqrt of spectral ChromaticObject.", obj.SED)
         self._obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable

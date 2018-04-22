@@ -62,6 +62,7 @@ class GalSimRangeError(GalSimError, ValueError):
         self.min = min
         self.max = max
 
+
 class GalSimBoundsError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input position is
     outside of the allowed bounds.
@@ -76,6 +77,21 @@ class GalSimBoundsError(GalSimError, ValueError):
         super().__init__(message)
         self.pos = pos
         self.bounds = bounds
+
+
+class GalSimSEDError(GalSimError):
+    """A GalSim-specific exception class indicating an attempt to do something invalid for the
+    kind of SED that is present.  Typically involving a dimensionless SED where a spectral SED
+    is required (or vice versa).
+
+    Attrubutes:
+
+        sed = the invalid SED
+    """
+    def __init__(self, message, sed):
+        message += " SED: {0!s}.".format(sed)
+        super().__init__(message)
+        self.sed = sed
 
 
 class GalSimHSMError(GalSimError):
