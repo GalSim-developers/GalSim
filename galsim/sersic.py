@@ -24,6 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
+from .errors import GalSimRangeError
 
 class Sersic(GSObject):
     """A class describing a Sersic profile.
@@ -196,6 +197,9 @@ class Sersic(GSObject):
     _is_analytic_x = True
     _is_analytic_k = True
 
+    _minimum_n = 0.3  # Lower bounds has hard limit at ~0.29
+    _maximum_n = 6.2  # Upper bounds is just where we have tested that code works well.
+
     # The conversion from hlr to scale radius is complicated for Sersic, especially since we
     # allow it to be truncated.  So we do these calculations in the C++-layer constructor.
     def __init__(self, n, half_light_radius=None, scale_radius=None,
@@ -204,6 +208,11 @@ class Sersic(GSObject):
         self._flux = float(flux)
         self._trunc = float(trunc)
         self._gsparams = GSParams.check(gsparams)
+
+        if self._n < Sersic._minimum_n:
+            raise GalSimRangeError("Requested Sersic index, %s, is too small"%self._n)
+        if self._n > Sersic._maximum_n:
+            raise GalSimRangeError("Requested Sersic index, %s, is too large"%self._n)
 
         # Parse the radius options
         if half_light_radius is not None:
@@ -217,7 +226,7 @@ class Sersic(GSObject):
                 self._r0 = self._hlr / self.calculateHLRFactor()
             else:
                 if self._trunc <= math.sqrt(2.) * self._hlr:
-                    raise ValueError("Sersic trunc must be > sqrt(2) * half_light_radius")
+                    raise GalSimRangeError("Sersic trunc must be > sqrt(2) * half_light_radius")
                 self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
         elif scale_radius is not None:
             self._r0 = float(scale_radius)

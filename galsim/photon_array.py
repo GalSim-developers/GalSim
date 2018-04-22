@@ -209,6 +209,8 @@ class PhotonArray(object):
 
     def convolve(self, rhs, rng=None):
         "Convolve this PhotonArray with another."
+        if rhs.size() != self.size():
+            raise GalSimError("PhotonArray.convolve with unequal size arrays")
         ud = UniformDeviate(rng)
         self._pa.convolve(rhs._pa, ud._rng)
 
@@ -275,6 +277,8 @@ class PhotonArray(object):
 
         @returns the total flux of photons the landed inside the image bounds.
         """
+        if not image.bounds.isDefined():
+            raise GalSimError("Attempting to PhotonArray::addTo an Image with undefined Bounds")
         return self._pa.addTo(image._image)
 
     @classmethod

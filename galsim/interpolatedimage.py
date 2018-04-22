@@ -29,7 +29,7 @@ from .gsparams import GSParams
 from .image import Image
 from .bounds import _BoundsI
 from .position import PositionD
-from .interpolant import Quintic, Interpolant
+from .interpolant import Quintic, Interpolant, SincInterpolant
 from .utilities import convert_interpolant, lazy_property, doc_inherit
 from .random import BaseDeviate
 from . import _galsim
@@ -340,7 +340,7 @@ class InterpolatedImage(GSObject):
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
         if (calculate_stepk or calculate_maxk or flux is not None) and self._image_flux == 0.:
             raise GalSimError("This input image has zero total flux. "
-                               "It does not define a valid surface brightness profile.")
+                              "It does not define a valid surface brightness profile.")
 
         # Process the different options for flux, stepk, maxk
         self._flux = self._getFlux(flux, normalization)
@@ -651,6 +651,12 @@ class InterpolatedImage(GSObject):
     @doc_inherit
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def shoot(self, n_photons, rng=None):
+        if isinstance(self.x_interpolant, SincInterpolant):
+            raise GalSimError("Photon shooting is not practical with SincInterpolant")
+        return GSObject.shoot(self, n_photons, rng)
 
     @doc_inherit
     def _shoot(self, photons, ud):

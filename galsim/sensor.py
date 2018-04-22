@@ -67,6 +67,8 @@ class Sensor(object):
 
         @returns the total flux that fell onto the image.
         """
+        if not image.bounds.isDefined():
+            raise GalSimError("Calling accumulate on image with undefined bounds")
         return photons.addTo(image)
 
     def __repr__(self):
@@ -275,6 +277,8 @@ class SiliconSensor(Sensor):
                 raise RuntimeError("accumulate called with resume, but provided image does "
                                    "not match one used in the previous accumulate call.")
         self._last_image = image
+        if not image.bounds.isDefined():
+            raise GalSimError("Calling accumulate on image with undefined bounds")
         return self._silicon.accumulate(photons._pa, self.rng._rng, image._image, orig_center._p,
                                         resume)
 

@@ -111,10 +111,10 @@ def test_moffat():
         np.testing.assert_almost_equal(moffat.xValue(cen), moffat.max_sb)
 
     # Should raise an exception if >=2 radii are provided.
-    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, half_light_radius=1, fwhm=2)
-    assert_raises(TypeError, galsim.Moffat, beta=1, half_light_radius=1, fwhm=2)
-    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, fwhm=2)
-    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, half_light_radius=1)
+    assert_raises(TypeError, galsim.Moffat, beta=3, scale_radius=3, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=3, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=3, scale_radius=3, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=3, scale_radius=3, half_light_radius=1)
 
 
 @timer

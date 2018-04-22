@@ -19,12 +19,19 @@
 # Define the class hierarchy for errors and warnings emitted by GalSim that aren't
 # obviously one of the standard python errors.
 
-# Base class for all GalSim-emitted run-time errors.
 class GalSimError(RuntimeError):
+    """The base class for GalSim-specific run-time errors.
+    """
+    pass
+
+class GalSimRangeError(GalSimError):
+    """A GalSim-specific exception class indicating that some user-input value is
+    outside of the allowed range of values.
+    """
     pass
 
 
-# Base class for all GalSim-emitted warnings.
 class GalSimWarning(UserWarning):
+    """The base class for GalSim-emitted warnings.
+    """
     pass
-
