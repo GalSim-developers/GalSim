@@ -23,9 +23,10 @@ from contextlib import contextmanager
 from future.utils import iteritems
 from builtins import range, object
 import weakref
-
-
 import numpy as np
+
+from .errors import GalSimError
+
 
 def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
@@ -1147,7 +1148,7 @@ def combine_wave_list(*args):
         wave_list = np.union1d(wave_list, obj.wave_list)
     wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
     if blue_limit > red_limit:
-        raise RuntimeError("Empty wave_list intersection.")
+        raise GalSimError("Empty wave_list intersection.")
     # Make sure both limits are included.
     if len(wave_list) > 0 and (wave_list[0] != blue_limit or wave_list[-1] != red_limit):
         wave_list = np.union1d([blue_limit, red_limit], wave_list)

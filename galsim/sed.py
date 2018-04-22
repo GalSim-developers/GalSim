@@ -700,7 +700,7 @@ class SED(object):
         @returns the new normalized SED.
         """
         if bandpass.zeropoint is None:
-            raise RuntimeError("Cannot call SED.withMagnitude on this bandpass, because it does not"
+            raise GalSimError("Cannot call SED.withMagnitude on this bandpass, because it does not"
                                " have a zeropoint.  See Bandpass.withZeropoint()")
         current_magnitude = self.calculateMagnitude(bandpass)
         norm = 10**(-0.4*(target_magnitude - current_magnitude))
@@ -761,7 +761,7 @@ class SED(object):
         if self.dimensionless:
             raise TypeError("Cannot calculate magnitude of dimensionless SED.")
         if bandpass.zeropoint is None:
-            raise RuntimeError("Cannot do this calculation for a bandpass without an assigned"
+            raise GalSimError("Cannot do this calculation for a bandpass without an assigned"
                                " zeropoint")
         flux = self.calculateFlux(bandpass)
         return -2.5 * np.log10(flux) + bandpass.zeropoint

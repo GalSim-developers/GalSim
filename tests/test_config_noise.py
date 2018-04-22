@@ -604,7 +604,7 @@ def test_whiten():
 
     # If whitening already added too much noise, raise an exception
     config['image']['noise']['variance'] = 1.e-5
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         galsim.config.BuildStamp(config)
 
     # 2. Poisson noise
@@ -652,7 +652,7 @@ def test_whiten():
     np.testing.assert_almost_equal(im3d.array, im3c.array, decimal=5)
 
     config['image']['noise']['sky_level_pixel'] = 1.e-5
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         galsim.config.BuildStamp(config)
 
     # 3. CCDNoise
@@ -705,7 +705,7 @@ def test_whiten():
 
     config['image']['noise']['sky_level_pixel'] = 1.e-5
     config['image']['noise']['read_noise'] = 0
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         galsim.config.BuildStamp(config)
 
     # 4. COSMOSNoise
@@ -729,7 +729,7 @@ def test_whiten():
 
     config['image']['noise']['variance'] = 1.e-5
     del config['_current_cn_tag']
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         galsim.config.BuildStamp(config)
 
 

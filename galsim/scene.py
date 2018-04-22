@@ -26,6 +26,7 @@ import math
 import os
 
 from .real import RealGalaxy, RealGalaxyCatalog
+from .errors import GalSimError
 
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
@@ -512,7 +513,7 @@ class COSMOSCatalog(object):
         # call the appropriate helper routine for that case.
         if gal_type == 'real':
             if chromatic:
-                raise RuntimeError("Cannot yet make real chromatic galaxies!")
+                raise GalSimError("Cannot yet make real chromatic galaxies!")
             gal_list = self._makeReal(indices, noise_pad_size, rng, gsparams)
         else:
             # If no pre-selection was done based on radius or flux, then we won't have checked
@@ -713,11 +714,11 @@ class COSMOSCatalog(object):
             # Note that we can avoid including these in the catalog in the first place by using
             # `exclusion_level=bad_fits` or `exclusion_level=marginal` when making the catalog.
             if sstat < 1 or sstat > 4 or sparams[1] <= 0 or sparams[0] <= 0:
-                raise RuntimeError("Cannot make parametric model for this galaxy!")
+                raise GalSimError("Cannot make parametric model for this galaxy!")
         else:
             use_bulgefit = record['use_bulgefit']
             if not use_bulgefit and not record['viable_sersic']:
-                raise RuntimeError("Cannot make parametric model for this galaxy!")
+                raise GalSimError("Cannot make parametric model for this galaxy!")
 
         if use_bulgefit:
             # Bulge parameters:
@@ -748,7 +749,7 @@ class COSMOSCatalog(object):
             # Make sure the bulge-to-total flux ratio is not nonsense.
             bfrac = bulge_flux/(bulge_flux+disk_flux)
             if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):
-                raise RuntimeError("Cannot make parametric model for this galaxy")
+                raise GalSimError("Cannot make parametric model for this galaxy")
 
             # Then combine the two components of the galaxy.
             if chromatic:

@@ -22,6 +22,7 @@ Definitions of the various interpolants used by InterpolatedImage and Interpolat
 
 import math
 from past.builtins import basestring
+
 from . import _galsim
 from .gsparams import GSParams
 from .utilities import lazy_property

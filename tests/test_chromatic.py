@@ -1191,14 +1191,14 @@ def test_gsparam():
     # getting properly forwarded through the internals of ChromaticObjects.
     gsparams = galsim.GSParams(maximum_fft_size=16)
     gal = galsim.Gaussian(fwhm=1, gsparams=gsparams) * bulge_SED
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         gal.drawImage(bandpass)
 
     # Repeat, putting the gsparams argument in after the ChromaticObject constructor.
     gal = galsim.Gaussian(fwhm=1) * bulge_SED
     psf = galsim.Gaussian(sigma=0.4)
     final = galsim.Convolve([gal, psf], gsparams=gsparams)
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         final.drawImage(bandpass)
 
     do_pickle(final)
@@ -1535,7 +1535,7 @@ def test_interpolated_ChromaticObject():
         ' when including achromatic transformations after precomputation')
 
     # Check that the routine does not interpolate outside of its original bounds.
-    with assert_raises(RuntimeError):
+    with assert_raises(galsim.GalSimError):
         obj_interp.drawImage(bandpass_z)
 
     # Make sure it behaves appropriately when asked to apply chromatic transformations after

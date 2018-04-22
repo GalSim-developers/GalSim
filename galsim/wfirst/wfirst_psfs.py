@@ -315,7 +315,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
         PSF = PSF_dict[SCA]
         if not isinstance(PSF, galsim.ChromaticOpticalPSF) and \
                 not isinstance(PSF, galsim.InterpolatedChromaticObject):
-            raise RuntimeError("Error, PSFs are not ChromaticOpticalPSFs.")
+            raise galsim.GalSimError("Error, PSFs are not ChromaticOpticalPSFs.")
         star = galsim.Gaussian(sigma=1.e-8, flux=1.)
 
         for bp_name in bandpass_list:

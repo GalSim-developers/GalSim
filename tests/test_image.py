@@ -246,29 +246,29 @@ def test_Image_basic():
                 assert im2_cview[x,y] == value3
 
         # Setting or getting the value outside the bounds should throw an exception.
-        assert_raises(RuntimeError,im1.setValue,0,0,1)
-        assert_raises(RuntimeError,im1.__call__,0,0)
-        assert_raises(RuntimeError,im1.__getitem__,0,0)
-        assert_raises(RuntimeError,im1.__setitem__,0,0,1)
-        assert_raises(RuntimeError,im1.view().setValue,0,0,1)
-        assert_raises(RuntimeError,im1.view().__call__,0,0)
-        assert_raises(RuntimeError,im1.view().__getitem__,0,0)
-        assert_raises(RuntimeError,im1.view().__setitem__,0,0,1)
+        assert_raises(galsim.GalSimError,im1.setValue,0,0,1)
+        assert_raises(galsim.GalSimError,im1.__call__,0,0)
+        assert_raises(galsim.GalSimError,im1.__getitem__,0,0)
+        assert_raises(galsim.GalSimError,im1.__setitem__,0,0,1)
+        assert_raises(galsim.GalSimError,im1.view().setValue,0,0,1)
+        assert_raises(galsim.GalSimError,im1.view().__call__,0,0)
+        assert_raises(galsim.GalSimError,im1.view().__getitem__,0,0)
+        assert_raises(galsim.GalSimError,im1.view().__setitem__,0,0,1)
 
-        assert_raises(RuntimeError,im1.setValue,ncol+1,0,1)
-        assert_raises(RuntimeError,im1.__call__,ncol+1,0)
-        assert_raises(RuntimeError,im1.view().setValue,ncol+1,0,1)
-        assert_raises(RuntimeError,im1.view().__call__,ncol+1,0)
+        assert_raises(galsim.GalSimError,im1.setValue,ncol+1,0,1)
+        assert_raises(galsim.GalSimError,im1.__call__,ncol+1,0)
+        assert_raises(galsim.GalSimError,im1.view().setValue,ncol+1,0,1)
+        assert_raises(galsim.GalSimError,im1.view().__call__,ncol+1,0)
 
-        assert_raises(RuntimeError,im1.setValue,0,nrow+1,1)
-        assert_raises(RuntimeError,im1.__call__,0,nrow+1)
-        assert_raises(RuntimeError,im1.view().setValue,0,nrow+1,1)
-        assert_raises(RuntimeError,im1.view().__call__,0,nrow+1)
+        assert_raises(galsim.GalSimError,im1.setValue,0,nrow+1,1)
+        assert_raises(galsim.GalSimError,im1.__call__,0,nrow+1)
+        assert_raises(galsim.GalSimError,im1.view().setValue,0,nrow+1,1)
+        assert_raises(galsim.GalSimError,im1.view().__call__,0,nrow+1)
 
-        assert_raises(RuntimeError,im1.setValue,ncol+1,nrow+1,1)
-        assert_raises(RuntimeError,im1.__call__,ncol+1,nrow+1)
-        assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
-        assert_raises(RuntimeError,im1.view().__call__,ncol+1,nrow+1)
+        assert_raises(galsim.GalSimError,im1.setValue,ncol+1,nrow+1,1)
+        assert_raises(galsim.GalSimError,im1.__call__,ncol+1,nrow+1)
+        assert_raises(galsim.GalSimError,im1.view().setValue,ncol+1,nrow+1,1)
+        assert_raises(galsim.GalSimError,im1.view().__call__,ncol+1,nrow+1)
 
         # Also, setting values in something that should be const
         assert_raises(ValueError,im1.view(make_const=True).setValue,1,1,1)
@@ -402,10 +402,10 @@ def test_undefined_image():
         assert im11.array.shape == (1,1)
         assert im11 == im1
 
-        assert_raises(RuntimeError,im1.setValue,0,0,1)
-        assert_raises(RuntimeError,im1.__call__,0,0)
-        assert_raises(RuntimeError,im1.view().setValue,0,0,1)
-        assert_raises(RuntimeError,im1.view().__call__,0,0)
+        assert_raises(galsim.GalSimError,im1.setValue,0,0,1)
+        assert_raises(galsim.GalSimError,im1.__call__,0,0)
+        assert_raises(galsim.GalSimError,im1.view().setValue,0,0,1)
+        assert_raises(galsim.GalSimError,im1.view().__call__,0,0)
 
         do_pickle(im1.bounds)
         do_pickle(im1)
@@ -1884,21 +1884,21 @@ def test_Image_resize():
 @timer
 def test_ConstImage_array_constness():
     """Test that Image instances with make_const=True cannot be modified via their .array
-    attributes, and that if this is attempted a RuntimeError is raised.
+    attributes, and that if this is attempted a GalSimError is raised.
     """
     for i in range(ntypes):
         image = galsim.Image(ref_array.astype(types[i]), make_const=True)
         try:
             image.array[1, 2] = 666
             assert False, "Setting values in a const image.array should have raised an error."
-        # Apparently older numpy versions might raise a RuntimeError, a ValueError, or a TypeError
+        # Apparently older numpy versions might raise a GalSimError, a ValueError, or a TypeError
         # when trying to write to arrays that have writeable=False.
         # From the numpy 1.7.0 release notes:
         #     Attempting to write to a read-only array (one with
         #     ``arr.flags.writeable`` set to ``False``) used to raise either a
-        #     RuntimeError, ValueError, or TypeError inconsistently, depending on
+        #     GalSimError, ValueError, or TypeError inconsistently, depending on
         #     which code path was taken. It now consistently raises a ValueError.
-        except (RuntimeError, ValueError, TypeError):
+        except (galsim.GalSimError, ValueError, TypeError):
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])

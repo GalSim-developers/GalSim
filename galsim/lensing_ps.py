@@ -20,6 +20,7 @@ The "lensing engine" for drawing shears from some power spectrum.
 """
 
 import numpy as np
+
 from .angle import arcsec, AngleUnit
 from .position import PositionD, PositionI
 from .bounds import BoundsD, BoundsI
@@ -31,6 +32,7 @@ from .table import LookupTable
 from . import utilities
 from . import integ
 from . import _galsim
+from .errors import GalSimError
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -560,7 +562,7 @@ class PowerSpectrum(object):
         (e.g. when calling the function through a Proxy object).
         """
         if not hasattr(self,'ngrid_tot'):
-            raise RuntimeError("BuildGrid has not been called yet.")
+            raise GalSimError("BuildGrid has not been called yet.")
         ntot = 0
         # cf. PowerSpectrumRealizer._generate_power_array
         temp = 2 * np.product( (self.ngrid_tot, self.ngrid_tot//2 +1 ) )
@@ -770,7 +772,7 @@ class PowerSpectrum(object):
         # We should throw an exception if the image is smaller than 'border', since at this point
         # this process doesn't make sense.
         if im.bounds.xmax - im.bounds.xmin < border:
-            raise RuntimeError("Periodic wrapping does not work with images this small!")
+            raise GalSimError("Periodic wrapping does not work with images this small!")
         expanded_bounds = im.bounds.withBorder(border)
         # Make new image with those bounds.
         im_new = ImageD(expanded_bounds, scale=self.grid_spacing)
@@ -907,7 +909,7 @@ class PowerSpectrum(object):
         If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
         if not hasattr(self, 'im_g1'):
-            raise RuntimeError("PowerSpectrum.buildGrid must be called before getShear")
+            raise GalSimError("PowerSpectrum.buildGrid must be called before getShear")
 
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getShear')
@@ -1021,7 +1023,7 @@ class PowerSpectrum(object):
         If the input `pos` is given a list/array of positions, kappa is a NumPy array.
         """
         if not hasattr(self, 'im_kappa'):
-            raise RuntimeError("PowerSpectrum.buildGrid must be called before getConvergence")
+            raise GalSimError("PowerSpectrum.buildGrid must be called before getConvergence")
 
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getConvergence')
@@ -1118,7 +1120,7 @@ class PowerSpectrum(object):
         If the input `pos` is given a list/array of positions, mu is a NumPy array.
         """
         if not hasattr(self, 'im_kappa'):
-            raise RuntimeError("PowerSpectrum.buildGrid must be called before getMagnification")
+            raise GalSimError("PowerSpectrum.buildGrid must be called before getMagnification")
 
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getMagnification')
@@ -1219,7 +1221,7 @@ class PowerSpectrum(object):
         If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
         if not hasattr(self, 'im_kappa'):
-            raise RuntimeError("PowerSpectrum.buildGrid must be called before getLensing")
+            raise GalSimError("PowerSpectrum.buildGrid must be called before getLensing")
 
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getLensing')

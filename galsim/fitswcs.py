@@ -23,11 +23,13 @@ trying to read.
 
 import warnings
 import numpy as np
+
 from .wcs import CelestialWCS, JacobianWCS, AffineTransform
 from .position import PositionD, PositionI
 from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
+from .errors import GalSimError
 
 #########################################################################################
 #
@@ -137,7 +139,7 @@ class AstropyWCS(CelestialWCS):
         # TODO: If they ever fix this bug, use the correct version here.
         if (astropy.__version__ < '999' and header is not None and
             'CTYPE1' in header and 'ZPX' in header['CTYPE1'].upper()):
-            raise RuntimeError("AstropyWCS cannot (always) parse ZPX files")
+            raise GalSimError("AstropyWCS cannot (always) parse ZPX files")
 
         # Load the wcs from the header.
         if header is not None:
@@ -162,7 +164,7 @@ class AstropyWCS(CelestialWCS):
                 warnings.simplefilter("ignore")
                 ra, dec = wcs.all_pix2world( [ [0, 0] ], 1)[0]
         except Exception as err:  # pragma: no cover
-            raise RuntimeError("AstropyWCS was unable to read the WCS specification in the header.")
+            raise GalSimError("AstropyWCS was unable to read the WCS specification in the header.")
 
         self._wcs = wcs
 
@@ -452,7 +454,7 @@ class PyAstWCS(CelestialWCS):
         #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes
         # (given by Nout).
         if wcsinfo.Nin != 2 or wcsinfo.Nout != 2:
-            raise RuntimeError("The world coordinate system is not 2-dimensional")
+            raise GalSimError("The world coordinate system is not 2-dimensional")
 
         if file_name is not None:
             fits.closeHDUList(hdu_list, fin)
@@ -480,7 +482,7 @@ class PyAstWCS(CelestialWCS):
             wcsinfo = fc.read()
 
         if wcsinfo is None:
-            raise RuntimeError("Failed to read WCS information from fits file")
+            raise GalSimError("Failed to read WCS information from fits file")
 
         # The PyAst WCS might not have (RA,Dec) axes, which we want.  It might for instance have
         # (Dec, RA) instead.  If it's possible to convert to an (RA,Dec) system, this next line
@@ -488,7 +490,7 @@ class PyAstWCS(CelestialWCS):
         # cf. https://github.com/timj/starlink-pyast/issues/8
         wcsinfo = wcsinfo.findframe(starlink.Ast.SkyFrame())
         if wcsinfo is None:
-            raise RuntimeError("The WCS read in does not define a pair of celestial axes" )
+            raise GalSimError("The WCS read in does not define a pair of celestial axes" )
 
         return wcsinfo
 
@@ -744,7 +746,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
             for line in lines:
                 vals = line.split()
                 if len(vals) != 5:
-                    raise RuntimeError('wcstools xy2sky returned invalid result near %s'%(xy1))
+                    raise GalSimError('wcstools xy2sky returned invalid result near %s'%(xy1))
                 ra.append(float(vals[0]))
                 dec.append(float(vals[1]))
 
@@ -782,10 +784,10 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         # However, if there was an error, the J200 might be missing.
         vals = results.split()
         if len(vals) < 6:
-            raise RuntimeError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
+            raise GalSimError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
         if len(vals) > 6:
             warnings.warn('wcstools sky2xy indicates that %f,%f is off the image\n'%(ra,dec) +
-                            'output is %r'%results)
+                          'output is %r'%results, GalSimWarning)
         x = float(vals[4])
         y = float(vals[5])
 
@@ -963,11 +965,11 @@ class GSFitsWCS(CelestialWCS):
         elif ctype1.startswith('RA---') and ctype2.startswith('DEC--'):
             flip = False
         else:
-            raise RuntimeError("The WCS read in does not define a pair of celestial axes. "
+            raise GalSimError("The WCS read in does not define a pair of celestial axes. "
                                "Expecting CTYPE1,2 to start with RA--- and DEC--.  Got %s, %s"%(
                                ctype1, ctype2))
         if ctype1[5:] != ctype2[5:]:
-            raise RuntimeError("ctype1, ctype2 do not seem to agree on the WCS type")
+            raise GalSimError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
         if self.wcs_type in [ 'TAN', 'TPV', 'TNX', 'TAN-SIP' ]:
             self.projection = 'gnomonic'
@@ -978,7 +980,7 @@ class GSFitsWCS(CelestialWCS):
         elif self.wcs_type == 'ARC':
             self.projection = 'postel'
         else:
-            raise RuntimeError("GSFitsWCS cannot read files using WCS type "+self.wcs_type)
+            raise GalSimError("GSFitsWCS cannot read files using WCS type "+self.wcs_type)
         crval1 = float(header['CRVAL1'])
         crval2 = float(header['CRVAL2'])
         crpix1 = float(header['CRPIX1'])
@@ -1145,7 +1147,7 @@ class GSFitsWCS(CelestialWCS):
              wat1[3] != '=' or
              not wat1[4].startswith('"') or
              not wat1[-1].endswith('"') ):
-            raise RuntimeError("TNX WAT1 was not as expected")
+            raise GalSimError("TNX WAT1 was not as expected")
         if ( len(wat2) < 12 or
              wat2[0] != 'wtype=tnx' or
              wat2[1] != 'axtype=dec' or
@@ -1153,7 +1155,7 @@ class GSFitsWCS(CelestialWCS):
              wat2[3] != '=' or
              not wat2[4].startswith('"') or
              not wat2[-1].endswith('"') ):
-            raise RuntimeError("TNX WAT2 was not as expected")
+            raise GalSimError("TNX WAT2 was not as expected")
 
         # Break the next bit out into another function, since it is the same for x and y.
         pv1 = self._parse_tnx_data(wat1[4:])
@@ -1204,7 +1206,7 @@ class GSFitsWCS(CelestialWCS):
 
         pv1 = [ float(x) for x in data[8:] ]
         if len(pv1) != 10:
-            raise RuntimeError("Wrong number of items found in WAT data")
+            raise GalSimError("Wrong number of items found in WAT data")
 
         # Put these into our matrix formulation.
         pv = np.array( [ [ pv1[0], pv1[4], pv1[7], pv1[9] ],

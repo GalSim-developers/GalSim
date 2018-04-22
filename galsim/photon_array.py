@@ -21,9 +21,11 @@ Also includes classes that modify PhotonArray objects in a number of ways.
 """
 
 import numpy as np
+
 from . import _galsim
 from .random import UniformDeviate
 from .angle import radians, arcsec
+from .errors import GalSimError
 
 # Add on more methods in the python layer
 
@@ -548,7 +550,7 @@ class PhotonDCR(object):
         """
         from . import dcr
         if not photon_array.hasAllocatedWavelengths():
-            raise RuntimeError("PhotonDCR requires that wavelengths be set")
+            raise GalSimError("PhotonDCR requires that wavelengths be set")
 
         w = photon_array.wavelength
         cenx = local_wcs.origin.x

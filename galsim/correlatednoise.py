@@ -21,10 +21,12 @@ Python layer documentation and functions for handling correlated noise in GalSim
 
 import numpy as np
 from future.utils import iteritems
+
 from .image import Image
 from .random import BaseDeviate
 from .gsobject import GSObject
 from . import utilities
+from .errors import GalSimError
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -240,7 +242,7 @@ class _BaseCorrelatedNoise(object):
         return image
 
     def applyToView(self, image_view):
-        raise RuntimeError(
+        raise GalSimError(
             "CorrelatedNoise can only be applied to a regular Image, not an ImageView")
 
     def whitenImage(self, image):
@@ -724,7 +726,7 @@ class _BaseCorrelatedNoise(object):
             self._variance_stored = var
 
             if var <= 0.:
-                raise RuntimeError("CorrelatedNoise found to have negative variance.")
+                raise GalSimError("CorrelatedNoise found to have negative variance.")
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise.  First do
             # the power spectrum (PS)

@@ -35,6 +35,7 @@ from .position import PositionD, PositionI
 from .utilities import lazy_property
 from . import utilities
 from . import integ
+from .errors import GalSimError
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -588,8 +589,8 @@ class ChromaticObject(object):
         @returns the new normalized ChromaticObject.
         """
         if bandpass.zeropoint is None:
-            raise RuntimeError("Cannot call ChromaticObject.withMagnitude on this bandpass, because"
-                               " it does not have a zeropoint.  See Bandpass.withZeropoint()")
+            raise GalSimError("Cannot call ChromaticObject.withMagnitude on this bandpass, because"
+                              " it does not have a zeropoint.  See Bandpass.withZeropoint()")
         current_magnitude = self.calculateMagnitude(bandpass)
         norm = 10**(-0.4*(target_magnitude - current_magnitude))
         return self * norm
@@ -1095,8 +1096,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         """
         # First, some wavelength-related sanity checks.
         if wave < np.min(self.waves) or wave > np.max(self.waves):
-            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
-                               " %.1f to %.1f nm"%(wave, np.min(self.waves), np.max(self.waves)))
+            raise GalSimError("Requested wavelength %.1f is outside the allowed range:"
+                              " %.1f to %.1f nm"%(wave, np.min(self.waves), np.max(self.waves)))
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
@@ -1163,13 +1164,13 @@ class InterpolatedChromaticObject(ChromaticObject):
         wave_list, _, _ = utilities.combine_wave_list(wave_objs)
 
         if np.min(wave_list) < np.min(self.waves):
-            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
-                               " %.1f to %.1f nm"%(np.min(wave_list), np.min(self.waves),
-                                                   np.max(self.waves)))
+            raise GalSimError("Requested wavelength %.1f is outside the allowed range:"
+                              " %.1f to %.1f nm"%(np.min(wave_list), np.min(self.waves),
+                                                  np.max(self.waves)))
         if np.max(wave_list) > np.max(self.waves):
-            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
-                               " %.1f to %.1f nm"%(np.max(wave_list), np.min(self.waves),
-                                                   np.max(self.waves)))
+            raise GalSimError("Requested wavelength %.1f is outside the allowed range:"
+                              " %.1f to %.1f nm"%(np.max(wave_list), np.min(self.waves),
+                                                  np.max(self.waves)))
 
         # The integration is carried out using the following two basic principles:
         # (1) We use linear interpolation between the stored images to get an image at a given

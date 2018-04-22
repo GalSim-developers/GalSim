@@ -22,6 +22,7 @@ DistDeviate class.
 
 import numpy as np
 import weakref
+
 from . import _galsim
 
 class BaseDeviate(object):

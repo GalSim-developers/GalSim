@@ -77,8 +77,8 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     """
     # Check for cached sky level information for this filter.  If not, raise exception
     if not hasattr(bandpass, '_sky_level'):
-        raise RuntimeError("Only bandpasses returned from galsim.wfirst.getBandpasses() are"
-                           " allowed here!")
+        raise galsim.GalSimError("Only bandpasses returned from galsim.wfirst.getBandpasses() are"
+                                 " allowed here!")
 
     # Check for proper type for position, and extract the ecliptic coordinates.
     if world_pos is None:

@@ -17,8 +17,8 @@
 #
 
 from builtins import range, zip
-
 import numpy as np
+
 from .random import BaseDeviate, GaussianDeviate
 from .image import Image
 from .angle import radians

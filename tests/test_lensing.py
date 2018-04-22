@@ -237,7 +237,7 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
     rng2 = rng.duplicate()
-    assert_raises(RuntimeError, test_ps.nRandCallsForBuildGrid)
+    assert_raises(galsim.GalSimError, test_ps.nRandCallsForBuildGrid)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
     assert g1.shape == (ngrid, ngrid)

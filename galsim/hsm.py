@@ -57,12 +57,17 @@ with default values, using help(galsim.hsm.HSMParams).
 
 
 import numpy as np
+
 from . import _galsim
 from .position import PositionD
 from .bounds import BoundsI
 from .shear import Shear
 from .image import Image, ImageI, ImageF, ImageD
+from .errors import GalSimError
 
+
+class GalSimHSMError(GalSimError):
+    pass
 
 class ShapeData(object):
     """A class to contain the outputs of using the HSM shape and moments measurement routines.
@@ -484,7 +489,7 @@ def _convertMask(image, weight=None, badpix=None):
 
     # if no pixels are used, raise an exception
     if mask.array.sum() == 0:
-        raise RuntimeError("No pixels are being used!")
+        raise GalSimError("No pixels are being used!")
 
     # finally, return the Image for the weight map
     return mask
@@ -595,7 +600,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                             the lower-left pixel is (image.xmin, image.ymin).
                             [default: gal_image.true_center]
     @param strict           Whether to require success. If `strict=True`, then there will be a
-                            `RuntimeError` exception if shear estimation fails.  If set to `False`,
+                            `GalSimError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output
                             ShapeData object. [default: True]
     @param hsmparams        The hsmparams keyword can be used to change the settings used by
@@ -622,7 +627,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         return result
     except RuntimeError as err:
         if (strict == True):
-            raise
+            raise GalSimHSMError(str(err))
         else:
             return ShapeData(error_message = str(err))
 
@@ -674,7 +679,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
 
         >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
-    then the result will be a RuntimeError due to moment measurement failing because the object is
+    then the result will be a GalSimError due to moment measurement failing because the object is
     so large.  While the list of all possible settings that can be changed is accessible in the
     docstring of the HSMParams class, in this case we need to modify `max_amoment` which
     is the maximum value of the moments in units of pixel^2.  The following measurement, using the
@@ -703,9 +708,9 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             is (image.xmin, image.ymin).
                             [default: object_image.true_center]
     @param strict           Whether to require success. If `strict=True`, then there will be a
-                            `RuntimeError` exception if shear estimation fails.  If set to `False`,
-                            then information about failures will be silently stored in the output
-                            ShapeData object. [default: True]
+                            `GalSimHSMError` exception if shear estimation fails.  If set to
+                            `False`, then information about failures will be silently stored in the
+                            output ShapeData object. [default: True]
     @param round_moments    Use a circular weight function instead of elliptical.
                             [default: False]
     @param hsmparams        The hsmparams keyword can be used to change the settings used by
@@ -731,7 +736,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         return result
     except RuntimeError as err:
         if (strict == True):
-            raise
+            raise GalSimHSMError(str(err))
         else:
             return ShapeData(error_message = str(err))
 

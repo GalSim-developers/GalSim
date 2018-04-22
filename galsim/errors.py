@@ -16,6 +16,10 @@
 #    and/or other materials provided with the distribution.
 #
 
-from .main import main
+# Define the class hierarchy for errors and warnings emitted by GalSim that aren't
+# obviously one of the standard python errors.
 
-main()
+# Base class for all GalSim-emitted run-time errors.
+class GalSimError(RuntimeError):
+    pass
+
