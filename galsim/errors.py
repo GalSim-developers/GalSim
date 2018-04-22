@@ -42,6 +42,21 @@ class GalSimRangeError(GalSimError, ValueError):
         self.min = min
         self.max = max
 
+class GalSimBoundsError(GalSimError, ValueError):
+    """A GalSim-specific exception class indicating that some user-input position is
+    outside of the allowed bounds.
+
+    Attrubutes:
+
+        pos = the invalid position
+        bounds = the bounds in which it was expected to fall
+    """
+    def __init__(self, message, pos, bounds):
+        super().__init__(message + " Position {0!s} not in bounds {1!s}.".format(
+                         pos, bounds))
+        self.pos = pos
+        self.bounds = bounds
+
 
 class GalSimWarning(UserWarning):
     """The base class for GalSim-emitted warnings.
