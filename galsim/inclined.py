@@ -25,6 +25,7 @@ from .utilities import lazy_property, doc_inherit
 from .exponential import Exponential
 from .angle import Angle
 from .position import PositionD
+from .errors import GalSimRangeError
 
 
 class InclinedExponential(GSObject):
@@ -100,7 +101,7 @@ class InclinedExponential(GSObject):
         # Check that the scale/half-light radius is valid
         if scale_radius is not None:
             if not scale_radius > 0.:
-                raise ValueError("scale_radius must be > zero.")
+                raise GalSimRangeError("scale_radius must be > 0.", scale_radius, 0.)
             if half_light_radius is not None:
                 raise TypeError(
                         "Only one of scale_radius and half_light_radius may be " +
@@ -108,7 +109,7 @@ class InclinedExponential(GSObject):
             self._r0 = float(scale_radius)
         elif half_light_radius is not None:
             if not half_light_radius > 0.:
-                raise ValueError("half_light_radius must be > zero.")
+                raise GalSimRangeError("half_light_radius must be > 0.", half_light_radius, 0.)
             # Use the factor from the Exponential class
             self._r0 = float(half_light_radius) / Exponential._hlr_factor
         else:
@@ -119,7 +120,7 @@ class InclinedExponential(GSObject):
         # Check that the height specification is valid
         if scale_height is not None:
             if not scale_height > 0.:
-                raise ValueError("scale_height must be > zero.")
+                raise GalSimRangeError("scale_height must be > 0.", scale_height, 0.)
             if scale_h_over_r is not None:
                 raise TypeError(
                         "Only one of scale_height and scale_h_over_r may be " +
@@ -130,7 +131,7 @@ class InclinedExponential(GSObject):
                 # Use the default scale_h_over_r
                 scale_h_over_r = 0.1
             elif not scale_h_over_r > 0.:
-                raise ValueError("half_light_radius must be > zero.")
+                raise GalSimRangeError("half_light_radius must be > 0.", scale_h_over_r, 0.)
             self._h0 = float(self._r0) * float(scale_h_over_r)
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is
@@ -307,12 +308,12 @@ class InclinedSersic(GSObject):
 
         # Check that trunc is valid
         if trunc < 0.:
-            raise ValueError("trunc must be >= zero (zero implying no truncation).")
+            raise GalSimRangeError("trunc must be >= 0. (zero implying no truncation).", trunc, 0.)
 
         # Parse the radius options
         if scale_radius is not None:
             if not scale_radius > 0.:
-                raise ValueError("scale_radius must be > zero.")
+                raise GalSimRangeError("scale_radius must be > 0.", scale_radius, 0.)
             if half_light_radius is not None:
                 raise TypeError(
                         "Only one of scale_radius and half_light_radius may be " +
@@ -321,13 +322,13 @@ class InclinedSersic(GSObject):
             self._hlr = 0.
         elif half_light_radius is not None:
             if not half_light_radius > 0.:
-                raise ValueError("half_light_radius must be > zero.")
+                raise GalSimRangeError("half_light_radius must be > 0.", half_light_radius, 0.)
             self._hlr = float(half_light_radius)
             if self._trunc == 0. or flux_untruncated:
                 self._r0 = self._hlr / _galsim.SersicHLR(self._n, 1.)
             else:
                 if self._trunc <= math.sqrt(2.) * self._hlr:
-                    raise ValueError("Sersic trunc must be > sqrt(2) * half_light_radius")
+                    raise GalSimRangerror("Sersic trunc must be > sqrt(2) * half_light_radius")
                 self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
         else:
             raise TypeError(
@@ -337,7 +338,7 @@ class InclinedSersic(GSObject):
         # Parse the height options
         if scale_height is not None:
             if not scale_height > 0.:
-                raise ValueError("scale_height must be > zero.")
+                raise GalSimRangeError("scale_height must be > 0.", scale_height, 0.)
             if scale_h_over_r is not None:
                 raise TypeError(
                         "Only one of scale_height and scale_h_over_r may be " +
@@ -347,7 +348,7 @@ class InclinedSersic(GSObject):
             if scale_h_over_r is None:
                 scale_h_over_r = 0.1
             elif not scale_h_over_r > 0.:
-                raise ValueError("half_light_radius must be > zero.")
+                raise GalSimRangeError("half_light_radius must be > 0.", scale_h_over_r, 0.)
             self._h0 = float(scale_h_over_r) * self._r0
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is

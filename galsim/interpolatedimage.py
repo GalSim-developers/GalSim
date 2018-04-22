@@ -34,7 +34,7 @@ from .utilities import convert_interpolant, lazy_property, doc_inherit
 from .random import BaseDeviate
 from . import _galsim
 from . import fits
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimWarning
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -400,7 +400,7 @@ class InterpolatedImage(GSObject):
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
 
         if pad_factor <= 0.:
-            raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
+            raise GalSimRangeError("Invalid pad_factor <= 0 in InterpolatedImage", pad_factor, 0.)
 
         # Convert noise_pad_size from arcsec to pixels according to the local wcs.
         # Use the minimum scale, since we want to make sure noise_pad_size is
@@ -465,9 +465,6 @@ class InterpolatedImage(GSObject):
         # Figure out what kind of noise to apply to the image
         try:
             noise_pad = float(noise_pad)
-            if noise_pad < 0.:
-                raise ValueError("Noise variance cannot be negative!")
-            noise = GaussianNoise(rng1, sigma = np.sqrt(noise_pad))
 
         except (TypeError, ValueError):
             if isinstance(noise_pad, _BaseCorrelatedNoise):
@@ -488,6 +485,11 @@ class InterpolatedImage(GSObject):
                 raise ValueError(
                     "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
                     "containing an image to use to make a CorrelatedNoise!")
+
+        else:
+            if noise_pad < 0.:
+                raise GalSimRangeError("Noise variance may not be negative.", noise_pad, 0.)
+            noise = GaussianNoise(rng1, sigma = np.sqrt(noise_pad))
 
         # Find the portion of xim to fill with noise.
         # It's allowed for the noise padding to not cover the whole pad image

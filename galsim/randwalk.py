@@ -23,6 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .position import PositionD
 from .utilities import lazy_property, doc_inherit
+from .errors import GalSimRangeError
 
 class RandomWalk(GSObject):
     """
@@ -199,13 +200,12 @@ class RandomWalk(GSObject):
                             "got %s" % str(self._rng))
 
         if self._npoints <= 0:
-            raise ValueError("npoints must be > 0, got %s" % str(self._npoints))
+            raise GalSimRangeError("npoints must be > 0", self._npoints, 1)
 
         if self._half_light_radius <= 0.0:
-            raise ValueError("half light radius must be > 0"
-                             ", got %s" % str(self._half_light_radius))
+            raise GalSimRangeError("half light radius must be > 0", self._half_light_radius, 0.)
         if self._flux < 0.0:
-            raise ValueError("flux must be >= 0, got %s" % str(self._flux))
+            raise GalSimRangeError("flux must be >= 0", self._flux, 0.)
 
     def __str__(self):
         rep='galsim.RandomWalk(%(npoints)d, %(hlr)g, flux=%(flux)g, gsparams=%(gsparams)s)'

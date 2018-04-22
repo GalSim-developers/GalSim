@@ -31,7 +31,7 @@ from . import utilities
 from . import integ
 from . import dcr
 from .utilities import WeakMethod, lazy_property, combine_wave_list
-from .errors import GalSimError
+from .errors import GalSimError, GalSimRangeError
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -369,11 +369,11 @@ class SED(object):
 
         extrapolation_slop = 1.e-6 # allow a small amount of extrapolation
         if wmin < self.blue_limit - extrapolation_slop:
-            raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
-                             .format(wmin, self.blue_limit))
+            raise GalSimRangeError("Requested wavelength is bluer than blue_limit.",
+                                   wave, self.blue_limit, self.red_limit)
         if wmax > self.red_limit + extrapolation_slop:
-            raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
-                             .format(wmax, self.red_limit))
+            raise GalSimRangeError("Requested wavelength is redder than red_limit.",
+                                   wave, self.blue_limit, self.red_limit)
 
     @lazy_property
     def _fast_spec(self):
@@ -715,7 +715,7 @@ class SED(object):
         @returns the redshifted SED.
         """
         if redshift <= -1:
-            raise ValueError("Invalid redshift {0}".format(redshift))
+            raise GalSimRangeError("Invalid redshift", redshift, -1.)
         zfactor = (1.0 + redshift) / (1.0 + self.redshift)
         wave_list = self.wave_list * zfactor
         blue_limit = self.blue_limit * zfactor

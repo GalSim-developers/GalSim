@@ -26,7 +26,7 @@ from .image import Image
 from .random import BaseDeviate
 from .gsobject import GSObject
 from . import utilities
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimWarning
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -1410,7 +1410,8 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     # Then check for negative variance before doing anything time consuming
     if variance < 0:
-        raise ValueError("Input keyword variance must be zero or positive.")
+        raise GalSimRangeError("Specified variance must be zero or positive.",
+                               variance, 0, None)
 
     # If x_interpolant not specified on input, use bilinear
     if x_interpolant is None:
@@ -1473,7 +1474,8 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         from .box import Pixel
         from .convolve import AutoConvolve
         if variance < 0:
-            raise ValueError("Input keyword variance must be zero or positive.")
+            raise GalSimRangeError("Specified variance must be zero or positive.",
+                                   variance, 0, None)
 
         if wcs is not None:
             if scale is not None:

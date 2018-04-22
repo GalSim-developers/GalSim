@@ -210,9 +210,11 @@ class Sersic(GSObject):
         self._gsparams = GSParams.check(gsparams)
 
         if self._n < Sersic._minimum_n:
-            raise GalSimRangeError("Requested Sersic index, %s, is too small"%self._n)
+            raise GalSimRangeError("Requested Sersic index is too small",
+                                   self._n, Sersic._minimum_n, Sersic._maximum_n)
         if self._n > Sersic._maximum_n:
-            raise GalSimRangeError("Requested Sersic index, %s, is too large"%self._n)
+            raise GalSimRangeError("Requested Sersic index is too large",
+                                   self._n, Sersic._minimum_n, Sersic._maximum_n)
 
         # Parse the radius options
         if half_light_radius is not None:
@@ -226,7 +228,8 @@ class Sersic(GSObject):
                 self._r0 = self._hlr / self.calculateHLRFactor()
             else:
                 if self._trunc <= math.sqrt(2.) * self._hlr:
-                    raise GalSimRangeError("Sersic trunc must be > sqrt(2) * half_light_radius")
+                    raise GalSimRangeError("Sersic trunc must be > sqrt(2) * half_light_radius",
+                                           self._trunc, math.sqrt(2.) * self._hlr)
                 self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
         elif scale_radius is not None:
             self._r0 = float(scale_radius)

@@ -24,6 +24,7 @@ import numpy as np
 import weakref
 
 from . import _galsim
+from .errors import GalSimRangeError
 
 class BaseDeviate(object):
     """Base class for all the various random deviates.
@@ -299,7 +300,7 @@ class GaussianDeviate(BaseDeviate):
     """
     def __init__(self, seed=None, mean=0., sigma=1.):
         if sigma < 0.:
-            raise ValueError("GaussianDeviate sigma must be > 0.")
+            raise GalSimRangeError("GaussianDeviate sigma must be > 0.", sigma, 0.)
         self._rng_type = _galsim.GaussianDeviateImpl
         self._rng_args = (float(mean), float(sigma))
         self.reset(seed)
@@ -774,8 +775,7 @@ class DistDeviate(BaseDeviate):
         @returns the corresponding x such that p = cdf(x).
         """
         if p<0 or p>1:
-            raise ValueError('Cannot request cumulative probability value from DistDeviate for '
-                             'p<0 or p>1!  You entered: %f'%p)
+            raise GalSimRangeError('Invalid cumulative probability for DistDeviate', p, 0., 1.)
         return self._inverse_cdf(p)
 
     def __call__(self):

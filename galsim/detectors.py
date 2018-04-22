@@ -24,7 +24,7 @@ import numpy as np
 import sys
 
 from .image import Image
-from .errors import GalSimWarning
+from .errors import GalSimRangeError, GalSimWarning
 
 def applyNonlinearity(self, NLfunc, *args):
     """
@@ -133,12 +133,15 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
                             value.
     """
 
-    if not isinstance(alpha, float) or alpha < 0.:
-        raise ValueError("Invalid value of alpha, must be float >= 0")
-    if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
-        raise ValueError("Invalid value of exp_time, must be float or int >= 0")
-    if not (isinstance(base_flux, float) or isinstance(base_flux,int)) or base_flux < 0.:
-        raise ValueError("Invalid value of base_flux, must be float or int >= 0")
+    if alpha < 0.:
+        raise GalSimRangeError("Invalid value of alpha, must be >= 0",
+                               alpha, 0, None)
+    if exp_time < 0.:
+        raise GalSimRangeError("Invalid value of exp_time, must be >= 0",
+                               exp_time, 0, None)
+    if base_flux < 0.:
+        raise GalSimRangeError("Invalid value of base_flux, must be >= 0",
+                               base_flux, 0, None)
 
     if np.any(self.array<0):
         import warnings

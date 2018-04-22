@@ -26,7 +26,7 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
-from .errors import GalSimWarning
+from .errors import GalSimRangeError, GalSimWarning
 
 
 class AtmosphericScreen(object):
@@ -273,7 +273,7 @@ class AtmosphericScreen(object):
             # Can't reverse, so reset and move forward.
             if t < self._time:
                 if t < 0.0:
-                    raise ValueError("Can't rewind irreversible screen to t < 0.0")
+                    raise GalSimRangeError("Can't rewind irreversible screen to t < 0.0", t, 0.)
                 self._reset()
             # Find number of boiling updates we need to perform.
             previous_update_number = int(self._time // self.time_step)

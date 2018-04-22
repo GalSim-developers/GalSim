@@ -1096,9 +1096,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         """
         # First, some wavelength-related sanity checks.
         if wave < np.min(self.waves) or wave > np.max(self.waves):
-            raise GalSimRangeError("Requested wavelength %.1f is outside the allowed range:"
-                                   " %.1f to %.1f nm"%(wave, np.min(self.waves),
-                                                       np.max(self.waves)))
+            raise GalSimRangeError("Requested wavelength is outside the allowed range.",
+                                   wave, np.min(self.waves), np.max(self.waves))
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
@@ -1165,13 +1164,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         wave_list, _, _ = utilities.combine_wave_list(wave_objs)
 
         if np.min(wave_list) < np.min(self.waves):
-            raise GalSimRangeError("Requested wavelength %.1f is outside the allowed range:"
-                                   " %.1f to %.1f nm"%(np.min(wave_list), np.min(self.waves),
-                                                       np.max(self.waves)))
+            raise GalSimRangeError("Requested wavelength is outside the allowed range.",
+                                   wave_list, np.min(self.waves), np.max(self.waves))
         if np.max(wave_list) > np.max(self.waves):
-            raise GalSimRangeError("Requested wavelength %.1f is outside the allowed range:"
-                                   " %.1f to %.1f nm"%(np.max(wave_list), np.min(self.waves),
-                                                       np.max(self.waves)))
+            raise GalSimRangeError("Requested wavelength is outside the allowed range.",
+                                   wave_list, np.min(self.waves), np.max(self.waves))
 
         # The integration is carried out using the following two basic principles:
         # (1) We use linear interpolation between the stored images to get an image at a given

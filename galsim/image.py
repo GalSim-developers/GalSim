@@ -1206,7 +1206,7 @@ class Image(object):
         if not self.bounds.isDefined():
             raise GalSimError("Attempt to access values of an undefined image")
         if not self.bounds.includes(x,y):
-            raise GalSimRangeError("Attempt to access position %s,%s, not in bounds %s"%(
+            raise GalSimError("Attempt to access position %s,%s, not in bounds %s"%(
                     x,y,self.bounds))
         return self._getValue(x,y)
 
@@ -1231,7 +1231,7 @@ class Image(object):
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
-            raise GalSimRangeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
+            raise GalSimError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
         self._setValue(pos.x,pos.y,value)
 
     def _setValue(self, x, y, value):
@@ -1255,7 +1255,7 @@ class Image(object):
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
-            raise GalSimRangeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
+            raise GalSimError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
         self._addValue(pos.x,pos.y,value)
 
     def _addValue(self, x, y, value):
