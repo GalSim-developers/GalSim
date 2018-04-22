@@ -414,7 +414,7 @@ def test_SED_init():
     assert_raises(TypeError, galsim.SED, spec=lambda w:1.0, flux_type='bar')
     assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
     assert_raises(ValueError, galsim.SED, spec='wave', wave_type=units.Hz, flux_type='2')
-    assert_raises(ValueError, galsim.SED, 1.0, 'nm', 'fphotons')
+    assert_raises(galsim.GalSimSEDError, galsim.SED, 1.0, 'nm', 'fphotons')
     # These should succeed.
     galsim.SED(spec='wave', wave_type='nm', flux_type='flambda')
     galsim.SED(spec='wave/wave', wave_type='nm', flux_type='flambda')
