@@ -19,16 +19,28 @@
 # Define the class hierarchy for errors and warnings emitted by GalSim that aren't
 # obviously one of the standard python errors.
 
+from builtins import super
+
 class GalSimError(RuntimeError):
     """The base class for GalSim-specific run-time errors.
     """
-    pass
 
-class GalSimRangeError(GalSimError):
+class GalSimRangeError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input value is
     outside of the allowed range of values.
+
+    Attrubutes:
+
+        value = the invalid value
+        min = the minimum allowed value (may be None)
+        max = the maximum allowed value (may be None)
     """
-    pass
+    def __init__(self, message, value, min, max=None):
+        super().__init__(message + " Value {0!s} not in range [{1!s}, {2!s}].".format(
+                         value, min, max))
+        self.value = value
+        self.min = min
+        self.max = max
 
 
 class GalSimWarning(UserWarning):

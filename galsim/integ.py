@@ -24,7 +24,7 @@ import numpy as np
 from functools import reduce
 
 from . import _galsim
-from .errors import GalSimError
+from .errors import GalSimError, GalSimRangeError
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
@@ -95,7 +95,7 @@ def trapz(func, min, max, points=10000):
     """
     if not np.isscalar(points):
         if (np.max(points) > max) or (np.min(points) < min):
-            raise ValueError("Points outside of range: %s -- %s"%(min,max))
+            raise GalSimRangeError("Points outside of specified range", points, min, max)
     elif int(points) != points:
         raise TypeError("'npoints' must be integer type or array")
     else:

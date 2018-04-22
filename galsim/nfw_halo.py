@@ -24,6 +24,7 @@ from .position import PositionD
 from .angle import arcsec
 from . import integ
 from . import utilities
+from .errors import GalSimRangeError
 
 class Cosmology(object):
     """Basic cosmology calculations.
@@ -90,9 +91,9 @@ class Cosmology(object):
             return da
         else:
             if z < 0:
-                raise ValueError("Redshift z must not be negative")
+                raise GalSimRangeError("Redshift z must be >= 0", z, 0.)
             if z < z_ref:
-                raise ValueError("Redshift z must not be smaller than the reference redshift")
+                raise GalSimRangeError("Redshift z must be >= the reference redshift", z, z_ref)
 
             d = integ.int1d(self.__angKernel, z_ref+1, z+1)
             # check for curvature

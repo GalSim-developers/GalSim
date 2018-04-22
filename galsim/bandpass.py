@@ -29,6 +29,7 @@ from . import utilities
 from . import integ
 from . import meta_data
 from .utilities import WeakMethod, combine_wave_list
+from .errors import GalSimRangeError
 
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
@@ -111,7 +112,8 @@ class Bandpass(object):
                                     # it can be supplied directly as a constructor argument.
 
         if blue_limit is not None and red_limit is not None and blue_limit >= red_limit:
-            raise ValueError("blue_limit must be less than red_limit")
+            raise GalSimRangeError("blue_limit must be less than red_limit",
+                                   blue_limit, None, red_limit)
         self.blue_limit = blue_limit # These may change as we go through this.
         self.red_limit = red_limit
         self.zeropoint = zeropoint
@@ -175,11 +177,11 @@ class Bandpass(object):
             self.wave_list = np.array(self._tp.getArgs())/self.wave_factor
             # Make sure that blue_limit and red_limit are within LookupTable region of support.
             if self.blue_limit < (self._tp.x_min/self.wave_factor):
-                raise ValueError("Cannot set blue_limit to be less than throughput "
-                                 + "LookupTable.x_min")
+                raise GalSimRangeError("Cannot set blue_limit to be less than throughput x_min",
+                                       self.blue_limit, self._tp.x_min, self._tp.x_max)
             if self.red_limit > (self._tp.x_max/self.wave_factor):
-                raise ValueError("Cannot set red_limit to be greater than throughput "
-                                 + "LookupTable.x_max")
+                raise GalSimRangeError("Cannot set red_limit to be greater than throughput x_max",
+                                       self.red_limit, self._tp.x_min, self._tp.x_max)
             # Remove any values that are outside the limits
             self.wave_list = self.wave_list[np.logical_and(self.wave_list >= self.blue_limit,
                                                            self.wave_list <= self.red_limit) ]
@@ -398,7 +400,7 @@ class Bandpass(object):
                 vegafile = os.path.join(meta_data.share_dir, "SEDs", "vega.txt")
                 sed = SED(vegafile, wave_type='nm', flux_type='flambda')
             else:
-                raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))
+                raise ValueError("Unrecognized Zeropoint string {0}.".format(zeropoint))
             zeropoint = sed
 
         # Convert `zeropoint` from galsim.SED to float
@@ -475,14 +477,14 @@ class Bandpass(object):
             blue_limit = self.blue_limit
         else:
             if blue_limit < self.blue_limit:
-                raise ValueError("Supplied blue_limit (%f) is bluer than the original (%f)!"%
-                                 (blue_limit, self.blue_limit))
+                raise GalSimRangeError("Supplied blue_limit may not be bluer than the original.",
+                                       blue_limit, self.blue_limit, self.red_limit)
         if red_limit is None:
             red_limit = self.red_limit
         else:
             if red_limit > self.red_limit:
-                raise ValueError("Supplied red_limit (%f) is redder than the original (%f)!"%
-                                 (red_limit, self.red_limit))
+                raise GalSimRangeError("Supplied red_limit may not be redder than the original.",
+                                       red_limit, self.blue_limit, self.red_limit)
 
         wave_list = self.wave_list
         if len(self.wave_list) > 0:

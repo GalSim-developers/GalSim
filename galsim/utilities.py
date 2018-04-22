@@ -393,7 +393,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     if len(x) != len(f):
         raise ValueError("len(x) != len(f)")
     if rel_err <= 0 or rel_err >= 1:
-        raise ValueError("rel_err must be between 0 and 1")
+        raise GalSimRangeError("rel_err must be between 0 and 1", rel_err, 0., 1.)
     if not (np.diff(x) >= 0).all():
         raise ValueError("input x is not sorted.")
 
@@ -491,7 +491,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
     if len(x) != len(f):
         raise ValueError("len(x) != len(f)")
     if rel_err <= 0 or rel_err >= 1:
-        raise ValueError("rel_err must be between 0 and 1")
+        raise GalSimRangeError("rel_err must be between 0 and 1", rel_err, 0., 1.)
     if not (np.diff(x) >= 0).all():
         raise ValueError("input x is not sorted.")
 

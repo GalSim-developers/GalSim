@@ -220,9 +220,8 @@ class Aperture(object):
         self._obscuration = obscuration  # We store this, even though it's not always used.
         self._gsparams = gsparams
 
-        if obscuration >= 1.:
-            raise ValueError("Pupil fully obscured! obscuration = {:0} (>= 1)"
-                             .format(obscuration))
+        if obscuration < 0. or obscuration >= 1.:
+            raise GalSimRangeError("Invalid obscuration.", obscuration, 0., 1.)
 
         # You can either set geometric properties, or use a pupil image, but not both, so check for
         # that here.  One caveat is that we allow sanity checking the sampling of a pupil_image by

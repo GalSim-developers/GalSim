@@ -25,7 +25,7 @@ import numpy as np
 from . import _galsim
 from .random import UniformDeviate
 from .angle import radians, arcsec
-from .errors import GalSimError
+from .errors import GalSimError, GalSimRangeError
 
 # Add on more methods in the python layer
 
@@ -302,7 +302,7 @@ class PhotonArray(object):
         ud = UniformDeviate(rng)
         max_flux = float(max_flux)
         if (max_flux <= 0):
-            raise ValueError("max_flux must be positive")
+            raise GalSimRangeError("max_flux must be positive", max_flux, 0.)
         total_flux = image.array.sum(dtype=float)
 
         # This goes a bit over what we actually need, but not by much.  Worth it to not have to
@@ -428,9 +428,9 @@ class FRatioAngles(object):
     def __init__(self, fratio, obscuration=0.0, rng=None):
 
         if fratio < 0:
-            raise ValueError("The f-ratio must be positive.")
+            raise GalSimRangeError("The f-ratio must be positive.", fratio, 0.)
         if obscuration < 0 or obscuration >= 1:
-            raise ValueError("The obscuration fraction must be between 0 and 1.")
+            raise GalSimRangeError("Invalid obscuration.", obscuration, 0., 1.)
         ud = UniformDeviate(rng)
 
         self.fratio = fratio

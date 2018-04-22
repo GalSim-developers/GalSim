@@ -118,9 +118,11 @@ class Spergel(GSObject):
         self._gsparams = GSParams.check(gsparams)
 
         if self._nu < Spergel._minimum_nu:
-            raise GalSimRangeError("Requested Spergel index, %s, is too small"%self._nu)
+            raise GalSimRangeError("Requested Spergel index is too small",
+                                   self._nu, Spergel._minimum_nu, Spergel._maximum_nu)
         if self._nu > Spergel._maximum_nu:
-            raise GalSimRangeError("Requested Spergel index, %s, is too large"%self._nu)
+            raise GalSimRangeError("Requested Spergel index is too large",
+                                   self._nu, Spergel._minimum_nu, Spergel._maximum_nu)
 
         # Parse the radius options
         if half_light_radius is not None:

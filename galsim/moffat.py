@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimRangeError
+from .errors import GalSimError, GalSimRangeError
 
 
 class Moffat(GSObject):
@@ -88,10 +88,10 @@ class Moffat(GSObject):
         self._gsparams = GSParams.check(gsparams)
 
         if self._trunc == 0. and self._beta <= 1.1:
-            raise GalSimRangeError("Moffat profiles with beta <= 1.1 must be truncated")
+            raise GalSimError("Moffat profiles with beta <= 1.1 must be truncated")
 
         if self._trunc < 0.:
-            raise ValueError("Moffat trunc must be positive")
+            raise GalSimRangeError("Moffat trunc must be >= 0", self._trunc, 0.)
 
         # Parse the radius options
         if half_light_radius is not None:
@@ -101,7 +101,8 @@ class Moffat(GSObject):
                         "specified for Moffat")
             self._hlr = float(half_light_radius)
             if self._trunc > 0. and self._trunc <= math.sqrt(2.) * self._hlr:
-                raise GalSimRangeError("Moffat trunc must be > sqrt(2) * half_light_radius.")
+                raise GalSimRangeError("Moffat trunc must be > sqrt(2) * half_light_radius.",
+                                       self._trunc, math.sqrt(2.) * self._hlr)
             self._r0 = _galsim.MoffatCalculateSRFromHLR(self._hlr, self._trunc, self._beta)
             self._fwhm = 0.
         elif fwhm is not None:

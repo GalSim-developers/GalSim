@@ -58,7 +58,7 @@ import math
 from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimWarning
 
 
 class GSObject(object):
@@ -1490,11 +1490,11 @@ class GSObject(object):
 
         # Make sure (gain, area, exptime) have valid values:
         if gain <= 0.:
-            raise ValueError("Invalid gain <= 0.")
+            raise GalSimRangeError("Invalid gain <= 0.", gain, 0., None)
         if area <= 0.:
-            raise ValueError("Invalid area <= 0.")
+            raise GalSimRangeError("Invalid area <= 0.", area, 0., None)
         if exptime <= 0.:
-            raise ValueError("Invalid exptime <= 0.")
+            raise GalSimRangeError("Invalid exptime <= 0.", exptime, 0., None)
 
         if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb']:
             raise ValueError("Invalid method name = %s"%method)
@@ -2042,7 +2042,7 @@ class GSObject(object):
         from .image import ImageD
         # Make sure the type of n_photons is correct and has a valid value:
         if n_photons < 0.:
-            raise ValueError("Invalid n_photons < 0.")
+            raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
 
         if poisson_flux is None:
             if n_photons == 0.: poisson_flux = True
