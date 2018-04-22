@@ -51,7 +51,7 @@ class GSParams(object):
                                 will raise an exception indicating that the image is too large,
                                 which is often a sign of an error in the user's code. However, if
                                 you have the memory to handle it, you can raise this limit to
-                                allow the calculation to happen. [default: 4096]
+                                allow the calculation to happen. [default: 8192]
     @param folding_threshold    This sets a maximum amount of real space folding that is allowed,
                                 an effect caused by the periodic nature of FFTs.  FFTs implicitly
                                 use periodic boundary conditions, and a profile specified on a
@@ -123,7 +123,7 @@ class GSParams(object):
                                 of probability are considered ok to use with the dominant-sampling
                                 algorithm. [default: 1.e-4]
     """
-    def __init__(self, minimum_fft_size=128, maximum_fft_size=4096,
+    def __init__(self, minimum_fft_size=128, maximum_fft_size=8192,
                  folding_threshold=5.e-3, stepk_minimum_hlr=5, maxk_threshold=1.e-3,
                  kvalue_accuracy=1.e-5, xvalue_accuracy=1.e-5, table_spacing=1,
                  realspace_relerr=1.e-4, realspace_abserr=1.e-6,
