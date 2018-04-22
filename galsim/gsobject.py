@@ -58,7 +58,7 @@ import math
 from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
-from .errors import GalSimError, GalSimRangeError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimWarning
 
 
 class GSObject(object):
@@ -603,8 +603,8 @@ class GSObject(object):
 
         @returns an estimate of the radius in physical units (or both estimates if rtype == 'both')
         """
-        if rtype not in ['trace', 'det', 'both']:
-            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+        if rtype not in ('trace', 'det', 'both'):
+            raise GalSimValueError("Invalid rtype.", rtype, ('trace', 'det', 'both'))
 
         if hasattr(self, 'sigma'):
             if rtype == 'both':
@@ -1486,7 +1486,7 @@ class GSObject(object):
 
         # Check that image is sane
         if image is not None and not isinstance(image, Image):
-            raise ValueError("image is not an Image instance")
+            raise GalSimValueError("image is not an Image instance", image)
 
         # Make sure (gain, area, exptime) have valid values:
         if gain <= 0.:
@@ -1496,8 +1496,9 @@ class GSObject(object):
         if exptime <= 0.:
             raise GalSimRangeError("Invalid exptime <= 0.", exptime, 0., None)
 
-        if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb']:
-            raise ValueError("Invalid method name = %s"%method)
+        if method not in ('auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb'):
+            raise GalSimValueError("Invalid method name", method,
+                                   ('auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb'))
 
         # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
         if method == 'auto' and isinstance(self, Convolution):
@@ -1678,7 +1679,7 @@ class GSObject(object):
         """
         from .image import ImageD, ImageF
         if image.wcs is None or not image.wcs.isPixelScale():
-            raise ValueError("drawReal requires an image with a PixelScale wcs")
+            raise GalSimValueError("drawReal requires an image with a PixelScale wcs", image)
 
         if image.dtype in [ np.float64, np.float32 ] and not add_to_image and image.iscontiguous:
             self._drawReal(image)
@@ -1841,7 +1842,7 @@ class GSObject(object):
         @returns The total flux drawn inside the image bounds.
         """
         if image.wcs is None or not image.wcs.isPixelScale():
-            raise ValueError("drawPhot requires an image with a PixelScale wcs")
+            raise GalSimValueError("drawPhot requires an image with a PixelScale wcs", image)
 
         kimage, wrap_size = self.drawFFT_makeKImage(image)
         self._drawKImage(kimage)
@@ -2060,7 +2061,7 @@ class GSObject(object):
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
         if image.wcs is None or not image.wcs.isPixelScale():
-            raise ValueError("drawPhot requires an image with a PixelScale wcs")
+            raise GalSimValueError("drawPhot requires an image with a PixelScale wcs", image)
 
         if sensor is None:
             sensor = Sensor()
@@ -2199,7 +2200,7 @@ class GSObject(object):
         from .image import Image
         # Make sure provided image is complex
         if image is not None and not image.iscomplex:
-            raise ValueError("Provided image must be complex")
+            raise GalSimValueError("Provided image must be complex", image)
 
         # Possibly get the scale from image.
         if image is not None and scale is None:

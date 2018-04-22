@@ -75,7 +75,7 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionI, x=11, z=23)
     assert_raises(TypeError, galsim.PositionI, x=11)
     assert_raises(TypeError, galsim.PositionI, 11)
-    assert_raises(ValueError, galsim.PositionI, 11, 23.5)
+    assert_raises(TypeError, galsim.PositionI, 11, 23.5)
 
     assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
     assert_raises(TypeError, galsim.PositionD, x=11, z=23)
@@ -125,12 +125,12 @@ def test_pos():
     assert pd9 == 0*pd1
     assert isinstance(pd9, galsim.PositionD)
 
-    assert_raises(ValueError, pd1.__mul__, "11")
-    assert_raises(ValueError, pd1.__mul__, None)
-    assert_raises(ValueError, pd1.__div__, "11e")
-    assert_raises(ValueError, pi1.__mul__, "11e")
-    assert_raises(ValueError, pi1.__mul__, None)
-    assert_raises(ValueError, pi1.__div__, 11.5)
+    assert_raises(TypeError, pd1.__mul__, "11")
+    assert_raises(TypeError, pd1.__mul__, None)
+    assert_raises(TypeError, pd1.__div__, "11e")
+    assert_raises(TypeError, pi1.__mul__, "11e")
+    assert_raises(TypeError, pi1.__mul__, None)
+    assert_raises(TypeError, pi1.__div__, 11.5)
 
     do_pickle(pi1)
     do_pickle(pd1)
@@ -210,7 +210,7 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
     assert_raises(TypeError, galsim.BoundsI, 11)
-    assert_raises(ValueError, galsim.BoundsI, 11, 23.5, 17, 50.9)
+    assert_raises(TypeError, galsim.BoundsI, 11, 23.5, 17, 50.9)
 
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9)
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
@@ -237,13 +237,13 @@ def test_bounds():
     assert bd1.withBorder(4.1) == galsim.BoundsD(6.9,27.1,12.9,54.1)
     assert bd1.withBorder(0) == galsim.BoundsD(11,23,17,50)
     assert bd1.withBorder(-1) == galsim.BoundsD(12,22,18,49)
-    assert_raises(ValueError, bi1.withBorder, 'blue')
-    assert_raises(ValueError, bi1.withBorder, 4.1)
-    assert_raises(ValueError, bi1.withBorder, '4')
-    assert_raises(ValueError, bi1.withBorder, None)
-    assert_raises(ValueError, bd1.withBorder, 'blue')
-    assert_raises(ValueError, bd1.withBorder, '4.1')
-    assert_raises(ValueError, bd1.withBorder, None)
+    assert_raises(TypeError, bi1.withBorder, 'blue')
+    assert_raises(TypeError, bi1.withBorder, 4.1)
+    assert_raises(TypeError, bi1.withBorder, '4')
+    assert_raises(TypeError, bi1.withBorder, None)
+    assert_raises(TypeError, bd1.withBorder, 'blue')
+    assert_raises(TypeError, bd1.withBorder, '4.1')
+    assert_raises(TypeError, bd1.withBorder, None)
 
     # Check expand
     assert bi1.expand(2) == galsim.BoundsI(5,29,0,67)

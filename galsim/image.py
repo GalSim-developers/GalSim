@@ -27,7 +27,7 @@ from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from . import utilities
-from .errors import GalSimError, GalSimBoundsError
+from .errors import GalSimError, GalSimBoundsError, GalSimValueError
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -291,8 +291,7 @@ class Image(object):
         # Figure out what dtype we want:
         dtype = Image._alias_dtypes.get(dtype,dtype)
         if dtype is not None and dtype not in Image.valid_dtypes:
-            raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
-                             ".  Instead got "+str(dtype))
+            raise GalSimValueError("Invlid dtype.", dtype, Image.valid_dtypes)
         if array is not None:
             if not isinstance(array, np.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
@@ -303,10 +302,8 @@ class Image(object):
                     dtype = Image._alias_dtypes[dtype]
                     array = array.astype(dtype, copy=copy)
                 elif dtype not in Image._cpp_valid_dtypes:
-                    raise ValueError(
-                        "array's dtype.type must be one of "+str(Image._cpp_valid_dtypes)+
-                        ".  Instead got "+str(array.dtype.type)+".  Or can set "+
-                        "dtype explicitly.")
+                    raise GalSimValueError("Invalid dtype of provided array.", array.dtype,
+                                           Image._cpp_valid_dtypes)
                 elif copy:
                     array = np.array(array)
             else:
@@ -726,7 +723,7 @@ class Image(object):
                 raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
             _galsim.wrapImage(self._image, bounds._b, False, True)
         else:
-            raise ValueError("Invalid value for hermitian: %s"%hermitian)
+            raise GalSimValueError("Invalid value for hermitian", hermitian, (False, 'x', 'y'))
         return ret;
 
     def _wrap(self, bounds, hermx, hermy):
@@ -864,9 +861,10 @@ class Image(object):
         @returns an Image instance with the k-space image.
         """
         if self.wcs is None:
-            raise ValueError("calculate_fft requires that the scale be set.")
+            raise GalSimError("calculate_fft requires that the scale be set.")
         if not self.wcs.isPixelScale():
-            raise ValueError("calculate_fft requires that the image has a PixelScale wcs.")
+            raise GalSimValueError("calculate_fft requires that the image has a PixelScale wcs.",
+                                   self.wcs)
         if not self.bounds.isDefined():
             raise ValueError("calculate_fft requires that the image have defined bounds.")
 
@@ -911,13 +909,15 @@ class Image(object):
         @returns an ImageD instance with the real-space image.
         """
         if self.wcs is None:
-            raise ValueError("calculate_inverse_fft requires that the scale be set.")
+            raise GalSimError("calculate_inverse_fft requires that the scale be set.")
         if not self.wcs.isPixelScale():
-            raise ValueError("calculate_inverse_fft requires that the image has a PixelScale wcs.")
+            raise GalSimValueError("calculate_inverse_fft requires that the image has a "
+                                   "PixelScale wcs.", self.wcs)
         if not self.bounds.isDefined():
             raise ValueError("calculate_inverse_fft requires that the image have defined bounds.")
         if not self.bounds.includes(0,0):
-            raise ValueError("calculate_inverse_fft requires that the image includes point (0,0)")
+            raise GalSimBoundsError("calculate_inverse_fft requires that the image includes (0,0)",
+                                    PositionI(0,0), self.bounds)
 
         No2 = max(self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax)
 
@@ -1252,7 +1252,7 @@ class Image(object):
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
-            raise GalSimError("Attempt to set value of an undefined image")
+            raise ValueError("Attempt to set value of an undefined image")
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
@@ -1272,7 +1272,7 @@ class Image(object):
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
-            raise GalSimError("Attempt to set values of an undefined image")
+            raise ValueError("Attempt to set values of an undefined image")
         self._fill(value)
 
     def _fill(self, value):
@@ -1297,7 +1297,7 @@ class Image(object):
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
-            raise GalSimError("Attempt to set values of an undefined image")
+            raise ValueError("Attempt to set values of an undefined image")
         self._invertSelf()
 
     def _invertSelf(self):
@@ -1394,7 +1394,7 @@ class Image(object):
                  (or both estimates if rtype == 'both').
         """
         if rtype not in ['trace', 'det', 'both']:
-            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+            raise GalSimValueError("Invalid rtype.", rtype, ('trace', 'det', 'both'))
 
         if center is None:
             center = self.true_center
@@ -1578,12 +1578,12 @@ def ImageCD(*args, **kwargs):
 # Define a utility function to be used by the arithmetic functions below
 def check_image_consistency(im1, im2, integer=False):
     if integer and not im1.isinteger:
-        raise ValueError("Image must have integer values, not %s"%im1.dtype)
+        raise GalSimValueError("Image must have integer values.",im1)
     if isinstance(im2, Image):
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
         if integer and not im2.isinteger:
-            raise ValueError("Image must have integer values, not %s"%im2.dtype)
+            raise GalSimValueError("Image must have integer values.",im2)
 
 def Image_add(self, other):
     check_image_consistency(self, other)

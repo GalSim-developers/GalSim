@@ -182,9 +182,9 @@ class SiliconSensor(Sensor):
             # A bit kludgy, but it works
             self.treering_func = LookupTable(x=[0.0,1.0], f=[0.0,0.0], interpolant='linear')
         elif not isinstance(treering_func, LookupTable):
-            raise ValueError("treering_func must be a galsim.LookupTable")
+            raise TypeError("treering_func must be a galsim.LookupTable")
         if not isinstance(treering_center, PositionD):
-            raise ValueError("treering_center must be a galsim.PositionD")
+            raise TypeError("treering_center must be a galsim.PositionD")
 
         # Now we read in the absorption length table:
         abs_file = os.path.join(meta_data.share_dir, 'sensors', 'abs_length.dat')

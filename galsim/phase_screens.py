@@ -26,7 +26,7 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
-from .errors import GalSimRangeError, GalSimWarning
+from .errors import GalSimRangeError, GalSimValueError, GalSimWarning
 
 
 class AtmosphericScreen(object):
@@ -652,7 +652,7 @@ class OpticalScreen(object):
                 raise TypeError("Cannot pass in individual aberrations and array!")
             # Aberrations were passed in, so check for right number of entries.
             if len(aberrations) <= 2:
-                raise ValueError("Aberrations keyword must have length > 2")
+                raise GalSimValueError("Aberrations keyword must have length > 2", aberrations)
             # Check for non-zero value in first two places.  Probably a mistake.
             if aberrations[0] != 0.0:
                 import warnings

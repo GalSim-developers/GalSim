@@ -39,6 +39,7 @@ import numpy as np
 from . import _galsim
 from .image import Image, ImageD, ImageCD
 from .bounds import BoundsI
+from .errors import GalSimValueError
 
 def fft2(a, shift_in=False, shift_out=False):
     """Compute the 2-dimensional discrete Fourier Transform.
@@ -78,13 +79,13 @@ def fft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must be 2D.",s)
     M, N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must have even sizes.",s)
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
@@ -163,13 +164,13 @@ def ifft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must be 2D.",s)
     M,N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must have even sizes.",s)
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
@@ -219,13 +220,13 @@ def rfft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must be 2D.",s)
     M,N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must have even sizes.",s)
 
     a = a.astype(np.float64, copy=False)
     xim = ImageD(a, xmin = -No2, ymin = -Mo2)
@@ -271,13 +272,13 @@ def irfft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must be 2D.",s)
     M,No2 = s
     No2 -= 1  # s is (M,No2+1)
     Mo2 = M // 2
 
     if M != Mo2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
+        raise GalSimValueError("Input array must have even sizes.",s)
 
     a = a.astype(np.complex128, copy=False)
     kim = ImageCD(a, xmin = 0, ymin = -Mo2)

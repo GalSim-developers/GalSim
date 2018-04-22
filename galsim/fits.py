@@ -28,7 +28,7 @@ import os
 import numpy as np
 
 from .image import Image
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimWarning
 
 
 ##############################################################################################
@@ -56,7 +56,9 @@ def _parse_compression(compression, file_name):
             elif file_name.lower().endswith('.bz2'): file_compress = 'bzip2'
             else: pass
     else:
-        raise ValueError("Invalid compression %s"%compression)
+        raise GalSimValueError("Invalid compression", compression,
+                               ('rice', 'gzip_tile', 'hcompress', 'plio', 'gzip', 'bzip2',
+                                'none', 'auto'))
     if pyfits_compress:
         if 'CompImageHDU' not in pyfits.__dict__:
             raise NotImplementedError(
@@ -218,7 +220,8 @@ class _ReadFile:
                 except: # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
-            raise GalSimError("None of the options for gunzipping were successful.")
+            else:  # pragma: no cover
+                raise GalSimError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
             with open(file) as fid: pass
             while self.bz2_index < len(self.bz2_methods):
@@ -229,9 +232,10 @@ class _ReadFile:
                 except: # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
-            raise GalSimError("None of the options for bunzipping were successful.")
+            else:  # pragma: no cover
+                raise GalSimError("None of the options for bunzipping were successful.")
         else:
-            raise ValueError("Unknown file_compression")
+            raise GalSimValueError("Unknown file_compression", file_compress, ('gzip', 'bzip2'))
 _read_file = _ReadFile()
 
 # Do the same trick for _write_file(file,hdu_list,clobber,file_compress,pyfits_compress):
@@ -395,7 +399,8 @@ class _WriteFile:
                 except:  # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
-            raise GalSimError("None of the options for gunzipping were successful.")
+            else:  # pragma: no cover
+                raise GalSimError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
             while self.bz2_index < len(self.bz2_methods):
                 try:
@@ -405,9 +410,10 @@ class _WriteFile:
                 except:  # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
-            raise GalSimError("None of the options for bunzipping were successful.")
+            else:  # pragma: no cover
+                raise GalSimError("None of the options for bunzipping were successful.")
         else:
-            raise ValueError("Unknown file_compression")
+            raise GalSimValueError("Unknown file_compression", file_compress, ('gzip', 'bzip2'))
 
         # There is a bug in pyfits where they don't add the size of the variable length array
         # to the TFORMx header keywords.  They should have size at the end of them.
@@ -573,8 +579,8 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
     from ._pyfits import pyfits
 
     if image.iscomplex:
-        raise ValueError("Cannot write complex Images to a fits file. "
-                         "Write image.real and image.imag separately.")
+        raise GalSimValueError("Cannot write complex Images to a fits file. "
+                               "Write image.real and image.imag separately.", image)
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -622,8 +628,8 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     from ._pyfits import pyfits
 
     if any(image.iscomplex for image in image_list if isinstance(image, Image)):
-        raise ValueError("Cannot write complex Images to a fits file. "
-                         "Write image.real and image.imag separately.")
+        raise GalSimValueError("Cannot write complex Images to a fits file. "
+                               "Write image.real and image.imag separately.", image_list)
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -689,18 +695,18 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     if isinstance(image_list, np.ndarray):
         is_all_numpy = True
         if image_list.dtype.kind == 'c':
-            raise ValueError("Cannot write complex numpy arrays to a fits file. "
-                             "Write array.real and array.imag separately.")
+            raise GalSimValueError("Cannot write complex numpy arrays to a fits file. "
+                                   "Write array.real and array.imag separately.", image_list)
     elif all(isinstance(item, np.ndarray) for item in image_list):
         is_all_numpy = True
         if any(a.dtype.kind == 'c' for a in image_list):
-            raise ValueError("Cannot write complex numpy arrays to a fits file. "
-                             "Write array.real and array.imag separately.")
+            raise GalSimValueError("Cannot write complex numpy arrays to a fits file. "
+                                   "Write array.real and array.imag separately.", image_list)
     else:
         is_all_numpy = False
         if any(im.iscomplex for im in image_list):
-            raise ValueError("Cannot write complex images to a fits file. "
-                             "Write image.real and image.imag separately.")
+            raise GalSimValueError("Cannot write complex images to a fits file. "
+                                   "Write image.real and image.imag separately.", image_list)
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -785,7 +791,7 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
     if pyfits_compress and compression != 'auto':
         # If compression is auto and it determined that it should use rice, then we
         # should presume that the hdus were already rice compressed, so we can ignore it here.
-        raise ValueError("Compression %s is invalid for writeFile"%compression)
+        raise GalSimValueError("Compression %s is invalid for writeFile",compression)
     _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
 
 
@@ -1293,10 +1299,10 @@ class FitsHeader(object):
             if isinstance(value, tuple):
                 # header[key] = (value, comment) syntax
                 if not (0 < len(value) <= 2):
-                    raise ValueError(
+                    raise GalSimValueError(
                         'A Header item may be set with either a scalar value, '
                         'a 1-tuple containing a scalar value, or a 2-tuple '
-                        'containing a scalar value and comment string.')
+                        'containing a scalar value and comment string.', value)
                 elif len(value) == 1:
                     self.header.update(key, value[0])
                 else:

@@ -231,7 +231,7 @@ def test_exceptions():
     """
     # What if it receives as input something that is not an Image? Give it a GSObject to check.
     g = galsim.Gaussian(sigma=1.)
-    with assert_raises((ValueError, AttributeError)):
+    with assert_raises((TypeError, AttributeError)):
         galsim.InterpolatedImage(g)
     # What if Image does not have a scale set, but scale keyword is not specified?
     im = galsim.ImageF(5, 5)

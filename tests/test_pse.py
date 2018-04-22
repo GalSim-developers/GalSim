@@ -172,8 +172,8 @@ def test_PSE_weight():
     np.testing.assert_allclose(P_eb3[1:]/P_theory[1:], 0., atol=zero_tolerance,
                                err_msg='Weighted PSE found EB cross-power')
 
-    assert_raises(ValueError, pse.estimate, g1, g2, weight_EE=8)
-    assert_raises(ValueError, pse.estimate, g1, g2, weight_BB='yes')
+    assert_raises(TypeError, pse.estimate, g1, g2, weight_EE=8)
+    assert_raises(TypeError, pse.estimate, g1, g2, weight_BB='yes')
 
 
 if __name__ == "__main__":

@@ -24,6 +24,8 @@ from builtins import zip
 import os
 import numpy as np
 
+from .errors import GalSimValueError
+
 class Catalog(object):
     """A class storing the data from an input catalog.
 
@@ -78,18 +80,17 @@ class Catalog(object):
             else:
                 file_type = 'ASCII'
         file_type = file_type.upper()
-        if file_type not in ['FITS', 'ASCII']:
-            raise ValueError("file_type must be either FITS or ASCII if specified.")
+        if file_type not in ('FITS', 'ASCII'):
+            raise GalSimValueError("file_type must be either FITS or ASCII if specified.",
+                                   file_type, ('FITS', 'ASCII'))
         self.file_type = file_type
         self.comments = comments
         self.hdu = hdu
 
         if file_type == 'FITS':
             self.readFits(hdu, _nobjects_only)
-        elif file_type == 'ASCII':
+        else:  # file_type == 'ASCII':
             self.readAscii(comments, _nobjects_only)
-        else:
-            raise ValueError("Invalid file_type %s"%file_type)
 
     # When we make a proxy of this class (cf. galsim/config/stamp.py), the attributes
     # don't get proxied.  Only callable methods are.  So make method versions of these.
@@ -263,11 +264,12 @@ class Dict(object):
             elif ext.lower().startswith('.j'):
                 file_type = 'JSON'
             else:
-                raise ValueError('Unable to determine file_type from file_name ending')
+                raise GalSimValueError('Unable to determine file_type from file_name ending',
+                                       file_name, ('*.p*', '*.y*', '*.j*'))
 
         file_type = file_type.upper()
-        if file_type not in ['PICKLE','YAML','JSON']:
-            raise ValueError("file_type must be one of Pickle, YAML, or JSON if specified.")
+        if file_type not in ('PICKLE','YAML','JSON'):
+            raise GalSimValueError("Invalid file_type", file_type, ('Pickle', 'YAML', 'JSON'))
         self.file_type = file_type
 
         self.key_split = key_split
@@ -288,7 +290,7 @@ class Dict(object):
             with open(self.file_name, 'r') as f:
                 self.dict = json.load(f)
         else:
-            raise ValueError("Invalid file_type %s"%file_type)
+            raise GalSimValueError("Invalid file_type", file_type, ('Pickle', 'YAML', 'JSON'))
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
@@ -306,10 +308,10 @@ class Dict(object):
             # Otherwise, return the result.
             else:
                 if k not in d and default is None:
-                    raise ValueError("key=%s not found in dictionary"%key)
+                    raise GalSimValueError("key not found in dictionary.",key)
                 return d.get(k,default)
 
-        raise ValueError("Invalid key=%s given to Dict.get()"%key)
+        raise GalSimValueError("Invalid key given to Dict.get()",key)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.dict.
@@ -423,7 +425,8 @@ class OutputCatalog(object):
                             which will be used at the end to re-sort the rows.
         """
         if len(row) != self.ncols:
-            raise ValueError("Length of row does not match the number of columns")
+            raise GalSimValueError("Length of row does not match the number of columns = %d"%(
+                                   self.ncols), len(row))
         self.rows.append(tuple(row))
         if sort_key is None:
             self.sort_keys.append(self.nobjects)
@@ -453,15 +456,13 @@ class OutputCatalog(object):
             else:
                 file_type = 'ASCII'
         file_type = file_type.upper()
-        if file_type not in ['FITS', 'ASCII']:
-            raise ValueError("file_type must be either FITS or ASCII if specified.")
+        if file_type not in ('FITS', 'ASCII'):
+            raise GalSimValueError("Invalid file_type.", file_type, ('FITS', 'ASCII'))
 
         if file_type == 'FITS':
             self.writeFits(file_name)
-        elif file_type == 'ASCII':
+        else:  # file_type == 'ASCII':
             self.writeAscii(file_name, prec)
-        else:
-            raise ValueError("Invalid file_type %s"%file_type)
 
     def makeData(self):
         """Returns a numpy array of the data as it should be written to an output file.

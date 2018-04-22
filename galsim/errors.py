@@ -24,6 +24,26 @@ from builtins import super
 class GalSimError(RuntimeError):
     """The base class for GalSim-specific run-time errors.
     """
+    pass
+
+
+class GalSimValueError(GalSimError, ValueError):
+    """A GalSim-specific exception class indicating that some user-input value is invalid.
+
+    Attrubutes:
+
+        value = the invalid value
+        allowed_values = a list of allowed values if appropriate (may be None)
+    """
+    def __init__(self, message, value, allowed_values=None):
+        message += " Value {0!s}".format(value)
+        if allowed_values:
+            message += " not in {0!s}".format(allowed_values)
+        super().__init__(message)
+        self.value = value
+        self.min = min
+        self.max = max
+
 
 class GalSimRangeError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input value is
@@ -36,8 +56,8 @@ class GalSimRangeError(GalSimError, ValueError):
         max = the maximum allowed value (may be None)
     """
     def __init__(self, message, value, min, max=None):
-        super().__init__(message + " Value {0!s} not in range [{1!s}, {2!s}].".format(
-                         value, min, max))
+        message += " Value {0!s} not in range [{1!s}, {2!s}].".format(value, min, max)
+        super().__init__(message)
         self.value = value
         self.min = min
         self.max = max
@@ -52,10 +72,16 @@ class GalSimBoundsError(GalSimError, ValueError):
         bounds = the bounds in which it was expected to fall
     """
     def __init__(self, message, pos, bounds):
-        super().__init__(message + " Position {0!s} not in bounds {1!s}.".format(
-                         pos, bounds))
+        message += " Position {0!s} not in bounds {1!s}.".format(pos, bounds)
+        super().__init__(message)
         self.pos = pos
         self.bounds = bounds
+
+
+class GalSimHSMError(GalSimError):
+    """A GalSim-specific exception class indicating some kind of failure of the HSM algorithms
+    """
+    pass
 
 
 class GalSimWarning(UserWarning):

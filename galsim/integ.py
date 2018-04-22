@@ -24,7 +24,7 @@ import numpy as np
 from functools import reduce
 
 from . import _galsim
-from .errors import GalSimError, GalSimRangeError
+from .errors import GalSimError, GalSimRangeError, GalSimValueError
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
@@ -113,7 +113,7 @@ def midptRule(f, xs):
     @returns  Midpoint rule approximation to the integral.
     """
     if len(xs) < 2:
-        raise ValueError("Not enough points for midptRule integration")
+        raise GalSimValueError("Not enough points for midptRule integration", xs)
     x, xp = xs[:2]
     result = f(x)*(xp-x)
     for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
@@ -131,7 +131,7 @@ def trapzRule(f, xs):
     @returns  Trapezoidal rule approximation to the integral.
     """
     if len(xs) < 2:
-        raise ValueError("Not enough points for trapzRule integration")
+        raise GalSimValueError("Not enough points for trapzRule integration", xs)
     x, xp = xs[:2]
     result = 0.5*f(x)*(xp-x)
     for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
@@ -193,8 +193,7 @@ class SampleIntegrator(ImageIntegrator):
 
     def calculateWaves(self, bandpass):
         if len(bandpass.wave_list) < 0:
-            raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
-                                 "SampleIntegrator.")
+            raise GalSimValueError("Provided bandpass must have defined wave_list", bandpass)
         return bandpass.wave_list
 
 

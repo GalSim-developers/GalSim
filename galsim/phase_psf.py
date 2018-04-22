@@ -80,7 +80,7 @@ from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimWarning
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -387,9 +387,11 @@ class Aperture(object):
 
         # Sanity checks
         if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
-            raise ValueError("We require square input pupil plane arrays!")
+            raise GalSimValueError("Input pupil_plane_im must be square.",
+                                   pupil_plane_im.array.shape)
         if pupil_plane_im.array.shape[0] % 2 == 1:
-            raise ValueError("Even-sized input arrays are required for the pupil plane!")
+            raise GalSimValueError("Input pupil_plane_im must have even sizes.",
+                                   pupil_plane_im.array.shape)
 
         # Set the scale, priority is:
         # 1.  pupil_plane_scale kwarg
@@ -1146,7 +1148,7 @@ class PhaseScreenPSF(GSObject):
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
         if self.exptime < 0:
-            raise ValueError("Cannot integrate PSF for negative time.")
+            raise GalSimRangeError("Cannot integrate PSF for negative time.", self.exptime, 0.)
 
         self._ii_pad_factor = ii_pad_factor
 

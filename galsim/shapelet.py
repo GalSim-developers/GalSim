@@ -28,6 +28,8 @@ from .position import PositionD
 from .image import Image
 from .utilities import doc_inherit
 from . import _galsim
+from .errors import GalSimValueError
+
 
 class Shapelet(GSObject):
     """A class describing polar shapelet surface brightness profiles.
@@ -272,8 +274,8 @@ class Shapelet(GSObject):
         center = PositionD(center.x,center.y)
 
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                                "'f', 'surface brightness' or 'sb'.") % normalization)
+            raise GalSimValueError("Invalid normalization requested.", normalization,
+                                   ('flux', 'f', 'surface brightneess', 'sb'))
 
         ret = Shapelet(sigma, order, bvec=None, gsparams=gsparams)
 

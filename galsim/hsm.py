@@ -63,11 +63,8 @@ from .position import PositionD
 from .bounds import BoundsI
 from .shear import Shear
 from .image import Image, ImageI, ImageF, ImageD
-from .errors import GalSimError
+from .errors import GalSimError, GalSimValueError, GalSimHSMError
 
-
-class GalSimHSMError(GalSimError):
-    pass
 
 class ShapeData(object):
     """A class to contain the outputs of using the HSM shape and moments measurement routines.
@@ -465,7 +462,7 @@ def _convertMask(image, weight=None, badpix=None):
 
         # also make sure there are no negative values
         if np.any(weight.array < 0) == True:
-            raise ValueError("Weight image cannot contain negative values!")
+            raise GalSimValueError("Weight image cannot contain negative values.", weight)
 
         # if weight is an ImageI, then we can use it as the mask image:
         if weight.dtype == np.int32:

@@ -31,7 +31,7 @@ from . import utilities
 from . import integ
 from . import dcr
 from .utilities import WeakMethod, lazy_property, combine_wave_list
-from .errors import GalSimError, GalSimRangeError
+from .errors import GalSimError, GalSimValueError, GalSimRangeError
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -128,14 +128,14 @@ class SED(object):
         self._flux_type = flux_type  # Need to save the original for repr
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
-            if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
+            if wave_type.lower() in ('nm', 'nanometer', 'nanometers'):
                 self.wave_type = 'nm'
                 self.wave_factor = 1.
-            elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
+            elif wave_type.lower() in ('a', 'ang', 'angstrom', 'angstroms'):
                 self.wave_type = 'Angstrom'
                 self.wave_factor = 10.
             else:
-                raise ValueError("Unknown wave_type '{0}'".format(wave_type))
+                raise GalSimValueError("Unknown wave_type", wave_type, ('nm', 'Angstrom'))
         else:
             self.wave_type = wave_type
             try:
@@ -173,7 +173,8 @@ class SED(object):
                 self.flux_type = '1'
                 self.spectral = False
             else:
-                raise ValueError("Unknown flux_type '{0}'".format(flux_type))
+                raise GalSimValueError("Unknown flux_type", flux_type,
+                                       ('flambda', 'fnu', 'fphotons', '1'))
         else:
             self.flux_type = flux_type
             self.spectral = self.check_spectral()
@@ -320,16 +321,15 @@ class SED(object):
                 except ArithmeticError:
                     test_value = 0
                 except Exception as e:
-                    raise ValueError(
+                    raise GalSimValueError(
                         "String spec must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
-                        "Input provided: {0!r}\n".format(self._orig_spec) +
-                        "Caught error: {0}".format(e))
+                        "Caught error: {0}".format(e), self._orig_spec)
                 from numbers import Real
                 if not isinstance(test_value, Real):
-                    raise ValueError("The given SED function, %r, did not return a valid"
-                                     " number at test wavelength %s: got %s"%(
-                                     self._spec, 700.0, test_value))
+                    raise GalSimValueError("The given SED function did not return a valid number "
+                                           "at test wavelength %s: got %s"%(700.0, test_value),
+                                           self._orig_spec)
 
         else:
             self._spec = self._orig_spec
@@ -741,7 +741,10 @@ class SED(object):
             slop = 1e-6 # nm
             if (self.blue_limit > bandpass.blue_limit + slop
                     or self.red_limit < bandpass.red_limit - slop):
-                raise ValueError("SED undefined within Bandpass")
+                raise GalSimRangeError("Bandpass is not completely within defined wavelength "
+                                       "range for this SED.",
+                                       (bandpass.blue_limit, bandpass.red_limit),
+                                       self.blue_limit, self.red_limit)
             x, _, _ = combine_wave_list(self, bandpass)
             return np.trapz(bandpass(x) * self(x), x)
         else:

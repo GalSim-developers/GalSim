@@ -1177,7 +1177,7 @@ def test_analytic_integrator():
                                          "Analytic integrator doesn't match sample integrator")
 
     # Test that attempting to use SampleIntegrator with analytic sed, bandpass raises an Error:
-    with assert_raises(AttributeError):
+    with assert_raises(ValueError):
         final1.drawImage(band1,
                          integrator=galsim.integ.SampleIntegrator(rule=galsim.integ.trapzRule))
 

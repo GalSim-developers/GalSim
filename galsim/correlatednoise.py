@@ -26,7 +26,7 @@ from .image import Image
 from .random import BaseDeviate
 from .gsobject import GSObject
 from . import utilities
-from .errors import GalSimError, GalSimRangeError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimWarning
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -400,11 +400,11 @@ class _BaseCorrelatedNoise(object):
 
         # Check that the input is square in shape.
         if image.array.shape[0] != image.array.shape[1]:
-            raise ValueError("Input image is not square!")
+            raise GalSimValueError("Input image must be square.", image.array.shape)
 
         # Check that the input order is an allowed value.
         if order % 2 != 0 or order <= 2:
-            raise ValueError("Order must be an even number >=4!")
+            raise GalSimValueError("Order must be an even number >=4.", order)
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.  Note that this cache is not the same as the one used for
@@ -929,7 +929,7 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     from .random import GaussianDeviate
     # Sanity check on requested shape versus that of rootps
     if len(shape) != 2 or (shape[0], shape[1]//2+1) != rootps.shape:
-        raise ValueError("Requested shape does not match that of the supplied rootps")
+        raise GalSimValueError("Requested shape does not match that of the supplied rootps", shape)
     #  Quickest to create Gaussian rng each time needed, so do that here...
     gd = GaussianDeviate(
         rng, sigma=np.sqrt(.5 * shape[0] * shape[1])) # Note sigma scaling: 1/sqrt(2) needed so
@@ -1217,7 +1217,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
             if not wcs.isUniform():
-                raise ValueError("Cannot provide non-uniform wcs")
+                raise GalSimValueError("Cannot provide non-uniform wcs", wcs)
             if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             cf_image.wcs = wcs
@@ -1483,7 +1483,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
             if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             if not wcs.isUniform():
-                raise ValueError("Cannot provide non-uniform wcs")
+                raise GalSimValueError("Cannot provide non-uniform wcs", wcs)
         elif scale is not None:
             wcs = PixelScale(scale)
         else:
