@@ -49,6 +49,8 @@ API Changes
   profile (unless the inclination angle is 0 degrees). (#809f)
 - Removed galsim_yaml and galsim_json scripts, which were essentially just
   aliases for galsim -f yaml and galsim -f json respectively. (#809f)
+- Removed lsst module, which depended on the LSST stack and had gotten quite
+  out of sync and broken. (#964)
 
 
 Bug Fixes
