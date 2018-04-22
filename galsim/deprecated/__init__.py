@@ -16,10 +16,13 @@
 #    and/or other materials provided with the distribution.
 #
 
+from ..errors import GalSimWarning
+
 # Note: By default python2.7 ignores DeprecationWarnings.  Apparently they are really
-#       for python system deprecations.  I think GalSim deprecations are more appropriately
-#       considered UserWarnings, which are not ignored by default.
-class GalSimDeprecationWarning(UserWarning):
+#       for python system deprecations.  GalSim deprecations are thus only subclassed from
+#       GalSimWarning, not DeprecationWarning.  The former are a subclass of UserWarning,
+#       which are not ignored by default.
+class GalSimDeprecationWarning(GalSimWarning):
     def __init__(self, s):
         super(GalSimDeprecationWarning, self).__init__(self, s)
 

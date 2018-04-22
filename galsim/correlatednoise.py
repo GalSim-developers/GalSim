@@ -26,7 +26,7 @@ from .image import Image
 from .random import BaseDeviate
 from .gsobject import GSObject
 from . import utilities
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -116,7 +116,7 @@ class _BaseCorrelatedNoise(object):
         if not wcs.compatible(self.wcs, other.wcs):
             import warnings
             warnings.warn("Adding two CorrelatedNoise objects with incompatible WCS functions.\n"+
-                          "The result will have the WCS of the first object.")
+                          "The result will have the WCS of the first object.", GalSimWarning)
         return _BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
@@ -124,7 +124,7 @@ class _BaseCorrelatedNoise(object):
         if not wcs.compatible(self.wcs, other.wcs):
             import warnings
             warnings.warn("Subtracting two CorrelatedNoise objects with incompatible WCS functions.\n"+
-                          "The result will have the WCS of the first object.")
+                          "The result will have the WCS of the first object.", GalSimWarning)
         return _BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
 
     def __mul__(self, variance_ratio):
@@ -1405,7 +1405,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         import warnings
         warnings.warn(
             "Function getCOSMOSNoise() unable to read FITS image from "+str(file_name)+", "+
-            "more information on the error in the following Exception...")
+            "more information on the error in the following Exception...", GalSimWarning)
         raise
 
     # Then check for negative variance before doing anything time consuming

@@ -2961,11 +2961,11 @@ def test_FITS_bad_type():
     testS_file = os.path.join(datadir, "testS.fits")
     testMultiS_file = os.path.join(datadir, "test_multiS.fits")
     testCubeS_file = os.path.join(datadir, "test_cubeS.fits")
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         testS_image = galsim.fits.read(testS_file)
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         testMultiS_image_list = galsim.fits.readMulti(testMultiS_file)
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         testCubeS_image_list = galsim.fits.readCube(testCubeS_file)
 
     np.testing.assert_equal(np.float64, testS_image.array.dtype.type)

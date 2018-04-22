@@ -1164,7 +1164,7 @@ def test_kroundtrip():
     np.testing.assert_almost_equal(b.maxk, c.maxk)
 
     # Smaller stepk is overridden.
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepk)
     np.testing.assert_almost_equal(b.stepk, d.stepk)
     np.testing.assert_almost_equal(b.maxk, d.maxk)

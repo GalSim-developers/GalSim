@@ -23,3 +23,8 @@
 class GalSimError(RuntimeError):
     pass
 
+
+# Base class for all GalSim-emitted warnings.
+class GalSimWarning(UserWarning):
+    pass
+

@@ -100,7 +100,7 @@ from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, ar
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 # Image
 from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image

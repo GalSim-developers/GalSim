@@ -32,7 +32,7 @@ from .table import LookupTable
 from . import utilities
 from . import integ
 from . import _galsim
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -975,7 +975,7 @@ class PowerSpectrum(object):
                 warnings.warn(
                     "Warning: position (%f,%f) not within the bounds "%(x,y) +
                     "of the gridded shear values: " + str(self.bounds) +
-                    ".  Returning a shear of (0,0) for this point.")
+                    ".  Returning a shear of (0,0) for this point.", GalSimWarning)
                 return 0., 0.
             else:
                 # Treat this as a periodic box.
@@ -1073,7 +1073,7 @@ class PowerSpectrum(object):
                 warnings.warn(
                     "Warning: position (%f,%f) not within the bounds "%(x,y) +
                     "of the gridded convergence values: " + str(self.bounds) +
-                    ".  Returning a convergence of 0 for this point.")
+                    ".  Returning a convergence of 0 for this point.", GalSimWarning)
                 return 0.
             else:
                 # Treat this as a periodic box.
@@ -1172,7 +1172,7 @@ class PowerSpectrum(object):
                 warnings.warn(
                     "Warning: position (%f,%f) not within the bounds "%(x,y) +
                     "of the gridded convergence values: " + str(self.bounds) +
-                    ".  Returning a magnification of 1 for this point.")
+                    ".  Returning a magnification of 1 for this point.", GalSimWarning)
                 return 1.
             else:
                 # Treat this as a periodic box.
@@ -1280,7 +1280,7 @@ class PowerSpectrum(object):
                 warnings.warn(
                     "Warning: position (%f,%f) not within the bounds "%(x,y) +
                     "of the gridded values: " + str(self.bounds) +
-                    ".  Returning 0 for lensing observables at this point.")
+                    ".  Returning 0 for lensing observables at this point.", GalSimWarning)
                 return 0., 0., 1.
             else:
                 # Treat this as a periodic box.

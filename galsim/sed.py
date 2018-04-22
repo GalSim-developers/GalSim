@@ -31,6 +31,7 @@ from . import utilities
 from . import integ
 from . import dcr
 from .utilities import WeakMethod, lazy_property, combine_wave_list
+from .errors import GalSimError
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.

@@ -21,11 +21,12 @@ in a configuration file.
 """
 
 from __future__ import print_function
-
 import sys
 import os
 import logging
 import pprint
+
+from .errors import GalSimWarning
 
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
@@ -219,7 +220,7 @@ def main():
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim')
 
-    logger.warn('Using config file %s', args.config_file)
+    logger.warn('Using config file %s', args.config_file, GalSimWarning)
     all_config = ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
 

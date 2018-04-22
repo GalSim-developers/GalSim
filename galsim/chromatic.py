@@ -35,7 +35,7 @@ from .position import PositionD, PositionI
 from .utilities import lazy_property
 from . import utilities
 from . import integ
-from .errors import GalSimError
+from .errors import GalSimError, GalSimWarning
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -1464,7 +1464,7 @@ class ChromaticTransformation(ChromaticObject):
             import warnings
             warnings.warn("Cannot render image with chromatic transformation applied to it "
                           "using interpolation between stored images.  Reverting to "
-                          "non-interpolated version.")
+                          "non-interpolated version.", GalSimWarning)
             obj = obj.deinterpolated
         self.interpolated = obj.interpolated
 
@@ -1967,7 +1967,8 @@ class ChromaticConvolution(ChromaticObject):
             import warnings
             warnings.warn(
                 "Image rendering for this convolution cannot take advantage of " +
-                "interpolation-related optimization.  Will use full profile evaluation.")
+                "interpolation-related optimization.  Will use full profile evaluation.",
+                GalSimWarning)
 
         # Assemble wave_lists
         self.wave_list, _, _ = utilities.combine_wave_list(self.obj_list)

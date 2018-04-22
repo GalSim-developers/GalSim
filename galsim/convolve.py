@@ -23,6 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticConvolution
 from .utilities import lazy_property, doc_inherit
+from .errors import GalSimWarning
 
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more GSObject or ChromaticObject instances.
@@ -169,7 +170,7 @@ class Convolution(GSObject):
                 msg = """
                 Doing convolution where all objects have hard edges.
                 There might be some inaccuracies due to ringing in k-space."""
-            warnings.warn(msg)
+            warnings.warn(msg, GalSimWarning)
 
         if real_space:
             # Can't do real space if nobj > 2
@@ -178,7 +179,7 @@ class Convolution(GSObject):
                 msg = """
                 Real-space convolution of more than 2 objects is not implemented.
                 Switching to DFT method."""
-                warnings.warn(msg)
+                warnings.warn(msg, GalSimWarning)
                 real_space = False
 
             # Also can't do real space if any object is not analytic, so check for that.
@@ -190,7 +191,7 @@ class Convolution(GSObject):
                         A component to be convolved is not analytic in real space.
                         Cannot use real space convolution.
                         Switching to DFT method."""
-                        warnings.warn(msg)
+                        warnings.warn(msg, GalSimWarning)
                         real_space = False
                         break
 
@@ -221,7 +222,7 @@ class Convolution(GSObject):
                 if _noise is not None:
                     import warnings
                     warnings.warn("Unable to propagate noise in galsim.Convolution when "
-                                  "multiple objects have noise attribute")
+                                  "multiple objects have noise attribute", GalSimWarning)
                     break
                 _noise = obj.noise
                 others = [ obj2 for k, obj2 in enumerate(self.obj_list) if k != i ]
@@ -483,7 +484,7 @@ class Deconvolution(GSObject):
     def _noise(self):
         if self.orig_obj.noise is not None:
             import warnings
-            warnings.warn("Unable to propagate noise in galsim.Deconvolution")
+            warnings.warn("Unable to propagate noise in galsim.Deconvolution", GalSimWarning)
         return None
 
     def __eq__(self, other):
@@ -648,7 +649,7 @@ class AutoConvolution(Convolution):
             msg = """
             Doing auto-convolution of object with hard edges.
             This might be more accurate and/or faster using real_space=True"""
-            warnings.warn(msg)
+            warnings.warn(msg, GalSimWarning)
 
         # Can't do real space if object is not analytic, so check for that.
         if real_space and not obj.is_analytic_x:
@@ -657,7 +658,7 @@ class AutoConvolution(Convolution):
             Object to be auto-convolved is not analytic in real space.
             Cannot use real space convolution.
             Switching to DFT method."""
-            warnings.warn(msg)
+            warnings.warn(msg, GalSimWarning)
             real_space = False
 
         # Save the construction parameters (as they are at this point) as attributes so they
@@ -682,7 +683,7 @@ class AutoConvolution(Convolution):
     def _noise(self):
         if self.orig_obj.noise is not None:
             import warnings
-            warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
+            warnings.warn("Unable to propagate noise in galsim.AutoConvolution", GalSimWarning)
         return None
 
     def __eq__(self, other):
@@ -791,7 +792,7 @@ class AutoCorrelation(Convolution):
             msg = """
             Doing auto-correlation of object with hard edges.
             This might be more accurate and/or faster using real_space=True"""
-            warnings.warn(msg)
+            warnings.warn(msg, GalSimWarning)
 
         # Can't do real space if object is not analytic, so check for that.
         if real_space and not obj.is_analytic_x:
@@ -800,7 +801,7 @@ class AutoCorrelation(Convolution):
             Object to be auto-correlated is not analytic in real space.
             Cannot use real space convolution.
             Switching to DFT method."""
-            warnings.warn(msg)
+            warnings.warn(msg, GalSimWarning)
             real_space = False
 
         # Save the construction parameters (as they are at this point) as attributes so they
@@ -825,7 +826,7 @@ class AutoCorrelation(Convolution):
     def _noise(self):
         if self.orig_obj.noise is not None:
             import warnings
-            warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
+            warnings.warn("Unable to propagate noise in galsim.AutoCorrelation", GalSimWarning)
         return None
 
     def __eq__(self, other):

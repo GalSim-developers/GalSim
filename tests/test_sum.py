@@ -318,7 +318,7 @@ def test_sum_noise():
     obj4 = galsim.Gaussian(sigma=3.3)
     obj4.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.8)
     try:
-        np.testing.assert_warns(UserWarning, galsim.Sum, [obj1, obj4])
+        np.testing.assert_warns(galsim.GalSimWarning, galsim.Sum, [obj1, obj4])
     except:
         pass
 

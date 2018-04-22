@@ -334,17 +334,17 @@ def test_realspace_convolve():
 
     # Check some warnings that should be raised
     # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
-    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel])
-    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
-    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
+    assert_warns(galsim.GalSimWarning, galsim.Convolve, [psf, psf, pixel])
+    assert_warns(galsim.GalSimWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
+    assert_warns(galsim.GalSimWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
     # 2 with hard edges gives a warning if we ask it not to use real_space
-    assert_warns(UserWarning, galsim.Convolve, [psf, pixel], real_space=False)
+    assert_warns(galsim.GalSimWarning, galsim.Convolve, [psf, pixel], real_space=False)
     # >2 of any kind give a warning if we ask it to use real_space
     g = galsim.Gaussian(sigma=2)
-    assert_warns(UserWarning, galsim.Convolve, [g, g, g], real_space=True)
+    assert_warns(galsim.GalSimWarning, galsim.Convolve, [g, g, g], real_space=True)
     # non-analytic profiles cannot do real_space
     d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
-    assert_warns(UserWarning, galsim.Convolve, [g, d], real_space=True)
+    assert_warns(galsim.GalSimWarning, galsim.Convolve, [g, d], real_space=True)
 
     # Repeat some of the above for AutoConvolve and AutoCorrelate
     conv = galsim.AutoConvolve(psf,real_space=True)
@@ -357,10 +357,10 @@ def test_realspace_convolve():
     do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
     do_pickle(conv)
 
-    assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
-    assert_warns(UserWarning, galsim.AutoConvolve, d, real_space=True)
-    assert_warns(UserWarning, galsim.AutoCorrelate, psf, real_space=False)
-    assert_warns(UserWarning, galsim.AutoCorrelate, d, real_space=True)
+    assert_warns(galsim.GalSimWarning, galsim.AutoConvolve, psf, real_space=False)
+    assert_warns(galsim.GalSimWarning, galsim.AutoConvolve, d, real_space=True)
+    assert_warns(galsim.GalSimWarning, galsim.AutoCorrelate, psf, real_space=False)
+    assert_warns(galsim.GalSimWarning, galsim.AutoCorrelate, d, real_space=True)
 
 
 @timer
@@ -778,9 +778,9 @@ def test_convolve_noise():
     # to propagate noise properly.  (It takes the input noise from the first one.)
     conv2 = galsim.Convolution(obj1, obj2)
     conv3 = galsim.Convolution(obj1, obj2, obj3)
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         assert conv2.noise == obj1.noise.convolvedWith(obj2)
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         assert conv3.noise == obj1.noise.convolvedWith(galsim.Convolve(obj2,obj3))
 
     # Other types don't propagate noise and give a warning about it.
@@ -788,13 +788,13 @@ def test_convolve_noise():
     autoconv = galsim.AutoConvolution(obj2)
     autocorr = galsim.AutoCorrelation(obj2)
     four = galsim.FourierSqrt(obj2)
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         assert deconv.noise is None
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         assert autoconv.noise is None
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         assert autocorr.noise is None
-    with assert_warns(UserWarning):
+    with assert_warns(galsim.GalSimWarning):
         assert four.noise is None
 
     obj2.noise = None  # Remove obj2 noise for the rest.

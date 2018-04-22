@@ -26,6 +26,7 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
+from .errors import GalSimWarning
 
 
 class AtmosphericScreen(object):
@@ -214,13 +215,15 @@ class AtmosphericScreen(object):
                     import warnings
                     warnings.warn(
                         "Instantiating AtmosphericScreen with kmax != inf "
-                        "may yield surprising results when drawing using Fourier optics.")
+                        "may yield surprising results when drawing using Fourier optics.",
+                        GalSimWarning)
             if check == 'phot':
                 if self.kmax == np.inf:
                     import warnings
                     warnings.warn(
                         "Instantiating AtmosphericScreen with kmax == inf "
-                        "may yield surprising results when drawing using geometric optics.")
+                        "may yield surprising results when drawing using geometric optics.",
+                        GalSimWarning)
 
 
     # Note the magic number 0.00058 is actually ... wait for it ...
@@ -654,7 +657,8 @@ class OpticalScreen(object):
             if aberrations[0] != 0.0:
                 import warnings
                 warnings.warn(
-                    "Detected non-zero value in aberrations[0] -- this value is ignored!")
+                    "Detected non-zero value in aberrations[0] -- this value is ignored!",
+                    GalSimWarning)
             aberrations = np.array(aberrations)
         self.aberrations = aberrations
 
