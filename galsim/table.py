@@ -29,6 +29,7 @@ from .utilities import lazy_property
 from .position import PositionD
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
+from .errors import GalSimIncompatibleValuesError
 
 class LookupTable(object):
     """
@@ -105,7 +106,7 @@ class LookupTable(object):
 
         # Sanity checks
         if len(x) != len(f):
-            raise ValueError("Input array lengths don't match")
+            raise GalSimIncompatibleValuesError("Input array lengths don't match", x=x, f=f)
         if interpolant == 'spline' and len(x) < 3:
             raise GalSimValueError("Input arrays too small to spline interpolate", x)
         if interpolant in ['linear', 'ceil', 'floor', 'nearest'] and len(x) < 2:
@@ -438,7 +439,8 @@ class LookupTable2D(object):
 
         fshape = self.f.shape
         if fshape != (len(x), len(y)):
-            raise ValueError("Shape of `f` must be (len(`x`), len(`y`)).")
+            raise GalSimIncompatibleValuesError(
+                "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
         if interpolant not in ('linear', 'ceil', 'floor', 'nearest'):
             raise GalSimValueError("Unknown interpolant.", interpolant,
@@ -461,8 +463,10 @@ class LookupTable2D(object):
                 self.xperiod = self.x[-1] - self.x[0]
                 self.yperiod = self.y[-1] - self.y[0]
             else:
-                raise ValueError("Cannot use edge_mode='wrap' unless either x and y are equally "
-                                 "spaced or first/last row/column of f are identical.")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot use edge_mode='wrap' unless either x and y are equally "
+                    "spaced or first/last row/column of f are identical.",
+                    edge_mode=edge_mode, x=x, y=y, f=f)
 
     @lazy_property
     def _tab(self):

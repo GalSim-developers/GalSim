@@ -27,7 +27,8 @@ import numpy as np
 import os
 import sys
 
-from .errors import GalSimError, GalSimValueError
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+
 
 class PowerSpectrumEstimator(object):
     """
@@ -208,7 +209,8 @@ class PowerSpectrumEstimator(object):
         from .table import LookupTable
         # Check for the expected square geometry consistent with the previously-defined grid size.
         if g1.shape != g2.shape:
-            raise ValueError("g1 and g2 grids do not have the same shape!")
+            raise GalSimIncompatibleValuesError(
+                "g1 and g2 grids do not have the same shape.", g1=g1, g2=g2)
         if g1.shape[0] != g1.shape[1]:
             raise GalSimValueError("Input shear arrays must be square.", g1.shape)
         if g1.shape[0] != self.N:

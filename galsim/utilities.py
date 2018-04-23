@@ -25,7 +25,7 @@ from builtins import range, object
 import weakref
 import numpy as np
 
-from .errors import GalSimError, GalSimValueError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
 
 
 def roll2d(image, shape):
@@ -392,7 +392,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
 
     # Check for valid inputs
     if len(x) != len(f):
-        raise ValueError("len(x) != len(f)")
+        raise GalSimIncompatibleValuesError("len(x) != len(f)", x=x, f=f)
     if rel_err <= 0 or rel_err >= 1:
         raise GalSimRangeError("rel_err must be between 0 and 1", rel_err, 0., 1.)
     if not (np.diff(x) >= 0).all():
@@ -490,7 +490,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
 
     # Check for valid inputs
     if len(x) != len(f):
-        raise ValueError("len(x) != len(f)")
+        raise GalSimIncompatibleValuesError("len(x) != len(f)", x=x, f=f)
     if rel_err <= 0 or rel_err >= 1:
         raise GalSimRangeError("rel_err must be between 0 and 1", rel_err, 0., 1.)
     if not (np.diff(x) >= 0).all():
@@ -716,8 +716,9 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     y_size,x_size = image.array.shape
     if x_size%n1 or y_size%n2:
-        raise ValueError("The value of 'N' is incompatible with the dimensions of the image to "+
-                         +"be 'deinterleaved'")
+        raise GalSimIncompatibleValuesError(
+            "The value of N is incompatible with the dimensions of the image to be deinterleaved",
+            N=N, image=image)
 
     im_list, offsets = [], []
     for i in range(n1):
@@ -852,10 +853,12 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
 
     if (n1*n2 != len(im_list)):
-        raise ValueError("'N' is incompatible with the number of images in 'im_list'")
+        raise GalSimIncompatibleValuesError(
+            "N is incompatible with the number of images in im_list", N=N, im_list=im_list)
 
     if len(im_list)!=len(offsets):
-        raise ValueError("'im_list' and 'offsets' must be lists of same length")
+        raise GalSimIncompatibleValuesError(
+            "im_list and offsets must be lists of same length", im_list=im_list, offsets=offsets)
 
     for offset in offsets:
         if not isinstance(offset, PositionD):
@@ -873,11 +876,12 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             raise TypeError("'im_list' must be a list of galsim.Image instances")
 
         if im.array.shape != (y_size,x_size):
-            raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
+            raise GalSimIncompatibleValuesError(
+                "All galsim.Image instances in im_list must be of the same size", im_list=im_list)
 
         if im.wcs != wcs:
-            raise ValueError(
-                "All galsim.Image instances in 'im_list' must have the same WCS")
+            raise GalSimIncompatibleValuesError(
+                "All galsim.Image instances in im_list must have the same WCS", im_list=im_list)
 
     img_array = np.zeros((n2*y_size,n1*x_size))
     # The tricky part - going from (x,y) Image coordinates to array indices
@@ -894,14 +898,16 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             err_j = (n2-1)*0.5-n2*dy - round((n2-1)*0.5-n2*dy)
             tol = 1.e-6
             if abs(err_i)>tol or abs(err_j)>tol:
-                raise ValueError(
-                    "'offsets' must be a list of galsim.PositionD instances with x values "+
-                    "spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
+                raise GalSimIncompatibleValuesError(
+                    "offsets must be a list of galsim.PositionD instances with x values "
+                    "spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2),
+                    N=N, offsets=offsets)
 
             if i<0 or j<0 or i>=x_size or j>=y_size:
-                raise ValueError(
-                    "'offsets' must be a list of galsim.PositionD instances with x values "+
-                    "spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
+                raise GalSimIncompatibleValuesError(
+                    "offsets must be a list of galsim.PositionD instances with x values "
+                    "spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2),
+                    N=N, offsets=offsets)
 
         img_array[j::n2,i::n1] = im_list[k].array[:,:]
 
@@ -1071,14 +1077,16 @@ def dol_to_lod(dol, N=None):
                 out[k] = v[i]
             except IndexError:  # It's list-like, but too short.
                 if len(v) != 1:
-                    raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot broadcast kwargs of different non-length-1 lengths.", dol=dol)
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
             except KeyboardInterrupt:
                 raise
             except: # pragma: no cover
-                raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
+                raise GalSimIncompatibleValuesError(
+                    "Cannot broadcast kwarg {0}={1}".format(k, v), dol=dol)
         yield out
 
 def structure_function(image):
@@ -1341,10 +1349,10 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     if weight is not None:
         # We need some sanity checks here in case people passed in weird values.
         if len(weight) != n_choices:
-            raise ValueError("Array of weights has wrong length: %d instead of %d"%
-                                 (len(weight), n_choices))
-        if np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or \
-                np.any(np.isinf(weight)):
+            raise GalSimIncompatibleValuesError(
+                "Array of weights has wrong length", weight=weight, n_choices=n_choices)
+        if (np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or
+            np.any(np.isinf(weight))):
             raise GalSimValueError("Supplied weights include values outside [0,1] or inf/NaN.",
                                    weight)
 

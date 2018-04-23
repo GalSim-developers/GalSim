@@ -28,7 +28,7 @@ from .position import PositionD
 from .image import Image
 from .utilities import doc_inherit
 from . import _galsim
-from .errors import GalSimValueError
+from .errors import GalSimValueError, GalSimIncompatibleValuesError
 
 
 class Shapelet(GSObject):
@@ -136,7 +136,8 @@ class Shapelet(GSObject):
             self._bvec = np.empty(bvec_size, dtype=float)
         else:
             if len(bvec) != bvec_size:
-                raise ValueError("bvec is the wrong size for the provided order")
+                raise GalSimIncompatibleValuesError(
+                    "bvec is the wrong size for the provided order", bvec=bvec, order=order)
             self._bvec = np.ascontiguousarray(bvec, dtype=float)
 
         self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,

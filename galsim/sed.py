@@ -32,6 +32,7 @@ from . import integ
 from . import dcr
 from .utilities import WeakMethod, lazy_property, combine_wave_list
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimSEDError
+from .errors import GalSimIncompatibleValuesError
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -607,7 +608,8 @@ class SED(object):
         # These conditions ensure that SED addition is commutative.
 
         if self.redshift != other.redshift:
-            raise ValueError("Can only add SEDs with same redshift.")
+            raise GalSimIncompatibleValuesError(
+                "Can only add SEDs with same redshift.", self_sed=self, other=other)
 
         if self.dimensionless and other.dimensionless:
             flux_type = '1'

@@ -39,7 +39,8 @@ from .gsobject import GSObject
 from .chromatic import ChromaticSum
 from .position import PositionD
 from .utilities import doc_inherit
-from .errors import GalSimError, GalSimValueError
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
 
@@ -220,11 +221,14 @@ class RealGalaxy(GSObject):
             # Get the index to use in the catalog
             if index is not None:
                 if id is not None or random:
-                    raise ValueError('Too many methods for selecting a galaxy!')
+                    raise GalSimIncompatibleValuesError(
+                        "Too many methods for selecting a galaxy.",
+                        index=index, id=id, random=random)
                 use_index = index
             elif id is not None:
                 if random:
-                    raise ValueError('Too many methods for selecting a galaxy!')
+                    raise GalSimIncompatibleValuesError(
+                        "Too many methods for selecting a galaxy.", id=id, random=random)
                 use_index = real_galaxy_catalog.getIndexForID(id)
             elif random:
                 ud = UniformDeviate(self.rng)
@@ -237,7 +241,9 @@ class RealGalaxy(GSObject):
                         # Pick another one to try.
                         use_index = int(real_galaxy_catalog.nobjects * ud())
             else:
-                raise ValueError('No method specified for selecting a galaxy!')
+                raise GalSimIncompatibleValuesError(
+                    "No method specified for selecting a galaxy.",
+                    index=index, id=id, random=random)
             if logger:
                 logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
 
@@ -529,7 +535,9 @@ class RealGalaxyCatalog(object):
     def __init__(self, file_name=None, sample=None, dir=None, preload=False,
                  logger=None, _nobjects_only=False):
         if sample is not None and file_name is not None:
-            raise ValueError("Cannot specify both the sample and file_name!")
+            raise GalSimIncompatibleValuesError(
+                "Cannot specify both the sample and file_name.",
+                sample=sample, file_name=file_name)
 
         from ._pyfits import pyfits
         self.file_name, self.image_dir, _ = _parse_files_dirs(file_name, dir, sample)
@@ -1016,17 +1024,20 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Get the index to use in the catalog
         if index is not None:
             if id is not None or random:
-                raise ValueError('Too many methods for selecting a galaxy!')
+                raise GalSimIncompatibleValuesError(
+                    "Too many methods for selecting a galaxy.", index=index, id=id, random=random)
             use_index = index
         elif id is not None:
             if random:
-                raise ValueError('Too many methods for selecting a galaxy!')
+                raise GalSimIncompatibleValuesError(
+                    "Too many methods for selecting a galaxy.", id=id, random=random)
             use_index = real_galaxy_catalogs[0].getIndexForID(id)
         elif random:
             uniform_deviate = UniformDeviate(self.rng)
             use_index = int(real_galaxy_catalogs[0].nobjects * uniform_deviate())
         else:
-            raise ValueError('No method specified for selecting a galaxy!')
+            raise GalSimIncompatibleValuesError(
+                "No method specified for selecting a galaxy.", index=index, id=id, random=random)
         if logger:
             logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
                          use_index)

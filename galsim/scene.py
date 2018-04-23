@@ -26,7 +26,7 @@ import math
 import os
 
 from .real import RealGalaxy, RealGalaxyCatalog
-from .errors import GalSimError, GalSimValueError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
 
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
@@ -166,7 +166,9 @@ class COSMOSCatalog(object):
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
                  min_flux=0., max_flux=0., _nobjects_only=False):
         if sample is not None and file_name is not None:
-            raise ValueError("Cannot specify both the sample and file_name!")
+            raise GalSimIncompatibleValuesError(
+                "Cannot specify both the sample and file_name.",
+                sample=sample, file_name=file_name)
 
         from ._pyfits import pyfits
         from .real import _parse_files_dirs
@@ -479,7 +481,9 @@ class COSMOSCatalog(object):
             if gal_type is None:
                 gal_type = 'parametric'
             elif gal_type != 'parametric':
-                raise ValueError("Only 'parametric' galaxy type is allowed when use_real == False")
+                raise GalSimIncompatibleValuesError(
+                    "Only 'parametric' galaxy type is allowed when use_real == False",
+                    gal_type=gal_type, use_real=self.use_real)
         else:
             if gal_type is None:
                 gal_type = 'real'
@@ -872,7 +876,9 @@ class COSMOSCatalog(object):
             if gal_type is None:
                 gal_type = 'parametric'
             elif gal_type != 'parametric':
-                raise ValueError("Only 'parametric' galaxy type is allowed when use_real == False")
+                raise GalSimIncompatibleValuesError(
+                    "Only 'parametric' galaxy type is allowed when use_real == False",
+                    gal_type=gal_type, use_real=False)
 
         if gal_type not in ('real', 'parametric'):
             raise GalSimValueError("Invalid galaxy type", gal_type, ('real', 'parametric'))

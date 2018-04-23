@@ -86,6 +86,20 @@ class GalSimUndefinedBoundsError(GalSimError):
     pass
 
 
+class GalSimIncompatibleValuesError(GalSimError, ValueError):
+    """A GalSim-specific exception class indicating that 2 or more user-input values are
+    incompatible as given.
+
+    Attrubutes:
+
+        values = a dict of {name : value} giving the values that in combination are invalid.
+    """
+    def __init__(self, message, **kwargs):
+        self.values = kwargs
+        message += " Values {0!s}".format(self.values)
+        super().__init__(message)
+
+
 class GalSimSEDError(GalSimError):
     """A GalSim-specific exception class indicating an attempt to do something invalid for the
     kind of SED that is present.  Typically involving a dimensionless SED where a spectral SED

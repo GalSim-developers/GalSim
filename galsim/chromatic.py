@@ -35,7 +35,8 @@ from .position import PositionD, PositionI
 from .utilities import lazy_property
 from . import utilities
 from . import integ
-from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimIncompatibleValuesError
+from .errors import GalSimWarning
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -416,9 +417,9 @@ class ChromaticObject(object):
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, integ.SampleIntegrator):
             if len(wave_list) < 2:
-                raise ValueError(
-                    "Cannot use SampleIntegrator when Bandpass and SED are both "
-                    "analytic.")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot use SampleIntegrator when Bandpass and SED are both analytic.",
+                    integrator=integrator, bandpass=bandpass, sed=self.SED)
             bandpass = Bandpass(LookupTable(wave_list, bandpass(wave_list),
                                             interpolant='linear'), 'nm')
 
@@ -1749,7 +1750,8 @@ class ChromaticSum(ChromaticObject):
         dimensionless = all(a.dimensionless for a in args)
         spectral = all(a.spectral for a in args)
         if not (dimensionless or spectral):
-            raise ValueError("Cannot add dimensionless and spectral ChromaticObjects.")
+            raise GalSimIncompatibleValuesError(
+                "Cannot add dimensionless and spectral ChromaticObjects.", args=args)
 
         # Sort arguments into inseparable objects and groups of separable objects.  Note that
         # separable groups are only identified if the constituent objects have the *same* SED even
@@ -1931,7 +1933,8 @@ class ChromaticConvolution(ChromaticObject):
         # Accumulate convolutant .SEDs.  Check if more than one is spectral.
         nspectral = sum(arg.spectral for arg in args)
         if nspectral > 1:
-            raise ValueError("Cannot convolve more than one spectral ChromaticObject.")
+            raise GalSimIncompatibleValuesError(
+                "Cannot convolve more than one spectral ChromaticObject.", args=args)
         self.SED = args[0].SED
         for obj in args[1:]:
             self.SED *= obj.SED
