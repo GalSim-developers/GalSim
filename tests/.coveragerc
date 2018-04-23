@@ -33,13 +33,7 @@ exclude_lines =
 
     # Don't complain if tests don't hit defensive checks of user input
     raise NotImplementedError
-    raise ValueError
-    raise RuntimeError
     raise TypeError
-    raise AttributeError
-    raise IndexError
-    raise IOError
-    raise KeyError
 
     # Don't complain about not hitting warning code
     if suppress_warnings is False:
@@ -52,9 +46,8 @@ exclude_lines =
     if __name__ == .__main__.:
 
     # Don't complain about exceptional circumstances not under control of the test suite
-    except KeyboardInterrupt
-    except IOError
-    except OSError
+    except .*KeyboardInterrupt
+    except .*OSError
 
     # Or code for special cases of older versions of things.
     except ImportError
