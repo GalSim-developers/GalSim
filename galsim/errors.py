@@ -21,6 +21,54 @@
 
 from builtins import super
 
+# Note to developers about which exception to throw.
+#
+# Aside from the below classes, which should be preferred for most errors, we also
+# throw the following in some cases.
+#
+# TypeError:    Use this for errors that in a more strongly typed language would probably
+#               be a compiler error.  For instance, it is used for the following errors:
+#                - a parameter has the wrong type
+#                - the wrong number of unnamed args when processing `*args` by hand.
+#                - missing or invalid kwargs when processing `**kwargs` by hand.
+#
+# OSError:      Use this for errors related to I/O, disk access, etc.  Note: In Python 2,
+#               there was a distinction between IOError and OSError, but there was never much
+#               difference in reality, and in Python 3, they made everything OSError.
+#               We should just use OSError for all such kinds of errors.
+#
+# KeyError:     Use this for the equivalent of accessing a dict-like object with an invalid key.
+#               E.g. FitsHeader and Catalog raise this for accessing invalid columns.
+#
+# IndexError:   Use this for the equivalent of accessing a list-like object with an invalid index.
+#               E.g. RealGalaxyCatalog and Catalog raise this for accessing invalid rows.
+#
+# NotImplementedError:  Use this for features that we have not implemented.  Even if there is
+#                       no future intent to do so.  E.g. GSObject defines uses this for a number
+#                       of methods that are invalid for non-x-analytic profiles where the
+#                       functionality is not implemented (and never will be) in some of the
+#                       derived classes.
+#                       Also, use it for calls that are invalid in a base class perhaps, but are
+#                       valid for derived classes.  E.g. GSObject and Position use this for their
+#                       __init__ implementations.
+#
+# AttributeError:   Use this only for an attempt to access an attribute that an object does not
+#                   have.  We don't currently raise this anywhere in GalSim.
+#
+# RuntimeError: Don't use this.  Use GalSimError (or a subclass) for any run-time errors.
+#
+# ValueError:   Don't use this.  Use one of the below exceptions that derive from ValueError.
+#
+# std::runtime_error:   Use this for errors in the C++ layer, and put a try/except guard around
+#                       the C++ call in the Python layer to convert to a GalSimError.  E.g.
+#                       GSFitsWCS._invert_pv uses this for non-convergence, but we convert to
+#                       a GalSimError in Python.
+#                       When possible, try to guard against any such events by making appropriate
+#                       checks in the Python layer before dropping down into C++.  E.g. Image
+#                       checks for anything that might cause the C++ Image class to throw an
+#                       exception and raises some kind of GalSim exception first.
+
+
 class GalSimError(RuntimeError):
     """The base class for GalSim-specific run-time errors.
     """
