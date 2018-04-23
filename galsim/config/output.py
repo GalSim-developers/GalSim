@@ -20,6 +20,8 @@ import os
 import galsim
 import logging
 
+from ..utilities import EnsureDir
+
 # This file handles building the output files according to the specifications in config['output'].
 # This file includes the basic functionality, but it calls out to helper functions for the
 # different types of output files.  It includes the implementation of the default output type,
@@ -373,35 +375,6 @@ def RetryIO(func, args, ntries, file_name, logger):
         else:
             break
     return ret
-
-
-def EnsureDir(target):
-    """
-    Make sure the directory for the target location exists, watching for a race condition
-
-    In particular check if the OS reported that the directory already exists when running
-    makedirs, which can happen if another process creates it before this one can
-    """
-
-    _ERR_FILE_EXISTS=17
-    dir = os.path.dirname(target)
-    if dir == '': return
-
-    exists = os.path.exists(dir)
-    if not exists:
-        try:
-            os.makedirs(dir)
-        except OSError as err:
-            # check if the file now exists, which can happen if some other
-            # process created the directory between the os.path.exists call
-            # above and the time of the makedirs attempt.  This is OK
-            if err.errno != _ERR_FILE_EXISTS:
-                raise err
-
-    elif exists and not os.path.isdir(dir):
-        raise OSError("tried to make directory '%s' "
-                      "but a non-directory file of that "
-                      "name already exists" % dir)
 
 
 class OutputBuilder(object):

@@ -23,6 +23,7 @@ from contextlib import contextmanager
 from future.utils import iteritems
 from builtins import range, object
 import weakref
+import os
 import numpy as np
 
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
@@ -1500,3 +1501,31 @@ class WeakMethod(object):
         if self.c() is None :
             raise TypeError('Method called on dead object')
         return self.f(self.c(), *args)
+
+def EnsureDir(target):
+    """
+    Make sure the directory for the target location exists, watching for a race condition
+
+    In particular check if the OS reported that the directory already exists when running
+    makedirs, which can happen if another process creates it before this one can
+    """
+
+    _ERR_FILE_EXISTS=17
+    dir = os.path.dirname(target)
+    if dir == '': return
+
+    exists = os.path.exists(dir)
+    if not exists:
+        try:
+            os.makedirs(dir)
+        except OSError as err:
+            # check if the file now exists, which can happen if some other
+            # process created the directory between the os.path.exists call
+            # above and the time of the makedirs attempt.  This is OK
+            if err.errno != _ERR_FILE_EXISTS:
+                raise err
+
+    elif exists and not os.path.isdir(dir):
+        raise OSError("tried to make directory '%s' "
+                      "but a non-directory file of that "
+                      "name already exists" % dir)
