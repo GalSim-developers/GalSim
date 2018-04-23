@@ -121,7 +121,7 @@ class VonKarman(GSObject):
             sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0, self._flux,
                                        self._scale, self._do_delta, self._gsparams._gsp)
         except RuntimeError as err:  # pragma: no cover
-            # There are apparently a couple possible failure modes that can be found in the
+            # There are a couple possible failure modes that can be found in the
             # C++ layer.  Turn them into GalSimErrors.
             raise GalSimError(std(err))
 

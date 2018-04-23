@@ -279,7 +279,8 @@ class PhotonArray(object):
         @returns the total flux of photons the landed inside the image bounds.
         """
         if not image.bounds.isDefined():
-            raise GalSimError("Attempting to PhotonArray::addTo an Image with undefined Bounds")
+            raise GalSimUndefinedBoundsError(
+                "Attempting to PhotonArray::addTo an Image with undefined Bounds")
         return self._pa.addTo(image._image)
 
     @classmethod

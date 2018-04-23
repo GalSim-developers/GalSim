@@ -1224,7 +1224,7 @@ class Image(object):
         im(pos) or im(x=x,y=y))
         """
         if not self.bounds.isDefined():
-            raise GalSimError("Attempt to access values of an undefined image")
+            raise GalSimUndefinedBoundsError("Attempt to access values of an undefined image")
         if not self.bounds.includes(x,y):
             raise GalSimBoundsError("Attempt to access position not in bounds of image.",
                                     PositionI(x,y), self.bounds)
@@ -1247,7 +1247,7 @@ class Image(object):
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
-            raise GalSimError("Attempt to set value of an undefined image")
+            raise GalSimUndefinedBoundsError("Attempt to set value of an undefined image")
         pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
