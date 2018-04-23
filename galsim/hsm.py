@@ -63,7 +63,7 @@ from .position import PositionD
 from .bounds import BoundsI
 from .shear import Shear
 from .image import Image, ImageI, ImageF, ImageD
-from .errors import GalSimError, GalSimValueError, GalSimHSMError
+from .errors import GalSimError, GalSimValueError, GalSimHSMError, GalSimIncompatibleValuesError
 
 
 class ShapeData(object):
@@ -458,7 +458,9 @@ def _convertMask(image, weight=None, badpix=None):
     else:
         # if weight image was supplied, check if it has the right bounds and is non-negative
         if weight.bounds != image.bounds:
-            raise ValueError("Weight image does not have same bounds as the input Image!")
+            raise GalSimIncompatibleValuesError(
+                "Weight image does not have same bounds as the input Image.",
+                weight=weight, image=image)
 
         # also make sure there are no negative values
         if np.any(weight.array < 0) == True:
@@ -481,7 +483,9 @@ def _convertMask(image, weight=None, badpix=None):
     # image; also check bounds
     if badpix is not None:
         if badpix.bounds != image.bounds:
-            raise ValueError("Badpix image does not have the same bounds as the input Image!")
+            raise GalSimIncompatibleValuesError(
+                "Badpix image does not have the same bounds as the input Image.",
+                badpix=badpix, image=image)
         mask.array[badpix.array != 0] = 0
 
     # if no pixels are used, raise an exception

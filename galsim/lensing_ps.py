@@ -32,7 +32,7 @@ from .table import LookupTable
 from . import utilities
 from . import integ
 from . import _galsim
-from .errors import GalSimError, GalSimValueError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -170,8 +170,9 @@ class PowerSpectrum(object):
     def __init__(self, e_power_function=None, b_power_function=None, delta2=False, units=arcsec):
         # Check that at least one power function is not None
         if e_power_function is None and b_power_function is None:
-            raise ValueError(
-                "At least one of e_power_function or b_power_function must be provided.")
+            raise GalSimIncompatibleValuesError(
+                "At least one of e_power_function or b_power_function must be provided.",
+                e_power_function=e_power_function, b_power_function=b_power_function)
 
         self.e_power_function = e_power_function
         self.b_power_function = b_power_function
@@ -1539,7 +1540,7 @@ def kappaKaiserSquires(g1, g2):
     if not isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray):
         raise TypeError("Input g1 and g2 must be galsim Image or NumPy arrays.")
     if g1.shape != g2.shape:
-        raise ValueError("Input g1 and g2 must be the same shape.")
+        raise GalSimIncompatibleValuesError("Input g1 and g2 must be the same shape.", g1=g1, g2=g2)
     if g1.shape[0] != g1.shape[1]:
         raise NotImplementedError("Non-square input shear grids not supported.")
 

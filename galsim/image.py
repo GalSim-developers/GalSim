@@ -28,7 +28,7 @@ from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from . import utilities
 from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
-from .errors import GalSimUndefinedBoundsError
+from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -401,9 +401,11 @@ class Image(object):
             if not isinstance(b, BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             if b.xmax-b.xmin+1 != array.shape[1]:
-                raise ValueError("Shape of array is inconsistent with provided bounds")
+                raise GalSimIncompatibleValuesError(
+                    "Shape of array is inconsistent with provided bounds", array=array, bounds=b)
             if b.ymax-b.ymin+1 != array.shape[0]:
-                raise ValueError("Shape of array is inconsistent with provided bounds")
+                raise GalSimIncompatibleValuesError(
+                    "Shape of array is inconsistent with provided bounds", array=array, bounds=b)
             if b.isDefined():
                 xmin = b.xmin
                 ymin = b.ymin
@@ -713,15 +715,23 @@ class Image(object):
             _galsim.wrapImage(self._image, bounds._b, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
-                raise ValueError("hermitian == 'x' requires self.bounds.xmin == 0")
+                raise GalSimIncompatibleValuesError(
+                    "hermitian == 'x' requires self.bounds.xmin == 0",
+                    hermitian=hermitian, bounds=self.bounds)
             if bounds.xmin != 0:
-                raise ValueError("hermitian == 'x' requires bounds.xmin == 0")
+                raise GalSimIncompatibleValuesError(
+                    "hermitian == 'x' requires bounds.xmin == 0",
+                    hermitian=hermitian, bounds=bounds)
             _galsim.wrapImage(self._image, bounds._b, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
-                raise ValueError("hermitian == 'y' requires self.bounds.ymin == 0")
+                raise GalSimIncompatibleValuesError(
+                    "hermitian == 'y' requires self.bounds.ymin == 0",
+                    hermitian=hermitian, bounds=self.bounds)
             if bounds.ymin != 0:
-                raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
+                raise GalSimIncompatibleValuesError(
+                    "hermitian == 'y' requires bounds.ymin == 0",
+                    hermitian=hermitian, bounds=bounds)
             _galsim.wrapImage(self._image, bounds._b, False, True)
         else:
             raise GalSimValueError("Invalid value for hermitian", hermitian, (False, 'x', 'y'))
@@ -965,8 +975,8 @@ class Image(object):
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if self.bounds.numpyShape() != rhs.bounds.numpyShape():
-            raise ValueError("Trying to copy images that are not the same shape (%s -> %s)"%(
-                             rhs.bounds, self.bounds))
+            raise GalSimIncompatibleValuesError(
+                "Trying to copy images that are not the same shape", self_image=self, rhs=rhs)
         self._array[:,:] = rhs.array[:,:]
 
     def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
@@ -1584,7 +1594,7 @@ def check_image_consistency(im1, im2, integer=False):
         raise GalSimValueError("Image must have integer values.",im1)
     if isinstance(im2, Image):
         if im1.array.shape != im2.array.shape:
-            raise ValueError("Image shapes are inconsistent")
+            raise GalSimIncompatibleValuesError( "Image shapes are inconsistent", im1=im1, im2=im2)
         if integer and not im2.isinteger:
             raise GalSimValueError("Image must have integer values.",im2)
 

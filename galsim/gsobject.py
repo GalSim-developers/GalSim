@@ -58,7 +58,8 @@ import math
 from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
-from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimWarning
 
 
 class GSObject(object):
@@ -1014,25 +1015,32 @@ class GSObject(object):
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
-                raise ValueError("Cannot provide bounds if image is provided")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide bounds if image is provided", bounds=bounds, image=image)
             if nx is not None or ny is not None:
-                raise ValueError("Cannot provide nx,ny if image is provided")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide nx,ny if image is provided", nx=nx, ny=ny, image=image)
             if dtype is not None and image.array.dtype != dtype:
-                raise ValueError("Cannot specify dtype != image.array.dtype if image is provided")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot specify dtype != image.array.dtype if image is provided",
+                    dtype=dtype, image=image)
 
         # Make image if necessary
         if image is None:
             # Can't add to image if none is provided.
             if add_to_image:
-                raise ValueError("Cannot add_to_image if image is None")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot add_to_image if image is None", add_to_image=add_to_image, image=image)
             # Use bounds or nx,ny if provided
             if bounds is not None:
                 if nx is not None or ny is not None:
-                    raise ValueError("Cannot set both bounds and (nx, ny)")
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot set both bounds and (nx, ny)", nx=nx, ny=ny, bounds=bounds)
                 image = Image(bounds=bounds, dtype=dtype)
             elif nx is not None or ny is not None:
                 if nx is None or ny is None:
-                    raise ValueError("Must set either both or neither of nx, ny")
+                    raise GalSimIncompatibleValuesError(
+                        "Must set either both or neither of nx, ny", nx=nx, ny=ny)
                 image = Image(nx, ny, dtype=dtype)
             else:
                 N = self.getGoodImageSize(1.0)
@@ -1043,7 +1051,9 @@ class GSObject(object):
         elif not image.bounds.isDefined():
             # Can't add to image if need to resize
             if add_to_image:
-                raise ValueError("Cannot add_to_image if image bounds are not defined")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot add_to_image if image bounds are not defined",
+                    add_to_image=add_to_image, image=image)
             N = self.getGoodImageSize(1.0)
             if odd: N += 1
             bounds = _BoundsI(1,N,1,N)
@@ -1063,7 +1073,9 @@ class GSObject(object):
         else:
             bounds = image.bounds
         if not bounds.isDefined():
-            raise ValueError("Cannot provide non-local wcs with automatically sized image")
+            raise GalSimIncompatibleValuesError(
+                "Cannot provide non-local wcs with automatically sized image",
+                wcs=wcs, image=image, bounds=new_bounds)
         elif use_true_center:
             obj_cen = bounds.true_center
         else:
@@ -1115,7 +1127,8 @@ class GSObject(object):
         # Determine the correct wcs given the input scale, wcs and image.
         if wcs is not None:
             if scale is not None:
-                raise ValueError("Cannot provide both wcs and scale")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both wcs and scale", wcs=wcs, scale=scale)
             if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             if image is not None: image.wcs = None
@@ -1517,21 +1530,34 @@ class GSObject(object):
         # Some parameters are only relevant for method == 'phot'
         if method != 'phot' and sensor is None:
             if n_photons != 0.:
-                raise ValueError("n_photons is only relevant for method='phot'")
+                raise GalSimIncompatibleValuesError(
+                    "n_photons is only relevant for method='phot'",
+                    method=method, sensor=sensor, n_photons=n_photons)
             if rng is not None:
-                raise ValueError("rng is only relevant for method='phot'")
+                raise GalSimIncompatibleValuesError(
+                    "rng is only relevant for method='phot'",
+                    method=method, sensor=sensor, rng=rng)
             if max_extra_noise != 0.:
-                raise ValueError("max_extra_noise is only relevant for method='phot'")
+                raise GalSimIncompatibleValuesError(
+                    "max_extra_noise is only relevant for method='phot'",
+                    method=method, sensor=sensor, max_extra_noise=max_extra_noise)
             if poisson_flux is not None:
-                raise ValueError("poisson_flux is only relevant for method='phot'")
+                raise GalSimIncompatibleValuesError(
+                    "poisson_flux is only relevant for method='phot'",
+                    method=method, sensor=sensor, poisson_flux=poisson_flux)
             if surface_ops != ():
-                raise ValueError("surface_ops are only relevant for method='phot'")
+                raise GalSimIncompatibleValuesError(
+                    "surface_ops are only relevant for method='phot'",
+                    method=method, sensor=sensor, surface_ops=surface_ops)
             if save_photons:
-                raise ValueError("save_photons is only valid for method='phot'")
+                raise GalSimIncompatibleValuesError(
+                    "save_photons is only valid for method='phot'",
+                    method=method, sensor=sensor, save_photons=save_photons)
         else:
             # If we want to save photons, it doesn't make sense to limit the number per shoot call.
             if save_photons and maxN is not None:
-                raise ValueError("Setting maxN is incompatible with save_photons=True")
+                raise GalSimIncompatibleValuesError(
+                    "Setting maxN is incompatible with save_photons=True")
 
         # Do any delayed computation needed by fft or real_space drawing.
         if method != 'phot':
@@ -2233,7 +2259,9 @@ class GSObject(object):
 
         # Can't both recenter a provided image and add to it.
         if recenter and image.center != PositionI(0,0) and add_to_image:
-            raise ValueError("Cannot recenter a non-centered image when add_to_image=True")
+            raise GalSimIncompatibleValuesError(
+                "Cannot recenter a non-centered image when add_to_image=True",
+                recenter=recenter, image=image, add_to_image=add_to_image)
 
         # Set the center to 0,0 if appropriate
         if recenter and image.center != PositionI(0,0):

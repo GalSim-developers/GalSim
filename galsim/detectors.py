@@ -24,7 +24,8 @@ import numpy as np
 import sys
 
 from .image import Image
-from .errors import GalSimRangeError, GalSimValueError, GalSimWarning
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimWarning
 
 def applyNonlinearity(self, NLfunc, *args):
     """
@@ -309,7 +310,8 @@ def applyPersistence(self,imgs,coeffs):
     @returns None
     """
     if not len(imgs)==len(coeffs):
-        raise ValueError("The length of 'imgs' and 'coeffs' must be the same")
+        raise GalSimIncompatibleValuesError("The length of 'imgs' and 'coeffs' must be the same",
+                                            imgs=imgs, coeffs=coeffs)
     for img,coeff in zip(imgs,coeffs):
         self += coeff*img
 

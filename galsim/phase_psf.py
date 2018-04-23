@@ -80,7 +80,7 @@ from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
-from .errors import GalSimError, GalSimValueError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -233,10 +233,15 @@ class Aperture(object):
                            strut_thick == 0.05 and
                            strut_angle == 0.0*radians)
         if not is_default_geom and pupil_plane_im is not None:
-            raise ValueError("Can't specify both geometric parameters and pupil_plane_im.")
+            raise GalSimIncompatibleValuesError(
+                "Can't specify both geometric parameters and pupil_plane_im.",
+                circular_pupil=circular_pupil, nstruts=nstruts, strut_thick=strut_thick,
+                strut_angle=strut_angle, pupil_plane_im=pupil_plane_im)
 
         if screen_list is not None and lam is None:
-            raise ValueError("Wavelength `lam` must be specified with `screen_list`.")
+            raise GalSimIncompatibleValuesError(
+                "Wavelength `lam` must be specified with `screen_list`.",
+                screen_list=screen_list, lam=lam)
 
         # Although the user can set the pupil plane size and scale directly if desired, in most
         # cases it's nicer to have GalSim try to pick good values for these.
@@ -1072,7 +1077,7 @@ class PhaseScreenPSF(GSObject):
 
     The following are optional keywords to use to setup the aperture if `aper` is not provided:
 
-    @param diam                Aperture diameter in meters.
+    @param diam                Aperture diameter in meters. [default: None]
     @param circular_pupil      Adopt a circular pupil?  [default: True]
     @param obscuration         Linear dimension of central obscuration as fraction of aperture
                                linear dimension. [0., 1.).  [default: 0.0]
@@ -1128,7 +1133,8 @@ class PhaseScreenPSF(GSObject):
         if aper is None:
             # Check here for diameter.
             if 'diam' not in kwargs:
-                raise ValueError("Diameter required if aperture not specified directly.")
+                raise GalSimIncompatibleValuesError(
+                    "Diameter required if aperture not specified directly.", diam=None, aper=aper)
             aper = Aperture(lam=lam, screen_list=self._screen_list, gsparams=gsparams, **kwargs)
         self.aper = aper
 

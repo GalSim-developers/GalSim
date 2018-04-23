@@ -26,7 +26,7 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
-from .errors import GalSimRangeError, GalSimValueError, GalSimWarning
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
 
 
 class AtmosphericScreen(object):
@@ -107,10 +107,13 @@ class AtmosphericScreen(object):
                  vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, suppress_warning=False):
 
         if (alpha != 1.0 and time_step is None):
-            raise ValueError("No time_step provided when alpha != 1.0")
+            raise GalSimIncompatibleValuesError(
+                "No time_step provided when alpha != 1.0", alpha=alpha, time_step=time_step)
         if (alpha == 1.0 and time_step is not None):
-            raise ValueError("Setting AtmosphericScreen time_step prohibited when alpha == 1.0.  "
-                             "Did you mean to set time_step in makePSF or PhaseScreenPSF?")
+            raise GalSimIncompatibleValuesError(
+                "Setting AtmosphericScreen time_step prohibited when alpha == 1.0.  "
+                "Did you mean to set time_step in makePSF or PhaseScreenPSF?",
+                alpha=alpha, time_step=time_step)
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
@@ -339,7 +342,7 @@ class AtmosphericScreen(object):
         u = np.array(u, dtype=float)
         v = np.array(v, dtype=float)
         if u.shape != v.shape:
-            raise ValueError("u.shape not equal to v.shape")
+            raise GalSimIncompatibleValuesError("u.shape not equal to v.shape",u=u,v=v)
 
         if t is None:
             t = self._time
@@ -352,7 +355,8 @@ class AtmosphericScreen(object):
         else:
             t = np.array(t, dtype=float)
             if t.shape != u.shape:
-                raise ValueError("t.shape must match u.shape if t is not a scalar")
+                raise GalSimIncompatibleValuesError(
+                    "t.shape must match u.shape if t is not a scalar", t=t, u=u)
 
         self.instantiate()  # noop if already instantiated
 
@@ -399,7 +403,7 @@ class AtmosphericScreen(object):
         u = np.array(u, dtype=float)
         v = np.array(v, dtype=float)
         if u.shape != v.shape:
-            raise ValueError("u.shape not equal to v.shape")
+            raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
 
         from numbers import Real
         if isinstance(t, Real):
@@ -409,7 +413,8 @@ class AtmosphericScreen(object):
         else:
             t = np.array(t, dtype=float)
             if t.shape != u.shape:
-                raise ValueError("t.shape must match u.shape if t is not a scalar")
+                raise GalSimIncompatibleValuesError(
+                    "t.shape must match u.shape if t is not a scalar", t=t, u=u)
 
         self.instantiate()  # noop if already instantiated
 
@@ -581,7 +586,9 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
         kwargs['r0_500'] = [r0_500 * w**(-3./5) for w in r0_weights]
         # kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
     elif 'r0_weights' in kwargs:
-        raise ValueError("Cannot use r0_weights if r0_500 is specified as a list.")
+        raise GalSimIncompatibleValuesError(
+            "Cannot use r0_weights if r0_500 is specified as a list.",
+            r0_weights=kwargs['r0_weights'], r0_500=kwargs['r0_500'])
 
     if rng is None:
         rng = BaseDeviate()
@@ -745,7 +752,7 @@ class OpticalScreen(object):
         u = np.array(u, dtype=float)
         v = np.array(v, dtype=float)
         if u.shape != v.shape:
-            raise ValueError("u.shape not equal to v.shape")
+            raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront(u, v, t, theta)
 
     def _wavefront(self, u, v, t, theta):
@@ -767,7 +774,7 @@ class OpticalScreen(object):
         u = np.array(u, dtype=float)
         v = np.array(v, dtype=float)
         if u.shape != v.shape:
-            raise ValueError("u.shape not equal to v.shape")
+            raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront_gradient(u, v, t, theta)
 
 

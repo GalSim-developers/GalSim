@@ -35,7 +35,7 @@ from .random import BaseDeviate
 from . import _galsim
 from . import fits
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
-from .errors import GalSimWarning
+from .errors import GalSimIncompatibleValuesError, GalSimWarning
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -324,7 +324,9 @@ class InterpolatedImage(GSObject):
                 raise TypeError("wcs parameter is not a galsim.BaseWCS instance")
             self._image.wcs = wcs
         elif self._image.wcs is None:
-            raise ValueError("No information given with Image or keywords about pixel scale!")
+            raise GalSimIncompatibleValuesError(
+                "No information given with Image or keywords about pixel scale!",
+                scale=scale, wcs=wcs, image=image)
 
         # Figure out the offset to apply based on the original image (not the padded one).
         # We will apply this below in _sbp.
@@ -833,7 +835,9 @@ class InterpolatedKImage(GSObject):
                  real_kimage=None, imag_kimage=None, real_hdu=None, imag_hdu=None):
         if kimage is None:
             if real_kimage is None or imag_kimage is None:
-                raise ValueError("Must provide either kimage or real_kimage/imag_kimage")
+                raise GalSimIncompatibleValuesError(
+                    "Must provide either kimage or real_kimage/imag_kimage",
+                    kimage=kimage, real_kimage=real_kimage, imag_kimage=imag_kimage)
 
             # If the "image" is not actually an image, try to read the image as a file.
             if not isinstance(real_kimage, Image):
@@ -848,14 +852,20 @@ class InterpolatedKImage(GSObject):
             if not isinstance(imag_kimage, Image):
                 raise GalSimValueError("Supplied imag_kimage is not an Image instance", imag_kimage)
             if real_kimage.bounds != imag_kimage.bounds:
-                raise ValueError("Real and Imag kimages must have same bounds.")
+                raise GalSimIncompatibleValuesError(
+                    "Real and Imag kimages must have same bounds.",
+                    real_kimage=real_kimage, imag_kimage=imag_kimage)
             if real_kimage.wcs != imag_kimage.wcs:
-                raise ValueError("Real and Imag kimages must have same scale/wcs.")
+                raise GalSimIncompatibleValuesError(
+                    "Real and Imag kimages must have same scale/wcs.",
+                    real_kimage=real_kimage, imag_kimage=imag_kimage)
 
             kimage = real_kimage + 1j*imag_kimage
         else:
             if real_kimage is not None or imag_kimage is not None:
-                raise ValueError("Cannot provide both kimage and real_kimage/imag_kimage")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both kimage and real_kimage/imag_kimage",
+                    kimage=kimage, real_kimage=real_kimage, imag_kimage=imag_kimag)
             if not kimage.iscomplex:
                 raise GalSimValueError("Supplied kimage is not complex", kimage)
 
@@ -878,7 +888,8 @@ class InterpolatedKImage(GSObject):
                             kimage[bd].real.array[::-1,::-1]) and
                 np.allclose(kimage[bd].imag.array,
                             -kimage[bd].imag.array[::-1,::-1])):
-            raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
+            raise GalSimIncompatibleValuesError(
+                "Real and Imag kimages must form a Hermitian complex matrix.", kimage=kimage)
 
         if stepk is None:
             if self._kimage.scale is None:

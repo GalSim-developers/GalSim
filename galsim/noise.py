@@ -25,7 +25,8 @@ import numpy as np
 import math
 
 from .image import Image, ImageD
-from .errors import GalSimError
+from .utilities import doc_inherit
+from .errors import GalSimError, GalSimIncompatibleValuesError
 
 
 def addNoise(self, noise):
@@ -620,13 +621,15 @@ class VariableGaussianNoise(BaseNoise):
 
     # Repeat this here, since we want to add an extra sanity check, which should go in the
     # non-underscore version.
+    @doc_inherit
     def applyTo(self, image):
         if not isinstance(image, Image):
             raise TypeError("Provided image must be a galsim.Image")
         if image.array.shape != self.var_image.array.shape:
-            raise ValueError("Provided image shape does not match the shape of var_image")
+            raise GalSimIncompatibleValuesError(
+                "Provided image shape does not match the shape of var_image",
+                image=image, var_image=self.var_image)
         return self._applyTo(image)
-    applyTo.__doc__ = BaseNoise.applyTo.__doc__
 
     def _applyTo(self, image):
         noise_array = self.var_image.array.flatten()  # NB. Makes a copy! (which is what we want)

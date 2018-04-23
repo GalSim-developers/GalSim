@@ -27,7 +27,7 @@ from .random import BaseDeviate
 from .gsobject import GSObject
 from . import utilities
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimUndefinedBoundsError
-from .errors import GalSimWarning
+from .errors import GalSimIncompatibleValuesError, GalSimWarning
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -1216,7 +1216,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Set the wcs if necessary
         if wcs is not None:
             if scale is not None:
-                raise ValueError("Cannot provide both wcs and scale")
+                raise GalSimIncompatibleValuesError("Cannot provide both wcs and scale",
+                                                    scale=scale, wcs=scale)
             if not wcs.isUniform():
                 raise GalSimValueError("Cannot provide non-uniform wcs", wcs)
             if not isinstance(wcs, BaseWCS):
@@ -1480,7 +1481,8 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
         if wcs is not None:
             if scale is not None:
-                raise ValueError("Cannot provide both wcs and scale")
+                raise GalSimIncompatibleValuesError("Cannot provide both wcs and scale",
+                                                    scale=scale, wcs=wcs)
             if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             if not wcs.isUniform():

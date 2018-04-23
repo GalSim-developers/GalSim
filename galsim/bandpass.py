@@ -29,7 +29,7 @@ from . import utilities
 from . import integ
 from . import meta_data
 from .utilities import WeakMethod, combine_wave_list
-from .errors import GalSimRangeError, GalSimValueError
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
@@ -465,7 +465,10 @@ class Bandpass(object):
         # Enforce the choice of a single mode of truncation.
         if relative_throughput is not None:
             if blue_limit is not None or red_limit is not None:
-                raise ValueError("Truncate using relative_throughput or red/blue_limit, not both!")
+                raise GalSimIncompatibleValuesError(
+                    "Truncate using relative_throughput or red/blue_limit, not both!",
+                    blue_limit=blue_limit, red_limit=red_limit,
+                    relative_throughput=relative_throughput)
 
         if preserve_zp == 'auto':
             if relative_throughput is not None: preserve_zp = True
@@ -498,9 +501,9 @@ class Bandpass(object):
             wave_list = wave_list[np.logical_and(wave_list >= blue_limit,
                                                  wave_list <= red_limit) ]
         elif relative_throughput is not None:
-            raise ValueError(
+            raise GalSimIncompatibleValuesError(
                 "Can only truncate with relative_throughput argument if throughput is "
-                + "a LookupTable")
+                "a LookupTable", relative_throughput=relative_throughput, throughput=self._orig_tp)
 
         if preserve_zp:
             return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
