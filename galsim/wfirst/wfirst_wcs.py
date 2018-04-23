@@ -324,8 +324,8 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     """
     # Sanity check args.
     if not isinstance(wcs_dict, dict):
-        raise ValueError("wcs_dict should be a dict containing WCS output by"
-                         " galsim.wfirst.getWCS!"%galsim.wfirst.n_sca)
+        raise TypeError("wcs_dict should be a dict containing WCS output by "
+                        "galsim.wfirst.getWCS!"%galsim.wfirst.n_sca)
 
     if not isinstance(world_pos, galsim.CelestialCoord):
         raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
@@ -447,8 +447,7 @@ def _parse_sip_file(file):
     for later calculations.
     """
     if not os.path.exists(file):
-        raise galsim.GalSimError("Error, cannot find file that should have WFIRST SIP"
-                                 " coefficients: %s"%file)
+        raise OSError("Cannot find file that should have WFIRST SIP coefficients: %s"%file)
 
     # Parse the file, which comes from wfi_wcs_sip_gen_0.1.c provided by Jeff Kruk.
     data = np.loadtxt(file, usecols=[0, 3, 4, 5, 6, 7]).transpose()
@@ -489,7 +488,7 @@ def _det_to_tangplane_positions(x_in, y_in):
     """
     img_dist_coeff = np.array([-1.0873e-2, 3.5597e-03, 3.6515e-02, -1.8691e-4])
     if not isinstance(x_in, galsim.Angle) or not isinstance(y_in, galsim.Angle):
-        raise ValueError("Input x_in and y_in are not galsim.Angles.")
+        raise TypeError("Input x_in and y_in are not galsim.Angles.")
     # The optical distortion model is defined in terms of separations in *degrees*.
     r_sq = (x_in/galsim.degrees)**2 + (y_in/galsim.degrees)**2
     r = np.sqrt(r_sq)

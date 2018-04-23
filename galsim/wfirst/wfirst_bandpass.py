@@ -116,7 +116,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
             if key in thin_kwargs:
                 tmp_thin_dict[key] = kwargs.pop(key)
         if len(kwargs) != 0:
-            raise ValueError("Unknown kwargs: %s"%(' '.join(kwargs.keys())))
+            raise TypeError("Unknown kwargs: %s"%(' '.join(kwargs.keys())))
 
     # Set up a dictionary.
     bandpass_dict = {}
