@@ -262,8 +262,7 @@ def _parse_SCAs(SCAs):
             SCAs = [SCAs]
         # Then check for reasonable values.
         if min(SCAs) <= 0 or max(SCAs) > galsim.wfirst.n_sca:
-            raise ValueError(
-                "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
+            raise galsim.GalSimRangeError("Invalid SCA.", SCAs, 1, galsim.wfirst.n_sca)
         # Check for uniqueness.  If not unique, make it unique.
         SCAs = list(set(SCAs))
     else:

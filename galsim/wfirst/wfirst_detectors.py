@@ -97,15 +97,16 @@ def applyPersistence(img, prev_exposures):
                              recent exposure being the first element.
     """.format(ncoeff=galsim.wfirst.persistence_coefficients)
     if not hasattr(prev_exposures,'__iter__'):
-        raise TypeError("In wfirst.applyPersistence, 'prev_exposures' must be a list of Image"
-        " instances")
+        raise TypeError("In wfirst.applyPersistence, prev_exposures must be a list of Image "
+                        "instances")
 
     n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
     if n_exp > len(galsim.wfirst.persistence_coefficients):
         import warnings
         warnings.warn("More than {ncoeff} Image instances were passed to"
-                      " galsim.wfirst.applyPersistence routine. Ignoring the earlier"
-                      " exposures".format(ncoeff=galsim.wfirst.persistence_coefficients))
+                      "galsim.wfirst.applyPersistence routine. Ignoring the earlier"
+                      "exposures".format(ncoeff=galsim.wfirst.persistence_coefficients),
+                      galsim.GalSimWarning)
 
     img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
 
