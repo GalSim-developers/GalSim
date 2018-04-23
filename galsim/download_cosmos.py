@@ -27,6 +27,8 @@ try:
 except:
     from urllib.request import urlopen
 
+from .utilities import EnsureDir
+
 script_name = 'galsim_download_cosmos'
 
 def parse_args():
@@ -152,11 +154,6 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
 
-def ensure_dir(target):
-    d = os.path.dirname(target)
-    if not os.path.exists(d):
-        os.makedirs(d)
-
 def download(url, target, unpack_dir, args, logger):
     logger.warning('Downloading from url:\n  %s',url)
     logger.warning('Target location is:\n  %s',target)
@@ -171,7 +168,7 @@ def download(url, target, unpack_dir, args, logger):
     logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
 
     # Make sure the directory we want to put this file exists.
-    ensure_dir(target)
+    EnsureDir(target)
 
     # Check if the file already exists and if it is the right size
     do_download = True
