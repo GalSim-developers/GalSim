@@ -55,7 +55,8 @@ class RingBuilder(StampBuilder):
 
         num = params['num']
         if num <= 0:
-            raise ValueError("Attribute num for gal.type == Ring must be > 0")
+            raise galsim.GalSimConfigValueError("Attribute num for gal.type == Ring must be > 0",
+                                                num)
 
         # Setup the indexing sequence if it hasn't been specified using the number of items.
         galsim.config.SetDefaultIndex(config, num)
@@ -90,20 +91,20 @@ class RingBuilder(StampBuilder):
         num = galsim.config.ParseValue(config, 'num', base, int)[0]
         index = galsim.config.ParseValue(config, 'index', base, int)[0]
         if index < 0 or index >= num:
-            raise AttributeError("index %d out of bounds for Ring"%index)
+            raise galsim.GalSimConfigError("index %d out of bounds for Ring"%index)
 
         if index % num == 0:
             # Then we are on the first item in the ring, so make it normally.
             gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
             if gal is None:
-                raise AttributeError(
+                raise galsim.GalSimConfigError(
                     "The gal field must define a valid galaxy for stamp type=Ring.")
             # Save the galaxy profile for next time.
             self.first = gal
         else:
             # Grab the saved first galaxy.
             if not hasattr(self, 'first'):
-                raise galsim.GalSimError(
+                raise galsim.GalSimConfigError(
                     "Building Ring after the first item, but no first gal stored.")
             gal = self.first
             full_rot = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
@@ -154,7 +155,7 @@ class RingBuilder(StampBuilder):
         @returns a list of tasks
         """
         if 'num' not in config:
-            raise AttributeError("Attribute num is required for type = Ring")
+            raise galsim.GalSimConfigError("Attribute num is required for type = Ring")
         num = galsim.config.ParseValue(config, 'num', base, int)[0]
         ntot = len(jobs)
         tasks = [ [ (jobs[j], j) for j in range(k,min(k+num,ntot)) ] for k in range(0, ntot, num) ]

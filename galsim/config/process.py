@@ -604,7 +604,8 @@ def ParseExtendedKey(config, key):
         except (TypeError, KeyError):
             # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
             # KeyError for the case where d is a dict, but k is not a valid key.
-            raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
+            raise galsim.GalSimConfigError(
+                "Unable to parse extended key %s.  Field %s is invalid."%(key,k))
     return d, k
 
 def GetFromConfig(config, key):
@@ -623,7 +624,8 @@ def GetFromConfig(config, key):
     try:
         value = d[k]
     except Exception as e:
-        raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
+        raise galsim.GalSimConfigError(
+            "Unable to parse extended key %s.  Field %s is invalid."%(key,k))
     return value
 
 def SetInConfig(config, key, value):
@@ -646,7 +648,8 @@ def SetInConfig(config, key, value):
         try:
             d[k] = value
         except Exception as e:
-            raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
+            raise galsim.GalSimConfigError(
+                "Unable to parse extended key %s.  Field %s is invalid."%(key,k))
 
 
 def UpdateConfig(config, new_params):
@@ -742,11 +745,11 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     logger = LoggerWrapper(logger)
     import pprint
     if njobs < 1:
-        raise ValueError("Invalid number of jobs %d"%njobs)
+        raise galsim.GalSimValueError("Invalid number of jobs",njobs)
     if job < 1:
-        raise ValueError("Invalid job number %d.  Must be >= 1."%job)
+        raise galsim.GalSimValueError("Invalid job number.  Must be >= 1.",job)
     if job > njobs:
-        raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(job,njobs))
+        raise galsim.GalSimValueError("Invalid job number.  Must be <= njobs (%d)"%(njobs),job)
 
     # First thing to do is deep copy the input config to make sure we don't modify the original.
     config = CopyConfig(config)
@@ -1029,7 +1032,7 @@ def GetIndex(config, base, is_sequence=False):
     if 'index_key' in config:
         index_key = config['index_key']
         if index_key not in valid_index_keys:
-            raise AttributeError("Invalid index_key=%s."%index_key)
+            raise galsim.GalSimConfigValueError("Invalid index_key.", index_key, valid_index_keys)
     else:
         index_key = base.get('index_key','obj_num')
         if index_key == 'obj_num' and is_sequence:
@@ -1064,9 +1067,10 @@ def GetRNG(config, base, logger=None, tag=''):
     if 'rng_num' in config:
         rng_num = config['rng_num']
         if int(rng_num) != rng_num:
-            raise ValueError("rng_num must be an integer")
+            raise galsim.GalSimConfigValueError("rng_num must be an integer", rng_num)
         if not (index_key + '_rngs') in base:
-            raise AttributeError("rng_num is only allowed when image.random_seed is a list")
+            raise galsim.GalSimConfigError(
+                "rng_num is only allowed when image.random_seed is a list")
         rng = base.get(index_key + '_rngs', None)[int(rng_num)]
     else:
         rng = base.get(index_key + '_rng', None)

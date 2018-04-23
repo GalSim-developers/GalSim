@@ -217,7 +217,7 @@ def test_phot():
     # So without the noise field, it will raise an exception.
     del config['image']['n_photons']
     del config['stamp']['n_photons']
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
     # Using this much extra noise with a sky noise variance of 50 cuts the number of photons
@@ -349,9 +349,8 @@ def test_reject():
     assert "obj 1: Skipping because field skip=True" in cl.output
     assert "obj 1: Caught SkipThisObject: e = None" in cl.output
     assert "Skipping object 1" in cl.output
-    assert "Object 0: Caught exception 105 index has gone past the number of entries" in cl.output
-    assert ("Object 0: Caught exception inner_radius (5.369661) must be less than radius "+
-            "(3.931733) for type=RandomCircle") in cl.output
+    assert "Object 0: Caught exception index=105 has gone past the number of entries" in cl.output
+    assert "Object 0: Caught exception inner_radius must be less than radius (3.931733)" in cl.output
     assert "Object 0: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
     assert "obj 0: reject evaluated to True" in cl.output
     assert "Object 0: Rejecting this object and rebuilding" in cl.output
@@ -372,12 +371,12 @@ def test_reject():
     # If we lower the number of retries, we'll max out and abort the image
     config['stamp']['retry_failures'] = 10
     galsim.config.RemoveCurrent(config)
-    with assert_raises((ValueError, IndexError, galsim.GalSimError)):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamps(nimages, config, do_noise=False)
     try:
         with CaptureLog() as cl:
             galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
-    except (ValueError,IndexError,galsim.GalSimError):
+    except (galsim.GalSimConfigError):
         pass
     #print(cl.output)
     assert "Object 0: Too many exceptions/rejections for this object. Aborting." in cl.output
@@ -746,11 +745,11 @@ def test_scattered():
 
     # Check error message for missing nobjects
     del config['image']['nobjects']
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     # Also if there is an input field that doesn't have nobj capability
     config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
@@ -1291,7 +1290,7 @@ def test_wcs():
     wcs = galsim.config.BuildWCS(config, 'wcs', config)
     assert wcs == galsim.PixelScale(1.0)
 
-    with assert_raises(ValueError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildWCS(config['image'], 'invalid', config)
 
 @timer

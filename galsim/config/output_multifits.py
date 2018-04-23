@@ -67,7 +67,8 @@ class MultiFitsBuilder(OutputBuilder):
             if nimages:
                 config['nimages'] = nimages
         if 'nimages' not in config:
-            raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
+            raise galsim.GalSimConfigError(
+                "Attribute output.nimages is required for output.type = MultiFits")
         return galsim.config.ParseValue(config,'nimages',base,int)[0]
 
 

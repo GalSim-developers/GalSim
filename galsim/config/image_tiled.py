@@ -58,7 +58,7 @@ class TiledImageBuilder(ImageBuilder):
         self.stamp_ysize = params.get('stamp_ysize',stamp_size)
 
         if (self.stamp_xsize == 0) or (self.stamp_ysize == 0):
-            raise AttributeError(
+            raise galsim.GalSimConfigError(
                 "Both image.stamp_xsize and image.stamp_ysize need to be defined and != 0.")
 
         border = params.get("border",0)
@@ -82,12 +82,12 @@ class TiledImageBuilder(ImageBuilder):
         # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
         if ( ('image_force_xsize' in base and full_xsize != base['image_force_xsize']) or
              ('image_force_ysize' in base and full_ysize != base['image_force_ysize']) ):
-            raise ValueError(
-                "Unable to reconcile required image xsize and ysize with provided "+
-                "nx_tiles=%d, ny_tiles=%d, "%(self.nx_tiles,self.ny_tiles) +
-                "xborder=%d, yborder=%d\n"%(self.xborder,self.yborder) +
-                "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
-                "!= required (%d,%d)."%(base['image_force_xsize'],base['image_force_ysize']))
+            raise galsim.GalSimConfigError(
+                "Unable to reconcile required image xsize and ysize with provided "
+                "nx_tiles=%d, ny_tiles=%d, xborder=%d, yborder=%d\n"
+                "Calculated full_size = (%d,%d) != required (%d,%d)."%(
+                    self.nx_tiles, self.ny_tiles, self.xborder, self.yborder,
+                    full_xsize, full_ysize, base['image_force_xsize'],base['image_force_ysize']))
 
         return full_xsize, full_ysize
 
@@ -133,7 +133,7 @@ class TiledImageBuilder(ImageBuilder):
             rng = galsim.config.GetRNG(config, base, logger, 'TiledImage, order = '+order)
             galsim.random.permute(rng, ix_list, iy_list)
         else:
-            raise ValueError("Invalid order.  Must be row, column, or random")
+            raise galsim.GalSimConfigValueError("Invalid order.", order, ('row', 'col', 'random'))
 
         # Define a 'image_pos' field so the stamps can set their position appropriately in case
         # we need it for PowerSpectum or NFWHalo.
@@ -219,7 +219,7 @@ class TiledImageBuilder(ImageBuilder):
         base['image_num'] = image_num
 
         if 'nx_tiles' not in config or 'ny_tiles' not in config:
-            raise AttributeError(
+            raise galsim.GalSimConfigError(
                 "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
         nx = galsim.config.ParseValue(config,'nx_tiles',base,int)[0]
         ny = galsim.config.ParseValue(config,'ny_tiles',base,int)[0]

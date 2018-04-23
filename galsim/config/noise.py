@@ -65,7 +65,7 @@ def AddNoise(config, im, current_var=0., logger=None):
     else:
         noise_type = 'Poisson'  # Default is Poisson
     if noise_type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise"%noise_type)
+        raise galsim.GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
 
     # We need to use image_num for the index_key, but if we are running this from the stamp
     # building phase, then we want to use obj_num_rng for the noise rng.  So get the rng now
@@ -94,14 +94,14 @@ def CalculateNoiseVariance(config):
     """
     noise = config['image']['noise']
     if not isinstance(noise, dict):
-        raise AttributeError("image.noise is not a dict.")
+        raise galsim.GalSimConfigError("image.noise is not a dict.")
 
     if 'type' in noise:
         noise_type = noise['type']
     else:
         noise_type = 'Poisson'  # Default is Poisson
     if noise_type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise"%noise_type)
+        raise galsim.GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
 
     index, orig_index_key = galsim.config.GetIndex(noise, config)
     config['index_key'] = 'image_num'
@@ -139,7 +139,7 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     else:
         noise_type = 'Poisson'  # Default is Poisson
     if noise_type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise"%noise_type)
+        raise galsim.GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
 
     index, orig_index_key = galsim.config.GetIndex(noise, config)
     config['index_key'] = 'image_num'
@@ -159,7 +159,7 @@ def GetSky(config, base, logger=None):
     logger = galsim.config.LoggerWrapper(logger)
     if 'sky_level' in config:
         if 'sky_level_pixel' in config:
-            raise AttributeError("Cannot specify both sky_level and sky_level_pixel")
+            raise galsim.GalSimConfigError("Cannot specify both sky_level and sky_level_pixel")
         sky_level = galsim.config.ParseValue(config,'sky_level',base,float)[0]
         logger.debug('image %d, obj %d: sky_level = %f',
                      base.get('image_num',0),base.get('obj_num',0), sky_level)
@@ -268,7 +268,7 @@ class GaussianNoiseBuilder(NoiseBuilder):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                         base.get('image_num',0),base.get('obj_num',0),var,current_var)
             if var < current_var:
-                raise galsim.GalSimError(
+                raise galsim.GalSimConfigError(
                     "Whitening already added more noise than the requested Gaussian noise.")
             var -= current_var
 
@@ -324,7 +324,7 @@ class PoissonNoiseBuilder(NoiseBuilder):
             else:
                 test = (total_sky < current_var)
             if test:
-                raise galsim.GalSimError(
+                raise galsim.GalSimConfigError(
                     "Whitening already added more noise than the requested Poisson noise.")
             total_sky -= current_var
             extra_sky -= current_var
@@ -428,7 +428,7 @@ class CCDNoiseBuilder(NoiseBuilder):
                              target_var, current_var)
                 test = target_var < current_var
             if test:
-                raise galsim.GalSimError(
+                raise galsim.GalSimConfigError(
                     "Whitening already added more noise than the requested CCD noise.")
             if read_noise_var_adu >= current_var:
                 # First try to take away from the read_noise, since this one is actually Gaussian.
@@ -540,7 +540,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          base.get('image_num',0),base.get('obj_num',0), var, current_var)
             if var < current_var:
-                raise galsim.GalSimError(
+                raise galsim.GalSimConfigError(
                     "Whitening already added more noise than the requested COSMOS noise.")
             cn -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=cn.wcs)
 

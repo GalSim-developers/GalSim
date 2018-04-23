@@ -401,10 +401,13 @@ def test_float_value():
     assert "Warning: position (1000.000000,2000.000000) not within the bounds" in cl.output
     np.testing.assert_almost_equal(ps2c, 1.)
 
-    # Should raise an AttributeError if there is no type in the dict
-    assert_raises(AttributeError, galsim.config.ParseValue, config, 'no_type', config, float)
-    assert_raises(AttributeError, galsim.config.ParseValue, config, 'bad_key', config, float)
-    assert_raises(ValueError, galsim.config.ParseValue, config, 'bad_value', config, float)
+    # Should raise a GalSimConfigError if there is no type in the dict
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config, 'no_type', config, float)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config, 'bad_key', config, float)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config, 'bad_value', config, float)
 
 
 @timer

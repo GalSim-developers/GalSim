@@ -158,7 +158,8 @@ def _GenerateFromRandomBinomial(config, base, value_type):
     N = kwargs.get('N',1)
     p = kwargs.get('p',0.5)
     if value_type is bool and N != 1:
-        raise ValueError("N must = 1 for type = RandomBinomial used in bool context")
+        raise galsim.GalSimConfigValueError(
+            "N must = 1 for type = RandomBinomial used in bool context", N)
 
     dev = galsim.BinomialDeviate(rng,N=N,p=p)
     val = dev()
@@ -230,9 +231,11 @@ def _GenerateFromRandomDistribution(config, base, value_type):
     # Allow the user to give x,f instead of function to define a LookupTable.
     if 'x' in config or 'f' in config:
         if 'x' not in config or 'f' not in config:
-            raise AttributeError("Both x and f must be provided for type=RandomDistribution")
+            raise galsim.GalSimConfigError(
+                "Both x and f must be provided for type=RandomDistribution")
         if 'function' in kwargs:
-            raise AttributeError("Cannot provide function with x,f for type=RandomDistribution")
+            raise galsim.GalSimConfigError(
+                "Cannot provide function with x,f for type=RandomDistribution")
         x = config['x']
         f = config['f']
         x_log = config.get('x_log', False)
@@ -242,9 +245,11 @@ def _GenerateFromRandomDistribution(config, base, value_type):
                                                 interpolant=interpolant)
     else:
         if 'function' not in kwargs:
-            raise AttributeError("function or x,f  must be provided for type=RandomDistribution")
+            raise galsim.GalSimConfigError(
+                "function or x,f  must be provided for type=RandomDistribution")
         if 'x_log' in config or 'f_log' in config:
-            raise AttributeError("x_log, f_log are invalid with function for type=RandomDistribution")
+            raise galsim.GalSimConfigError(
+                "x_log, f_log are invalid with function for type=RandomDistribution")
 
     if '_distdev' not in config or config['_distdev_kwargs'] != kwargs:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every
@@ -281,8 +286,9 @@ def _GenerateFromRandomCircle(config, base, value_type):
     min_rsq = inner_radius**2
 
     if min_rsq >= max_rsq:
-        raise ValueError("inner_radius (%f) must be less than radius (%f) for type=RandomCircle"%(
-                         inner_radius, radius))
+        raise galsim.GalSimConfigValueError(
+            "inner_radius must be less than radius (%f) for type=RandomCircle"%(radius),
+            inner_radius)
 
     # Emulate a do-while loop
     while True:

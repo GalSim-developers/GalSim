@@ -17,7 +17,6 @@
 #
 
 import os
-import galsim
 import logging
 import inspect
 
@@ -30,6 +29,8 @@ import inspect
 # The keys will be the (string) names of the extra output types, and the values will be
 # builder classes that will perform the different processing functions.
 valid_extra_outputs = {}
+
+import galsim
 
 
 def SetupExtraOutput(config, logger=None):
@@ -272,7 +273,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
             # If no hdu, then probably writing to file
             continue
         if hdu <= 0 or hdu in hdus:
-            raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
+            raise galsim.GalSimConfigValueError("hdu is invalid or a duplicate.",hdu)
 
         builder = config['extra_builder'][key]
 
@@ -285,7 +286,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     first = len(main_data)
     for h in range(first,len(hdus)+first):
         if h not in hdus:
-            raise ValueError("Cannot skip hdus.  No output found for hdu %d"%h)
+            raise galsim.GalSimConfigError("Cannot skip hdus.  No output found for hdu %d"%h)
     # Turn hdus into a list (in order)
     hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
     return main_data + hdulist
@@ -302,7 +303,8 @@ def CheckNoExtraOutputHDUs(config, output_type, logger=None):
         if 'hdu' in field:
             hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
             logger.error("Extra output %s requesting to write to hdu %d", key, hdu)
-            raise AttributeError("Output type %s cannot add extra images as HDUs"%output_type)
+            raise galsim.GalSimConfigError(
+                "Output type %s cannot add extra images as HDUs"%output_type)
 
 
 def GetFinalExtraOutput(key, config, main_data, logger=None):
@@ -480,9 +482,9 @@ class ExtraOutputBuilder(object):
         """
         n = len(self.data)
         if n == 0:
-            raise galsim.GalSimError("No %s images were created."%self._extra_output_key)
+            raise galsim.GalSimConfigError("No %s images were created."%self._extra_output_key)
         elif n > 1:
-            raise galsim.GalSimError(
+            raise galsim.GalSimConfigError(
                     "%d %s images were created, but expecting only 1."%(n,self._extra_output_key))
         return self.data[0]
 
