@@ -125,7 +125,7 @@ class Catalog(object):
         if len(self.data.shape) == 1:
             self.data = self.data.reshape(1, -1)
         if len(self.data.shape) != 2:
-            raise IOError('Unable to parse the input catalog as a 2-d array')
+            raise OSError('Unable to parse the input catalog as a 2-d array')
 
         self.nobjects = self.data.shape[0]
         self.ncols = self.data.shape[1]

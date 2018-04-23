@@ -677,7 +677,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         if dir:
             file_name = os.path.join(dir, file_name)
         if not os.path.isfile(file_name):
-            raise IOError('Cannot find file '+file_name)
+            raise OSError('Cannot find file '+file_name)
         self._file_name = file_name
 
         # Check wcstools is installed and that it can read the file.
@@ -688,7 +688,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         results = p.communicate()[0]
         p.stdout.close()
         if len(results) == 0:
-            raise IOError('wcstools (specifically xy2sky) was unable to read '+file_name)
+            raise OSError('wcstools (specifically xy2sky) was unable to read '+file_name)
 
     @property
     def file_name(self): return self._file_name
@@ -746,10 +746,10 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
                 results = p.communicate()[0]
                 p.stdout.close()
                 if len(results) == 0:
-                    raise IOError('wcstools command xy2sky was unable to read '+ self._file_name)
+                    raise OSError('wcstools command xy2sky was unable to read '+ self._file_name)
                 if results[0] != '*': break
             if results[0] == '*':
-                raise IOError('wcstools command xy2sky was unable to read '+self._file_name)
+                raise OSError('wcstools command xy2sky was unable to read '+self._file_name)
             lines = results.splitlines()
 
             # Each line of output should looke like:
@@ -787,10 +787,10 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
             results = p.communicate()[0]
             p.stdout.close()
             if len(results) == 0:
-                raise IOError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
+                raise OSError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
             if results[0] != '*': break
         if results[0] == '*':
-            raise IOError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
+            raise OSError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
 
         # The output should looke like:
         #    ra dec J2000 -> x y

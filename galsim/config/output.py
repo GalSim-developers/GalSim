@@ -359,12 +359,12 @@ def RetryIO(func, args, ntries, file_name, logger):
         itry += 1
         try:
             ret = func(*args)
-        except IOError as e:
+        except (IOError, OSError) as e:
             if itry == ntries:
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                logger.warning('File %s: Caught IOError: %s',file_name,str(e))
+                logger.warning('File %s: Caught OSError: %s',file_name,str(e))
                 logger.warning('This is try %d/%d, so sleep for %d sec and try again.',
                                itry,ntries,itry)
                 import time
@@ -399,7 +399,7 @@ def EnsureDir(target):
                 raise err
 
     elif exists and not os.path.isdir(dir):
-        raise IOError("tried to make directory '%s' "
+        raise OSError("tried to make directory '%s' "
                       "but a non-directory file of that "
                       "name already exists" % dir)
 

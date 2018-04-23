@@ -85,7 +85,7 @@ class _ReadFile:
         p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = BytesIO(p.communicate()[0])
         if p.returncode != 0:
-            raise IOError("Error running gunzip. Return code = %s"%p.returncode)
+            raise OSError("Error running gunzip. Return code = %s"%p.returncode)
         p.wait()
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
@@ -137,7 +137,7 @@ class _ReadFile:
         p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = BytesIO(p.communicate()[0])
         if p.returncode != 0:
-            raise IOError("Error running bunzip2. Return code = %s"%p.returncode)
+            raise OSError("Error running bunzip2. Return code = %s"%p.returncode)
         p.wait()
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
@@ -254,7 +254,7 @@ class _WriteFile:
             p = subprocess.Popen(["gzip", tmp], close_fds=True)
             p.communicate()
             if p.returncode != 0:
-                raise IOError("Error running gzip. Return code = %s"%p.returncode)
+                raise OSError("Error running gzip. Return code = %s"%p.returncode)
             p.wait()
             os.rename(tmp+".gz",file)
         else:
@@ -262,7 +262,7 @@ class _WriteFile:
             p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
             p.communicate()
             if p.returncode != 0:
-                raise IOError("Error running gzip. Return code = %s"%p.returncode)
+                raise OSError("Error running gzip. Return code = %s"%p.returncode)
             p.wait()
 
     def gzip_call(self, hdu_list, file):
@@ -272,7 +272,7 @@ class _WriteFile:
             hdu_list.writeto(p.stdin)
             p.communicate()
             if p.returncode != 0:
-                raise IOError("Error running gzip. Return code = %s"%p.returncode)
+                raise OSError("Error running gzip. Return code = %s"%p.returncode)
             p.wait()
 
     def gzip_in_mem(self, hdu_list, file):  # pragma: no cover
@@ -315,7 +315,7 @@ class _WriteFile:
             p = subprocess.Popen(["bzip2", tmp], close_fds=True)
             p.communicate()
             if p.returncode != 0:
-                raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+                raise OSError("Error running bzip2. Return code = %s"%p.returncode)
             p.wait()
             os.rename(tmp+".bz2",file)
         else:
@@ -323,7 +323,7 @@ class _WriteFile:
             p = subprocess.Popen(["bzip2", root], close_fds=True)
             p.communicate()
             if p.returncode != 0:
-                raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+                raise OSError("Error running bzip2. Return code = %s"%p.returncode)
             p.wait()
 
     def bzip2_call(self, hdu_list, file):
@@ -333,7 +333,7 @@ class _WriteFile:
             hdu_list.writeto(p.stdin)
             p.communicate()
             if p.returncode != 0:
-                raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+                raise OSError("Error running bzip2. Return code = %s"%p.returncode)
             p.wait()
 
     def bz2_in_mem(self, hdu_list, file):  # pragma: no cover
@@ -386,7 +386,7 @@ class _WriteFile:
             if clobber:
                 os.remove(file)
             else:
-                raise IOError('File %r already exists'%file)
+                raise OSError('File %r already exists'%file)
 
         if not file_compress:
             hdu_list.writeto(file)
@@ -475,17 +475,17 @@ def _check_hdu(hdu, pyfits_compress):
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):  # pragma: no cover
             if isinstance(hdu, pyfits.BinTableHDU):
-                raise IOError('Expecting a CompImageHDU, but got a BinTableHDU. Probably your '
+                raise OSError('Expecting a CompImageHDU, but got a BinTableHDU. Probably your '
                               'pyfits installation does not have the pyfitsComp module installed.')
             elif isinstance(hdu, pyfits.ImageHDU):
                 import warnings
                 warnings.warn("Expecting a CompImageHDU, but found an uncompressed ImageHDU",
                               GalSimWarning)
             else:
-                raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
+                raise OSError('Found invalid HDU reading FITS file (expected an ImageHDU)')
     else:
         if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
-            raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
+            raise OSError('Found invalid HDU reading FITS file (expected an ImageHDU)')
 
 
 def _get_hdu(hdu_list, hdu, pyfits_compress):
@@ -497,12 +497,12 @@ def _get_hdu(hdu_list, hdu, pyfits_compress):
         if hdu is None:
             if pyfits_compress:
                 if len(hdu_list) <= 1:
-                    raise IOError('Expecting at least one extension HDU in galsim.read')
+                    raise OSError('Expecting at least one extension HDU in galsim.read')
                 hdu = 1
             else:
                 hdu = 0
         if len(hdu_list) <= hdu:
-            raise IOError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
+            raise OSError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
         hdu = hdu_list[hdu]
     else:
         hdu = hdu_list
@@ -954,11 +954,11 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
         if pyfits_compress:
             first = 1
             if len(hdu_list) <= 1:
-                raise IOError('Expecting at least one extension HDU in galsim.read')
+                raise OSError('Expecting at least one extension HDU in galsim.read')
         else:
             first = 0
             if len(hdu_list) < 1:
-                raise IOError('Expecting at least one HDU in galsim.readMulti')
+                raise OSError('Expecting at least one HDU in galsim.readMulti')
         for hdu in range(first,len(hdu_list)):
             image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress))
 

@@ -770,7 +770,7 @@ def test_retry_io():
         def writeFile(self, *args, **kwargs):
             p = self.ud()
             if p < 0.33:
-                raise IOError("p = %f"%p)
+                raise OSError("p = %f"%p)
             else:
                 galsim.fits.writeMulti(*args, **kwargs)
 
@@ -812,10 +812,10 @@ def test_retry_io():
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
-    assert "File output/test_flaky_fits_0.fits: Caught IOError" in cl.output
+    assert "File output/test_flaky_fits_0.fits: Caught OSError" in cl.output
     assert "This is try 2/6, so sleep for 2 sec and try again." in cl.output
     assert "file 0: Wrote FlakyFits to file 'output/test_flaky_fits_0.fits'" in cl.output
-    assert "File output/test_flaky_wt_0.fits: Caught IOError: " in cl.output
+    assert "File output/test_flaky_wt_0.fits: Caught OSError: " in cl.output
     assert "This is try 1/6, so sleep for 1 sec and try again." in cl.output
     assert "file 0: Wrote flaky_weight to 'output/test_flaky_wt_0.fits'" in cl.output
 
@@ -875,7 +875,7 @@ def test_retry_io():
     with CaptureLog() as cl:
         try:
             galsim.config.Process(config, logger=cl.logger, except_abort=True)
-        except IOError as e:
+        except OSError as e:
             assert str(e) == "p = 0.126989"
     #print(cl.output)
     assert "File output/test_flaky_fits_0.fits not written." in cl.output
