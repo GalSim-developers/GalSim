@@ -257,3 +257,12 @@ class GalSimWarning(UserWarning):
     def __repr__(self): return 'galsim.GalSimWarning(%r)'%(str(self))
     def __eq__(self, other): return repr(self) == repr(other)
     def __hash__(self): return hash(repr(self))
+
+
+# Note: By default python2.7 ignores DeprecationWarnings.  Apparently they are really
+#       for python system deprecations.  GalSim deprecations are thus only subclassed from
+#       GalSimWarning, not DeprecationWarning.
+class GalSimDeprecationWarning(GalSimWarning):
+    """A GalSim-specific warning class used for deprecation warnings.
+    """
+    def __repr__(self): return 'galsim.GalSimDeprecationWarning(%r)'%(str(self))

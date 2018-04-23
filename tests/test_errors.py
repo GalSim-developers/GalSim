@@ -225,6 +225,18 @@ def test_galsim_warning():
     do_pickle(err)
 
 
+@timer
+def test_galsim_deprecation_warning():
+    """Test basic usage of GalSimDeprecationWarning
+    """
+    err = galsim.GalSimDeprecationWarning("Test")
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err) == "Test"
+    assert isinstance(err, UserWarning)
+    do_pickle(err)
+
+
 if __name__ == "__main__":
     test_galsim_error()
     test_galsim_value_error()
@@ -238,4 +250,4 @@ if __name__ == "__main__":
     test_galsim_config_error()
     test_galsim_config_value_error()
     test_galsim_warning()
-
+    test_galsim_deprecation_warning()

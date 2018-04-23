@@ -106,7 +106,7 @@ from .errors import GalSimError, GalSimRangeError, GalSimValueError
 from .errors import GalSimBoundsError, GalSimUndefinedBoundsError, GalSimImmutableError
 from .errors import GalSimIncompatibleValuesError, GalSimSEDError, GalSimHSMError
 from .errors import GalSimConfigError, GalSimConfigValueError
-from .errors import GalSimWarning
+from .errors import GalSimWarning, GalSimDeprecationWarning
 
 # Image
 from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image
@@ -175,8 +175,8 @@ from .nfw_halo import NFWHalo, Cosmology
 from .sensor import Sensor, SiliconSensor
 from . import detectors  # Everything here is a method of Image, so nothing to import by name.
 
-# Deprecation warning class
-from .deprecated import GalSimDeprecationWarning
+# Deprecated functionality
+from . import deprecated
 
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
