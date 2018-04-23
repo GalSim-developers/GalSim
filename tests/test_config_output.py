@@ -183,11 +183,11 @@ def test_multifits():
 
     # Check error message for missing nimages
     del config['output']['nimages']
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildFile(config)
     # Also if there is an input field that doesn't have nobj capability
     config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildFile(config)
 
     # However, an input field that does have nobj will return something for nobjects.
@@ -251,11 +251,11 @@ def test_datacube():
 
     # Check error message for missing nimages
     del config['output']['nimages']
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildFile(config)
     # Also if there is an input field that doesn't have nobj capability
     config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildFile(config)
 
     # However, an input field that does have nobj will return something for nobjects.
@@ -273,7 +273,7 @@ def test_datacube():
     config['output']['weight'] = { 'hdu' : 1 }
     config['output']['badpix'] = { 'file_name' : 'output/test_datacube_bp.fits' }
     config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 0.1 }
-    with assert_raises(AttributeError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildFile(config)
 
     # But if both weight and badpix are files, then it should work.

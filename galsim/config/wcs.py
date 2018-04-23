@@ -57,7 +57,7 @@ def BuildWCS(config, key, base, logger=None):
     elif param == str(param) and (param[0] == '$' or param[0] == '@'):
         return galsim.config.ParseValue(config, key, base, None)[0]
     elif not isinstance(param, dict):
-        raise ValueError("wcs must be either a BaseWCS or a dict")
+        raise galsim.GalSimConfigError("wcs must be either a BaseWCS or a dict")
     elif 'type' in param:
         wcs_type = param['type']
     else:
@@ -83,7 +83,7 @@ def BuildWCS(config, key, base, logger=None):
         param['origin'] = origin
 
     if wcs_type not in valid_wcs_types:
-        raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
+        raise galsim.GalSimConfigValueError("Invalid image.wcs.type.", wcs_type, valid_wcs_types)
     logger.debug('image %d: Building wcs type %s', base.get('image_num',0), wcs_type)
     builder = valid_wcs_types[wcs_type]
     wcs = builder.buildWCS(param, base, logger)
@@ -247,14 +247,14 @@ class ListWCSBuilder(WCSBuilder):
         galsim.config.CheckAllParams(config, req=req, opt=opt)
         items = config['items']
         if not isinstance(items,list):
-            raise AttributeError("items entry for type=List is not a list.")
+            raise galsim.GalSimConfigError("items entry for type=List is not a list.")
 
         # Setup the indexing sequence if it hasn't been specified using the length of items.
         galsim.config.SetDefaultIndex(config, len(items))
         index, safe = galsim.config.ParseValue(config, 'index', base, int)
 
         if index < 0 or index >= len(items):
-            raise AttributeError("index %d out of bounds for wcs type=List"%index)
+            raise galsim.GalSimConfigError("index %d out of bounds for wcs type=List"%index)
         return BuildWCS(items, index, base)
 
 def RegisterWCSType(wcs_type, builder, input_type=None):

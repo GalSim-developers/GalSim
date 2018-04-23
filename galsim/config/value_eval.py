@@ -25,7 +25,7 @@ import re
 
 def _type_by_letter(key):
     if len(key) < 2:
-        raise AttributeError("Invalid user-defined variable %r"%key)
+        raise galsim.GalSimConfigError("Invalid user-defined variable %r"%key)
     if key[0] == 'f':
         return float
     elif key[0] == 'i':
@@ -45,7 +45,8 @@ def _type_by_letter(key):
     elif key[0] == 'x':
         return None
     else:
-        raise AttributeError("Invalid Eval variable: %s (starts with an invalid letter)"%key)
+        raise galsim.GalSimConfigError(
+            "Invalid Eval variable: %s (starts with an invalid letter)"%key)
 
 eval_base_variables = [ 'image_pos', 'world_pos', 'image_center', 'image_origin', 'image_bounds',
                         'image_xsize', 'image_ysize', 'stamp_xsize', 'stamp_ysize', 'pixel_scale',
@@ -91,7 +92,8 @@ def _GenerateFromEval(config, base, value_type):
             gdict = base['eval_gdict']
 
         if 'str' not in config:
-            raise AttributeError("Attribute str is required for type = %s"%(config['type']))
+            raise galsim.GalSimConfigError(
+                "Attribute str is required for type = %s"%(config['type']))
         string = config['str']
 
         # Turn any "Current" items indicated with an @ sign into regular variables.
@@ -121,7 +123,7 @@ def _GenerateFromEval(config, base, value_type):
         if 'eval_variables' in base:
             #print('found eval_variables = ',galsim.config.CleanConfig(base['eval_variables']))
             if not isinstance(base['eval_variables'],dict):
-                raise AttributeError("eval_variables must be a dict")
+                raise galsim.GalSimConfigError("eval_variables must be a dict")
             for key in base['eval_variables']:
                 # Only add variables that appear in the string.
                 if _isWordInString(key[1:],string) and key[1:] not in params:
@@ -152,7 +154,8 @@ def _GenerateFromEval(config, base, value_type):
         except KeyboardInterrupt:
             raise
         except Exception as e:  # pragma: no cover
-            raise ValueError("Unable to evaluate string %r as a %s\n"%(string,value_type) + str(e))
+            raise galsim.GalSimConfigError(
+                "Unable to evaluate string %r as a %s\n%r"%(string, value_type, e))
  
     # Always need to evaluate any parameters to pass to the function
     opt = {}
@@ -175,8 +178,8 @@ def _GenerateFromEval(config, base, value_type):
     except KeyboardInterrupt:
         raise
     except Exception as e:  # pragma: no cover
-        raise ValueError("Unable to evaluate string %r as a %s\n"%(config['str'],value_type) +
-                         str(e))
+        raise galsim.GalSimConfigError(
+            "Unable to evaluate string %r as a %s\n%r"%(config['str'],value_type, e))
 
 
 # Register this as a valid value type

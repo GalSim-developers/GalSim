@@ -73,30 +73,30 @@ def ParseValue(config, key, base, value_type):
                 if use_current:
                     if (value_type is not None and cvalue_type is not None and
                             cvalue_type != value_type):
-                        raise ValueError(
-                            "Attempt to parse %s multiple times with different value types:"%key +
-                            " %s and %s"%(value_type, cvalue_type))
+                        raise galsim.GalSimConfigError(
+                            "Attempt to parse %s multiple times with different value types: "
+                            "%s and %s"%(key, value_type, cvalue_type))
                     #print(index,'Using current value of ',key,' = ',param['current'][0])
                     return cval, csafe
         else:
             # Only need to check this the first time.
             if 'type' not in param:
-                raise AttributeError(
-                    "%s.type attribute required in config for non-constant parameter %s."%(key,key))
+                raise galsim.GalSimConfigError(
+                    "%s.type attribute required when providing a dict."%(key))
 
             # Check if the value_type is valid.
             # (See valid_value_types defined at the top of the file.)
             if type_name not in valid_value_types:
-                raise AttributeError(
-                    "Unrecognized type = %s specified for parameter %s"%(type_name,key))
+                raise galsim.GalSimConfigValueError("Unrecognized %s.type"%(key), type_name,
+                                                    valid_value_types)
 
             # Get the generating function and the list of valid types for it.
             generate_func, valid_types = valid_value_types[type_name]
 
             if value_type not in valid_types:
-                raise AttributeError(
-                    "Invalid value_type = %s specified for parameter %s with type = %s."%(
-                        value_type, key, type_name))
+                raise galsim.GalSimConfigValueError(
+                    "Invalid value_type specified for parameter %s with type=%s."%(key, type_name),
+                    value_type, valid_types)
 
             param['_gen_fn'] = generate_func
 
@@ -163,7 +163,10 @@ def ParseValue(config, key, base, value_type):
             # This makes sure strings are converted to float (or other type) if necessary.
             # In particular things like 1.e6 aren't converted to float automatically
             # by the yaml reader. (Although I think this is a bug.)
-            val = value_type(param)
+            try:
+                val = value_type(param)
+            except (ValueError, TypeError):
+                raise galsim.GalSimConfigError("Could not parse %s as a %s"%(param, value_type))
         #print(key,' = ',val)
 
         # Save the converted type for next time so it will hit the first if statement here
@@ -289,9 +292,10 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
             get[key] = value_type
         else:  # pragma: no cover
             if 'type' in config:
-                raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+                raise galsim.GalSimConfigError(
+                    "Attribute %s is required for type = %s"%(key,config['type']))
             else:
-                raise AttributeError("Attribute %s is required"%key)
+                raise galsim.GalSimConfigError("Attribute %s is required"%key)
 
     # Check optional items:
     for (key, value_type) in opt.items():
@@ -307,18 +311,19 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
                 count += 1
                 if count > 1:  # pragma: no cover
                     if 'type' in config:
-                        raise AttributeError(
+                        raise galsim.GalSimConfigError(
                             "Only one of the attributes %s is allowed for type = %s"%(
                                 s.keys(),config['type']))
                     else:
-                        raise AttributeError("Only one of the attributes %s is allowed"%s.keys())
+                        raise galsim.GalSimConfigError(
+                            "Only one of the attributes %s is allowed"%s.keys())
                 get[key] = value_type
         if count == 0:  # pragma: no cover
             if 'type' in config:
-                raise AttributeError(
+                raise galsim.GalSimConfigError(
                     "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
             else:
-                raise AttributeError("One of the attributes %s is required"%s.keys())
+                raise galsim.GalSimConfigError("One of the attributes %s is required"%s.keys())
 
     # Check that there aren't any extra keys in config aside from a few we expect:
     valid_keys += ignore
@@ -326,7 +331,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     for key in config:
         # Generators are allowed to use item names that start with _, which we ignore here.
         if key not in valid_keys and not key.startswith('_'):
-            raise AttributeError("Unexpected attribute %s found"%(key))
+            raise galsim.GalSimConfigError("Unexpected attribute %s found"%(key))
 
     config['_get'] = get
     return get
@@ -366,7 +371,7 @@ def _GetAngleValue(param):
         unit = galsim.AngleUnit.from_name(unit)
         return galsim.Angle(value, unit)
     except (TypeError, AttributeError) as e: # pragma: no cover
-        raise AttributeError("Unable to parse %s as an Angle.  Caught %s"%(param,e))
+        raise galsim.GalSimConfigError("Unable to parse %s as an Angle. Caught %s"%(param,e))
 
 
 def _GetPositionValue(param):
@@ -381,7 +386,8 @@ def _GetPositionValue(param):
             x = float(x.strip())
             y = float(y.strip())
         except (TypeError, AttributeError) as e: # pragma: no cover
-            raise AttributeError("Unable to parse %s as a PositionD.  Caught %s"%(param,e))
+            raise galsim.GalSimConfigError(
+                "Unable to parse %s as a PositionD. Caught %s"%(param,e))
     return galsim.PositionD(x,y)
 
 
@@ -398,13 +404,14 @@ def _GetBoolValue(param):
                 val = bool(int(param))
                 return val
             except (TypeError, AttributeError) as e: # pragma: no cover
-                raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
+                raise galsim.GalSimConfigError(
+                    "Unable to parse %s as a bool. Caught %s"%(param,e))
     else:
         try:
             val = bool(param)
             return val
         except (TypeError, AttributeError) as e: # pragma: no cover
-            raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
+            raise galsim.GalSimConfigError("Unable to parse %s as a bool. Caught %s"%(param,e))
 
 
 
@@ -526,10 +533,10 @@ def _GenerateFromSequence(config, base, value_type):
     nitems = kwargs.get('nitems',None)
 
     if repeat <= 0:
-        raise ValueError(
-            "Invalid repeat=%d (must be > 0) for type = Sequence"%repeat)
+        raise galsim.GalSimConfigValueError(
+            "Invalid repeat for type = Sequence (must be > 0)", repeat)
     if last is not None and nitems is not None:
-        raise AttributeError(
+        raise galsim.GalSimConfigError(
             "At most one of the attributes last and nitems is allowed for type = Sequence")
 
     index, index_key = galsim.config.GetIndex(kwargs, base, is_sequence=True)
@@ -612,7 +619,7 @@ def _GenerateFromFormattedStr(config, base, value_type):
             continue
         token = token.lstrip('0123456789lLh') # ignore field size, and long/short specification
         if len(token) == 0:
-            raise ValueError("Unable to parse '%s' as a valid format string"%format)
+            raise galsim.GalSimConfigError("Unable to parse %r as a valid format string"%format)
         if token[0].lower() in 'diouxX':
             val_types.append(int)
         elif token[0].lower() in 'eEfFgG':
@@ -620,12 +627,12 @@ def _GenerateFromFormattedStr(config, base, value_type):
         elif token[0].lower() in 'rs':
             val_types.append(str)
         else:
-            raise ValueError("Unable to parse '%s' as a valid format string"%format)
+            raise galsim.GalSimConfigError("Unable to parse %r as a valid format string"%format)
 
     if len(val_types) != len(items):
-        raise ValueError(
-            "Number of items for FormatStr (%d) does not match number expected from "%len(items)+
-            "format string (%d)"%len(val_types))
+        raise galsim.GalSimConfigError(
+            "Number of items for FormatStr (%d) does not match number expected from "
+            "format string (%d)"%(len(items), len(val_types)))
     vals = []
     for index in range(len(items)):
         val, safe1 = ParseValue(items, index, base, val_types[index])
@@ -646,14 +653,14 @@ def _GenerateFromList(config, base, value_type):
     CheckAllParams(config, req=req, opt=opt)
     items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for type=List is not a list.")
+        raise galsim.GalSimConfigError("items entry for type=List is not a list.")
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
     SetDefaultIndex(config, len(items))
     index, safe = ParseValue(config, 'index', base, int)
 
     if index < 0 or index >= len(items):
-        raise AttributeError("index %d out of bounds for type=List"%index)
+        raise galsim.GalSimConfigError("index %d out of bounds for type=List"%index)
     val, safe1 = ParseValue(items, index, base, value_type)
     safe = safe and safe1
     #print(base['obj_num'],'List index = %d, val = %s'%(index,val))
@@ -667,7 +674,7 @@ def _GenerateFromSum(config, base, value_type):
     CheckAllParams(config, req=req)
     items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for type=List is not a list.")
+        raise galsim.GalSimConfigError("items entry for type=List is not a list.")
 
     sum, safe = ParseValue(items, 0, base, value_type)
 
@@ -695,7 +702,7 @@ def _GenerateFromCurrent(config, base, value_type):
     try:
         return EvaluateCurrentValue(k, d, base, value_type)
     except ValueError as e: # pragma: no cover
-        raise ValueError("%s\nError generating Current value with key = %s"%(e,k))
+        raise galsim.GalSimConfigError("%s\nError generating Current value with key = %s"%(e,k))
 
 
 def RegisterValueType(type_name, gen_func, valid_types, input_type=None):

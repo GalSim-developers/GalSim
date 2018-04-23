@@ -44,11 +44,11 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
     logger = nfw_halo.logger
 
     if 'world_pos' not in base:
-        raise ValueError("NFWHaloShear requested, but no position defined.")
+        raise galsim.GalSimConfigError("NFWHaloShear requested, but no position defined.")
     pos = base['world_pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
-        raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
+        raise galsim.GalSimConfigError("NFWHaloShear requested, but no gal.redshift defined.")
     redshift = galsim.config.GetCurrentValue('redshift', base['gal'], float, base)
 
     # There aren't any parameters for this, so just make sure num is the only (optional)
@@ -77,11 +77,12 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
     logger = nfw_halo.logger
 
     if 'world_pos' not in base:
-        raise ValueError("NFWHaloMagnification requested, but no position defined.")
+        raise galsim.GalSimConfigError("NFWHaloMagnification requested, but no position defined.")
     pos = base['world_pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
-        raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
+        raise galsim.GalSimConfigError(
+            "NFWHaloMagnification requested, but no gal.redshift defined.")
     redshift = galsim.config.GetCurrentValue('redshift', base['gal'], float, base)
 
     opt = { 'max_mu' : float, 'num' : int }
@@ -89,8 +90,8 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.:
-        raise ValueError(
-            "Invalid max_mu=%f (must be > 0) for type = NFWHaloMagnification"%max_mu)
+        raise galsim.GalSimConfigValueError(
+            "Invalid max_mu for type = NFWHaloMagnification (must be > 0)", max_mu)
 
     mu = nfw_halo.getMagnification(pos,redshift)
     if mu < 0 or mu > max_mu:

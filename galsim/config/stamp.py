@@ -144,7 +144,7 @@ def SetupConfigObjNum(config, obj_num, logger=None):
         config['stamp'] = {}
     stamp = config['stamp']
     if not isinstance(stamp, dict):
-        raise AttributeError("config.stamp is not a dict.")
+        raise galsim.GalSimConfigError("config.stamp is not a dict.")
     if 'type' not in stamp:
         stamp['type'] = 'Basic'
 
@@ -264,6 +264,8 @@ stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'wmult', 'n_photons', 'max_extra_noise', 'poisson_flux',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
+valid_draw_methods = ('auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb')
+
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
     Build a single stamp image using the given config file
@@ -284,7 +286,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     stamp = config['stamp']
     stamp_type = stamp['type']
     if stamp_type not in valid_stamp_types:
-        raise AttributeError("Invalid stamp.type=%s."%stamp_type)
+        raise galsim.GalSimConfigValueError("Invalid stamp.type.", stamp_type, valid_stamp_types)
     builder = valid_stamp_types[stamp_type]
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.
@@ -363,8 +365,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             if not skip:
                 method = galsim.config.ParseValue(stamp,'draw_method',config,str)[0]
-                if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
-                    raise AttributeError("Invalid draw_method: %s"%method)
+                if method not in valid_draw_methods:
+                    raise galsim.GalSimConfigValueError("Invalid draw_method.", method,
+                                                        valid_draw_methods)
 
                 offset = config['stamp_offset']
                 if 'offset' in stamp:
@@ -403,9 +406,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                         builder.reset(config, logger)
                         continue
                     else:
-                        raise galsim.GalSimError(
-                                "Rejected an object %d times. If this is expected, "%ntries+
-                                "you should specify a larger stamp.retry_failures.")
+                        raise galsim.GalSimConfigError(
+                                "Rejected an object %d times. If this is expected, "
+                                "you should specify a larger stamp.retry_failures."%(ntries))
 
             galsim.config.ProcessExtraOutputsForStamp(config, skip, logger)
 
@@ -509,7 +512,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     max_extra_noise = None
     if 'n_photons' in config and 'n_photons' not in kwargs:
         if method != 'phot':
-            raise AttributeError('n_photons is invalid with method != phot')
+            raise galsim.GalSimConfigError('n_photons is invalid with method != phot')
         if 'max_extra_noise' in config:
             logger.warning(
                 "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
@@ -518,22 +521,22 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     elif 'max_extra_noise' in config:
         max_extra_noise = galsim.config.ParseValue(config, 'max_extra_noise', base, float)[0]
         if method != 'phot' and max_extra_noise is not None:
-            raise AttributeError('max_extra_noise is invalid with method != phot')
+            raise galsim.GalSimConfigError('max_extra_noise is invalid with method != phot')
 
     if 'poisson_flux' in config and 'poisson_flux' not in kwargs:
         if method != 'phot':
-            raise AttributeError('poisson_flux is invalid with method != phot')
+            raise galsim.GalSimConfigError('poisson_flux is invalid with method != phot')
         kwargs['poisson_flux'] = galsim.config.ParseValue(config, 'poisson_flux', base, bool)[0]
 
     if max_extra_noise is not None and 'max_extra_noise' not in kwargs:
         if max_extra_noise < 0.:
-            raise ValueError("image.max_extra_noise cannot be negative")
+            raise galsim.GalSimConfigError("image.max_extra_noise cannot be negative")
         if 'image' in base and 'noise' in base['image']:
             noise_var = galsim.config.CalculateNoiseVariance(base)
         else:
-            raise AttributeError("Need to specify noise level when using max_extra_noise")
+            raise galsim.GalSimConfigError("Need to specify noise level when using max_extra_noise")
         if noise_var < 0.:
-            raise ValueError("noise_var calculated to be < 0.")
+            raise galsim.GalSimConfigError("noise_var calculated to be < 0.")
         max_extra_noise *= noise_var
         kwargs['max_extra_noise'] = max_extra_noise
 
@@ -587,7 +590,7 @@ def ParseWorldPos(config, param_name, base, logger):
     if isinstance(param, dict):
         value_type = galsim.config.value.valid_value_types[param.get('type','XY')][1][0]
         if value_type not in [galsim.PositionD, galsim.CelestialCoord]:
-            raise AttributeError('Invalid type %s for %s',param.get('type',None),param_name)
+            raise galsim.GalSimConfigError('Invalid %s.type'%(param_name), param.get('type',None))
         return galsim.config.ParseValue(config, param_name, base, value_type)[0]
     else:
         value_type = (galsim.CelestialCoord if type(param) == galsim.CelestialCoord
@@ -693,8 +696,9 @@ class StampBuilder(object):
             elif 'gal' in base or 'psf' in base:
                 return None
             else:
-                raise AttributeError("At least one of gal or psf must be specified in config. " +
-                                     "If you really don't want any object, use gal type = None.")
+                raise galsim.GalSimConfigError(
+                    "At least one of gal or psf must be specified in config. "
+                    "If you really don't want any object, use gal type = None.")
 
     def makeStamp(self, config, base, xsize, ysize, logger):
         """Make the initial empty postage stamp image, if possible.
@@ -796,7 +800,8 @@ class StampBuilder(object):
                 noise = base['image']['noise']
                 if 'whiten' in noise:
                     if 'symmetrize' in noise:
-                        raise AttributeError('Only one of whiten or symmetrize is allowed')
+                        raise galsim.GalSimConfigError(
+                            'Only one of whiten or symmetrize is allowed')
                     whiten, safe = galsim.config.ParseValue(noise, 'whiten', base, bool)
                     # In case the galaxy was cached, update the rng
                     rng = galsim.config.GetRNG(noise, base, logger, "whiten")
@@ -829,13 +834,13 @@ class StampBuilder(object):
             return 1.
 
         if 'flux' in base[key]:
-            raise AttributeError(
+            raise galsim.GalSimConfigError(
                 'Only one of signal_to_noise or flux may be specified for %s'%key)
 
         if 'image' in base and 'noise' in base['image']:
             noise_var = galsim.config.CalculateNoiseVariance(base)
         else:
-            raise AttributeError(
+            raise galsim.GalSimConfigError(
                 "Need to specify noise level when using %s.signal_to_noise"%key)
         sn_target = galsim.config.ParseValue(base[key], 'signal_to_noise', base, float)[0]
 
@@ -899,8 +904,9 @@ class StampBuilder(object):
                 return True
         if 'min_flux_frac' in config:
             if not isinstance(prof, galsim.GSObject):
-                raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
-                                 "a single GSObject profile.")
+                raise galsim.GalSimConfigError(
+                    "Cannot apply min_flux_frac for stamp types that do not use "
+                    "a single GSObject profile.")
             expected_flux = prof.flux
             measured_flux = np.sum(image.array, dtype=float)
             min_flux_frac = galsim.config.ParseValue(config, 'min_flux_frac', base, float)[0]
@@ -912,8 +918,9 @@ class StampBuilder(object):
                 return True
         if 'min_snr' in config or 'max_snr' in config:
             if not isinstance(prof, galsim.GSObject):
-                raise ValueError("Cannot apply min_snr for stamp types that do not use "+
-                                "a single GSObject profile.")
+                raise galsim.GalSimConfigError(
+                    "Cannot apply min_snr for stamp types that do not use "
+                    "a single GSObject profile.")
             var = galsim.config.CalculateNoiseVariance(base)
             sumsq = np.sum(image.array**2, dtype=float)
             snr = np.sqrt(sumsq / var)

@@ -22,6 +22,7 @@ import numpy as np
 import logging
 
 # The psf extra output type builds an Image of the PSF at the same locations as the galaxies.
+from .stamp import valid_draw_methods
 
 # The code the actually draws the PSF on a postage stamp.
 def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
@@ -32,8 +33,8 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
     """
     if 'draw_method' in config:
         method = galsim.config.ParseValue(config,'draw_method',base,str)[0]
-        if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
-            raise AttributeError("Invalid draw_method: %s"%method)
+        if method not in valid_draw_methods:
+            raise galsim.GalSimConfigValueError("Invalid draw_method.", method, valid_draw_methods)
     else:
         method = 'auto'
 
@@ -43,13 +44,14 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
 
     if 'signal_to_noise' in config:
         if method == 'phot':
-            raise NotImplementedError(
+            raise galsim.GalSimConfigError(
                 "signal_to_noise option not implemented for draw_method = phot")
 
         if 'image' in base and 'noise' in base['image']:
             noise_var = galsim.config.CalculateNoiseVariance(base)
         else:
-            raise AttributeError("Need to specify noise level when using psf.signal_to_noise")
+            raise galsim.GalSimConfigError(
+                "Need to specify noise level when using psf.signal_to_noise")
 
         sn_target = galsim.config.ParseValue(config, 'signal_to_noise', base, float)[0]
 

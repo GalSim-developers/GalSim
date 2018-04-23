@@ -105,6 +105,7 @@ from .table import LookupTable, LookupTable2D
 from .errors import GalSimError, GalSimRangeError, GalSimValueError
 from .errors import GalSimImmutableError, GalSimUndefinedBoundsError
 from .errors import GalSimSEDError, GalSimHSMError, GalSimIncompatibleValuesError
+from .errors import GalSimConfigError, GalSimConfigValueError
 from .errors import GalSimWarning
 
 # Image

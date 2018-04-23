@@ -837,7 +837,7 @@ def test_cosmosgalaxy():
     gsobject_compare(gal3a, gal3b, conv=conv)
 
     config['obj_num'] = 3
-    with assert_raises(IndexError):
+    with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildGSObject(config, 'gal4')
 
     # One more test: make sure that if we specified from the start not to use real galaxies, that

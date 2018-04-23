@@ -89,8 +89,7 @@ class GalSimValueError(GalSimError, ValueError):
             message += " not in {0!s}".format(allowed_values)
         super().__init__(message)
         self.value = value
-        self.min = min
-        self.max = max
+        self.allowed_values = allowed_values
 
 
 class GalSimRangeError(GalSimError, ValueError):
@@ -180,6 +179,25 @@ class GalSimImmutableError(GalSimError):
         message += " Image: {0!s}".format(image)
         super().__init__(message)
         self.image = image
+
+
+class GalSimConfigError(GalSimError, ValueError):
+    """A GalSim-specific exception class indicating some kind of failure processing a
+    configuration file.
+    """
+    pass
+
+
+class GalSimConfigValueError(GalSimValueError, GalSimConfigError):
+    """A GalSim-specific exception class indicating that a config entry has an invalid value.
+
+    Attrubutes:
+
+        value = the invalid value
+        allowed_values = a list of allowed values if appropriate (may be None)
+    """
+    # Should use GalSimValueError init according to mro.
+    pass
 
 
 class GalSimWarning(UserWarning):

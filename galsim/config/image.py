@@ -122,7 +122,7 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
         config['image'] = {}
     image = config['image']
     if not isinstance(image, dict):
-        raise AttributeError("config.image is not a dict.")
+        raise galsim.GalSimConfigError("config.image is not a dict.")
 
     if 'file_num' not in config:
         config['file_num'] = 0
@@ -131,7 +131,7 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
         image['type'] = 'Single'
     image_type = image['type']
     if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%image_type)
+        raise galsim.GalSimConfigValueError("Invalid image.type.", image_type, valid_image_types)
 
     # In case this hasn't been done yet.
     galsim.config.SetupInput(config, logger)
@@ -168,12 +168,13 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     origin = 1 # default
     if 'index_convention' in image:
         convention = galsim.config.ParseValue(image,'index_convention',config,str)[0]
-        if convention.lower() in [ '0', 'c', 'python' ]:
+        if convention.lower() in ('0', 'c', 'python'):
             origin = 0
-        elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+        elif convention.lower() in ('1', 'fortran', 'fits'):
             origin = 1
         else:
-            raise AttributeError("Unknown index_convention: %s"%convention)
+            raise galsim.GalSimConfigValueError("Unknown index_convention", convention,
+                                                ('0', 'c', 'python', '1', 'fortran', 'fits'))
 
     config['image_origin'] = galsim.PositionI(origin,origin)
     config['image_center'] = galsim.PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
@@ -285,7 +286,7 @@ def GetNObjForImage(config, image_num):
     image = config.get('image',{})
     image_type = image.get('type','Single')
     if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%image_type)
+        raise galsim.GalSimConfigValueError("Invalid image.type.", image_type, valid_image_types)
     return valid_image_types[image_type].getNObj(image,config,image_num)
 
 
@@ -355,7 +356,7 @@ def MakeImageTasks(config, jobs, logger):
     image = config.get('image', {})
     image_type = image.get('type', 'Single')
     if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%image_type)
+        raise galsim.GalSimConfigValueError("Invalid image.type.", image_type, valid_image_types)
     return valid_image_types[image_type].makeTasks(image, config, jobs, logger)
 
 
@@ -398,8 +399,8 @@ class ImageBuilder(object):
             xsize = params.get('xsize',size)
             ysize = params.get('ysize',size)
         if (xsize == 0) != (ysize == 0):
-            raise AttributeError(
-                "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
+            raise galsim.GalSimConfigError(
+                "Both (or neither) of image.xsize and image.ysize need to be defined and != 0.")
 
         # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
         # in BuildStamp.  To mark this, we set image_pos to (0,0)

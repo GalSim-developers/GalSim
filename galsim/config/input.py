@@ -293,7 +293,8 @@ def GetInputObj(input_type, config, base, param_name):
                         error messages).
     """
     if 'input_objs' not in base or input_type not in base['input_objs']:
-        raise ValueError("No input %s available for type = %s"%(input_type,param_name))
+        raise galsim.GalSimConfigError(
+            "No input %s available for type = %s"%(input_type,param_name))
 
     if 'num' in config:
         num = galsim.config.ParseValue(config, 'num', base, int)[0]
@@ -301,9 +302,10 @@ def GetInputObj(input_type, config, base, param_name):
         num = 0
 
     if num < 0:
-        raise ValueError("Invalid num < 0 supplied for %s: num = %d"%(param_name,num))
+        raise galsim.GalSimConfigValueError("Invalid num < 0 supplied for %s."%param_name, num)
     if num >= len(base['input_objs'][input_type]):
-        raise ValueError("Invalid num supplied for %s (too large): num = %d"%(param_name,num))
+        raise galsim.GalSimConfigValueError("Invalid num supplied for %s (too large)"%param_name,
+                                            num)
 
     return base['input_objs'][input_type][num]
 

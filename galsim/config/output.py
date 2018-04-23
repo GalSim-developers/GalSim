@@ -119,7 +119,8 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         file_num, file_name = info[k]
         file_name2, t = result  # This is the t for which 0 means the file was skipped.
         if file_name2 != file_name:
-            raise galsim.GalSimError("Files seem to be out of sync. %s != %s",file_name, file_name2)
+            raise galsim.GalSimConfigError("Files seem to be out of sync. %s != %s",
+                                           file_name, file_name2)
         if t != 0 and logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
@@ -262,7 +263,8 @@ def GetNFiles(config):
     output = config.get('output',{})
     output_type = output.get('type','Fits')
     if output_type not in valid_output_types:
-        raise AttributeError("Invalid output.type=%s."%output_type)
+        raise galsim.GalSimConfigValueError("Invalid output.type.", output_type,
+                                            valid_output_types)
     return valid_output_types[output_type].getNFiles(output, config)
 
 
@@ -279,7 +281,8 @@ def GetNImagesForFile(config, file_num):
     output = config.get('output',{})
     output_type = output.get('type','Fits')
     if output_type not in valid_output_types:
-        raise AttributeError("Invalid output.type=%s."%output_type)
+        raise galsim.GalSimConfigValueError("Invalid output.type.", output_type,
+                                            valid_output_types)
     return valid_output_types[output_type].getNImages(output, config, file_num)
 
 
@@ -297,7 +300,8 @@ def GetNObjForFile(config, file_num, image_num):
     output = config.get('output',{})
     output_type = output.get('type','Fits')
     if output_type not in valid_output_types:
-        raise AttributeError("Invalid output.type=%s."%output_type)
+        raise galsim.GalSimConfigValueError("Invalid output.type.", output_type,
+                                            valid_output_types)
     return valid_output_types[output_type].getNObjPerImage(output, config, file_num, image_num)
 
 
@@ -338,7 +342,8 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
     # Check that the type is valid
     output_type = config['output']['type']
     if output_type not in valid_output_types:
-        raise AttributeError("Invalid output.type=%s."%output_type)
+        raise galsim.GalSimConfigValueError("Invalid output.type.", output_type,
+                                            valid_output_types)
 
 
 def SetDefaultExt(config, default_ext):
@@ -420,7 +425,8 @@ class OutputBuilder(object):
             # If a file_name isn't specified, we use the name of the config file + '.fits'
             file_name = base['root'] + self.default_ext
         else:
-            raise AttributeError("No file_name specified and unable to generate it automatically.")
+            raise galsim.GalSimConfigError(
+                "No file_name specified and unable to generate it automatically.")
 
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in config:
