@@ -245,7 +245,7 @@ class COSMOSCatalog(object):
                 try:
                     with pyfits.open(selection_file_name) as fits:
                         self.selection_cat = fits[1].data
-                except IOError:
+                except (IOError, OSError):
                     # There's one more option: full_file_name might be the parametric fit file, so
                     # we have to strip off the _fits.fits (instead of just the .fits)
                     selection_file_name = full_file_name[:k-5] + '_selection' + full_file_name[k:]
@@ -278,7 +278,7 @@ class COSMOSCatalog(object):
                           ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
                            (self.selection_cat['average_mask_adjacent_pixel_count'] / \
                                div_val < cut_ratio)) )
-            except IOError:
+            except (IOError, OSError):
                 # We can't make any of the above cuts (or any later ones that depend on the
                 # selection catalog) because we couldn't find the selection catalog.  Bummer.  Warn
                 # the user, and move on.

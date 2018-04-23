@@ -45,7 +45,7 @@ def test_cosmos_basic():
 
     # Check for reasonable exceptions when initializing.
     # Can't find data (wrong directory).
-    with assert_raises(IOError):
+    with assert_raises(OSError):
         galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits')
 
     # Try making galaxies

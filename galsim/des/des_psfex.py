@@ -208,27 +208,27 @@ class DES_PSFEx(object):
 
         # Check for valid values of all these things.
         if pol_naxis != 2:
-            raise IOError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
+            raise OSError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
         if not (pol_name1.startswith('X') and pol_name1.endswith('IMAGE')):
-            raise IOError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
+            raise OSError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
         if not (pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')):
-            raise IOError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
+            raise OSError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
         if pol_ngrp != 1:
-            raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
+            raise OSError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
         if pol_group1 != 1:
-            raise IOError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
+            raise OSError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
         if pol_group2 != 1:
-            raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
+            raise OSError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
         if psf_naxis != 3:
-            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psf_naxis)
+            raise OSError("PSFEx: Expected PSFNAXIS == 3, got %d"%psf_naxis)
         if psf_axis3 != ((pol_deg+1)*(pol_deg+2))//2:
-            raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
+            raise OSError("PSFEx: POLDEG and PSFAXIS3 disagree")
         if basis.shape[0] != psf_axis3:
-            raise IOError("PSFEx: PSFAXIS3 disagrees with actual basis size")
+            raise OSError("PSFEx: PSFAXIS3 disagrees with actual basis size")
         if basis.shape[1] != psf_axis2:
-            raise IOError("PSFEx: PSFAXIS2 disagrees with actual basis size")
+            raise OSError("PSFEx: PSFAXIS2 disagrees with actual basis size")
         if basis.shape[2] != psf_axis1:
-            raise IOError("PSFEx: PSFAXIS1 disagrees with actual basis size")
+            raise OSError("PSFEx: PSFAXIS1 disagrees with actual basis size")
 
         # Save some of these values for use in building the interpolated images
         self.basis = basis

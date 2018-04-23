@@ -292,8 +292,8 @@ def test_silicon():
     do_pickle(s1)
     do_pickle(s7)
 
-    assert_raises(IOError, galsim.SiliconSensor, name='junk')
-    assert_raises(IOError, galsim.SiliconSensor, name='output')
+    assert_raises(OSError, galsim.SiliconSensor, name='junk')
+    assert_raises(OSError, galsim.SiliconSensor, name='output')
     assert_raises(TypeError, galsim.SiliconSensor, rng=3.4)
     assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', rng1)
 

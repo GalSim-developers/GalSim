@@ -1397,7 +1397,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     if file_name is None:
         file_name = os.path.join(meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits')
     if not os.path.isfile(file_name):
-        raise IOError("The file %r does not exist."%(file_name))
+        raise OSError("The file %r does not exist."%(file_name))
     try:
         cfimage = fits.read(file_name)
     except KeyboardInterrupt:

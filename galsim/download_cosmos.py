@@ -284,9 +284,9 @@ def download(url, target, unpack_dir, args, logger):
                         sys.stdout.flush()
                         next_dot += file_size/100.
             logger.info("Download complete.")
-        except IOError as e:
+        except (IOError, OSError) as e:
             # Try to give a reasonable suggestion for some common IOErrors.
-            logger.error("\n\nIOError: %s",str(e))
+            logger.error("\n\nOSError: %s",str(e))
             if 'Permission denied' in str(e):
                 logger.error("Rerun using sudo %s",script_name)
                 logger.error("If this is not possible, you can download to an alternate location:")

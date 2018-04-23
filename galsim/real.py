@@ -867,9 +867,9 @@ def _parse_files_dirs(file_name, image_dir, sample):
     else:
         full_file_name = os.path.join(image_dir,file_name)
     if not os.path.isfile(full_file_name):
-        raise IOError(full_file_name+' not found.')
+        raise OSError(full_file_name+' not found.')
     if not os.path.isdir(image_dir):
-        raise IOError(image_dir+' directory does not exist!')
+        raise OSError(image_dir+' directory does not exist!')
 
     return full_file_name, image_dir, use_sample
 
