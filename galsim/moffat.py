@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimError, GalSimRangeError, GalSimIncompatibleValuesError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError
 
 
 class Moffat(GSObject):
@@ -88,8 +88,8 @@ class Moffat(GSObject):
         self._gsparams = GSParams.check(gsparams)
 
         if self._trunc == 0. and self._beta <= 1.1:
-            raise GalSimError("Moffat profiles with beta <= 1.1 must be truncated")
-
+            raise GalSimRangeError("Moffat profiles with beta <= 1.1 must be truncated",
+                                   beta, 1.1)
         if self._trunc < 0.:
             raise GalSimRangeError("Moffat trunc must be >= 0", self._trunc, 0.)
 

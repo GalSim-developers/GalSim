@@ -521,7 +521,7 @@ class COSMOSCatalog(object):
         # call the appropriate helper routine for that case.
         if gal_type == 'real':
             if chromatic:
-                raise GalSimError("Cannot yet make real chromatic galaxies!")
+                raise NotImplementedError("Cannot yet make real chromatic galaxies!")
             gal_list = self._makeReal(indices, noise_pad_size, rng, gsparams)
         else:
             # If no pre-selection was done based on radius or flux, then we won't have checked
