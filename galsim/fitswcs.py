@@ -29,7 +29,7 @@ from .position import PositionD, PositionI
 from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
-from .errors import GalSimError, GalSimWarning
+from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimWarning
 
 #########################################################################################
 #
@@ -125,9 +125,12 @@ class AstropyWCS(CelestialWCS):
             if compression is not 'auto':
                 self._tag += ', compression=%r'%compression
             if header is not None:
-                raise TypeError("Cannot provide both file_name and pyfits header")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both file_name and pyfits header",
+                    file_name=file_name, header=header)
             if wcs is not None:
-                raise TypeError("Cannot provide both file_name and wcs")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both file_name and wcs", file_name=file_name, wcs=wcs)
             hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
@@ -146,11 +149,14 @@ class AstropyWCS(CelestialWCS):
             if self._tag is None:
                 self.header = header
             if wcs is not None:
-                raise TypeError("Cannot provide both pyfits header and wcs")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both pyfits header and wcs", header=header, wcs=wcs)
             wcs = self._load_from_header(header, hdu)
 
         if wcs is None:
-            raise TypeError("Must provide one of file_name, header, or wcs")
+            raise GalSimIncompatibleValuesError(
+                "Must provide one of file_name, header, or wcs",
+                file_name=file_name, header=header, wcs=wcs)
 
         if file_name is not None:
             fits.closeHDUList(hdu_list, fin)
@@ -434,9 +440,13 @@ class PyAstWCS(CelestialWCS):
             if compression is not 'auto':
                 self._tag += ', compression=%r'%compression
             if header is not None:
-                raise TypeError("Cannot provide both file_name and pyfits header")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both file_name and pyfits header",
+                    file_name=file_name, header=header)
             if wcsinfo is not None:
-                raise TypeError("Cannot provide both file_name and wcsinfo")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both file_name and wcsinfo",
+                    file_name=file_name, wcsinfo=wcsinfo)
             hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
@@ -445,11 +455,14 @@ class PyAstWCS(CelestialWCS):
             if self._tag is None:
                 self.header = header
             if wcsinfo is not None:
-                raise TypeError("Cannot provide both pyfits header and wcsinfo")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both pyfits header and wcsinfo", header=header, wcsinfo=wcsinfo)
             wcsinfo = self._load_from_header(header, hdu)
 
         if wcsinfo is None:
-            raise TypeError("Must provide one of file_name, header, or wcsinfo")
+            raise GalSimIncompatibleValuesError(
+                "Must provide one of file_name, header, or wcsinfo",
+                file_name=file_name, header=header, wcsinfo=wcsinfo)
 
         #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes
         # (given by Nout).
@@ -786,8 +799,8 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         if len(vals) < 6:
             raise GalSimError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
         if len(vals) > 6:
-            warnings.warn('wcstools sky2xy indicates that %f,%f is off the image\n'%(ra,dec) +
-                          'output is %r'%results, GalSimWarning)
+            warnings.warn('wcstools sky2xy indicates that %f,%f is off the image. '
+                          'output is %r'%(ra,dec,results), GalSimWarning)
         x = float(vals[4])
         y = float(vals[5])
 
@@ -932,12 +945,15 @@ class GSFitsWCS(CelestialWCS):
             if compression is not 'auto':
                 self._tag += ', compression=%r'%compression
             if header is not None:
-                raise TypeError("Cannot provide both file_name and pyfits header")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both file_name and pyfits header",
+                    file_name=file_name, header=header)
             hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
         if header is None:
-            raise TypeError("Must provide either file_name or header")
+            raise GalSimIncompatibleValuesError(
+                "Must provide either file_name or header", file_name=file_name, header=header)
 
         # Read the wcs information from the header.
         self._read_header(header)
@@ -971,7 +987,7 @@ class GSFitsWCS(CelestialWCS):
         if ctype1[5:] != ctype2[5:]:
             raise GalSimError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
-        if self.wcs_type in [ 'TAN', 'TPV', 'TNX', 'TAN-SIP' ]:
+        if self.wcs_type in ('TAN', 'TPV', 'TNX', 'TAN-SIP'):
             self.projection = 'gnomonic'
         elif self.wcs_type == 'STG':
             self.projection = 'stereographic'
@@ -980,7 +996,9 @@ class GSFitsWCS(CelestialWCS):
         elif self.wcs_type == 'ARC':
             self.projection = 'postel'
         else:
-            raise GalSimError("GSFitsWCS cannot read files using WCS type "+self.wcs_type)
+            raise GalSimValueError("GSFitsWCS cannot read files using given wcs_type.",
+                                   self.wcs_type,
+                                   ('TAN', 'TPV', 'TNX', 'TAN-SIP', 'STG', 'ZEA', 'ARC'))
         crval1 = float(header['CRVAL1'])
         crval2 = float(header['CRVAL2'])
         crpix1 = float(header['CRPIX1'])
@@ -1074,9 +1092,9 @@ class GSFitsWCS(CelestialWCS):
              'PV1_11' in header and header['PV1_11'] != 0.0 or
              'PV2_3' in header and header['PV1_3'] != 0.0 or
              'PV2_11' in header and header['PV1_11'] != 0.0 ):
-            raise NotImplementedError("We don't implement odd powers of r for TPV")
+            raise NotImplementedError("TPV not implemented for odd powers of r")
         if 'PV1_12' in header:
-            raise NotImplementedError("We don't implement past 3rd order terms for TPV")
+            raise NotImplementedError("TPV not implemented past 3rd order terms")
 
         # Another strange thing is that the two matrices are defined in the opposite order
         # with respect to their element ordering.  And remember that we skipped k=3 in the
@@ -1377,7 +1395,9 @@ class GSFitsWCS(CelestialWCS):
     def _local(self, image_pos, world_pos, color=None):
         if image_pos is None:
             if world_pos is None:
-                raise TypeError("Either image_pos or world_pos must be provided")
+                raise GalSimIncompatibleValuesError(
+                    "Either image_pos or world_pos must be provided",
+                    image_pos=image_pos, world_pos=world_pos)
             image_pos = self._posToImage(world_pos, color=color)
 
         # The key lemma here is that chain rule for jacobians is just matrix multiplication.
@@ -1674,13 +1694,16 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     """
     if file_name is not None:
         if header is not None:
-            raise TypeError("Cannot provide both file_name and pyfits header")
+            raise GalSimIncompatibleValuesError(
+                "Cannot provide both file_name and pyfits header",
+                file_name=file_name, header=header)
         header = fits.FitsHeader(file_name=file_name, dir=dir, hdu=hdu, compression=compression,
                                  text_file=text_file)
     else:
         file_name = 'header' # For sensible error messages below.
     if header is None:
-        raise TypeError("Must provide either file_name or header")
+        raise GalSimIncompatibleValuesError(
+            "Must provide either file_name or header", file_name=file_name, header=header)
 
     for wcs_type in fits_wcs_types:
         try:
@@ -1703,8 +1726,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
         # Finally, this one is really the last resort, since it only reads in the linear part of the
         # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
         if not suppress_warning:
-            warnings.warn("All the fits WCS types failed to read "+file_name+".  " +
-                          "Using AffineTransform instead, which will not really be correct.",
+            warnings.warn("All the fits WCS types failed to read %r. Using AffineTransform "
+                          "instead, which will not really be correct."%(file_name),
                           GalSimWarning)
         wcs = AffineTransform._readHeader(header)
         return wcs

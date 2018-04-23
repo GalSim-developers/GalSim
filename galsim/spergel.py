@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimRangeError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError
 
 
 class Spergel(GSObject):
@@ -127,17 +127,18 @@ class Spergel(GSObject):
         # Parse the radius options
         if half_light_radius is not None:
             if scale_radius is not None:
-                raise TypeError(
-                        "Only one of scale_radius or half_light_radius may be " +
-                        "specified for Spergel")
+                raise GalSimIncompatibleValuesError(
+                    "Only one of scale_radius or half_light_radius may be specified",
+                    half_light_radius=half_light_radius, scale_radius=scale_radius)
             self._hlr = float(half_light_radius)
             self._r0 = self._hlr / _galsim.SpergelCalculateHLR(self._nu)
         elif scale_radius is not None:
             self._r0 = float(scale_radius)
             self._hlr = 0.
         else:
-            raise TypeError(
-                    "Either scale_radius or half_light_radius must be specified for Spergel")
+            raise GalSimIncompatibleValuesError(
+                "Either scale_radius or half_light_radius must be specified for Spergel",
+                half_light_radius=half_light_radius, scale_radius=scale_radius)
 
     @lazy_property
     def _sbp(self):

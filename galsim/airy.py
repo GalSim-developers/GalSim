@@ -24,6 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
+from .errors import GalSimIncompatibleValuesError
 
 
 class Airy(GSObject):
@@ -127,11 +128,15 @@ class Airy(GSObject):
         # docstring.
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
-                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+                raise GalSimIncompatibleValuesError(
+                    "If specifying lam_over_diam, then do not specify lam or diam",
+                    lam_over_diam=lam_over_diam, lam=lam, diam=diam)
             self._lod = float(lam_over_diam)
         else:
             if lam is None or diam is None:
-                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+                raise GalSimIncompatibleValuesError(
+                    "If not specifying lam_over_diam, then specify lam AND diam",
+                    lam_over_diam=lam_over_diam, lam=lam, diam=diam)
             # In this case we're going to use scale_unit, so parse it in case of string input:
             if isinstance(scale_unit, str):
                 scale_unit = AngleUnit.from_name(scale_unit)
@@ -158,7 +163,7 @@ class Airy(GSObject):
         else:
             # In principle can find the half light radius as a function of lam_over_diam and
             # obscuration too, but it will be much more involved...!
-            raise NotImplementedError("Half light radius calculation not implemented for Airy "+
+            raise NotImplementedError("Half light radius calculation not implemented for Airy "
                                       "objects with non-zero obscuration.")
 
     @property
@@ -171,7 +176,7 @@ class Airy(GSObject):
         else:
             # In principle can find the FWHM as a function of lam_over_diam and obscuration too,
             # but it will be much more involved...!
-            raise NotImplementedError("FWHM calculation not implemented for Airy "+
+            raise NotImplementedError("FWHM calculation not implemented for Airy "
                                       "objects with non-zero obscuration.")
 
     def __eq__(self, other):

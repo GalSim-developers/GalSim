@@ -24,7 +24,7 @@ from .position import PositionD
 from .angle import arcsec
 from . import integ
 from . import utilities
-from .errors import GalSimRangeError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError
 
 class Cosmology(object):
     """Basic cosmology calculations.
@@ -136,7 +136,9 @@ class NFWHalo(object):
                  omega_m=None, omega_lam=None, cosmo=None):
         if omega_m is not None or omega_lam is not None:
             if cosmo is not None:
-                raise TypeError("NFWHalo constructor received both cosmo and omega parameters")
+                raise GalSimIncompatibleValuesError(
+                    "NFWHalo constructor received both cosmo and omega parameters",
+                    cosmo=cosmo, omega_m=omega_m, omega_lam=omega_lam)
             if omega_m is None: omega_m = 1.-omega_lam
             if omega_lam is None: omega_lam = 1.-omega_m
             cosmo = Cosmology(omega_m=omega_m, omega_lam=omega_lam)

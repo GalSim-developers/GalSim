@@ -38,8 +38,7 @@ from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError
 # the following (closed, marked "wontfix") ticket on the numpy issue tracker:
 # http://projects.scipy.org/numpy/ticket/1246
 
-alt_int32 = ( np.array([0]).astype(np.int16) +
-              np.array([0]).astype(np.int32) ).dtype.type
+alt_int32 = (np.array([0], dtype=np.int16) + np.array([0], dtype=np.int32)).dtype.type
 
 
 class Image(object):
@@ -324,7 +323,8 @@ class Image(object):
         # Construct the image attribute
         if (ncol is not None or nrow is not None):
             if ncol is None or nrow is None:
-                raise TypeError("Both nrow and ncol must be provided")
+                raise GalSimIncompatibleValuesError(
+                    "Both nrow and ncol must be provided", ncol=ncol, nrow=nrow)
             if ncol != int(ncol) or nrow != int(nrow):
                 raise TypeError("nrow, ncol must be integers")
             ncol = int(ncol)
@@ -347,12 +347,14 @@ class Image(object):
             if make_const or not array.flags.writeable:
                 self._array.flags.writeable = False
             if init_value is not None:
-                raise TypeError("Cannot specify init_value with array")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot specify init_value with array", init_value=init_value, array=array)
         elif image is not None:
             if not isinstance(image, Image):
                 raise TypeError("image must be an Image")
             if init_value is not None:
-                raise TypeError("Cannot specify init_value with image")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot specify init_value with image", init_value=init_value, image=image)
             if wcs is None and scale is None:
                 wcs = image.wcs
             self._bounds = image.bounds
@@ -372,12 +374,15 @@ class Image(object):
             self._array = np.zeros(shape=(1,1), dtype=self._dtype)
             self._bounds = BoundsI()
             if init_value is not None:
-                raise TypeError("Cannot specify init_value without setting an initial size")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot specify init_value without setting an initial size",
+                    init_value, ncol=ncol, nrow=nrow, bounds=bounds)
 
         # Construct the wcs attribute
         if scale is not None:
             if wcs is not None:
-                raise TypeError("Cannot provide both scale and wcs to Image constructor")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both scale and wcs to Image constructor", wcs=wcs, scale=scale)
             self.wcs = PixelScale(float(scale))
         else:
             if wcs is not None and not isinstance(wcs,BaseWCS):
@@ -492,14 +497,14 @@ class Image(object):
             if self.wcs.isPixelScale():
                 return self.wcs.scale
             else:
-                raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
+                raise GalSimError("image.wcs is not a simple PixelScale; scale is undefined.")
         else:
             return None
 
     @scale.setter
     def scale(self, value):
         if self.wcs is not None and not self.wcs.isPixelScale():
-            raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
+            raise GalSimError("image.wcs is not a simple PixelScale; scale is undefined.")
         else:
             self.wcs = PixelScale(value)
 
@@ -995,11 +1000,13 @@ class Image(object):
         @param make_const   Make the view's data array immutable. [default: False]
         """
         if origin is not None and center is not None:
-            raise TypeError("Cannot provide both center and origin")
+            raise GalSimIncompatibleValuesError(
+                "Cannot provide both center and origin", center=center, origin=origin)
 
         if scale is not None:
             if wcs is not None:
-                raise TypeError("Cannot provide both scale and wcs")
+                raise GalSimIncompatibleValeusError(
+                    "Cannot provide both scale and wcs", scale=scale, wcs=wcs)
             wcs = PixelScale(scale)
         elif wcs is not None:
             if not isinstance(wcs,BaseWCS):

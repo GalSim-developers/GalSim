@@ -202,11 +202,13 @@ class RealGalaxy(GSObject):
         if rng is None:
             rng = BaseDeviate()
         elif not isinstance(rng, BaseDeviate):
-            raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+            raise TypeError("The rng provided to RealGalaxy is not a BaseDeviate")
         self.rng = rng
 
         if flux is not None and flux_rescale is not None:
-            raise TypeError("Cannot supply a flux and a flux rescaling factor!")
+            raise GalSimIncompatibleValuesError(
+                "Cannot supply a flux and a flux rescaling factor.",
+                flux=flux, flux_rescale=flux_rescale)
 
         if isinstance(real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a RealGalaxy without needing the rgc directly
@@ -856,9 +858,9 @@ def _parse_files_dirs(file_name, image_dir, sample):
                                      'COSMOS_'+use_sample+'_training_sample')
         full_file_name = os.path.join(image_dir,file_name)
         if not os.path.isfile(full_file_name):
-            raise GalSimError('No RealGalaxy catalog found in %s.  '%image_dir +
-                              'Run the program galsim_download_cosmos -s %s '%use_sample +
-                              'to download catalog and accompanying image files.')
+            raise GalSimError('No RealGalaxy catalog found in %s. Run the program '
+                              'galsim_download_cosmos -s %s to download catalog and accompanying '
+                              'image files.'%(image_dir, use_sample))
     elif image_dir is None:
         full_file_name = file_name
         image_dir = os.path.dirname(file_name)
@@ -1017,8 +1019,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         if rng is None:
             rng = BaseDeviate()
         elif not isinstance(rng, BaseDeviate):
-            raise TypeError("The rng provided to ChromaticRealGalaxy constructor "
-                            "is not a BaseDeviate")
+            raise TypeError("The rng provided to ChromaticRealGalaxy is not a BaseDeviate")
         self.rng = rng
 
         # Get the index to use in the catalog

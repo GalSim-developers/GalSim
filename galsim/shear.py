@@ -22,7 +22,7 @@ Redefinition of the Shear class at the Python layer.
 import numpy as np
 
 from .angle import Angle, _Angle, radians
-from .errors import GalSimRangeError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError
 
 class Shear(object):
     """A class to represent shears in a variety of ways.
@@ -137,12 +137,12 @@ class Shear(object):
         # g,beta
         elif 'g' in kwargs:
             if 'beta' not in kwargs:
-                raise TypeError(
-                    "Shear constructor requires position angle when g is specified!")
+                raise GalSimIncompatibleValuesError(
+                    "Shear constructor requires beta when g is specified.",
+                    g=kwargs['g'], beta=None)
             beta = kwargs.pop('beta')
             if not isinstance(beta, Angle):
-                raise TypeError(
-                    "The position angle that was supplied is not an Angle instance!")
+                raise TypeError("beta must be an Angle instance.")
             g = kwargs.pop('g')
             if g > 1 or g < 0:
                 raise GalSimRangeError("Requested |shear| is outside [0,1].",g, 0., 1.)
@@ -151,12 +151,12 @@ class Shear(object):
         # e,beta
         elif 'e' in kwargs:
             if 'beta' not in kwargs:
-                raise TypeError(
-                    "Shear constructor requires position angle when e is specified!")
+                raise GalSimIncompatibleValuesError(
+                    "Shear constructor requires beta when e is specified.",
+                    e=kwargs['e'], beta=None)
             beta = kwargs.pop('beta')
             if not isinstance(beta, Angle):
-                raise TypeError(
-                    "The position angle that was supplied is not an Angle instance!")
+                raise TypeError("beta must be an Angle instance.")
             e = kwargs.pop('e')
             if e > 1 or e < 0:
                 raise GalSimRangeError("Requested distortion is outside [0,1].", e, 0., 1.)
@@ -165,12 +165,12 @@ class Shear(object):
         # eta,beta
         elif 'eta' in kwargs:
             if 'beta' not in kwargs:
-                raise TypeError(
-                    "Shear constructor requires position angle when eta is specified!")
+                raise GalSimIncompatibleValuesError(
+                    "Shear constructor requires beta when eta is specified.",
+                    eta=kwargs['eta'], beta=None)
             beta = kwargs.pop('beta')
             if not isinstance(beta, Angle):
-                raise TypeError(
-                    "The position angle that was supplied is not an Angle instance!")
+                raise TypeError("beta must be an Angle instance.")
             eta = kwargs.pop('eta')
             if eta < 0:
                 raise GalSimRangeError("Requested eta is below 0.", eta, 0.)
@@ -179,12 +179,12 @@ class Shear(object):
         # q,beta
         elif 'q' in kwargs:
             if 'beta' not in kwargs:
-                raise TypeError(
-                    "Shear constructor requires position angle when q is specified!")
+                raise GalSimIncompatibleValuesError(
+                    "Shear constructor requires beta when q is specified.",
+                    q=kwargs['q'], beta=None)
             beta = kwargs.pop('beta')
             if not isinstance(beta, Angle):
-                raise TypeError(
-                    "The position angle that was supplied is not an Angle instance!")
+                raise TypeError("beta must be an Angle instance.")
             q = kwargs.pop('q')
             if q <= 0 or q > 1:
                 raise GalSimRangeError("Cannot use requested axis ratio.", q, 0., 1.)
@@ -192,7 +192,9 @@ class Shear(object):
             self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad)
 
         elif 'beta' in kwargs:
-            raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
+            raise GalSimIncompatibleValuesError(
+                "beta provided to Shear constructor, but not g/e/eta/q",
+                beta=kwargs['beta'], e=None, g=None, q=None, eta=None)
 
         # check for the case where there are 1 or 2 kwargs that are not valid ones for
         # initializing a Shear

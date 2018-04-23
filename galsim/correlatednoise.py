@@ -116,7 +116,7 @@ class _BaseCorrelatedNoise(object):
         from . import wcs
         if not wcs.compatible(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Adding two CorrelatedNoise objects with incompatible WCS functions.\n"+
+            warnings.warn("Adding two CorrelatedNoise objects with incompatible WCS. "
                           "The result will have the WCS of the first object.", GalSimWarning)
         return _BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
@@ -124,7 +124,7 @@ class _BaseCorrelatedNoise(object):
         from . import wcs
         if not wcs.compatible(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Subtracting two CorrelatedNoise objects with incompatible WCS functions.\n"+
+            warnings.warn("Subtracting two CorrelatedNoise objects with incompatible WCS. "
                           "The result will have the WCS of the first object.", GalSimWarning)
         return _BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
 
@@ -1397,7 +1397,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     if file_name is None:
         file_name = os.path.join(meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits')
     if not os.path.isfile(file_name):
-        raise IOError("The file '"+str(file_name)+"' does not exist.")
+        raise IOError("The file %r does not exist."%(file_name))
     try:
         cfimage = fits.read(file_name)
     except KeyboardInterrupt:
@@ -1406,8 +1406,8 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
-            "Function getCOSMOSNoise() unable to read FITS image from "+str(file_name)+", "+
-            "more information on the error in the following Exception...", GalSimWarning)
+            "Function getCOSMOSNoise() unable to read FITS image from %r."(file_name),
+            GalSimWarning)
         raise
 
     # Then check for negative variance before doing anything time consuming

@@ -317,7 +317,8 @@ class InterpolatedImage(GSObject):
         # Set the wcs if necessary
         if scale is not None:
             if wcs is not None:
-                raise TypeError("Cannot provide both scale and wcs to InterpolatedImage")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide both scale and wcs to InterpolatedImage", scale=scale, wcs=wcs)
             self._image.wcs = PixelScale(scale)
         elif wcs is not None:
             if not isinstance(wcs, BaseWCS):
@@ -488,7 +489,7 @@ class InterpolatedImage(GSObject):
                     InterpolatedImage._cache_noise_pad[noise_pad] = noise
             else:
                 raise GalSimValueError(
-                    "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
+                    "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "
                     "containing an image to use to make a CorrelatedNoise.", noise_pad)
 
         else:

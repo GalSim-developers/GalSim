@@ -53,7 +53,7 @@ from .gsobject import GSObject
 from .position import PositionI, PositionD
 from .celestial import CelestialCoord
 from .shear import Shear
-from .errors import GalSimError
+from .errors import GalSimError, GalSimIncompatibleValuesError
 
 class BaseWCS(object):
     """The base class for all other kinds of WCS transformations.
@@ -410,7 +410,9 @@ class BaseWCS(object):
         """
         if color is None: color = self._color
         if image_pos and world_pos:
-            raise TypeError("Only one of image_pos or world_pos may be provided")
+            raise GalSimIncompatibleValuesError(
+                "Only one of image_pos or world_pos may be provided",
+                image_pos=image_pos, world_pos=world_pos)
         return self._local(image_pos, world_pos, color)
 
     def jacobian(self, image_pos=None, world_pos=None, color=None):

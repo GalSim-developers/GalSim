@@ -435,7 +435,7 @@ def test_SED_init():
     sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type=units.Hz, flux_type='flambda')
     assert_raises(ValueError, sed, 0.5)
     assert_raises(ValueError, sed, 12.0)
-    assert_raises(TypeError, galsim.SED, '1', 'nm', units.erg/units.s)
+    assert_raises(ValueError, galsim.SED, '1', 'nm', units.erg/units.s)
     assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
 
     # Check a few valid calls for when fast=False

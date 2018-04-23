@@ -35,8 +35,8 @@ from .position import PositionD, PositionI
 from .utilities import lazy_property
 from . import utilities
 from . import integ
-from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimIncompatibleValuesError
-from .errors import GalSimWarning
+from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
+from .errors import GalSimIncompatibleValuesError, GalSimWarning
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -332,7 +332,8 @@ class ChromaticObject(object):
             elif integrator == 'midpoint':
                 rule = integ.midptRule
             else:
-                raise TypeError("Unrecognized integration rule: %s"%integrator)
+                raise GalSimValueError("Unrecognized integration rule", integrator,
+                                       ('trapezoidal', 'midpoint'))
             if len(wave_list) > 0:
                 integrator = integ.SampleIntegrator(rule)
             else:
@@ -609,7 +610,7 @@ class ChromaticObject(object):
         _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
 
         if self.dimensionless:
-            raise TypeError("Cannot set flux density of dimensionless ChromaticObject.")
+            raise GalSimSEDError("Cannot set flux density of dimensionless ChromaticObject.", self)
         if isinstance(wavelength, units.Quantity):
             wavelength_nm = wavelength.to(units.nm, units.spectral())
             current_flux_density = self.SED(wavelength_nm.value)
@@ -1138,11 +1139,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         instead interact with the `drawImage` method.
         """
         from .interpolatedimage import InterpolatedImage
-        if integrator not in ['trapezoidal', 'midpoint']:
+        if integrator not in ('trapezoidal', 'midpoint'):
             if not isinstance(integrator, str):
                 raise TypeError("Integrator should be a string indicating trapezoidal"
                                 " or midpoint rule for integration")
-            raise TypeError("Unknown integrator: %s"%integrator)
+            raise GalSimValueError("Unknown integrator",integrator, ('trapezoidal', 'midpoint'))
 
         if _flux_ratio is None:
             _flux_ratio = lambda w: 1.0
@@ -1338,7 +1339,7 @@ class ChromaticAtmosphere(ChromaticObject):
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
         for kw in self.kw:
-            if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+            if kw not in ('temperature', 'pressure', 'H2O_pressure'):
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
 
         self.base_refraction = dcr.get_refraction(self.base_wavelength, self.zenith_angle,
@@ -1679,7 +1680,7 @@ class ChromaticTransformation(ChromaticObject):
         if (hasattr(self._jac, '__call__') or
             hasattr(self._offset, '__call__') or
             not self._flux_ratio._const):
-            raise TypeError("Cannot propagate noise through chromatic transformation")
+            raise GalSimError("Cannot propagate noise through chromatic transformation")
         noise = self.original.noise
         jac = self._jac
         flux_ratio = self._flux_ratio(42.) # const, so use any wavelength
@@ -1736,7 +1737,7 @@ class ChromaticSum(ChromaticObject):
                 args = args[0]
             else:
                 raise TypeError("Single input argument must be a GSObject, a ChromaticObject,"
-                                +" or list of them.")
+                                " or list of them.")
         # else args is already the list of objects
 
         self.interpolated = any(arg.interpolated for arg in args)
@@ -1913,9 +1914,8 @@ class ChromaticConvolution(ChromaticObject):
             elif isinstance(args[0], list):
                 args = args[0]
             else:
-                raise TypeError(
-                    "Single input argument must be a GSObject, or a ChromaticObject,"
-                    +" or list of them.")
+                raise TypeError("Single input argument must be a GSObject, or a ChromaticObject,"
+                                " or list of them.")
         # else args is already the list of objects
 
         # Check kwargs
@@ -1969,7 +1969,7 @@ class ChromaticConvolution(ChromaticObject):
         if n_nonsep>1 and n_interp>0: # pragma: no cover
             import warnings
             warnings.warn(
-                "Image rendering for this convolution cannot take advantage of " +
+                "Image rendering for this convolution cannot take advantage of "
                 "interpolation-related optimization.  Will use full profile evaluation.",
                 GalSimWarning)
 
@@ -2195,11 +2195,11 @@ class ChromaticConvolution(ChromaticObject):
         # Exactly one of the convolutants has a .covspec attribute.
         covspecs = [ obj.covspec for obj in self.obj_list if hasattr(obj, 'covspec') ]
         if len(covspecs) != 1:
-            raise TypeError("Cannot compute noise for ChromaticConvolution for which number "
-                            "of convolutants with covspec attribute is not 1.")
+            raise GalSimError("Cannot compute noise for ChromaticConvolution for which number "
+                              "of convolutants with covspec attribute is not 1.")
         if not hasattr(self, '_last_bp'):
-            raise TypeError("Cannot compute noise for ChromaticConvolution until after drawImage "
-                            "has been called.")
+            raise GalSimError("Cannot compute noise for ChromaticConvolution until after drawImage "
+                              "has been called.")
         covspec = covspecs[0]
         other = Convolve([obj for obj in self.obj_list if not hasattr(obj, 'covspec')])
         return covspec.toNoise(self._last_bp, other, self._last_wcs)  # rng=?
@@ -2497,7 +2497,9 @@ class ChromaticOpticalPSF(ChromaticObject):
         # We have to require either diam OR lam_over_diam:
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
-            raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
+            raise GalSimIncompatibleValuesError(
+                "Need to specify telescope diameter OR wavelength/diam ratio",
+                diam=diam, lam_over_diam=lam_over_diam)
         if diam is not None:
             self.lam_over_diam = (1.e-9*lam/diam)*radians/self.scale_unit
             self.diam = diam
@@ -2607,7 +2609,9 @@ class ChromaticAiry(ChromaticObject):
 
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
-            raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
+            raise GalSimIncompatibleValuesError(
+                "Need to specify telescope diameter OR wavelength/diam ratio",
+                diam=diam, lam_over_diam=lam_over_diam)
         if diam is not None:
             self.lam_over_diam = (1.e-9*lam/diam)*radians/self.scale_unit
         else:

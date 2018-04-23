@@ -24,6 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
+from .errors import GalSimIncompatibleValuesError
 
 
 class Exponential(GSObject):
@@ -75,15 +76,15 @@ class Exponential(GSObject):
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
         if half_light_radius is not None:
             if scale_radius is not None:
-                raise TypeError(
-                        "Only one of scale_radius and half_light_radius may be " +
-                        "specified for Exponential")
+                raise GalSimIncompatibleValuesError(
+                    "Only one of scale_radius and half_light_radius may be specified",
+                    half_light_radius=half_light_radius, scale_radius=scale_radius)
             else:
                 scale_radius = half_light_radius / Exponential._hlr_factor
         elif scale_radius is None:
-                raise TypeError(
-                        "Either scale_radius or half_light_radius must be " +
-                        "specified for Exponential")
+                raise GalSimIncompatibleValuesError(
+                    "Either scale_radius or half_light_radius must be specified",
+                    half_light_radius=half_light_radius, scale_radius=scale_radius)
         self._r0 = float(scale_radius)
         self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)

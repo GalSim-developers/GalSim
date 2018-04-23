@@ -24,7 +24,7 @@ import numpy as np
 import weakref
 
 from . import _galsim
-from .errors import GalSimRangeError, GalSimValueError
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 
 class BaseDeviate(object):
     """Base class for all the various random deviates.
@@ -685,8 +685,9 @@ class DistDeviate(BaseDeviate):
                 if interpolant is None:
                     interpolant='linear'
                 if x_min or x_max:
-                    raise TypeError('Cannot pass x_min or x_max alongside a '
-                                    'filename in arguments to DistDeviate')
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot pass x_min or x_max with a filename argument",
+                        function=function, x_min=x_min, x_max=x_max)
                 function = LookupTable.from_file(function, interpolant=interpolant)
                 x_min = function.x_min
                 x_max = function.x_max
@@ -701,8 +702,8 @@ class DistDeviate(BaseDeviate):
                         function(0.6) # A value unlikely to be a singular point of a function
                 except Exception as e:
                     raise GalSimValueError(
-                        "String function must either be a valid filename or something that "+
-                        "can eval to a function of x.\n"+
+                        "String function must either be a valid filename or something that "
+                        "can eval to a function of x.\n"
                         "Caught error: {0}".format(e), self.__function)
         else:
             self.__function = weakref.ref(function) # Save the inputs to be used in repr
@@ -710,17 +711,22 @@ class DistDeviate(BaseDeviate):
             if not (isinstance(function, LookupTable) or hasattr(function, '__call__')):
                 raise TypeError('Keyword function must be a callable function or a string')
             if interpolant:
-                raise TypeError('Cannot provide an interpolant with a callable function argument')
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide an interpolant with a callable function argument",
+                    interpolant=interpolant, function=function)
             if isinstance(function, LookupTable):
                 if x_min or x_max:
-                    raise TypeError('Cannot provide x_min or x_max with a LookupTable function '+
-                                    'argument')
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot provide x_min or x_max with a LookupTable function",
+                        function=function, x_min=x_min, x_max=x_max)
                 x_min = function.x_min
                 x_max = function.x_max
             else:
                 if x_min is None or x_max is None:
-                    raise TypeError('Must provide x_min and x_max when function argument is a '+
-                                    'regular python callable function')
+                    raise GalSimIncompatibleValuesError(
+                        "Must provide x_min and x_max when function argument is a regular "
+                        "python callable function",
+                        function=function, x_min=x_min, x_max=x_max)
 
         # Compute the probability distribution function, pdf(x)
         if (npoints is None and isinstance(function, LookupTable) and
@@ -799,7 +805,7 @@ class DistDeviate(BaseDeviate):
         return  self.__function if isinstance(self.__function, str) else self.__function()
 
     def __repr__(self):
-        return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '+
+        return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '
                 'npoints=%r)')%(self._seed_repr(), self._function, self._xmin, self._xmax,
                                 self._interpolant, self._npoints)
     def __str__(self):

@@ -147,7 +147,7 @@ class AtmosphericScreen(object):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
 
     def __repr__(self):
-        return ("galsim.AtmosphericScreen(%r, %r, altitude=%r, r0_500=%r, L0=%r, " +
+        return ("galsim.AtmosphericScreen(%r, %r, altitude=%r, r0_500=%r, L0=%r, "
                 "vx=%r, vy=%r, alpha=%r, time_step=%r, rng=%r)") % (
                         self.screen_size, self.screen_scale, self.altitude, self.r0_500, self.L0,
                         self.vx, self.vy, self.alpha, self.time_step, self._orig_rng)
@@ -656,7 +656,11 @@ class OpticalScreen(object):
         else:
             # Make sure no individual aberrations were passed in, since they will be ignored.
             if any([tip, tilt, defocus, astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher]):
-                raise TypeError("Cannot pass in individual aberrations and array!")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot pass in individual aberrations and array.",
+                    tip=tip, tilt=tilt, defocus=defocus, astig1=astig1, astig2=astig2,
+                    coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2,
+                    spher=spher, aberrations=aberrations)
             # Aberrations were passed in, so check for right number of entries.
             if len(aberrations) <= 2:
                 raise GalSimValueError("Aberrations keyword must have length > 2", aberrations)

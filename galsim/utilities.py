@@ -151,9 +151,9 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
             others.pop(0)
     elif len(args) == 1:  # pragma: no cover
         if integer:
-            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionI")
+            raise TypeError("Cannot parse argument %s as a PositionI"%(args[0]))
         else:
-            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionD")
+            raise TypeError("Cannot parse argument %s as a PositionD"%(args[0]))
     elif len(args) <= 2 + len(others):
         x = args[0]
         y = args[1]
@@ -703,16 +703,16 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
         if len(N)==2:
             n1,n2 = N
         else:
-            raise TypeError("'N' has to be a list or a tuple of two integers")
+            raise TypeError("N must be a list or a tuple of two integers")
         if not (n1 == int(n1) and n2 == int(n2)):
-            raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+            raise TypeError("N must be of type int or a list or a tuple of two integers")
         n1 = int(n1)
         n2 = int(n2)
     else:
-        raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        raise TypeError("N must be of type int or a list or a tuple of two integers")
 
     if not isinstance(image, Image):
-        raise TypeError("'image' has to be an instance of galsim.Image")
+        raise TypeError("image must be an instance of galsim.Image")
 
     y_size,x_size = image.array.shape
     if x_size%n1 or y_size%n2:
@@ -841,16 +841,16 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         if len(N)==2:
             n1,n2 = N
         else:
-            raise TypeError("'N' has to be a list or a tuple of two integers")
+            raise TypeError("N must be a list or a tuple of two integers")
         if not (n1 == int(n1) and n2 == int(n2)):
-            raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+            raise TypeError("N must be of type int or a list or a tuple of two integers")
         n1 = int(n1)
         n2 = int(n2)
     else:
-        raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        raise TypeError("N must be of type int or a list or a tuple of two integers")
 
     if len(im_list)<2:
-        raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
+        raise TypeError("im_list must have at least two instances of galsim.Image")
 
     if (n1*n2 != len(im_list)):
         raise GalSimIncompatibleValuesError(
@@ -862,10 +862,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     for offset in offsets:
         if not isinstance(offset, PositionD):
-            raise TypeError("'offsets' must be a list of galsim.PositionD instances")
+            raise TypeError("offsets must be a list of galsim.PositionD instances")
 
     if not isinstance(im_list[0], Image):
-        raise TypeError("'im_list' must be a list of galsim.Image instances")
+        raise TypeError("im_list must be a list of galsim.Image instances")
 
     # These should be the same for all images in `im_list'.
     y_size, x_size = im_list[0].array.shape
@@ -873,7 +873,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     for im in im_list[1:]:
         if not isinstance(im, Image):
-            raise TypeError("'im_list' must be a list of galsim.Image instances")
+            raise TypeError("im_list must be a list of galsim.Image instances")
 
         if im.array.shape != (y_size,x_size):
             raise GalSimIncompatibleValuesError(
@@ -1144,8 +1144,8 @@ def combine_wave_list(*args):
         elif isinstance(args[0], (list, tuple)):
             args = args[0]
         else:
-            raise TypeError("Single input argument must be a SED, Bandpass, GSObject, "
-                            " ChromaticObject or a (possibly mixed) list of them.")
+            raise TypeError("Single input argument must be an SED, Bandpass, GSObject, "
+                            "ChromaticObject or a (possibly mixed) list of them.")
 
     blue_limit = 0.0
     red_limit = np.inf
@@ -1334,7 +1334,7 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     from .random import BaseDeviate, UniformDeviate
     # Make sure we got a proper RNG.
     if not isinstance(rng, BaseDeviate):
-        raise TypeError("The rng provided to rand_with_replacement() is not a BaseDeviate")
+        raise TypeError("The rng provided to rand_with_replacement() must be a BaseDeviate")
     ud = UniformDeviate(rng)
 
     # Sanity check the requested number of random indices.

@@ -71,7 +71,7 @@ class Position(object):
     a PositionI by a float or add a PositionI to a PositionD.
     """
     def __init__(self):
-        raise NotImplementedError("Cannot instantiate the base class.  " +
+        raise NotImplementedError("Cannot instantiate the base class.  "
                                   "Use either PositionD or PositionI.")
 
     def _parse_args(self, *args, **kwargs):
@@ -88,8 +88,8 @@ class Position(object):
                     try:
                         self.x, self.y = args[0]
                     except (TypeError, ValueError):
-                        raise TypeError(("Single argument to %s must be either a Position "+
-                                         "or a tuple.")%self.__class__)
+                        raise TypeError("Single argument to %s must be either a Position "
+                                        "or a tuple."%self.__class__)
             else:
                 raise TypeError("%s takes at most 2 arguments (%d given)"%(
                         self.__class__, len(args)))

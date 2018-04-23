@@ -97,7 +97,7 @@ def trapz(func, min, max, points=10000):
         if (np.max(points) > max) or (np.min(points) < min):
             raise GalSimRangeError("Points outside of specified range", points, min, max)
     elif int(points) != points:
-        raise TypeError("'npoints' must be integer type or array")
+        raise TypeError("npoints must be integer type or array")
     else:
         points = np.linspace(min, max, points)
 

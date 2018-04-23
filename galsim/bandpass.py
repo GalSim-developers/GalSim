@@ -169,8 +169,9 @@ class Bandpass(object):
                 self.red_limit = float(self._tp.x_max)/self.wave_factor
         else:
             if self.blue_limit is None or self.red_limit is None:
-                raise TypeError(
-                    "red_limit and blue_limit are required if throughput is not a LookupTable.")
+                raise GalSimIncompatibleValuesError(
+                    "red_limit and blue_limit are required if throughput is not a LookupTable.",
+                    blue_limit=blue_limit, red_limit=red_limit, throughput=throughput)
 
         # Sanity check blue/red limit and create self.wave_list
         if isinstance(self._tp, LookupTable):
@@ -219,15 +220,16 @@ class Bandpass(object):
                 self._tp = LookupTable.from_file(filename, interpolant='linear')
             else:
                 if self.blue_limit is None or self.red_limit is None:
-                    raise TypeError(
-                        "red_limit and blue_limit are required if throughput is not a LookupTable.")
+                    raise GalSimIncompatibleValuesError(
+                        "red_limit and blue_limit are required if throughput is not a LookupTable.",
+                        blue_limit=None, red_limit=None, throughput=self._orig_tp)
                 test_wave = self.blue_limit
                 try:
                     self._tp = utilities.math_eval('lambda wave : ' + self._orig_tp)
                     test_value = self._tp(test_wave)
                 except Exception as e:
                     raise GalSimValueError(
-                        "String throughput must either be a valid filename or something that "+
+                        "String throughput must either be a valid filename or something that "
                         "can eval to a function of wave.\n Caught error: %s."%(e),
                         self._orig_tp)
                 from numbers import Real
@@ -597,7 +599,7 @@ class Bandpass(object):
         return self._hash
 
     def __repr__(self):
-        return ('galsim.Bandpass(%r, wave_type=%r, blue_limit=%r, red_limit=%r, zeropoint=%r, '+
+        return ('galsim.Bandpass(%r, wave_type=%r, blue_limit=%r, red_limit=%r, zeropoint=%r, '
                                  '_wave_list=array(%r))')%(
                 self._orig_tp, self.wave_type, self.blue_limit, self.red_limit, self.zeropoint,
                 self.wave_list.tolist())

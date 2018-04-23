@@ -22,6 +22,7 @@ This file defines functions that return the refraction angle (the angle between 
 apparent zenith angles of an object), as a function of zenith angle, wavelength, temperature,
 pressure, and water vapor content.
 """
+from .errors import GalSimIncompatibleValuesError
 
 def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2O_pressure=1.067):
     """Return the refractive index of air as function of wavelength.
@@ -94,7 +95,9 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
     from .angle import degrees
     if zenith_coord is None:
         if HA is None or latitude is None:
-            raise TypeError("Must provide either zenith_coord or (HA, latitude).")
+            raise GalSimIncompatibleValuesError(
+                "Must provide either zenith_coord or (HA, latitude).",
+                HA=HA, latitude=latitude, zenith_coord=zenit_coord)
         zenith_coord = CelestialCoord(HA + obj_coord.ra, latitude)
     zenith_angle = obj_coord.distanceTo(zenith_coord)
     NCP = CelestialCoord(0.0*degrees, 90*degrees)
@@ -124,9 +127,10 @@ def parse_dcr_angles(**kwargs):
     if 'zenith_angle' in kwargs:
         zenith_angle = kwargs.pop('zenith_angle')
         parallactic_angle = kwargs.pop('parallactic_angle', 0.0*degrees)
-        if not isinstance(zenith_angle, Angle) or \
-                not isinstance(parallactic_angle, Angle):
-            raise TypeError("zenith_angle and parallactic_angle must be galsim.Angles.")
+        if not isinstance(zenith_angle, Angle):
+            raise TypeError("zenith_angle must be a galsim.Angle.")
+        if not isinstance(parallactic_angle, Angle):
+            raise TypeError("parallactic_angle must be a galsim.Angles.")
     elif 'obj_coord' in kwargs:
         obj_coord = kwargs.pop('obj_coord')
         if 'zenith_coord' in kwargs:
@@ -135,8 +139,9 @@ def parse_dcr_angles(**kwargs):
                 obj_coord=obj_coord, zenith_coord=zenith_coord)
         else:
             if 'HA' not in kwargs or 'latitude' not in kwargs:
-                raise TypeError("Either zenith_coord or (HA, latitude) is required " +
-                                "when obj_coord is specified.")
+                raise GalSimIncompatibleValuesError(
+                    "Must provide either zenith_coord or (HA, latitude).",
+                    HA=None, latitude=None, obj_coord=obj_coode)
             HA = kwargs.pop('HA')
             latitude = kwargs.pop('latitude')
             zenith_angle, parallactic_angle = zenith_parallactic_angles(

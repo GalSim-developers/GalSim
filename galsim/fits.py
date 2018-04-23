@@ -28,7 +28,7 @@ import os
 import numpy as np
 
 from .image import Image
-from .errors import GalSimError, GalSimValueError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimWarning, GalSimIncompatibleValuesError
 
 
 ##############################################################################################
@@ -475,9 +475,8 @@ def _check_hdu(hdu, pyfits_compress):
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):  # pragma: no cover
             if isinstance(hdu, pyfits.BinTableHDU):
-                raise IOError('Expecting a CompImageHDU, but got a BinTableHDU\n' +
-                    'Probably your pyfits installation does not have the pyfitsComp module '+
-                    'installed.')
+                raise IOError('Expecting a CompImageHDU, but got a BinTableHDU. Probably your '
+                              'pyfits installation does not have the pyfitsComp module installed.')
             elif isinstance(hdu, pyfits.ImageHDU):
                 import warnings
                 warnings.warn("Expecting a CompImageHDU, but found an uncompressed ImageHDU",
@@ -585,9 +584,11 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list")
+        raise GalSimIncompatibleValuesError(
+            "Cannot provide both file_name and hdu_list", file_name=file_name, hdu_list=hdu_list)
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list")
+        raise GalSimIncompatibleValuesError(
+            "Must provide either file_name or hdu_list", file_name=file_name, hdu_list=hdu_list)
 
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
@@ -634,9 +635,11 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list")
+        raise GalSimIncompatibleValuesError(
+            "Cannot provide both file_name and hdu_list", file_name=file_name, hdu_list=hdu_list)
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list")
+        raise GalSimIncompatibleValuesError(
+            "Must provide either file_name or hdu_list", file_name=file_name, hdu_list=hdu_list)
 
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
@@ -711,9 +714,11 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list")
+        raise GalSimIncompatibleValuesError(
+            "Cannot provide both file_name and hdu_list", file_name=file_name, hdu_list=hdu_list)
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list")
+        raise GalSimIncompatibleValuesError(
+            "Must provide either file_name or hdu_list", file_name=file_name, hdu_list=hdu_list)
 
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
@@ -729,7 +734,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     else:
         nimages = len(image_list)
         if (nimages == 0):
-            raise IndexError("In writeCube: image_list has no images")
+            raise GalSimValueError("In writeCube: image_list has no images", image_list)
         im = image_list[0]
         dtype = im.array.dtype
         nx = im.xmax - im.xmin + 1
@@ -745,8 +750,9 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
             nx_k = im.xmax-im.xmin+1
             ny_k = im.ymax-im.ymin+1
             if nx_k != nx or ny_k != ny:
-                raise IndexError("In writeCube: image %d has the wrong shape"%k +
-                    "Shape is (%d,%d).  Should be (%d,%d)"%(nx_k,ny_k,nx,ny))
+                raise GalSimValueError("In writeCube: image %d has the wrong shape. "
+                                       "Shape is (%d,%d) should be (%d,%d)"%(k,nx_k,ny_k,nx,ny),
+                                       im)
             cube[k,:,:] = image_list[k].array
 
 
@@ -855,9 +861,11 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list to read()")
+        raise GalSimIncompatibleValuesError(
+            "Cannot provide both file_name and hdu_list", file_name=file_name, hdu_list=hdu_list)
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list to read()")
+        raise GalSimIncompatibleValuesError(
+            "Must provide either file_name or hdu_list", file_name=file_name, hdu_list=hdu_list)
 
     if file_name:
         hdu_list, fin = _read_file(file_name, dir, file_compress)
@@ -871,8 +879,8 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
             data = hdu.data
         else:
             import warnings
-            warnings.warn("No C++ Image template instantiation for data type %s" % dt +
-                          "   Using numpy.float64 instead.", GalSimWarning)
+            warnings.warn("No C++ Image template instantiation for data type %s. "
+                          "Using numpy.float64 instead."%(dt), GalSimWarning)
             data = hdu.data.astype(np.float64)
 
         image = Image(array=data)
@@ -930,9 +938,11 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list to readMulti()")
+        raise GalSimIncompatibleValuesError(
+            "Cannot provide both file_name and hdu_list", file_name=file_name, hdu_list=hdu_list)
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list to readMulti()")
+        raise GalSimIncompatibleValuesError(
+            "Must provide either file_name or hdu_list", file_name=file_name, hdu_list=hdu_list)
 
     if file_name:
         hdu_list, fin = _read_file(file_name, dir, file_compress)
@@ -1003,9 +1013,11 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list to read()")
+        raise GalSimIncompatibleValuesError(
+            "Cannot provide both file_name and hdu_list", file_name=file_name, hdu_list=hdu_list)
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list to read()")
+        raise GalSimIncompatibleValuesError(
+            "Must provide either file_name or hdu_list", file_name=file_name, hdu_list=hdu_list)
 
     if file_name:
         hdu_list, fin = _read_file(file_name, dir, file_compress)
@@ -1019,8 +1031,8 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
             data = hdu.data
         else:
             import warnings
-            warnings.warn("No C++ Image template instantiation for data type %s" % dt +
-                          "   Using numpy.float64 instead.", GalSimWarning)
+            warnings.warn("No C++ Image template instantiation for data type %s. "
+                          "Using numpy.float64 instead."%(dt), GalSimWarning)
             data = hdu.data.astype(np.float64)
 
         nimages = data.shape[0]
@@ -1186,11 +1198,14 @@ class FitsHeader(object):
         from ._pyfits import pyfits
 
         if header and file_name:
-            raise TypeError("Cannot provide both file_name and header to FitsHeader")
+           raise GalSimIncompatibleValuesError(
+               "Cannot provide both file_name and header", file_name=file_name, header=header)
         if header and hdu_list:
-            raise TypeError("Cannot provide both hdu_list and header to FitsHeader")
+           raise GalSimIncompatibleValuesError(
+               "Cannot provide both hdu_list and header", hdu_list=hdu_list, header=header)
         if file_name and hdu_list:
-            raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
+           raise GalSimIncompatibleValuesError(
+               "Cannot provide both file_name and hdu_list", file_name=file_name, hdu_list=hdu_list)
 
         # Interpret a string header as though it were passed as file_name.
         if isinstance(header, basestring):
@@ -1275,7 +1290,7 @@ class FitsHeader(object):
         if key in self.header:
             del self.header[key]
         else:
-            raise KeyError("key "+key+" not in FitsHeader")
+            raise KeyError("key %r not in FitsHeader"%(key))
 
     def __getitem__(self, key):
         return self.header[key]
