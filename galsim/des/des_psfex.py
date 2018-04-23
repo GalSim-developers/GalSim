@@ -28,10 +28,11 @@ See documentation here:
 """
 
 from past.builtins import basestring
+import os
+import numpy as np
 
 import galsim
 import galsim.config
-import numpy as np
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
@@ -107,15 +108,16 @@ class DES_PSFEx(object):
 
         if dir:
             if not isinstance(file_name, basestring):
-                raise ValueError("Cannot provide dir and an HDU instance")
-            import os
+                raise TypeError("file_name must be a string")
             file_name = os.path.join(dir,file_name)
             if image_file_name is not None:
                 image_file_name = os.path.join(dir,image_file_name)
         self.file_name = file_name
         if image_file_name:
             if wcs is not None:
-                raise AttributeError("Cannot provide both image_file_name and wcs")
+                raise galsim.GalSimIncompatibleValuesError(
+                    "Cannot provide both image_file_name and wcs",
+                    image_file_name=image_file_name, wcs=wcs)
             header = galsim.FitsHeader(file_name=image_file_name)
             wcs, origin = galsim.wcs.readFromFitsHeader(header)
             self.wcs = wcs
@@ -338,7 +340,7 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     elif 'image_pos' in base:
         image_pos = base['image_pos']
     else:
-        raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
+        raise galsim.GalSimConfigError("DES_PSFEx requested, but no image_pos defined in base.")
 
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)

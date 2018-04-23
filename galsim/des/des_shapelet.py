@@ -85,8 +85,8 @@ class DES_Shapelet(object):
             else:  # pragma: no cover
                 file_type = 'ASCII'
         file_type = file_type.upper()
-        if file_type not in ['FITS', 'ASCII']:
-            raise ValueError("file_type must be either FITS or ASCII if specified.")
+        if file_type not in ('FITS', 'ASCII'):
+            raise galsim.GalSimValueError("Invalid file_type.", file_type, ('FITS', 'ASCII'))
 
         if file_type == 'FITS':
             self.read_fits()
@@ -192,7 +192,8 @@ class DES_Shapelet(object):
         """Get the B vector as a numpy array at position pos
         """
         if not self.bounds.includes(pos):
-            raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
+            raise galsim.GalSimBoundsError("position in DES_Shapelet.getPSF is out of bounds",
+                                           pos, self.bounds)
 
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
@@ -246,7 +247,7 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
     elif 'image_pos' in base:
         image_pos = base['image_pos']
     else:
-        raise ValueError("DES_Shapelet requested, but no image_pos defined in base.")
+        raise galsim.GalSimConfigError("DES_Shapelet requested, but no image_pos defined in base.")
 
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)
