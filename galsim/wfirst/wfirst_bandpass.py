@@ -107,7 +107,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
             import warnings
             warnings.warn('default_thin_trunc is true, but other arguments have been passed'
                           ' to getBandpasses().  Using the other arguments and ignoring'
-                          ' default_thin_trunc.')
+                          ' default_thin_trunc.', galsim.GalSimWarning)
             default_thin_trunc = False
     if len(kwargs) > 0:
         for key in kwargs:

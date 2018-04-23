@@ -211,7 +211,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if ('noclobber' in output
         and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
         and os.path.isfile(file_name)):
-        logger.warning('Skipping file %d = %s because output.noclobber = True' +
+        logger.warning('Skipping file %d = %s because output.noclobber = True'
                        ' and file exists',file_num,file_name)
         return file_name, 0
 

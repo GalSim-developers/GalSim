@@ -515,7 +515,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
             raise galsim.GalSimConfigError('n_photons is invalid with method != phot')
         if 'max_extra_noise' in config:
             logger.warning(
-                "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
+                "Both 'max_extra_noise' and 'n_photons' are set in config dict, "
                 "ignoring 'max_extra_noise'.")
         kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
     elif 'max_extra_noise' in config:
