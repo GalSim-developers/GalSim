@@ -2,6 +2,7 @@ branches:
     only:
         - master
         - noboost
+        - '#755'
 
 language: python
 python:
