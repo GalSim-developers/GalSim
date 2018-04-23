@@ -455,11 +455,11 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         #print(repr(obj1))
         with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
-        print('obj1 = ',repr(obj1))
-        print('obj5 = ',repr(obj5))
+        #print('obj1 = ',repr(obj1))
+        #print('obj5 = ',repr(obj5))
         f5 = func(obj5)
-        print('f1 = ',f1)
-        print('f5 = ',f5)
+        #print('f1 = ',f1)
+        #print('f5 = ',f5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
     else:
         # Even if we're not actually doing the test, still make the repr to check for syntax errors.
