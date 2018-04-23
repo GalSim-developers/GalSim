@@ -196,7 +196,8 @@ class PhotonArray(object):
     def assignAt(self, istart, rhs):
         "Assign the contents of another PhotonArray to this one starting at istart."
         if istart + rhs.size() > self.size():
-            raise IndexError("The given rhs does not fit into this array starting at %d"%istart)
+            raise GalSimValueError(
+                "The given rhs does not fit into this array starting at %d"%istart, rhs)
         s = slice(istart, istart + rhs.size())
         self.x[s] = rhs.x
         self.y[s] = rhs.y
@@ -543,7 +544,7 @@ class PhotonDCR(object):
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
         for kw in self.kw:
-            if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+            if kw not in ('temperature', 'pressure', 'H2O_pressure'):
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
 
         self.base_refraction = dcr.get_refraction(self.base_wavelength, self.zenith_angle,

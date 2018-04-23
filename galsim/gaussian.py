@@ -24,6 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
+from .errors import GalSimIncompatibleValuesError
 
 
 class Gaussian(GSObject):
@@ -84,22 +85,22 @@ class Gaussian(GSObject):
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
         if fwhm is not None :
             if sigma is not None or half_light_radius is not None:
-                raise TypeError(
-                        "Only one of sigma, fwhm, and half_light_radius may be " +
-                        "specified for Gaussian")
+                raise GalSimIncompatibleValuesError(
+                    "Only one of sigma, fwhm, and half_light_radius may be specified",
+                    fwhm=fwhm, sigma=sigma, half_light_radius=half_light_radius)
             else:
                 sigma = fwhm / Gaussian._fwhm_factor
         elif half_light_radius is not None:
             if sigma is not None:
-                raise TypeError(
-                        "Only one of sigma, fwhm, and half_light_radius may be " +
-                        "specified for Gaussian")
+                raise GalSimIncompatibleValuesError(
+                    "Only one of sigma, fwhm, and half_light_radius may be specified",
+                    fwhm=fwhm, sigma=sigma, half_light_radius=half_light_radius)
             else:
                 sigma = half_light_radius / Gaussian._hlr_factor
         elif sigma is None:
-                raise TypeError(
-                        "One of sigma, fwhm, or half_light_radius must be " +
-                        "specified for Gaussian")
+            raise GalSimIncompatibleValuesError(
+                "One of sigma, fwhm, and half_light_radius must be specified",
+                fwhm=fwhm, sigma=sigma, half_light_radius=half_light_radius)
 
         self._sigma = float(sigma)
         self._flux = float(flux)

@@ -591,9 +591,9 @@ class PowerSpectrum(object):
                     pf(1.0)
                 except Exception as e:
                     raise GalSimValueError(
-                        "String %s must either be a valid filename or something that "%pf_str+
-                        "can eval to a function of k.\n"+
-                        "Caught error: {0}".format(e), origpf)
+                        "String {0} must either be a valid filename or something that "
+                        "can eval to a function of k.\n"
+                        "Caught error: {1}".format(pf_str, e), origpf)
 
         # Check that the function is sane.
         # Note: Only try tests below if it's not a LookupTable.
@@ -974,9 +974,9 @@ class PowerSpectrum(object):
                 # shear to zero for positions that are outside the original grid.
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                    "of the gridded shear values: " + str(self.bounds) +
-                    ".  Returning a shear of (0,0) for this point.", GalSimWarning)
+                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded shear "
+                    "values.  Returning a shear of (0,0) for this point."%(x,y,self.bounds),
+                    GalSimWarning)
                 return 0., 0.
             else:
                 # Treat this as a periodic box.
@@ -1072,9 +1072,9 @@ class PowerSpectrum(object):
             if not periodic:
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                    "of the gridded convergence values: " + str(self.bounds) +
-                    ".  Returning a convergence of 0 for this point.", GalSimWarning)
+                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
+                    "convergence values. Returning a convergence of 0 for this point."%(
+                    x,y,self.bounds), GalSimWarning)
                 return 0.
             else:
                 # Treat this as a periodic box.
@@ -1171,9 +1171,9 @@ class PowerSpectrum(object):
             if not periodic:
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                    "of the gridded convergence values: " + str(self.bounds) +
-                    ".  Returning a magnification of 1 for this point.", GalSimWarning)
+                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
+                    "convergence values. Returning a magnification of 1 for this point."%(
+                    x,y,self.bounds), GalSimWarning)
                 return 1.
             else:
                 # Treat this as a periodic box.
@@ -1279,9 +1279,9 @@ class PowerSpectrum(object):
             if not periodic:
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                    "of the gridded values: " + str(self.bounds) +
-                    ".  Returning 0 for lensing observables at this point.", GalSimWarning)
+                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
+                    "values. Returning 0 for lensing observables at this point."%(x,y,self.bounds),
+                    GalSimWarning)
                 return 0., 0., 1.
             else:
                 # Treat this as a periodic box.

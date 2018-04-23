@@ -88,12 +88,9 @@ class LookupTable(object):
                          that all inputs / outputs will still be f, it's just a question of how the
                          interpolation is done. [default: False]
     """
-    def __init__(self, x=None, f=None, interpolant=None, x_log=False, f_log=False):
+    def __init__(self, x, f, interpolant=None, x_log=False, f_log=False):
         self.x_log = x_log
         self.f_log = f_log
-
-        if x is None or f is None:
-            raise TypeError("x and f are required for LookupTable")
 
         # check for proper interpolant
         if interpolant is None:

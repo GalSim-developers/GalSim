@@ -180,7 +180,9 @@ class SED(object):
             self.flux_type = flux_type
             self.spectral = self.check_spectral()
             if not self.spectral and not self.check_dimensionless():
-                raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
+                raise GalSimValueError(
+                    "Flux_type must be equivalent to a spectral density or dimensionless.",
+                    flux_type)
             try:
                 if self.wave_factor and self.spectral:
                     self.flux_factor = (1*self.flux_type).to(SED._fphotons).value
@@ -323,8 +325,8 @@ class SED(object):
                     test_value = 0
                 except Exception as e:
                     raise GalSimValueError(
-                        "String spec must either be a valid filename or something that "+
-                        "can eval to a function of wave.\n" +
+                        "String spec must either be a valid filename or something that "
+                        "can eval to a function of wave.\n"
                         "Caught error: {0}".format(e), self._orig_spec)
                 from numbers import Real
                 if not isinstance(test_value, Real):
@@ -535,7 +537,8 @@ class SED(object):
         # Product of two SEDs
         if isinstance(other, SED):
             if self.spectral and other.spectral:
-                raise TypeError("Cannot multiply two spectral densities together.")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot multiply two spectral densities together.", self_sed=self, other=other)
 
             if other._const:
                 return self._mul_scalar(other._spec(42.0))  # const, so can eval anywhere.
@@ -576,7 +579,7 @@ class SED(object):
     def __div__(self, other):
         # Enable division by scalars or dimensionless callables (including dimensionless SEDs.)
         if isinstance(other, SED) and other.spectral:
-            raise TypeError("Cannot divide by spectral SED.")
+            raise GalSimSEDError("Cannot divide by spectral SED.", other)
         if hasattr(other, '__call__'):
             spec = lambda w: self(w * (1.0 + self.redshift)) / other(w * (1.0 + self.redshift))
         elif isinstance(self._spec, LookupTable):
@@ -618,7 +621,8 @@ class SED(object):
             flux_type = 'fphotons'
             _spectral = True
         else:
-            raise TypeError("Cannot add SEDs with incompatible dimensions.")
+            raise GalSimIncompatibleValuesError(
+                "Cannot add SEDs with incompatible dimensions.", self_sed=self, other=other)
 
         wave_list, blue_limit, red_limit = combine_wave_list(self, other)
 
@@ -664,7 +668,7 @@ class SED(object):
         @returns the new normalized SED.
         """
         if self.dimensionless:
-            raise TypeError("Cannot set flux density of dimensionless SED.")
+            raise GalSimSEDError("Cannot set flux density of dimensionless SED.", self)
         if isinstance(wavelength, units.Quantity):
             wavelength_nm = wavelength.to(units.nm, units.spectral())
             current_flux_density = self._call(wavelength_nm.value)
@@ -738,7 +742,7 @@ class SED(object):
         """
         from . import integ
         if self.dimensionless:
-            raise TypeError("Cannot calculate flux of dimensionless SED.")
+            raise GalSimSEDError("Cannot calculate flux of dimensionless SED.", self)
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
             slop = 1e-6 # nm
             if (self.blue_limit > bandpass.blue_limit + slop
@@ -765,7 +769,7 @@ class SED(object):
         @returns the bandpass magnitude.
         """
         if self.dimensionless:
-            raise TypeError("Cannot calculate magnitude of dimensionless SED.")
+            raise GalSimSEDError("Cannot calculate magnitude of dimensionless SED.", self)
         if bandpass.zeropoint is None:
             raise GalSimError("Cannot do this calculation for a bandpass without an assigned"
                               " zeropoint")
@@ -837,7 +841,7 @@ class SED(object):
         """
         from .dcr import parse_dcr_angles
         if self.dimensionless:
-            raise TypeError("Cannot calculate DCR shifts of dimensionless SED.")
+            raise GalSimSEDError("Cannot calculate DCR shifts of dimensionless SED.", self)
 
         zenith_angle, parallactic_angle, kwargs = parse_dcr_angles(**kwargs)
 
@@ -887,7 +891,7 @@ class SED(object):
         @returns the ratio of the PSF second moments to the second moments of the reference PSF.
         """
         if self.dimensionless:
-            raise TypeError("Cannot calculate seeing moment ratio of dimensionless SED.")
+            raise GalSimSEDError("Cannot calculate seeing moment ratio of dimensionless SED.", self)
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
             x, _, _ = combine_wave_list([self, bandpass])
@@ -968,7 +972,7 @@ class SED(object):
         return self._hash
 
     def __repr__(self):
-        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,' +
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,'
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
                       self._orig_spec, self.wave_type, self._flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit,

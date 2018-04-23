@@ -231,7 +231,7 @@ def download(url, target, unpack_dir, args, logger):
 
         if obsolete:
             if args.quiet or args.force:
-                logger.warning("The version currently on disk is obsolete.  "+
+                logger.warning("The version currently on disk is obsolete.  "
                                "Downloading new version.")
             else:
                 q = "The version currently on disk is obsolete.  Download new version?"
@@ -239,10 +239,10 @@ def download(url, target, unpack_dir, args, logger):
                 if yn == 'no':
                     do_download = False
         elif args.force:
-            logger.info("Target file has already been downloaded and unpacked.  "+
+            logger.info("Target file has already been downloaded and unpacked.  "
                         "Forced re-download.")
         elif args.quiet:
-            logger.info("Target file has already been downloaded and unpacked.  "+
+            logger.info("Target file has already been downloaded and unpacked.  "
                         "Not re-downloading.")
             do_download = False
             args.save = True  # Don't delete it!

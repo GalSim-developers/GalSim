@@ -36,7 +36,7 @@ class Interpolant(object):
     """
     def __init__(self):
         raise NotImplementedError(
-            "The Interpolant bas class should not be instantiated directly. "+
+            "The Interpolant bas class should not be instantiated directly. "
             "Use one of the subclasses instead, or use the `from_name` factory function.")
 
     @staticmethod

@@ -197,9 +197,9 @@ def test_draw_add_commutativity():
                 +"galsim.chromatic")
 
     # As an aside, check for appropriate tests of 'integrator' argument.
-    assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
+    assert_raises(ValueError, chromatic_final.drawImage, bandpass, method='no_pixel',
                   integrator='midp') # minor misspelling
-    assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
+    assert_raises(ValueError, chromatic_final.drawKImage, bandpass,
                   integrator='midp') # minor misspelling
     assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
                   integrator=galsim.integ.midpt)
@@ -533,7 +533,7 @@ def test_chromatic_flux():
         int_flux/analytic_flux, 1.0, 3,
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
-    assert_raises(TypeError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
+    assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
     assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
 
     # Go back to no interpolation (this will effect the PSFs that are used below).

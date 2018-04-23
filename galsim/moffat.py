@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimError, GalSimRangeError
+from .errors import GalSimError, GalSimRangeError, GalSimIncompatibleValuesError
 
 
 class Moffat(GSObject):
@@ -96,9 +96,9 @@ class Moffat(GSObject):
         # Parse the radius options
         if half_light_radius is not None:
             if scale_radius is not None or fwhm is not None:
-                raise TypeError(
-                        "Only one of scale_radius, half_light_radius, or fwhm may be " +
-                        "specified for Moffat")
+                raise GalSimIncompatibleValuesError(
+                    "Only one of scale_radius, half_light_radius, or fwhm may be specified",
+                    half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm)
             self._hlr = float(half_light_radius)
             if self._trunc > 0. and self._trunc <= math.sqrt(2.) * self._hlr:
                 raise GalSimRangeError("Moffat trunc must be > sqrt(2) * half_light_radius.",
@@ -107,9 +107,9 @@ class Moffat(GSObject):
             self._fwhm = 0.
         elif fwhm is not None:
             if scale_radius is not None:
-                raise TypeError(
-                        "Only one of scale_radius, half_light_radius, or fwhm may be " +
-                        "specified for Moffat")
+                raise GalSimIncompatibleValuesError(
+                    "Only one of scale_radius, half_light_radius, or fwhm may be specified",
+                    half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm)
             self._fwhm = float(fwhm)
             self._r0 = self._fwhm / (2. * math.sqrt(2.**(1./self._beta) - 1.))
             self._hlr = 0.
@@ -118,9 +118,9 @@ class Moffat(GSObject):
             self._hlr = 0.
             self._fwhm = 0.
         else:
-            raise TypeError(
-                    "One of scale_radius, half_light_radius, or fwhm must be " +
-                    "specified for Moffat")
+            raise GalSimIncompatibleValuesError(
+                "One of scale_radius, half_light_radius, or fwhm must be specified",
+                half_light_radius=half_light_radius, scale_radius=scale_radius, fwhm=fwhm)
 
     @lazy_property
     def _sbp(self):

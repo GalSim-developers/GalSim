@@ -48,8 +48,8 @@ def parse_args():
         parser.add_argument('config_file', type=str, nargs='?', help='the configuration file')
         parser.add_argument(
             'variables', type=str, nargs='*',
-            help='additional variables or modifications to variables in the config file. ' +
-            'e.g. galsim foo.yaml output.nproc=-1 gal.rotate="{type : Random}"')
+            help='additional variables or modifications to variables in the config file. '
+                 'e.g. galsim foo.yaml output.nproc=-1 gal.rotate="{type : Random}"')
         parser.add_argument(
             '-v', '--verbosity', type=int, action='store', default=1, choices=(0, 1, 2, 3),
             help='integer verbosity level: min=0, max=3 [default=1]')
@@ -59,8 +59,8 @@ def parse_args():
         parser.add_argument(
             '-f', '--file_type', type=str, action='store', choices=('yaml','json'),
             default=None,
-            help=('type of config_file: yaml or json are currently supported. ' +
-                  '[default is to automatically determine the type from the extension]'))
+            help='type of config_file: yaml or json are currently supported. '
+                 '[default is to automatically determine the type from the extension]')
         parser.add_argument(
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
@@ -73,12 +73,12 @@ def parse_args():
             'Used in conjunction with -j (--job)')
         parser.add_argument(
             '-j', '--job', type=int, action='store', default=1,
-            help='set the job number for this particular run. Must be in [1,njobs]. ' +
-            'Used in conjunction with -n (--njobs)')
+            help='set the job number for this particular run. Must be in [1,njobs]. '
+                 'Used in conjunction with -n (--njobs)')
         parser.add_argument(
             '-x', '--except_abort', action='store_const', default=False, const=True,
-            help='abort the whole job whenever any file raises an exception rather than ' +
-            'continuing on')
+            help='abort the whole job whenever any file raises an exception rather than '
+                 'continuing on')
         parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -112,7 +112,7 @@ def parse_args():
         parser.add_option(
             '-f', '--file_type', type="choice", action='store', choices=('yaml','json'),
             default=None,
-            help=('type of config_file: yaml or json are currently supported. ' +
+            help=('type of config_file: yaml or json are currently supported. '
                   '[default is to automatically determine the type from the extension]'))
         parser.add_option(
             '-m', '--module', type=str, action='append', default=None, 
@@ -126,12 +126,12 @@ def parse_args():
             'Used in conjunction with -j (--job)')
         parser.add_option(
             '-j', '--job', type=int, action='store', default=1,
-            help='set the job number for this particular run. Must be in [1,njobs]. ' +
-            'Used in conjunction with -n (--njobs)')
+            help='set the job number for this particular run. Must be in [1,njobs]. '
+                 'Used in conjunction with -n (--njobs)')
         parser.add_option(
             '-x', '--except_abort', action='store_const', default=False, const=True,
-            help='abort the whole job whenever any file raises an exception rather than ' +
-            'just reporting the exception and continuing on')
+            help='abort the whole job whenever any file raises an exception rather than '
+                 'just reporting the exception and continuing on')
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')

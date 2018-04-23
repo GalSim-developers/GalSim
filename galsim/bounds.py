@@ -94,7 +94,7 @@ class Bounds(object):
     information.
     """
     def __init__(self):
-        raise NotImplementedError("Cannot instantiate the base class.  " +
+        raise NotImplementedError("Cannot instantiate the base class. "
                                   "Use either BoundsD or BoundsI.")
 
     def _parse_args(self, *args, **kwargs):
@@ -136,7 +136,7 @@ class Bounds(object):
                                 self.__class__.__name__,len(args)))
         elif len(args) != 0:
             raise TypeError("Cannot provide both keywork and non-keyword arguments to %s"%(
-                self.__class__.__name__))
+                            self.__class__.__name__))
         else:
             try:
                 self._isdefined = True
@@ -146,7 +146,7 @@ class Bounds(object):
                 self.ymax = kwargs.pop('ymax')
             except KeyError:
                 raise TypeError("Keyword arguments, xmin, xmax, ymin, ymax are required for %s"%(
-                    self.__class__.__name__))
+                                self.__class__.__name__))
             if kwargs:
                 raise TypeError("Got unexpected keyword arguments %s"%kwargs.keys())
 
@@ -332,7 +332,7 @@ class Bounds(object):
                 return self.__class__(other)
         else:
             raise TypeError("other must be either a %s or a %s"%(
-                    self.__class__.__name__,self._pos_class.__name__))
+                            self.__class__.__name__,self._pos_class.__name__))
 
     def __repr__(self):
         if self.isDefined():

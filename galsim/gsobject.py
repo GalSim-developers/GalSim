@@ -1795,8 +1795,8 @@ class GSObject(object):
 
         if Nk > self.gsparams.maximum_fft_size:
             raise GalSimError(
-                "drawFFT requires an FFT that is too large: %s. "%Nk +
-                "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
+                "drawFFT requires an FFT that is too large: %s. If you can handle "
+                "the large FFT, you may update gsparams.maximum_fft_size."%(Nk))
 
         bounds = _BoundsI(0,Nk//2,-Nk//2,Nk//2)
         if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:
@@ -1983,13 +1983,12 @@ class GSObject(object):
 
         if iN <= 0:  # pragma: no cover
             import warnings
-            warnings.warn("Automatic n_photons calculation did not end up with positive N. " +
-                          "(n_photons = %s)  No photons will be shot. "%n_photons +
-                          "prof = %s  "%self +
-                          "flux = %s  "%self.flux +
-                          "poisson_flux = %s  "%poisson_flux +
-                          "max_extra_noise = %s  "%max_extra_noise +
-                          "g = %s  "%g, GalSimWarning)
+            warnings.warn("Automatic n_photons calculation did not end up with positive N. "
+                          "(n_photons = {0})  No photons will be shot. "
+                          "  prof = {1}\n  flux = {2}\n  poisson_flux = {3}\n"
+                          "  max_extra_noise = {4}\n  g = {5}".format(
+                                n_photons, self, self.flux, poisson_flux, max_extra_noise, g),
+                          GalSimWarning)
             return 0, 1.
 
         return iN, g
@@ -2122,7 +2121,7 @@ class GSObject(object):
                 # so the traceback shows as much detail as possible.
                 import warnings
                 warnings.warn(
-                    "Unable to draw this GSObject with photon shooting.  Perhaps it is a "+
+                    "Unable to draw this GSObject with photon shooting.  Perhaps it is a "
                     "Deconvolve or is a compound including one or more Deconvolve objects.",
                     GalSimWarning)
                 raise

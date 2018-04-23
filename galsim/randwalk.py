@@ -196,8 +196,7 @@ class RandomWalk(GSObject):
         """
         from .random import BaseDeviate
         if not isinstance(self._rng, BaseDeviate):
-            raise TypeError("rng must be an instance of galsim.BaseDeviate, "
-                            "got %s" % str(self._rng))
+            raise TypeError("rng must be an instance of galsim.BaseDeviate, got %s"%self._rng)
 
         if self._npoints <= 0:
             raise GalSimRangeError("npoints must be > 0", self._npoints, 1)

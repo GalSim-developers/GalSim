@@ -1230,7 +1230,7 @@ class PhaseScreenPSF(GSObject):
                 (self._screen_list, self.lam, self.exptime))
 
     def __repr__(self):
-        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, " +
+        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, "
                   "interpolant=%r, scale_unit=%r, gsparams=%r)")
         return outstr % (self._screen_list, self.lam, self.exptime, self.flux, self.aper,
                          self.theta, self.interpolant, self.scale_unit, self.gsparams)
@@ -1296,10 +1296,10 @@ class PhaseScreenPSF(GSObject):
             if observed_stepk < specified_stepk:
                 import warnings
                 warnings.warn(
-                    "The calculated stepk (%g) for PhaseScreenPSF is smaller "%observed_stepk +
-                    "than what was used to build the wavefront (%g). "%specified_stepk +
-                    "This could lead to aliasing problems. " +
-                    "Increasing pad_factor is recommended.", GalSimWarning)
+                    "The calculated stepk (%g) for PhaseScreenPSF is smaller than what was used "
+                    "to build the wavefront (%g). This could lead to aliasing problems. "
+                    "Increasing pad_factor is recommended."%(observed_stepk, specified_stepk),
+                    GalSimWarning)
 
     @property
     def _sbp(self):
@@ -1640,7 +1640,9 @@ class OpticalPSF(GSObject):
         # OpticalScreen.
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
-                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+                raise GalSimIncompatibleValuesError(
+                    "If specifying lam_over_diam, then do not specify lam or diam",
+                    lam_over_diam=lam_over_diam, lam=lam, diam=diam)
             # For combination of lam_over_diam and pupil_plane_im with a specified scale, it's
             # tricky to determine the actual diameter of the pupil needed by Aperture.  So for now,
             # we just disallow this combination.  Please feel free to raise an issue at
@@ -1648,20 +1650,26 @@ class OpticalPSF(GSObject):
             if pupil_plane_im is not None:
                 if isinstance(pupil_plane_im, basestring):
                     # Filename, therefore specific scale exists.
-                    raise TypeError("If specifying lam_over_diam, then do not "
-                                    "specify pupil_plane_im as a filename.")
-                elif (isinstance(pupil_plane_im, Image)
-                      and pupil_plane_im.scale is not None):
-                    raise TypeError("If specifying lam_over_diam, then do not specify "
-                                    "pupil_plane_im with definite scale attribute.")
+                    raise GalSimIncompatibleValuesError(
+                        "If specifying lam_over_diam, then do not specify pupil_plane_im as "
+                        "as a filename.",
+                        lam_over_diam=lam_over_diam, pupil_plane_im=pupil_plane_im)
+                elif isinstance(pupil_plane_im, Image) and pupil_plane_im.scale is not None:
+                    raise GalSimIncompatibleValuesError(
+                        "If specifying lam_over_diam, then do not specify pupil_plane_im "
+                        "with definite scale attribute.",
+                        lam_over_diam=lam_over_diam, pupil_plane_im=pupil_plane_im)
                 elif pupil_plane_scale is not None:
-                    raise TypeError("If specifying lam_over_diam, then do not specify "
-                                    "pupil_plane_scale.")
+                    raise GalSimIncompatibleValuesError(
+                        "If specifying lam_over_diam, then do not specify pupil_plane_scale. ",
+                        lam_over_diam=lam_over_diam, pupil_plane_scale=pupil_plane_scale)
             lam = 500.  # Arbitrary
             diam = lam*1.e-9 / lam_over_diam * radians / scale_unit
         else:
             if lam is None or diam is None:
-                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+                raise GalSimIncompatibleValuesError(
+                    "If not specifying lam_over_diam, then specify lam AND diam",
+                    lam_over_diam=lam_over_diam, lam=lam, diam=diam)
 
         # Make the optical screen.
         optics_screen = OpticalScreen(
