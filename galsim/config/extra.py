@@ -223,8 +223,8 @@ def WriteExtraOutputs(config, main_data, logger=None):
         galsim.config.EnsureDir(file_name)
 
         if noclobber and os.path.isfile(file_name):  # pragma: no cover
-            logger.warning('Not writing %s file %d = %s because output.noclobber = True' +
-                           ' and file exists',key,config['file_num'],file_name)
+            logger.warning('Not writing %s file %d = %s because output.noclobber = True '
+                           'and file exists',key,config['file_num'],file_name)
             continue
 
         if config['extra_last_file'].get(key, None) == file_name:

@@ -220,7 +220,7 @@ def main():
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim')
 
-    logger.warn('Using config file %s', args.config_file, GalSimWarning)
+    logger.warning('Using config file %s', args.config_file)
     all_config = ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
 

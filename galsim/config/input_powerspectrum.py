@@ -156,7 +156,7 @@ class PowerSpectrumLoader(InputLoader):
 
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
-        logger.debug('image %d: PowerSpectrum buildGrid(grid_spacing=%s, ngrid=%s, center=%s, ' +
+        logger.debug('image %d: PowerSpectrum buildGrid(grid_spacing=%s, ngrid=%s, center=%s, '
                      'interpolant=%s, variance=%s)',
                      base.get('image_num',0), grid_spacing, ngrid, center, interpolant, variance)
         input_obj.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=center,
