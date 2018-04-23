@@ -72,7 +72,10 @@ from builtins import super
 class GalSimError(RuntimeError):
     """The base class for GalSim-specific run-time errors.
     """
-    pass
+    # Minimal version of these to make GalSimError reprable and picklable.
+    def __repr__(self): return 'galsim.GalSimError(%r)'%(str(self))
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __hash__(self): return hash(repr(self))
 
 
 class GalSimValueError(GalSimError, ValueError):
@@ -84,12 +87,19 @@ class GalSimValueError(GalSimError, ValueError):
         allowed_values = a list of allowed values if appropriate (may be None)
     """
     def __init__(self, message, value, allowed_values=None):
+        self.message = message
+        self.value = value
+        self.allowed_values = allowed_values
+
         message += " Value {0!s}".format(value)
         if allowed_values:
             message += " not in {0!s}".format(allowed_values)
         super().__init__(message)
-        self.value = value
-        self.allowed_values = allowed_values
+
+    def __repr__(self):
+        return 'galsim.GalSimValueError(%r,%r,%r)'%(self.message, self.value, self.allowed_values)
+    def __reduce__(self):  # Need to override this whenever constructor take extra params
+        return GalSimValueError, (self.message, self.value, self.allowed_values)
 
 
 class GalSimRangeError(GalSimError, ValueError):
@@ -103,11 +113,18 @@ class GalSimRangeError(GalSimError, ValueError):
         max = the maximum allowed value (may be None)
     """
     def __init__(self, message, value, min, max=None):
-        message += " Value {0!s} not in range [{1!s}, {2!s}].".format(value, min, max)
-        super().__init__(message)
+        self.message = message
         self.value = value
         self.min = min
         self.max = max
+
+        message += " Value {0!s} not in range [{1!s}, {2!s}]".format(value, min, max)
+        super().__init__(message)
+
+    def __repr__(self):
+        return 'galsim.GalSimRangeError(%r,%r,%r,%r)'%(self.message, self.value, self.min, self.max)
+    def __reduce__(self):
+        return GalSimRangeError, (self.message, self.value, self.min, self.max)
 
 
 class GalSimBoundsError(GalSimError, ValueError):
@@ -120,17 +137,45 @@ class GalSimBoundsError(GalSimError, ValueError):
         bounds = the bounds in which it was expected to fall
     """
     def __init__(self, message, pos, bounds):
-        message += " Position {0!s} not in bounds {1!s}.".format(pos, bounds)
-        super().__init__(message)
+        self.message = message
         self.pos = pos
         self.bounds = bounds
+
+        message += " {0!s} not in {1!s}".format(pos, bounds)
+        super().__init__(message)
+
+    def __repr__(self):
+        return 'galsim.GalSimBoundsError(%r,%r,%r)'%(self.message, self.pos, self.bounds)
+    def __reduce__(self):
+        return GalSimBoundsError, (self.message, self.pos, self.bounds)
 
 
 class GalSimUndefinedBoundsError(GalSimError):
     """A GalSim-specific exception class indicating an attempt to access the range of bounds
     that have not yet been defined.
     """
-    pass
+    def __repr__(self):
+        return 'galsim.GalSimUndefinedBoundsError(%r)'%(str(self))
+
+
+class GalSimImmutableError(GalSimError):
+    """A GalSim-specific exception class indicating an attempt to modify an immutable image.
+
+    Attrubutes:
+
+        image = the image that the user attempted to modify
+    """
+    def __init__(self, message, image):
+        self.message = message
+        self.image = image
+
+        message += " Image: {0!s}".format(image)
+        super().__init__(message)
+
+    def __repr__(self):
+        return 'galsim.GalSimImmutableError(%r,%r)'%(self.message, self.image)
+    def __reduce__(self):
+        return GalSimImmutableError, (self.message, self.image)
 
 
 class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
@@ -141,10 +186,17 @@ class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
 
         values = a dict of {name : value} giving the values that in combination are invalid.
     """
-    def __init__(self, message, **kwargs):
-        self.values = kwargs
+    def __init__(self, message, values={}, **kwargs):
+        self.message = message
+        self.values = dict(values, **kwargs)
+
         message += " Values {0!s}".format(self.values)
         super().__init__(message)
+
+    def __repr__(self):
+        return 'galsim.GalSimIncompatibleValuesError(%r,%r)'%(self.message, self.values)
+    def __reduce__(self):
+        return GalSimIncompatibleValuesError, (self.message, self.values)
 
 
 class GalSimSEDError(GalSimError, TypeError):
@@ -157,35 +209,31 @@ class GalSimSEDError(GalSimError, TypeError):
         sed = the invalid SED
     """
     def __init__(self, message, sed):
-        message += " SED: {0!s}.".format(sed)
-        super().__init__(message)
+        self.message = message
         self.sed = sed
+
+        message += " SED: {0!s}".format(sed)
+        super().__init__(message)
+
+    def __repr__(self):
+        return 'galsim.GalSimSEDError(%r,%r)'%(self.message, self.sed)
+    def __reduce__(self):
+        return GalSimSEDError, (self.message, self.sed)
 
 
 class GalSimHSMError(GalSimError):
     """A GalSim-specific exception class indicating some kind of failure of the HSM algorithms
     """
-    pass
-
-
-class GalSimImmutableError(GalSimError):
-    """A GalSim-specific exception class indicating an attempt to modify an immutable image.
-
-    Attrubutes:
-
-        image = the image that the user attempted to modify
-    """
-    def __init__(self, message, image):
-        message += " Image: {0!s}".format(image)
-        super().__init__(message)
-        self.image = image
+    def __repr__(self):
+        return 'galsim.GalSimHSMError(%r)'%(str(self))
 
 
 class GalSimConfigError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating some kind of failure processing a
     configuration file.
     """
-    pass
+    def __repr__(self):
+        return 'galsim.GalSimConfigError(%r)'%(str(self))
 
 
 class GalSimConfigValueError(GalSimValueError, GalSimConfigError):
@@ -196,11 +244,16 @@ class GalSimConfigValueError(GalSimValueError, GalSimConfigError):
         value = the invalid value
         allowed_values = a list of allowed values if appropriate (may be None)
     """
-    # Should use GalSimValueError init according to mro.
-    pass
+    def __repr__(self):
+        return 'galsim.GalSimConfigValueError(%r,%r,%r)'%(
+            self.message, self.value, self.allowed_values)
+    def __reduce__(self):
+        return GalSimConfigValueError, (self.message, self.value, self.allowed_values)
 
 
 class GalSimWarning(UserWarning):
     """The base class for GalSim-emitted warnings.
     """
-    pass
+    def __repr__(self): return 'galsim.GalSimWarning(%r)'%(str(self))
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __hash__(self): return hash(repr(self))
