@@ -137,7 +137,10 @@ def test_galsim_incompatible_values_error():
     err = galsim.GalSimIncompatibleValuesError("Test", a=1, b=2)
     print('str = ',str(err))
     print('repr = ',repr(err))
-    assert str(err) == "Test Values {'a': 1, 'b': 2}"
+    # This isn't completely deterministic across python versions.
+    str_possibilities = ["Test Values {'a': 1, 'b': 2}",
+                         "Test Values {'b': 2, 'a': 1}"]
+    assert str(err) in str_possibilities
     assert err.values == dict(a=1, b=2)
     assert isinstance(err, galsim.GalSimError)
     assert isinstance(err, ValueError)
