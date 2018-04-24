@@ -1204,7 +1204,20 @@ def test_wcs():
         # This needs to be done after 'scale2', so call it zref to make sure it happens
         # alphabetically after scale2 in a sorted list.
         'zref' : '$(@image.scale2).withOrigin(galsim.PositionD(22,33))',
-        'invalid' : 34
+        'bad1' : 34,
+        'bad2' : { 'type' : 'Invalid' },
+        'bad3' : { 'type' : 'List', 'items' : galsim.PixelScale(0.12), },
+        'bad4' : { 'type' : 'List', 'items' : "galsim.PixelScale(0.12)", },
+        'bad5' : {
+            'type' : 'List',
+            'items' : [ galsim.PixelScale(0.12), galsim.PixelScale(0.23) ],
+            'index' : -1
+        },
+        'bad6' : {
+            'type' : 'List',
+            'items' : [ galsim.PixelScale(0.12), galsim.PixelScale(0.23) ],
+            'index' : 2
+        },
     }
 
     reference = {
@@ -1291,7 +1304,17 @@ def test_wcs():
     assert wcs == galsim.PixelScale(1.0)
 
     with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildWCS(config['image'], 'invalid', config)
+        galsim.config.BuildWCS(config['image'], 'bad1', config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildWCS(config['image'], 'bad2', config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildWCS(config['image'], 'bad3', config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildWCS(config['image'], 'bad4', config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildWCS(config['image'], 'bad5', config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildWCS(config['image'], 'bad6', config)
 
 @timer
 def test_index_key():
