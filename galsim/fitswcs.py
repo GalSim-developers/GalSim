@@ -383,9 +383,6 @@ class PyAstWCS(CelestialWCS):
 
         https://pypi.python.org/pypi/starlink-pyast/
 
-    Note: There were bugs in starlink.Ast prior to version 2.6, so if you have an earlier version,
-    you should upgrade to at least 2.6.
-
     Initialization
     --------------
     A PyAstWCS is initialized with one of the following commands:

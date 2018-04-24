@@ -1491,13 +1491,6 @@ def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
     from multiprocessing import Process, Queue, current_process
-    # Workaround for a bug in python 2.6. The bug is that sys.stdin can be double closed if
-    # multiprocessing is used within something that already uses multiprocessing.
-    # Specifically, if we are using nosetests with multiple processes.
-    # See http://bugs.python.org/issue5313 for more info.
-    if sys.version_info < (2,7):
-        sys.stdin.close()
-        sys.stdin = open(os.devnull)
 
     def generate_list(seed):
         """Given a particular seed value, generate a list of random numbers.

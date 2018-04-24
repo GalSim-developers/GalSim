@@ -259,7 +259,7 @@ class GalSimWarning(UserWarning):
     def __hash__(self): return hash(repr(self))
 
 
-# Note: By default python2.7 ignores DeprecationWarnings.  Apparently they are really
+# Note: By default python ignores DeprecationWarnings.  Apparently they are really
 #       for python system deprecations.  GalSim deprecations are thus only subclassed from
 #       GalSimWarning, not DeprecationWarning.
 class GalSimDeprecationWarning(GalSimWarning):

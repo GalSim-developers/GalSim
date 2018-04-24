@@ -297,12 +297,7 @@ def download(url, target, unpack_dir, args, logger):
 
 def unpack(target, target_dir, unpack_dir, meta, args, logger):
     logger.info("Unpacking the tarball...")
-    #with tarfile.open(target) as tar:
-    # The above line works on python 2.7+.  But to make sure we work for 2.6, we use the
-    # following workaround.
-    # cf. http://stackoverflow.com/questions/6086603/statement-with-and-tarfile
-    from contextlib import closing
-    with closing(tarfile.open(target)) as tar:
+    with tarfile.open(target) as tar:
         if args.verbosity >= 3:
             tar.list(verbose=True)
         elif args.verbosity >= 2:
