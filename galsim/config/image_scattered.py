@@ -52,22 +52,13 @@ class ScatteredImageBuilder(ImageBuilder):
         opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
         params = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore+extra_ignore)[0]
 
-        # Special check for the size.  Either size or both xsize and ysize is required.
-        if 'size' not in params:
-            if 'xsize' not in params or 'ysize' not in params:
-                raise galsim.GalSimConfigError(
-                    "Either size or both xsize and ysize is required for image.type=Scattered")
-            full_xsize = params['xsize']
-            full_ysize = params['ysize']
-        else:
-            if 'xsize' in params:
-                raise galsim.GalSimConfigError(
-                    "Attributes xsize is invalid if size is set for image.type=Scattered")
-            if 'ysize' in params:
-                raise galsim.GalSimConfigError(
-                    "Attributes ysize is invalid if size is set for image.type=Scattered")
-            full_xsize = params['size']
-            full_ysize = params['size']
+        size = params.get('size',0)
+        full_xsize = params.get('xsize',size)
+        full_ysize = params.get('ysize',size)
+
+        if (full_xsize <= 0) or (full_ysize <= 0):
+            raise galsim.GalSimConfigError(
+                "Both image.stamp_xsize and image.stamp_ysize need to be defined and > 0.")
 
         # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
         if ( ('image_force_xsize' in base and full_xsize != base['image_force_xsize']) or
