@@ -192,7 +192,7 @@ def ErrorExit(*args, **kwargs):
     """
     import shutil
 
-    out = open("gs_error.txt","wb")
+    out = open("gs_error.txt","w")
 
     # Start with the error message to output both to the screen and to gs_error.txt:
     print()
