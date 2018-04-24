@@ -94,7 +94,7 @@ def SetupExtraOutput(config, logger=None):
 
         # Make the data list the right length now to avoid issues with multiple
         # processes trying to append at the same time.
-        nimages = config['nimages']
+        nimages = config.get('nimages', 1)
         for k in range(nimages):
             data.append(None)
 
@@ -159,7 +159,7 @@ def ProcessExtraOutputsForImage(config, logger=None):
                 image_num = config['image_num']
                 start_image_num = config['start_image_num']
                 start_obj_num = config['start_obj_num']
-                nobj = config['nobj']
+                nobj = config.get('nobj', [0])
                 k = image_num - start_image_num
                 for i in range(k):
                     start_obj_num += nobj[i]

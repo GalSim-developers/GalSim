@@ -175,6 +175,60 @@ def test_poisson():
     im3b = galsim.config.BuildImage(config)
     np.testing.assert_almost_equal(im3b.array, im3a.array, decimal=6)
 
+    # Can't have both sky_level and sky_level_pixel
+    config['image']['noise']['sky_level_pixel'] = 2000.
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # Must have a valid noise type
+    del config['image']['noise']['sky_level_pixel']
+    config['image']['noise']['type'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # noise must be a dict
+    config['image']['noise'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # Can't have signal_to_noise and  flux
+    config['image']['noise'] = { 'type' : 'Poisson', 'sky_level' : sky }
+    config['gal']['signal_to_noise'] = 100
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # This should work
+    del config['gal']['flux']
+    galsim.config.BuildImage(config)
+
+    # These now hit the errors in CalculateNoiseVariance rather than AddNoise
+    config['image']['noise']['type'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['noise'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    del config['image']['noise']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # If rather than signal_to_noise, we have an extra_weight output, then it hits
+    # a different error.
+    config['gal']['flux'] = 100
+    del config['gal']['signal_to_noise']
+    config['output'] = { 'weight' : {} }
+    config['image']['noise'] = { 'type' : 'Poisson', 'sky_level' : sky }
+    galsim.config.SetupExtraOutput(config)
+    galsim.config.SetupConfigFileNum(config, 0, 0, 0)
+    # This should work again.
+    galsim.config.BuildImage(config)
+    config['image']['noise']['type'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['noise'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
 
 @timer
 def test_ccdnoise():

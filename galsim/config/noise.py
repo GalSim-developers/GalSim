@@ -56,14 +56,13 @@ def AddNoise(config, im, current_var=0., logger=None):
     logger = galsim.config.LoggerWrapper(logger)
     if 'noise' in config['image']:
         noise = config['image']['noise']
-    else:
-        # No noise.
+    else: # No noise.
         return
+    if not isinstance(noise, dict):
+        raise galsim.GalSimConfigError("image.noise is not a dict.")
 
-    if 'type' in noise:
-        noise_type = noise['type']
-    else:
-        noise_type = 'Poisson'  # Default is Poisson
+    # Default is Poisson
+    noise_type = noise.get('type', 'Poisson')
     if noise_type not in valid_noise_types:
         raise galsim.GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
 
@@ -96,10 +95,7 @@ def CalculateNoiseVariance(config):
     if not isinstance(noise, dict):
         raise galsim.GalSimConfigError("image.noise is not a dict.")
 
-    if 'type' in noise:
-        noise_type = noise['type']
-    else:
-        noise_type = 'Poisson'  # Default is Poisson
+    noise_type = noise.get('type', 'Poisson')
     if noise_type not in valid_noise_types:
         raise galsim.GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
 
@@ -130,14 +126,12 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     logger = galsim.config.LoggerWrapper(logger)
     if 'noise' in config['image']:
         noise = config['image']['noise']
-    else:
-        # No noise.
+    else: # No noise.
         return
+    if not isinstance(noise, dict):
+        raise galsim.GalSimConfigError("image.noise is not a dict.")
 
-    if 'type' in noise:
-        noise_type = noise['type']
-    else:
-        noise_type = 'Poisson'  # Default is Poisson
+    noise_type = noise.get('type', 'Poisson')
     if noise_type not in valid_noise_types:
         raise galsim.GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
 
