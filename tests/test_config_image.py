@@ -862,6 +862,45 @@ def test_scattered():
     image = galsim.config.BuildImage(config)
     np.testing.assert_almost_equal(image.array, image2.array)
 
+    del config['image']['size']
+    del config['image']['_get']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['xsize'] = size
+    del config['image']['_get']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['ysize'] = size
+    del config['image']['_get']
+
+    # If doing datacube, sizes have to be consistent.
+    config['image_force_xsize'] = size
+    config['image_force_ysize'] = size
+    galsim.config.BuildImage(config)  # This works
+
+    # These don't.
+    config['image']['xsize'] = size-1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['xsize'] = size
+    config['image']['ysize'] = size+1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['ysize'] = size
+
+    # Can't have both image_pos and world_pos
+    config['image']['world_pos'] = {
+        'type' : 'List',
+        'items' : [ galsim.PositionD(x1*scale, y1*scale),
+                    galsim.PositionD(x2*scale, y2*scale),
+                    galsim.PositionD(x3*scale, y3*scale) ]
+    }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    del config['image']['image_pos']
+    image = galsim.config.BuildImage(config)  # But just world_pos is fine.
+    np.testing.assert_almost_equal(image.array, image2.array)
+
     # When starting from the file state, there is some extra code to test about this, so
     # check that here.
     config['output'] = { 'type' : 'MultiFits', 'file_name' : 'output/test_scattered.fits',

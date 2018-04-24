@@ -1074,7 +1074,6 @@ def test_eval_full_word():
                 'units': 'arcsec',
                 'grid_spacing': 10,
                 'ngrid': '$math.ceil(2*focal_rmax / @input.power_spectrum.grid_spacing)',
-                'center': "0,0",
             },
         },
 
