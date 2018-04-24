@@ -1063,7 +1063,7 @@ def GetRNG(config, base, logger=None, tag=''):
 
     return rng
 
-def CleanConfig(config): # pragma: no cover
+def CleanConfig(config):
     """Return a "clean" config dict without any leading-underscore values
 
     GalSim config dicts store a lot of ancillary information internally to help improve
