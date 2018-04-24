@@ -661,6 +661,14 @@ def test_whiten():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamp(config)
 
+    # Can't have both whiten and symmetrize
+    config['image']['noise']['variance'] = 50
+    config['image']['noise']['symmetrize'] = 4
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+    config['image']['noise']['symmetrize'] = False  # OK if false though.
+    galsim.config.BuildStamp(config)
+
     # 2. Poisson noise
     #####
     config['image']['noise'] =  {

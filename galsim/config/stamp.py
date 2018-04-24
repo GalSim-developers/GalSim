@@ -793,20 +793,24 @@ class StampBuilder(object):
         """
         # If the object has a noise attribute, then check if we need to do anything with it.
         current_var = 0.  # Default if not overwritten
-        if prof is not None and prof.noise is not None:
+        if isinstance(prof,galsim.GSObject) and prof.noise is not None:
             if 'image' in base and 'noise' in base['image']:
                 noise = base['image']['noise']
+                whiten = symmetrize = False
                 if 'whiten' in noise:
-                    if 'symmetrize' in noise:
-                        raise galsim.GalSimConfigError(
-                            'Only one of whiten or symmetrize is allowed')
-                    whiten, safe = galsim.config.ParseValue(noise, 'whiten', base, bool)
+                    whiten = galsim.config.ParseValue(noise, 'whiten', base, bool)[0]
+                if 'symmetrize' in noise:
+                    symmetrize = galsim.config.ParseValue(noise, 'symmetrize', base, int)[0]
+                if whiten and symmetrize:
+                    raise galsim.GalSimConfigError(
+                        'Only one of whiten or symmetrize is allowed')
+                if whiten or symmetrize:
                     # In case the galaxy was cached, update the rng
                     rng = galsim.config.GetRNG(noise, base, logger, "whiten")
                     prof.noise.rng.reset(rng)
+                if whiten:
                     current_var = prof.noise.whitenImage(image)
-                elif 'symmetrize' in noise:
-                    symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', base, int)
+                if symmetrize:
                     current_var = prof.noise.symmetrizeImage(image, symmetrize)
         return current_var
 
