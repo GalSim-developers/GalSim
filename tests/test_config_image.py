@@ -1864,6 +1864,140 @@ def test_variable_cat_size():
     np.testing.assert_array_equal(cfg_images[1], ref_images[1])
 
 
+class BlendSetBuilder(galsim.config.StampBuilder):
+    """This is a stripped-down version of the BlendSetBuilder in examples/des/blend.py.
+    Use this to test the validity of having a StampBuilder that doesn't use a simple
+    GSObject for its "prof".
+    """
+
+    def setup(self, config, base, xsize, ysize, ignore, logger):
+        """Do the appropriate setup for a Blend stamp.
+        """
+        self.ngal = galsim.config.ParseValue(config, 'n_neighbors', base, int)[0] + 1
+        self.sep = galsim.config.ParseValue(config, 'sep', base, float)[0]
+        ignore = ignore + ['n_neighbors', 'sep']
+        return super(self.__class__, self).setup(config, base, xsize, ysize, ignore, logger)
+
+    def buildProfile(self, config, base, psf, gsparams, logger):
+        """
+        Build a list of galaxy profiles, each convolved with the psf, to use for the blend image.
+        """
+        if (base['obj_num'] % self.ngal != 0):
+            return None
+        else:
+            self.neighbor_gals = []
+            for i in range(self.ngal-1):
+                gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
+                self.neighbor_gals.append(gal)
+                galsim.config.RemoveCurrent(base['gal'], keep_safe=True)
+
+            rng = galsim.config.GetRNG(config, base, logger, 'BlendSet')
+            ud = galsim.UniformDeviate(rng)
+            self.neighbor_pos = [galsim.PositionI(int(ud()*2*self.sep-self.sep),
+                                                  int(ud()*2*self.sep-self.sep))
+                                 for i in range(self.ngal-1)]
+            #print('neighbor positions = ',self.neighbor_pos)
+
+            self.main_gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams,
+                                                        logger=logger)[0]
+
+            self.profiles = [ self.main_gal ]
+            self.profiles += [ g.shift(p) for g, p in zip(self.neighbor_gals, self.neighbor_pos) ]
+            if psf:
+                self.profiles = [ galsim.Convolve(gal, psf) for gal in self.profiles ]
+            return self.profiles
+
+    def draw(self, profiles, image, method, offset, config, base, logger):
+        nx = base['stamp_xsize']
+        ny = base['stamp_ysize']
+        wcs = base['wcs']
+
+        if profiles is not None:
+            bounds = galsim.BoundsI(galsim.PositionI(0,0))
+            for pos in self.neighbor_pos:
+                bounds += pos
+            bounds = bounds.withBorder(max(nx,ny)//2 + 1)
+
+            self.full_images = []
+            for prof in profiles:
+                im = galsim.ImageF(bounds=bounds, wcs=wcs)
+                galsim.config.DrawBasic(prof, im, method, offset-im.true_center, config, base,
+                                        logger)
+                self.full_images.append(im)
+
+        k = base['obj_num'] % self.ngal
+        if k == 0:
+            center_pos = galsim.PositionI(0,0)
+        else:
+            center_pos = self.neighbor_pos[k-1]
+        xmin = int(center_pos.x) - nx//2 + 1
+        ymin = int(center_pos.y) - ny//2 + 1
+        self.bounds = galsim.BoundsI(xmin, xmin+nx-1, ymin, ymin+ny-1)
+
+        image.setZero()
+        image.wcs = wcs
+        for full_im in self.full_images:
+            assert full_im.bounds.includes(self.bounds)
+            image += full_im[self.bounds]
+
+        return image
+
+@timer
+def test_blend():
+    """Test the functionality used by the BlendSet stamp type in examples/des/blend.py.
+    Especially that it's internal "prof" is not just a single GSObject.
+    """
+    galsim.config.RegisterStampType('BlendSet', BlendSetBuilder())
+    config = {
+        'stamp' : {
+            'type' : 'BlendSet',
+            'n_neighbors' : 3,
+            'sep' : 10,
+            'size' : 64,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type' : 'Random', 'min': 1, 'max': 3 },
+            'flux' : { 'type' : 'Random', 'min': 20, 'max': 300 },
+        },
+        'image' : {
+            'type' : 'Single',
+            'pixel_scale' : 0.5,
+            'random_seed' : 1234,
+        },
+    }
+
+    # First just check that this works correctly as is.
+    galsim.config.SetupConfigImageNum(config, 0, 0)
+    images = galsim.config.BuildImages(8,config)
+    for i, im in enumerate(images):
+        im.write('output/blend%02d.fits'%i)
+    # Within each blendset, the images are shifted copies of each other.
+    np.testing.assert_array_equal(images[1].array[3:64,16:64], images[0].array[0:61,9:57])
+    np.testing.assert_array_equal(images[2].array[1:62,6:54], images[0].array[0:61,9:57])
+    np.testing.assert_array_equal(images[3].array[0:61,0:48], images[0].array[0:61,9:57])
+
+    np.testing.assert_array_equal(images[5].array[0:55,9:64], images[4].array[9:64,9:64])
+    np.testing.assert_array_equal(images[6].array[5:60,1:56], images[4].array[9:64,9:64])
+    np.testing.assert_array_equal(images[7].array[0:55,0:55], images[4].array[9:64,9:64])
+
+    # If there is a current_image, then updateSkip requires special handling here.
+    config['current_image'] = galsim.Image(64,64)
+    im8 = galsim.config.BuildStamp(config, obj_num=8)
+
+    # Some reject items are invalid when using this kind of stamp.
+    config['stamp']['min_flux_frac'] = 0.3
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config, obj_num=8)
+    del config['stamp']['min_flux_frac']
+    config['stamp']['min_snr'] = 20
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config, obj_num=8)
+    del config['stamp']['min_snr']
+    config['stamp']['max_snr'] = 200
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config, obj_num=8)
+
 
 if __name__ == "__main__":
     test_single()
@@ -1881,3 +2015,4 @@ if __name__ == "__main__":
     test_multirng()
     test_template()
     test_variable_cat_size()
+    test_blend()

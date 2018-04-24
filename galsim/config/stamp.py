@@ -732,7 +732,7 @@ class StampBuilder(object):
 
         @returns whether to skip drawing this object.
         """
-        if prof is not None and base.get('current_image',None) is not None:
+        if isinstance(prof,galsim.GSObject) and base.get('current_image',None) is not None:
             if image is None:
                 prof = base['wcs'].toImage(prof, image_pos=base['image_pos'])
                 N = prof.getGoodImageSize(1.)
