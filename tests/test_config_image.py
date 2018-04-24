@@ -1145,6 +1145,46 @@ def test_tiled():
     im3b = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im3b.array, im3a.array)
 
+    # Check errors
+    # sizes need to be > 0
+    config['image']['stamp_xsize'] = 0
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['stamp_xsize'] = xsize
+    config['image']['stamp_ysize'] = -30
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['stamp_ysize'] = ysize
+    config['image']['order'] = 'invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['order'] = 'col'
+    del config['image']['nx_tiles']
+    del config['image']['_get']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImages(2,config)
+    config['image']['nx_tiles'] = nx
+
+    # If doing datacube, sizes have to be consistent.
+    config['image']['stamp_xsize'] = xsize
+    config['image']['stamp_ysize'] = ysize
+    config['image_force_xsize'] = im3b.array.shape[1]
+    config['image_force_ysize'] = im3b.array.shape[0]
+    galsim.config.BuildImage(config)  # This works.
+
+    # These don't.
+    config['image']['stamp_xsize'] = xsize-1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['stamp_xsize'] = xsize
+    config['image']['stamp_ysize'] = ysize+1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image']['stamp_ysize'] = ysize
+    config['image']['yborder'] = xborder
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
 
 @timer
 def test_njobs():

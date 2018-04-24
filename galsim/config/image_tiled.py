@@ -57,9 +57,9 @@ class TiledImageBuilder(ImageBuilder):
         self.stamp_xsize = params.get('stamp_xsize',stamp_size)
         self.stamp_ysize = params.get('stamp_ysize',stamp_size)
 
-        if (self.stamp_xsize == 0) or (self.stamp_ysize == 0):
+        if (self.stamp_xsize <= 0) or (self.stamp_ysize <= 0):
             raise galsim.GalSimConfigError(
-                "Both image.stamp_xsize and image.stamp_ysize need to be defined and != 0.")
+                "Both image.stamp_xsize and image.stamp_ysize need to be defined and > 0.")
 
         border = params.get("border",0)
         self.xborder = params.get("xborder",border)
