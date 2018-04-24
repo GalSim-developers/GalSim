@@ -96,6 +96,47 @@ def test_single():
         im7 = im7_list[k]
         np.testing.assert_array_equal(im7.array, im1.array)
 
+    # Check some errors
+    config['stamp'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['stamp'] = { 'type' : 'Invalid' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['stamp'] = { 'draw_method' : 'invalid' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['stamp'] = { 'n_photons' : 200 }    # These next few require draw_method = phot
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['stamp'] = { 'poisson_flux' : False }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['stamp'] = { 'max_extra_noise' : 20. }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    del config['stamp']
+    config['image'] = 'Invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image'] = { 'type' : 'Invalid' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImages(3,config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImages(0,config)
+    config['image'] = { 'type' : 'Single', 'xsize' : 32 }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image'] = { 'type' : 'Single', 'xsize' : 0, 'ysize' : 32 }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image'] = { 'type' : 'Single' }
+    del config['gal']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
 
 @timer
 def test_positions():
@@ -160,6 +201,13 @@ def test_positions():
     np.testing.assert_array_equal(im6.array, im1.array)
     assert im6.bounds == im1.bounds
 
+    del config['image']['image_pos']
+    del config['image']['world_pos']
+    config['stamp']['world_pos'] = { 'type' : 'Random' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+
 @timer
 def test_phot():
     """Test draw_method=phot, which has extra allowed kwargs
@@ -204,7 +252,7 @@ def test_phot():
 
     # If max_extra_noise is given with n_photons, then ignore it.
     del config['_copied_image_keys_to_stamp']
-    config['image']['max_extra_noise'] = 0.1
+    config['stamp']['max_extra_noise'] = 0.1
     im3c = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im3c.array, im3a.array)
 
@@ -230,6 +278,19 @@ def test_phot():
     im4a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50), rng=ud))
     im4b = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im4b.array, im4a.array)
+
+    # max_extra noise < 0 is invalid
+    config['stamp']['max_extra_noise'] = -1.
+    galsim.config.RemoveCurrent(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # Also negative variance noise is invalid.
+    config['stamp']['max_extra_noise'] = 0.1
+    config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : -50 }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
 
 @timer
 def test_reject():
@@ -545,6 +606,44 @@ def test_ring():
         print('gal1b = ',gal1b)
         gsobject_compare(gal1a, gal1b)
 
+    # Make sure it all runs using the normal syntax
+    stamp = galsim.config.BuildStamp(config)
+
+    # num <= 0 is invalid
+    config['stamp']['num'] = 0
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+    config['stamp']['num'] = -1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+    del config['stamp']['num']
+    del config['stamp']['_get']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamps(10, config)   # Different error is making multiple stamps.
+    # Check invalid index.  (Ususally this is automatic and can't be wrong, but it is
+    # permissible to set it by hand.)
+    config['stamp']['num'] = 2
+    config['stamp']['index'] = 2
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+    config['stamp']['index'] = -1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+    # Starting on an odd index is an error.  It's hard to make this happen in practice,
+    # but her we can do it by manually deleting the first attribute.
+    del galsim.config.stamp.valid_stamp_types['Ring'].first
+    config['stamp']['index'] = 1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+    # Invalid to just have a psf.
+    config['psf'] = config['gal']
+    del config['gal']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamp(config)
+
+
     config = {
         'stamp' : {
             'type' : 'Ring',
@@ -703,6 +802,10 @@ def test_scattered():
             np.testing.assert_almost_equal(ixx / (sigma/scale)**2, 1, decimal=1)
             np.testing.assert_almost_equal(ixy, 0., decimal=3)
             np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
+
+    config['image']['index_convention'] = 'invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
 
     # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the
     # image count.
