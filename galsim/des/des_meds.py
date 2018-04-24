@@ -287,7 +287,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             if sys.getsizeof(vec) > MAX_MEMORY:  # pragma: no cover
                 raise galsim.GalSimError(
                     "Running out of memory > %1.0fGB - you can increase the limit by changing "
-                    "galsim.des_meds.MAX_MEMORY"%(%MAX_MEMORY/1.e9))
+                    "galsim.des_meds.MAX_MEMORY"%(MAX_MEMORY/1.e9))
 
         # update the start rows fields in the catalog
         cat['start_row'].append(start_rows)
