@@ -20,20 +20,7 @@ import os
 import galsim
 import logging
 import copy
-
-
-# Python 2.6 doesn't include OrderedDict natively.  There is a package ordereddict that you
-# can pip install.  But if the user hasn't done that, we'll just read into a regular dict.
-# The only feature that requires the OrderedDict is the truth catalog output.  With a regular
-# dict the columns will appear in arbitrary order.
-try:
-    from collections import OrderedDict
-except ImportError:
-    try:
-        from ordereddict import OrderedDict
-    except ImportError:
-        OrderedDict = dict
-
+from collections import OrderedDict
 
 def MergeConfig(config1, config2, logger=None):
     """
@@ -123,20 +110,8 @@ def ReadJson(config_file):
     import json
 
     with open(config_file) as f:
-        try:
-            # cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python
-            config = json.load(f, object_pairs_hook=OrderedDict)
-        except TypeError:  # pragma: no cover
-            # for python2.6, json doesn't come with the object_pairs_hook, so
-            # try using simplejson, and if that doesn't work, just use a regular dict.
-            # Also, it seems that if the above line raises an exception, the file handle
-            # is not left at the beginning, so seek back to 0.
-            f.seek(0)
-            try:
-                import simplejson
-                config = simplejson.load(f, object_pairs_hook=OrderedDict)
-            except ImportError:
-                config = json.load(f)
+        # cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python
+        config = json.load(f, object_pairs_hook=OrderedDict)
 
     # JSON files only ever define a single job, but we need to return a list with this one item.
     return [config]

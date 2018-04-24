@@ -1328,8 +1328,8 @@ def GetPythonVersion(config):
     # there:
     if not result:
         py_version = ''
-        for v in ['2.7', '2,6', '3.4', '3.5', # supported versions first
-                  '2.5', '2,4', '3.3', '3.2', '3.1', '3.0']: # these are mostly to give accurate logging and error messages
+        for v in ['2.7', '3.4', '3.5', '3.6', # supported versions first
+                  '2.6', '2.5', '2,4', '3.3', '3.2', '3.1', '3.0']: # these are mostly to give accurate logging and error messages
             if v in py_inc or v in python:
                 py_version = v
                 break

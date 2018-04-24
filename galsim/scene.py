@@ -853,8 +853,7 @@ class COSMOSCatalog(object):
         record = self.param_cat[self.orig_index[index]]
         # Convert to a dict, since on some systems, the numpy record doesn't seem to
         # pickle correctly.
-        #record_dict = { k:record[k] for k in record.dtype.names }  # doesn't work in python 2.6
-        record_dict = dict( (k,record[k]) for k in record.dtype.names )  # equivalent.
+        record_dict = { k:record[k] for k in record.dtype.names }
         return record_dict
 
     def canMakeReal(self):

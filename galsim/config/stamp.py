@@ -116,7 +116,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 # A list of keys that really belong in stamp, but are allowed in image both for convenience
 # and backwards-compatibility reasons.  Any of these present will be copied over to
 # config['stamp'] if they exist in config['image'].
-stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method', 'wmult',
+stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method',
                     'n_photons', 'max_extra_noise', 'poisson_flux']
 
 def SetupConfigObjNum(config, obj_num, logger=None):
@@ -261,7 +261,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
-                'wmult', 'n_photons', 'max_extra_noise', 'poisson_flux',
+                'n_photons', 'max_extra_noise', 'poisson_flux',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
 valid_draw_methods = ('auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb')
@@ -501,8 +501,6 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     kwargs['image'] = image
     kwargs['offset'] = offset
     kwargs['method'] = method
-    if 'wmult' in config and 'wmult' not in kwargs: # pragma: no cover
-        kwargs['wmult'] = galsim.config.ParseValue(config, 'wmult', base, float)[0]
     if 'wcs' not in kwargs and 'scale' not in kwargs:
         kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
     if method == 'phot' and 'rng' not in kwargs:

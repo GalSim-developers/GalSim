@@ -34,8 +34,8 @@ class PowerSpectrumEstimator(object):
     """
     Class for estimating the shear power spectrum from gridded shears.
 
-    The PowerSpectrumEstimator class can be used even on systems where GalSim is not installed.  It
-    just requires Python v2.6 or 2.7 and NumPy.
+    The PowerSpectrumEstimator class can be used even on systems where GalSim is not installed.
+    It just requires NumPy.
 
     This class stores all the data used in power spectrum estimation that is fixed with the geometry
     of the problem - the binning and spin weighting factors.
