@@ -290,12 +290,9 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     for (key, value_type) in req.items():
         if key in config:
             get[key] = value_type
-        else:  # pragma: no cover
-            if 'type' in config:
-                raise galsim.GalSimConfigError(
-                    "Attribute %s is required for type = %s"%(key,config['type']))
-            else:
-                raise galsim.GalSimConfigError("Attribute %s is required"%key)
+        else:
+            raise galsim.GalSimConfigError(
+                "Attribute %s is required for type = %s"%(key,config.get('type',None)))
 
     # Check optional items:
     for (key, value_type) in opt.items():
@@ -309,21 +306,15 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
         for (key, value_type) in s.items():
             if key in config:
                 count += 1
-                if count > 1:  # pragma: no cover
-                    if 'type' in config:
-                        raise galsim.GalSimConfigError(
-                            "Only one of the attributes %s is allowed for type = %s"%(
-                                s.keys(),config['type']))
-                    else:
-                        raise galsim.GalSimConfigError(
-                            "Only one of the attributes %s is allowed"%s.keys())
+                if count > 1:
+                    raise galsim.GalSimConfigError(
+                        "Only one of the attributes %s is allowed for type = %s"%(
+                            s.keys(),config.get('type',None)))
                 get[key] = value_type
-        if count == 0:  # pragma: no cover
-            if 'type' in config:
-                raise galsim.GalSimConfigError(
-                    "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
-            else:
-                raise galsim.GalSimConfigError("One of the attributes %s is required"%s.keys())
+        if count == 0:
+            raise galsim.GalSimConfigError(
+                "One of the attributes %s is required for type = %s"%(
+                    s.keys(),config.get('type',None)))
 
     # Check that there aren't any extra keys in config aside from a few we expect:
     valid_keys += ignore
@@ -367,7 +358,7 @@ def _GetAngleValue(param):
         value = float(value)
         unit = galsim.AngleUnit.from_name(unit)
         return galsim.Angle(value, unit)
-    except (TypeError, AttributeError) as e: # pragma: no cover
+    except (ValueError, TypeError, AttributeError) as e:
         raise galsim.GalSimConfigError("Unable to parse %s as an Angle. Caught %s"%(param,e))
 
 
@@ -382,7 +373,7 @@ def _GetPositionValue(param):
             x, y = param.split(',')
             x = float(x.strip())
             y = float(y.strip())
-        except (TypeError, AttributeError) as e: # pragma: no cover
+        except (ValueError, TypeError, AttributeError) as e:
             raise galsim.GalSimConfigError(
                 "Unable to parse %s as a PositionD. Caught %s"%(param,e))
     return galsim.PositionD(x,y)
@@ -400,16 +391,13 @@ def _GetBoolValue(param):
             try:
                 val = bool(int(param))
                 return val
-            except (TypeError, AttributeError) as e: # pragma: no cover
+            except (ValueError, TypeError, AttributeError) as e:
                 raise galsim.GalSimConfigError(
                     "Unable to parse %s as a bool. Caught %s"%(param,e))
     else:
-        try:
-            val = bool(param)
-            return val
-        except (TypeError, AttributeError) as e: # pragma: no cover
-            raise galsim.GalSimConfigError("Unable to parse %s as a bool. Caught %s"%(param,e))
-
+        # This always works.
+        # Everything in Python is convertible to bool.
+        return bool(param)
 
 
 #
@@ -698,7 +686,7 @@ def _GenerateFromCurrent(config, base, value_type):
 
     try:
         return EvaluateCurrentValue(k, d, base, value_type)
-    except ValueError as e: # pragma: no cover
+    except (TypeError, ValueError) as e:
         raise galsim.GalSimConfigError("%s\nError generating Current value with key = %s"%(e,k))
 
 
