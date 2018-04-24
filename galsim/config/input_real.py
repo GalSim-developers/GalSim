@@ -54,7 +54,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
 
     if 'index' in kwargs:
         index = kwargs['index']
-        if index >= real_cat.getNObjects():
+        if index >= real_cat.getNObjects() or index < 0:
             raise galsim.GalSimConfigError(
                 "index=%s has gone past the number of entries in the RealGalaxyCatalog"%index)
 
