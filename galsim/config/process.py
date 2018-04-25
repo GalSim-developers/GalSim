@@ -258,7 +258,7 @@ def CopyConfig(config):
     config1 = copy.copy(config)
 
     # Make sure the input_manager isn't in the copy
-    config1.pop('input_manager',None)
+    config1.pop('_input_manager',None)
 
     # Now deepcopy all the regular config fields to make sure things like current don't
     # get clobbered by two processes writing to the same dict.  Also the rngs.
@@ -1039,14 +1039,18 @@ def GetRNG(config, base, logger=None, tag=''):
     index, index_key = GetIndex(config, base)
     logger.debug("GetRNG for %s: %s",index_key,index)
 
-    if 'rng_num' in config:
-        rng_num = config['rng_num']
+    rng_num = config.get('rng_num', 0)
+    if rng_num != 0:
         if int(rng_num) != rng_num:
             raise galsim.GalSimConfigValueError("rng_num must be an integer", rng_num)
-        if not (index_key + '_rngs') in base:
+        rngs = base.get(index_key + '_rngs', None)
+        if rngs is None:
             raise galsim.GalSimConfigError(
                 "rng_num is only allowed when image.random_seed is a list")
-        rng = base.get(index_key + '_rngs', None)[int(rng_num)]
+        if rng_num < 0 or rng_num > len(rngs):
+            raise galsim.GalSimConfigError(
+                "rng_num is invalid.  Must be in [0,%d]"%(len(rngs)))
+        rng = rngs[int(rng_num)]
     else:
         rng = base.get(index_key + '_rng', None)
 
@@ -1063,7 +1067,7 @@ def GetRNG(config, base, logger=None, tag=''):
 
     return rng
 
-def CleanConfig(config):
+def CleanConfig(config, keep_current=False):
     """Return a "clean" config dict without any leading-underscore values
 
     GalSim config dicts store a lot of ancillary information internally to help improve
@@ -1076,8 +1080,9 @@ def CleanConfig(config):
         >>> print(galsim.config.CleanConfig(config_dict))
     """
     if isinstance(config, dict):
-        return { k : CleanConfig(config[k]) for k in config if k[0] != '_' }
+        return { k : CleanConfig(config[k], keep_current) for k in config
+                 if k[0] != '_' and (keep_current or k != 'current') }
     elif isinstance(config, list):
-        return [ CleanConfig(item) for item in config ]
+        return [ CleanConfig(item, keep_current) for item in config ]
     else:
         return config

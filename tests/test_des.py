@@ -666,7 +666,7 @@ def test_psf_config():
 
     # Insert a wcs for thes last one.
     config['wcs'] = galsim.FitsWCS(os.path.join(data_dir,wcs_file))
-    del config['input_objs']
+    config = galsim.config.CleanConfig(config)
     galsim.config.ProcessInput(config)
     psfex2 = galsim.des.DES_PSFEx(psfex_file, dir=data_dir, wcs=config['wcs'])
     psf5a = galsim.config.BuildGSObject(config, 'psf5')[0]

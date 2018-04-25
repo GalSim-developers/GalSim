@@ -46,12 +46,12 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
     any objects that need to be initialized.
 
     Each item registered as a valid input type will be built and available at the top level
-    of config in config['input_objs'].  Since there is allowed to be more than one of each type
+    of config in config['_input_objs'].  Since there is allowed to be more than one of each type
     of input object (e.g. multilpe catalogs or multiple dicts), these are actually lists.
     If there is only one e.g. catalog entry in config['input'], then this list will have one
     element.
 
-    e.g. config['input_objs']['catalog'][0] holds the first catalog item defined in
+    e.g. config['_input_objs']['catalog'][0] holds the first catalog item defined in
     config['input']['catalog'] (if any).
 
     @param config           The configuration dict to process
@@ -97,7 +97,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                   ('output' in config and 'nproc' in config['output'] and
                    galsim.config.ParseValue(config['output'], 'nproc', config, int)[0] != 1) ) )
 
-        if use_manager and 'input_manager' not in config:
+        if use_manager and '_input_manager' not in config:
             from multiprocessing.managers import BaseManager
             class InputManager(BaseManager): pass
 
@@ -109,16 +109,16 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                     tag = key + str(i)
                     InputManager.register(tag, valid_input_types[key].init_func)
             # Start up the input_manager
-            config['input_manager'] = InputManager()
-            config['input_manager'].start()
+            config['_input_manager'] = InputManager()
+            config['_input_manager'].start()
 
-        if 'input_objs' not in config:
-            config['input_objs'] = {}
+        if '_input_objs' not in config:
+            config['_input_objs'] = {}
             for key in all_keys:
                 fields = config['input'][key]
                 nfields = len(fields) if isinstance(fields, list) else 1
-                config['input_objs'][key] = [ None for i in range(nfields) ]
-                config['input_objs'][key+'_safe'] = [ None for i in range(nfields) ]
+                config['_input_objs'][key] = [ None for i in range(nfields) ]
+                config['_input_objs'][key+'_safe'] = [ None for i in range(nfields) ]
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
@@ -136,8 +136,8 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
 
             for i in range(len(fields)):
                 field = fields[i]
-                input_objs = config['input_objs'][key]
-                input_objs_safe = config['input_objs'][key+'_safe']
+                input_objs = config['_input_objs'][key]
+                input_objs_safe = config['_input_objs'][key+'_safe']
                 logger.debug('file %d: Current values for %s are %s, safe = %s',
                              file_num, key, str(input_objs[i]), input_objs_safe[i])
                 if input_objs[i] is not None and input_objs_safe[i]:
@@ -172,7 +172,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                     logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
                     if use_manager:
                         tag = key + str(i)
-                        input_obj = getattr(config['input_manager'],tag)(**kwargs)
+                        input_obj = getattr(config['_input_manager'],tag)(**kwargs)
                     else:
                         input_obj = loader.init_func(**kwargs)
 
@@ -208,7 +208,7 @@ def SetupInput(config, logger=None):
     at BuildImage say.  This will make sure the input objects are set up in the way that they
     normally would have been by the first level of processing in a `galsim config_file` run.
     """
-    if 'input_objs' not in config:
+    if '_input_objs' not in config:
         orig_index_key = config.get('index_key',None)
         config['index_key'] = 'file_num'
         ProcessInput(config, logger=logger)
@@ -246,8 +246,8 @@ def ProcessInputNObjects(config, logger=None):
                 # If it's a list, just use the first one.
                 if isinstance(field, list): field = field[0]
 
-                if key in config['input_objs'] and config['input_objs'][key+'_safe'][0]:
-                    input_obj = config['input_objs'][key][0]
+                if key in config['_input_objs'] and config['_input_objs'][key+'_safe'][0]:
+                    input_obj = config['_input_objs'][key][0]
                 else:
                     kwargs, safe = loader.getKwargs(field, config, logger)
                     kwargs['_nobjects_only'] = True
@@ -271,7 +271,7 @@ def SetupInputsForImage(config, logger=None):
             loader = valid_input_types[key]
             if key in config['input']:
                 fields = config['input'][key]
-                input_objs = config['input_objs'][key]
+                input_objs = config['_input_objs'][key]
                 # Make fields a list if necessary.
                 if not isinstance(fields, list): fields = [ fields ]
 
@@ -292,7 +292,7 @@ def GetInputObj(input_type, config, base, param_name):
     @param param_name   The type of value that we are trying to construct (only used for
                         error messages).
     """
-    if 'input_objs' not in base or input_type not in base['input_objs']:
+    if '_input_objs' not in base or input_type not in base['_input_objs']:
         raise galsim.GalSimConfigError(
             "No input %s available for type = %s"%(input_type,param_name))
 
@@ -303,11 +303,11 @@ def GetInputObj(input_type, config, base, param_name):
 
     if num < 0:
         raise galsim.GalSimConfigValueError("Invalid num < 0 supplied for %s."%param_name, num)
-    if num >= len(base['input_objs'][input_type]):
+    if num >= len(base['_input_objs'][input_type]):
         raise galsim.GalSimConfigValueError("Invalid num supplied for %s (too large)"%param_name,
                                             num)
 
-    return base['input_objs'][input_type][num]
+    return base['_input_objs'][input_type][num]
 
 
 class InputLoader(object):
