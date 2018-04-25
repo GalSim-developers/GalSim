@@ -1047,7 +1047,7 @@ def test_tiled():
             'type' : 'Gaussian',
             'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
             'flux' : '$image_pos.x + image_pos.y',
-        }
+        },
     }
 
     seed = 1234
@@ -1182,6 +1182,114 @@ def test_tiled():
         galsim.config.BuildImage(config)
     config['image']['stamp_ysize'] = ysize
     config['image']['yborder'] = xborder
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # If tile with a square grid, then PowerSpectrum can omit grid_spacing and ngrid.
+    size = 32
+    config = {
+        'image' : {
+            'type' : 'Tiled',
+            'nx_tiles' : nx,
+            'ny_tiles' : ny,
+            'stamp_size' : size,
+            'pixel_scale' : scale,
+
+            'random_seed' : 1234,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : '$image_pos.x + image_pos.y',
+            'shear' : { 'type' : 'PowerSpectrumShear' },
+        },
+        'input' : {
+            'power_spectrum' : { 'e_power_function' : 'np.exp(-k**0.2)' },
+        },
+    }
+
+    seed = 1234
+    ps = galsim.PowerSpectrum(e_power_function=lambda k: np.exp(-k**0.2))
+    rng = galsim.BaseDeviate(seed)
+    im4a = galsim.Image(nx*size, ny*size, scale=scale)
+    center = im4a.true_center * scale
+    ps.buildGrid(grid_spacing=size*scale, ngrid=max(nx,ny), rng=rng, center=center)
+    for j in range(ny):
+        for i in range(nx):
+            seed += 1
+            ud = galsim.UniformDeviate(seed)
+            xorigin = i * size + 1
+            yorigin = j * size + 1
+            x = xorigin + (size-1)/2.
+            y = yorigin + (size-1)/2.
+            stamp = galsim.Image(size,size, scale=scale)
+            stamp.setOrigin(xorigin,yorigin)
+
+            sigma = ud() + 1
+            flux = x + y
+            gal = galsim.Gaussian(sigma=sigma, flux=flux)
+            g1, g2 = ps.getShear(galsim.PositionD(x*scale,y*scale))
+            gal = gal.shear(g1=g1, g2=g2)
+            gal.drawImage(stamp)
+            im4a[stamp.bounds] = stamp
+
+    # Compare to what config builds
+    im4b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im4b.array, im4a.array)
+
+    # If grid sizes aren't square, it also works properly, but with more complicated ngrid calc.
+    config = galsim.config.CleanConfig(config)
+    del config['image']['stamp_size']
+    config['image']['stamp_xsize'] = xsize
+    config['image']['stamp_ysize'] = ysize
+    seed = 1234
+    rng = galsim.BaseDeviate(seed)
+    im5a = galsim.Image(nx*xsize, ny*ysize, scale=scale)
+    center = im5a.true_center * scale
+    grid_spacing = min(xsize,ysize) * scale
+    ngrid = int(math.ceil(max(nx*xsize, ny*ysize) * scale / grid_spacing))
+    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, rng=rng, center=center)
+    for j in range(ny):
+        for i in range(nx):
+            seed += 1
+            ud = galsim.UniformDeviate(seed)
+            xorigin = i * xsize + 1
+            yorigin = j * ysize + 1
+            x = xorigin + (xsize-1)/2.
+            y = yorigin + (ysize-1)/2.
+            stamp = galsim.Image(xsize,ysize, scale=scale)
+            stamp.setOrigin(xorigin,yorigin)
+
+            sigma = ud() + 1
+            flux = x + y
+            gal = galsim.Gaussian(sigma=sigma, flux=flux)
+            g1, g2 = ps.getShear(galsim.PositionD(x*scale,y*scale))
+            gal = gal.shear(g1=g1, g2=g2)
+            gal.drawImage(stamp)
+            im5a[stamp.bounds] = stamp
+
+    im5b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im5b.array, im5a.array)
+
+    # Finally, if the image type isn't tiled, then grid_spacing is required.
+    config = {
+        'image' : {
+            'type' : 'Scattered',
+            'size': nx*size,
+            'nobjects' : nx*ny,
+            'pixel_scale' : scale,
+            'random_seed' : 1234,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : '$image_pos.x + image_pos.y',
+            'shear' : { 'type' : 'PowerSpectrumShear' },
+        },
+        'input' : {
+            'power_spectrum' : { 'e_power_function' : 'np.exp(-k**0.2)' },
+        },
+    }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
