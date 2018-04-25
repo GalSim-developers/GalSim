@@ -192,7 +192,7 @@ def test_multifits():
 
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
-    del config['input_objs']
+    config = galsim.config.CleanConfig(config)
     config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
     galsim.config.BuildFile(config)
     im4_list = galsim.fits.readMulti('output/test_multifits.fits')
@@ -260,7 +260,7 @@ def test_datacube():
 
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
-    del config['input_objs']
+    config = galsim.config.CleanConfig(config)
     config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
     galsim.config.BuildFile(config)
     im4_list = galsim.fits.readCube('output/test_datacube.fits')
@@ -373,6 +373,15 @@ def test_skip():
         galsim.config.Process(config, njobs=3, job=3, logger=cl.logger)
     assert "Splitting work into 3 jobs.  Doing job 3" in cl.output
     assert "Building 2 out of 6 total files: file_num = 4 .. 5" in cl.output
+
+    # job < 1 or job > njobs is invalid
+    with assert_raises(galsim.GalSimValueError):
+        galsim.config.Process(config, njobs=3, job=0)
+    with assert_raises(galsim.GalSimValueError):
+        galsim.config.Process(config, njobs=3, job=4)
+    # Also njobs < 1 is invalid
+    with assert_raises(galsim.GalSimValueError):
+        galsim.config.Process(config, njobs=0)
 
 
 @timer
@@ -939,7 +948,7 @@ def test_config():
     assert config == config5
 
     # Copying deep copies and removes any existing input_manager
-    config4['input_manager'] = 'an input manager'
+    config4['_input_manager'] = 'an input manager'
     config7 = galsim.config.CopyConfig(config4)
     assert config == config7
 
@@ -1182,7 +1191,7 @@ def test_eval_full_word():
     logger = logging.getLogger('test_eval_full_word')
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
 
     # First check the truth catalogs
     data0 = np.genfromtxt('output/test_eval_full_word_0.dat', names=True, deletechars='')

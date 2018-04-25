@@ -857,8 +857,7 @@ def test_scattered():
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
     config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
-    del config['input_objs']
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CleanConfig(config)
     image = galsim.config.BuildImage(config)
     np.testing.assert_almost_equal(image.array, image2.array)
 
@@ -905,8 +904,7 @@ def test_scattered():
     # check that here.
     config['output'] = { 'type' : 'MultiFits', 'file_name' : 'output/test_scattered.fits',
                          'nimages' : 2 }
-    del config['input_objs']
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CleanConfig(config)
     galsim.config.BuildFile(config)
     image = galsim.fits.read('output/test_scattered.fits')
     np.testing.assert_almost_equal(image.array, image2.array)
@@ -1758,6 +1756,11 @@ def test_index_key():
     assert 'current' not in config1['gal']['ellip']
     assert 'current' not in config1['gal']['shear']
 
+    # Finally check for invalid index_key
+    config['psf']['index_key'] = 'psf_num'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildFile(config)
+
 
 @timer
 def test_multirng():
@@ -1846,6 +1849,29 @@ def test_multirng():
         np.testing.assert_array_equal(im.array, images1[n].array)
         np.testing.assert_array_equal(im.array, images2[n].array)
         np.testing.assert_array_equal(im.array, images3[n].array)
+
+    # Finally, test invalid rng_num
+    config4 = galsim.config.CopyConfig(config)
+    config4['image']['world_pos']['rng_num'] = -1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config4)
+    config5 = galsim.config.CopyConfig(config)
+    config5['image']['world_pos']['rng_num'] = 20
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config5)
+    config6 = galsim.config.CopyConfig(config)
+    config6['image']['world_pos']['rng_num'] = 1.3
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config6)
+    config7 = galsim.config.CopyConfig(config)
+    config7['image']['world_pos']['rng_num'] = 1
+    config7['image']['random_seed'] = 12345
+    del config7['input']
+    del config7['psf']['ellip']
+    del config7['gal']['shear']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config7)
+
 
 @timer
 def test_template():

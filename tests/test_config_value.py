@@ -394,8 +394,7 @@ def test_float_value():
     ps = galsim.PowerSpectrum(e_power_function='500 * np.exp(-k**0.2)')
     ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
     print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
-    galsim.config.RemoveCurrent(config)
-    del config['input_objs']
+    config = galsim.config.CleanConfig(config)
     config['input']['power_spectrum']['e_power_function'] = '500 * np.exp(-k**0.2)'
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, logger=cl.logger)
@@ -526,7 +525,9 @@ def test_int_value():
         'cur2' : { 'type' : 'Current', 'key' : 'list2.index.step' },
         'bad1' : 'left',
         'bad2' : int,
-        'bad3' : { 'type' : 'Current', 'key' : 'list2.index.type' }
+        'bad3' : { 'type' : 'Current', 'key' : 'list2.index.type' },
+        'bad4' : { 'type' : 'Catalog' , 'num' : 2, 'col' : 'int1' },
+        'bad5' : { 'type' : 'Catalog' , 'num' : -1, 'col' : 'int1' },
     }
 
     test_yaml = True
@@ -703,6 +704,17 @@ def test_int_value():
         galsim.config.ParseValue(config,'bad2', config, int)
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'bad3',config, int)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config,'bad4',config, int)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config,'bad5',config, int)
+    config = galsim.config.CleanConfig(config)
+    del config['input']['catalog']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config,'cat1',config, int)
+    del config['input']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config,'cat1',config, int)
 
 
 @timer
@@ -1304,8 +1316,7 @@ def test_shear_value():
     ps.buildGrid(grid_spacing=10, ngrid=40, center=galsim.PositionD(5,5), interpolant='linear',
                  rng=rng)
     print("strong lensing shear = ",ps.getShear((0.1,0.2)))
-    galsim.config.RemoveCurrent(config)
-    del config['input_objs']
+    config = galsim.config.CleanConfig(config)
     config['input']['power_spectrum']['e_power_function'] = '500 * np.exp(-k**0.2)'
     galsim.config.SetupInputsForImage(config, None)
     ps2b = ps.getShear((0.1,0.2))
