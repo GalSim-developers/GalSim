@@ -29,12 +29,11 @@ import numpy as np
 
 class DES_Shapelet(object):
     """Class that handles DES files describing interpolated polar shapelet decompositions.
-    These are usually stored as *_fitpsf.fits files, although there is also an ASCII
-    version stored as *_fitpsf.dat.
+    These are stored as *_fitpsf.fits files.  They are not used in DES anymore, so this
+    class is at best of historical interest
 
-    The shapelet PSFs are built as part of the WL portion of the DES pipeline.  They measure
-    a shapelet decomposition of each star and interpolate the shapelet coefficients over the
-    image positions.
+    The shapelet PSFs measure a shapelet decomposition of each star and interpolate the shapelet
+    coefficients over the image positions.
 
     Unlike PSFEx, these PSF models are built directly in world coordinates.  The shapelets know
     about the WCS, so they are able to fit the shapelet model directly in terms of arcsec.
@@ -65,76 +64,21 @@ class DES_Shapelet(object):
     @param file_name        The name of the file to be read in.
     @param dir              Optionally a directory name can be provided if the file names do not
                             already include it. [default: None]
-    @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name
-                            ending. [default: None]
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'dir' : str, 'file_type' : str }
+    _opt_params = { 'dir' : str }
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, file_name, dir=None, file_type=None):
+    def __init__(self, file_name, dir=None):
         if dir:
             import os
             file_name = os.path.join(dir,file_name)
         self.file_name = file_name
-
-        if not file_type:  # pragma: no branch
-            if self.file_name.lower().endswith('.fits'):
-                file_type = 'FITS'
-            else:  # pragma: no cover
-                file_type = 'ASCII'
-        file_type = file_type.upper()
-        if file_type not in ('FITS', 'ASCII'):
-            raise galsim.GalSimValueError("Invalid file_type.", file_type, ('FITS', 'ASCII'))
-
-        if file_type == 'FITS':
-            self.read_fits()
-        else:  # pragma: no cover
-            self.read_ascii()
-
-    # We haven't used these for a long time, so this is at best of historical interest...
-    def read_ascii(self):  # pragma: no cover
-        """Read in a DES_Shapelet stored using the the ASCII-file version.
-        """
-        fin = open(self.file_name, 'r')
-        lines = fin.readlines()
-        temp = lines[0].split()
-        self.psf_order = int(temp[0])
-        self.psf_size = (self.psf_order+1) * (self.psf_order+2) // 2
-        self.sigma = float(temp[1])
-        self.fit_order = int(temp[2])
-        self.fit_size = (self.fit_order+1) * (self.fit_order+2) // 2
-        self.npca = int(temp[3])
-
-        temp = lines[1].split()
-        self.bounds = galsim.BoundsD(
-            float(temp[0]), float(temp[1]),
-            float(temp[2]), float(temp[3]))
-
-        temp = lines[2].split()
-        assert int(temp[0]) == self.psf_size
-        self.ave_psf = np.array(temp[2:self.psf_size+2]).astype(float)
-        assert self.ave_psf.shape == (self.psf_size,)
-
-        temp = lines[3].split()
-        assert int(temp[0]) == self.npca
-        assert int(temp[1]) == self.psf_size
-        self.rot_matrix = np.array(
-            [ lines[4+k].split()[1:self.psf_size+1] for k in range(self.npca) ]
-            ).astype(float)
-        assert self.rot_matrix.shape == (self.npca, self.psf_size)
-
-        temp = lines[5+self.npca].split()
-        assert int(temp[0]) == self.fit_size
-        assert int(temp[1]) == self.npca
-        self.interp_matrix = np.array(
-            [ lines[6+self.npca+k].split()[1:self.npca+1] for k in range(self.fit_size) ]
-            ).astype(float)
-        assert self.interp_matrix.shape == (self.fit_size, self.npca)
+        self.read_fits()
 
     def read_fits(self):
-        """Read in a DES_Shapelet stored using the the FITS-file version.
+        """Read in a DES_Shapelet stored in FITS file.
         """
         from galsim._pyfits import pyfits
         with pyfits.open(self.file_name) as fits:
