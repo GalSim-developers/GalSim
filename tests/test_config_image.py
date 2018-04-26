@@ -640,9 +640,9 @@ def test_ring():
     # Invalid to just have a psf.
     config['psf'] = config['gal']
     del config['gal']
+    config['stamp']['index'] = 0
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamp(config)
-
 
     config = {
         'stamp' : {

@@ -1558,6 +1558,13 @@ def test_eval():
         galsim.config.ParseValue(config,'bad4',config, float)
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'bad5',config, float)
+    config['eval_variables'] = 'itwo'
+    config = galsim.config.CleanConfig(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config,'eval3',config, float)
+    del config['eval_variables']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ParseValue(config,'eval3',config, float)
 
     # Test the evaluation in RandomDistribution
     # Example config taken directly from Issue #776:
