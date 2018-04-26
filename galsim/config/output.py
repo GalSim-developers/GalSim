@@ -118,9 +118,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     def done_func(logger, proc, k, result, t2):
         file_num, file_name = info[k]
         file_name2, t = result  # This is the t for which 0 means the file was skipped.
-        if file_name2 != file_name:
-            raise galsim.GalSimConfigError("Files seem to be out of sync. %s != %s",
-                                           file_name, file_name2)
+        if file_name2 != file_name:  # pragma: no cover  (I think this should never happen.)
+            raise galsim.GalSimError("Files seem to be out of sync. %s != %s",
+                                     file_name, file_name2)
         if t != 0 and logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc

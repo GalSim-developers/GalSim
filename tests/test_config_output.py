@@ -128,10 +128,31 @@ def test_fits():
     # multithreading starts.  But with a regular logger, there really is profiling output.
     assert "Starting separate profiling for each of the" in cl.output
 
-    # If there is no output field, the default behavior is to write to root.fits.
+    # Check some public API utility functions
+    assert galsim.config.GetNFiles(config) == 6
+    assert galsim.config.GetNImagesForFile(config, 0) == 1
+    assert galsim.config.GetNObjForFile(config, 0, 0) == [1]
+
+    # Check invalid output type
+    config['output']['type'] = 'invalid'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildFile(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.Process(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.GetNImagesForFile(config, 0)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.GetNObjForFile(config, 0, 0)
+
+    # If there is no output field, it raises an error when trying to do BuildFile.
     os.remove('output_fits/test_fits_0.fits')
     config = galsim.config.CopyConfig(config1)
     del config['output']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildFile(config)
+
+    # However, when run from a real config file, the processing will write a 'root' field,
+    # which it will use for the default behavior to write to root.fits.
     config['root'] = 'output_fits/test_fits_0'
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
@@ -168,6 +189,10 @@ def test_multifits():
         im1 = gal.drawImage(scale=1)
         im1_list.append(im1)
     print('multifit image shapes = ',[im.array.shape for im in im1_list])
+
+    assert galsim.config.GetNFiles(config) == 1
+    assert galsim.config.GetNImagesForFile(config, 0) == 6
+    assert galsim.config.GetNObjForFile(config, 0, 0) == [1, 1, 1, 1, 1, 1]
 
     galsim.config.Process(config)
     im2_list = galsim.fits.readMulti('output/test_multifits.fits')
@@ -236,6 +261,10 @@ def test_datacube():
             im1 = gal.drawImage(bounds=b, scale=1)
         im1_list.append(im1)
     print('datacube image shapes = ',[im.array.shape for im in im1_list])
+
+    assert galsim.config.GetNFiles(config) == 1
+    assert galsim.config.GetNImagesForFile(config, 0) == 6
+    assert galsim.config.GetNObjForFile(config, 0, 0) == [1, 1, 1, 1, 1, 1]
 
     galsim.config.Process(config)
     im2_list = galsim.fits.readCube('output/test_datacube.fits')
