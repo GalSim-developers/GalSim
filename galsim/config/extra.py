@@ -211,7 +211,7 @@ def WriteExtraOutputs(config, main_data, logger=None):
         if 'file_name' in field:
             galsim.config.SetDefaultExt(field, '.fits')
             file_name = galsim.config.ParseValue(field,'file_name',config,str)[0]
-        else:
+        else:  # pragma: no cover  (it is convered, but codecov wrongly thinks it isn't.
             # If no file_name, then probably writing to hdu
             continue
         if 'dir' in field:
@@ -271,7 +271,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
         field = output[key]
         if 'hdu' in field:
             hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
-        else:
+        else:  # pragma: no cover  (it is convered, but codecov wrongly thinks it isn't.
             # If no hdu, then probably writing to file
             continue
         if hdu <= 0 or hdu in hdus:
