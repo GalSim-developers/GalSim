@@ -828,7 +828,7 @@ def test_extra_psf_sn():
     # First pure psf image with no noise.
     gal_image = galsim.config.BuildImage(config)
     pure_psf_image = galsim.config.extra.GetFinalExtraOutput('psf', config)[0]
-    np.testing.assert_almost_equal(pure_psf_image.array.sum(), 1.)
+    np.testing.assert_almost_equal(pure_psf_image.array.sum(), 1., decimal=6)
 
     # Draw PSF at S/N = 100
     # (But first check that an error is raised if noise is missing.
