@@ -412,14 +412,53 @@ def test_extra_wt():
 
     galsim.config.Process(config)
 
+    main_im = [ galsim.fits.read('output/test_main_%d.fits'%k) for k in range(nfiles) ]
     for k in range(nfiles):
         im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
         np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k))
         im_bp = galsim.fits.read('output/test_bp_%d.fits'%k)
         np.testing.assert_array_equal(im_bp.array, 0)
+        os.remove('output/test_main_%d.fits'%k)
+
+    # If noclobber = True, don't overwrite existing file.
+    config['noise'] = { 'type' : 'Poisson', 'sky_level_pixel' : 500 }
+    config['output']['noclobber'] = True
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    assert 'Not writing weight file 0 = output/test_wt_0.fits' in cl.output
+    for k in range(nfiles):
+        im = galsim.fits.read('output/test_main_%d.fits'%k)
+        np.testing.assert_equal(im.array, main_im[k].array)
+        im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
+        np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k))
+
+    # Can also add these as extra hdus rather than separate files.
+    config['output']['noclobber'] = False
+    config['output']['weight'] = { 'hdu' : 1 }
+    config['output']['badpix'] = { 'hdu' : 2 }
+    galsim.config.RemoveCurrent(config)
+    galsim.config.Process(config)
+    for k in range(nfiles):
+        im_wt = galsim.fits.read('output/test_main_%d.fits'%k, hdu=1)
+        np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k))
+        im_bp = galsim.fits.read('output/test_main_%d.fits'%k, hdu=2)
+        np.testing.assert_array_equal(im_bp.array, 0)
+
+    config['output']['badpix'] = { 'hdu' : 0 }
+    galsim.config.RemoveCurrent(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.Process(config, except_abort=True)
+    config['output']['badpix'] = { 'hdu' : 1 }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.Process(config, except_abort=True)
+    config['output']['badpix'] = { 'hdu' : 3 }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.Process(config, except_abort=True)
 
     # If include_obj_var = True, then weight image includes signal.
     config['output']['weight']['include_obj_var'] = True
+    config['output']['badpix'] = { 'hdu' : 2 }
     config['output']['nproc'] = 2
     galsim.config.RemoveCurrent(config)
     galsim.config.Process(config)
@@ -428,8 +467,34 @@ def test_extra_wt():
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         im = gal.drawImage(scale=0.4)
-        im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
+        im_wt = galsim.fits.read('output/test_main_%d.fits'%k, hdu=1)
         np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k + im.array))
+
+    # It is permissible for weight, badpix to have no output.  Some use cases require building
+    # the weight and/or badpix information even if it is not associated with any output.
+    config['output']['weight'] = {}
+    config['output']['badpix'] = {}
+    galsim.config.RemoveCurrent(config)
+    galsim.config.Process(config)
+    for k in range(nfiles):
+        assert_raises(OSError, galsim.fits.read, 'output/test_main_%d.fits'%k, hdu=1)
+        os.remove('output/test_wt_%d.fits'%k)
+        os.remove('output/test_main_%d.fits'%k)
+
+    # Can also have both outputs
+    config['output']['weight'] = { 'file_name': "$'output/test_wt_%d.fits'%file_num", 'hdu': 1 }
+    galsim.config.RemoveCurrent(config)
+    galsim.config.Process(config, except_abort=True)
+    for k in range(nfiles):
+        im_wt1 = galsim.fits.read('output/test_wt_%d.fits'%k)
+        np.testing.assert_almost_equal(im_wt1.array, 1./(0.7 + k))
+        im_wt2 = galsim.fits.read('output/test_main_%d.fits'%k, hdu=1)
+        np.testing.assert_almost_equal(im_wt2.array, 1./(0.7 + k))
+
+    # Other such use cases would access the final weight or badpix image using GetFinalExtraOutput
+    galsim.config.BuildFile(config)
+    wt = galsim.config.extra.GetFinalExtraOutput('weight', config)
+    np.testing.assert_almost_equal(wt[0].array, 1./0.7)
 
     # If the image is a Scattered type, then the weight adn badpix images are built by a
     # different code path.
@@ -706,6 +771,85 @@ def test_extra_psf():
     assert "Not writing psf file 3 = output_psf/test_psf.fits because already written" in cl.output
     assert "Not writing psf file 4 = output_psf/test_psf.fits because already written" in cl.output
     assert "Not writing psf file 5 = output_psf/test_psf.fits because already written" in cl.output
+
+@timer
+def test_extra_psf_sn():
+    """Test the signal_to_noise option of the extra psf field
+    """
+    config = {
+        'image' : {
+            'random_seed' : 1234,
+            'pixel_scale' : 0.4,
+            'size' : 64,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 2.3,
+            'flux' : 100,
+        },
+        'psf' : {
+            'type' : 'Moffat',
+            'beta' : 3.5,
+            'fwhm' : 0.7,
+        },
+        'output' : {
+            'psf' : {}
+        },
+    }
+    # First pure psf image with no noise.
+    gal_image = galsim.config.BuildImage(config)
+    pure_psf_image = galsim.config.extra.GetFinalExtraOutput('psf', config)[0]
+    np.testing.assert_almost_equal(pure_psf_image.array.sum(), 1.)
+
+    # Draw PSF at S/N = 100
+    # (But first check that an error is raised if noise is missing.
+    config['output']['psf']['signal_to_noise'] = 100
+    galsim.config.RemoveCurrent(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    noise_var = 20.
+    config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : noise_var, }
+    gal_image = galsim.config.BuildImage(config)
+    sn100_psf_image = galsim.config.extra.GetFinalExtraOutput('psf', config)[0]
+    sn100_flux = sn100_psf_image.array.sum()
+    psf_noise = sn100_psf_image - sn100_flux * pure_psf_image
+    print('psf_noise.var = ',psf_noise.array.var(), noise_var)
+    np.testing.assert_allclose(psf_noise.array.var(), noise_var, rtol=0.02)
+    snr = np.sqrt( np.sum(sn100_psf_image.array**2, dtype=float) / noise_var )
+    print('snr = ',snr, 100)
+    np.testing.assert_allclose(snr, 100, rtol=0.2)  # Not super accurate for any single image.
+
+    # Can also specify different draw_methods.
+    config['output']['psf']['draw_method'] = 'real_space'
+    galsim.config.RemoveCurrent(config)
+    gal_image = galsim.config.BuildImage(config)
+    real_psf_image = galsim.config.extra.GetFinalExtraOutput('psf', config)[0]
+    print('real flux = ', real_psf_image.array.sum(), sn100_flux)
+    np.testing.assert_allclose(real_psf_image.array.sum(), sn100_flux, rtol=1.e-4)
+
+    # phot is invalid with signal_to_noise
+    config['output']['psf']['draw_method'] = 'phot'
+    galsim.config.RemoveCurrent(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # Check for other invalid input
+    config['output']['psf']['draw_method'] = 'input'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['output']['psf']['draw_method'] = 'auto'
+    config['output']['psf']['flux'] = sn100_flux
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # OK to use phot with flux.
+    config['output']['psf']['draw_method'] = 'phot'
+    del config['output']['psf']['signal_to_noise']
+    gal_image = galsim.config.BuildImage(config)
+    phot_psf_image = galsim.config.extra.GetFinalExtraOutput('psf', config)[0]
+    print('phot flux = ', phot_psf_image.array.sum(), sn100_flux)
+    np.testing.assert_allclose(phot_psf_image.array.sum(), sn100_flux, rtol=1.e-4)
 
 
 @timer
@@ -1253,6 +1397,7 @@ if __name__ == "__main__":
     test_skip()
     test_extra_wt()
     test_extra_psf()
+    test_extra_psf_sn()
     test_extra_truth()
     test_retry_io()
     test_config()

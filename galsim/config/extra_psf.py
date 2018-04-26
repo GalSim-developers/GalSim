@@ -38,11 +38,25 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
     else:
         method = 'auto'
 
+    if 'flux' in config:
+        flux = galsim.config.ParseValue(config,'flux',base,float)[0]
+        psf = psf.withFlux(flux)
+
+    if method == 'phot':
+        rng = galsim.config.GetRNG(config, base)
+        n_photons = psf.flux
+    else:
+        rng = None
+        n_photons = 0
+
     wcs = base['wcs'].local(base['image_pos'])
     im = galsim.ImageF(bounds, wcs=wcs)
-    im = psf.drawImage(image=im, offset=offset, method=method)
+    im = psf.drawImage(image=im, offset=offset, method=method, rng=rng, n_photons=n_photons)
 
     if 'signal_to_noise' in config:
+        if 'flux' in config:
+            raise galsim.GalSimConfigError(
+                "Cannot specify both flux and signal_to_noise for psf output")
         if method == 'phot':
             raise galsim.GalSimConfigError(
                 "signal_to_noise option not implemented for draw_method = phot")
