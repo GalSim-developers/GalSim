@@ -57,10 +57,9 @@ def test_meds():
     psf13 = galsim.Image(box_size, box_size, init_value=143)
     dudx = 11.1; dudy = 11.2; dvdx = 11.3; dvdy = 11.4; x0 = 11.5; y0 = 11.6;
     wcs11  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
-    dudx = 12.1; dudy = 12.2; dvdx = 12.3; dvdy = 12.4; x0 = 12.5; y0 = 12.6;
-    wcs12  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
-    dudx = 13.1; dudy = 13.2; dvdx = 13.3; dvdy = 13.4; x0 = 13.5; y0 = 13.6;
-    wcs13  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
+    dudx = 12.1; dudy = 12.2; dvdx = 12.3; dvdy = 12.4;
+    wcs12  = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+    wcs13  = galsim.PixelScale(13)
 
 
     # create lists
@@ -90,10 +89,9 @@ def test_meds():
 
     dudx = 21.1; dudy = 21.2; dvdx = 21.3; dvdy = 21.4; x0 = 21.5; y0 = 21.6;
     wcs21  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
-    dudx = 22.1; dudy = 22.2; dvdx = 22.3; dvdy = 22.4; x0 = 22.5; y0 = 22.6;
-    wcs22  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
-    dudx = 23.1; dudy = 23.2; dvdx = 23.3; dvdy = 23.4; x0 = 23.5; y0 = 23.6;
-    wcs23  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
+    dudx = 22.1; dudy = 22.2; dvdx = 22.3; dvdy = 22.4;
+    wcs22  = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+    wcs23  = galsim.PixelScale(23)
 
     # create lists
     images = [img21, img22, img23]
@@ -109,12 +107,47 @@ def test_meds():
     img23.wcs = wcs23
     obj2 = galsim.des.MultiExposureObject(images=images, weight=weight, seg=seg, psf=psf, id=2)
 
+    obj3 = galsim.des.MultiExposureObject(images=images, id=3)
+
     # create an object list
     objlist = [obj1, obj2]
 
     # save objects to MEDS file
     filename_meds = 'output/test_meds.fits'
     galsim.des.WriteMEDS(objlist, filename_meds, clobber=True)
+
+    bad1 = galsim.Image(32, 48, init_value=0)
+    bad2 = galsim.Image(35, 35, init_value=0)
+    bad3 = galsim.Image(48, 48, init_value=0)
+
+    with assert_raises(TypeError):
+        galsim.des.MultiExposureObject(images=img11)
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[bad1])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[bad2])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[img11,bad3])
+    with assert_raises(TypeError):
+        galsim.des.MultiExposureObject(images=images, weight=wth11)
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=images, weight=[])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[img11], weight=[bad3])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[img11], psf=[bad1])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[img11], psf=[bad2])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[img11, img12], psf=[bad2, psf12])
+    with assert_raises(TypeError):
+        galsim.des.MultiExposureObject(images=images, wcs=wcs11)
+    celestial_wcs = galsim.FitsWCS("DECam_00154912_12_header.fits", dir='des_data')
+    with assert_raises(galsim.GalSimValueError):
+        galsim.des.MultiExposureObject(images=[img11], wcs=[celestial_wcs])
+
 
     # Note that while there are no tests prior to this, the above still checks for
     # syntax errors in the meds creation software, so it's still worth running as part
@@ -123,14 +156,10 @@ def test_meds():
     # stays in sync with any changes there.
     try:
         import meds
-    except ImportError:
-        print('Failed to import meds.  Unable to do tests of meds file.')
-        return
-    try:
         # Meds will import this, so check for this too.
         import fitsio
     except ImportError:
-        print('Failed to import fitsio.  Unable to do tests of meds file.')
+        print('Failed to import either meds or fitsio.  Unable to do tests of meds file.')
         return
 
     # Run meds module's validate function
@@ -295,7 +324,18 @@ def test_meds_config():
     config['output']['badpix'] = {}
     galsim.config.Process(config, logger=logger)
 
+    config = galsim.config.CleanConfig(config)
+    config['image'] = {
+        'type' : 'Scattered',
+        'nobjects' : 20,
+        'pixel_scale' : pixel_scale,
+        'size' : stamp_size ,
+    }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.Process(config, logger=logger)
+
     # Now repeat, making a separate file for each
+    config = galsim.config.CleanConfig(config)
     config['gal']['half_light_radius'] = { 'type' : 'Sequence', 'first' : 0.7, 'step' : 0.1,
                                            'index_key' : 'file_num' }
     config['output'] = { 'type' : 'Fits',
@@ -310,7 +350,7 @@ def test_meds_config():
                         'nx_tiles' : 1,
                         'ny_tiles' : n_per_obj,
                         'pixel_scale' : pixel_scale,
-                        'offset' : config['image']['offset'],
+                        'offset' : { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y },
                         'stamp_size' : stamp_size,
                         'random_seed' : seed
                       }
@@ -594,6 +634,11 @@ def test_psf():
     numpy.testing.assert_almost_equal(meas.observed_shape.g2/2, ref_shape.g2/2, decimal=2,
                                       err_msg="no-wcs PSFEx shape.g2 doesn't match")
 
+    with assert_raises(TypeError):
+        galsim.des.DES_PSFEx(file_name=file, wcs=wcs_file, dir=data_dir)
+    with assert_raises(galsim.GalSimError):
+        galsim.des.DES_PSFEx(psfex_file, image_file_name=wcs_file, wcs=wcs_file, dir=data_dir)
+
     # Now the shapelet PSF model.  This model is already in sky coordinates, so no wcs_file needed.
     fitpsf = galsim.des.DES_Shapelet(os.path.join(data_dir,fitpsf_file))
     psf = fitpsf.getPSF(image_pos)
@@ -608,6 +653,9 @@ def test_psf():
                                       err_msg="Shapelet PSF shape.g1 doesn't match")
     numpy.testing.assert_almost_equal(meas.observed_shape.g2/2, ref_shape.g2/2, decimal=2,
                                       err_msg="Shapelet PSF shape.g2 doesn't match")
+
+    with assert_raises(galsim.GalSimBoundsError):
+        fitpsf.getPSF(image_pos = galsim.PositionD(4000, 5000))
 
 
 @timer
@@ -637,6 +685,7 @@ def test_psf_config():
                    'gsparams' : { 'folding_threshold' : 1.e-4 } },
         'psf5' : { 'type' : 'DES_PSFEx', 'image_pos' : galsim.PositionD(789,567), 'flux' : 388,
                    'gsparams' : { 'folding_threshold' : 1.e-4 } },
+        'bad1' : { 'type' : 'DES_Shapelet', 'image_pos' : galsim.PositionD(5670,789) },
 
         # This would normally be set by the config processing.  Set it manually here.
         'image_pos' : image_pos,
@@ -672,6 +721,15 @@ def test_psf_config():
     psf5a = galsim.config.BuildGSObject(config, 'psf5')[0]
     psf5b = psfex2.getPSF(galsim.PositionD(789,567),gsparams=gsparams).withFlux(388)
     gsobject_compare(psf5a, psf5b)
+
+    del config['image_pos']
+    galsim.config.RemoveCurrent(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildGSObject(config, 'psf1')[0]
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildGSObject(config, 'psf2')[0]
+    with assert_raises(galsim.config.gsobject.SkipThisObject):
+        galsim.config.BuildGSObject(config, 'bad1')[0]
 
 
 if __name__ == "__main__":

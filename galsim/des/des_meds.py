@@ -269,7 +269,8 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             vec['image'].append(obj.images[i].array.flatten())
             vec['seg'].append(obj.seg[i].array.flatten())
             vec['weight'].append(obj.weight[i].array.flatten())
-            vec['psf'].append(obj.psf[i].array.flatten())
+            if obj.psf is not None:
+                vec['psf'].append(obj.psf[i].array.flatten())
 
             # append cutout_row/col
             cutout_row[i] = obj.cutout_row[i]
@@ -456,11 +457,9 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         import time
         t1 = time.time()
 
-        if 'image' in base and 'type' in base['image']:
-            image_type = base['image']['type']
-            if image_type != 'Single':
-                raise galsim.GalSimConfigError(
-                    "MEDS files are not compatible with image type %s."%image_type)
+        if base.get('image',{}).get('type', 'Single') != 'Single':
+            raise galsim.GalSimConfigError(
+                "MEDS files are not compatible with image type %s."%base['image']['type'])
 
         req = { 'nobjects' : int , 'nstamps_per_object' : int }
         ignore += [ 'file_name', 'dir', 'nfiles' ]
