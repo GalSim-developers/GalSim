@@ -200,6 +200,29 @@ def test_simplegeometry():
 
 
 @timer
+def test_cdmodel_errors():
+    """Test some invalid usage of CDModel"""
+
+    # I don't think these errors are possible from the PowerLawCD constructor, so test
+    # them directly in the base class.
+    with assert_raises(galsim.GalSimValueError):
+        # Must be odd x odd
+        galsim.cdmodel.BaseCDModel(
+            np.zeros((4,4)), np.zeros((4,4)), np.zeros((4,4)), np.zeros((4,4)) )
+    with assert_raises(galsim.GalSimValueError):
+        # Must be square
+        galsim.cdmodel.BaseCDModel(
+            np.zeros((5,3)), np.zeros((5,3)), np.zeros((5,3)), np.zeros((5,3)) )
+    with assert_raises(galsim.GalSimValueError):
+        # Must be same shape
+        galsim.cdmodel.BaseCDModel(
+            np.zeros((3,3)), np.zeros((3,3)), np.zeros((3,3)), np.zeros((5,5)) )
+    with assert_raises(galsim.GalSimValueError):
+        # Must be >= 3x3
+        galsim.cdmodel.BaseCDModel(
+            np.zeros((1,1)), np.zeros((1,1)), np.zeros((1,1)), np.zeros((1,1)) )
+
+@timer
 def test_fluxconservation():
     """Test flux conservation of charge deflection model for galaxy and flat image.
     """
@@ -347,6 +370,7 @@ def test_exampleimage():
 
 if __name__ == "__main__":
     test_simplegeometry()
+    test_cdmodel_errors()
     test_fluxconservation()
     test_forwardbackward()
     test_gainratio()
