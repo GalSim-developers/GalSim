@@ -50,10 +50,54 @@ def test_basic_catalog():
 
     do_pickle(cat)
 
+    cat2 = galsim.Catalog('catalog.fits', 'config_input', hdu=1, file_type='FITS')
+    assert cat2 == cat
+
+    cat3 = galsim.Catalog('catalog.fits', 'config_input', _nobjects_only=True)
+    assert cat3 == cat
+    assert cat3.nobjects == cat3.getNObjects() == cat.nobjects
+    with assert_raises(AttributeError):
+        assert cat3.ncols
+    with assert_raises(AttributeError):
+        cat3.get(1,'angle2')
+
+    with assert_raises(galsim.GalSimValueError):
+        galsim.Catalog('catalog.fita', 'config_input', file_type='invalid')
+
+    with assert_raises(IndexError):
+        cat.get(-1, 'angle2')
+    with assert_raises(IndexError):
+        cat.get(3, 'angle2')
+    with assert_raises(KeyError):
+        cat.get(1, 'invalid')
+    with assert_raises(TypeError):
+        cat.get('val', 'angle2')
+
+    cat2 = galsim.Catalog('catalog2.fits', 'config_input', hdu=2)
+    assert cat2.nobjects == cat.nobjects
+    np.testing.assert_array_equal(cat2.data, cat.data)
+    assert cat2 != cat
+    do_pickle(cat2)
+
+    cat3 = galsim.Catalog('catalog2.fits', 'config_input', hdu='data')
+    assert cat3.nobjects == cat.nobjects
+    np.testing.assert_array_equal(cat3.data, cat.data)
+    assert cat3 != cat
+    assert cat3 != cat2  # Even though these are the same, it doesn't no 'data' is hdu 2.
+    do_pickle(cat3)
+
+    cat2n = galsim.Catalog('catalog2.fits', 'config_input', hdu=2, _nobjects_only=True)
+    assert cat2n.nobjects == 3
+
+    with assert_raises((IOError, OSError)):
+        galsim.Catalog('invalid.fits', 'config_input')
+
 
 @timer
 def test_basic_dict():
     """Test basic operations on Dict."""
+    import yaml
+
     # Pickle
     d = galsim.Dict(dir='config_input', file_name='dict.p')
     np.testing.assert_equal(len(d), 4)
@@ -79,24 +123,16 @@ def test_basic_dict():
     do_pickle(d)
 
     # YAML
-    try:
-        import yaml
-    except ImportError as e:
-        # Raise a warning so this message shows up when doing pytest (or scons tests).
-        import warnings
-        warnings.warn("Unable to import yaml.  Skipping yaml tests")
-        print("Caught ",e)
-    else:
-        d = galsim.Dict(dir='config_input', file_name='dict.yaml')
-        np.testing.assert_equal(len(d), 5)
-        np.testing.assert_equal(d.file_type, 'YAML')
-        np.testing.assert_equal(d['i'], 1)
-        np.testing.assert_equal(d.get('s'), 'Brian')
-        np.testing.assert_equal(d.get('s2', 'Grail'), 'Grail')  # Not in dict.  Use default.
-        np.testing.assert_almost_equal(d.get('f', 999.), 0.1) # In dict.  Ignore default.
-        d2 = galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='yaml')
-        assert d == d2
-        do_pickle(d)
+    d = galsim.Dict(dir='config_input', file_name='dict.yaml')
+    np.testing.assert_equal(len(d), 5)
+    np.testing.assert_equal(d.file_type, 'YAML')
+    np.testing.assert_equal(d['i'], 1)
+    np.testing.assert_equal(d.get('s'), 'Brian')
+    np.testing.assert_equal(d.get('s2', 'Grail'), 'Grail')  # Not in dict.  Use default.
+    np.testing.assert_almost_equal(d.get('f', 999.), 0.1) # In dict.  Ignore default.
+    d2 = galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='yaml')
+    assert d == d2
+    do_pickle(d)
 
 
 @timer

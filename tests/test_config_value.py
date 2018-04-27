@@ -120,14 +120,7 @@ def test_float_value():
         'image_center' : galsim.PositionD(0,0),
     }
 
-    test_yaml = True
-    try:
-        galsim.config.ProcessInput(config)
-    except ImportError:
-        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
-        del config['input']['dict'][2]
-        galsim.config.ProcessInput(config)
-        test_yaml = False
+    galsim.config.ProcessInput(config)
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, float)[0]
@@ -315,12 +308,8 @@ def test_float_value():
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, float)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, float)[0])
-    if test_yaml:
-        dict.append(galsim.config.ParseValue(config,'dict3',config, float)[0])
-        dict.append(galsim.config.ParseValue(config,'dict4',config, float)[0])
-    else:
-        dict.append(0.1)
-        dict.append(1.9)
+    dict.append(galsim.config.ParseValue(config,'dict3',config, float)[0])
+    dict.append(galsim.config.ParseValue(config,'dict4',config, float)[0])
     np.testing.assert_array_almost_equal(dict, [ 23.17, -17.23, 0.1, 1.9 ])
 
     sum1 = galsim.config.ParseValue(config,'sum1',config, float)[0]
@@ -530,14 +519,7 @@ def test_int_value():
         'bad5' : { 'type' : 'Catalog' , 'num' : -1, 'col' : 'int1' },
     }
 
-    test_yaml = True
-    try:
-        galsim.config.ProcessInput(config)
-    except ImportError:
-        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
-        del config['input']['dict'][2]
-        galsim.config.ProcessInput(config)
-        test_yaml = False
+    galsim.config.ProcessInput(config)
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, int)[0]
@@ -684,10 +666,7 @@ def test_int_value():
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, int)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, int)[0])
-    if test_yaml:
-        dict.append(galsim.config.ParseValue(config,'dict3',config, int)[0])
-    else:
-        dict.append(1)
+    dict.append(galsim.config.ParseValue(config,'dict3',config, int)[0])
     np.testing.assert_array_equal(dict, [ 17, -23, 1 ])
 
     sum1 = galsim.config.ParseValue(config,'sum1', config, int)[0]
@@ -760,14 +739,7 @@ def test_bool_value():
         'bad3' : { 'type' : 'RandomBinomial', 'N' : 2 },
     }
 
-    test_yaml = True
-    try:
-        galsim.config.ProcessInput(config)
-    except ImportError:
-        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
-        del config['input']['dict'][2]
-        galsim.config.ProcessInput(config)
-        test_yaml = False
+    galsim.config.ProcessInput(config)
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, bool)[0]
@@ -866,10 +838,7 @@ def test_bool_value():
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, bool)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, bool)[0])
-    if test_yaml:
-        dict.append(galsim.config.ParseValue(config,'dict3',config, bool)[0])
-    else:
-        dict.append(False)
+    dict.append(galsim.config.ParseValue(config,'dict3',config, bool)[0])
     np.testing.assert_array_equal(dict, [ True, False, False ])
 
     # Test bad values
@@ -926,14 +895,7 @@ def test_str_value():
         'bad5' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ], 'index' : 5 },
     }
 
-    test_yaml = True
-    try:
-        galsim.config.ProcessInput(config)
-    except ImportError:
-        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
-        del config['input']['dict'][2]
-        galsim.config.ProcessInput(config)
-        test_yaml = False
+    galsim.config.ProcessInput(config)
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, str)[0]
@@ -1003,10 +965,7 @@ def test_str_value():
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, str)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, str)[0])
-    if test_yaml:
-        dict.append(galsim.config.ParseValue(config,'dict3',config, str)[0])
-    else:
-        dict.append('Brian')
+    dict.append(galsim.config.ParseValue(config,'dict3',config, str)[0])
     np.testing.assert_array_equal(dict, [ 'Life', 'of', 'Brian' ])
 
     with assert_raises(galsim.GalSimConfigError):
