@@ -389,6 +389,32 @@ def test_silicon_fft():
 def test_silicon_area():
     """Test the Silicon class calculate_pixel_areas() function.
     """
+    # Adding this test to compare to Poisson simulation
+    # Craig Lage - 27Apr18
+    # Draw a very small spot with 80K electrons
+    # This puts all of the charge in the central pixel to
+    # match how the Poisson simulations are done
+    obj = galsim.Gaussian(flux=8.0E4, sigma=0.02)
+    im = obj.drawImage(nx=9, ny=9, scale=0.3, dtype=float)
+    im.setCenter(0,0)
+
+    rng = galsim.BaseDeviate(5678)
+    silicon = galsim.SiliconSensor(rng=rng)
+    area_image = silicon.calculate_pixel_areas(im)
+    # Get the area data from the Poisson simulation
+    area_filename = silicon.vertex_file.split('/')[-1].strip('.dat')+'_areas.dat'
+    area_dir = os.path.join(os.getcwd(),'sensor_validation/')
+    area_data = np.loadtxt(area_dir+area_filename, skiprows = 1)    
+    # Now test that they are almost equal
+    for line in area_data:
+        nx = int(line[0]-4)
+        ny = int(line[1]-4)
+        poisson_area = line[2]
+        galsim_area = area_image[nx,ny]
+        #print(nx,ny,poisson_area,galsim_area)
+        np.testing.assert_almost_equal(poisson_area/100.0, galsim_area, decimal=3)
+
+    
     # Draw a smallish but very bright Gaussian image
     obj = galsim.Gaussian(flux=5.e5, sigma=0.2)
     im = obj.drawImage(nx=17, ny=17, scale=0.3, dtype=float)
