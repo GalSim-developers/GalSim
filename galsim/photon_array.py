@@ -371,14 +371,11 @@ class PhotonArray(object):
 
         @param file_name    The file name of the input FITS file.
         """
-        from ._pyfits import pyfits, pyfits_version
+        from ._pyfits import pyfits
         with pyfits.open(file_name) as fits:
             data = fits[1].data
         N = len(data)
-        if pyfits_version > '3.0':
-            names = data.columns.names
-        else: # pragma: no cover
-            names = data.dtype.names
+        names = data.columns.names
 
         photons = cls(N, x=data['x'], y=data['y'], flux=data['flux'])
         if 'dxdz' in names:

@@ -802,9 +802,6 @@ def test_speedup():
     significant speedup.
     """
     import time
-    #import cProfile, pstats
-    #pr = cProfile.Profile()
-    #pr.enable()
     atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=0.2)
     # Should be ~seconds if _prepareDraw() gets executed, ~0.01s otherwise.
     psf = atm.makePSF(lam=500.0, diam=1.0, exptime=15.0, time_step=0.025)

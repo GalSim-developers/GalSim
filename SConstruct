@@ -1763,24 +1763,16 @@ PyMODINIT_FUNC initcheck_numpy(void)
     return 1
 
 def CheckPyFITS(config):
-    config.Message('Checking for PyFITS... ')
+    config.Message('Checking for astropy.io.fits... ')
 
-    result, output = TryScript(config,"import pyfits",python)
-    astropy = False
+    result, output = TryScript(config,"import astropy.io.fits",python)
     if not result:
-        result, output = TryScript(config,"import astropy.io.fits",python)
-        astropy = True
-    if not result:
-        ErrorExit("Unable to import pyfits or astropy.io.fits using the python executable:\n" +
+        ErrorExit("Unable to import astropy.io.fits using the python executable:\n" +
                   python)
     config.Result(1)
 
-    if astropy:
-        result, astropy_ver = TryScript(config,"import astropy; print(astropy.__version__)",python)
-        print('Astropy version is',astropy_ver)
-    else:
-        result, pyfits_ver = TryScript(config,"import pyfits; print(pyfits.__version__)",python)
-        print('PyFITS version is',pyfits_ver)
+    result, astropy_ver = TryScript(config,"import astropy; print(astropy.__version__)",python)
+    print('Astropy version is',astropy_ver)
 
     return 1
 

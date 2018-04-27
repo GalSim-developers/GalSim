@@ -16,18 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Make it so we can use either pyfits or astropy.io.fits as pyfits.
+# We used to support legacy pyfits in addition to astropy.io.fits.  We still call
+# astropy.io.fits in the code, but we have removed the legacy compatibility hacks.
 
-try:
-    import astropy.io.fits as pyfits
-    # astropy started their versioning over at 0.  (Understandably.)
-    # To make this seamless with pyfits versions, we add 4 to the astropy version.
-    from astropy import version as astropy_version
-    pyfits_version = str( (4 + astropy_version.major) + astropy_version.minor/10.)
-    pyfits_str = 'astropy.io.fits'
-except ImportError:
-    import pyfits
-    pyfits_version = pyfits.__version__
-    pyfits_str = 'pyfits'
+import astropy.io.fits as pyfits
 
 
