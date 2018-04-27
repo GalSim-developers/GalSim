@@ -110,7 +110,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
                           ' default_thin_trunc.', galsim.GalSimWarning)
             default_thin_trunc = False
     if len(kwargs) > 0:
-        for key in kwargs:
+        for key in list(kwargs.keys()):
             if key in truncate_kwargs:
                 tmp_truncate_dict[key] = kwargs.pop(key)
             if key in thin_kwargs:

@@ -25,6 +25,7 @@ Dependency Changes
 API Changes
 -----------
 
+- Changed the order of arguments of galsim.wfirst.allDetectorEffects. (#755)
 - Most of the functionality associated with C++-layer objects has been
   redesigned or removed.  These were non-public-API features, so if you have
   been using the public API, you should be fine.  But if you have been relying

@@ -99,12 +99,9 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     # The table only includes longitude in the range [0, 180] because there is symmetry in that a
     # negative longitude in the range[-180, 0] should have the same sky level as at the positive
     # value of longitude (given that the Sun is at 0).
-    if ecliptic_lon/galsim.degrees > 180.:
-        ecliptic_lon -= 360.*galsim.degrees
-    ecliptic_lon = abs(ecliptic_lon/galsim.degrees)*galsim.degrees
-    # And latitude symmetries:
-    if ecliptic_lat/galsim.degrees < 0.:
-        ecliptic_lat = abs(ecliptic_lat/galsim.degrees)*galsim.degrees
+    ecliptic_lon = ecliptic_lon.wrap()
+    ecliptic_lon = abs(ecliptic_lon.rad)*galsim.radians
+    ecliptic_lat = abs(ecliptic_lat.rad)*galsim.radians
     sin_ecliptic_lat = np.sin(ecliptic_lat)
 
     # Take the lookup table, and turn negative numbers (indicating failure because of proximity to

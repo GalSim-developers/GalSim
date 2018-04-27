@@ -38,8 +38,8 @@ def test_nonlinearity_basic():
     im_save = im.copy()
 
     # Basic - exceptions / bad usage (invalid function, does not return NumPy array).
-    with assert_raises(ValueError):
-        im.applyNonlinearity(lambda x : 1.0)
+    assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
+    assert_raises(ValueError, im.applyNonlinearity, lambda x : np.array([1,2,3]))
 
     # Check for constant function as NLfunc
     im_new = im.copy()
@@ -177,8 +177,9 @@ def test_recipfail_basic():
     im_save = im.copy()
 
     # Basic - exceptions / bad usage.
-    with assert_raises(ValueError):
-        im.addReciprocityFailure(-1.0, 200, 1.0)
+    assert_raises(ValueError, im.addReciprocityFailure, -1.0, 200, 1.0)
+    assert_raises(ValueError, im.addReciprocityFailure, 1.0, -200, 1.0)
+    assert_raises(ValueError, im.addReciprocityFailure, 1.0, 200, -1.0)
 
     # Preservation of data type / scale / bounds
     im_new = im.copy()
@@ -321,6 +322,11 @@ def test_IPC_basic():
     np.testing.assert_array_equal(
         im_new.array, im.array,
         err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
+
+    assert_raises(ValueError, im_new.applyIPC, galsim.Image(2,2,init_value=1))
+    assert_raises(ValueError, im_new.applyIPC, galsim.Image(3,3,init_value=-1))
+    assert_raises(ValueError, im_new.applyIPC, ipc_kernel * -1)
+    assert_raises(ValueError, im_new.applyIPC, ipc_kernel, edge_treatment='invalid')
 
     # Test with a scalar fill_value
     fill_value = np.pi # a non-trivial one
