@@ -39,7 +39,6 @@ from .errors import GalSimError, GalSimValueError, GalSimWarning, GalSimIncompat
 ##############################################################################################
 
 def _parse_compression(compression, file_name):
-    from ._pyfits import pyfits, pyfits_version
     file_compress = None
     pyfits_compress = None
     if compression == 'rice' or compression == 'RICE_1': pyfits_compress = 'RICE_1'
@@ -59,12 +58,6 @@ def _parse_compression(compression, file_name):
         raise GalSimValueError("Invalid compression", compression,
                                ('rice', 'gzip_tile', 'hcompress', 'plio', 'gzip', 'bzip2',
                                 'none', 'auto'))
-    if pyfits_compress:
-        if 'CompImageHDU' not in pyfits.__dict__:
-            raise NotImplementedError(
-                'Compressed Images not supported before pyfits version 2.0. You have version %s.'%(
-                    pyfits_version))
-
     return file_compress, pyfits_compress
 
 # This is a class rather than a def, since we want to store some variable, and that's easier
@@ -186,26 +179,13 @@ class _ReadFile:
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, file_compress):
-        from ._pyfits import pyfits, pyfits_version
+        from ._pyfits import pyfits
         if dir:
             import os
             file = os.path.join(dir,file)
 
         if not file_compress:
-            if pyfits_version < '3.1': # pragma: no cover
-                # Sometimes early versions of pyfits do weird things with the final hdu when
-                # writing fits files with rice compression.  It seems to add a bunch of '\0'
-                # characters after the end of what should be the last hdu.  When reading this
-                # back in, it gets interpreted as the start of another hdu, which is then found
-                # to be missing its END card in the header.  The easiest workaround is to just
-                # tell it to ignore any missing END problems on the read command.  Also ignore
-                # the warnings it emits along the way.
-                import warnings
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    hdu_list = pyfits.open(file, 'readonly', ignore_missing_end=True)
-            else:
-                hdu_list = pyfits.open(file, 'readonly')
+            hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
             # Before trying all the gzip options, first make sure the file exists and is readable.
@@ -290,8 +270,8 @@ class _WriteFile:
 
     def gzip_tmp(self, hdu_list, file):  # pragma: no cover
         import gzip
-        # However, pyfits versions before 2.3 do not support writing to a buffer, so the
-        # above code will fail.  We need to use a temporary in that case.
+        # Old pyfits versions did not support writing to a buffer, so the # above code will fail.
+        # This is probably not necessary anymore, but left here as another option in case useful.
         tmp = file + '.tmp'
         # It would be pretty odd for this filename to already exist, but just in case...
         while os.path.isfile(tmp):
@@ -378,7 +358,6 @@ class _WriteFile:
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
         import os
-        from ._pyfits import pyfits, pyfits_version
         if dir:
             file = os.path.join(dir,file)
 
@@ -415,42 +394,14 @@ class _WriteFile:
         else:
             raise GalSimValueError("Unknown file_compression", file_compress, ('gzip', 'bzip2'))
 
-        # There is a bug in pyfits where they don't add the size of the variable length array
-        # to the TFORMx header keywords.  They should have size at the end of them.
-        # This bug has been fixed in version 3.1.2.
-        # (See http://trac.assembla.com/pyfits/ticket/199)
-        if pyfits_compress and pyfits_version < '3.1.2':
-            with pyfits.open(file,'update',disable_image_compression=True) as hdu_list:
-                for hdu in hdu_list[1:]: # Skip PrimaryHDU
-                    # Find the maximum variable array length
-                    max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
-                    # Add '(N)' to the TFORMx keywords for the variable array items
-                    s = '(%d)'%max_ar_len
-                    for key in hdu.header.keys():
-                        if key.startswith('TFORM'):
-                            tform = hdu.header[key]
-                            # Only update if the form is a P (= variable length data)
-                            # and the (*) is not there already.
-                            if 'P' in tform and '(' not in tform:
-                                hdu.header[key] = tform + s
-
-            # Workaround for a bug in some pyfits 3.0.x versions
-            # It was fixed in 3.0.8.  I'm not sure when the bug was
-            # introduced, but I believe it was 3.0.3.
-            if (pyfits_version > '3.0' and pyfits_version < '3.0.8' and
-                'COMPRESSION_ENABLED' in pyfits.hdu.compressed.__dict__):
-                pyfits.hdu.compressed.COMPRESSION_ENABLED = True
 _write_file = _WriteFile()
 
 def _add_hdu(hdu_list, data, pyfits_compress):
-    from ._pyfits import pyfits, pyfits_version
+    from ._pyfits import pyfits
     if pyfits_compress:
         if len(hdu_list) == 0:
             hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
-        if pyfits_version < '4.3':
-            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
-        else:
-            hdu = pyfits.CompImageHDU(data, compression_type=pyfits_compress)
+        hdu = pyfits.CompImageHDU(data, compression_type=pyfits_compress)
     else:
         if len(hdu_list) == 0:
             hdu = pyfits.PrimaryHDU(data)
@@ -1274,11 +1225,7 @@ class FitsHeader(object):
     # The rest of the functions are typical non-mutating functions for a dict, for which we
     # generally just pass the request along to self.header.
     def __len__(self):
-        from ._pyfits import pyfits_version
-        if pyfits_version < '3.1':
-            return len(self.header.ascard)
-        else:
-            return len(self.header)
+        return len(self.header)
 
     def __contains__(self, key):
         return key in self.header
@@ -1308,35 +1255,13 @@ class FitsHeader(object):
             value = str(value.decode())
         except AttributeError:
             pass
-        from ._pyfits import pyfits_version
         self._tag = None
-        if pyfits_version < '3.1':
-            if isinstance(value, tuple):
-                # header[key] = (value, comment) syntax
-                if not (0 < len(value) <= 2):
-                    raise GalSimValueError(
-                        'A Header item may be set with either a scalar value, '
-                        'a 1-tuple containing a scalar value, or a 2-tuple '
-                        'containing a scalar value and comment string.', value)
-                elif len(value) == 1:
-                    self.header.update(key, value[0])
-                else:
-                    self.header.update(key, value[0], value[1])
-            else:
-                # header[key] = value syntax
-                self.header.update(key, value)
-        else:
-            # Recent versions implement the above logic with the regular setitem method.
-            self.header[key] = value
+        # Recent versions implement the above logic with the regular setitem method.
+        self.header[key] = value
 
     def clear(self):
-        from ._pyfits import pyfits_version
         self._tag = None
-        if pyfits_version < '3.1':
-            # Not sure when clear() was added, but not present in 2.4, and present in 3.1.
-            del self.header.ascardlist()[:]
-        else:
-            self.header.clear()
+        self.header.clear()
 
     def get(self, key, default=None):
         return self.header.get(key, default)
@@ -1345,44 +1270,24 @@ class FitsHeader(object):
         return self.header.items()
 
     def iteritems(self):
-        from ._pyfits import pyfits_version
-        if pyfits_version < '3.1':
-            return self.header.items()
-        else:
-            return iteritems(self.header)
+        return iteritems(self.header)
 
     def iterkeys(self):
-        from ._pyfits import pyfits_version
-        if pyfits_version < '3.1':
-            return self.header.keys()
-        else:
-            return iterkeys(self.header)
+        return iterkeys(self.header)
 
     def itervalues(self):
-        from ._pyfits import pyfits_version
-        if pyfits_version < '3.1':
-            return self.header.ascard.values()
-        else:
-            return itervalues(self.header)
+        return itervalues(self.header)
 
     def keys(self):
         return self.header.keys()
 
     def update(self, dict2):
-        from ._pyfits import pyfits_version
         self._tag = None
-        # dict2 may be a dict or another FitsHeader (or anything that acts like a dict).
-        # Note: Don't use self.header.update, since that sometimes has problems (in astropy)
-        # with COMMENT lines.  The __setitem__ syntax seems to work properly though.
-        for k, v in iteritems(dict2):
-            self[k] = v
+        for key, item in dict2.items():
+            self.header[key] = item
 
     def values(self):
-        from ._pyfits import pyfits_version
-        if pyfits_version < '3.1':
-            return self.header.ascard.values()
-        else:
-            return self.header.values()
+        return self.header.values()
 
     def append(self, key, value='', useblanks=True):
         """Append an item to the end of the header.
@@ -1395,19 +1300,10 @@ class FitsHeader(object):
         @param useblanks    If there are blank entries currently at the end, should they be
                             overwritten with the new entry? [default: True]
         """
-        from ._pyfits import pyfits, pyfits_version
         self._tag = None
-        if pyfits_version < '3.1':
-            # NB. append doesn't quite do what it claims when useblanks=False.
-            # If there are blanks, it doesn't put the new item after the blanks.
-            # Inserting before the end does do what we want.
-            self.header.ascardlist().insert(len(self), pyfits.Card(key, value),
-                                            useblanks=useblanks)
-        else:
-            self.header.insert(len(self), (key, value), useblanks=useblanks)
+        self.header.insert(len(self), (key, value), useblanks=useblanks)
 
     def __repr__(self):
-        from ._pyfits import pyfits_str
         if self._tag is None:
             return "galsim.FitsHeader(header=%r)"%list(self.items())
         else:
@@ -1427,27 +1323,6 @@ class FitsHeader(object):
 
     def __hash__(self):
         return hash(tuple(sorted(self.items())))
-
-    def __deepcopy__(self, memo):
-        # Need this because pyfits.Header deepcopy was broken before 3.0.6.
-        # cf. https://aeon.stsci.edu/ssb/trac/pyfits/ticket/115
-        from ._pyfits import pyfits, pyfits_version
-        import copy
-        # Boilerplate deepcopy implementation.
-        # cf. http://stackoverflow.com/questions/1500718/what-is-the-right-way-to-override-the-copy-deepcopy-operations-on-an-object-in-p
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        d1 = self.__dict__
-        # This is the special bit for this case.
-        if pyfits_version < '3.0.6':
-            # Not technically a deepcopy apparently, but good enough in most cases.
-            result.header = self.header.copy()
-            d1 = d1.copy()
-            del d1['header']
-        for k, v in d1.items():
-            setattr(result, k, copy.deepcopy(v, memo))
-        return result
 
 # inject write as method of Image class
 Image.write = write

@@ -26,16 +26,13 @@ from galsim_test_helpers import *
 
 
 # Get whatever version of pyfits or astropy we are using
-from galsim._pyfits import pyfits, pyfits_version
+from galsim._pyfits import pyfits
 
 
 @timer
 def test_read():
     """Test reading a FitsHeader from an existing FITS file
     """
-    # Older pyfits versions treat the blank rows differently, so it comes out as 213.
-    # I don't know exactly when it switched, but for < 3.1, I'll just update this to
-    # whatever the initial value is.
     tpv_len = 215
 
     def check_tpv(header):
@@ -58,8 +55,6 @@ def test_read():
     dir = 'fits_files'
     # First option: give a file_name
     header = galsim.FitsHeader(file_name=os.path.join(dir,file_name))
-    if pyfits_version < '3.1':
-        tpv_len = len(header)
     check_tpv(header)
     do_pickle(header)
     # Let the FitsHeader init handle the dir
@@ -107,8 +102,7 @@ def test_read():
     assert header == orig_header
     del header['AIRMASS']
     assert 'AIRMASS' not in header
-    if pyfits_version >= '3.1':
-        assert len(header) == tpv_len-1
+    assert len(header) == tpv_len-1
     assert header != orig_header
     do_pickle(header)
 
@@ -116,8 +110,7 @@ def test_read():
     assert header.get('AIRMASS', 2.0) == 2.0
     # key should still not be in the header
     assert 'AIRMASS' not in header
-    if pyfits_version >= '3.1':
-        assert len(header) == tpv_len-1
+    assert len(header) == tpv_len-1
     assert header != orig_header
 
     # Add items to a header

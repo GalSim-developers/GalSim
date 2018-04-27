@@ -134,13 +134,10 @@ class Catalog(object):
     def readFits(self, hdu, _nobjects_only=False):
         """Read in an input catalog from a FITS file.
         """
-        from ._pyfits import pyfits, pyfits_version
+        from ._pyfits import pyfits
         with pyfits.open(self.file_name) as fits:
             raw_data = fits[hdu].data
-        if pyfits_version > '3.0':
-            self.names = raw_data.columns.names
-        else:
-            self.names = raw_data.dtype.names
+        self.names = raw_data.columns.names
         self.nobjects = len(raw_data.field(self.names[0]))
         if (_nobjects_only): return
         # The pyfits raw_data is a FITS_rec object, which isn't picklable, so we need to
@@ -579,12 +576,7 @@ class OutputCatalog(object):
                 cols.append(pyfits.Column(name=name, format='%dA'%dt.itemsize, array=data[name]))
 
         cols = pyfits.ColDefs(cols)
-
-        # Depending on the version of pyfits, one of these should work:
-        try:
-            tbhdu = pyfits.BinTableHDU.from_columns(cols)
-        except AttributeError:  # pragma: no cover
-            tbhdu = pyfits.new_table(cols)
+        tbhdu = pyfits.BinTableHDU.from_columns(cols)
         return tbhdu
 
     def __repr__(self):
