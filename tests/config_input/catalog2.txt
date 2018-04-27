@@ -1,0 +1,5 @@
+% input catalog for test_config_value.py
+% 0      1    2  3   4   5     6           7    8   9           10      11
+1.234  4.131  9  -3  1  yes   He's	"ceased to be"		1.2	23
+2.345  -900   0  8   0  No    bleedin'	"bereft of life"	0.1	15
+3.456  8.e3  -4  17  1  false demised!  "kicked the bucket"	-0.9    82

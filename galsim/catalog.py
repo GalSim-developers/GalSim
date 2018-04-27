@@ -24,7 +24,7 @@ from builtins import zip
 import os
 import numpy as np
 
-from .errors import GalSimValueError
+from .errors import GalSimValueError, GalSimKeyError, GalSimIndexError
 
 class Catalog(object):
     """A class storing the data from an input catalog.
@@ -96,10 +96,14 @@ class Catalog(object):
     # don't get proxied.  Only callable methods are.  So make method versions of these.
     def getNObjects(self) : return self.nobjects
     def isFits(self) : return self.isfits
+    def __len__(self) : return self.nobjects
 
     def readAscii(self, comments, _nobjects_only=False):
         """Read in an input catalog from an ASCII file.
         """
+        if len(comments) > 1:
+            raise GalSimValueError('Invalid comments character', comments)
+
         # If all we care about is nobjects, this is quicker:
         if _nobjects_only:
             # See the script devel/testlinecounting.py that tests several possibilities.
@@ -109,8 +113,8 @@ class Catalog(object):
                 if (len(comments) == 1):
                     c = comments[0]
                     self.nobjects = sum(1 for line in f if line[0] != c)
-                else:
-                    self.nobjects = sum(1 for line in f if not line.startswith(comments))
+                else:  # len(comments) == 0.  No comments.
+                    self.nobjects = sum(1 for line in f)
             return
 
         # Read in the data using the numpy convenience function
@@ -136,16 +140,10 @@ class Catalog(object):
         """
         from ._pyfits import pyfits
         with pyfits.open(self.file_name) as fits:
-            raw_data = fits[hdu].data
-        self.names = raw_data.columns.names
-        self.nobjects = len(raw_data.field(self.names[0]))
+            self.data = fits[hdu].data.copy()
+        self.names = self.data.columns.names
+        self.nobjects = len(self.data)
         if (_nobjects_only): return
-        # The pyfits raw_data is a FITS_rec object, which isn't picklable, so we need to
-        # copy the fields into a new structure to make sure our Catalog is picklable.
-        # The simplest is probably a dict keyed by the field names, which we save as self.data.
-        self.data = {}
-        for name in self.names:
-            self.data[name] = raw_data.field(name)
         self.ncols = len(self.names)
         self.isfits = True
 
@@ -160,18 +158,16 @@ class Catalog(object):
         """
         if self.isfits:
             if col not in self.names:
-                raise KeyError("Column %s is invalid for catalog %s"%(col,self.file_name))
+                raise GalSimKeyError("Column %s is invalid for catalog %s"%(col,self.file_name))
             if index < 0 or index >= self.nobjects:
-                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
-            if index >= len(self.data[col]):
-                raise IndexError("Object %d is invalid for column %s"%(index,col))
+                raise GalSimIndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
             return self.data[col][index]
         else:
             icol = int(col)
             if icol < 0 or icol >= self.ncols:
-                raise IndexError("Column %d is invalid for catalog %s"%(icol,self.file_name))
+                raise GalSimIndexError("Column %s is invalid for catalog %s"%(icol,self.file_name))
             if index < 0 or index >= self.nobjects:
-                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
+                raise GalSimIndexError("Object %s is invalid for catalog %s"%(index,self.file_name))
             return self.data[index, icol]
 
     def getFloat(self, index, col):
@@ -186,10 +182,8 @@ class Catalog(object):
 
     def __repr__(self):
         s = "galsim.Catalog(file_name=%r, file_type=%r"%(self.file_name, self.file_type)
-        if self.comments != '#':
-            s += ', comments=%r'%self.comments
-        if self.hdu != 1:
-            s += ', hdu=%r'%self.hdu
+        if self.comments != '#': s += ', comments=%r'%self.comments
+        if self.hdu != 1: s += ', hdu=%r'%self.hdu
         s += ')'
         return s
 
@@ -305,10 +299,9 @@ class Dict(object):
             # Otherwise, return the result.
             else:
                 if k not in d and default is None:
-                    raise GalSimValueError("key not found in dictionary.",key)
+                    raise GalSimKeyError("key not found in dictionary.",key)
                 return d.get(k,default)
-
-        raise GalSimValueError("Invalid key given to Dict.get()",key)
+        raise GalSimKeyError("Invalid key given to Dict.get()",key)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.dict.
@@ -322,7 +315,7 @@ class Dict(object):
         return key in self.dict
 
     def __iter__(self):
-        return self.dict.__iter__
+        return self.dict.__iter__()
 
     def keys(self):
         return self.dict.keys()
@@ -402,6 +395,7 @@ class OutputCatalog(object):
     def nobjects(self): return len(self.rows)
     @property
     def ncols(self): return len(self.names)
+    def __len__(self): return self.nobjects
 
     # Again, when we use this through a proxy, we need getters for the attributes.
     def getNames(self): return self.names

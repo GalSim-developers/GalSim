@@ -102,6 +102,22 @@ class GalSimValueError(GalSimError, ValueError):
         return GalSimValueError, (self.message, self.value, self.allowed_values)
 
 
+class GalSimKeyError(GalSimError, KeyError):
+    """A GalSim-specific exception class indicating an attempt to access a dict-like object
+    with an invalid key.
+    """
+    def __repr__(self):
+        return 'galsim.GalSimKeyError(%r)'%(str(self))
+
+
+class GalSimIndexError(GalSimError, IndexError):
+    """A GalSim-specific execption class indicating an attempt to access a list-like object
+    with an invalid index.
+    """
+    def __repr__(self):
+        return 'galsim.GalSimIndexError(%r)'%(str(self))
+
+
 class GalSimRangeError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input value is
     outside of the allowed range of values.
