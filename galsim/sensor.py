@@ -99,16 +99,19 @@ class SiliconSensor(Sensor):
     along the columns than across the rows, since charge flows more easily in the readout
     direction.
 
-    Note that there is an option to transpose the effect if your definition of the image is to
-    have the readout "columns" along the x direction.  E.g. to conform with the LSST Camera
-    Coordinate System definitions of x,y, which are transposed relative to the usual FITS meanings.
-
     There is also an option to include "tree rings" in the Silicon model, which add small
     distortions to the sensor pixel positions due to non-uniform background doping in the silicon
     sensor.  The tree rings are defined by a center and a radial amplitude function.  The radial
     function needs to be a galsim.LookupTable instance.  Note that if you just want a simple cosine
     radial function, you can use the helper class method `SiliconSensor.simple_treerings` to
     build the LookupTable for you.
+
+    Note that there is an option to transpose the effect if your definition of the image is to
+    have the readout "columns" along the x direction.  E.g. to conform with the LSST Camera
+    Coordinate System definitions of x,y, which are transposed relative to the usual FITS meanings.
+    This only affects the direction of the brighter-fatter effect.  It does not change the meaning
+    of treering_center, which should still be defined in terms of the coordinate system of the
+    images being passed to `accumulate`.
 
 
     @param name             The base name of the files which contains the sensor information,
