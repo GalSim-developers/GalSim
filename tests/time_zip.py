@@ -28,12 +28,7 @@ from galsim import pyfits
 
 n_iter = 20
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
+import galsim
 
 big_im = galsim.Image(5000, 5000)
 big_im_file = 'big_im_file.fits'

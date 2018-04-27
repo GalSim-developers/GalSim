@@ -13,7 +13,7 @@ pybind11>=2.2
 pip==9.0.3  # For now, pybind11 in conjunction with pip version 10.0 is broken.  Use 9.0.3.
 
 # Not technically required, but useful.
-pyyaml>=3.12
+pyyaml>=3.12  # This one is required to run tests.
 pandas>=0.20
 
 # This is not in conda.  Let pip install these.
