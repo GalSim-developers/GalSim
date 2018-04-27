@@ -429,13 +429,15 @@ def test_check_all_contiguous():
 
 @timer
 def test_deInterleaveImage():
+    from galsim.utilities import deInterleaveImage, interleaveImages
+
     np.random.seed(84) # for generating the same random instances
 
     # 1) Check compatability with interleaveImages
     img = galsim.Image(np.random.randn(64,64),scale=0.25)
     img.setOrigin(galsim.PositionI(5,7)) ## for non-trivial bounds
-    im_list, offsets = galsim.utilities.deInterleaveImage(img,8)
-    img1 = galsim.utilities.interleaveImages(im_list,8,offsets)
+    im_list, offsets = deInterleaveImage(img,8)
+    img1 = interleaveImages(im_list,8,offsets)
     np.testing.assert_array_equal(img1.array,img.array,
             err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for square "
                       "images")
@@ -445,8 +447,8 @@ def test_deInterleaveImage():
 
     img = galsim.Image(abs(np.random.randn(16*5,16*2)),scale=0.5)
     img.setCenter(0,0) ## for non-trivial bounds
-    im_list, offsets = galsim.utilities.deInterleaveImage(img,(2,5))
-    img1 = galsim.utilities.interleaveImages(im_list,(2,5),offsets)
+    im_list, offsets = deInterleaveImage(img,(2,5))
+    img1 = interleaveImages(im_list,(2,5),offsets)
     np.testing.assert_array_equal(img1.array,img.array,
             err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for "
                       "rectangular images")
@@ -456,7 +458,7 @@ def test_deInterleaveImage():
 
     # 2) Checking for offsets
     img = galsim.Image(np.random.randn(32,32),scale=2.0)
-    im_list, offsets = galsim.utilities.deInterleaveImage(img,(4,2))
+    im_list, offsets = deInterleaveImage(img,(4,2))
 
     ## Checking if offsets are centered around zero
     assert np.sum([offset.x for offset in offsets]) == 0.
@@ -473,7 +475,7 @@ def test_deInterleaveImage():
     img0 = galsim.Image(32,32)
     g0.drawImage(image=img0,method='no_pixel',scale=0.25)
 
-    im_list0, offsets0 = galsim.utilities.deInterleaveImage(img0,2,conserve_flux=True)
+    im_list0, offsets0 = deInterleaveImage(img0,2,conserve_flux=True)
 
     for n in range(len(im_list0)):
         im = galsim.Image(16,16)
@@ -496,8 +498,8 @@ def test_deInterleaveImage():
     g1.drawImage(image=img1,scale=0.5/n1,method='no_pixel')
     g2.drawImage(image=img2,scale=0.5/n2,method='no_pixel')
 
-    im_list1, offsets1 = galsim.utilities.deInterleaveImage(img1,(n1**2,1),conserve_flux=True)
-    im_list2, offsets2 = galsim.utilities.deInterleaveImage(img2,[1,n2**2],conserve_flux=False)
+    im_list1, offsets1 = deInterleaveImage(img1,(n1**2,1),conserve_flux=True)
+    im_list2, offsets2 = deInterleaveImage(img2,[1,n2**2],conserve_flux=False)
 
     for n in range(n1**2):
         im, offset = im_list1[n], offsets1[n]
@@ -514,9 +516,19 @@ def test_deInterleaveImage():
                      "horizontal direction")
         # im is scaled to account for flux not being conserved
 
+    assert_raises(TypeError, deInterleaveImage, image=img0.array, N=2)
+    assert_raises(TypeError, deInterleaveImage, image=img0, N=2.0)
+    assert_raises(TypeError, deInterleaveImage, image=img0, N=(2.0, 2.0))
+    assert_raises(TypeError, deInterleaveImage, image=img0, N=(2,2,3))
+    assert_raises(ValueError, deInterleaveImage, image=img0, N=7)
+    assert_raises(ValueError, deInterleaveImage, image=img0, N=(2,7))
+    assert_raises(ValueError, deInterleaveImage, image=img0, N=(7,2))
+
 
 @timer
 def test_interleaveImages():
+    from galsim.utilities import interleaveImages, deInterleaveImage
+
     # 1a) With galsim Gaussian
     g = galsim.Gaussian(sigma=3.7,flux=1000.)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
@@ -534,7 +546,7 @@ def test_interleaveImages():
     scale = im.scale
 
     # Input to N as an int
-    img = galsim.utilities.interleaveImages(im_list,n,offsets=offset_list)
+    img = interleaveImages(im_list,n,offsets=offset_list)
     im = galsim.Image(16*n*n,16*n*n)
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
@@ -560,7 +572,7 @@ def test_interleaveImages():
     im_list_randperm = [im_list[idx] for idx in rand_idx]
     offset_list_randperm = [offset_list[idx] for idx in rand_idx]
     # Input to N as a tuple
-    img_randperm = galsim.utilities.interleaveImages(im_list_randperm,(n,n),offsets=offset_list_randperm)
+    img_randperm = interleaveImages(im_list_randperm,(n,n),offsets=offset_list_randperm)
 
     np.testing.assert_array_equal(img_randperm.array,img.array,
         err_msg="Interleaved images do not match when 'offsets' is supplied")
@@ -571,7 +583,7 @@ def test_interleaveImages():
     im_list = []
     n = 5
     # Generate approximate offsets
-    DX = np.array([-0.67,-0.33,0.,0.33,0.67])
+    DX = np.array([-0.47,-0.23,0.,0.23,0.47])
     DY = DX
     for dy in DY:
         for dx in DX:
@@ -583,7 +595,9 @@ def test_interleaveImages():
 
     N = (n,n)
     with assert_raises(ValueError):
-        galsim.utilities.interleaveImages(im_list,N,offset_list)
+        interleaveImages(im_list,N,offset_list)
+    # Can turn off the checks and just use these as they are with catch_offset_errors=False
+    interleaveImages(im_list,N,offset_list, catch_offset_errors=False)
 
     offset_list = []
     im_list = []
@@ -600,7 +614,8 @@ def test_interleaveImages():
 
     N = (n,n)
     with assert_raises(ValueError):
-        galsim.utilities.interleaveImages(im_list, N, offset_list)
+        interleaveImages(im_list, N, offset_list)
+    interleaveImages(im_list, N, offset_list, catch_offset_errors=False)
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
@@ -619,8 +634,8 @@ def test_interleaveImages():
         gal1.drawImage(im,offset=offset,method='no_pixel',scale=2.0)
         im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list, N=[1,n**2], offsets=offset_list,
-                                            add_flux=False, suppress_warnings=True)
+    img = interleaveImages(im_list, N=[1,n**2], offsets=offset_list,
+                           add_flux=False, suppress_warnings=True)
     im = galsim.Image(16,16*n*n)
     # The interleaved image has the total flux averaged out since `add_flux = False'
     gal = galsim.Gaussian(sigma=3.7*n,flux=100.)
@@ -647,7 +662,7 @@ def test_interleaveImages():
         gal2.drawImage(im,offset=offset,method='no_pixel',scale=3.0)
         im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list, N=np.array([n**2,1]), offsets=offset_list,
+    img = interleaveImages(im_list, N=np.array([n**2,1]), offsets=offset_list,
                                             suppress_warnings=True)
     im = galsim.Image(16*n*n,16*n*n)
     gal = galsim.Gaussian(sigma=3.7,flux=100.*n*n)
@@ -676,8 +691,8 @@ def test_interleaveImages():
             im.setOrigin(3,3) # for non-trivial bounds
             im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list)
-    im_list_1, offset_list_1 = galsim.utilities.deInterleaveImage(img, N=n)
+    img = interleaveImages(im_list,N=n,offsets=offset_list)
+    im_list_1, offset_list_1 = deInterleaveImage(img, N=n)
 
     for k in range(n**2):
         assert offset_list_1[k] == offset_list[k]
@@ -688,13 +703,36 @@ def test_interleaveImages():
         assert im_list[k].bounds == im_list_1[k].bounds
 
     # Checking for non-default flux option
-    img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
-    im_list_2, offset_list_2 = galsim.utilities.deInterleaveImage(img,N=n,conserve_flux=True)
+    img = interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
+    im_list_2, offset_list_2 = deInterleaveImage(img,N=n,conserve_flux=True)
 
     for k in range(n**2):
         assert offset_list_2[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_2[k].array, im_list[k].array)
         assert im_list_2[k].wcs == im_list[k].wcs
+
+    assert_raises(TypeError, interleaveImages, im_list=img, N=n, offsets=offset_list)
+    assert_raises(ValueError, interleaveImages, [img], N=1, offsets=offset_list)
+    assert_raises(TypeError, interleaveImages, [im.array for im in im_list], n, offset_list)
+    assert_raises(TypeError, interleaveImages,
+                  [im_list[0]] + [im.array for im in im_list[1:]],
+                  n, offset_list)
+    assert_raises(TypeError, interleaveImages,
+                  [galsim.Image(16+i,16+j,scale=1) for i in range(n) for j in range(n)],
+                  n, offset_list)
+    assert_raises(TypeError, interleaveImages,
+                  [galsim.Image(16,16,scale=i) for i in range(n) for j in range(n)],
+                  n, offset_list)
+    assert_raises(TypeError, interleaveImages, im_list, N=3.0, offsets=offset_list)
+    assert_raises(TypeError, interleaveImages, im_list, N=(3.0, 3.0), offsets=offset_list)
+    assert_raises(TypeError, interleaveImages, im_list, N=(3,3,3), offsets=offset_list)
+    assert_raises(ValueError, interleaveImages, im_list, N=7, offsets=offset_list)
+    assert_raises(ValueError, interleaveImages, im_list, N=(2,7), offsets=offset_list)
+    assert_raises(ValueError, interleaveImages, im_list, N=(7,2), offsets=offset_list)
+    assert_raises(TypeError, interleaveImages, im_list, N=n)
+    assert_raises(TypeError, interleaveImages, im_list, N=n, offsets=offset_list[0])
+    assert_raises(TypeError, interleaveImages, im_list, N=n, offsets=range(n*n))
+
 
 
 @timer

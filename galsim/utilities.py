@@ -669,17 +669,11 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     from .wcs import JacobianWCS, PixelScale
     if isinstance(N,int):
         n1,n2 = N,N
-    elif hasattr(N,'__iter__'):
-        if len(N)==2:
-            n1,n2 = N
-        else:
-            raise TypeError("N must be a list or a tuple of two integers")
-        if not (n1 == int(n1) and n2 == int(n2)):
-            raise TypeError("N must be of type int or a list or a tuple of two integers")
-        n1 = int(n1)
-        n2 = int(n2)
     else:
-        raise TypeError("N must be of type int or a list or a tuple of two integers")
+        try:
+            n1,n2 = N
+        except (TypeError, ValueError):
+            raise TypeError("N must be an integer or a tuple of two integers")
 
     if not isinstance(image, Image):
         raise TypeError("image must be an instance of galsim.Image")
@@ -729,7 +723,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
 
 def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False,
-    catch_offset_errors=True):
+                     catch_offset_errors=True):
     """
     Interleaves the pixel values from two or more images and into a single larger image.
 
@@ -807,20 +801,14 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     from .wcs import PixelScale, JacobianWCS
     if isinstance(N,int):
         n1,n2 = N,N
-    elif hasattr(N,'__iter__'):
-        if len(N)==2:
-            n1,n2 = N
-        else:
-            raise TypeError("N must be a list or a tuple of two integers")
-        if not (n1 == int(n1) and n2 == int(n2)):
-            raise TypeError("N must be of type int or a list or a tuple of two integers")
-        n1 = int(n1)
-        n2 = int(n2)
     else:
-        raise TypeError("N must be of type int or a list or a tuple of two integers")
+        try:
+            n1,n2 = N
+        except (TypeError, ValueError):
+            raise TypeError("N must be an integer or a tuple of two integers")
 
     if len(im_list)<2:
-        raise TypeError("im_list must have at least two instances of galsim.Image")
+        raise GalSimValueError("im_list must have at least two instances of galsim.Image", im_list)
 
     if (n1*n2 != len(im_list)):
         raise GalSimIncompatibleValuesError(
@@ -873,13 +861,18 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
                     "spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2),
                     N=N, offsets=offsets)
 
-            if i<0 or j<0 or i>=x_size or j>=y_size:
+            if i<0 or j<0 or i>=n1 or j>=n2:
                 raise GalSimIncompatibleValuesError(
                     "offsets must be a list of galsim.PositionD instances with x values "
                     "spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2),
                     N=N, offsets=offsets)
+        else:
+            # If we're told to just trust the offsets, at least make sure the slice will be
+            # the right shape.
+            i = i%n1
+            j = j%n2
 
-        img_array[j::n2,i::n1] = im_list[k].array[:,:]
+        img_array[j::n2,i::n1] = im_list[k].array
 
     img = Image(img_array)
     if not add_flux:

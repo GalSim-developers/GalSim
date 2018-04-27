@@ -185,19 +185,18 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                 blue_limit, red_limit = _find_limits(default_bandpass_list, bandpass_dict)
             else:
                 if not isinstance(wavelength_limits, tuple):
-                    raise TypeError("Wavelength limits must be entered as a tuple!")
+                    raise TypeError("Wavelength limits must be entered as a tuple.")
                 blue_limit, red_limit = wavelength_limits
                 if red_limit <= blue_limit:
-                    raise GalSimIncompatibleValuesError(
+                    raise galsim.GalSimIncompatibleValuesError(
                         "Wavelength limits must have red_limit > blue_limit.",
                         blue_limit=blue_limit, red_limit=red_limit)
+    elif isinstance(wavelength, float):
+        wavelength_nm = wavelength
+    elif isinstance(wavelength, galsim.Bandpass):
+        wavelength_nm = wavelength.effective_wavelength
     else:
-        if isinstance(wavelength, galsim.Bandpass):
-            wavelength_nm = wavelength.effective_wavelength
-        elif isinstance(wavelength, float):
-            wavelength_nm = wavelength
-        else:
-            raise TypeError("wavelength should either be a Bandpass, float, or None.")
+        raise TypeError("wavelength should either be a Bandpass, float, or None.")
 
     # Start reading in the aberrations for the relevant SCAs.
     aberration_dict = {}
@@ -279,11 +278,11 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     # Check for sane input PSF_dict.
     if len(PSF_dict) == 0 or len(PSF_dict) > galsim.wfirst.n_sca or \
             min(PSF_dict.keys()) < 1 or max(PSF_dict.keys()) > galsim.wfirst.n_sca:
-        raise GalSimError("PSF_dict must come from getPSF()!")
+        raise galsim.GalSimError("PSF_dict must come from getPSF().")
 
     # Check if file already exists and warn about clobbering.
     if os.path.isfile(filename):
-        if not clobber:
+        if clobber:
             os.remove(filename)
         else:
             raise OSError("Output file %r already exists"%filename)
@@ -294,11 +293,8 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
         bandpass_list = default_bandpass_list
     else:
         if not isinstance(bandpass_list[0], basestring):
-            raise TypeError("Expected input list of bandpass names!")
+            raise TypeError("Expected input list of bandpass names.")
         if not set(bandpass_list).issubset(default_bandpass_list):
-            err_msg = ''
-            for item in default_bandpass_list:
-                err_msg += item+' '
             raise galsim.GalSimValueError("Invalid values in bandpass_list", bandpass_list,
                                           default_bandpass_list)
 
@@ -313,7 +309,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
         PSF = PSF_dict[SCA]
         if not isinstance(PSF, galsim.ChromaticOpticalPSF) and \
                 not isinstance(PSF, galsim.InterpolatedChromaticObject):
-            raise TypeError("PSFs are not ChromaticOpticalPSFs.")
+            raise galsim.GalSimValueError("PSFs are not ChromaticOpticalPSFs.", PSF_dict)
         star = galsim.Gaussian(sigma=1.e-8, flux=1.)
 
         for bp_name in bandpass_list:
@@ -375,20 +371,19 @@ def loadPSFImages(filename):
 
         # Find all indices in `bp_list` that correspond to this bandpass.
         bp_indices = []
-        if band_name in bp_list:
-            idx = -1
-            while True:
-                try:
-                    idx = bp_list.index(band_name, idx+1)
-                    bp_indices.append(idx)
-                except ValueError:
-                    break
+        idx = -1
+        while True:
+            try:
+                idx = bp_list.index(band_name, idx+1)
+                bp_indices.append(idx)
+            except ValueError:
+                break
 
         for SCA in SCA_list:
             # Now find which element has both the right band_name and is for this SCA.  There might
             # not be any, depending on what exactly was stored.
             use_idx = -1
-            for index in bp_indices:
+            for index in bp_indices:  # pragma: no branch
                 if SCA_list[index] == SCA:
                     use_idx = index
                     break
@@ -411,9 +406,6 @@ def _read_aberrations(SCA):
     @returns a NumPy array containing the aberrations, in the required format for
     ChromaticOpticalPSF.
     """
-    if SCA < 1 or SCA > galsim.wfirst.n_sca:
-        raise galsim.GalSimRangeError("Invalid SCA requested", SCA, 1, galsim.wfirst.n_sca)
-
     # Construct filename.
     sca_str = '%02d'%SCA
     infile = os.path.join(galsim.meta_data.share_dir,

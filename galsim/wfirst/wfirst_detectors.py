@@ -27,6 +27,9 @@ import galsim.wfirst
 import numpy as np
 import os
 
+from . import exptime as default_exptime
+
+
 def applyNonlinearity(img):
     """
     Applies the WFIRST nonlinearity function to the supplied image `im`.
@@ -41,7 +44,7 @@ def applyNonlinearity(img):
     """
     img.applyNonlinearity(NLfunc=galsim.wfirst.NLfunc)
 
-def addReciprocityFailure(img, exptime=None):
+def addReciprocityFailure(img, exptime=default_exptime):
     """
     Accounts for the reciprocity failure for the WFIRST directors and includes it in the original
     Image `img` directly.
@@ -55,10 +58,8 @@ def addReciprocityFailure(img, exptime=None):
     @param exptime          The exposure time (t) in seconds, which goes into the expression for
                             reciprocity failure given in the docstring.  If None, then the routine
                             will use the default WFIRST exposure time in galsim.wfirst.exptime.
-                            [default: None]
-    """
-    if exptime is None:
-        exptime=galsim.wfirst.exptime
+                            [default: {exptime}]
+    """.format(exptime=default_exptime)
     img.addReciprocityFailure(exp_time=exptime, alpha=galsim.wfirst.reciprocity_alpha,
                               base_flux=1.0)
 
@@ -95,22 +96,15 @@ def applyPersistence(img, prev_exposures):
     @param img               The Image to be transformed.
     @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with the
                              recent exposure being the first element.
-    """.format(ncoeff=galsim.wfirst.persistence_coefficients)
+    """.format(ncoeff=len(galsim.wfirst.persistence_coefficients))
     if not hasattr(prev_exposures,'__iter__'):
         raise TypeError("In wfirst.applyPersistence, prev_exposures must be a list of Image "
                         "instances")
 
     n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
-    if n_exp > len(galsim.wfirst.persistence_coefficients):
-        import warnings
-        warnings.warn("More than {ncoeff} Image instances were passed to"
-                      "galsim.wfirst.applyPersistence routine. Ignoring the earlier"
-                      "exposures".format(ncoeff=galsim.wfirst.persistence_coefficients),
-                      galsim.GalSimWarning)
-
     img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
 
-def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
+def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime):
     """
     This utility applies all sources of noise and detector effects for WFIRST that are implemented
     in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
@@ -125,25 +119,22 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     recent exposures.
 
     @param img               The Image to be modified.
+    @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with
+                             the recent exposure being the first element. [default: []]
     @param rng               An optional galsim.BaseDeviate to use for the addition of noise.  If
                              None, a new one will be initialized.  [default: None]
     @param exptime           The exposure time, in seconds.  If None, then the WFIRST default
-                             exposure time will be used.  [default: None]
-    @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with
-                             the recent exposure being the first element. [default: []]
+                             exposure time will be used.  [default: {exptime}]
 
     @returns prev_exposures  Updated list of previous exposures containing up to {ncoeff} Image
                              instances.
-    """.format(ncoeff=galsim.wfirst.persistence_coefficients)
-    # Deal appropriately with passed-in RNG, exposure time.
-    if rng is None:
-        rng = galsim.BaseDeviate()
-    elif not isinstance(rng, galsim.BaseDeviate):
-        raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
-    if exptime is None:
-        exptime=galsim.wfirst.exptime
+    """.format(ncoeff=len(galsim.wfirst.persistence_coefficients), exptime=default_exptime)
+
+    # Make sure we don't have any negative values.
+    img.replaceNegative(0.)
 
     # Add Poisson noise.
+    rng = galsim.BaseDeviate(rng)
     poisson_noise = galsim.PoissonNoise(rng)
     img.addNoise(poisson_noise)
 
@@ -159,12 +150,12 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     img.addNoise(dark_noise)
 
     # Persistence (use WFIRST coefficients)
+    prev_exposures = list(prev_exposures)
     applyPersistence(img,prev_exposures)
 
     # Update the 'prev_exposures' queue
-    if len(prev_exposures)>=len(galsim.wfirst.persistence_coefficients):
-        prev_exposures.pop()
-    prev_exposures.insert(0,img.copy())
+    ncoeff = len(galsim.wfirst.persistence_coefficients)
+    prev_exposures = [img.copy()] + prev_exposures[:ncoeff-1]
 
     # Nonlinearity (use WFIRST routine).
     applyNonlinearity(img)

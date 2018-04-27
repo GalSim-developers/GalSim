@@ -214,17 +214,15 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
         raise GalSimValueError("IPC kernel must be an Image instance of size 3x3.", IPC_kernel)
 
     # Check for non-negativity of the kernel
-    if kernel_nonnegativity is True:
-        if (ipc_kernel<0).any() is True:
-            raise GalSimValueError("IPC kernel must not contain negative entries", IPC_kernel)
+    if kernel_nonnegativity and (ipc_kernel<0).any():
+        raise GalSimValueError("IPC kernel must not contain negative entries", IPC_kernel)
 
     # Check and enforce correct normalization for the kernel
-    if kernel_normalization is True:
-        if abs(ipc_kernel.sum() - 1.0) > 10.*np.finfo(ipc_kernel.dtype.type).eps:
-            import warnings
-            warnings.warn("The entries in the IPC kernel did not sum to 1. Scaling the kernel to "\
-                +"ensure correct normalization.", GalSimWarning)
-            IPC_kernel = IPC_kernel/ipc_kernel.sum()
+    if kernel_normalization and abs(ipc_kernel.sum()-1) > 10.*np.finfo(ipc_kernel.dtype.type).eps:
+        import warnings
+        warnings.warn("The entries in the IPC kernel did not sum to 1. Scaling the kernel to "\
+            +"ensure correct normalization.", GalSimWarning)
+        IPC_kernel = IPC_kernel/ipc_kernel.sum()
 
     # edge_treatment can be 'extend', 'wrap' or 'crop'
     if edge_treatment=='crop':

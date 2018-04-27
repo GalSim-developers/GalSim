@@ -147,7 +147,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
 
     # Parse input position
     if not isinstance(world_pos, galsim.CelestialCoord):
-        raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
+        raise TypeError("Position on the sky must be given as a galsim.CelestialCoord.")
 
     # Get the date. (Vernal equinox in 2025, taken from
     # http://www.astropixels.com/ephemeris/soleq2001.html, if none was supplied.)
@@ -157,7 +157,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
 
     # Are we allowed to look here?
     if not allowedPos(world_pos, date):
-        raise galsim.GalSimError("Error, WFIRST cannot look at this position on this date!")
+        raise galsim.GalSimError("Error, WFIRST cannot look at this position on this date.")
 
     # If position angle was not given, then get the optimal one:
     if PA is None:
@@ -166,7 +166,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     else:
         # Just enforce type
         if not isinstance(PA, galsim.Angle):
-            raise TypeError("Position angle must be a galsim.Angle!")
+            raise TypeError("Position angle must be a galsim.Angle.")
 
     # Check which SCAs are to be done using a helper routine in this module.
     SCAs = galsim.wfirst._parse_SCAs(SCAs)
@@ -192,22 +192,22 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     wcs_dict = {}
     for i_sca in SCAs:
         # Set up the header.
-        header = galsim.FitsHeader()
+        header = []
         # Populate some necessary variables in the FITS header that are always the same, regardless of
         # input and SCA number.
         _populate_required_fields(header)
 
         # And populate some things that just depend on the overall locations or other input, not on
         # the SCA.
-        header['RA_TARG'] = (world_pos.ra / galsim.degrees,
-                             "right ascension of the target (deg) (J2000)")
-        header['DEC_TARG'] = (world_pos.dec / galsim.degrees,
-                              "declination of the target (deg) (J2000)")
-        header['PA_OBSY'] = (pa_obsy / galsim.degrees, "position angle of observatory Y axis (deg)")
-        header['PA_FPA'] = (pa_fpa / galsim.degrees, "position angle of FPA Y axis (deg)")
-
-        # Finally do all the SCA-specific stuff.
-        header['SCA_NUM'] = (i_sca, "SCA number (1 - 18)")
+        header.extend([
+            ('RA_TARG', world_pos.ra / galsim.degrees,
+                        "right ascension of the target (deg) (J2000)"),
+            ('DEC_TARG', world_pos.dec / galsim.degrees,
+                         "declination of the target (deg) (J2000)"),
+            ('PA_OBSY', pa_obsy / galsim.degrees, "position angle of observatory Y axis (deg)"),
+            ('PA_FPA', pa_fpa / galsim.degrees, "position angle of FPA Y axis (deg)"),
+            ('SCA_NUM', i_sca, "SCA number (1 - 18)"),
+        ])
 
         # Set the position of center of this SCA in focal plane angular coordinates.
         sca_xc_fpa = np.arctan(sca_xc_mm[i_sca]/focal_length)*galsim.radians
@@ -240,8 +240,6 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         crval = world_pos.deproject(u, v, projection='gnomonic')
         crval1 = crval.ra
         crval2 = crval.dec
-        header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
-        header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
 
         # Compute the position angle of the local pixel Y axis.
         # This requires projecting local North onto the detector axes.
@@ -269,26 +267,30 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         # Rotate by pa_fpa.
         cos_pa_sca = np.cos(pa_sca)
         sin_pa_sca = np.sin(pa_sca)
-        header['CD1_1'] = (cos_pa_sca * a10 + sin_pa_sca * b10,
-                           "partial of first axis coordinate w.r.t. x")
-        header['CD1_2'] = (cos_pa_sca * a11 + sin_pa_sca * b11,
-                           "partial of first axis coordinate w.r.t. y")
-        header['CD2_1'] = (-sin_pa_sca * a10 + cos_pa_sca * b10,
-                            "partial of second axis coordinate w.r.t. x")
-        header['CD2_2'] = (-sin_pa_sca * a11 + cos_pa_sca * b11,
-                            "partial of second axis coordinate w.r.t. y")
-        header['ORIENTAT'] = (pa_sca / galsim.degrees,
-                              "position angle of image y axis (deg. e of n)")
-        header['LONPOLE'] = (phi_p / galsim.degrees,
-                             "Native longitude of celestial pole")
+
+        header.extend([
+            ('CRVAL1', crval1 / galsim.degrees, "first axis value at reference pixel"),
+            ('CRVAL2', crval2 / galsim.degrees, "second axis value at reference pixel"),
+            ('CD1_1', cos_pa_sca * a10 + sin_pa_sca * b10,
+                      "partial of first axis coordinate w.r.t. x"),
+            ('CD1_2', cos_pa_sca * a11 + sin_pa_sca * b11,
+                      "partial of first axis coordinate w.r.t. y"),
+            ('CD2_1', -sin_pa_sca * a10 + cos_pa_sca * b10,
+                      "partial of second axis coordinate w.r.t. x"),
+            ('CD2_2', -sin_pa_sca * a11 + cos_pa_sca * b11,
+                      "partial of second axis coordinate w.r.t. y"),
+            ('ORIENTAT', pa_sca / galsim.degrees, "position angle of image y axis (deg. e of n)"),
+            ('LONPOLE', phi_p / galsim.degrees, "Native longitude of celestial pole"),
+        ])
         for i in range(n_sip):
             for j in range(n_sip):
                 if i+j >= 2 and i+j < n_sip:
                     sipstr = "A_%d_%d"%(i,j)
-                    header[sipstr] = a_sip[i_sca,i,j]
+                    header.append( (sipstr, a_sip[i_sca,i,j]) )
                     sipstr = "B_%d_%d"%(i,j)
-                    header[sipstr] = b_sip[i_sca,i,j]
+                    header.append( (sipstr,  b_sip[i_sca,i,j]) )
 
+        header = galsim.FitsHeader(header)
         wcs = galsim.GSFitsWCS(header=header)
         # Store the original header as an attribute of the WCS.  This ensures that we have all the
         # extra keywords for whenever an image with this WCS is written to file.
@@ -324,11 +326,10 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     """
     # Sanity check args.
     if not isinstance(wcs_dict, dict):
-        raise TypeError("wcs_dict should be a dict containing WCS output by "
-                        "galsim.wfirst.getWCS!"%galsim.wfirst.n_sca)
+        raise TypeError("wcs_dict should be a dict containing WCS output by galsim.wfirst.getWCS.")
 
     if not isinstance(world_pos, galsim.CelestialCoord):
-        raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
+        raise TypeError("Position on the sky must be given as a galsim.CelestialCoord.")
 
     # Set up the minimum and maximum pixel values, depending on whether or not to include the
     # border.  We put it immediately into a galsim.BoundsI(), since the routine returns xmin, xmax,
@@ -340,7 +341,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     for i_sca in wcs_dict:
         wcs = wcs_dict[i_sca]
         image_pos = wcs.toImage(world_pos)
-        if bounds_list[i_sca-1].includes(int(image_pos.x), int(image_pos.y)):
+        if bounds_list[i_sca].includes(image_pos):
             sca = i_sca
             break
 
@@ -370,28 +371,28 @@ def _calculate_minmax_pix(include_border=False):
         # are the same, but that won't always be the case, so for the sake of generality we only
         # group together those that are forced to be the same.
         #
-        # Negative side of 1/2/3, same as positive side of 10/11/12
+        # Positive side of 1/2/3, same as negative side of 10/11/12
         border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        min_x_pix[1:4] -= half_border_pix
-        max_x_pix[10:13] += half_border_pix
+        max_x_pix[1:4] += half_border_pix
+        min_x_pix[10:13] -= half_border_pix
 
-        # Positive side of 1/2/3 and 13/14/15, same as negative side of 10/11/12, 4/5/6
+        # Negative side of 1/2/3 and 13/14/15, same as positive side of 10/11/12, 4/5/6
         border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        max_x_pix[1:4] += half_border_pix
-        max_x_pix[13:16] += half_border_pix
-        min_x_pix[10:13] -= half_border_pix
-        min_x_pix[4:7] -= half_border_pix
+        min_x_pix[1:4] -= half_border_pix
+        min_x_pix[13:16] -= half_border_pix
+        max_x_pix[10:13] += half_border_pix
+        max_x_pix[4:7] += half_border_pix
 
-        # Positive side of 4/5/6, 16/17/18, 7/8/9, same as negative side of 13/14/15, 7/8/9,
-        # 16/17/18
+        # Negative side of 4/5/6, 16/17/18, same as positive side of 13/14/15, 7/8/9
+        # Also add this same chip gap to the outside chips.  Neg side of 7/8/9, pos 16/17/18.
         border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        max_x_pix[4:10] += half_border_pix
-        max_x_pix[16:19] += half_border_pix
-        min_x_pix[7:10] -= half_border_pix
-        min_x_pix[13:19] -= half_border_pix
+        min_x_pix[4:10] -= half_border_pix
+        min_x_pix[16:19] -= half_border_pix
+        max_x_pix[7:10] += half_border_pix
+        max_x_pix[13:19] += half_border_pix
 
         # In the vertical direction, the gaps vary, with the gap between one pair of rows being
         # significantly larger than between the other pair of rows.  The reason for this has to do
@@ -399,22 +400,24 @@ def _calculate_minmax_pix(include_border=False):
         # and choices in which way to arrange each SCA to maximize the usable space in the focal
         # plane.
 
-        # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16 and 2/5/8/11/14/17
+        # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16.
+        # Also use this for top of top row: 1/4/7/10/13/16.
         border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        list_1 = np.linspace(1,16,6).astype(int)
+        list_1 = np.arange(1,18,3)
         list_2 = list_1 + 1
         list_3 = list_1 + 2
-        min_y_pix[list_1] -= half_border_pix
-        min_y_pix[list_2] -= half_border_pix
         max_y_pix[list_2] += half_border_pix
-
-        # Top of 1/4/7/10/13/16, same as bottom of 3/6/9/12/15/18 and top of same
-        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[3])-galsim.wfirst.n_pix*pixel_size_mm
-        half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        min_y_pix[list_3] -= half_border_pix
+        min_y_pix[list_1] -= half_border_pix
         max_y_pix[list_1] += half_border_pix
+
+        # Top of 3/6/9/12/15/18, same as bottom of 2/5/8/11/14/17.
+        # Also use this for bottom of bottom row: 3/6/9/12/15/18.
+        border_mm = abs(sca_yc_mm[2]-sca_yc_mm[3])-galsim.wfirst.n_pix*pixel_size_mm
+        half_border_pix = int(0.5*border_mm / pixel_size_mm)
         max_y_pix[list_3] += half_border_pix
+        min_y_pix[list_2] -= half_border_pix
+        min_y_pix[list_3] -= half_border_pix
 
     return min_x_pix, max_x_pix, min_y_pix, max_y_pix
 
@@ -423,23 +426,25 @@ def _populate_required_fields(header):
     Utility routine to do populate some of the basic fields for the WCS headers for WFIRST that
     don't require any interesting calculation.
     """
-    header['EQUINOX'] = (2000.0, "equinox of celestial coordinate system")
-    header['WCSAXES'] = (2, "number of World Coordinate System axes")
-    header['A_ORDER'] = 4
-    header['B_ORDER'] = 4
-    header['WCSNAME'] = 'wfiwcs_'+optics_design_ver+'_'+prog_version
-    header['CRPIX1'] = (galsim.wfirst.n_pix/2, "x-coordinate of reference pixel")
-    header['CRPIX2'] = (galsim.wfirst.n_pix/2, "y-coordinate of reference pixel")
-    header['CTYPE1'] = ("RA---TAN-SIP", "coordinate type for the first axis")
-    header['CTYPE2'] = ("DEC--TAN-SIP", "coordinate type for the second axis")
-    header['SIMPLE'] = 'True'
-    header['BITPIX'] = 16
-    header['NAXIS'] = 0
-    header['EXTEND'] = 'True'
-    header['BZERO'] = 0
-    header['BSCALE'] = 1
-    header['TELESCOP'] = (tel_name, "telescope used to acquire data")
-    header['INSTRUME'] = (instr_name, "identifier for instrument used to acquire data")
+    header.extend([
+        ('EQUINOX', 2000.0, "equinox of celestial coordinate system"),
+        ('WCSAXES', 2, "number of World Coordinate System axes"),
+        ('A_ORDER', 4),
+        ('B_ORDER', 4),
+        ('WCSNAME', 'wfiwcs_'+optics_design_ver+'_'+prog_version),
+        ('CRPIX1', galsim.wfirst.n_pix/2, "x-coordinate of reference pixel"),
+        ('CRPIX2', galsim.wfirst.n_pix/2, "y-coordinate of reference pixel"),
+        ('CTYPE1', "RA---TAN-SIP", "coordinate type for the first axis"),
+        ('CTYPE2', "DEC--TAN-SIP", "coordinate type for the second axis"),
+        ('SIMPLE', 'True'),
+        ('BITPIX', 16),
+        ('NAXIS', 0),
+        ('EXTEND', 'True'),
+        ('BZERO', 0),
+        ('BSCALE', 1),
+        ('TELESCOP', tel_name, "telescope used to acquire data"),
+        ('INSTRUME', instr_name, "identifier for instrument used to acquire data"),
+    ])
 
 def _parse_sip_file(file):
     """
@@ -487,8 +492,6 @@ def _det_to_tangplane_positions(x_in, y_in):
 
     """
     img_dist_coeff = np.array([-1.0873e-2, 3.5597e-03, 3.6515e-02, -1.8691e-4])
-    if not isinstance(x_in, galsim.Angle) or not isinstance(y_in, galsim.Angle):
-        raise TypeError("Input x_in and y_in are not galsim.Angles.")
     # The optical distortion model is defined in terms of separations in *degrees*.
     r_sq = (x_in/galsim.degrees)**2 + (y_in/galsim.degrees)**2
     r = np.sqrt(r_sq)

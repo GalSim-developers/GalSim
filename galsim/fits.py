@@ -1218,9 +1218,8 @@ class FitsHeader(object):
                     # update() should handle anything that acts like a dict.
                     self.update(header)
                 else:
-                    # for a list, just add each item one at a time.
-                    for k,v in header:
-                        self.append(k,v,useblanks=False)
+                    for card in header:
+                        self.header.append(card, end=True)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we
     # generally just pass the request along to self.header.
