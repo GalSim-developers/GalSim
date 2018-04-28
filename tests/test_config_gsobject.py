@@ -1020,10 +1020,10 @@ def test_interpolated_image():
                    'x_interpolant' : 'lanczos5', 'scale' : 0.7, 'flux' : 1.e5
                  },
         'gal5' : { 'type' : 'InterpolatedImage', 'image' : file_name,
-                   'noise_pad' : 0.001
+                   'noise_pad' : 0.001, 'noise_pad_size' : 64,
                  },
         'gal6' : { 'type' : 'InterpolatedImage', 'image' : file_name,
-                   'noise_pad' : 'fits_files/blankimg.fits'
+                   'noise_pad' : 'fits_files/blankimg.fits', 'noise_pad_size' : 64,
                  },
         'gal7' : { 'type' : 'InterpolatedImage', 'image' : file_name,
                    'pad_image' : 'fits_files/blankimg.fits'
@@ -1054,11 +1054,12 @@ def test_interpolated_image():
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gal5b = galsim.InterpolatedImage(im, rng=rng, noise_pad=0.001)
+    gal5b = galsim.InterpolatedImage(im, rng=rng, noise_pad=0.001, noise_pad_size=64)
     gsobject_compare(gal5a, gal5b)
 
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='fits_files/blankimg.fits')
+    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='fits_files/blankimg.fits',
+                                     noise_pad_size=64)
     gsobject_compare(gal6a, gal6b)
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
