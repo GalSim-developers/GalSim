@@ -687,6 +687,9 @@ def check_crg_noise(n_sed, n_im, n_trial, tol):
     print("Convolving by output PSF")
     objs = [galsim.Convolve(crg, out_PSF) for crg in crgs]
 
+    with assert_raises(galsim.GalSimError):
+        noise = objs[0].noise  # Invalid before drawImage is called
+
     print("Drawing through output filter")
     out_imgs = [obj.drawImage(visband, nx=30, ny=30, scale=0.1)
                 for obj in objs]

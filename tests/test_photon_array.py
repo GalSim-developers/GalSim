@@ -499,19 +499,40 @@ def test_dcr():
                                    err_msg="PhotonDCR with alpha=0 didn't match")
 
     # Also check invalid parameters
+    zenith_coord = galsim.CelestialCoord(13.54 * galsim.hours, lsst_lat)
     assert_raises(TypeError, galsim.PhotonDCR,
                   zenith_angle=zenith_angle,
                   parallactic_angle=parallactic_angle)  # base_wavelength is required
     assert_raises(TypeError, galsim.PhotonDCR,
                   base_wavelength=500,
                   parallactic_angle=parallactic_angle)  # zenith_angle (somehow) is required
-    assert_raises(TypeError, galsim.PhotonDCR,
-                  base_wavelength=500,
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
+                  zenith_angle=34.4,
+                  parallactic_angle=parallactic_angle)  # zenith_angle must be Angle
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
+                  zenith_angle=zenith_angle,
+                  parallactic_angle=34.5)               # parallactic_angle must be Angle
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
+                  obj_coord=obj_coord,
+                  latitude=lsst_lat)                    # Missing HA
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
+                  obj_coord=obj_coord,
+                  HA=local_sidereal_time-obj_coord.ra)  # Missing latitude
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
+                  obj_coord=obj_coord)                  # Need either zenith_coord, or (HA,lat)
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
+                  obj_coord=obj_coord,
+                  zenith_coord=zenith_coord,
+                  HA=local_sidereal_time-obj_coord.ra)  # Can't have both HA and zenith_coord
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
+                  obj_coord=obj_coord,
+                  zenith_coord=zenith_coord,
+                  latitude=lsst_lat)                    # Can't have both lat and zenith_coord
+    assert_raises(TypeError, galsim.PhotonDCR, 500,
                   zenith_angle=zenith_angle,
                   parallactic_angle=parallactic_angle,
                   H20_pressure=1.)                      # invalid (misspelled)
-    assert_raises(ValueError, galsim.PhotonDCR,
-                  base_wavelength=500,
+    assert_raises(ValueError, galsim.PhotonDCR, 500,
                   zenith_angle=zenith_angle,
                   parallactic_angle=parallactic_angle,
                   scale_unit='inches')                  # invalid scale_unit

@@ -757,8 +757,6 @@ class DistDeviate(BaseDeviate):
 
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability = cdf[-1]
-        if totalprobability < 0.:
-            raise GalSimValueError('Negative probability found in DistDeviate.',function)
         cdf /= totalprobability
 
         self._inverse_cdf = LookupTable(cdf, xarray, interpolant='linear')

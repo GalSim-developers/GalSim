@@ -768,12 +768,23 @@ def test_python_LRU_Cache():
         assert cache(i) == f(i)
     assert (1,) not in cache.cache
 
+    # "Resize" to same size does nothing.
+    cache.resize(newsize)
+    assert len(cache.cache) == 20
+    assert (1,) not in cache.cache
+    for i in range(2, newsize+2):
+        assert (i,) in cache.cache
+
     # Test mostly non-destructive cache contraction.
     # Already bumped (0,) and (1,), so (2,) should be the first to get bumped
     for i in range(newsize-1, size, -1):
         assert (newsize - (i - 1),) in cache.cache
         cache.resize(i)
         assert (newsize - (i - 1),) not in cache.cache
+
+    assert_raises(ValueError, cache.resize, 0)
+    assert_raises(ValueError, cache.resize, -20)
+
 
 @timer
 def test_rand_with_replacement():

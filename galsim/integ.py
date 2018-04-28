@@ -192,8 +192,6 @@ class SampleIntegrator(ImageIntegrator):
         self.rule = rule
 
     def calculateWaves(self, bandpass):
-        if len(bandpass.wave_list) < 0:
-            raise GalSimValueError("Provided bandpass must have defined wave_list", bandpass)
         return bandpass.wave_list
 
 
