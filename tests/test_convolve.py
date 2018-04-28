@@ -51,9 +51,7 @@ def test_convolve():
     # Note: Since both of these have hard edges, GalSim wants to do this with real_space=True.
     # Here we are intentionally tesing the Fourier convolution, so we want to suppress the
     # warning that GalSim emits.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with assert_warns(galsim.GalSimWarning):
         # We'll do the real space convolution below
         conv = galsim.Convolve([psf,pixel],real_space=False)
         conv.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
@@ -92,8 +90,7 @@ def test_convolve():
     check_basic(conv, "Moffat * Pixel")
 
     # Test photon shooting.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with assert_warns(galsim.GalSimWarning):
         do_shoot(conv,myImg,"Moffat * Pixel")
     # Clear the warnings registry for later so we can test that appropriate warnings are raised.
     galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
@@ -133,6 +130,16 @@ def test_convolve():
     assert_raises(TypeError, galsim.Convolution, [psf, myImg])
     assert_raises(TypeError, galsim.Convolution, [psf, psf, myImg])
     assert_raises(TypeError, galsim.Convolution, [psf, psf], realspace=False)
+
+    with assert_warns(galsim.GalSimWarning):
+        triple = galsim.Convolve(psf, psf, pixel)
+    assert_raises(galsim.GalSimError, triple.xValue, galsim.PositionD(0,0))
+    assert_raises(galsim.GalSimError, triple.drawReal, myImg)
+
+    deconv = galsim.Convolve(psf, galsim.Deconvolve(pixel))
+    assert_raises(galsim.GalSimError, deconv.xValue, galsim.PositionD(0,0))
+    assert_raises(galsim.GalSimError, deconv.drawReal, myImg)
+    assert_raises(galsim.GalSimError, deconv.drawPhot, myImg, n_photons=10)
 
 
 @timer
@@ -242,9 +249,7 @@ def test_shearconvolve():
     check_basic(conv, "sheared Gaussian * Pixel")
 
     # Test photon shooting.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with assert_warns(galsim.GalSimWarning):
         do_shoot(conv,myImg,"sheared Gaussian * Pixel")
     # Clear the warnings registry for later so we can test that appropriate warnings are raised.
     galsim.GSObject.drawImage.__globals__['__warningregistry__'].clear()
@@ -541,6 +546,10 @@ def test_deconvolve():
     assert_raises(TypeError, galsim.Deconvolution, [psf])
     assert_raises(TypeError, galsim.Deconvolution, psf, psf)
     assert_raises(TypeError, galsim.Deconvolution, psf, real_space=False)
+
+    assert_raises(NotImplementedError, inv_obj.xValue, galsim.PositionD(0,0))
+    assert_raises(NotImplementedError, inv_obj.drawReal, myImg1)
+    assert_raises(NotImplementedError, inv_obj.shoot, 1)
 
 
 @timer

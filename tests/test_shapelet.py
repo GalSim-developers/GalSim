@@ -171,6 +171,11 @@ def test_shapelet_properties():
     # Check picklability
     do_pickle(shapelet)
 
+    assert_raises(TypeError, galsim.Shapelet, sigma=sigma)
+    assert_raises(TypeError, galsim.Shapelet, sigma=sigma, bvec=bvec)
+    assert_raises(TypeError, galsim.Shapelet, order=order, bvec=bvec)
+    assert_raises(ValueError, galsim.Shapelet, sigma=sigma, order=5, bvec=bvec)
+
 
 @timer
 def test_shapelet_fit():
@@ -235,6 +240,13 @@ def test_shapelet_fit():
                 err_msg="Second fitted shapelet has the wrong order")
         np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
                 err_msg="Second fitted shapelet coefficients do not match original")
+
+    assert_raises(ValueError, galsim.Shapelet.fit, sigma, 10, im1, normalization='invalid')
+
+    # Haven't gotten around to implementing this yet...
+    im2.wcs = galsim.JacobianWCS(0.2,0.01,0.01,0.2)
+    with assert_raises(NotImplementedError):
+        galsim.Shapelet.fit(sigma, 10, im2)
 
 
 @timer

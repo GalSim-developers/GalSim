@@ -328,7 +328,8 @@ class InclinedSersic(GSObject):
                 self._r0 = self._hlr / _galsim.SersicHLR(self._n, 1.)
             else:
                 if self._trunc <= math.sqrt(2.) * self._hlr:
-                    raise GalSimRangerror("Sersic trunc must be > sqrt(2) * half_light_radius")
+                    raise GalSimRangeError("Sersic trunc must be > sqrt(2) * half_light_radius",
+                                           self._trunc, math.sqrt(2.) * self._hlr)
                 self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
         else:
             raise GalSimIncompatibleValuesError(

@@ -137,7 +137,22 @@ def test_sersic():
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
     assert_raises(TypeError, galsim.Sersic, n=1.2, scale_radius=3, half_light_radius=1)
+    assert_raises(TypeError, galsim.Sersic, n=1.2)
     assert_raises(TypeError, galsim.DeVaucouleurs, scale_radius=3, half_light_radius=1)
+    assert_raises(TypeError, galsim.DeVaucouleurs)
+
+    # Allowed range is [0.3, 6.2]
+    assert_raises(ValueError, galsim.Sersic, n=0.2, scale_radius=3)
+    assert_raises(ValueError, galsim.Sersic, n=6.3, scale_radius=3)
+
+    # trunc must be > sqrt(2) * hlr
+    assert_raises(ValueError, galsim.Sersic, n=3, half_light_radius=1, trunc=1.4)
+    assert_raises(ValueError, galsim.DeVaucouleurs, half_light_radius=1, trunc=1.4)
+
+    # Other errors
+    assert_raises(TypeError, galsim.Sersic, scale_radius=3)
+    assert_raises(ValueError, galsim.Sersic, n=3, scale_radius=3, trunc=-1)
+    assert_raises(ValueError, galsim.DeVaucouleurs, scale_radius=3, trunc=-1)
 
 
 @timer

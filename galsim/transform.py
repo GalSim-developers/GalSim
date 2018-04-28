@@ -162,11 +162,12 @@ class Transformation(GSObject):
 
     @lazy_property
     def _sbp(self):
-        if self._det == 0.:
-            raise GalSimError("Transformation has a degenerate Jacobian")
         dudx, dudy, dvdx, dvdy = self._jac.ravel()
-        return _galsim.SBTransform(self._original._sbp, dudx, dudy, dvdx, dvdy,
-                                   self._offset._p, self._flux_ratio, self.gsparams._gsp)
+        try:
+            return _galsim.SBTransform(self._original._sbp, dudx, dudy, dvdx, dvdy,
+                                       self._offset._p, self._flux_ratio, self.gsparams._gsp)
+        except RuntimeError as e:
+            raise GalSimError(str(e))
 
     @lazy_property
     def _noise(self):

@@ -727,7 +727,7 @@ class GSObject(object):
         kpos = parse_pos_args(args,kwargs,'kx','ky')
         return self._kValue(kpos)
 
-    def _kValue(self, kpos):
+    def _kValue(self, kpos):  # pragma: no cover  (all our classes override this)
         """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
         """
         raise NotImplementedError("%s does not implement kValue"%self.__class__.__name__)
@@ -873,6 +873,8 @@ class GSObject(object):
             shear = args[0]
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
+        elif len(kwargs) == 0:
+            raise TypeError("Error, shear argument is required")
         else:
             shear = Shear(**kwargs)
         return Transform(self, jac=shear.getMatrix().ravel().tolist())
@@ -1036,6 +1038,8 @@ class GSObject(object):
                 if nx is not None or ny is not None:
                     raise GalSimIncompatibleValuesError(
                         "Cannot set both bounds and (nx, ny)", nx=nx, ny=ny, bounds=bounds)
+                if not bounds.isDefined():
+                    raise GalSimValueError("Cannot use undefined bounds", bounds)
                 image = Image(bounds=bounds, dtype=dtype)
             elif nx is not None or ny is not None:
                 if nx is None or ny is None:
@@ -1499,7 +1503,7 @@ class GSObject(object):
 
         # Check that image is sane
         if image is not None and not isinstance(image, Image):
-            raise GalSimValueError("image is not an Image instance", image)
+            raise TypeError("image is not an Image instance", image)
 
         # Make sure (gain, area, exptime) have valid values:
         if gain <= 0.:
@@ -1981,7 +1985,7 @@ class GSObject(object):
         # Make n_photons an integer.
         iN = int(n_photons + 0.5)
 
-        if iN <= 0:  # pragma: no cover
+        if iN <= 0:
             import warnings
             warnings.warn("Automatic n_photons calculation did not end up with positive N. "
                           "(n_photons = {0})  No photons will be shot. "
@@ -2116,15 +2120,10 @@ class GSObject(object):
 
             try:
                 photons = self.shoot(thisN, ud)
-            except GalSimError:  # pragma: no cover
-                # Give some extra explanation as a warning, then raise the original exception
-                # so the traceback shows as much detail as possible.
-                import warnings
-                warnings.warn(
-                    "Unable to draw this GSObject with photon shooting.  Perhaps it is a "
-                    "Deconvolve or is a compound including one or more Deconvolve objects.",
-                    GalSimWarning)
-                raise
+            except (GalSimError, NotImplementedError) as e:
+                raise GalSimError("Unable to draw this GSObject with photon shooting.  Perhaps it "
+                                  "is a Deconvolve or is a compound including one or more "
+                                  "Deconvolve objects.\nOriginal error: %r"%(e))
 
             if g != 1. or thisN != Ntot:
                 photons.scaleFlux(g * thisN / Ntot)
@@ -2224,8 +2223,12 @@ class GSObject(object):
         from .wcs import PixelScale
         from .image import Image
         # Make sure provided image is complex
-        if image is not None and not image.iscomplex:
-            raise GalSimValueError("Provided image must be complex", image)
+        if image is not None:
+            if not isinstance(image, Image):
+                raise TypeError("Provided image must be galsim.Image", image)
+
+            if not image.iscomplex:
+                raise GalSimValueError("Provided image must be complex", image)
 
         # Possibly get the scale from image.
         if image is not None and scale is None:
@@ -2255,11 +2258,24 @@ class GSObject(object):
             real_prof = PixelScale(dx).toImage(self)
             dtype = np.complex128 if image is None else image.dtype
             image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, odd=True)
+        else:
+            # Do some checks that setup_image would have done for us
+            if bounds is not None:
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide bounds if image is provided", bounds=bounds, image=image)
+            if nx is not None or ny is not None:
+                raise GalSimIncompatibleValuesError(
+                    "Cannot provide nx,ny if image is provided", nx=nx, ny=ny, image=image)
+            if not image.bounds.isDefined():
+                if add_to_image:
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot add_to_image if image bounds are not defined",
+                        add_to_image=add_to_image, image=image)
 
         # Can't both recenter a provided image and add to it.
         if recenter and image.center != PositionI(0,0) and add_to_image:
             raise GalSimIncompatibleValuesError(
-                "Cannot recenter a non-centered image when add_to_image=True",
+                "Cannot use add_to_image=True unless image is centered at (0,0) or recenter=False",
                 recenter=recenter, image=image, add_to_image=add_to_image)
 
         # Set the center to 0,0 if appropriate
@@ -2280,7 +2296,7 @@ class GSObject(object):
             image += im2
         return image
 
-    def _drawKImage(self, image):
+    def _drawKImage(self, image):  # pragma: no cover  (all our classes override this)
         """Equivalent to drawKImage(image, add_to_image, recenter=False, add_to_image=False), but
         without the normal sanity checks or the option to create the image automatically.
 

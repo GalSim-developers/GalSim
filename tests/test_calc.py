@@ -159,6 +159,8 @@ def test_sigma():
     np.testing.assert_equal(
             (g1.sigma, g1.sigma), g1.calculateMomentRadius(rtype='both'),
             err_msg="Gaussian.calculateMomentRadius(both) returned wrong value.")
+    with assert_raises(galsim.GalSimValueError):
+        g1.calculateMomentRadius(rtype='invalid')
 
     # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to
     # do the calculation.

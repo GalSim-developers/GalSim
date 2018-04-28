@@ -134,9 +134,11 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
     other_vals = []
     if len(args) == 0:
         # Then name1,name2 need to be kwargs
-        # If not, then python will raise an appropriate error.
-        x = kwargs.pop(name1)
-        y = kwargs.pop(name2)
+        try:
+            x = kwargs.pop(name1)
+            y = kwargs.pop(name2)
+        except KeyError:
+            raise TypeError('Expecting kwargs %s, %s.  Got %s'%(name1, name2, kwargs.keys()))
     elif ( ( isinstance(args[0], PositionI) or
              (not integer and isinstance(args[0], PositionD)) ) and
            len(args) <= 1+len(others) ):
@@ -151,7 +153,7 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         for arg in args[1:]:
             other_vals.append(arg)
             others.pop(0)
-    elif len(args) == 1:  # pragma: no cover
+    elif len(args) == 1:
         if integer:
             raise TypeError("Cannot parse argument %s as a PositionI"%(args[0]))
         else:

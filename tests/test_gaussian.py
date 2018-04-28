@@ -105,11 +105,16 @@ def test_gaussian():
     assert_raises(TypeError, galsim.Gaussian, half_light_radius=1, fwhm=2)
     assert_raises(TypeError, galsim.Gaussian, sigma=3, fwhm=2)
     assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1)
+    # Or none.
+    assert_raises(TypeError, galsim.Gaussian)
 
     # Finally, test the noise property for things that don't have any noise set.
     assert gauss.noise is None
     # And accessing the attribute from the class should indicate that it is a lazyproperty
     assert 'lazy_property' in str(galsim.GSObject._noise)
+
+    # And check that trying to use GSObject directly is an error.
+    assert_raises(NotImplementedError, galsim.GSObject)
 
 
 @timer
@@ -135,6 +140,22 @@ def test_gaussian_properties():
         gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
         outFlux = gauss.flux
         np.testing.assert_almost_equal(outFlux, inFlux)
+
+    # Check some valid and invalid ways to pass arguments to xValue
+    # Same code applies to kValue and others, so just do this one.
+    assert gauss.xValue(cen.x, cen.y) == gauss.xValue(cen)
+    assert gauss.xValue(x=cen.x, y=cen.y) == gauss.xValue(cen)
+    assert gauss.xValue( (cen.x, cen.y) ) == gauss.xValue(cen)
+    assert_raises(TypeError, gauss.xValue, cen.x)
+    assert_raises(TypeError, gauss.xValue, x=cen.x)
+    assert_raises(TypeError, gauss.xValue, cen.x, y=cen.y)
+    assert_raises(TypeError, gauss.xValue, dx=cen.x, dy=cen.y)
+    assert_raises(TypeError, gauss.xValue, dx=cen.x, y=cen.y)
+    assert_raises(TypeError, gauss.xValue, x=cen.x, dy=cen.y)
+    assert_raises(TypeError, gauss.xValue, cen.x, cen.y, cen.y)
+    assert_raises(TypeError, gauss.xValue, cen.x, cen.y, invalid=True)
+    assert_raises(TypeError, gauss.xValue, pos=cen)
+
 
 
 @timer

@@ -78,6 +78,8 @@ def test_exponential():
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
     assert_raises(TypeError, galsim.Exponential, scale_radius=3, half_light_radius=1)
+    # Or neither.
+    assert_raises(TypeError, galsim.Exponential)
 
 
 @timer
