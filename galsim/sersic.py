@@ -216,6 +216,9 @@ class Sersic(GSObject):
             raise GalSimRangeError("Requested Sersic index is too large",
                                    self._n, Sersic._minimum_n, Sersic._maximum_n)
 
+        if self._trunc < 0:
+            raise GalSimRangeError("Sersic trunc must be > 0", self._trunc, 0.)
+
         # Parse the radius options
         if half_light_radius is not None:
             if scale_radius is not None:

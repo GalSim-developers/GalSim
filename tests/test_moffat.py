@@ -99,7 +99,18 @@ def test_moffat():
     assert_raises(TypeError, galsim.Moffat, beta=3, half_light_radius=1, fwhm=2)
     assert_raises(TypeError, galsim.Moffat, beta=3, scale_radius=3, fwhm=2)
     assert_raises(TypeError, galsim.Moffat, beta=3, scale_radius=3, half_light_radius=1)
+    assert_raises(TypeError, galsim.Moffat, beta=3)
 
+    # beta <= 1.1 needs to be truncated.
+    assert_raises(ValueError, galsim.Moffat, beta=1.1, scale_radius=3)
+    assert_raises(ValueError, galsim.Moffat, beta=0.9, scale_radius=3)
+
+    # trunc must be > sqrt(2) * hlr
+    assert_raises(ValueError, galsim.Moffat, beta=3, half_light_radius=1, trunc=1.4)
+
+    # Other errors
+    assert_raises(TypeError, galsim.Moffat, scale_radius=3)
+    assert_raises(ValueError, galsim.Moffat, beta=3, scale_radius=3, trunc=-1)
 
 @timer
 def test_moffat_properties():

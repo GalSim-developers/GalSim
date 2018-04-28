@@ -28,17 +28,9 @@ from galsim_test_helpers import *
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
     """
-    import warnings
-    # Cause all warnings to always be triggered.
-    # Important in case we want to trigger the same one twice in the test suite.
-    warnings.simplefilter("always")
-
     # Check that f() raises a warning, but not an error.
-    with warnings.catch_warnings(record=True) as w:
+    with assert_warns(galsim.GalSimDeprecationWarning):
         res = f(*args, **kwargs)
-    assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
-    #print([ str(wk.message) for wk in w ])
-    assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return res
 
 if __name__ == "__main__":

@@ -773,24 +773,18 @@ def test_pixel():
     gal2b = galsim.Pixel(scale = 1.7, flux = 100)
     gsobject_compare(gal2a, gal2b)
 
-    # The config stuff emits a warning about the rectangular pixel.
-    # We suppress that here, since we're doing it on purpose.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = galsim.Box(width = 2, height = 2.1, flux = 1.e6)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
+    # Drawing sheared Pixel without convolution doesn't work, so we need to
+    # do the extra convolution by a Gaussian here
+    gsobject_compare(gal3a, gal3b, conv=galsim.Gaussian(0.1))
 
-        gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
-        gal3b = galsim.Box(width = 2, height = 2.1, flux = 1.e6)
-        gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
-        # Drawing sheared Pixel without convolution doesn't work, so we need to
-        # do the extra convolution by a Gaussian here
-        gsobject_compare(gal3a, gal3b, conv=galsim.Gaussian(0.1))
-
-        gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-        gal4b = galsim.Box(width = 1, height = 1.2, flux = 50)
-        gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
-        gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2)
-        gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
+    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+    gal4b = galsim.Box(width = 1, height = 1.2, flux = 50)
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2)
+    gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
 
 @timer
 def test_realgalaxy():
@@ -1002,9 +996,7 @@ def test_cosmosgalaxy():
 
     config['obj_num'] = 0
     # It is going to complain that it doesn't have weight factors.  We want to ignore this.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with assert_warns(galsim.GalSimWarning):
         gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
         gal1b = cosmos_cat.makeGalaxy(rng=rng)
     gsobject_compare(gal1a, gal1b, conv=conv)

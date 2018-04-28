@@ -92,6 +92,12 @@ def test_smallshear():
     # Check really small shear  (This mostly tests a branch in the str function.)
     do_pickle(galsim.Gaussian(sigma=2.3).shear(g1=1.e-13,g2=0))
 
+    assert_raises(TypeError, gauss.shear)
+    assert_raises(TypeError, gauss.shear, 0.3)
+    assert_raises(TypeError, gauss.shear, 0.1, 0.3)
+    assert_raises(TypeError, gauss.shear, g1=0.1, g2=0.1, invalid=0.3)
+    assert_raises(TypeError, gauss.shear, myShear, invalid=0.3)
+
 @timer
 def test_largeshear():
     """Test the application of a large shear to a Sersic profile against a known result.
@@ -197,6 +203,8 @@ def test_rotate():
     do_pickle(gal, lambda x: x.drawImage())
     do_pickle(gal)
 
+    assert_raises(TypeError, gal.rotate)
+    assert_raises(TypeError, gal.rotate, 34)
 
 @timer
 def test_mag():
@@ -867,6 +875,7 @@ def test_ne():
     objs = [galsim.Transform(gal1),
             galsim.Transform(gal2),
             galsim.Transform(gal1, jac=(1, 0.5, 0.5, 1)),
+            galsim.Transform(gal1, jac=(1, 1, 1, 1)),
             galsim.Transform(gal1, jac=jac),
             galsim.Transform(gal1, offset=galsim.PositionD(2, 2)),
             galsim.Transform(gal1, offset=offset),
@@ -874,6 +883,12 @@ def test_ne():
             galsim.Transform(gal1, flux_ratio=flux_ratio),
             galsim.Transform(gal1, gsparams=gsp)]
     all_obj_diff(objs)
+
+    # The degenerate jacobian will build fine, but will raise an exception when used.
+    degen = galsim.Transform(gal1, jac=(1, 1, 1, 1))
+    with assert_raises(galsim.GalSimError):
+        sbp = degen._sbp
+
 
 @timer
 def test_compound():

@@ -23,7 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticConvolution
 from .utilities import lazy_property, doc_inherit
-from .errors import GalSimWarning
+from .errors import GalSimWarning, GalSimError
 
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more GSObject or ChromaticObject instances.
@@ -349,14 +349,10 @@ class Convolution(GSObject):
         elif len(self.obj_list) == 2:
             try:
                 return self._sbp.xValue(pos._p)
-            except AttributeError: # pragma: no cover
-                # TODO: Once we have a GSObject subclass that doesn't implement the _sbp
-                #       attribute, add a test that this branch works properly.
-                #       (Currently it is unreachable, since all profiles have _sbp.)
-                raise NotImplementedError(
+            except (AttributeError, RuntimeError):
+                raise GalSimError(
                     "At least one profile in %s does not implement real-space convolution"%self)
         else:
-            # XXX Not sure if this code is reachable...
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
     @doc_inherit
@@ -371,11 +367,10 @@ class Convolution(GSObject):
         elif len(self.obj_list) == 2:
             try:
                 self._sbp.draw(image._image, image.scale)
-            except AttributeError: # pragma: no cover
-                raise NotImplementedError(
+            except (AttributeError, RuntimeError):
+                raise GalSimError(
                     "At least one profile in %s does not implement real-space convolution"%self)
         else:
-            # XXX Not sure if this code is reachable...
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
     @doc_inherit

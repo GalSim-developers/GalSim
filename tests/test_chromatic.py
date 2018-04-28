@@ -614,12 +614,17 @@ def test_chromatic_flux():
                                    "using flux_ratio * ChromaticObject")
 
     # As should this.
-    star4 = star.withScaledFlux(flux_ratio)
+    star4 = star.withScaledFlux(lambda wave: flux_ratio)
     final = galsim.Convolve([star4, PSF])
     final.drawImage(bandpass, image=image)
     np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using ChromaticObject.withScaledFlux(flux_ratio)")
+    # Can't scale GSObject by function (just SED)
+    with assert_raises(TypeError):
+        galsim.Gaussian(fwhm=1e-8).withScaledFlux(lambda wave: flux)
+    with assert_raises(TypeError):
+        galsim.Gaussian(fwhm=1e-8) * (lambda wave: flux)
 
     # Test ChromaticObject.withFlux
     star5 = star.withFlux(1.0, bandpass)
@@ -656,7 +661,6 @@ def test_chromatic_flux():
     assert star7 == star8
     star9 = star.withFluxDensity(0.5*units.astrophys.photon/(units.s*units.cm**2*units.AA), 500)
     assert star7 == star9
-
 
 
 @timer

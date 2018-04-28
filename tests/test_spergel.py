@@ -90,6 +90,12 @@ def test_spergel():
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
     assert_raises(TypeError, galsim.Spergel, nu=0, scale_radius=3, half_light_radius=1)
+    assert_raises(TypeError, galsim.Spergel, nu=0)
+    assert_raises(TypeError, galsim.Spergel, scale_radius=3)
+
+    # Allowed range = [-0.85, 4.0]
+    assert_raises(ValueError, galsim.Spergel, nu=-0.9)
+    assert_raises(ValueError, galsim.Spergel, nu=4.1)
 
 
 @timer

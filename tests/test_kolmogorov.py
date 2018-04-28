@@ -117,6 +117,7 @@ def test_kolmogorov():
     assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, r0=1)
     assert_raises(TypeError, galsim.Kolmogorov, lam=3)
     assert_raises(TypeError, galsim.Kolmogorov, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov)
 
 @timer
 def test_kolmogorov_properties():

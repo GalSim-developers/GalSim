@@ -644,6 +644,12 @@ def test_exceptions():
         get_prof("InclinedSersic", inclination = 0.*galsim.degrees,
                  scale_radius = 1., trunc = -4.5)
 
+    # trunc can't be too small in InclinedSersic
+    with assert_raises(ValueError):
+        get_prof("InclinedSersic", inclination = 0.*galsim.degrees,
+                 half_light_radius = 1., trunc = 1.4)
+
+
 @timer
 def test_value_retrieval():
     """ Tests to make sure that if a parameter is passed to a profile, we get back the same

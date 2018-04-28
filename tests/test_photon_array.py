@@ -329,6 +329,9 @@ def test_photon_io():
     photons = image.photons
     assert photons.size() == len(photons) == nphotons
 
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        obj.drawImage(method='phot', n_photons=nphotons, save_photons=True, maxN=1.e5)
+
     file_name = 'output/photons1.dat'
     photons.write(file_name)
 

@@ -98,5 +98,9 @@ def test_fourier_sqrt():
     assert_raises(TypeError, galsim.FourierSqrtProfile, psf, psf)
     assert_raises(TypeError, galsim.FourierSqrtProfile, psf, real_space=False)
 
+    assert_raises(NotImplementedError, sqrt1.xValue, galsim.PositionD(0,0))
+    assert_raises(NotImplementedError, sqrt1.drawReal, myImg1)
+    assert_raises(NotImplementedError, sqrt1.shoot, 1)
+
 if __name__ == "__main__":
     test_fourier_sqrt()
