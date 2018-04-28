@@ -274,13 +274,13 @@ class InterpolatedImage(GSObject):
                  _force_stepk=0., _force_maxk=0., hdu=None):
 
         from .wcs import BaseWCS, PixelScale
-
-        from .wcs import BaseWCS, PixelScale
         from .random import BaseDeviate
 
         # If the "image" is not actually an image, try to read the image as a file.
-        if not isinstance(image, Image):
+        if isinstance(image, str):
             image = fits.read(image, hdu=hdu)
+        elif not isinstance(image, Image):
+            raise TypeError("Supplied image must be an Image or file name")
 
         # make sure image is really an image and has a float type
         if image.dtype != np.float32 and image.dtype != np.float64:
@@ -344,8 +344,8 @@ class InterpolatedImage(GSObject):
         # I think the only things that will mess up if flux == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
         if (calculate_stepk or calculate_maxk or flux is not None) and self._image_flux == 0.:
-            raise GalSimError("This input image has zero total flux. "
-                              "It does not define a valid surface brightness profile.")
+            raise GalSimValueError("This input image has zero total flux. It does not define a "
+                                   "valid surface brightness profile.", image)
 
         # Process the different options for flux, stepk, maxk
         self._flux = self._getFlux(flux, normalization)
@@ -394,13 +394,13 @@ class InterpolatedImage(GSObject):
 
     def _buildRealImage(self, pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache):
         # Check that given pad_image is valid:
-        if pad_image:
+        if pad_image is not None:
             if isinstance(pad_image, basestring):
                 pad_image = fits.read(pad_image)
-            else:
+            elif isinstance(pad_image, Image):
                 pad_image = pad_image._view()
-            if not isinstance(pad_image, Image):
-                raise GalSimValueError("Supplied pad_image must be an Image.", pad_image)
+            else:
+                raise TypeError("Supplied pad_image must be an Image.", pad_image)
             if pad_image.dtype != np.float32 and pad_image.dtype != np.float64:
                 raise GalSimValueError("Invalid dtype for Supplied pad_image.", pad_image.dtype,
                                        (np.float32, np.float64))
@@ -412,8 +412,19 @@ class InterpolatedImage(GSObject):
         # Use the minimum scale, since we want to make sure noise_pad_size is
         # as large as we need in any direction.
         if noise_pad_size:
+            if noise_pad_size < 0:
+                raise GalSimValuesError("noise_pad_size may not be negative", noise_pad_size)
+            if not noise_pad:
+                raise GalSimIncompatibleValuesError(
+                        "Must provide noise_pad if noise_pad_size > 0",
+                        noise_pad=noise_pad, noise_pad_size=noise_pad_size)
             noise_pad_size = int(math.ceil(noise_pad_size / self._wcs._minScale()))
             noise_pad_size = Image.good_fft_size(noise_pad_size)
+        else:
+            if noise_pad:
+                raise GalSimIncompatibleValuesError(
+                        "Must provide noise_pad_size if noise_pad != 0",
+                        noise_pad=noise_pad, noise_pad_size=noise_pad_size)
 
         # The size of the final padded image is the largest of the various size specifications
         pad_size = max(self._image.array.shape)
@@ -432,7 +443,7 @@ class InterpolatedImage(GSObject):
 
         # If requested, fill (some of) this image with noise padding.
         nz_bounds = self._image.bounds
-        if noise_pad_size > 0 and noise_pad is not None:
+        if noise_pad:
             # This is a bit involved, so pass this off to another helper function.
             b = self._buildNoisePadImage(noise_pad_size, noise_pad, rng, use_cache)
             nz_bounds += b
@@ -471,7 +482,6 @@ class InterpolatedImage(GSObject):
         # Figure out what kind of noise to apply to the image
         try:
             noise_pad = float(noise_pad)
-
         except (TypeError, ValueError):
             if isinstance(noise_pad, _BaseCorrelatedNoise):
                 noise = noise_pad.copy(rng=rng1)
@@ -661,14 +671,12 @@ class InterpolatedImage(GSObject):
         return self._sbp.kValue(kpos._p)
 
     @doc_inherit
-    def shoot(self, n_photons, rng=None):
-        if isinstance(self.x_interpolant, SincInterpolant):
-            raise GalSimError("Photon shooting is not practical with SincInterpolant")
-        return GSObject.shoot(self, n_photons, rng)
-
-    @doc_inherit
     def _shoot(self, photons, ud):
-        self._sbp.shoot(photons._pa, ud._rng)
+        try:
+            self._sbp.shoot(photons._pa, ud._rng)
+        except RuntimeError:
+            xi = self.x_interpolant.__class__.__name__
+            raise GalSimError("Photon shooting is not practical with x_interpolant of type %s"%xi)
 
     @doc_inherit
     def _drawReal(self, image):
@@ -841,17 +849,16 @@ class InterpolatedKImage(GSObject):
                     kimage=kimage, real_kimage=real_kimage, imag_kimage=imag_kimage)
 
             # If the "image" is not actually an image, try to read the image as a file.
-            if not isinstance(real_kimage, Image):
+            if isinstance(real_kimage, str):
                 real_kimage = fits.read(real_kimage, hdu=real_hdu)
-            if not isinstance(imag_kimage, Image):
+            elif not isinstance(real_kimage, Image):
+                raise TypeError("real_kimage must be either an Image or a file name")
+            if isinstance(imag_kimage, str):
                 imag_kimage = fits.read(imag_kimage, hdu=imag_hdu)
+            elif not isinstance(imag_kimage, Image):
+                raise TypeError("imag_kimage must be either an Image or a file name")
 
-            # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are
-            # congruent.
-            if not isinstance(real_kimage, Image):
-                raise GalSimValueError("Supplied real_kimage is not an Image instance", real_kimage)
-            if not isinstance(imag_kimage, Image):
-                raise GalSimValueError("Supplied imag_kimage is not an Image instance", imag_kimage)
+            # make sure real_kimage, imag_kimage are congruent.
             if real_kimage.bounds != imag_kimage.bounds:
                 raise GalSimIncompatibleValuesError(
                     "Real and Imag kimages must have same bounds.",
@@ -866,13 +873,18 @@ class InterpolatedKImage(GSObject):
             if real_kimage is not None or imag_kimage is not None:
                 raise GalSimIncompatibleValuesError(
                     "Cannot provide both kimage and real_kimage/imag_kimage",
-                    kimage=kimage, real_kimage=real_kimage, imag_kimage=imag_kimag)
+                    kimage=kimage, real_kimage=real_kimage, imag_kimage=imag_kimage)
+            if not isinstance(kimage, Image):
+                raise TypeError("kimage must be a galsim.Image isntance")
             if not kimage.iscomplex:
                 raise GalSimValueError("Supplied kimage is not complex", kimage)
 
         # Make sure wcs is a PixelScale.
         if kimage.wcs is not None and not kimage.wcs.isPixelScale():
             raise GalSimValueError("kimage wcs must be PixelScale or None.", kimage.wcs)
+
+        if not kimage.bounds.isDefined():
+            raise GalSimUndefinedBoundsError("Supplied image does not have bounds defined.")
 
         self._kimage = kimage.copy()
         self._gsparams = GSParams.check(gsparams)

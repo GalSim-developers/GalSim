@@ -1225,8 +1225,13 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Get Fourier-space representations of input imgs.
         kimgs = np.empty((Nim, nk, nk), dtype=np.complex128)
 
+        if noise_pad_size == 0:
+            noise_pad = 0.
+
         for i, (img, xi) in enumerate(zip(imgs, xis)):
-            ii = InterpolatedImage(img, noise_pad_size=noise_pad_size, noise_pad=xi,
+            if noise_pad_size != 0:
+                noise_pad = xi
+            ii = InterpolatedImage(img, noise_pad_size=noise_pad_size, noise_pad=noise_pad,
                                    rng=self.rng, pad_factor=pad_factor)
             kimgs[i] = ii.drawKImage(nx=nk, ny=nk, scale=stepk).array
 
