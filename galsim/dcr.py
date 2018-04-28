@@ -97,8 +97,13 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
         if HA is None or latitude is None:
             raise GalSimIncompatibleValuesError(
                 "Must provide either zenith_coord or (HA, latitude).",
-                HA=HA, latitude=latitude, zenith_coord=zenit_coord)
+                HA=HA, latitude=latitude, zenith_coord=zenith_coord)
         zenith_coord = CelestialCoord(HA + obj_coord.ra, latitude)
+    else:
+        if HA is not None or latitude is not None:
+            raise GalSimIncompatibleValuesError(
+                "Cannot provide both zenith_coord and (HA, latitude).",
+                HA=HA, latitude=latitude, zenith_coord=zenith_coord)
     zenith_angle = obj_coord.distanceTo(zenith_coord)
     NCP = CelestialCoord(0.0*degrees, 90*degrees)
     parallactic_angle = obj_coord.angleBetween(NCP, zenith_coord)
@@ -133,19 +138,11 @@ def parse_dcr_angles(**kwargs):
             raise TypeError("parallactic_angle must be a galsim.Angles.")
     elif 'obj_coord' in kwargs:
         obj_coord = kwargs.pop('obj_coord')
-        if 'zenith_coord' in kwargs:
-            zenith_coord = kwargs.pop('zenith_coord')
-            zenith_angle, parallactic_angle = zenith_parallactic_angles(
-                obj_coord=obj_coord, zenith_coord=zenith_coord)
-        else:
-            if 'HA' not in kwargs or 'latitude' not in kwargs:
-                raise GalSimIncompatibleValuesError(
-                    "Must provide either zenith_coord or (HA, latitude).",
-                    HA=None, latitude=None, obj_coord=obj_coode)
-            HA = kwargs.pop('HA')
-            latitude = kwargs.pop('latitude')
-            zenith_angle, parallactic_angle = zenith_parallactic_angles(
-                obj_coord=obj_coord, HA=HA, latitude=latitude)
+        zenith_coord = kwargs.pop('zenith_coord', None)
+        HA = kwargs.pop('HA', None)
+        latitude = kwargs.pop('latitude', None)
+        zenith_angle, parallactic_angle = zenith_parallactic_angles(
+            obj_coord=obj_coord, zenith_coord=zenith_coord, HA=HA, latitude=latitude)
     else:
         raise TypeError("Need to specify zenith_angle and parallactic_angle.")
     return zenith_angle, parallactic_angle, kwargs

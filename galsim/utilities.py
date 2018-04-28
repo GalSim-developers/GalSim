@@ -26,7 +26,8 @@ import weakref
 import os
 import numpy as np
 
-from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
+from .errors import GalSimWarning
 
 
 def roll2d(image, shape):
@@ -404,15 +405,15 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
         # Nothing to do
         return x,f
 
-    if trim_zeros:
-        first = max(f.nonzero()[0][0]-1, 0)  # -1 to keep one non-redundant zero.
-        last = min(f.nonzero()[0][-1]+1, len(x)-1)  # +1 to keep one non-redundant zero.
-        x, f = x[first:last+1], f[first:last+1]
-
     total_integ = np.trapz(abs(f), x)
     if total_integ == 0:
         return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = total_integ * rel_err
+
+    if trim_zeros:
+        first = max(f.nonzero()[0][0]-1, 0)  # -1 to keep one non-redundant zero.
+        last = min(f.nonzero()[0][-1]+1, len(x)-1)  # +1 to keep one non-redundant zero.
+        x, f = x[first:last+1], f[first:last+1]
 
     x_range = x[-1] - x[0]
     if not preserve_range:
@@ -988,6 +989,8 @@ class LRU_Cache:
         else:
             root = self.root
             cache = self.cache
+            if maxsize <= 0:
+                raise GalSimValueError("Invalid maxsize", maxsize)
             if maxsize < oldsize:
                 for i in range(oldsize - maxsize):
                     # Delete root.next
@@ -995,15 +998,13 @@ class LRU_Cache:
                     new_next_link = root[1] = root[1][1]
                     new_next_link[0] = root
                     del cache[current_next_link[2]]
-            elif maxsize > oldsize:
+            else: #  maxsize > oldsize:
                 for i in range(maxsize - oldsize):
                     # Insert between root and root.next
                     key = object()
                     cache[key] = link = [root, root[1], key, None]
                     root[1][0] = link
                     root[1] = link
-            else:
-                raise GalSimValueError("Invalid maxsize.", maxsize)
 
 
 # http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array

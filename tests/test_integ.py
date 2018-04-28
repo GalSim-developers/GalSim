@@ -234,6 +234,10 @@ def test_trapz_basic():
         result/expected_val, 1.0, decimal=6, verbose=True,
         err_msg='Test of trapzRule() with points failed for f(x)=x^2 from 0 to 1')
 
+    assert_raises(ValueError, galsim.integ.trapz, func, 0, 1, points=np.linspace(0, 1.1, 100))
+    assert_raises(ValueError, galsim.integ.trapz, func, 0.1, 1, points=np.linspace(0, 1, 100))
+    assert_raises(TypeError, galsim.integ.trapz, func, 0.1, 1, points=2.3)
+
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()
