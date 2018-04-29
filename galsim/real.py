@@ -36,6 +36,7 @@ import os
 import numpy as np
 
 from .gsobject import GSObject
+from .gsparams import GSParams
 from .chromatic import ChromaticSum
 from .position import PositionD
 from .utilities import doc_inherit
@@ -290,7 +291,7 @@ class RealGalaxy(GSObject):
         self._input_flux = flux
         self._flux_rescale = flux_rescale
         self._area_norm = area_norm
-        self._gsparams = gsparams
+        self._gsparams = GSParams.check(gsparams)
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad_size:
@@ -542,7 +543,7 @@ class RealGalaxyCatalog(object):
                 sample=sample, file_name=file_name)
 
         from ._pyfits import pyfits
-        self.file_name, self.image_dir, _ = _parse_files_dirs(file_name, dir, sample)
+        self.file_name, self.image_dir, self.sample = _parse_files_dirs(file_name, dir, sample)
 
         with pyfits.open(self.file_name) as fits:
             self.cat = fits[1].data
@@ -858,9 +859,9 @@ def _parse_files_dirs(file_name, image_dir, sample):
                                      'COSMOS_'+use_sample+'_training_sample')
         full_file_name = os.path.join(image_dir,file_name)
         if not os.path.isfile(full_file_name):
-            raise GalSimError('No RealGalaxy catalog found in %s. Run the program '
-                              'galsim_download_cosmos -s %s to download catalog and accompanying '
-                              'image files.'%(image_dir, use_sample))
+            raise OSError('No RealGalaxy catalog found in %s. Run the program '
+                          'galsim_download_cosmos -s %s to download catalog and accompanying '
+                          'image files.'%(image_dir, use_sample))
     elif image_dir is None:
         full_file_name = file_name
         image_dir = os.path.dirname(file_name)
@@ -869,7 +870,7 @@ def _parse_files_dirs(file_name, image_dir, sample):
     if not os.path.isfile(full_file_name):
         raise OSError(full_file_name+' not found.')
     if not os.path.isdir(image_dir):
-        raise OSError(image_dir+' directory does not exist!')
+        raise OSError(image_dir+' directory does not exist.')
 
     return full_file_name, image_dir, use_sample
 
@@ -1163,7 +1164,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         self._area_norm = area_norm
         self._k_interpolant = k_interpolant
-        self._gsparams = gsparams
+        self._gsparams = GSParams.check(gsparams)
 
         NSED = len(self.SEDs)
         Nim = len(imgs)
