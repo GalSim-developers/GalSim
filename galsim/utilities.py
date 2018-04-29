@@ -266,16 +266,19 @@ def _convertPositions(pos, units, func):
        This is used by the functions getShear(), getConvergence(), getMagnification(), and
        getLensing() for both PowerSpectrum and NFWHalo.
     """
-    from .position import PositionD, PositionI
+    from .position import Position
     from .angle import AngleUnit, arcsec
     # Check for PositionD or PositionI:
-    if isinstance(pos, PositionD) or isinstance(pos, PositionI):
+    if isinstance(pos, Position):
         pos = [ pos.x, pos.y ]
 
-    # Check for list of PositionD or PositionI:
+    elif len(pos) == 0:
+        raise TypeError("Unable to parse the input pos argument for %s."%func)
+
+    # Check for list of Position:
     # The only other options allow pos[0], so if this is invalid, an exception
     # will be raised:
-    elif isinstance(pos[0], PositionD) or isinstance(pos[0], PositionI):
+    elif isinstance(pos[0], Position):
         pos = [ np.array([p.x for p in pos], dtype='float'),
                 np.array([p.y for p in pos], dtype='float') ]
 

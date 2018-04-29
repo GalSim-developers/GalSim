@@ -767,8 +767,8 @@ class PowerSpectrum(object):
         Utility function to wrap an input image with some number of border pixels.  By default, the
         number of border pixels is 7, but this function works as long as it's less than the size of
         the input image itself.  This function is used for periodic interpolation by the
-        getShear() and other methods, but eventually if we make a 2d LookupTable-type class, this
-        should become a method of that class.
+        getShear() and other methods, but eventually if we upgrade LookupTable2D to allow
+        Lanczos interpolation, we should ust that.  cf. Issue #751
         """
         # We should throw an exception if the image is smaller than 'border', since at this point
         # this process doesn't make sense.
@@ -1478,13 +1478,6 @@ class PowerSpectrumRealizer(object):
 
         # Fudge the value at k=0, so we don't have to evaluate power there
         k[0,0] = k[1,0]
-        # Raise a clear exception for LookupTable that are not defined on the full k range!
-        if isinstance(power_function, LookupTable):
-            mink = np.min(k)
-            maxk = np.max(k)
-            if mink < power_function.x_min or maxk > power_function.x_max:
-                raise GalSimRangeError("LookupTable P(k) is not defined for full k range on grid",
-                                       k, mink, maxk)
         P_k = np.empty_like(k)
         P_k[:,:] = power_function(k)
 
@@ -1537,8 +1530,8 @@ def kappaKaiserSquires(g1, g2):
     prior to input.
     """
     # Checks on inputs
-    if not isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray):
-        raise TypeError("Input g1 and g2 must be galsim Image or NumPy arrays.")
+    if not (isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray)):
+        raise TypeError("Input g1 and g2 must be NumPy arrays.")
     if g1.shape != g2.shape:
         raise GalSimIncompatibleValuesError("Input g1 and g2 must be the same shape.", g1=g1, g2=g2)
     if g1.shape[0] != g1.shape[1]:
