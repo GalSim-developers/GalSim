@@ -95,6 +95,11 @@ def test_read():
     check_tpv(header)
     do_pickle(header)
 
+    assert_raises(TypeError, galsim.FitsHeader, file_name=file_name, header=header)
+    with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
+        assert_raises(TypeError, galsim.FitsHeader, file_name=file_name, hdu_list=hdu_list)
+        assert_raises(TypeError, galsim.FitsHeader, header=header, hdu_list=hdu_list)
+
     # Remove an item from the header
     # Start with file_name constructor, to test that the repr is changed by the edit.
     orig_header = header

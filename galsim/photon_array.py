@@ -25,7 +25,7 @@ import numpy as np
 from . import _galsim
 from .random import UniformDeviate
 from .angle import radians, arcsec
-from .errors import GalSimError, GalSimRangeError
+from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 
 # Add on more methods in the python layer
 
@@ -190,8 +190,8 @@ class PhotonArray(object):
         self._flux *= scale
 
     def scaleXY(self, scale):
-        self._x *= scale
-        self._y *= scale
+        self._x *= float(scale)
+        self._y *= float(scale)
 
     def assignAt(self, istart, rhs):
         "Assign the contents of another PhotonArray to this one starting at istart."
@@ -317,7 +317,7 @@ class PhotonArray(object):
         photons._y = photons.y[:N]
         photons._flux = photons.flux[:N]
 
-        if image.scale != 1.:
+        if image.scale != 1. and image.scale is not None:
             photons.scaleXY(image.scale)
         return photons
 

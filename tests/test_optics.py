@@ -417,7 +417,7 @@ def test_OpticalPSF_pupil_plane():
     # need it, and it is invalid to give lam_over_diam (rather than lam, diam separately) when
     # there is a specific scale for the pupil plane image.  But see the last test below where
     # we do use lam, diam separately with the input image.
-    im.scale = None
+    im.wcs = None
     # This implies that the lam_over_diam value
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  oversampling=pp_oversampling, pupil_plane_im=im,
@@ -574,7 +574,7 @@ def test_OpticalPSF_pupil_plane():
                                       calculate_maxk=False, calculate_stepk=False,
                                       x_interpolant='linear')
     new_im = int_im.drawImage(scale=rescale_fac, method='no_pixel')
-    new_im.scale = None  # Let OpticalPSF figure out the scale automatically.
+    new_im.wcs = None  # Let OpticalPSF figure out the scale automatically.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=new_im, oversampling=pp_oversampling,
                                  gsparams=gsp)

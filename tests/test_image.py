@@ -246,29 +246,33 @@ def test_Image_basic():
                 assert im2_cview[x,y] == value3
 
         # Setting or getting the value outside the bounds should throw an exception.
-        assert_raises(galsim.GalSimError,im1.setValue,0,0,1)
-        assert_raises(galsim.GalSimError,im1.__call__,0,0)
-        assert_raises(galsim.GalSimError,im1.__getitem__,0,0)
-        assert_raises(galsim.GalSimError,im1.__setitem__,0,0,1)
-        assert_raises(galsim.GalSimError,im1.view().setValue,0,0,1)
-        assert_raises(galsim.GalSimError,im1.view().__call__,0,0)
-        assert_raises(galsim.GalSimError,im1.view().__getitem__,0,0)
-        assert_raises(galsim.GalSimError,im1.view().__setitem__,0,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.setValue,0,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.addValue,0,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.__call__,0,0)
+        assert_raises(galsim.GalSimBoundsError,im1.__getitem__,0,0)
+        assert_raises(galsim.GalSimBoundsError,im1.__setitem__,0,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.view().setValue,0,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.view().__call__,0,0)
+        assert_raises(galsim.GalSimBoundsError,im1.view().__getitem__,0,0)
+        assert_raises(galsim.GalSimBoundsError,im1.view().__setitem__,0,0,1)
 
-        assert_raises(galsim.GalSimError,im1.setValue,ncol+1,0,1)
-        assert_raises(galsim.GalSimError,im1.__call__,ncol+1,0)
-        assert_raises(galsim.GalSimError,im1.view().setValue,ncol+1,0,1)
-        assert_raises(galsim.GalSimError,im1.view().__call__,ncol+1,0)
+        assert_raises(galsim.GalSimBoundsError,im1.setValue,ncol+1,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.addValue,ncol+1,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.__call__,ncol+1,0)
+        assert_raises(galsim.GalSimBoundsError,im1.view().setValue,ncol+1,0,1)
+        assert_raises(galsim.GalSimBoundsError,im1.view().__call__,ncol+1,0)
 
-        assert_raises(galsim.GalSimError,im1.setValue,0,nrow+1,1)
-        assert_raises(galsim.GalSimError,im1.__call__,0,nrow+1)
-        assert_raises(galsim.GalSimError,im1.view().setValue,0,nrow+1,1)
-        assert_raises(galsim.GalSimError,im1.view().__call__,0,nrow+1)
+        assert_raises(galsim.GalSimBoundsError,im1.setValue,0,nrow+1,1)
+        assert_raises(galsim.GalSimBoundsError,im1.addValue,0,nrow+1,1)
+        assert_raises(galsim.GalSimBoundsError,im1.__call__,0,nrow+1)
+        assert_raises(galsim.GalSimBoundsError,im1.view().setValue,0,nrow+1,1)
+        assert_raises(galsim.GalSimBoundsError,im1.view().__call__,0,nrow+1)
 
-        assert_raises(galsim.GalSimError,im1.setValue,ncol+1,nrow+1,1)
-        assert_raises(galsim.GalSimError,im1.__call__,ncol+1,nrow+1)
-        assert_raises(galsim.GalSimError,im1.view().setValue,ncol+1,nrow+1,1)
-        assert_raises(galsim.GalSimError,im1.view().__call__,ncol+1,nrow+1)
+        assert_raises(galsim.GalSimBoundsError,im1.setValue,ncol+1,nrow+1,1)
+        assert_raises(galsim.GalSimBoundsError,im1.addValue,ncol+1,nrow+1,1)
+        assert_raises(galsim.GalSimBoundsError,im1.__call__,ncol+1,nrow+1)
+        assert_raises(galsim.GalSimBoundsError,im1.view().setValue,ncol+1,nrow+1,1)
+        assert_raises(galsim.GalSimBoundsError,im1.view().__call__,ncol+1,nrow+1)
 
         # Also, setting values in something that should be const
         assert_raises(galsim.GalSimImmutableError,im1.view(make_const=True).setValue,1,1,1)
@@ -304,8 +308,8 @@ def test_Image_basic():
         dx = 31
         dy = 16
         im1.shift(dx,dy)
-        im2_view.setOrigin( 1+dx , 1+dy )
-        im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
+        im2_view.setOrigin(1+dx , 1+dy)
+        im3_view.setCenter((ncol+1)/2+dx , (nrow+1)/2+dy)
         shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
 
         assert im1.bounds == shifted_bounds
@@ -322,6 +326,13 @@ def test_Image_basic():
                 assert im2(x,y) == value3
                 assert im2_view(x+dx,y+dy) == value3
                 assert im3_view(x+dx,y+dy) == value3
+
+        assert_raises(TypeError, im1.shift, dx)
+        assert_raises(TypeError, im1.shift, dx=dx)
+        assert_raises(TypeError, im1.shift, x=dx, y=dy)
+        assert_raises(TypeError, im1.shift, dx, dy=dy)
+        assert_raises(TypeError, im1.shift, dx, dy, dy)
+        assert_raises(TypeError, im1.shift, dx, dy, invalid=True)
 
         # Check picklability
         do_pickle(im1)
@@ -402,10 +413,17 @@ def test_undefined_image():
         assert im11.array.shape == (1,1)
         assert im11 == im1
 
-        assert_raises(galsim.GalSimError,im1.setValue,0,0,1)
-        assert_raises(galsim.GalSimError,im1.__call__,0,0)
-        assert_raises(galsim.GalSimError,im1.view().setValue,0,0,1)
-        assert_raises(galsim.GalSimError,im1.view().__call__,0,0)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.setValue, 0, 0, 1)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.__call__, 0, 0)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.view().setValue, 0, 0, 1)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.view().__call__, 0, 0)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.view().addValue, 0, 0, 1)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.fill, 3)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.view().fill, 3)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.invertSelf)
+        im1.scale = 1.
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.calculate_fft)
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.calculate_inverse_fft)
 
         do_pickle(im1.bounds)
         do_pickle(im1)
@@ -479,6 +497,15 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" read failed reading from filename input.")
 
+        assert_raises(ValueError, galsim.fits.read, test_file, compression='invalid')
+        assert_raises(ValueError, ref_image.write, test_file, compression='invalid')
+        assert_raises(OSError, galsim.fits.read, test_file, compression='rice')
+
+        assert_raises(TypeError, galsim.fits.read)
+        assert_raises(TypeError, galsim.fits.read, test_file, hdu_list=hdu)
+        assert_raises(TypeError, ref_image.write)
+        assert_raises(TypeError, ref_image.write, file_name=test_file, hdu_list=hdu)
+
         #
         # Test various compression schemes
         #
@@ -531,7 +558,7 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for auto full-file bzip2")
 
-        # Test ric
+        # Test rice
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.fz")
         test_image = galsim.fits.read(test_file, compression='rice')
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
@@ -689,6 +716,35 @@ def test_Image_MultiFITS_IO():
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" readMulti failed after using writeFile")
+
+        assert_raises(ValueError, galsim.fits.readMulti, test_multi_file, compression='invalid')
+        assert_raises(ValueError, galsim.fits.writeMulti, image_list, test_multi_file,
+                      compression='invalid')
+        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+                      compression='invalid')
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='rice')
+        assert_raises(OSError, galsim.fits.readFile, test_multi_file, compression='rice')
+
+        assert_raises(TypeError, galsim.fits.readMulti)
+        assert_raises(TypeError, galsim.fits.readMulti, test_multi_file, hdu_list=hdu)
+        assert_raises(TypeError, galsim.fits.readMulti, hdu_list=test_multi_file)
+        assert_raises(TypeError, galsim.fits.writeMulti)
+        assert_raises(TypeError, galsim.fits.writeMulti, image_list)
+        assert_raises(TypeError, galsim.fits.writeMulti, image_list,
+                      file_name=test_multi_file, hdu_list=hdu)
+
+        assert_raises(TypeError, galsim.fits.writeFile)
+        assert_raises(TypeError, galsim.fits.writeFile, image_list)
+        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+                      compression='invalid')
+        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+                      compression='rice')
+        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+                      compression='gzip_tile')
+        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+                      compression='hcompress')
+        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+                      compression='plio')
 
         #
         # Test various compression schemes
@@ -957,6 +1013,26 @@ def test_Image_CubeFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" readCube failed after using writeFile")
 
+        assert_raises(ValueError, galsim.fits.readCube, test_cube_file, compression='invalid')
+        assert_raises(ValueError, galsim.fits.writeCube, image_list, test_cube_file,
+                      compression='invalid')
+        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_cube_file,
+                      compression='invalid')
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='rice')
+
+        assert_raises(TypeError, galsim.fits.readCube)
+        assert_raises(TypeError, galsim.fits.readCube, test_cube_file, hdu_list=hdu)
+        assert_raises(TypeError, galsim.fits.readCube, hdu_list=test_cube_file)
+        assert_raises(TypeError, galsim.fits.writeCube)
+        assert_raises(TypeError, galsim.fits.writeCube, image_list)
+        assert_raises(TypeError, galsim.fits.writeCube, image_list,
+                      file_name=test_cube_file, hdu_list=hdu_list)
+
+        assert_raises(ValueError, galsim.fits.writeCube, image_list[:0], test_cube_file)
+        assert_raises(ValueError, galsim.fits.writeCube,
+                      [image_list[0], image_list[1].subImage(galsim.BoundsI(0,4,0,4))],
+                      test_cube_file)
+
         #
         # Test various compression schemes
         #
@@ -1131,12 +1207,8 @@ def test_Image_binary_add():
         # shape.  Note that this test is only included here (not in the unit tests for all
         # other operations) because all operations have the same error-checking code, so it should
         # only be necessary to check once.
-        image1 = galsim.Image(ref_array.astype(types[i]))
-        image2 = image1.subImage(galsim.BoundsI(image1.xmin, image1.xmax-1,
-                                                image1.ymin+1, image1.ymax))
         with assert_raises(ValueError):
-            image1.__add__(image2)
-
+            image1 + image1.subImage(galsim.BoundsI(0,4,0,4))
 
 @timer
 def test_Image_binary_subtract():
@@ -1169,6 +1241,9 @@ def test_Image_binary_subtract():
             np.testing.assert_array_equal(ref_array.astype(type3), image3.array,
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        with assert_raises(ValueError):
+            image1 - image1.subImage(galsim.BoundsI(0,4,0,4))
 
 
 @timer
@@ -1209,6 +1284,9 @@ def test_Image_binary_multiply():
             np.testing.assert_array_equal((2*ref_array**2).astype(type3), image3.array,
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        with assert_raises(ValueError):
+            image1 * image1.subImage(galsim.BoundsI(0,4,0,4))
 
 
 @timer
@@ -1252,6 +1330,9 @@ def test_Image_binary_divide():
                     decimal=decimal,
                     err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        with assert_raises(ValueError):
+            image1 / image1.subImage(galsim.BoundsI(0,4,0,4))
 
 
 @timer
@@ -1402,6 +1483,9 @@ def test_Image_binary_scalar_pow():
                 err_msg="Binary pow scalar in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
 
+        with assert_raises(TypeError):
+            image1 ** image2
+
 
 @timer
 def test_Image_inplace_add():
@@ -1435,6 +1519,9 @@ def test_Image_inplace_add():
             np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image1.array,
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        with assert_raises(ValueError):
+            image1 += image1.subImage(galsim.BoundsI(0,4,0,4))
 
 
 @timer
@@ -1470,6 +1557,9 @@ def test_Image_inplace_subtract():
                     err_msg="Inplace subtract in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
+        with assert_raises(ValueError):
+            image1 -= image1.subImage(galsim.BoundsI(0,4,0,4))
+
 
 @timer
 def test_Image_inplace_multiply():
@@ -1503,6 +1593,9 @@ def test_Image_inplace_multiply():
             np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image1.array,
                     err_msg="Inplace multiply in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        with assert_raises(ValueError):
+            image1 *= image1.subImage(galsim.BoundsI(0,4,0,4))
 
 
 @timer
@@ -1555,6 +1648,9 @@ def test_Image_inplace_divide():
                     decimal=decimal,
                     err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        with assert_raises(ValueError):
+            image1 /= image1.subImage(galsim.BoundsI(0,4,0,4))
 
 
 @timer
@@ -1677,6 +1773,8 @@ def test_Image_inplace_scalar_pow():
                 err_msg="Inplace scalar pow in Image class (dictionary "
                 +"call) does not match reference for dtype = "+str(types[i]))
 
+        with assert_raises(TypeError):
+            image1 **= image2
 
 @timer
 def test_Image_subImage():
@@ -1769,6 +1867,10 @@ def test_Image_subImage():
             err_msg="image[bounds] /= im2 set wrong locations for dtype = "+str(types[i]))
 
         do_pickle(image)
+
+    assert_raises(TypeError, image.subImage, bounds=None)
+    assert_raises(TypeError, image.subImage, bounds=galsim.BoundsD(0,4,0,4))
+
 
 def make_subImage(file_name, bounds):
     """Helper function for test_subImage_persistence
@@ -1880,11 +1982,14 @@ def test_Image_resize():
             do_pickle(im2)
             do_pickle(im3)
 
+    assert_raises(TypeError, im1.resize, bounds=None)
+    assert_raises(TypeError, im1.resize, bounds=galsim.BoundsD(0,5,0,5))
+
 
 @timer
 def test_ConstImage_array_constness():
     """Test that Image instances with make_const=True cannot be modified via their .array
-    attributes, and that if this is attempted a GalSimError is raised.
+    attributes, and that if this is attempted a GalSimImmutableError is raised.
     """
     for i in range(ntypes):
         image = galsim.Image(ref_array.astype(types[i]), make_const=True)
@@ -1948,7 +2053,7 @@ def test_BoundsI_init_with_non_pure_ints():
     assert ref_bounds == galsim.BoundsI(*bound_arr_flt), \
         "Cannot initialize a BoundI with float array elements"
 
-    # Using non-integers should raise a ValueError
+    # Using non-integers should raise a TypeError
     assert_raises(TypeError, galsim.BoundsI, *bound_arr_flt_nonint)
     assert_raises(TypeError, galsim.BoundsI,
                   xmin=bound_arr_flt_nonint[0], xmax=bound_arr_flt_nonint[1],
@@ -2088,6 +2193,8 @@ def test_Image_view():
     imv2.setCenter(0,0)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    with assert_raises(galsim.GalSimError):
+        imv.scale   # scale is invalid if wcs is not a PixelScale
     do_pickle(imv)
     do_pickle(imv2)
 
@@ -2100,6 +2207,8 @@ def test_Image_view():
     assert imv(11,19) == 50
     assert im(11,19) == 50
     imv2 = im.view()
+    with assert_raises(galsim.GalSimError):
+        imv2.scale = 0.17   # Invalid if wcs is not PixelScale
     imv2.wcs = None
     imv2.scale = 0.17
     assert imv.bounds == imv2.bounds
@@ -2126,6 +2235,11 @@ def test_Image_view():
     im.setValue(11,19, 17)
     assert im.array.min() == 17
     assert im.array.max() == 17
+
+    assert_raises(TypeError, im.view, origin=(0,0), center=(0,0))
+    assert_raises(TypeError, im.view, scale=0.3, wcs=galsim.JacobianWCS(1.1, 0.1, 0.1, 1.))
+    assert_raises(TypeError, im.view, scale=galsim.PixelScale(0.3))
+    assert_raises(TypeError, im.view, wcs=0.3)
 
 
 @timer
@@ -2278,6 +2392,10 @@ def test_copy():
     assert im5(3,8) == 11.
     im8[3,8] = 15
     assert im5(3,8) == 11.
+
+    assert_raises(TypeError, im5.copyFrom, im8.array)
+    im9 = galsim.Image(5,5,init_value=3)
+    assert_raises(ValueError, im5.copyFrom, im9)
 
 
 @timer
@@ -2800,6 +2918,69 @@ def test_int_image_arith():
             np.testing.assert_array_equal(test.array, 0,
                     err_msg="//= failed for Images with dtype = %s."%types[i])
 
+    with assert_raises(ValueError):
+        full & full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full | full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full ^ full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full // full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full % full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full &= full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full |= full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full ^= full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full //= full.subImage(galsim.BoundsI(0,4,0,4))
+    with assert_raises(ValueError):
+        full %= full.subImage(galsim.BoundsI(0,4,0,4))
+
+    imd = galsim.ImageD(ref_array)
+    with assert_raises(ValueError):
+        imd & full
+    with assert_raises(ValueError):
+        imd | full
+    with assert_raises(ValueError):
+        imd ^ full
+    with assert_raises(ValueError):
+        imd // full
+    with assert_raises(ValueError):
+        imd % full
+    with assert_raises(ValueError):
+        imd &= full
+    with assert_raises(ValueError):
+        imd |= full
+    with assert_raises(ValueError):
+        imd ^= full
+    with assert_raises(ValueError):
+        imd //= full
+    with assert_raises(ValueError):
+        imd %= full
+
+    with assert_raises(ValueError):
+        full & imd
+    with assert_raises(ValueError):
+        full | imd
+    with assert_raises(ValueError):
+        full ^ imd
+    with assert_raises(ValueError):
+        full // imd
+    with assert_raises(ValueError):
+        full % imd
+    with assert_raises(ValueError):
+        full &= imd
+    with assert_raises(ValueError):
+        full |= imd
+    with assert_raises(ValueError):
+        full ^= imd
+    with assert_raises(ValueError):
+        full //= imd
+    with assert_raises(ValueError):
+        full %= imd
 
 
 @timer
@@ -2925,6 +3106,21 @@ def test_wrap():
                                   "image.wrap(%s) did not return the right subimage")
     np.testing.assert_equal(im3_wrap.bounds, b3,
                             "image.wrap(%s) does not have the correct bounds")
+
+    b = galsim.BoundsI(-K+1,K,-L+1,L)
+    b2 = galsim.BoundsI(-K+1,K,0,L)
+    b3 = galsim.BoundsI(0,K,-L+1,L)
+    assert_raises(TypeError, im.wrap, bounds=None)
+    assert_raises(ValueError, im3.wrap, b, hermitian='x')
+    assert_raises(ValueError, im3.wrap, b2, hermitian='x')
+    assert_raises(ValueError, im.wrap, b3, hermitian='x')
+    assert_raises(ValueError, im2.wrap, b, hermitian='y')
+    assert_raises(ValueError, im2.wrap, b3, hermitian='y')
+    assert_raises(ValueError, im.wrap, b2, hermitian='y')
+    assert_raises(ValueError, im.wrap, b, hermitian='invalid')
+    assert_raises(ValueError, im2.wrap, b2, hermitian='invalid')
+    assert_raises(ValueError, im3.wrap, b3, hermitian='invalid')
+
 
 @timer
 def test_FITS_bad_type():
