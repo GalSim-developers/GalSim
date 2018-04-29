@@ -121,6 +121,15 @@ def test_table():
         do_pickle(table1)
         do_pickle(table2)
 
+    assert_raises(ValueError, galsim.LookupTable, x=args1, f=vals1, interpolant='invalid')
+    assert_raises(ValueError, galsim.LookupTable, x=[1], f=[1], interpolant='linear')
+    assert_raises(ValueError, galsim.LookupTable, x=[1,2], f=[1,2], interpolant='spline')
+    assert_raises(ValueError, galsim.LookupTable, x=[1,1,1], f=[1,2,3])
+    assert_raises(ValueError, galsim.LookupTable, x=[0,1,2], f=[1,2,3], x_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=[-1,0,1], f=[1,2,3], x_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=[0,1,2], f=[0,1,2], f_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=[0,1,2], f=[2,-1,2], f_log=True)
+
 
 @timer
 def test_init():
@@ -170,6 +179,15 @@ def test_log():
         np.testing.assert_almost_equal(
             result_4, result_1, decimal=3,
             err_msg='Disagreement when interpolating in log(f)')
+
+    with assert_raises(galsim.GalSimRangeError):
+        tab_2(-1)
+    with assert_raises(galsim.GalSimRangeError):
+        tab_3(-1)
+    with assert_raises(galsim.GalSimRangeError):
+        tab_2(x_neg)
+    with assert_raises(galsim.GalSimRangeError):
+        tab_3(x_neg)
 
     # Check picklability
     do_pickle(tab_1)
@@ -341,11 +359,13 @@ def test_table2d():
     # Test edge exception
     with assert_raises(ValueError):
         tab2d(1e6, 1e6)
+    with assert_raises(ValueError):
+        tab2d.gradient(1e6, 1e6)
 
     # Test edge wrapping
     # Check that can't construct table with edge-wrapping if edges don't match
     with assert_raises(ValueError):
-        galsim.LookupTable((x, y, z), dict(edge_mode='wrap'))
+        galsim.LookupTable2D(x, y, z, edge_mode='wrap')
 
     # Extend edges and make vals match
     x = np.append(x, x[-1] + (x[-1]-x[-2]))
@@ -366,7 +386,8 @@ def test_table2d():
 
 
     # Test floor/ceil/nearest interpolant
-    x = y = np.arange(5)
+    x = np.arange(5)
+    y = np.arange(5)
     z = x + y[:, np.newaxis]
     tab2d = galsim.LookupTable2D(x, y, z, interpolant='ceil')
     assert tab2d(2.4, 3.6) == 3+4, "Ceil interpolant failed."
@@ -374,6 +395,10 @@ def test_table2d():
     assert tab2d(2.4, 3.6) == 2+3, "Floor interpolant failed."
     tab2d = galsim.LookupTable2D(x, y, z, interpolant='nearest')
     assert tab2d(2.4, 3.6) == 2+4, "Nearest interpolant failed."
+
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z, interpolant='invalid')
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z, edge_mode='invalid')
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z[:-1,:-1])
 
     # Test that x,y arrays need to be strictly increasing.
     x[0] = x[1]
