@@ -166,9 +166,6 @@ class LookupTable(object):
 
         # Handle the log(x) if necessary
         if self.x_log:
-            if np.any(np.asarray(x) <= 0.):
-                raise GalSimValueError("Cannot interpolate x<=0 when using log(x) interpolation.",
-                                       x)
             x = np.log(x)
 
         x = np.asarray(x)
@@ -176,9 +173,7 @@ class LookupTable(object):
             f = self._tab.interp(float(x))
         else:
             dimen = len(x.shape)
-            if dimen > 2:
-                raise GalSimValueError("Arrays with dimension larger than 2 not allowed.", x)
-            elif dimen == 2:
+            if dimen > 1:
                 f = np.empty_like(x.ravel(), dtype=float)
                 xx = x.astype(float,copy=False).ravel()
                 self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
@@ -281,7 +276,7 @@ class LookupTable(object):
             data = data.values.transpose()
         except (ImportError, AttributeError, CParserError): # pragma: no cover
             data = np.loadtxt(file_name).transpose()
-        if data.shape[0] != 2:
+        if data.shape[0] != 2:  # pragma: no cover
             raise GalSimValueError("File provided for LookupTable does not have 2 columns",
                                    file_name)
         x=data[0]
