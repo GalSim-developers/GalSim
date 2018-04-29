@@ -181,6 +181,40 @@ def test_photon_array():
     np.testing.assert_almost_equal(pa2.dydz[50:], pa1.dydz)
     np.testing.assert_almost_equal(pa2.wavelength[50:], pa1.wavelength)
 
+    # Error if it doesn't fit.
+    assert_raises(ValueError, pa2.assignAt, 90, pa1)
+
+    # Test some trivial usage of makeFromImage
+    zero = galsim.Image(4,4,init_value=0)
+    photons = galsim.PhotonArray.makeFromImage(zero)
+    print('photons = ',photons)
+    assert len(photons) == 16
+    np.testing.assert_array_equal(photons.flux, 0.)
+
+    ones = galsim.Image(4,4,init_value=1)
+    photons = galsim.PhotonArray.makeFromImage(ones)
+    print('photons = ',photons)
+    assert len(photons) == 16
+    np.testing.assert_almost_equal(photons.flux, 1.)
+
+    tens = galsim.Image(4,4,init_value=8)
+    photons = galsim.PhotonArray.makeFromImage(tens, max_flux=5.)
+    print('photons = ',photons)
+    assert len(photons) == 32
+    np.testing.assert_almost_equal(photons.flux, 4.)
+
+    assert_raises(ValueError, galsim.PhotonArray.makeFromImage, zero, max_flux=0.)
+    assert_raises(ValueError, galsim.PhotonArray.makeFromImage, zero, max_flux=-2)
+
+    # Check some other errors
+    undef = galsim.Image()
+    assert_raises(galsim.GalSimUndefinedBoundsError, pa2.addTo, undef)
+
+    # This shouldn't be able to happen in regular photon-shooting usage, so check here.
+    # TODO: Would be nice to have some real tests of the convolve functionality here,
+    #       rather than just implicitly in the shooting tests.
+    assert_raises(galsim.GalSimError, pa2.convolve, pa1)
+
     # Check picklability again with non-zero values for everything
     do_pickle(photon_array)
 
@@ -539,6 +573,9 @@ def test_dcr():
                   zenith_angle=zenith_angle,
                   parallactic_angle=parallactic_angle,
                   scale_unit='inches')                  # invalid scale_unit
+
+    # Invalid to use dcr without some way of setting wavelengths.
+    assert_raises(galsim.GalSimError, achrom.drawImage, im2, method='phot', surface_ops=[dcr])
 
 @unittest.skipIf(no_astroplan, 'Unable to import astroplan')
 @timer

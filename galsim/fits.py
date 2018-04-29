@@ -214,7 +214,7 @@ class _ReadFile:
                     self.bz2 = self.bz2_methods[self.bz2_index]
             else:  # pragma: no cover
                 raise GalSimError("None of the options for bunzipping were successful.")
-        else:
+        else:  # pragma: no cover  (can't get here from public API)
             raise GalSimValueError("Unknown file_compression", file_compress, ('gzip', 'bzip2'))
 _read_file = _ReadFile()
 
@@ -391,7 +391,7 @@ class _WriteFile:
                     self.bz2 = self.bz2_methods[self.bz2_index]
             else:  # pragma: no cover
                 raise GalSimError("None of the options for bunzipping were successful.")
-        else:
+        else:  # pragma: no cover  (can't get here from public API)
             raise GalSimValueError("Unknown file_compression", file_compress, ('gzip', 'bzip2'))
 
 _write_file = _WriteFile()
@@ -424,19 +424,11 @@ def _check_hdu(hdu, pyfits_compress):
 
     # Check that the specified compression is right for the given hdu type.
     if pyfits_compress:
-        if not isinstance(hdu, pyfits.CompImageHDU):  # pragma: no cover
-            if isinstance(hdu, pyfits.BinTableHDU):
-                raise OSError('Expecting a CompImageHDU, but got a BinTableHDU. Probably your '
-                              'pyfits installation does not have the pyfitsComp module installed.')
-            elif isinstance(hdu, pyfits.ImageHDU):
-                import warnings
-                warnings.warn("Expecting a CompImageHDU, but found an uncompressed ImageHDU",
-                              GalSimWarning)
-            else:
-                raise OSError('Found invalid HDU reading FITS file (expected an ImageHDU)')
+        if not isinstance(hdu, pyfits.CompImageHDU):
+            raise OSError('Found invalid HDU type reading FITS file (expected a CompImageHDU)')
     else:
         if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
-            raise OSError('Found invalid HDU reading FITS file (expected an ImageHDU)')
+            raise OSError('Found invalid HDU type reading FITS file (expected an ImageHDU)')
 
 
 def _get_hdu(hdu_list, hdu, pyfits_compress):
@@ -455,8 +447,10 @@ def _get_hdu(hdu_list, hdu, pyfits_compress):
         if len(hdu_list) <= hdu:
             raise OSError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
         hdu = hdu_list[hdu]
-    else:
+    elif isinstance(hdu_list, (pyfits.ImageHDU, pyfits.PrimaryHDU, pyfits.CompImageHDU)):
         hdu = hdu_list
+    else:
+        raise TypeError("Invalid hdu_list: %s",hdu_list)
     _check_hdu(hdu, pyfits_compress)
     return hdu
 
@@ -651,6 +645,8 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
         if image_list.dtype.kind == 'c':
             raise GalSimValueError("Cannot write complex numpy arrays to a fits file. "
                                    "Write array.real and array.imag separately.", image_list)
+    elif len(image_list) == 0:
+        raise GalSimValueError("In writeCube: image_list has no images", image_list)
     elif all(isinstance(item, np.ndarray) for item in image_list):
         is_all_numpy = True
         if any(a.dtype.kind == 'c' for a in image_list):
@@ -684,8 +680,6 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
         wcs = None
     else:
         nimages = len(image_list)
-        if (nimages == 0):
-            raise GalSimValueError("In writeCube: image_list has no images", image_list)
         im = image_list[0]
         dtype = im.array.dtype
         nx = im.xmax - im.xmin + 1
@@ -748,6 +742,7 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
     if pyfits_compress and compression != 'auto':
         # If compression is auto and it determined that it should use rice, then we
         # should presume that the hdus were already rice compressed, so we can ignore it here.
+        # Otherwise, any pyfits_compression options are invalid.
         raise GalSimValueError("Compression %s is invalid for writeFile",compression)
     _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
 
@@ -973,9 +968,9 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     if file_name:
         hdu_list, fin = _read_file(file_name, dir, file_compress)
 
-    hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
-
     try:
+        hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+
         wcs, origin = wcs.readFromFitsHeader(hdu.header)
         dt = hdu.data.dtype.type
         if dt in Image.valid_dtypes:
@@ -1231,12 +1226,7 @@ class FitsHeader(object):
 
     def __delitem__(self, key):
         self._tag = None
-        # This is equivalent to the newer pyfits implementation, but older versions silently
-        # did nothing if the key was not in the header.
-        if key in self.header:
-            del self.header[key]
-        else:
-            raise KeyError("key %r not in FitsHeader"%(key))
+        del self.header[key]
 
     def __getitem__(self, key):
         return self.header[key]
@@ -1255,7 +1245,6 @@ class FitsHeader(object):
         except AttributeError:
             pass
         self._tag = None
-        # Recent versions implement the above logic with the regular setitem method.
         self.header[key] = value
 
     def clear(self):

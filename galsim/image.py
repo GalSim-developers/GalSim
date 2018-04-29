@@ -293,8 +293,6 @@ class Image(object):
         if dtype is not None and dtype not in Image.valid_dtypes:
             raise GalSimValueError("Invlid dtype.", dtype, Image.valid_dtypes)
         if array is not None:
-            if not isinstance(array, np.ndarray):
-                raise TypeError("array must be a numpy.ndarray instance")
             if copy is None: copy = False
             if dtype is None:
                 dtype = array.dtype.type
@@ -376,7 +374,7 @@ class Image(object):
             if init_value is not None:
                 raise GalSimIncompatibleValuesError(
                     "Cannot specify init_value without setting an initial size",
-                    init_value, ncol=ncol, nrow=nrow, bounds=bounds)
+                    init_value=init_value, ncol=ncol, nrow=nrow, bounds=bounds)
 
         # Construct the wcs attribute
         if scale is not None:
@@ -879,11 +877,10 @@ class Image(object):
         if self.wcs is None:
             raise GalSimError("calculate_fft requires that the scale be set.")
         if not self.wcs.isPixelScale():
-            raise GalSimValueError("calculate_fft requires that the image has a PixelScale wcs.",
-                                   self.wcs)
+            raise GalSimError("calculate_fft requires that the image has a PixelScale wcs.")
         if not self.bounds.isDefined():
-            raise GalSimUndefinedBoundsError("calculate_fft requires that the image have defined "
-                                             "bounds.")
+            raise GalSimUndefinedBoundsError(
+                    "calculate_fft requires that the image have defined bounds.")
 
         No2 = max(-self.bounds.xmin, self.bounds.xmax+1, -self.bounds.ymin, self.bounds.ymax+1)
 
@@ -928,8 +925,7 @@ class Image(object):
         if self.wcs is None:
             raise GalSimError("calculate_inverse_fft requires that the scale be set.")
         if not self.wcs.isPixelScale():
-            raise GalSimValueError("calculate_inverse_fft requires that the image has a "
-                                   "PixelScale wcs.", self.wcs)
+            raise GalSimError("calculate_inverse_fft requires that the image has a PixelScale wcs.")
         if not self.bounds.isDefined():
             raise GalSimUndefinedBoundsError("calculate_inverse_fft requires that the image have "
                                              "defined bounds.")
@@ -979,6 +975,8 @@ class Image(object):
         """
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
+        if not isinstance(rhs, Image):
+            raise TypeError("Trying to copyFrom a non-image")
         if self.bounds.numpyShape() != rhs.bounds.numpyShape():
             raise GalSimIncompatibleValuesError(
                 "Trying to copy images that are not the same shape", self_image=self, rhs=rhs)
@@ -1005,7 +1003,7 @@ class Image(object):
 
         if scale is not None:
             if wcs is not None:
-                raise GalSimIncompatibleValeusError(
+                raise GalSimIncompatibleValuesError(
                     "Cannot provide both scale and wcs", scale=scale, wcs=wcs)
             wcs = PixelScale(scale)
         elif wcs is not None:
@@ -1771,7 +1769,7 @@ def Image_neg(self):
 
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
-    check_image_consistency(self, other)
+    check_image_consistency(self, other, integer=True)
     try:
         a = other.array
     except AttributeError:

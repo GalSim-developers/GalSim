@@ -1166,7 +1166,7 @@ class PixelScale(LocalWCS):
 
     def __init__(self, scale):
         self._color = None
-        self._scale = scale
+        self._scale = float(scale)
 
     # Help make sure PixelScale is read-only.
     @property
@@ -1271,7 +1271,7 @@ class ShearWCS(LocalWCS):
 
     def __init__(self, scale, shear):
         self._color = None
-        self._scale = scale
+        self._scale = float(scale)
         self._shear = shear
         self._g1 = shear.g1
         self._g2 = shear.g2
@@ -1407,10 +1407,10 @@ class JacobianWCS(LocalWCS):
 
     def __init__(self, dudx, dudy, dvdx, dvdy):
         self._color = None
-        self._dudx = dudx
-        self._dudy = dudy
-        self._dvdx = dvdx
-        self._dvdy = dvdy
+        self._dudx = float(dudx)
+        self._dudy = float(dudy)
+        self._dvdx = float(dvdx)
+        self._dvdy = float(dvdy)
         self._det = dudx * dvdy - dudy * dvdx
 
     # Help make sure JacobianWCS is read-only.

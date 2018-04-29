@@ -1231,6 +1231,25 @@ def test_fft():
             im2_real.array, im2_alt_real.array, 9,
             "inverse_fft produce a different array than obj2.drawImage(nx,ny,method='sb')")
 
+    # wcs must be a PixelScale
+    xim.wcs = galsim.JacobianWCS(1.1,0.1,0.1,1)
+    with assert_raises(galsim.GalSimError):
+        xim.calculate_fft()
+    with assert_raises(galsim.GalSimError):
+        xim.calculate_inverse_fft()
+    xim.wcs = None
+    with assert_raises(galsim.GalSimError):
+        xim.calculate_fft()
+    with assert_raises(galsim.GalSimError):
+        xim.calculate_inverse_fft()
+
+    # inverse needs image with 0,0
+    xim.scale=1
+    xim.setOrigin(1,1)
+    with assert_raises(galsim.GalSimBoundsError):
+        xim.calculate_inverse_fft()
+
+
 @timer
 def test_np_fft():
     """Test the equivalence between np.fft functions and the galsim versions
