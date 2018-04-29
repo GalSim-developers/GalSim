@@ -175,6 +175,17 @@ def test_PSE_weight():
     assert_raises(TypeError, pse.estimate, g1, g2, weight_EE=8)
     assert_raises(TypeError, pse.estimate, g1, g2, weight_BB='yes')
 
+    # If N is fairly small, then can get zeros in the counts, which raises an error
+    array_size = 5
+    g1, g2 = ps.buildGrid(grid_spacing=grid_spacing, ngrid=array_size, units=galsim.degrees,
+                          rng=galsim.BaseDeviate(rand_seed))
+    pse = galsim.pse.PowerSpectrumEstimator(N=array_size,
+                                            sky_size_deg=array_size*grid_spacing,
+                                            nbin=n_ell)
+    with assert_raises(galsim.GalSimError):
+        pse.estimate(g1,g2)
+
+
 
 if __name__ == "__main__":
     test_PSE_basic()
