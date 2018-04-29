@@ -853,7 +853,7 @@ def test_thin():
         print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, preserving range."
         thin_s = s.thin(rel_err=err, preserve_range=False)
-        thin_flux = thin_s.calculateFlux(bp)
+        thin_flux = thin_s.calculateFlux(bp.truncate(thin_s.blue_limit, thin_s.red_limit))
         thin_err = (flux-thin_flux)/flux
         print("num samples with preserve_range = False: ",len(thin_s.wave_list))
         print("realized error = ",(flux-thin_flux)/flux)

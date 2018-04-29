@@ -30,6 +30,8 @@ Bug Fixes
 - Fixed python3 unicode/str mismatches in tests/SConscript (#932)
 - Fixed memory leak when drawing PhaseScreenPSFs using photon-shooting (#942)
 - Fixed a few minor bugs in the Silicon code. (#963)
+- Fixed a bug in SED.thin(), where it would always use the default rel_err,
+  rather than the provided value. (#963)
 
 
 Deprecated Features

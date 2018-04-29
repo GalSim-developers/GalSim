@@ -799,7 +799,7 @@ class SED(object):
 
             # Note that this is thinning in native units, not nm and photons/nm.
             newx, newf = galsim.utilities.thin_tabulated_values(
-                    rest_wave_native, spec_native,
+                    rest_wave_native, spec_native, rel_err=rel_err,
                     trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
 
             newspec = galsim.LookupTable(newx, newf, interpolant='linear')
