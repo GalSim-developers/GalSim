@@ -487,7 +487,13 @@ def test_dcr_angles():
              'Deneb', 'Mizar', 'Dubhe', 'Sirius', 'Rigel', 'Etamin', 'Alderamin']
 
     for name in names:
-        star = astroplan.FixedTarget.from_name(name)
+        try:
+            star = astroplan.FixedTarget.from_name(name)
+        except Exception as e:
+            print('Caught exception trying to make star from name ',name)
+            print(e)
+            print('Aborting.  (Probably some kind of network problem.)')
+            return
         print(star)
 
         ap_z = subaru.altaz(time, star).zen

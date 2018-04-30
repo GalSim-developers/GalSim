@@ -38,12 +38,18 @@ namespace {
         static void wrapTemplates(W & wrapper)
         {
             typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-                                                     ImageView<U>, Position<int>);
+                                                     ImageView<U>, Position<int>, bool);
+            typedef void (Silicon::*area_fn)(ImageView<U>, Position<int>);
+
             wrapper
                 .def("accumulate",
                      (accumulate_fn)&Silicon::accumulate,
-                     (bp::args("photons", "rng", "image", "orig_center")),
+                     (bp::args("photons", "rng", "image", "orig_center", "resume")),
                      "Accumulate photons in image")
+                .def("fill_with_pixel_areas",
+                     (area_fn)&Silicon::fillWithPixelAreas,
+                     (bp::args("image", "orig_center")),
+                     "Fill image with pixel areas")
                 ;
         }
 
@@ -53,7 +59,8 @@ namespace {
                                     double SensorThickness, const bp::object& array,
                                     const Table<double, double>& treeRingTable,
                                     const Position<double>& treeRingCenter,
-                                    const Table<double, double>& abs_length_table)
+                                    const Table<double, double>& abs_length_table,
+                                    bool transpose)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -72,7 +79,7 @@ namespace {
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                                Nrecalc, DiffStep, PixelSize, SensorThickness, data,
-                               treeRingTable, treeRingCenter, abs_length_table);
+                               treeRingTable, treeRingCenter, abs_length_table, transpose);
         }
 
         static void wrap()
@@ -85,7 +92,7 @@ namespace {
                                   "Nrecalc", "DiffStep", "PixelSize",
                                   "SensorThickness", "vertex_data",
                                   "treeRingTable", "treeRingCenter",
-                                  "abs_length_table"))))
+                                  "abs_length_table", "transpose"))))
                 .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);
