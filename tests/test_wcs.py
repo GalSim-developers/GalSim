@@ -177,24 +177,38 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
         image_pos = galsim.PositionD(x+x0,y+y0)
         world_pos = galsim.PositionD(u,v)
         world_pos2 = wcs.toWorld(image_pos, color=color)
+        world_pos3 = wcs.posToWorld(image_pos, color=color)
         np.testing.assert_almost_equal(
                 world_pos.x, world_pos2.x, digits2,
                 'wcs.toWorld returned wrong world position for '+name)
         np.testing.assert_almost_equal(
                 world_pos.y, world_pos2.y, digits2,
                 'wcs.toWorld returned wrong world position for '+name)
+        np.testing.assert_almost_equal(
+                world_pos.x, world_pos3.x, digits2,
+                'wcs.postoWorld returned wrong world position for '+name)
+        np.testing.assert_almost_equal(
+                world_pos.y, world_pos3.y, digits2,
+                'wcs.postoWorld returned wrong world position for '+name)
 
         scale = wcs.maxLinearScale(image_pos, color=color)
         try:
             # The reverse transformation is not guaranteed to be implemented,
             # so guard against NotImplementedError being raised:
             image_pos2 = wcs.toImage(world_pos, color=color)
+            image_pos3 = wcs.posToImage(world_pos, color=color)
             np.testing.assert_almost_equal(
                     image_pos.x*scale, image_pos2.x*scale, digits2,
                     'wcs.toImage returned wrong image position for '+name)
             np.testing.assert_almost_equal(
                     image_pos.y*scale, image_pos2.y*scale, digits2,
                     'wcs.toImage returned wrong image position for '+name)
+            np.testing.assert_almost_equal(
+                    image_pos.x*scale, image_pos3.x*scale, digits2,
+                    'wcs.posToImage returned wrong image position for '+name)
+            np.testing.assert_almost_equal(
+                    image_pos.y*scale, image_pos3.y*scale, digits2,
+                    'wcs.posToImage returned wrong image position for '+name)
         except NotImplementedError:
             pass
 
@@ -207,6 +221,21 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
         np.testing.assert_almost_equal(
                 world_pos.y, wcs.toWorld(image_pos, color=color).y, digits2,
                 'wcs.toWorld gave different value with PositionI image_pos for '+name)
+    assert_raises(TypeError, wcs.posToWorld, (3,4))
+    assert_raises(TypeError, wcs.toWorld, (3,4))
+    assert_raises(TypeError, wcs.toWorld, galsim.CelestialCoord(0*galsim.degrees,0*galsim.degrees))
+    assert_raises(TypeError, wcs.posToWorld,
+                  galsim.CelestialCoord(0*galsim.degrees,0*galsim.degrees))
+    assert_raises(TypeError, wcs.toImage, (3,4))
+    assert_raises(TypeError, wcs.posToImage, (3,4))
+    if wcs.isCelestial():
+        assert_raises(TypeError, wcs.toImage, galsim.PositionD(3,4))
+        assert_raises(TypeError, wcs.posToImage, galsim.PositionD(3,4))
+    else:
+        assert_raises(TypeError, wcs.toImage,
+                      galsim.CelestialCoord(0*galsim.degrees,0*galsim.degrees))
+        assert_raises(TypeError, wcs.posToImage,
+                      galsim.CelestialCoord(0*galsim.degrees,0*galsim.degrees))
 
 
 def check_world(pos1, pos2, digits, err_msg):
@@ -271,9 +300,7 @@ def do_wcs_image(wcs, name, approx=False):
     if wcs.isUniform():
         # Test that the regular CD, CRPIX, CRVAL items that are written to the header
         # describe an equivalent WCS as this one.
-        hdu, hdu_list, fin = galsim.fits.readFile(test_name, dir=dir)
-        affine = galsim.AffineTransform._readHeader(hdu.header)
-        galsim.fits.closeHDUList(hdu_list, fin)
+        affine = galsim.FitsWCS(test_name, dir=dir)
         check_world(affine.toWorld(im.origin), world1, digits2,
                     "World position of origin is wrong after write/read.")
         check_world(affine.toWorld(im.center), world2, digits2,
@@ -567,17 +594,15 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
     np.testing.assert_almost_equal(
             world_pos2.y, world_pos1.y, digits,
             'withOrigin(new_origin) returned wrong world position')
-    if not wcs.isCelestial():
-        new_world_origin = galsim.PositionD(5352.7, 9234.3)
-        wcs5 = wcs.withOrigin(new_origin, new_world_origin, color=color)
-        world_pos3 = wcs5.toWorld(new_origin, color=color)
-        np.testing.assert_almost_equal(
-                world_pos3.x, new_world_origin.x, digits,
-                'withOrigin(new_origin, new_world_origin) returned wrong position')
-        np.testing.assert_almost_equal(
-                world_pos3.y, new_world_origin.y, digits,
-                'withOrigin(new_origin, new_world_origin) returned wrong position')
-
+    new_world_origin = galsim.PositionD(5352.7, 9234.3)
+    wcs5 = wcs.withOrigin(new_origin, new_world_origin, color=color)
+    world_pos3 = wcs5.toWorld(new_origin, color=color)
+    np.testing.assert_almost_equal(
+            world_pos3.x, new_world_origin.x, digits,
+            'withOrigin(new_origin, new_world_origin) returned wrong position')
+    np.testing.assert_almost_equal(
+            world_pos3.y, new_world_origin.y, digits,
+            'withOrigin(new_origin, new_world_origin) returned wrong position')
 
     # Check that (x,y) -> (u,v) and converse work correctly
     # These tests work regardless of whether the WCS is local or not.
@@ -664,6 +689,27 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile with given wcs and image_profile differed when drawn for '+name)
+
+    # Check some properties that should be the same for the wcs and its local jacobian.
+    np.testing.assert_allclose(
+            wcs.minLinearScale(image_pos=image_pos, color=color),
+            wcs.jacobian(image_pos=image_pos, color=color).minLinearScale(color=color))
+    np.testing.assert_allclose(
+            wcs.maxLinearScale(image_pos=image_pos, color=color),
+            wcs.jacobian(image_pos=image_pos, color=color).maxLinearScale(color=color))
+    np.testing.assert_allclose(
+            wcs.pixelArea(image_pos=image_pos, color=color),
+            wcs.jacobian(image_pos=image_pos, color=color).pixelArea(color=color))
+
+    if not wcs.isUniform():
+        assert_raises(TypeError, wcs.local)
+    assert_raises(TypeError, wcs.local, image_pos=image_pos, world_pos=world_pos, color=color)
+    assert_raises(TypeError, wcs.local, image_pos=(3,4), color=color)
+    assert_raises(TypeError, wcs.local, world_pos=(3,4), color=color)
+
+    assert_raises(TypeError, wcs.withOrigin)
+    assert_raises(TypeError, wcs.withOrigin, origin=(3,4), color=color)
+    assert_raises(TypeError, wcs.withOrigin, origin=image_pos, world_origin=(3,4), color=color)
 
 
 def do_celestial_wcs(wcs, name, test_pickle=True):
@@ -778,6 +824,16 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
             except NotImplementedError:
                 pass
 
+    assert_raises(TypeError, wcs.local)
+    assert_raises(TypeError, wcs.local, image_pos=image_pos, world_pos=world_pos)
+    assert_raises(TypeError, wcs.local, image_pos=(3,4))
+    assert_raises(TypeError, wcs.local, world_pos=(3,4))
+
+    assert_raises(TypeError, wcs.withOrigin)
+    assert_raises(TypeError, wcs.withOrigin, origin=(3,4))
+    assert_raises(TypeError, wcs.withOrigin, world_origin=(3,4))
+    assert_raises(TypeError, wcs.withOrigin, origin=image_pos, world_origin=world_pos)
+
 
 @timer
 def test_pixelscale():
@@ -791,6 +847,14 @@ def test_pixelscale():
     assert wcs == wcs2, 'PixelScale copy is not == the original'
     wcs3 = galsim.PixelScale(scale + 0.1234)
     assert wcs != wcs3, 'PixelScale is not != a different one'
+    assert wcs.scale == scale
+    assert wcs.origin == galsim.PositionD(0,0)
+    assert wcs.world_origin == galsim.PositionD(0,0)
+
+    assert_raises(TypeError, galsim.PixelScale)
+    assert_raises(TypeError, galsim.PixelScale, scale=galsim.PixelScale(scale))
+    assert_raises(TypeError, galsim.PixelScale, scale=scale, origin=galsim.PositionD(0,0))
+    assert_raises(TypeError, galsim.PixelScale, scale=scale, world_origin=galsim.PositionD(0,0))
 
     ufunc = lambda x,y: x*scale
     vfunc = lambda x,y: y*scale
@@ -818,10 +882,25 @@ def test_pixelscale():
     # Add an image origin offset
     x0 = 1
     y0 = 1
-    origin = galsim.PositionD(x0,y0)
+    origin = galsim.PositionI(x0,y0)
     wcs = galsim.OffsetWCS(scale, origin)
     wcs2 = galsim.PixelScale(scale).withOrigin(origin)
     assert wcs == wcs2, 'OffsetWCS is not == PixelScale.withOrigin(origin)'
+    assert wcs.origin == origin
+    assert wcs.scale == scale
+
+    # Default origin is (0,0)
+    wcs3 = galsim.OffsetWCS(scale)
+    assert wcs3.origin == galsim.PositionD(0,0)
+    assert wcs3.world_origin == galsim.PositionD(0,0)
+
+    assert_raises(TypeError, galsim.OffsetWCS)
+    assert_raises(TypeError, galsim.OffsetWCS, scale=galsim.PixelScale(scale))
+    assert_raises(TypeError, galsim.OffsetWCS, scale=scale, origin=5)
+    assert_raises(TypeError, galsim.OffsetWCS, scale=scale,
+                  origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
+    assert_raises(TypeError, galsim.OffsetWCS, scale=scale,
+                  world_origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
 
     # Check basic copy and == , != for OffsetWCS:
     wcs2 = wcs.copy()
@@ -871,6 +950,15 @@ def test_shearwcs():
     g2 = -0.37
     shear = galsim.Shear(g1=g1,g2=g2)
     wcs = galsim.ShearWCS(scale, shear)
+    assert wcs.shear == shear
+    assert wcs.origin == galsim.PositionD(0,0)
+    assert wcs.world_origin == galsim.PositionD(0,0)
+
+    assert_raises(TypeError, galsim.ShearWCS)
+    assert_raises(TypeError, galsim.ShearWCS, shear=0.3)
+    assert_raises(TypeError, galsim.ShearWCS, shear=shear, origin=galsim.PositionD(0,0))
+    assert_raises(TypeError, galsim.ShearWCS, shear=shear, world_origin=galsim.PositionD(0,0))
+    assert_raises(TypeError, galsim.ShearWCS, g1=g1, g2=g2)
 
     # Check basic copy and == , !=:
     wcs2 = wcs.copy()
@@ -911,6 +999,21 @@ def test_shearwcs():
     wcs = galsim.OffsetShearWCS(scale, shear, origin)
     wcs2 = galsim.ShearWCS(scale, shear).withOrigin(origin)
     assert wcs == wcs2, 'OffsetShearWCS is not == ShearWCS.withOrigin(origin)'
+    assert wcs.shear == shear
+    assert wcs.origin == origin
+    assert wcs.world_origin == galsim.PositionD(0,0)
+
+    wcs3 = galsim.OffsetShearWCS(scale, shear)
+    assert wcs3.origin == galsim.PositionD(0,0)
+    assert wcs3.world_origin == galsim.PositionD(0,0)
+
+    assert_raises(TypeError, galsim.OffsetShearWCS)
+    assert_raises(TypeError, galsim.OffsetShearWCS, shear=0.3)
+    assert_raises(TypeError, galsim.OffsetShearWCS, shear=shear, origin=5)
+    assert_raises(TypeError, galsim.OffsetShearWCS, shear=shear,
+                  origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
+    assert_raises(TypeError, galsim.OffsetShearWCS, shear=shear,
+                  world_origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
 
     # Check basic copy and == , != for OffsetShearWCS:
     wcs2 = wcs.copy()
@@ -965,6 +1068,18 @@ def test_affinetransform():
 
     wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
 
+    assert wcs.dudx == dudx
+    assert wcs.dudy == dudy
+    assert wcs.dvdx == dvdx
+    assert wcs.dvdy == dvdy
+
+    assert_raises(TypeError, galsim.JacobianWCS)
+    assert_raises(TypeError, galsim.JacobianWCS, dudx, dudy, dvdx)
+    assert_raises(TypeError, galsim.JacobianWCS, dudx, dudy, dvdx, dvdy,
+                  origin=galsim.PositionD(0,0))
+    assert_raises(TypeError, galsim.JacobianWCS, dudx, dudy, dvdx, dvdy,
+                  world_origin=galsim.PositionD(0,0))
+
     # Check basic copy and == , !=:
     wcs2 = wcs.copy()
     assert wcs == wcs2, 'JacobianWCS copy is not == the original'
@@ -991,6 +1106,14 @@ def test_affinetransform():
     wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
     wcs2 = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy).withOrigin(origin)
     assert wcs == wcs2, 'AffineTransform is not == JacobianWCS.withOrigin(origin)'
+
+    assert_raises(TypeError, galsim.AffineTransform)
+    assert_raises(TypeError, galsim.AffineTransform, dudx, dudy, dvdx)
+    assert_raises(TypeError, galsim.AffineTransform, dudx, dudy, dvdx, dvdy, origin=3)
+    assert_raises(TypeError, galsim.AffineTransform, dudx, dudy, dvdx, dvdy,
+                  origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
+    assert_raises(TypeError, galsim.AffineTransform, dudx, dudy, dvdx, dvdy,
+                  world_origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
 
     # Check basic copy and == , != for AffineTransform:
     wcs2 = wcs.copy()
@@ -1066,6 +1189,18 @@ def test_affinetransform():
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'AffineTransform')
 
+    # Degenerate transformation should raise some errors
+    degen_wcs = galsim.JacobianWCS(0.2, 0.1, 0.2, 0.1)
+    assert_raises(galsim.GalSimError, degen_wcs.getDecomposition)
+
+    image_pos = galsim.PositionD(0,0)
+    world_pos = degen_wcs.toWorld(image_pos)  # This direction is ok.
+    assert_raises(galsim.GalSimError, degen_wcs.toImage, world_pos)  # This is not.
+    assert_raises(galsim.GalSimError, degen_wcs._x, 0, 0)
+    assert_raises(galsim.GalSimError, degen_wcs._y, 0, 0)
+    assert_raises(galsim.GalSimError, degen_wcs.inverse)
+    assert_raises(galsim.GalSimError, degen_wcs.toImage, galsim.Gaussian(sigma=2))
+
 
 def radial_u(x, y):
     """A cubic radial function used for a u(x,y) function """
@@ -1120,12 +1255,29 @@ def test_uvfunction():
     vfunc = lambda x,y: y * scale
     wcs = galsim.UVFunction(ufunc, vfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale', test_pickle=False)
+    assert wcs.ufunc(2.9, 3.7) == ufunc(2.9, 3.7)
+    assert wcs.vfunc(2.9, 3.7) == vfunc(2.9, 3.7)
+    assert wcs.xfunc is None
+    assert wcs.yfunc is None
 
     # Also check with inverse functions.
     xfunc = lambda u,v: u / scale
     yfunc = lambda u,v: v / scale
     wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale with inverse', test_pickle=False)
+    assert wcs.ufunc(2.9, 3.7) == ufunc(2.9, 3.7)
+    assert wcs.vfunc(2.9, 3.7) == vfunc(2.9, 3.7)
+    assert wcs.xfunc(2.9, 3.7) == xfunc(2.9, 3.7)
+    assert wcs.yfunc(2.9, 3.7) == yfunc(2.9, 3.7)
+
+    assert_raises(TypeError, galsim.UVFunction)
+    assert_raises(TypeError, galsim.UVFunction, ufunc=ufunc)
+    assert_raises(TypeError, galsim.UVFunction, vfunc=vfunc)
+    assert_raises(TypeError, galsim.UVFunction, ufunc, vfunc, origin=5)
+    assert_raises(TypeError, galsim.UVFunction, ufunc, vfunc,
+                  origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
+    assert_raises(TypeError, galsim.UVFunction, ufunc, vfunc,
+                  world_origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
 
     # 2. Like ShearWCS
     scale = 0.23
@@ -1279,6 +1431,19 @@ def test_uvfunction():
     wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction from demo9', test_pickle=False)
 
+    # Check that passing really long strings works correctly.
+    ufuncs = "0.05 * x * (1. + 2.e-6 * (x**2 + y**2))"
+    vfuncs = "0.05 * y * (1. + 2.e-6 * (x**2 + y**2))"
+    xfuncs = ("(lambda w: ( 0. if w==0. else "
+              "   100.*u/w*(( 5*math.sqrt(w**2+5.e3/27.)+5*w )**(1./3.) - "
+              "             ( 5*math.sqrt(w**2+5.e3/27.)-5*w )**(1./3.))) )(math.sqrt(u**2+v**2))")
+    yfuncs = ("(lambda w: ( 0. if w==0. else "
+              "   100.*v/w*(( 5*math.sqrt(w**2+5.e3/27.)+5*w )**(1./3.) - "
+              "             ( 5*math.sqrt(w**2+5.e3/27.)-5*w )**(1./3.))) )(math.sqrt(u**2+v**2))")
+    wcs = galsim.UVFunction(ufuncs, vfuncs, xfuncs, yfuncs)
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction from demo9, string', test_pickle=True)
+    do_wcs_image(wcs, 'UVFunction from demo9, string')
+
     # This version doesn't work with numpy arrays because of the math functions.
     # This provides a test of that branch of the makeSkyImage function.
     ufunc = lambda x,y : 0.17 * x * (1. + 1.e-5 * math.sqrt(x**2 + y**2))
@@ -1296,7 +1461,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, lambda x,y: ufunc(x,y,-0.3), lambda x,y: vfunc(x,y,-0.3),
                     'UVFunction with color-dependence', test_pickle=False, color=-0.3)
 
-    # Check that passing functions as strings works correctly.
+    # Also, check this one as a string
     wcs = galsim.UVFunction(ufunc='(%r+0.1*c)*x + %r*y'%(dudx,dudy),
                             vfunc='%r*x + (%r-0.2*c)*y'%(dvdx,dvdy),
                             xfunc='((%r-0.2*c)*u - %r*v)/((%r+0.1*c)*(%r-0.2*c)-%r)'%(
@@ -1401,6 +1566,10 @@ def test_radecfunction():
             dec_str = '%r.deproject(x*galsim.arcsec,y*galsim.arcsec,projection="lambert").dec.rad'%center
             wcs5 = galsim.RaDecFunction(ra_str, dec_str, origin=galsim.PositionD(-9.,-8.))
 
+            wcs6 = wcs2.copy()
+            assert wcs2 == wcs6, 'RaDecFunction copy is not == the original'
+            assert wcs6.radec_func(3,4) == radec_func(3,4)
+
             # Check that distance, jacobian for some x,y positions match the UV values.
             for x,y in zip(far_x_list, far_y_list):
 
@@ -1458,16 +1627,16 @@ def test_radecfunction():
                     # match pretty well.
                     np.testing.assert_almost_equal(
                             jac2.minLinearScale(), jac1.minLinearScale(), digits,
-                            'RaDecFunction '+name+' minScale() does not match expected value.')
+                            'RaDecFunction '+name+' minLinearScale() does not match expected value.')
                     np.testing.assert_almost_equal(
                             test_wcs.minLinearScale(image_pos), jac1.minLinearScale(), digits,
-                            'RaDecFunction '+name+' minScale(pos) does not match expected value.')
+                            'RaDecFunction '+name+' minLinearScale(pos) does not match expected value.')
                     np.testing.assert_almost_equal(
                             jac2.maxLinearScale(), jac1.maxLinearScale(), digits,
-                            'RaDecFunction '+name+' maxScale() does not match expected value.')
+                            'RaDecFunction '+name+' maxLinearScale() does not match expected value.')
                     np.testing.assert_almost_equal(
                             test_wcs.maxLinearScale(image_pos), jac1.maxLinearScale(), digits,
-                            'RaDecFunction '+name+' maxScale(pos) does not match expected value.')
+                            'RaDecFunction '+name+' maxLinearScale(pos) does not match expected value.')
 
                     # The main discrepancy between the jacobians is a rotation term.
                     # The pixels in the projected coordinates do not necessarily point north,
@@ -1519,6 +1688,12 @@ def test_radecfunction():
                                  ', '+str(center.dec/galsim.degrees), test_pickle=True)
                 do_celestial_wcs(wcs5, 'RaDecFunc 4 centered at '+str(center.ra/galsim.degrees)+
                                  ', '+str(center.dec/galsim.degrees), test_pickle=True)
+
+    assert_raises(TypeError, galsim.RaDecFunction)
+    assert_raises(TypeError, galsim.RaDecFunction, radec_func, origin=5)
+    assert_raises(TypeError, galsim.RaDecFunction, radec_func,
+                  origin=galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees))
+    assert_raises(TypeError, galsim.RaDecFunction, radec_func, world_origin=galsim.PositionD(0,0))
 
     # Check that using a wcs in the context of an image works correctly
     # (Uses the last wcs2, wcs3 set in the above loops.)
@@ -1577,7 +1752,7 @@ def test_astropywcs():
             import astropy.wcs
             import scipy  # AstropyWCS constructor will do this, so check now.
     except ImportError as e:
-        print('Unable to import astropy.wcs.  Skipping AstropyWCS tests.')
+        print('Unable to import astropy.wcs or scipy.  Skipping AstropyWCS tests.')
         print('Caught ',e)
         return
 
@@ -1586,13 +1761,16 @@ def test_astropywcs():
     if __name__ == "__main__":
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TAN-FLIP', 'REGION' ]
     else:
-        test_tags = [ 'SIP' ]
+        test_tags = [ 'TAN', 'SIP' ]
 
     dir = 'fits_files'
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print(tag,' file_name = ',file_name)
-        wcs = galsim.AstropyWCS(file_name, dir=dir)
+        if tag == 'TAN':
+            wcs = galsim.AstropyWCS(file_name, dir=dir, compression='none', hdu=0)
+        else:
+            wcs = galsim.AstropyWCS(file_name, dir=dir)
 
         do_ref(wcs, ref_list, 'AstropyWCS '+tag)
 
@@ -1600,6 +1778,32 @@ def test_astropywcs():
 
         do_wcs_image(wcs, 'AstropyWCS_'+tag)
 
+    # Can also use an existing astropy.wcs.WCS instance to construct.
+    # This is probably a rare use case, but could aid efficiency if you already build the
+    # astropy WCS for other purposes.
+    astropy_wcs = wcs.wcs  # Just steal such an object from the last wcs above.
+    assert isinstance(astropy_wcs, astropy.wcs.WCS)
+    wcs1 = galsim.AstropyWCS(wcs=astropy_wcs)
+    do_celestial_wcs(wcs1, 'AstropyWCS from wcs', test_pickle=False)
+    repr(wcs1)
+
+    # Can also use a header.  Again steal it from the wcs above.
+    wcs2 = galsim.AstropyWCS(header=wcs.header)
+    do_celestial_wcs(wcs2, 'AstropyWCS from header', test_pickle=True)
+
+    # Doesn't support LINEAR WCS types.
+    with assert_raises(galsim.GalSimError):
+        galsim.AstropyWCS('SBProfile_comparison_images/kolmogorov.fits')
+
+    assert_raises(TypeError, galsim.AstropyWCS)
+    assert_raises(TypeError, galsim.AstropyWCS, file_name, header='dummy')
+    assert_raises(TypeError, galsim.AstropyWCS, file_name, wcs=wcs)
+    assert_raises(TypeError, galsim.AstropyWCS, wcs=wcs, header='dummy')
+
+    # Astropy thinks it can handle ZPX files, but as of version 2.0.4, they don't work right.
+    # Check that we raise an exception for any attempt to read these with astropy.
+    # (And if they ever fix this, add 'ZPX' to the test_tags above and remvoe this check.)
+    assert_raises(galsim.GalSimError, galsim.AstropyWCS, references['ZPX'][0], dir=dir)
 
 @timer
 def test_pyastwcs():
@@ -1623,7 +1827,10 @@ def test_pyastwcs():
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print(tag,' file_name = ',file_name)
-        wcs = galsim.PyAstWCS(file_name, dir=dir)
+        if tag == 'TAN':
+            wcs = galsim.PyAstWCS(file_name, dir=dir, compression='none', hdu=0)
+        else:
+            wcs = galsim.PyAstWCS(file_name, dir=dir)
 
         # The PyAst implementation of the SIP type only gets the inverse transformation
         # approximately correct.  So we need to be a bit looser in that check.
@@ -1636,6 +1843,30 @@ def test_pyastwcs():
         # but it's small enough an error that I don't think it's worth worrying about further.
         approx = tag in [ 'ZPX', 'TAN-FLIP' ]
         do_wcs_image(wcs, 'PyAstWCS_'+tag, approx)
+
+    # Can also use an existing startlink.Ast.FrameSet instance to construct.
+    # This is probably a rare use case, but could aid efficiency if you already open the
+    # fits file with starlink for other purposes.
+    wcs = galsim.PyAstWCS(references['TAN'][0], dir=dir)
+    wcsinfo = wcs.wcsinfo
+    assert isinstance(wcsinfo, starlink.Ast.FrameSet)
+    wcs1 = galsim.PyAstWCS(wcsinfo=wcsinfo)
+    do_celestial_wcs(wcs1, 'PyAstWCS from wcsinfo', test_pickle=False)
+    repr(wcs1)
+
+    # Can also use a header.  Again steal it from the wcs above.
+    wcs2 = galsim.PyAstWCS(header=wcs.header)
+    do_celestial_wcs(wcs2, 'PyAstWCS from header', test_pickle=True)
+
+    # Doesn't support LINEAR WCS types.
+    with assert_raises(galsim.GalSimError):
+        galsim.PyAstWCS('SBProfile_comparison_images/kolmogorov.fits')
+
+    assert_raises(TypeError, galsim.PyAstWCS)
+    assert_raises(TypeError, galsim.PyAstWCS, file_name, header='dummy')
+    assert_raises(TypeError, galsim.PyAstWCS, file_name, wcsinfo=wcsinfo)
+    assert_raises(TypeError, galsim.PyAstWCS, wcsinfo=wcsinfo, header='dummy')
+
 
 
 @timer
@@ -1680,6 +1911,18 @@ def test_wcstools():
 
         do_wcs_image(wcs, 'WcsToolsWCS_'+tag)
 
+    # TAN-PV is one of the ones that WcsToolsWCS doesn't support.
+    #with assert_raises(galsim.GalSimValueError):
+    galsim.WcsToolsWCS(references['TAN-PV'][0], dir=dir)
+
+    # Doesn't support LINEAR WCS types.
+    with assert_raises(galsim.GalSimError):
+        galsim.WcsToolsWCS('SBProfile_comparison_images/kolmogorov.fits')
+
+    assert_raises(TypeError, galsim.WcsToolsWCS)
+    assert_raises(TypeError, galsim.WcsToolsWCS, file_name, header='dummy')
+
+
 
 @timer
 def test_gsfitswcs():
@@ -1695,13 +1938,33 @@ def test_gsfitswcs():
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print(tag,' file_name = ',file_name)
-        wcs = galsim.GSFitsWCS(file_name, dir=dir)
+        if tag == 'TAN':
+            # For this one, check compression and hdu options.
+            wcs = galsim.GSFitsWCS(file_name, dir=dir, compression='none', hdu=0)
+        else:
+            wcs = galsim.GSFitsWCS(file_name, dir=dir)
 
         do_ref(wcs, ref_list, 'GSFitsWCS '+tag)
 
         do_celestial_wcs(wcs, 'GSFitsWCS '+file_name)
 
         do_wcs_image(wcs, 'GSFitsWCS_'+tag)
+
+    # TSC is one of the ones that GSFitsWCS doesn't support.
+    with assert_raises(galsim.GalSimValueError):
+        galsim.GSFitsWCS(references['TSC'][0], dir=dir)
+
+    # Doesn't support LINEAR WCS types.
+    with assert_raises(galsim.GalSimError):
+        galsim.GSFitsWCS('SBProfile_comparison_images/kolmogorov.fits')
+
+    assert_raises(TypeError, galsim.GSFitsWCS)
+    assert_raises(TypeError, galsim.GSFitsWCS, file_name, header='dummy')
+
+@timer
+def test_tanwcs():
+    """Test the TanWCS function, which returns a GSFitsWCS instance.
+    """
 
     # Use TanWCS function to create TAN GSFitsWCS objects from scratch.
     # First a slight tweak on a simple scale factor
@@ -1773,7 +2036,10 @@ def test_fitswcs():
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print(tag,' file_name = ',file_name)
-        wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
+        if tag == 'TAN':
+            wcs = galsim.FitsWCS(file_name, dir=dir, compression='none', hdu=0)
+        else:
+            wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
         print('FitsWCS is really ',type(wcs))
 
         if isinstance(wcs, galsim.AffineTransform):
@@ -1796,6 +2062,14 @@ def test_fitswcs():
         hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir)
         affine = galsim.AffineTransform._readHeader(hdu.header)
         galsim.fits.closeHDUList(hdu_list, fin)
+
+    # This does support LINEAR WCS types.
+    linear = galsim.FitsWCS('SBProfile_comparison_images/kolmogorov.fits')
+    assert isinstance(linear, galsim.OffsetWCS)
+
+    assert_raises(TypeError, galsim.FitsWCS)
+    assert_raises(TypeError, galsim.FitsWCS, file_name, header='dummy')
+
 
 
 @timer
@@ -1989,6 +2263,7 @@ if __name__ == "__main__":
     test_pyastwcs()
     test_wcstools()
     test_gsfitswcs()
+    test_tanwcs()
     test_fitswcs()
     test_scamp()
     test_compateq()

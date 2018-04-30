@@ -50,7 +50,7 @@ each one.
 import numpy as np
 
 from .gsobject import GSObject
-from .position import PositionI, PositionD
+from .position import Position, PositionI, PositionD
 from .celestial import CelestialCoord
 from .shear import Shear
 from .errors import GalSimError, GalSimIncompatibleValuesError
@@ -233,10 +233,8 @@ class BaseWCS(object):
                                 CelestialCoord.project for the valid options. [default: 'gnomonic']
         """
         if color is None: color = self._color
-        if isinstance(image_pos, PositionI):
-            image_pos = PositionD(image_pos.x, image_pos.y)
-        elif not isinstance(image_pos, PositionD):
-            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        if not isinstance(image_pos, Position):
+            raise TypeError("image_pos must be a PositionD or PositionI argument")
         return self._posToWorld(image_pos, color=color, **kwargs)
 
     def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None):
@@ -287,11 +285,9 @@ class BaseWCS(object):
         """
         if color is None: color = self._color
         if self.isCelestial() and not isinstance(world_pos, CelestialCoord):
-            raise TypeError("toImage requires a CelestialCoord argument")
-        elif not self.isCelestial() and isinstance(world_pos, PositionI):
-            world_pos = PositionD(world_pos.x, world_pos.y)
-        elif not self.isCelestial() and not isinstance(world_pos, PositionD):
-            raise TypeError("toImage requires a PositionD or PositionI argument")
+            raise TypeError("world_pos must be a CelestialCoord argument")
+        elif not self.isCelestial() and not isinstance(world_pos, Position):
+            raise TypeError("world_pos must be a PositionD or PositionI argument")
         return self._posToImage(world_pos, color=color)
 
     def profileToImage(self, world_profile, image_pos=None, world_pos=None, color=None):
@@ -409,11 +405,15 @@ class BaseWCS(object):
         @returns a LocalWCS instance.
         """
         if color is None: color = self._color
-        if image_pos and world_pos:
-            raise GalSimIncompatibleValuesError(
-                "Only one of image_pos or world_pos may be provided",
-                image_pos=image_pos, world_pos=world_pos)
-        return self._local(image_pos, world_pos, color)
+        if world_pos is not None:
+            if image_pos is not None:
+                raise GalSimIncompatibleValuesError(
+                    "Only one of image_pos or world_pos may be provided",
+                    image_pos=image_pos, world_pos=world_pos)
+            image_pos = self.posToImage(world_pos, color)
+        if image_pos is not None and not isinstance(image_pos, Position):
+            raise TypeError("image_pos must be a PositionD or PositionI argument")
+        return self._local(image_pos, color)
 
     def jacobian(self, image_pos=None, world_pos=None, color=None):
         """Return the local JacobianWCS of the WCS at a given point.
@@ -542,9 +542,7 @@ class BaseWCS(object):
         @returns the new recentered WCS
         """
         if color is None: color = self._color
-        if isinstance(origin, PositionI):
-            origin = PositionD(origin.x, origin.y)
-        elif not isinstance(origin, PositionD):
+        if not isinstance(origin, Position):
             raise TypeError("origin must be a PositionD or PositionI argument")
         return self._withOrigin(origin, world_origin, color)
 
@@ -588,13 +586,11 @@ class BaseWCS(object):
         5. We haven't thought much about the security implications of this, so beware using
            GalSim to open FITS files from untrusted sources.
 
-        @param header       A FitsHeader object to write the data to.
+        @param header       A FitsHeader (or dict-like) object to write the data to.
         @param bounds       The bounds of the image.
         """
         from . import fits
         # First write the XMIN, YMIN values
-        if not isinstance(header, fits.FitsHeader):
-            header = fits.FitsHeader(header)
         header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")
         header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
 
@@ -637,15 +633,13 @@ class BaseWCS(object):
         if origin is None:
             self._origin = PositionD(0,0)
         else:
-            if isinstance(origin, PositionI):
-                origin = PositionD(origin)
-            elif not isinstance(origin, PositionD):
+            if not isinstance(origin, Position):
                 raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
         if world_origin is None:
             self._world_origin = PositionD(0,0)
         else:
-            if not isinstance(world_origin, PositionD):
+            if not isinstance(world_origin, Position):
                 raise TypeError("world_origin must be a PositionD argument")
             self._world_origin = world_origin
 
@@ -702,20 +696,9 @@ def readFromFitsHeader(header):
     if wcs_name is not None:
         wcs_type = eval('galsim.' + wcs_name)
         wcs = wcs_type._readHeader(header)
-    elif 'GS_SCALE' in header:
-        # Old versions of GalSim didn't write GS_WCS, but did write GS_SCALE, which implies that
-        # the wcs is just a PixelScale:
-        wcs = PixelScale(header['GS_SCALE'])
-    elif 'CTYPE1' in header:
-        try:
-            wcs = FitsWCS(header=header, suppress_warning=True)
-        except KeyboardInterrupt:
-            raise
-        except:  # pragma: no cover
-            # This shouldn't ever happen, but just in case...
-            wcs = PixelScale(1.)
     else:
-        wcs = PixelScale(1.)
+        # If we aren't told which type to use, this should find something appropriate
+        wcs = FitsWCS(header=header, suppress_warning=True)
 
     if xmin != 1 or ymin != 1:
         # ds9 always assumes the image has an origin at (1,1), so convert back to actual
@@ -821,9 +804,7 @@ class EuclideanWCS(BaseWCS):
         #     v1 = v0 + v2 - v(x0,y0)
 
         else:
-            if isinstance(world_origin, PositionI):
-                world_origin = PositionD(world_origin.x, world_origin.y)
-            elif not isinstance(origin, PositionD):
+            if not isinstance(world_origin, Position):
                 raise TypeError("world_origin must be a PositionD or PositionI argument")
             if not self.isLocal():
                 world_origin += self.world_origin - self._posToWorld(self.origin, color=color)
@@ -831,11 +812,10 @@ class EuclideanWCS(BaseWCS):
 
     # If the class doesn't define something else, then we can approximate the local Jacobian
     # from finite differences for the derivatives.  This will be overridden by UniformWCS.
-    def _local(self, image_pos, world_pos, color):
+    def _local(self, image_pos, color):
+
         if image_pos is None:
-            if world_pos is None:
-                raise TypeError("Either image_pos or world_pos must be provided")
-            image_pos = self._posToImage(world_pos, color=color)
+            raise TypeError("origin must be a PositionD or PositionI argument")
 
         # Calculate the Jacobian using finite differences for the derivatives.
         x0 = image_pos.x - self.x0
@@ -917,7 +897,7 @@ class UniformWCS(EuclideanWCS):
         return self._local_wcs._y(u,v)
 
     # For UniformWCS, the local WCS is an attribute.  Just return it.
-    def _local(self, image_pos=None, world_pos=None, color=None):
+    def _local(self, image_pos, color):
         return self._local_wcs
 
     # UniformWCS transformations can be inverted easily, so might as well provide that function.
@@ -970,7 +950,7 @@ class LocalWCS(UniformWCS):
         return PositionD(self._x(u,v),self._y(u,v))
 
     # For LocalWCS, this is of course trivial.
-    def _local(self, image_pos, world_pos, color):
+    def _local(self, image_pos, color):
         return self
 
 
@@ -1007,12 +987,11 @@ class CelestialWCS(BaseWCS):
     # from finite differences for the derivatives of ra and dec.  Very similar to the
     # version for EuclideanWCS, but convert from dra, ddec to du, dv locallat at the given
     # position.
-    def _local(self, image_pos, world_pos, color):
+    def _local(self, image_pos, color):
         from .angle import radians, arcsec
+
         if image_pos is None:
-            if world_pos is None:
-                raise TypeError("Either image_pos or world_pos must be provided")
-            image_pos = self._posToImage(world_pos, color)
+            raise TypeError("origin must be a PositionD or PositionI argument")
 
         x0 = image_pos.x - self.x0
         y0 = image_pos.y - self.y0
@@ -1285,11 +1264,6 @@ class ShearWCS(LocalWCS):
     @property
     def shear(self): return self._shear
 
-    @property
-    def origin(self): return PositionD(0,0)
-    @property
-    def world_origin(self): return PositionD(0,0)
-
     def _u(self, x, y, color=None):
         u = x * (1.-self._g1) - y * self._g2
         u *= self._gfactor * self._scale
@@ -1423,11 +1397,6 @@ class JacobianWCS(LocalWCS):
     @property
     def dvdy(self): return self._dvdy
 
-    @property
-    def origin(self): return PositionD(0,0)
-    @property
-    def world_origin(self): return PositionD(0,0)
-
     def _u(self, x, y, color=None):
         return self._dudx * x + self._dudy * y
 
@@ -1439,10 +1408,16 @@ class JacobianWCS(LocalWCS):
         #      ( dvdx  dvdy )
         #  J^-1 = (1/det) (  dvdy  -dudy )
         #                 ( -dvdx   dudx )
-        return (self._dvdy * u - self._dudy * v)/self._det
+        try:
+            return (self._dvdy * u - self._dudy * v)/self._det
+        except ZeroDivisionError:
+            raise GalSimError("Transformation is singular")
 
     def _y(self, u, v, color=None):
-        return (-self._dvdx * u + self._dudx * v)/self._det
+        try:
+            return (-self._dvdx * u + self._dudx * v)/self._det
+        except ZeroDivisionError:
+            raise GalSimError("Transformation is singular")
 
     def _profileToWorld(self, image_profile):
         from .transform import _Transform
@@ -1451,10 +1426,13 @@ class JacobianWCS(LocalWCS):
 
     def _profileToImage(self, world_profile):
         from .transform import _Transform
-        return _Transform(world_profile,
-                          (self._dvdy/self._det, -self._dudy/self._det,
-                           -self._dvdx/self._det, self._dudx/self._det),
-                          flux_ratio=self._pixelArea())
+        try:
+            return _Transform(world_profile,
+                              (self._dvdy/self._det, -self._dudy/self._det,
+                               -self._dvdx/self._det, self._dudx/self._det),
+                              flux_ratio=self._pixelArea())
+        except ZeroDivisionError:
+            raise GalSimError("Transformation is singular")
 
     def _pixelArea(self):
         return abs(self._det)
@@ -1564,8 +1542,11 @@ class JacobianWCS(LocalWCS):
         return 0.5 * (h1 + h2)
 
     def _inverse(self):
-        return JacobianWCS(self._dvdy/self._det, -self._dudy/self._det,
-                           -self._dvdx/self._det, self._dudx/self._det)
+        try:
+            return JacobianWCS(self._dvdy/self._det, -self._dudy/self._det,
+                               -self._dvdx/self._det, self._dudx/self._det)
+        except ZeroDivisionError:
+            raise GalSimError("Transformation is singular")
 
     def _toJacobian(self):
         return self
@@ -1871,7 +1852,7 @@ class AffineTransform(UniformWCS):
             dudy = header.get("CD1_2",0.)
             dvdx = header.get("CD2_1",0.)
             dvdy = header.get("CD2_2",1.)
-        elif 'CDELT1' in header or 'CDELT2' in header:
+        else:
             dudx = header.get("CDELT1",1.)
             dudy = 0.
             dvdx = 0.
@@ -1953,18 +1934,10 @@ def _writeFuncToHeader(func, letter, header):
             import pickle
         import types, marshal, base64
         if type(func) == types.FunctionType:
-            try:
-                # Python3 and usually Python2
-                code = marshal.dumps(func.__code__)
-                name = func.__name__
-                defaults = func.__defaults__
-                closure = func.__closure__
-            except AttributeError:  # pragma: no cover
-                # Older Python2 syntax, just in case.
-                code = marshal.dumps(func.func_code)
-                name = func.func_name
-                defaults = func.func_defaults
-                closure = func.func_closure
+            code = marshal.dumps(func.__code__)
+            name = func.__name__
+            defaults = func.__defaults__
+            closure = func.__closure__
 
             # Functions may also have something called closure cells.  If there are any, we need
             # to include them as well.  Help for this part came from:
@@ -2018,7 +1991,8 @@ def _writeFuncToHeader(func, letter, header):
         else: key = 'GS_%s%04d'%(letter,i)
         header[key] = s_array[i]
 
-def _makecell(value):
+def _makecell(value):  # pragma: no cover
+                       # (codecov gets confused, because the lambda function is never called.)
     # This is a little trick to make a closure cell.
     # We make a function that has the given value in closure, then then get the
     # first (only) closure item, which will be the closure cell we need.
