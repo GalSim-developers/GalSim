@@ -8,18 +8,20 @@ either pip or setup.py.
 Dependency Changes
 ------------------
 
+- Officially no longer support Python 2.6. (#755)
 - No longer support pre-astropy versions of pyfits (now bundled in astropy
-  as astropy.io.fits). (#755)
+  as astropy.io.fits).  Nor astropy versions <1.0. (#755)
 - Added LSSTDESC.Coord, which contains the functionality that used to be in
   GalSim as the Angle and CelestialCoord classes.  We moved it to a separate
   repo so people could more easily use this functionality without requiring all
   of GalSim as a dependency. (#809b)
 - Removed dependency on boost. (#809)
 - Removed dependency on TMV. (#809)
-- Added dependency on pybind11. (#809)
-- Added dependency on Eigen. (#809)
+- Added dependency on pybind11.  (You can still use boost if you want using
+  the SCons installation method.) (#809)
+- Added dependency on Eigen. (You can still use TMV if you want using the
+  SCons installation method.) (#809)
 - FFTW is now the only dependency that pip cannot handle automatically. (#809)
-- Officially no longer support Python 2.6. (Pretty sure no one cares.)
 
 
 API Changes

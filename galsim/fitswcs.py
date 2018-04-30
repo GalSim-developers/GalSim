@@ -24,12 +24,13 @@ trying to read.
 import warnings
 import numpy as np
 
-from .wcs import CelestialWCS, JacobianWCS, AffineTransform
+from .wcs import CelestialWCS
 from .position import PositionD, PositionI
 from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
-from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimWarning, convert_cpp_errors
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimWarning, convert_cpp_errors
 
 #########################################################################################
 #
@@ -132,34 +133,37 @@ class AstropyWCS(CelestialWCS):
                 raise GalSimIncompatibleValuesError(
                     "Cannot provide both file_name and wcs", file_name=file_name, wcs=wcs)
             hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
-            header = hdu.header
 
-        # At least as late as version 1.1.2, astropy thinks it knows how to parse ZPX files,
-        # but can at least sometimes seg fault when it tries to parse the header.  Check for
-        # that explicitly here and raise an exception before getting to _load_from_header
-        # I think this is fixed in 1.2, but I'm not 100% sure.
-        # Update: Nope.  Still broken.  cf. Issue #783.
-        # TODO: If they ever fix this bug, use the correct version here.
-        if (astropy.__version__ < '999' and header is not None and
-            'CTYPE1' in header and 'ZPX' in header['CTYPE1'].upper()):
-            raise GalSimError("AstropyWCS cannot (always) parse ZPX files")
+        try:
+            if file_name is not None:
+                header = hdu.header
 
-        # Load the wcs from the header.
-        if header is not None:
-            if self._tag is None:
-                self.header = header
-            if wcs is not None:
+            # At least as late as version 2.0.4, astropy thinks it knows how to parse ZPX files,
+            # but can at least sometimes seg fault when it tries to parse the header.  Check for
+            # that explicitly here and raise an exception before getting to _load_from_header
+            # TODO: If they ever fix this bug, use the correct version here.
+            if (astropy.__version__ < '999' and header is not None and
+                'CTYPE1' in header and 'ZPX' in header['CTYPE1'].upper()):
+                raise GalSimError("AstropyWCS cannot (always) parse ZPX files")
+
+            # Load the wcs from the header.
+            if header is not None:
+                if wcs is not None:
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot provide both pyfits header and wcs", header=header, wcs=wcs)
+                self.header = fits.FitsHeader(header)
+                wcs = self._load_from_header(self.header)
+            else:
+                self.header = None
+
+            if wcs is None:
                 raise GalSimIncompatibleValuesError(
-                    "Cannot provide both pyfits header and wcs", header=header, wcs=wcs)
-            wcs = self._load_from_header(header, hdu)
+                    "Must provide one of file_name, header, or wcs",
+                    file_name=file_name, header=header, wcs=wcs)
 
-        if wcs is None:
-            raise GalSimIncompatibleValuesError(
-                "Must provide one of file_name, header, or wcs",
-                file_name=file_name, header=header, wcs=wcs)
-
-        if file_name is not None:
-            fits.closeHDUList(hdu_list, fin)
+        finally:
+            if file_name is not None:
+                fits.closeHDUList(hdu_list, fin)
 
         # If astropy.wcs cannot parse the header, it won't notice from just doing the
         # WCS(header) command.  It will silently move on, thinking things are fine until
@@ -169,12 +173,17 @@ class AstropyWCS(CelestialWCS):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 ra, dec = wcs.all_pix2world( [ [0, 0] ], 1)[0]
-        except Exception as err:  # pragma: no cover
-            raise GalSimError("AstropyWCS was unable to read the WCS specification in the header.")
+        except KeyboardInterrupt:
+            raise
+        except Exception as err:
+            raise OSError("AstropyWCS was unable to read the WCS specification in the header."
+                          "Caught error: %r"%err)
 
+        if not wcs.is_celestial:
+            raise GalSimError("The WCS read in does not define a pair of celestial axes" )
         self._wcs = wcs
 
-    def _load_from_header(self, header, hdu):
+    def _load_from_header(self, header):
         import astropy.wcs
         from . import fits
         self._fix_header(header)
@@ -228,11 +237,11 @@ class AstropyWCS(CelestialWCS):
             # Old versions fail with an AttributeError about astropy.wcs.Wcsprm.lattype
             # cf. https://github.com/astropy/astropy/pull/1463
             # This has been fixed for a while now, but leave in this workaround for old versions.
-            ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
+            ra, dec = self.wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
         except AttributeError:  # pragma: no cover
             # If that failed, then we should be on version < 1.0.1, and the header should have
             # been fixed above by _fix_header.  So this should work correctly.
-            ra, dec = self._wcs.all_pix2world(x1, y1, 1)
+            ra, dec = self.wcs.all_pix2world(x1, y1, 1)
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
         factor = degrees / radians
@@ -263,7 +272,7 @@ class AstropyWCS(CelestialWCS):
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
+                xy = self.wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
         else: # pragma: no cover
             # This section is basically a copy of astropy.wcs's _all_world2pix function, but
             # simplified a bit to remove some features we don't need, and with corrections
@@ -280,13 +289,13 @@ class AstropyWCS(CelestialWCS):
             # It seems to be harmless, so we explicitly ignore it here:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                xy0 = self._wcs.wcs_world2pix(rd, origin)
+                xy0 = self.wcs.wcs_world2pix(rd, origin)
 
             # Note that the fmod bit accounts for the possibility that ra and the ra returned
             # from all_pix2world have a different wrapping around 360.  We fmod dec too even
             # though it won't do anything, since that's how the numpy array fmod2 has to work.
             func = lambda pix: (
-                    (np.fmod(self._wcs.all_pix2world(np.atleast_2d(pix),origin) -
+                    (np.fmod(self.wcs.all_pix2world(np.atleast_2d(pix),origin) -
                              rd + 180,360) - 180).ravel() )
 
             # This is the main bit that the astropy function is missing.
@@ -302,7 +311,7 @@ class AstropyWCS(CelestialWCS):
             # starting at exactly the right value, it is hugely more efficient to give it an
             # estimate of alpha, since it is not typically near unity in this case, so it is much
             # faster to start with something closer to the right value.
-            alpha = np.mean(np.abs(self._wcs.wcs.get_cdelt()))
+            alpha = np.mean(np.abs(self.wcs.wcs.get_cdelt()))
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -320,55 +329,51 @@ class AstropyWCS(CelestialWCS):
         # Make a new header with the contents of this WCS.
         # Note: relax = True means to write out non-standard FITS types.
         # Weirdly, this is the default when reading the header, but not when writing.
-        header.update(self._wcs.to_header(relax=True))
+        header.update(self.wcs.to_header(relax=True))
 
         # And write the name as a special GalSim key
         header["GS_WCS"] = ("AstropyWCS", "GalSim WCS name")
-        # Finally, update the CRPIX items if necessary.
-        if self.origin.x != 0:
-            header["CRPIX1"] = header["CRPIX1"] + self.origin.x
-        if self.origin.y != 0:
-            header["CRPIX2"] = header["CRPIX2"] + self.origin.y
+        # And the image origin.
+        header["GS_X0"] = (self.origin.x, "GalSim image origin x")
+        header["GS_Y0"] = (self.origin.y, "GalSim image origin y")
         return header
 
     @staticmethod
     def _readHeader(header):
-        return AstropyWCS(header=header)
+        x0 = header.get("GS_X0",0.)
+        y0 = header.get("GS_Y0",0.)
+        return AstropyWCS(header=header, origin=PositionD(x0,y0))
 
     def copy(self):
-        # The copy module version of copying the dict works fine here.
-        import copy
-        return copy.copy(self)
+        ret = AstropyWCS.__new__(AstropyWCS)
+        ret.__dict__.update(self.__dict__)
+        return ret
 
     def __eq__(self, other):
         return ( isinstance(other, AstropyWCS) and
-                 self._wcs.to_header(relax=True) == other.wcs.to_header(relax=True) and
+                 self.wcs.to_header(relax=True) == other.wcs.to_header(relax=True) and
                  self.origin == other.origin )
 
     def __repr__(self):
-        if self._tag is None:
-            if hasattr(self,'header'):
-                self._tag = 'header=%r'%fits.FitsHeader(self.header)
-            else:
-                self._tag = 'wcs=%r'%self.wcs
-        return "galsim.AstropyWCS(%s, origin=%r)"%(self._tag, self.origin)
+        if self._tag is not None:
+            tag = self._tag
+        elif self.header is not None:
+            tag = 'header=%r'%self.header
+        else:
+            tag = 'wcs=%r'%self.wcs
+        return "galsim.AstropyWCS(%s, origin=%r)"%(tag, self.origin)
 
     def __hash__(self): return hash(repr(self))
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        # If header or wcs is in the tag, then it might still be picklable, so let pickle
-        # try and raise the normal exception if it can't.
-        if self._tag is not None and 'wcs' not in self._tag and 'header' not in self._tag: # pragma: no branch
-            del d['_wcs']
+        del d['_wcs']
         return d
 
     def __setstate__(self, d):
         import galsim
         self.__dict__ = d
-        hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
-        self._wcs = self._load_from_header(hdu.header, hdu)
-        fits.closeHDUList(hdu_list, fin)
+        self._wcs = self._load_from_header(self.header)
 
 
 class PyAstWCS(CelestialWCS):
@@ -408,7 +413,7 @@ class PyAstWCS(CelestialWCS):
                           a FitsHeader object.  [default: None]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read()
                           for the available options.  [default:'auto']
-    @param wcsinfo        An existing starlink.Ast.WcsMap [default: None]
+    @param wcsinfo        An existing starlink.Ast.FrameSet [default: None]
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PositionD or PositionI.
                           [default: None]
@@ -445,43 +450,52 @@ class PyAstWCS(CelestialWCS):
                     "Cannot provide both file_name and wcsinfo",
                     file_name=file_name, wcsinfo=wcsinfo)
             hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
-            header = hdu.header
 
-        # Load the wcs from the header.
-        if header is not None:
-            if self._tag is None:
-                self.header = header
-            if wcsinfo is not None:
+        try:
+            if file_name is not None:
+                header = hdu.header
+
+            # Load the wcs from the header.
+            if header is not None:
+                if wcsinfo is not None:
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot provide both pyfits header and wcsinfo",
+                        header=header, wcsinfo=wcsinfo)
+                self.header = fits.FitsHeader(header)
+                wcsinfo = self._load_from_header(self.header)
+            else:
+                self.header = None
+
+            if wcsinfo is None:
                 raise GalSimIncompatibleValuesError(
-                    "Cannot provide both pyfits header and wcsinfo", header=header, wcsinfo=wcsinfo)
-            wcsinfo = self._load_from_header(header, hdu)
+                    "Must provide one of file_name, header, or wcsinfo",
+                    file_name=file_name, header=header, wcsinfo=wcsinfo)
 
-        if wcsinfo is None:
-            raise GalSimIncompatibleValuesError(
-                "Must provide one of file_name, header, or wcsinfo",
-                file_name=file_name, header=header, wcsinfo=wcsinfo)
+            #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes
+            # (given by Nout).
+            if wcsinfo.Nin != 2 or wcsinfo.Nout != 2:  # pragma: no cover
+                raise GalSimError("The world coordinate system is not 2-dimensional")
 
-        #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes
-        # (given by Nout).
-        if wcsinfo.Nin != 2 or wcsinfo.Nout != 2:
-            raise GalSimError("The world coordinate system is not 2-dimensional")
-
-        if file_name is not None:
-            fits.closeHDUList(hdu_list, fin)
+        finally:
+            if file_name is not None:
+                fits.closeHDUList(hdu_list, fin)
 
         self._wcsinfo = wcsinfo
 
-    def _load_from_header(self, header, hdu):
+    def _load_from_header(self, header):
         import starlink.Atl
         # Note: For much of this class implementation, I've followed the example provided here:
         #       http://dsberry.github.io/starlink/node4.html
         self._fix_header(header)
-        # PyFITSAdapter requires an hdu, not a header, so if we were given a header directly,
-        # then we need to mock it up.
-        if hdu is None:
-            from ._pyfits import pyfits
-            hdu = pyfits.PrimaryHDU()
-            fits.FitsHeader(hdu_list=hdu).update(header)
+
+        # PyFITSAdapter requires an hdu, not a header, so just put it in a pyfits header object.
+        # It turns out there are subtle differences between this and using the original FITS
+        # file hdu that we read in above.  So there is a slight inefficiency here in creating
+        # a new blank PrimaryHDU for this.  But in return we gain more reliable serializability.
+        from ._pyfits import pyfits
+        hdu = pyfits.PrimaryHDU()
+        fits.FitsHeader(hdu_list=hdu).update(header)
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             # They aren't so good at keeping up with the latest pyfits and numpy syntax, so
@@ -492,7 +506,7 @@ class PyAstWCS(CelestialWCS):
             wcsinfo = fc.read()
 
         if wcsinfo is None:
-            raise GalSimError("Failed to read WCS information from fits file")
+            raise OSError("Failed to read WCS information from fits file")
 
         # The PyAst WCS might not have (RA,Dec) axes, which we want.  It might for instance have
         # (Dec, RA) instead.  If it's possible to convert to an (RA,Dec) system, this next line
@@ -529,7 +543,7 @@ class PyAstWCS(CelestialWCS):
         # if input is either scalar x,y or two arrays.
         xy = np.array([np.atleast_1d(x), np.atleast_1d(y)])
 
-        ra, dec = self._wcsinfo.tran( xy )
+        ra, dec = self.wcsinfo.tran( xy )
         # PyAst returns ra, dec in radians, so we're good.
 
         try:
@@ -544,7 +558,7 @@ class PyAstWCS(CelestialWCS):
 
     def _xy(self, ra, dec, color=None):
         rd = np.array([np.atleast_1d(ra), np.atleast_1d(dec)])
-        x, y = self._wcsinfo.tran( rd, False )
+        x, y = self.wcsinfo.tran( rd, False )
         return x[0], y[0]
 
     def _newOrigin(self, origin):
@@ -566,23 +580,23 @@ class PyAstWCS(CelestialWCS):
             fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu) , "Encoding=FITS-WCS")
             # Let Ast know how big the image is that we'll be writing.
             for key in ['NAXIS', 'NAXIS1', 'NAXIS2']:
-                if key in header:
+                if key in header:  # pragma: no branch
                     fc[key] = header[key]
-            success = fc.write(self._wcsinfo)
+            success = fc.write(self.wcsinfo)
             # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN
             # respectively.  However, if the maximum error is less than 0.1 pixel, it claims
             # success nonetheless.  This doesn't seem accurate enough for many purposes,
             # so we need to countermand that.
             # The easiest way I found to check for them is that the string TPN is in the string
             # version of wcsinfo.  So check for that and set success = False in that case.
-            if 'TPN' in str(self._wcsinfo): success = False
+            if 'TPN' in str(self.wcsinfo): success = False
             # Likewise for SIP.  MPF seems to be an appropriate string to look for.
-            if 'MPF' in str(self._wcsinfo): success = False
+            if 'MPF' in str(self.wcsinfo): success = False
             if not success:
                 # This should always work, since it uses starlinks own proprietary encoding, but
                 # it won't necessarily be readable by ds9.
                 fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu))
-                fc.write(self._wcsinfo)
+                fc.write(self.wcsinfo)
             fc.writefits()
         header.update(hdu.header)
 
@@ -600,40 +614,36 @@ class PyAstWCS(CelestialWCS):
         return PyAstWCS(header=header, origin=PositionD(x0,y0))
 
     def copy(self):
-        # The copy module version of copying the dict works fine here.
-        import copy
-        return copy.copy(self)
+        ret = PyAstWCS.__new__(PyAstWCS)
+        ret.__dict__.update(self.__dict__)
+        return ret
 
     def __eq__(self, other):
         return ( isinstance(other, PyAstWCS) and
-                 str(self._wcsinfo) == str(other.wcsinfo) and
+                 repr(self.wcsinfo) == repr(other.wcsinfo) and
                  self.origin == other.origin)
 
     def __repr__(self):
-        if self._tag is None:
-            if hasattr(self, 'header'):
-                self._tag = 'header=%r'%fits.FitsHeader(self.header)
-            else:
-                # Ast doesn't have a good repr for a FrameSet, so do it ourselves.
-                self._tag = 'wcsinfo=<starlink.Ast.FrameSet at %s>'%id(self.wcsinfo)
-        return "galsim.PyAstWCS(%s, origin=%r)"%(self._tag, self.origin)
+        if self._tag is not None:
+            tag = self._tag
+        elif self.header is not None:
+            tag = 'header=%r'%self.header
+        else:
+            # Ast doesn't have a good repr for a FrameSet, so do it ourselves.
+            tag = 'wcsinfo=<starlink.Ast.FrameSet at %s>'%id(self.wcsinfo)
+        return "galsim.PyAstWCS(%s, origin=%r)"%(tag, self.origin)
 
     def __hash__(self): return hash(repr(self))
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        # If header or wcsinfo is in the tag, then we can't pickle.  Just leave it alone
-        # and let pickle raise the normal exception.
-        if self._tag is not None and 'wcsinfo' not in self._tag and 'header' not in self._tag: # pragma: no branch
-            del d['_wcsinfo']
+        del d['_wcsinfo']
         return d
 
     def __setstate__(self, d):
         import galsim
         self.__dict__ = d
-        hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
-        self._wcsinfo = self._load_from_header(hdu.header, hdu)
-        fits.closeHDUList(hdu_list, fin)
+        self._wcsinfo = self._load_from_header(self.header)
 
 
 # I can't figure out how to get wcstools installed in the travis environment (cf. .travis.yml).
@@ -686,6 +696,12 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         p.stdout.close()
         if len(results) == 0:
             raise OSError('wcstools (specifically xy2sky) was unable to read '+file_name)
+
+        # wcstools supports LINEAR WCS's, but we don't want to allow them, since then
+        # the CelestialWCS base class is inappropriate.  The clue to detect this is that
+        # the results only have 4 values, rather than use usual 5 (missing epoch).
+        if len(results.split()) == 4:
+            raise GalSimError("The WCS read in does not define a pair of celestial axes" )
 
     @property
     def file_name(self): return self._file_name
@@ -946,17 +962,21 @@ class GSFitsWCS(CelestialWCS):
                     "Cannot provide both file_name and pyfits header",
                     file_name=file_name, header=header)
             hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
-            header = hdu.header
 
-        if header is None:
-            raise GalSimIncompatibleValuesError(
-                "Must provide either file_name or header", file_name=file_name, header=header)
+        try:
+            if file_name is not None:
+                header = hdu.header
 
-        # Read the wcs information from the header.
-        self._read_header(header)
+            if header is None:
+                raise GalSimIncompatibleValuesError(
+                    "Must provide either file_name or header", file_name=file_name, header=header)
 
-        if file_name is not None:
-            fits.closeHDUList(hdu_list, fin)
+            # Read the wcs information from the header.
+            self._read_header(header)
+
+        finally:
+            if file_name is not None:
+                fits.closeHDUList(hdu_list, fin)
 
         if origin is not None:
             self.crpix += [ origin.x, origin.y ]
@@ -978,11 +998,11 @@ class GSFitsWCS(CelestialWCS):
         elif ctype1.startswith('RA---') and ctype2.startswith('DEC--'):
             flip = False
         else:
-            raise GalSimError("The WCS read in does not define a pair of celestial axes. "
-                              "Expecting CTYPE1,2 to start with RA--- and DEC--.  Got %s, %s"%(
-                              ctype1, ctype2))
+            raise GalSimError(
+                "GSFitsWCS only supports celestial coordinate systems."
+                "Expecting CTYPE1,2 to start with RA--- and DEC--.  Got %s, %s"%(ctype1, ctype2))
         if ctype1[5:] != ctype2[5:]:
-            raise GalSimError("ctype1, ctype2 do not seem to agree on the WCS type")
+            raise OSError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
         if self.wcs_type in ('TAN', 'TPV', 'TNX', 'TAN-SIP'):
             self.projection = 'gnomonic'
@@ -1161,7 +1181,7 @@ class GSFitsWCS(CelestialWCS):
              wat1[2] != 'lngcor' or
              wat1[3] != '=' or
              not wat1[4].startswith('"') or
-             not wat1[-1].endswith('"') ):
+             not wat1[-1].endswith('"') ):  # pragma: no cover
             raise GalSimError("TNX WAT1 was not as expected")
         if ( len(wat2) < 12 or
              wat2[0] != 'wtype=tnx' or
@@ -1169,7 +1189,7 @@ class GSFitsWCS(CelestialWCS):
              wat2[2] != 'latcor' or
              wat2[3] != '=' or
              not wat2[4].startswith('"') or
-             not wat2[-1].endswith('"') ):
+             not wat2[-1].endswith('"') ):  # pragma: no cover
             raise GalSimError("TNX WAT2 was not as expected")
 
         # Break the next bit out into another function, since it is the same for x and y.
@@ -1199,18 +1219,18 @@ class GSFitsWCS(CelestialWCS):
             data = data[1:]
         else:
             data[0] = data[0][1:]
-        if data[-1] == '"':  # pragma: no branch
+        if data[-1] == '"':
             data = data[:-1]
-        else:
+        else:  # pragma: no cover
             data[-1] = data[-1][:-1]
 
         code = int(data[0].strip('.'))  # Weirdly, these integers are given with decimal points.
         xorder = int(data[1].strip('.'))
         yorder = int(data[2].strip('.'))
         cross = int(data[3].strip('.'))
-        if cross != 2:
+        if cross != 2:  # pragma: no cover
             raise NotImplementedError("TNX only implemented for half-cross option.")
-        if xorder != 4 or yorder != 4:
+        if xorder != 4 or yorder != 4:  # pragma: no cover
             raise NotImplementedError("TNX only implemented for order = 4")
         # Note: order = 4 really means cubic.  order is how large the pv matrix is, i.e. 4x4.
 
@@ -1220,7 +1240,7 @@ class GSFitsWCS(CelestialWCS):
         ymax = float(data[7])
 
         pv1 = [ float(x) for x in data[8:] ]
-        if len(pv1) != 10:
+        if len(pv1) != 10:  # pragma: no cover
             raise GalSimError("Wrong number of items found in WAT data")
 
         # Put these into our matrix formulation.
@@ -1388,13 +1408,11 @@ class GSFitsWCS(CelestialWCS):
         return x, y
 
     # Override the version in CelestialWCS, since we can do this more efficiently.
-    def _local(self, image_pos, world_pos, color=None):
+    def _local(self, image_pos, color=None):
+        from .wcs import JacobianWCS
+
         if image_pos is None:
-            if world_pos is None:
-                raise GalSimIncompatibleValuesError(
-                    "Either image_pos or world_pos must be provided",
-                    image_pos=image_pos, world_pos=world_pos)
-            image_pos = self._posToImage(world_pos, color=color)
+            raise TypeError("origin must be a PositionD or PositionI argument")
 
         # The key lemma here is that chain rule for jacobians is just matrix multiplication.
         # i.e. if s = s(u,v), t = t(u,v) and u = u(x,y), v = v(x,y), then
@@ -1688,6 +1706,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                           (Note: this is set to True when this function is implicitly called from
                           one of the galsim.fits.read* functions.)
     """
+    from .wcs import AffineTransform, PixelScale, OffsetWCS
+
     if file_name is not None:
         if header is not None:
             raise GalSimIncompatibleValuesError(
@@ -1701,6 +1721,18 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
         raise GalSimIncompatibleValuesError(
             "Must provide either file_name or header", file_name=file_name, header=header)
 
+    # For linear WCS specifications, AffineTransformation should work.
+    if header.get('CTYPE1', 'LINEAR') == 'LINEAR':
+        wcs = AffineTransform._readHeader(header)
+        # Convert to PixelScale if possible.
+        if (wcs.dudx == wcs.dvdy and wcs.dudy == wcs.dvdx == 0):
+            if wcs.x0 == wcs.y0 == wcs.u0 == wcs.v0 == 0:
+                wcs = PixelScale(wcs.dudx)
+            else:
+                wcs = OffsetWCS(wcs.dudx, wcs.origin, wcs.world_origin)
+        return wcs
+
+    # Otherwise (and typically), try the various wcs types that can read celestial coordinates.
     for wcs_type in fits_wcs_types:
         try:
             wcs = wcs_type._readHeader(header)
@@ -1716,6 +1748,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                 if compression is not 'auto':
                     wcs._tag += ', compression=%r'%compression
             return wcs
+        except KeyboardInterrupt:
+            raise
         except Exception as err:
             pass
     else:  # pragma: no cover
@@ -1725,8 +1759,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
             warnings.warn("All the fits WCS types failed to read %r. Using AffineTransform "
                           "instead, which will not really be correct."%(file_name),
                           GalSimWarning)
-        wcs = AffineTransform._readHeader(header)
-        return wcs
+        return AffineTransform._readHeader(header)
 
 # Let this function work like a class in config.
 FitsWCS._req_params = { "file_name" : str }
