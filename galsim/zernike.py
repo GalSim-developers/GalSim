@@ -22,7 +22,7 @@ Module contains code for evaluating and fitting Zernike polynomials
 import numpy as np
 
 from .utilities import LRU_Cache, binomial, horner2d, nCr, lazy_property
-from .errors import GalSimValueError
+from .errors import GalSimValueError, GalSimRangeError
 
 # Some utilities for working with Zernike polynomials
 
@@ -431,17 +431,6 @@ class Zernike(object):
         self.coef = np.asarray(coef)
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
-
-    # _coef_array property only exists to support the deprecated OpticalPSF.coef_array attribute.
-    # It can be deleted in version 2.0.
-    @lazy_property
-    def _coef_array(self):
-        arr = _noll_coef_array(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
-
-        if self.R_outer != 1.0:
-            shape = arr.shape
-            arr /= self.R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
-        return arr
 
     @lazy_property
     def _coef_array_xy(self):

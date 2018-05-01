@@ -34,19 +34,60 @@ theta0 = (0*galsim.arcmin, 0*galsim.arcmin)
 def test_aperture():
     """Test various ways to construct Apertures."""
     # Simple tests for constructing and pickling Apertures.
-    aper1 = galsim.Aperture(diam=1.0)
+    aper1 = galsim.Aperture(diam=1.7)
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
-    aper2 = galsim.Aperture(diam=1.0, pupil_plane_im=im)
-    aper3 = galsim.Aperture(diam=1.0, nstruts=4)
+    aper2 = galsim.Aperture(diam=1.7, pupil_plane_im=im)
+    aper3 = galsim.Aperture(diam=1.7, nstruts=4)
     do_pickle(aper1)
     do_pickle(aper2)
     do_pickle(aper3)
     # Automatically created Aperture should match one created via OpticalScreen
-    aper1 = galsim.Aperture(diam=1.0)
-    aper2 = galsim.Aperture(diam=1.0, lam=500, screen_list=[galsim.OpticalScreen(diam=1.0)])
+    aper1 = galsim.Aperture(diam=1.7)
+    aper2 = galsim.Aperture(diam=1.7, lam=500, screen_list=[galsim.OpticalScreen(diam=1.7)])
     err_str = ("Aperture created implicitly using Airy does not match Aperture created using "
                "OpticalScreen.")
     assert aper1 == aper2, err_str
+
+    assert_raises(ValueError, galsim.Aperture, 1.7, obscuration=-0.3)
+    assert_raises(ValueError, galsim.Aperture, 1.7, obscuration=1.1)
+    assert_raises(ValueError, galsim.Aperture, -1.7)
+    assert_raises(ValueError, galsim.Aperture, 0)
+
+    assert_raises(ValueError, galsim.Aperture, 1.7, pupil_plane_im=im, circular_pupil=False)
+    assert_raises(ValueError, galsim.Aperture, 1.7, pupil_plane_im=im, nstruts=2)
+    assert_raises(ValueError, galsim.Aperture, 1.7, pupil_plane_im=im, strut_thick=0.01)
+    assert_raises(ValueError, galsim.Aperture, 1.7, pupil_plane_im=im, strut_angle=5*galsim.degrees)
+    assert_raises(ValueError, galsim.Aperture, 1.7, pupil_plane_im=im, strut_angle=5*galsim.degrees)
+    assert_raises(ValueError, galsim.Aperture, 1.7, screen_list=[galsim.OpticalScreen(diam=1)])
+
+    # rho is a convenience property that can be useful when debugging, but isn't used in the
+    # main code base.
+    np.testing.assert_almost_equal(aper1.rho, aper1.u * 2./1.7 + 1j * aper1.v * 2./1.7)
+
+    # Some other functions that aren't used by anything anymore, but were useful in development.
+    for lam in [300, 550, 1200]:
+        stepk = aper1._getStepK(lam=lam)
+        maxk = aper1._getMaxK(lam=lam)
+        scale = aper1._sky_scale(lam=lam)
+        size = aper1._sky_size(lam=lam)
+        np.testing.assert_almost_equal(stepk, 2.*np.pi/size)
+        np.testing.assert_almost_equal(maxk, np.pi/scale)
+
+    # If the constructed pupil plane would be too large, raise an error
+    assert_raises(galsim.GalSimError, galsim.Aperture, 1.7, pupil_plane_scale=1.e-4)
+
+    # Similar if the given image is too large.
+    # Here, we change gsparams.maximum_fft_size, rather than build a really large image to load.
+    assert_raises(galsim.GalSimError, galsim.Aperture, 1.7, pupil_plane_im=im,
+                  gsparams=galsim.GSParams(maximum_fft_size=64))
+
+    # Other choices just give warnings
+    with assert_warns(galsim.GalSimWarning):
+        galsim.Aperture(diam=1.7, pupil_plane_size=3, pupil_plane_scale=0.03)
+
+    im.wcs = None  # Otherwise get an error.
+    with assert_warns(galsim.GalSimWarning):
+        galsim.Aperture(diam=1.7, pupil_plane_im=im, pupil_plane_scale=0.03)
 
 
 @timer
@@ -166,7 +207,7 @@ def test_phase_screen_list():
     do_pickle(atm, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
-    atm2 = galsim.PhaseScreenList(atm[:-1])  # Refers to first n-1 screens
+    atm2 = atm[:-1]  # Refers to first n-1 screens
     assert atm != atm2
     # Append a different screen to the end of atm2
     atm2.append(ar2)
@@ -175,6 +216,11 @@ def test_phase_screen_list():
     del atm2[-1]
     atm2.append(atm[-1])
     assert atm == atm2
+
+    with assert_raises(TypeError):
+        atm['invalid']
+    with assert_raises(IndexError):
+        atm[3]
 
     # Test building from empty PhaseScreenList
     atm3 = galsim.PhaseScreenList()
@@ -252,6 +298,19 @@ def test_phase_screen_list():
     np.testing.assert_array_equal(psf, psf3, "PhaseScreenPSFs are inconsistent")
     np.testing.assert_array_equal(psf, psf4, "PhaseScreenPSFs are inconsistent")
 
+    # Check errors in u,v,t shapes.
+    assert_raises(ValueError, ar1.wavefront, aper.u, aper.v[:-1,:-1])
+    assert_raises(ValueError, ar1.wavefront, aper.u[:-1,:-1], aper.v)
+    assert_raises(ValueError, ar1.wavefront, aper.u, aper.v, 0.1 * aper.u[:-1,:-1])
+    assert_raises(ValueError, ar1.wavefront_gradient, aper.u, aper.v[:-1,:-1])
+    assert_raises(ValueError, ar1.wavefront_gradient, aper.u[:-1,:-1], aper.v)
+    assert_raises(ValueError, ar1.wavefront_gradient, aper.u, aper.v, 0.1 * aper.u[:-1,:-1])
+
+    assert_raises(ValueError, ar3.wavefront, aper.u, aper.v[:-1,:-1])
+    assert_raises(ValueError, ar3.wavefront, aper.u[:-1,:-1], aper.v)
+    assert_raises(ValueError, ar3.wavefront_gradient, aper.u, aper.v[:-1,:-1])
+    assert_raises(ValueError, ar3.wavefront_gradient, aper.u[:-1,:-1], aper.v)
+
 
 @timer
 def test_frozen_flow():
@@ -264,9 +323,7 @@ def test_frozen_flow():
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
     screen = galsim.AtmosphericScreen(1.0, dx, alt, vx=vx, rng=rng)
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with assert_warns(galsim.GalSimWarning):
         aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
     wf0 = screen.wavefront(aper.u, aper.v, None, theta0)
     dwdu0, dwdv0 = screen.wavefront_gradient(aper.u, aper.v, t=screen._time)
@@ -390,6 +447,14 @@ def test_scale_unit():
     opt_psf1 = galsim.OpticalPSF(lam=500.0, diam=1.0, scale_unit=galsim.arcsec)
     opt_psf2 = galsim.OpticalPSF(lam=500.0, diam=1.0, scale_unit='arcsec')
     assert opt_psf1 == opt_psf2, "scale unit did not parse as string"
+
+    assert_raises(ValueError, galsim.OpticalPSF, lam=500.0, diam=1.0, scale_unit='invalid')
+    assert_raises(ValueError, galsim.PhaseScreenPSF, atm, 500.0, aper=aper, scale_unit='invalid')
+    # Check a few other construction errors now too.
+    assert_raises(ValueError, galsim.PhaseScreenPSF, atm, 500.0, scale_unit='arcmin')
+    assert_raises(TypeError, galsim.PhaseScreenPSF, atm, 500.0, aper=aper, theta=34.*galsim.degrees)
+    assert_raises(TypeError, galsim.PhaseScreenPSF, atm, 500.0, aper=aper, theta=(34, 5))
+    assert_raises(ValueError, galsim.PhaseScreenPSF, atm, 500.0, aper=aper, exptime=-1)
 
 
 @timer

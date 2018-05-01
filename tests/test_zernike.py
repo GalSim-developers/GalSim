@@ -94,6 +94,10 @@ def test_Zernike_orthonormality():
     do_pickle(Z1)
     do_pickle(Z1, lambda z: tuple(z.evalCartesian(x, y)))
 
+    with assert_raises(ValueError):
+        Z1 = galsim.zernike.Zernike([0]*4 + [0.1]*7, R_outer=R_inner, R_inner=R_outer)
+        val1 = Z1.evalCartesian(x, y)
+
 
 @timer
 def test_annular_Zernike_limit():

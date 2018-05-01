@@ -408,7 +408,7 @@ def test_OpticalPSF_pupil_plane():
                       .format(pp_file))
         im = galsim.Image(ref_psf._psf.aper.illuminated.astype(float))
         im.scale = ref_psf._psf.aper.pupil_plane_scale
-        print('pupil_plane image has scale = ',pp_scale)
+        print('pupil_plane image has scale = ',im.scale)
         im.write(os.path.join(imgdir, pp_file))
     pp_scale = im.scale
     print('pupil_plane image has scale = ',pp_scale)
@@ -418,7 +418,7 @@ def test_OpticalPSF_pupil_plane():
     # there is a specific scale for the pupil plane image.  But see the last test below where
     # we do use lam, diam separately with the input image.
     im.wcs = None
-    # This implies that the lam_over_diam value
+    # This implies that the lam_over_diam value is valid.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  oversampling=pp_oversampling, pupil_plane_im=im,
                                  pad_factor=pp_pad_factor)
@@ -440,6 +440,23 @@ def test_OpticalPSF_pupil_plane():
     if do_slow_tests:
         do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
         do_pickle(test_psf)
+
+    # Make a smaller pupil plane image to test the pickling of this, even without slow tests.
+    with assert_warns(galsim.GalSimWarning):
+        alt_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                    oversampling=1., pupil_plane_im=im.bin(4,4),
+                                    pad_factor=1.)
+        do_pickle(alt_psf)
+
+    assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam, pupil_plane_im='pp_file')
+    assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam, pupil_plane_im=im,
+                  pupil_plane_scale=pp_scale)
+    assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam,
+                  pupil_plane_im=im.view(scale=pp_scale))
+    assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam,
+                  pupil_plane_im=galsim.Image(im.array[:-2,:]))
+    assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam,
+                  pupil_plane_im=galsim.Image(im.array[:-1,:-1]))
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
     # make sure that it still works even if we don't tell it that value.

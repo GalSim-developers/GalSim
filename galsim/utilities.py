@@ -103,9 +103,6 @@ def rotate_xy(x, y, theta):
 
     @return the rotated coordinates `(x_rot,y_rot)`.
     """
-    from .angle import Angle
-    if not isinstance(theta, Angle):
-        raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
     sint, cost = theta.sincos()
     x_rot = x * cost - y * sint
     y_rot = x * sint + y * cost
@@ -1067,8 +1064,11 @@ def structure_function(image):
 
     where the x and r on the RHS are 2D vectors, but the |r| on the LHS is just a scalar length.
 
-    @param image  Image containing random field realization.  The `.scale` attribute here *is* used
-                  in the calculation.  If it's `None`, then the code will use 1.0 for the scale.
+    The image must have its `scale` attribute defined.  It will be used in the calculations to
+    set the scale of the radial distances.
+
+    @param image  Image containing random field realization.
+
     @returns      A python callable mapping a separation length r to the estimate of the structure
                   function D(r).
     """
@@ -1076,8 +1076,6 @@ def structure_function(image):
     array = image.array
     nx, ny = array.shape
     scale = image.scale
-    if scale is None:
-        scale = 1.0
 
     # The structure function can be derived from the correlation function B(r) as:
     # D(r) = 2 * [B(0) - B(r)]
