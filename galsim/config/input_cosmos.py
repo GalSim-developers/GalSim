@@ -71,24 +71,20 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     if 'index' in config:
         galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
 
-    kwargs, safe = galsim.config.GetAllParams(config, base,
-        req = galsim.COSMOSCatalog.makeGalaxy._req_params,
-        opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
-        single = galsim.COSMOSCatalog.makeGalaxy._single_params,
-        ignore = ignore)
+    opt = { "index" : int,
+            "gal_type" : str,
+            "noise_pad_size" : float,
+            "deep" : bool,
+            "sersic_prec": float,
+            "n_random": int
+    }
+
+    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
-    # Deal with defaults for gal_type, if it wasn't specified:
-    # If COSMOSCatalog was constructed with 'use_real'=True, then default is 'real'.  Otherwise, the
-    # default is 'parametric'.  This code is in makeGalaxy, but since config has to use
-    # _makeSingleGalaxy, we have to include this here too.
-    if 'gal_type' not in kwargs:
-        if cosmos_cat.use_real: kwargs['gal_type'] = 'real'
-        else: kwargs['gal_type'] = 'parametric'
+    rng = galsim.config.GetRNG(config, base, logger, 'COSMOSGalaxy')
 
-    rng = None
     if 'index' not in kwargs:
-        rng = galsim.config.GetRNG(config, base, logger, 'COSMOSGalaxy')
         kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndex(1, rng=rng, _n_rng_calls=True)
 
         # Make sure this process gives consistent results regardless of the number of processes
@@ -98,12 +94,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
             # discard the same number of random calls from the one in the config dict.
             rng.discard(int(n_rng_calls))
 
-    # Even though gal_type is optional, it will have been set in the code above.  So we can at this
-    # point assume that kwargs['gal_type'] exists.
-    if kwargs['gal_type'] == 'real':
-        if rng is None:
-            rng = galsim.config.GetRNG(config, base, logger, 'COSMOSGalaxy')
-        kwargs['rng'] = rng
+    kwargs['rng'] = rng
 
     # NB. Even though index is officially optional, it will always be present, either because it was
     #     set by a call to selectRandomIndex, explicitly by the user, or due to the call to
@@ -115,12 +106,12 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base.get('obj_num',0),kwargs)
 
-    kwargs['cosmos_catalog'] = cosmos_cat
+    kwargs['self'] = cosmos_cat
 
     # Use a staticmethod of COSMOSCatalog to avoid pickling the result of makeGalaxy()
     # The RealGalaxy in particular has a large serialization, so it is more efficient to
     # make it in this process, which is what happens here.
-    gal = galsim.COSMOSCatalog._makeSingleGalaxy(**kwargs)
+    gal = galsim.COSMOSCatalog._makeGalaxy(**kwargs)
 
     return gal, safe
 

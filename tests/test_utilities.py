@@ -791,51 +791,76 @@ def test_rand_with_replacement():
     """Test routine to select random indices with replacement."""
     # Most aspects of this routine get tested when it's used by COSMOSCatalog.  We just check some
     # of the exception-handling here.
-    with assert_raises(ValueError):
-        galsim.utilities.rand_with_replacement(
-            n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
+
+    # Invalid rng
     with assert_raises(TypeError):
         galsim.utilities.rand_with_replacement(
             n=2, n_choices=10, rng='foo')
+
+    # Invalid n
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=0, n_choices=10, rng=galsim.BaseDeviate(1234))
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=-2, n_choices=10, rng=galsim.BaseDeviate(1234))
+
+    # Invalid n_choices
     with assert_raises(ValueError):
         galsim.utilities.rand_with_replacement(
             n=2, n_choices=10.5, rng=galsim.BaseDeviate(1234))
     with assert_raises(ValueError):
         galsim.utilities.rand_with_replacement(
-            n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
+            n=2, n_choices=0, rng=galsim.BaseDeviate(1234))
     with assert_raises(ValueError):
         galsim.utilities.rand_with_replacement(
-            n=-2, n_choices=11, rng=galsim.BaseDeviate(1234))
+            n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
 
+    # Negative weights
     tmp_weights = np.arange(10).astype(float)-3
     with assert_raises(ValueError):
         galsim.utilities.rand_with_replacement(
             n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
+    # NaN weights
     tmp_weights[0] = np.nan
     with assert_raises(ValueError):
         galsim.utilities.rand_with_replacement(
             n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
+    # inf weights
     tmp_weights[0] = np.inf
     with assert_raises(ValueError):
         galsim.utilities.rand_with_replacement(
             n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
 
+    # Wrong length for weights
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights[:4])
+
     # Make sure results come out the same whether we use _n_rng_calls or not.
-    result_1 = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
-                                                      rng=galsim.BaseDeviate(314159))
-    result_2, _ = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
-                                                         rng=galsim.BaseDeviate(314159),
-                                                         _n_rng_calls=True)
+    rng1 = galsim.BaseDeviate(314159)
+    rng2 = galsim.BaseDeviate(314159)
+    rng3 = galsim.BaseDeviate(314159)
+    result_1 = galsim.utilities.rand_with_replacement(n=10, n_choices=100, rng=rng1)
+    result_2, n_rng = galsim.utilities.rand_with_replacement(n=10, n_choices=100, rng=rng2,
+                                                             _n_rng_calls=True)
     assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
+    rng3.discard(n_rng)
+    assert rng1.raw() == rng2.raw() == rng3.raw()
+
+    # Repeat with weights
     weight = np.zeros(100)
     galsim.UniformDeviate(1234).generate(weight)
-    result_1 = galsim.utilities.rand_with_replacement(
-        n=10, n_choices=100, rng=galsim.BaseDeviate(314159), weight=weight)
+    result_1 = galsim.utilities.rand_with_replacement(10, 100, rng1, weight=weight)
     assert not np.all(result_1==result_2),"Weights did not have an effect"
-    result_2, _ = galsim.utilities.rand_with_replacement(
-        n=10, n_choices=100, rng=galsim.BaseDeviate(314159),
-        weight=weight, _n_rng_calls=True)
+    result_2, n_rng = galsim.utilities.rand_with_replacement(10, 100, rng2, weight=weight,
+                                                             _n_rng_calls=True)
     assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
+    rng3.discard(n_rng)
+    assert rng1.raw() == rng2.raw() == rng3.raw()
 
 @timer
 def test_position_type_promotion():

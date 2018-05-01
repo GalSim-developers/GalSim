@@ -11,6 +11,9 @@ Dependency Changes
 - Officially no longer support Python 2.6. (#755)
 - No longer support pre-astropy versions of pyfits (now bundled in astropy
   as astropy.io.fits).  Nor astropy versions <1.0. (#755)
+- No longer support pre-2016 version of the COSMOS catalog.  You may be
+  asked to run galsim_download_cosmos again if your version is found to
+  be obsolete. (#755)
 - Added LSSTDESC.Coord, which contains the functionality that used to be in
   GalSim as the Angle and CelestialCoord classes.  We moved it to a separate
   repo so people could more easily use this functionality without requiring all
