@@ -79,7 +79,8 @@ from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
-from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
+from .errors import GalSimWarning
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -217,8 +218,10 @@ class Aperture(object):
 
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
         self._obscuration = obscuration  # We store this, even though it's not always used.
-        self._gsparams = gsparams
+        self._gsparams = GSParams.check(gsparams)
 
+        if diam <= 0.:
+            raise GalSimRangeError("Invalid diam.", diam, 0.)
         if obscuration < 0. or obscuration >= 1.:
             raise GalSimRangeError("Invalid obscuration.", obscuration, 0., 1.)
 
@@ -286,7 +289,7 @@ class Aperture(object):
         else:  # Use geometric parameters.
             if pupil_plane_scale is not None:
                 # Check input scale and warn if looks suspicious.
-                if pupil_plane_scale > good_pupil_scale:  # pragma: no cover
+                if pupil_plane_scale > good_pupil_scale:
                     import warnings
                     ratio = good_pupil_scale / pupil_plane_scale
                     warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
@@ -297,7 +300,7 @@ class Aperture(object):
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
                 # Check input size and warn if looks suspicious
-                if pupil_plane_size < good_pupil_size:  # pragma: no cover
+                if pupil_plane_size < good_pupil_size:
                     import warnings
                     ratio = good_pupil_size / pupil_plane_size
                     warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
@@ -311,16 +314,6 @@ class Aperture(object):
                                        nstruts, strut_thick, strut_angle,
                                        pupil_plane_scale, pupil_plane_size)
 
-        # Check FFT size
-        if self._gsparams is not None:
-            maximum_fft_size = self._gsparams.maximum_fft_size
-        else:
-            maximum_fft_size = GSParams().maximum_fft_size
-        if self.npix > maximum_fft_size:
-            raise GalSimError("Created pupil plane array that is too large, {0} "
-                               "If you can handle the large FFT, you may update "
-                               "gsparams.maximum_fft_size".format(self.npix))
-
     def _generate_pupil_plane(self, circular_pupil, nstruts, strut_thick, strut_angle,
                               pupil_plane_scale, pupil_plane_size):
         """ Create an array of illuminated pixels parameterically.
@@ -329,6 +322,13 @@ class Aperture(object):
         # Fudge a little to prevent good_fft_size() from turning 512.0001 into 768.
         ratio *= (1.0 - 1.0/2**14)
         self.npix = Image.good_fft_size(int(np.ceil(ratio)))
+
+        # Check FFT size
+        if self.npix > self._gsparams.maximum_fft_size:
+            raise GalSimError("Created pupil plane array that is too large, {0} "
+                              "If you can handle the large FFT, you may update "
+                              "gsparams.maximum_fft_size".format(self.npix))
+
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
         self.pupil_plane_scale = pupil_plane_size / self.npix
@@ -389,6 +389,12 @@ class Aperture(object):
         pp_arr = pupil_plane_im.array
         self.npix = pp_arr.shape[0]
 
+        # Check FFT size
+        if self.npix > self._gsparams.maximum_fft_size:
+            raise GalSimError("Loaded pupil plane array that is too large, {0} "
+                              "If you can handle the large FFT, you may update "
+                              "gsparams.maximum_fft_size".format(self.npix))
+
         # Sanity checks
         if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
             raise GalSimValueError("Input pupil_plane_im must be square.",
@@ -426,7 +432,7 @@ class Aperture(object):
             self.pupil_plane_size = self.pupil_plane_scale * self.npix
 
         # Check sampling interval and warn if it's not good enough.
-        if self.pupil_plane_scale > good_pupil_scale:  # pragma: no cover
+        if self.pupil_plane_scale > good_pupil_scale:
             import warnings
             ratio = self.pupil_plane_scale / good_pupil_scale
             warnings.warn("Input pupil plane image may not be sampled well enough!\n"
@@ -531,39 +537,37 @@ class Aperture(object):
         """
         return self._illuminated
 
-    @property
+    @lazy_property
     def rho(self):
         """ Unit-disk normalized pupil plane coordinate as a complex number:
         (x, y) => x + 1j * y.
         """
-        if not hasattr(self, '_rho') or self._rho is None:
-            u = np.fft.fftshift(np.fft.fftfreq(self.npix, self.diam/self.pupil_plane_size/2.0))
-            u, v = np.meshgrid(u, u)
-            self._rho = u + 1j * v
-        return self._rho
+        f1 = np.fft.fftfreq(self.npix, 1./self.pupil_plane_size)
+        f2 = np.fft.fftfreq(self.npix, self.diam/self.pupil_plane_size/2.0)
+        u = np.fft.fftshift(np.fft.fftfreq(self.npix, self.diam/self.pupil_plane_size/2.0))
+        u, v = np.meshgrid(u, u)
+        return u + 1j * v
+
+    @lazy_property
+    def _uv(self):
+        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+        u, v =  np.meshgrid(u, u)
+        return u, v
 
     @property
     def u(self):
         """Pupil horizontal coordinate array in meters."""
-        if not hasattr(self, '_u'):
-            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
-            self._u, self._v = np.meshgrid(u, u)
-        return self._u
+        return self._uv[0]
 
     @property
     def v(self):
         """Pupil vertical coordinate array in meters."""
-        if not hasattr(self, '_v'):
-            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
-            self._u, self._v = np.meshgrid(u, u)
-        return self._v
+        return self._uv[1]
 
-    @property
+    @lazy_property
     def rsqr(self):
         """Pupil radius squared array in meters squared."""
-        if not hasattr(self, '_rsqr'):
-            self._rsqr = self.u**2 + self.v**2
-        return self._rsqr
+        return self.u**2 + self.v**2
 
     @property
     def obscuration(self):
@@ -591,6 +595,9 @@ class Aperture(object):
     # - Implies relation between aperture grid and real-space grid:
     #     dL = lambda/theta
     #     L = lambda/dtheta
+    #
+    # MJ: Of these four, only _sky_scale is still used.  The rest are left here for informational
+    # purposes, but nothing actually calls them.
     def _getStepK(self, lam, scale_unit=arcsec):
         """Return the Fourier grid spacing for this aperture at given wavelength.
 
@@ -657,20 +664,15 @@ class PhaseScreenList(object):
         if len(layers) == 1:
             # First check if layers[0] is a PhaseScreenList, so we avoid nesting.
             if isinstance(layers[0], PhaseScreenList):
-                layers = layers[0]._layers
+                self._layers = layers[0]._layers
             else:
                 # Next, see if layers[0] is iterable.  E.g., to catch generator expressions.
                 try:
-                    layers = list(layers[0])
+                    self._layers = list(layers[0])
                 except TypeError:
-                    # If that fails, check if layers[0] is a bare PhaseScreen.  Should probably
-                    # make an ABC for this (use __subclasshook__?), but for now, just check
-                    # AtmosphericScreen and OpticalScreen.
-                    if isinstance(layers[0], (AtmosphericScreen, OpticalScreen)):
-                        layers = [layers[0]]
-        # else, layers is either empty or a tuple of PhaseScreens and so responds appropriately
-        # to list() below.
-        self._layers = list(layers)
+                    self._layers = list(layers)
+        else:
+            self._layers = list(layers)
         self._update_attrs()
         self._pending = []  # Pending PSFs to calculate upon first drawImage.
 
@@ -684,7 +686,7 @@ class PhaseScreenList(object):
             return cls(self._layers[index])
         elif isinstance(index, numbers.Integral):
             return self._layers[index]
-        else:  # pragma: no cover
+        else:
             msg = "{cls.__name__} indices must be integers"
             raise TypeError(msg.format(cls=cls))
 
@@ -1144,7 +1146,7 @@ class PhaseScreenPSF(GSObject):
         if isinstance(scale_unit, str):
             scale_unit = AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
-        self._gsparams = gsparams
+        self._gsparams = GSParams.check(gsparams)
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
         self._force_stepk = _force_stepk
@@ -1688,17 +1690,14 @@ class OpticalPSF(GSObject):
                     gsparams=gsparams)
             self.obscuration = obscuration
         else:
-            if hasattr(aper, '_obscuration'):
-                self.obscuration = aper._obscuration
-            else:
-                self.obscuration = 0.0
+            self.obscuration = aper.obscuration
 
         # Save for pickling
         self._lam = float(lam)
         self._flux = float(flux)
         self._interpolant = interpolant
         self._scale_unit = scale_unit
-        self._gsparams = gsparams
+        self._gsparams = GSParams.check(gsparams)
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
         self._aper = aper
