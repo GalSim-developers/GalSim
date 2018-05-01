@@ -25,6 +25,7 @@ from future.utils import iteritems
 from .image import Image
 from .random import BaseDeviate
 from .gsobject import GSObject
+from .gsparams import GSParams
 from . import utilities
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, GalSimWarning
@@ -83,9 +84,6 @@ class _BaseCorrelatedNoise(object):
         if rng is not None and not isinstance(rng, BaseDeviate):
             raise TypeError(
                 "Supplied rng argument not a galsim.BaseDeviate or derived class instance.")
-        if not isinstance(gsobject, GSObject):
-            raise TypeError(
-                "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
 
         if rng is None: rng = BaseDeviate()
         self._rng = rng
@@ -94,18 +92,18 @@ class _BaseCorrelatedNoise(object):
         self.wcs = wcs
 
         # When applying normal or whitening noise to an image, we normally do calculations.
-        # If _profile_for_stored is profile, then it means that we can use the stored values in
-        # _rootps_store, _rootps_whitening_store, and/or _rootps_symmetrizing_store and avoid having
+        # If _profile_for_cached is profile, then it means that we can use the stored values in
+        # _rootps_cache, _rootps_whitening_cache, and/or _rootps_symmetrizing_cache and avoid having
         # to redo the calculations.
-        # So for now, we start out with _profile_for_stored = None, and _rootps_store,
-        # _rootps_whitening_store, _rootps_symmetrizing_store empty.
-        self._profile_for_stored = None
-        self._rootps_store = []
-        self._rootps_whitening_store = []
-        self._rootps_symmetrizing_store = []
+        # So for now, we start out with _profile_for_cached = None, and _rootps_cache,
+        # _rootps_whitening_cache, _rootps_symmetrizing_cache empty.
+        self._profile_for_cache = None
+        self._rootps_cache = {}
+        self._rootps_whitening_cache = {}
+        self._rootps_symmetrizing_cache = {}
         # Also set up the cache for a stored value of the variance, needed for efficiency once the
         # noise field can get convolved with other GSObjects making is_analytic_x False
-        self._variance_stored = None
+        self._variance_cached = None
 
     @property
     def rng(self): return self._rng
@@ -158,6 +156,17 @@ class _BaseCorrelatedNoise(object):
     def __eq__(self, other): return repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
+
+    def _clear_cache(self):
+        """Check if the profile has changed and clear caches if appropriate.
+        """
+        if self._profile_for_cache is not self._profile:
+            self._rootps_cache.clear()
+            self._rootps_whitening_cache.clear()
+            self._rootps_symmetrizing_cache.clear()
+            self._variance_cached = None
+        # Set profile_for_cache for next time.
+        self._profile_for_cache = self._profile
 
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.
@@ -220,12 +229,7 @@ class _BaseCorrelatedNoise(object):
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.
-        if self._profile_for_stored is not self._profile:
-            self._rootps_store = []
-            self._rootps_whitening_store = []
-            self._variance_stored = None
-        # Set profile_for_stored for next time.
-        self._profile_for_stored = self._profile
+        self._clear_cache()
 
         if image.wcs is None:
             wcs = self.wcs
@@ -241,10 +245,6 @@ class _BaseCorrelatedNoise(object):
         # Add it to the image
         image.array[:,:] += noise_array
         return image
-
-    def applyToView(self, image_view):
-        raise GalSimError(
-            "CorrelatedNoise can only be applied to a regular Image, not an ImageView")
 
     def whitenImage(self, image):
         """Apply noise designed to whiten correlated Gaussian random noise in an input Image.
@@ -317,12 +317,7 @@ class _BaseCorrelatedNoise(object):
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.
-        if self._profile_for_stored is not self._profile:
-            self._rootps_store = []
-            self._rootps_whitening_store = []
-            self._variance_stored = None
-        # Set profile_for_stored for next time.
-        self._profile_for_stored = self._profile
+        self._clear_cache()
 
         if image.wcs is None:
             wcs = self.wcs
@@ -410,11 +405,7 @@ class _BaseCorrelatedNoise(object):
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.  Note that this cache is not the same as the one used for
         # whitening.
-        if self._profile_for_stored is not self._profile:
-            self._rootps_store = []
-            self._rootps_symmetrizing_store = []
-        # Set profile_for_stored for next time.
-        self._profile_for_stored = self._profile
+        self._clear_cache()
 
         if image.wcs is None:
             wcs = self.wcs
@@ -485,9 +476,6 @@ class _BaseCorrelatedNoise(object):
 
         @returns a new CorrelatedNoise object with the specified rotation.
         """
-        from .angle import Angle
-        if not isinstance(theta, Angle):
-            raise TypeError("Input theta should be an Angle")
         return _BaseCorrelatedNoise(self.rng, self._profile.rotate(theta), self.wcs)
 
     def shear(self, *args, **kwargs):
@@ -531,21 +519,17 @@ class _BaseCorrelatedNoise(object):
         else:
             # If the profile has changed since last time (or if we have never been here before),
             # clear out the stored values.
-            if self._profile_for_stored is not self._profile:
-                self._rootps_store = []
-                self._rootps_whitening_store = []
-                self._variance_stored = None
-            # Set profile_for_stored for next time.
-            self._profile_for_stored = self._profile
+            self._clear_cache()
+
             # Then use cached version or rebuild if necessary
-            if self._variance_stored is not None:
-                variance = self._variance_stored
+            if self._variance_cached is not None:
+                variance = self._variance_cached
             else:
                 imtmp = Image(1, 1, dtype=float)
                 # GalSim internals handle this correctly w/out folding
                 self.drawImage(imtmp, scale=1.)
                 variance = imtmp(1, 1)
-                self._variance_stored = variance # Store variance for next time
+                self._variance_cached = variance # Store variance for next time
         return variance
 
     def withVariance(self, variance):
@@ -557,6 +541,8 @@ class _BaseCorrelatedNoise(object):
 
         @returns a CorrelatedNoise object with the new variance.
         """
+        if variance <= 0.:
+            raise GalSimValueError("variance must be > 0 in withVariance", variance)
         variance_ratio = variance / self.getVariance()
         return self * variance_ratio
 
@@ -702,19 +688,16 @@ class _BaseCorrelatedNoise(object):
         """Internal utility function for querying the `rootps` cache, used by applyTo(),
         whitenImage(), and symmetrizeImage() methods.
         """
-        # First check whether we can just use a stored power spectrum (no drawing necessary if so)
-        use_stored = False
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
         half_shape = (shape[0], shape[1] // 2 + 1)
-        for rootps_array, saved_wcs in self._rootps_store:
-            if rootps_array.shape == half_shape and wcs == saved_wcs:
-                use_stored = True
-                rootps = rootps_array
-                break
+        key = (half_shape, wcs)
+
+        # Use the cached value if possible.
+        rootps = self._rootps_cache.get(key, None)
 
         # If not, draw the correlation function to the desired size and resolution, then DFT to
         # generate the required array of the square root of the power spectrum
-        if use_stored is False:
+        if rootps is None:
             # Draw this correlation function into an array.  If this is not done at the same wcs as
             # the original image from which the CF derives, even if the image is rotated, then this
             # step requires interpolation and the newcf (used to generate the PS below) is thus
@@ -724,9 +707,9 @@ class _BaseCorrelatedNoise(object):
 
             # Since we just drew it, save the variance value for posterity.
             var = newcf(newcf.bounds.center)
-            self._variance_stored = var
+            self._variance_cached = var
 
-            if var <= 0.:
+            if var <= 0.:  # pragma: no cover   This should be impossible...
                 raise GalSimError("CorrelatedNoise found to have negative variance.")
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise.  First do
@@ -751,8 +734,8 @@ class _BaseCorrelatedNoise(object):
             # For now we just take the sqrt(abs(PS)):
             rootps = np.sqrt(np.abs(ps))
 
-            # Then add this and the relevant wcs to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.wcs))
+            # Save this in the cache
+            self._rootps_cache[key] = rootps
 
         return rootps
 
@@ -762,23 +745,20 @@ class _BaseCorrelatedNoise(object):
 
         @returns rootps_whitening, variance
         """
-        # First check whether we can just use a stored whitening power spectrum
-        use_stored = False
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
         half_shape = (shape[0], shape[1] // 2 + 1)
-        for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
-            if rootps_whitening_array.shape == half_shape and wcs == saved_wcs:
-                use_stored = True
-                rootps_whitening = rootps_whitening_array
-                variance = var
-                break
+
+        key = (half_shape, wcs)
+
+        # Use the cached values if possible.
+        rootps_whitening, variance = self._rootps_whitening_cache.get(key, (None,None))
 
         # If not, calculate the whitening power spectrum as (almost) the smallest power spectrum
         # that when added to rootps**2 gives a flat resultant power that is nowhere negative.
         # Note that rootps = sqrt(power spectrum), and this procedure therefore works since power
         # spectra add (rather like variances).  The resulting power spectrum will be all positive
         # (and thus physical).
-        if use_stored is False:
+        if rootps_whitening is None:
 
             rootps = self._get_update_rootps(shape, wcs)
             ps_whitening = -rootps * rootps
@@ -790,8 +770,8 @@ class _BaseCorrelatedNoise(object):
             # element we could use any as the PS should be flat.
             variance = rootps[0, 0]**2 + ps_whitening[0, 0]
 
-            # Then add all this and the relevant wcs to the _rootps_whitening_store
-            self._rootps_whitening_store.append((rootps_whitening, wcs, variance))
+            # Then add all this and the relevant wcs to the _rootps_whitening_cache
+            self._rootps_whitening_cache[key] = (rootps_whitening, variance)
 
         return rootps_whitening, variance
 
@@ -801,28 +781,20 @@ class _BaseCorrelatedNoise(object):
 
         @returns rootps_symmetrizing, variance
         """
-        # First check whether we can just use a stored symmetrizing power spectrum.  In addition for
-        # the considerations for use of cached observations for noise whitening, we need the
-        # requested order of the symmetry to be the same as the stored one.
-        use_stored = False
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
         half_shape = (shape[0], shape[1] // 2 + 1)
-        for (
-            rootps_symmetrizing_array, saved_wcs, var, saved_order
-            ) in self._rootps_symmetrizing_store:
-            if (rootps_symmetrizing_array.shape == half_shape and saved_order == order and
-                    wcs == saved_wcs):
-                use_stored = True
-                rootps_symmetrizing = rootps_symmetrizing_array
-                variance = var
-                break
+
+        key = (half_shape, wcs, order)
+
+        # Use the cached values if possible.
+        rootps_symmetrizing, variance = self._rootps_symmetrizing_cache.get(key, (None,None))
 
         # If not, calculate the symmetrizing power spectrum as (almost) the smallest power spectrum
         # that when added to rootps**2 gives a power that has N-fold symmetry, where `N=order`.
         # Note that rootps = sqrt(power spectrum), and this procedure therefore works since power
         # spectra add (rather like variances).  The resulting power spectrum will be all positive
         # (and thus physical).
-        if use_stored is False:
+        if rootps_symmetrizing is None:
 
             rootps = self._get_update_rootps(shape, wcs)
             ps_actual = rootps * rootps
@@ -836,10 +808,12 @@ class _BaseCorrelatedNoise(object):
             # be generated with the rootps_symmetrizing.
             # Here, unlike in _get_update_rootps_whitening, the final power spectrum is not flat, so
             # we have to take the mean power instead of just using the [0, 0] element.
+            # Note that the mean of the power spectrum (fourier space) is the zero lag value in
+            # real space, which is the desired variance.
             variance = np.mean(rootps**2 + ps_symmetrizing)
 
-            # Then add all this and the relevant wcs to the _rootps_symmetrizing_store
-            self._rootps_symmetrizing_store.append((rootps_symmetrizing, wcs, variance, order))
+            # Then add all this and the relevant wcs to the _rootps_symmetrizing_cache
+            self._rootps_symmetrizing_cache[key] = (rootps_symmetrizing, variance)
 
         return rootps_symmetrizing, variance
 
@@ -928,15 +902,11 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     @returns a NumPy array (contiguous) of the requested shape, filled with the noise field.
     """
     from .random import GaussianDeviate
-    # Sanity check on requested shape versus that of rootps
-    if len(shape) != 2 or (shape[0], shape[1]//2+1) != rootps.shape:
-        raise GalSimValueError("Requested shape does not match that of the supplied rootps", shape)
-    #  Quickest to create Gaussian rng each time needed, so do that here...
-    gd = GaussianDeviate(
-        rng, sigma=np.sqrt(.5 * shape[0] * shape[1])) # Note sigma scaling: 1/sqrt(2) needed so
-                                                      # <|gaussvec|**2> = product(shape); shape
-                                                      # needed because of the asymmetry in the
-                                                      # 1/N^2 division in the NumPy FFT/iFFT
+    # Quickest to create Gaussian rng each time needed, so do that here...
+    # Note sigma scaling: 1/sqrt(2) needed so <|gaussvec|**2> = product(shape)
+    # shape needed because of the asymmetry in the 1/N^2 division in the NumPy FFT/iFFT
+    gd = GaussianDeviate(rng, sigma=np.sqrt(.5 * shape[0] * shape[1]))
+
     # Fill a couple of arrays with this noise
     gvec_real = utilities.rand_arr((shape[0], shape[1]//2+1), gd)
     gvec_imag = utilities.rand_arr((shape[0], shape[1]//2+1), gd)
@@ -1218,10 +1188,10 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             if scale is not None:
                 raise GalSimIncompatibleValuesError("Cannot provide both wcs and scale",
                                                     scale=scale, wcs=scale)
-            if not wcs.isUniform():
-                raise GalSimValueError("Cannot provide non-uniform wcs", wcs)
             if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
+            if not wcs.isUniform():
+                raise GalSimValueError("Cannot provide non-uniform wcs", wcs)
             cf_image.wcs = wcs
         elif scale is not None:
             cf_image.scale = scale
@@ -1247,10 +1217,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         _BaseCorrelatedNoise.__init__(self, rng, cf_object, cf_image.wcs)
 
         if store_rootps:
-            # If it corresponds to the CF above, store useful data as a (rootps, wcs) tuple for
-            # efficient later use:
-            self._profile_for_stored = self._profile
-            self._rootps_store.append((np.sqrt(ps_array), cf_image.wcs))
+            # If it corresponds to the CF above, store in the cache
+            self._profile_for_cached = self._profile
+            shape = ps_array.shape
+            half_shape = (shape[0], shape[1] // 2 + 1)
+            key = (half_shape, cf_image.wcs)
+            self._rootps_cache[key] = np.sqrt(ps_array)
 
         self._image = image
 
@@ -1400,15 +1372,8 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         raise OSError("The file %r does not exist."%(file_name))
     try:
         cfimage = fits.read(file_name)
-    except KeyboardInterrupt:
-        raise
-    except: # pragma: no cover
-        # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
-        import warnings
-        warnings.warn(
-            "Function getCOSMOSNoise() unable to read FITS image from %r."(file_name),
-            GalSimWarning)
-        raise
+    except (IOError, OSError, AttributeError, TypeError):
+        raise OSError("Unable to read COSMOSNoise file %s"%(file_name))
 
     # Then check for negative variance before doing anything time consuming
     if variance < 0:
@@ -1494,7 +1459,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
         # Save the things that won't get saved by the base class, for use in repr.
         self.variance = variance
-        self._gsparams = gsparams
+        self._gsparams = GSParams.check(gsparams)
 
         # Need variance == xvalue(0,0) after autoconvolution
         # So the Pixel needs to have an amplitude of sigma at (0,0)
