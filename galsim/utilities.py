@@ -1309,9 +1309,9 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     # Sanity check the requested number of random indices.
     # Note: we do not require that the type be an int, as long as the value is consistent with
     # an integer value (i.e., it could be a float 1.0 or 1).
-    if not n-int(n) == 0 or n < 1:
+    if n != int(n) or n < 1:
         raise GalSimValueError("n must be an integer >= 1.", n)
-    if not n_choices-int(n_choices) == 0 or n_choices < 1:
+    if n_choices != int(n_choices) or n_choices < 1:
         raise GalSimValueError("n_choices must be an integer >= 1.", n_choices)
 
     # Sanity check the input weight.
