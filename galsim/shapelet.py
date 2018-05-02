@@ -28,7 +28,8 @@ from .position import PositionD
 from .image import Image
 from .utilities import doc_inherit
 from . import _galsim
-from .errors import GalSimValueError, GalSimIncompatibleValuesError, convert_cpp_errors
+from .errors import GalSimValueError, GalSimIncompatibleValuesError, GalSimNotImplementedError
+from .errors import convert_cpp_errors
 
 
 class Shapelet(GSObject):
@@ -284,8 +285,8 @@ class Shapelet(GSObject):
 
         if image.wcs is not None and not image.wcs.isPixelScale():
             # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
-            raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "
-                                      "with a non-trivial WCS.")
+            raise GalSimNotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "
+                                            "with a non-trivial WCS.")
 
         # Make it double precision if it is not.
         image = Image(image, dtype=np.float64, copy=False)

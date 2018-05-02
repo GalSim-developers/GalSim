@@ -38,29 +38,25 @@ from contextlib import contextmanager
 #                       much difference in reality, and in Python 3, they made everything OSError.
 #                       We should just use OSError for all such kinds of errors.
 #
-# KeyError:             Use this for the equivalent of accessing a dict-like object with an invalid
-#                       key. E.g. FitsHeader and Catalog raise this for accessing invalid columns.
-#
-# IndexError:           Use this for the equivalent of accessing a list-like object with an invalid
-#                       index. E.g. RealGalaxyCatalog and Catalog raise this for accessing invalid
-#                       rows.
-#
-# NotImplementedError:  Use this for features that we have not implemented.  Even if there is
-#                       no future intent to do so.  E.g. GSObject defines uses this for a number
-#                       of methods that are invalid for non-x-analytic profiles where the
-#                       functionality is not implemented (and never will be) in some of the
-#                       derived classes.
-#                       Also, use it for calls that are invalid in a base class perhaps, but are
-#                       valid for derived classes.  E.g. GSObject and Position use this for their
-#                       __init__ implementations.
+# NotImplementedError:  Use this for code that is not implemented by design and which will never
+#                       be implemented.  E.g. GSObject and Position use this for their __init__
+#                       implementations, since it is invalid to instantiate the base class.
+#                       Use GalSimNotImplementedError for features which might someday be
+#                       implemented.
 #
 # AttributeError:       Use this only for an attempt to access an attribute that an object does not
-#                       have.  We don't currently raise this anywhere in GalSim.
+#                       have.  Like TypeError, this should be reserved for things which a more
+#                       strongly typed language would catch at compile time. We don't currently
+#                       raise this anywhere in GalSim.
 #
 # RuntimeError:         Don't use this.  Use GalSimError (or a subclass) for any run-time errors.
 #
 # ValueError:           Don't use this.  Use one of the below exceptions that derive from
 #                       ValueError.
+#
+# KeyError:             Don't use this.  Use GalSimKeyError instead
+#
+# IndexError:           Don't use this.  Use GalSimIndexError instead.
 #
 # std::runtime_error:   Use this for errors in the C++ layer, and use the catch_cpp_errors()
 #                       context to convert these errors into GalSimErrors.  E.g.
@@ -84,6 +80,13 @@ from contextlib import contextmanager
 # GalSimValueError:     Use this for when a user provides an invalid value for a parameter.
 #                       Note: it has an optional argument to give a list of allowed values when
 #                       that is appropriate.
+#
+# GalSimKeyError        Use this for accessing a dict-like object with an invalid key. E.g.
+#                       FitsHeader and Catalog raise this for accessing invalid columns.
+#
+# GalSimIndexError      Use this for the equivalent of accessing a list-like object with an
+#                       invalid index. E.g. RealGalaxyCatalog and Catalog raise this for accessing
+#                       invalid rows.
 #
 # GalSimRangeError:     Use this when a a user provides an value outside of some allowed range.
 #                       You should also give the min/max values of the allowed range.  The max
@@ -111,9 +114,13 @@ from contextlib import contextmanager
 #
 # GalSimConfigError:    Use this for errors processing a config dict.
 #
-# GalSimConfigValueERror:   Use this when a config dict has a value that is invalid.  Basically,
+# GalSimConfigValueError:   Use this when a config dict has a value that is invalid.  Basically,
 #                           whenever you would normally use GalSimValueError when processing
 #                           a config dict, you should use this instead.
+#
+# GalSimNotImplementedError Use this for features that we have not yet implemented, but which may
+#                           be implemented someday.  So it's not a necessarily invalid usage, just
+#                           something that doesn't work currently.
 
 class GalSimError(RuntimeError):
     """The base class for GalSim-specific run-time errors.
@@ -311,6 +318,20 @@ class GalSimConfigValueError(GalSimValueError, GalSimConfigError):
             self.message, self.value, self.allowed_values)
     def __reduce__(self):
         return GalSimConfigValueError, (self.message, self.value, self.allowed_values)
+
+
+class GalSimNotImplementedError(GalSimError, NotImplementedError):
+    """A GalSim-specific exception class indicating that the feature being attempted is not
+    currently implemented.
+
+    If this is a feature you feel you need, please open an issue about it at
+
+        https://github.com/GalSim-developers/GalSim/issues
+
+    Even better, feel free to offer to contribute code to implement the feature.
+    """
+    def __repr__(self):
+        return 'galsim.GalSimNotImplementedError(%r)'%(str(self))
 
 
 class GalSimWarning(UserWarning):

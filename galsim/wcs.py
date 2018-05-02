@@ -53,7 +53,7 @@ from .gsobject import GSObject
 from .position import Position, PositionI, PositionD
 from .celestial import CelestialCoord
 from .shear import Shear
-from .errors import GalSimError, GalSimIncompatibleValuesError
+from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimNotImplementedError
 
 class BaseWCS(object):
     """The base class for all other kinds of WCS transformations.
@@ -2170,7 +2170,7 @@ class UVFunction(EuclideanWCS):
 
     def _x(self, u, v, color=None):
         if self._xfunc is None:
-            raise NotImplementedError(
+            raise GalSimNotImplementedError(
                 "World -> Image direction not implemented for this UVFunction")
         else:
             if self._uses_color:
@@ -2180,7 +2180,7 @@ class UVFunction(EuclideanWCS):
 
     def _y(self, u, v, color=None):
         if self._yfunc is None:
-            raise NotImplementedError(
+            raise GalSimNotImplementedError(
                 "World -> Image direction not implemented for this UVFunction")
         else:
             if self._uses_color:
@@ -2343,7 +2343,8 @@ class RaDecFunction(CelestialWCS):
         return self._radec_func(x,y)
 
     def _xy(self, ra, dec, color=None):
-        raise NotImplementedError("World -> Image direction not implemented for RaDecFunction")
+        raise GalSimNotImplementedError(
+                "World -> Image direction not implemented for RaDecFunction")
 
     def _newOrigin(self, origin):
         return RaDecFunction(self._orig_ra_func, self._orig_dec_func, origin)

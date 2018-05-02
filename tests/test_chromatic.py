@@ -215,6 +215,9 @@ def test_draw_add_commutativity():
     assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
                   integrator=galsim.integ.midpt)
 
+    # Can't use base class directly.
+    assert_raises(NotImplementedError, galsim.integ.ImageIntegrator)
+
 
 @timer
 def test_ChromaticConvolution_InterpolatedImage():

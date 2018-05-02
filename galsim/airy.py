@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
+from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, convert_cpp_errors
 
 
 class Airy(GSObject):
@@ -164,8 +164,9 @@ class Airy(GSObject):
         else:
             # In principle can find the half light radius as a function of lam_over_diam and
             # obscuration too, but it will be much more involved...!
-            raise NotImplementedError("Half light radius calculation not implemented for Airy "
-                                      "objects with non-zero obscuration.")
+            raise GalSimNotImplementedError(
+                    "Half light radius calculation not implemented for Airy "
+                    "objects with non-zero obscuration.")
 
     @property
     def fwhm(self):
@@ -177,8 +178,9 @@ class Airy(GSObject):
         else:
             # In principle can find the FWHM as a function of lam_over_diam and obscuration too,
             # but it will be much more involved...!
-            raise NotImplementedError("FWHM calculation not implemented for Airy "
-                                      "objects with non-zero obscuration.")
+            raise GalSimNotImplementedError(
+                    "FWHM calculation not implemented for Airy "
+                    "objects with non-zero obscuration.")
 
     def __eq__(self, other):
         return (isinstance(other, Airy) and

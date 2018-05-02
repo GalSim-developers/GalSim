@@ -210,7 +210,8 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
                     image_pos.y*scale, image_pos3.y*scale, digits2,
                     'wcs.posToImage returned wrong image position for '+name)
         except NotImplementedError:
-            pass
+            assert_raises(NotImplementedError, wcs._x, world_pos.x, world_pos.y, color=color)
+            assert_raises(NotImplementedError, wcs._y, world_pos.x, world_pos.y, color=color)
 
     if x0 == 0 and y0 == 0:
         # The last item in list should also work as a PositionI

@@ -37,7 +37,7 @@ from .gsparams import GSParams
 from . import utilities
 from . import integ
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
-from .errors import GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, GalSimWarning
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -1900,7 +1900,7 @@ class ChromaticConvolution(ChromaticObject):
         # real space convolution is not implemented for chromatic objects.
         real_space = kwargs.pop("real_space", None)
         if real_space:
-            raise NotImplementedError(
+            raise GalSimNotImplementedError(
                 "Real space convolution of chromatic objects not implemented.")
         self.gsparams = kwargs.pop("gsparams", None)
 
