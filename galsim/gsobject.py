@@ -59,7 +59,7 @@ from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimWarning, convert_cpp_errors
+from .errors import GalSimNotImplementedError, GalSimWarning, convert_cpp_errors
 
 
 class GSObject(object):
@@ -2122,9 +2122,10 @@ class GSObject(object):
             try:
                 photons = self.shoot(thisN, ud)
             except (GalSimError, NotImplementedError) as e:
-                raise GalSimError("Unable to draw this GSObject with photon shooting.  Perhaps it "
-                                  "is a Deconvolve or is a compound including one or more "
-                                  "Deconvolve objects.\nOriginal error: %r"%(e))
+                raise GalSimNotImplementedError(
+                        "Unable to draw this GSObject with photon shooting.  Perhaps it "
+                        "is a Deconvolve or is a compound including one or more "
+                        "Deconvolve objects.\nOriginal error: %r"%(e))
 
             if g != 1. or thisN != Ntot:
                 photons.scaleFlux(g * thisN / Ntot)

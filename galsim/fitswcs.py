@@ -30,7 +30,7 @@ from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimWarning, convert_cpp_errors
+from .errors import GalSimNotImplementedError, GalSimWarning, convert_cpp_errors
 
 #########################################################################################
 #
@@ -1108,10 +1108,10 @@ class GSFitsWCS(CelestialWCS):
         if ( 'PV1_3' in header and header['PV1_3'] != 0.0 or
              'PV1_11' in header and header['PV1_11'] != 0.0 or
              'PV2_3' in header and header['PV1_3'] != 0.0 or
-             'PV2_11' in header and header['PV1_11'] != 0.0 ):
-            raise NotImplementedError("TPV not implemented for odd powers of r")
-        if 'PV1_12' in header:
-            raise NotImplementedError("TPV not implemented past 3rd order terms")
+             'PV2_11' in header and header['PV1_11'] != 0.0 ): # pragma: no cover
+            raise GalSimNotImplementedError("TPV not implemented for odd powers of r")
+        if 'PV1_12' in header: # pragma: no cover
+            raise GalSimNotImplementedError("TPV not implemented past 3rd order terms")
 
         # Another strange thing is that the two matrices are defined in the opposite order
         # with respect to their element ordering.  And remember that we skipped k=3 in the
@@ -1229,9 +1229,9 @@ class GSFitsWCS(CelestialWCS):
         yorder = int(data[2].strip('.'))
         cross = int(data[3].strip('.'))
         if cross != 2:  # pragma: no cover
-            raise NotImplementedError("TNX only implemented for half-cross option.")
+            raise GalSimNotImplementedError("TNX only implemented for half-cross option.")
         if xorder != 4 or yorder != 4:  # pragma: no cover
-            raise NotImplementedError("TNX only implemented for order = 4")
+            raise GalSimNotImplementedError("TNX only implemented for order = 4")
         # Note: order = 4 really means cubic.  order is how large the pv matrix is, i.e. 4x4.
 
         xmin = float(data[4])

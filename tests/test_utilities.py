@@ -83,6 +83,10 @@ def test_pos():
     assert_raises(TypeError, galsim.PositionD, 11)
     assert_raises(ValueError, galsim.PositionD, 11, "blue")
 
+    # Can't use base class directly.
+    assert_raises(TypeError, galsim.Position, 11, 23)
+    assert_raises(NotImplementedError, galsim.Position)
+
     # Check arithmetic
     for p1 in [pi1, pd1]:
 
@@ -218,6 +222,10 @@ def test_bounds():
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
     assert_raises(TypeError, galsim.BoundsD, 11)
     assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
+
+    # Can't use base class directly.
+    assert_raises(TypeError, galsim.Bounds, 11, 23, 9, 12)
+    assert_raises(NotImplementedError, galsim.Bounds)
 
     # Check intersection
     assert bi1 == galsim.BoundsI(0,100,0,100) & bi1

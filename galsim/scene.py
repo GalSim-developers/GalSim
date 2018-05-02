@@ -26,7 +26,8 @@ import math
 import os
 
 from .real import RealGalaxy, RealGalaxyCatalog
-from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimNotImplementedError, GalSimWarning
 
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
@@ -475,7 +476,7 @@ class COSMOSCatalog(object):
         # call the appropriate helper routine for that case.
         if gal_type == 'real':
             if chromatic:
-                raise NotImplementedError("Cannot yet make real chromatic galaxies!")
+                raise GalSimNotImplementedError("Cannot yet make real chromatic galaxies!")
             gal_list = []
             for idx in indices:
                 real_params = self.getRealParams(idx)

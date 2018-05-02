@@ -31,7 +31,8 @@ from .random import GaussianDeviate
 from .table import LookupTable
 from . import utilities
 from . import integ
-from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimNotImplementedError, GalSimWarning
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -1534,7 +1535,7 @@ def kappaKaiserSquires(g1, g2):
     if g1.shape != g2.shape:
         raise GalSimIncompatibleValuesError("Input g1 and g2 must be the same shape.", g1=g1, g2=g2)
     if g1.shape[0] != g1.shape[1]:
-        raise NotImplementedError("Non-square input shear grids not supported.")
+        raise GalSimNotImplementedError("Non-square input shear grids not supported.")
 
     # Then setup the kx, ky grids
     kx, ky = utilities.kxky(g1.shape)

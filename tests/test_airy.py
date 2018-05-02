@@ -158,6 +158,13 @@ def test_airy_radii():
     assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
     assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_diam")
 
+    # hlr and fwhm not implemented for obscuration != 0
+    airy2 = galsim.Airy(lam_over_diam= 1./0.8, flux=1., obscuration=0.2)
+    with assert_raises(galsim.GalSimNotImplementedError):
+        airy2.half_light_radius
+    with assert_raises(galsim.GalSimNotImplementedError):
+        airy2.fwhm
+
 
 @timer
 def test_airy_flux_scaling():
