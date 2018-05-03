@@ -492,7 +492,7 @@ namespace galsim {
 #if 0
             // _resume_next_recalc initialized to -1, so this is our sign that we haven't run
             // accumulate yet.
-            if (_resume_next_recalc < 0)
+            if (_resume_next_recalc == -1)
                 throw std::runtime_error(
                     "Silicon::accumulate called with resume, but accumulate hasn't been run yet.");
 
@@ -503,7 +503,7 @@ namespace galsim {
                     "Silicon::accumulate called with resume, but image is not the same shape as "
                     "the previous run.");
 #endif
-            assert(_resume_next_recalc >= 0);
+            assert(_resume_next_recalc != -1);
             assert(_imagepolys.size() == nxny);
 
             next_recalc = _resume_next_recalc;
