@@ -84,6 +84,7 @@ class Catalog(object):
             raise GalSimValueError("file_type must be either FITS or ASCII if specified.",
                                    file_type, ('FITS', 'ASCII'))
         self.file_type = file_type
+        if comments == '': comments = None  # loadtxt actually wants None, not ''
         self.comments = comments
         self.hdu = hdu
 
@@ -101,7 +102,7 @@ class Catalog(object):
     def readAscii(self, comments, _nobjects_only=False):
         """Read in an input catalog from an ASCII file.
         """
-        if len(comments) > 1:
+        if comments is not None and len(comments) > 1:
             raise GalSimValueError('Invalid comments character', comments)
 
         # If all we care about is nobjects, this is quicker:
@@ -110,10 +111,10 @@ class Catalog(object):
             # An even faster version using buffering is possible although it requires some care
             # around edge cases, so we use this one instead, which is "correct by inspection".
             with open(self.file_name) as f:
-                if (len(comments) == 1):
+                if comments is not None:
                     c = comments[0]
                     self.nobjects = sum(1 for line in f if line[0] != c)
-                else:  # len(comments) == 0.  No comments.
+                else:  # comments == None.  No comments.
                     self.nobjects = sum(1 for line in f)
             return
 
@@ -158,17 +159,23 @@ class Catalog(object):
         """
         if self.isfits:
             if col not in self.names:
-                raise GalSimKeyError("Column %s is invalid for catalog %s"%(col,self.file_name))
+                raise GalSimKeyError("Column is invalid for catalog %s"%self.file_name, col)
+            if not isinstance(index, int):
+                raise GalSimIndexError("Index must be an int for catalog %s"%self.file_name, index)
             if index < 0 or index >= self.nobjects:
-                raise GalSimIndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
+                raise GalSimIndexError("Index is invalid for catalog %s"%self.file_name, index)
             return self.data[col][index]
         else:
-            icol = int(col)
-            if icol < 0 or icol >= self.ncols:
-                raise GalSimIndexError("Column %s is invalid for catalog %s"%(icol,self.file_name))
+            if not isinstance(col, int):
+                raise GalSimIndexError("Column must an int for ASCII catalog %s"%self.file_name,
+                                       col)
+            if col < 0 or col >= self.ncols:
+                raise GalSimIndexError("Column is invalid for catalog %s"%self.file_name, col)
+            if not isinstance(index, int):
+                raise GalSimIndexError("Index must be an int for catalog %s"%self.file_name, index)
             if index < 0 or index >= self.nobjects:
-                raise GalSimIndexError("Object %s is invalid for catalog %s"%(index,self.file_name))
-            return self.data[index, icol]
+                raise GalSimIndexError("Index is invalid for catalog %s"%self.file_name, col)
+            return self.data[index, col]
 
     def getFloat(self, index, col):
         """Return the data for the given `index` and `col` as a float if possible

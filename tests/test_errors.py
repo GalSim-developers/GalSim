@@ -60,6 +60,36 @@ def test_galsim_value_error():
 
 
 @timer
+def test_galsim_key_error():
+    """Test basic usage of GalSimKeyError
+    """
+    key = 'foo'
+    err = galsim.GalSimKeyError("Test", key)
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err) == "Test Key foo"
+    assert err.key == key
+    assert isinstance(err, galsim.GalSimError)
+    assert isinstance(err, KeyError)
+    do_pickle(err)
+
+
+@timer
+def test_galsim_index_error():
+    """Test basic usage of GalSimIndexError
+    """
+    index = 3
+    err = galsim.GalSimIndexError("Test", index)
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err) == "Test Index 3"
+    assert err.index == index
+    assert isinstance(err, galsim.GalSimError)
+    assert isinstance(err, IndexError)
+    do_pickle(err)
+
+
+@timer
 def test_galsim_range_error():
     """Test basic usage of GalSimRangeError
     """
@@ -217,6 +247,19 @@ def test_galsim_config_value_error():
 
 
 @timer
+def test_galsim_notimplemented_error():
+    """Test basic usage of GalSimNotImplementedError
+    """
+    err = galsim.GalSimNotImplementedError("Test")
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err) == "Test"
+    assert isinstance(err, galsim.GalSimError)
+    assert isinstance(err, NotImplementedError)
+    do_pickle(err)
+
+
+@timer
 def test_galsim_warning():
     """Test basic usage of GalSimWarning
     """
@@ -243,6 +286,8 @@ def test_galsim_deprecation_warning():
 if __name__ == "__main__":
     test_galsim_error()
     test_galsim_value_error()
+    test_galsim_key_error()
+    test_galsim_index_error()
     test_galsim_range_error()
     test_galsim_bounds_error()
     test_galsim_undefined_bounds_error()
@@ -252,5 +297,6 @@ if __name__ == "__main__":
     test_galsim_hsm_error()
     test_galsim_config_error()
     test_galsim_config_value_error()
+    test_galsim_notimplemented_error()
     test_galsim_warning()
     test_galsim_deprecation_warning()

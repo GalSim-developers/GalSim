@@ -27,7 +27,6 @@ See documentation here:
     https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf
 """
 
-from past.builtins import basestring
 import os
 import numpy as np
 
@@ -107,7 +106,7 @@ class DES_PSFEx(object):
     def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 
         if dir:
-            if not isinstance(file_name, basestring):
+            if not isinstance(file_name, str):
                 raise TypeError("file_name must be a string")
             file_name = os.path.join(dir,file_name)
             if image_file_name is not None:
@@ -129,7 +128,7 @@ class DES_PSFEx(object):
 
     def read(self):
         from galsim._pyfits import pyfits
-        if isinstance(self.file_name, basestring):
+        if isinstance(self.file_name, str):
             hdu_list = pyfits.open(self.file_name)
             hdu = hdu_list[1]
         else:

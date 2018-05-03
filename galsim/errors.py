@@ -159,16 +159,32 @@ class GalSimKeyError(GalSimError, KeyError):
     """A GalSim-specific exception class indicating an attempt to access a dict-like object
     with an invalid key.
     """
+    def __init__(self, message, key):
+        self.message = message
+        self.key = key
+        super().__init__(message, key)  # Need to pass key or pickle fails.
+
+    def __str__(self):
+        return self.message + " Key {0!s}".format(self.key)
+
     def __repr__(self):
-        return 'galsim.GalSimKeyError(%r)'%(str(self))
+        return 'galsim.GalSimKeyError(%r,%r)'%(self.message, self.key)
 
 
 class GalSimIndexError(GalSimError, IndexError):
     """A GalSim-specific execption class indicating an attempt to access a list-like object
     with an invalid index.
     """
+    def __init__(self, message, index):
+        self.message = message
+        self.index = index
+        super().__init__(message, index)
+
+    def __str__(self):
+        return self.message + " Index {0!s}".format(self.index)
+
     def __repr__(self):
-        return 'galsim.GalSimIndexError(%r)'%(str(self))
+        return 'galsim.GalSimIndexError(%r,%r)'%(self.message, self.index)
 
 
 class GalSimRangeError(GalSimError, ValueError):
