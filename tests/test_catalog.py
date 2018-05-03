@@ -63,6 +63,8 @@ def test_ascii_catalog():
         cat.get(1, 50)
     with assert_raises(IndexError):
         cat.get('val', 11)
+    with assert_raises(IndexError):
+        cat.get(3, 'val')
 
     cat2 = galsim.Catalog('catalog2.txt', 'config_input', comments='%')
     assert len(cat2) == cat2.nobjects == cat.nobjects
@@ -76,7 +78,7 @@ def test_ascii_catalog():
     assert cat3 != cat
     do_pickle(cat3)
 
-    cat3n = galsim.Catalog('catalog3.txt', 'config_input', comments='', _nobjects_only=True)
+    cat3n = galsim.Catalog('catalog3.txt', 'config_input', comments=None, _nobjects_only=True)
     assert cat3n.nobjects == 3
 
     with assert_raises((IOError, OSError)):
@@ -117,7 +119,9 @@ def test_fits_catalog():
         cat.get(3, 'angle2')
     with assert_raises(KeyError):
         cat.get(1, 'invalid')
-    with assert_raises(TypeError):
+    with assert_raises(KeyError):
+        cat.get(1, 3)
+    with assert_raises(IndexError):
         cat.get('val', 'angle2')
 
     cat2 = galsim.Catalog('catalog2.fits', 'config_input', hdu=2)

@@ -1971,7 +1971,7 @@ def _writeFuncToHeader(func, letter, header):
 
         # Fits can't handle arbitrary strings.  Shrink to a base-64 alphabet that is printable.
         # (This is like UUencoding for those of you who remember that...)
-        s = base64.b64encode(s)
+        s = base64.b64encode(s).decode()
         first_key = 'GS_'+letter+'_FN'
     else:
         # Nothing to write.

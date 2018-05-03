@@ -716,9 +716,7 @@ class RealGalaxyCatalog(object):
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
         if i >= len(self.gal_file_name):
-            raise GalSimIndexError(
-                'index %d given to getGalImage is out of range (0..%d)'
-                % (i,len(self.gal_file_name)-1))
+            raise GalSimIndexError('index out of range (0..%d)'%(len(self.gal_file_name)-1),i)
         f = self._getFile(self.gal_file_name[i])
         # For some reason the more elegant `with gal_lock:` syntax isn't working for me.
         # It gives an EOFError.  But doing an explicit acquire and release seems to work fine.
@@ -735,9 +733,7 @@ class RealGalaxyCatalog(object):
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
         if i >= len(self.psf_file_name):
-            raise GalSimIndexError(
-                'index %d given to getPSFImage is out of range (0..%d)'
-                % (i,len(self.psf_file_name)-1))
+            raise GalSimIndexError('index out of range (0..%d)'%(len(self.psf_file_name)-1),i)
         f = self._getFile(self.psf_file_name[i])
         self.psf_lock.acquire()
         array = f[self.psf_hdu[i]].data
@@ -765,9 +761,7 @@ class RealGalaxyCatalog(object):
             im = None
         else:
             if i >= len(self.noise_file_name):
-                raise GalSimIndexError(
-                    'index %d given to getNoise is out of range (0..%d)'%(
-                        i,len(self.noise_file_name)-1))
+                raise GalSimIndexError('index out of range (0..%d)'%(len(self.noise_file_name)-1),i)
             if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
                 if self.logger:

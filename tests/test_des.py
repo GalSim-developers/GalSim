@@ -635,7 +635,7 @@ def test_psf():
                                       err_msg="no-wcs PSFEx shape.g2 doesn't match")
 
     with assert_raises(TypeError):
-        galsim.des.DES_PSFEx(file_name=file, wcs=wcs_file, dir=data_dir)
+        galsim.des.DES_PSFEx(psf, wcs=wcs_file, dir=data_dir)
     with assert_raises(galsim.GalSimError):
         galsim.des.DES_PSFEx(psfex_file, image_file_name=wcs_file, wcs=wcs_file, dir=data_dir)
 
