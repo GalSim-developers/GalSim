@@ -163,8 +163,6 @@ class PositionD(Position):
     """
     def __init__(self, *args, **kwargs):
         self._parse_args(*args, **kwargs)
-        if self.x != float(self.x) or self.y != float(self.y):
-            raise TypeError("PositionD must be initialized with float values")
         self.x = float(self.x)
         self.y = float(self.y)
 

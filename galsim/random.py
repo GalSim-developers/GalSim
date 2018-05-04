@@ -712,10 +712,9 @@ class DistDeviate(BaseDeviate):
                         "can eval to a function of x.\n"
                         "Caught error: {0}".format(e), self.__function)
         else:
-            self.__function = weakref.ref(function) # Save the inputs to be used in repr
             # Check that the function is actually a function
-            if not (isinstance(function, LookupTable) or hasattr(function, '__call__')):
-                raise TypeError('Keyword function must be a callable function or a string')
+            if not hasattr(function, '__call__'):
+                raise TypeError('function must be a callable function or a string')
             if interpolant:
                 raise GalSimIncompatibleValuesError(
                     "Cannot provide an interpolant with a callable function argument",
@@ -733,6 +732,8 @@ class DistDeviate(BaseDeviate):
                         "Must provide x_min and x_max when function argument is a regular "
                         "python callable function",
                         function=function, x_min=x_min, x_max=x_max)
+
+            self.__function = weakref.ref(function) # Save the inputs to be used in repr
 
         # Compute the probability distribution function, pdf(x)
         if (npoints is None and isinstance(function, LookupTable) and

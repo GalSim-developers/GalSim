@@ -53,7 +53,8 @@ def _parse_compression(compression, file_name):
             if file_name.lower().endswith('.fz'): pyfits_compress = 'RICE_1'
             elif file_name.lower().endswith('.gz'): file_compress = 'gzip'
             elif file_name.lower().endswith('.bz2'): file_compress = 'bzip2'
-            else: pass
+            else:  # pragma: no cover  (Not sure why Travis thinks this isn't covered.)
+                pass
     else:
         raise GalSimValueError("Invalid compression", compression,
                                ('rice', 'gzip_tile', 'hcompress', 'plio', 'gzip', 'bzip2',
@@ -724,6 +725,9 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     try:
         hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
+        if hdu.data is None:
+            raise OSError("HDU is empty.  (data is None)")
+
         wcs, origin = wcs.readFromFitsHeader(hdu.header)
         dt = hdu.data.dtype.type
         if dt in Image.valid_dtypes:
@@ -875,6 +879,9 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
 
     try:
         hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+
+        if hdu.data is None:
+            raise OSError("HDU is empty.  (data is None)")
 
         wcs, origin = wcs.readFromFitsHeader(hdu.header)
         dt = hdu.data.dtype.type

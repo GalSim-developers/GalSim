@@ -129,13 +129,13 @@ class Bounds(object):
                     self.ymin = min(args[0].y, args[1].y)
                     self.ymax = max(args[0].y, args[1].y)
                 else:
-                    raise TypeError("Two arguments to %s must be either Positions"%(
+                    raise TypeError("Two arguments to %s must be Positions"%(
                                     self.__class__.__name__))
             else:
                 raise TypeError("%s takes either 1, 2, or 4 arguments (%d given)"%(
                                 self.__class__.__name__,len(args)))
         elif len(args) != 0:
-            raise TypeError("Cannot provide both keywork and non-keyword arguments to %s"%(
+            raise TypeError("Cannot provide both keyword and non-keyword arguments to %s"%(
                             self.__class__.__name__))
         else:
             try:
@@ -373,9 +373,6 @@ class BoundsD(Bounds):
 
     def __init__(self, *args, **kwargs):
         self._parse_args(*args, **kwargs)
-        if (self.xmin != float(self.xmin) or self.xmax != float(self.xmax) or
-            self.ymin != float(self.ymin) or self.ymax != float(self.ymax)):
-            raise TypeError("BoundsD must be initialized with float values")
         self.xmin = float(self.xmin)
         self.xmax = float(self.xmax)
         self.ymin = float(self.ymin)

@@ -889,6 +889,8 @@ def test_ne():
     with assert_raises(galsim.GalSimError):
         sbp = degen._sbp
 
+    assert_raises(TypeError, galsim.Transform, jac)
+
 
 @timer
 def test_compound():

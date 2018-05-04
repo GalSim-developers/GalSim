@@ -172,7 +172,7 @@ class SiliconSensor(Sensor):
                 raise OSError("Cannot locate file %s or %s"%(self.config_file, cfg_file))
             self.config_file = cfg_file
             self.vertex_file = os.path.join(meta_data.share_dir, 'sensors', self.vertex_file)
-        if not os.path.isfile(self.vertex_file):
+        if not os.path.isfile(self.vertex_file):  # pragma: no cover
             raise OSError("Cannot locate vertex file %s"%(self.vertex_file))
 
         self.config = self._read_config_file(self.config_file)
@@ -205,7 +205,7 @@ class SiliconSensor(Sensor):
         nrecalc = float(self.nrecalc) / self.strength
         vertex_data = np.loadtxt(self.vertex_file, skiprows = 1)
 
-        if vertex_data.shape != (Nx * Ny * (4 * NumVertices + 4), 5):
+        if vertex_data.shape != (Nx * Ny * (4 * NumVertices + 4), 5):  # pragma: no cover
             raise OSError("Vertex file %s does not match config file %s"%(
                           self.vertex_file, self.config_file))
 
@@ -317,7 +317,7 @@ class SiliconSensor(Sensor):
             lines=file.readlines()
         lines = [ l.strip() for l in lines ]
         lines = [ l.split() for l in lines if len(l) > 0 and l[0] != '#' ]
-        if any([l[1] != '=' for l in lines]):
+        if any([l[1] != '=' for l in lines]):  # pragma: no cover
             raise OSError("Error reading config file %s"%filename)
         config = dict([(l[0], l[2]) for l in lines])
         # convert strings to int or float values when appropriate

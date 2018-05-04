@@ -1591,18 +1591,13 @@ def test_wcs():
     wcs = galsim.config.BuildWCS(config, 'wcs', config)
     assert wcs == galsim.PixelScale(1.0)
 
-    with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildWCS(config['image'], 'bad1', config)
-    with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildWCS(config['image'], 'bad2', config)
-    with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildWCS(config['image'], 'bad3', config)
-    with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildWCS(config['image'], 'bad4', config)
-    with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildWCS(config['image'], 'bad5', config)
-    with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildWCS(config['image'], 'bad6', config)
+    for bad in ['bad1', 'bad2', 'bad3', 'bad4', 'bad5', 'bad6']:
+        with assert_raises(galsim.GalSimConfigError):
+            galsim.config.BuildWCS(config['image'], bad, config)
+
+    # Base class usage is invalid
+    builder = galsim.config.wcs.WCSBuilder()
+    assert_raises(NotImplementedError, builder.buildWCS, config, config, logger=None)
 
 @timer
 def test_index_key():

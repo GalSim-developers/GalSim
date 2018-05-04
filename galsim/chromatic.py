@@ -528,7 +528,7 @@ class ChromaticObject(object):
 
         @returns the monochromatic object at the given wavelength.
         """
-        if self.__class__ != ChromaticObject:
+        if self.__class__ != ChromaticObject:  # pragma: no cover
             raise NotImplementedError(
                     "Subclasses of ChromaticObject must override evaluateAtWavelength()")
         return self._obj.evaluateAtWavelength(wave)
@@ -2396,6 +2396,15 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
             self.deinterpolated = self
         self.SED = SED(lambda w:math.sqrt(obj.SED(w)), 'nm', '1')
         self.wave_list = obj.wave_list
+
+    def __eq__(self, other):
+        return (isinstance(other, ChromaticFourierSqrtProfile) and
+                self._obj == other._obj and
+                self.kwargs == other.kwargs)
+
+    def __hash__(self):
+        return hash(("galsim.ChromaticFourierSqrtProfile", self._obj,
+                     frozenset(self.kwargs.items())))
 
     def __repr__(self):
         kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())

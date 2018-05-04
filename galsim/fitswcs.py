@@ -546,6 +546,8 @@ class PyAstWCS(CelestialWCS):
 
 # I can't figure out how to get wcstools installed in the travis environment (cf. .travis.yml).
 # So until that gets resolved, we omit this class from the coverage report.
+# This class was mostly useful as a refernce implementation anyway. It's much too slow for most
+# users to ever want to use it.
 class WcsToolsWCS(CelestialWCS): # pragma: no cover
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
     for a given FITS file.  It requires wcstools command line functions to be installed.
@@ -592,7 +594,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
                              stdout=subprocess.PIPE)
         results = p.communicate()[0]
         p.stdout.close()
-        if len(results) == 0:
+        if len(results) == 0 or 'cannot' in results:
             raise OSError('wcstools (specifically xy2sky) was unable to read '+file_name)
 
         # wcstools supports LINEAR WCS's, but we don't want to allow them, since then
@@ -889,8 +891,8 @@ class GSFitsWCS(CelestialWCS):
         from .angle import AngleUnit
         from .celestial import CelestialCoord
         # Start by reading the basic WCS stuff that most types have.
-        ctype1 = header['CTYPE1']
-        ctype2 = header['CTYPE2']
+        ctype1 = header.get('CTYPE1','')
+        ctype2 = header.get('CTYPE2','')
         if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
             flip = True
         elif ctype1.startswith('RA---') and ctype2.startswith('DEC--'):
@@ -899,7 +901,7 @@ class GSFitsWCS(CelestialWCS):
             raise GalSimError(
                 "GSFitsWCS only supports celestial coordinate systems."
                 "Expecting CTYPE1,2 to start with RA--- and DEC--.  Got %s, %s"%(ctype1, ctype2))
-        if ctype1[5:] != ctype2[5:]:
+        if ctype1[5:] != ctype2[5:]:  # pragma: no cover
             raise OSError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
         if self.wcs_type in ('TAN', 'TPV', 'TNX', 'TAN-SIP'):
@@ -1393,8 +1395,7 @@ class GSFitsWCS(CelestialWCS):
 
     def _newOrigin(self, origin):
         ret = self.copy()
-        if origin is not None:
-            ret.crpix = ret.crpix + [ origin.x, origin.y ]
+        ret.crpix = ret.crpix + [ origin.x, origin.y ]
         return ret
 
     def _writeHeader(self, header, bounds):

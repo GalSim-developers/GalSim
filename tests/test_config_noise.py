@@ -85,6 +85,12 @@ def test_gaussian():
     im1c = galsim.config.BuildImage(config)
     np.testing.assert_equal(im1c.array, im1a.array)
 
+    # Base class usage is invalid
+    builder = galsim.config.noise.NoiseBuilder()
+    assert_raises(NotImplementedError, builder.addNoise, config, config, im1a, rng, var,
+                 draw_method='auto', logger=None)
+    assert_raises(NotImplementedError, builder.getNoiseVariance, config, config)
+
 
 @timer
 def test_poisson():

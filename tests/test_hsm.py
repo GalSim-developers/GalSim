@@ -570,6 +570,9 @@ def test_hsmparams():
     assert_raises(galsim.GalSimError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
                   hsmparams=new_params_size)
 
+    assert_raises(TypeError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+                  hsmparams='hsmparams')
+
 
 @timer
 def test_hsmparams_nodefault():

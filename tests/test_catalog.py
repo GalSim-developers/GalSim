@@ -41,33 +41,20 @@ def test_ascii_catalog():
 
     cat2 = galsim.Catalog('catalog.txt', 'config_input', comments='#', file_type='ASCII')
     assert cat2 == cat
+    assert len(cat2) == cat2.nobjects == cat2.getNObjects() == cat.nobjects
+    assert cat2.ncols == cat.ncols
 
+    # Special _nobjects_only option sets nobjects, but doesn't finish setting up object.
     cat3 = galsim.Catalog('catalog.txt', 'config_input', _nobjects_only=True)
     assert cat3 == cat
-    assert cat3.nobjects == cat3.getNObjects() == cat.nobjects
+    assert len(cat3) == cat3.nobjects == cat3.getNObjects() == cat.nobjects
     with assert_raises(AttributeError):
         assert cat3.ncols
     with assert_raises(AttributeError):
-        cat3.get(1,11)
-
-    with assert_raises(galsim.GalSimValueError):
-        galsim.Catalog('catalog.txt', 'config_input', file_type='invalid')
-
-    with assert_raises(IndexError):
-        cat.get(-1, 11)
-    with assert_raises(IndexError):
-        cat.get(3, 11)
-    with assert_raises(IndexError):
-        cat.get(1, -1)
-    with assert_raises(IndexError):
-        cat.get(1, 50)
-    with assert_raises(IndexError):
-        cat.get('val', 11)
-    with assert_raises(IndexError):
-        cat.get(3, 'val')
+        assert cat3.get(1,11)
 
     cat2 = galsim.Catalog('catalog2.txt', 'config_input', comments='%')
-    assert len(cat2) == cat2.nobjects == cat.nobjects
+    assert cat2.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat2.data, cat.data)
     assert cat2 != cat
     do_pickle(cat2)
@@ -81,8 +68,19 @@ def test_ascii_catalog():
     cat3n = galsim.Catalog('catalog3.txt', 'config_input', comments=None, _nobjects_only=True)
     assert cat3n.nobjects == 3
 
-    with assert_raises((IOError, OSError)):
-        galsim.Catalog('invalid.txt', 'config_input')
+    # Check construction errors
+    assert_raises(galsim.GalSimValueError, galsim.Catalog, 'catalog.txt', file_type='invalid')
+    assert_raises(ValueError, galsim.Catalog, 'catalog3.txt', 'config_input', comments="#%")
+    assert_raises((IOError, OSError), galsim.Catalog, 'catalog.txt')  # Wrong dir
+    assert_raises((IOError, OSError), galsim.Catalog, 'invalid.txt', 'config_input')
+
+    # Check indexing errors
+    assert_raises(IndexError, cat.get, -1, 11)
+    assert_raises(IndexError, cat.get, 3, 11)
+    assert_raises(IndexError, cat.get, 1, -1)
+    assert_raises(IndexError, cat.get, 1, 50)
+    assert_raises(IndexError, cat.get, 'val', 11)
+    assert_raises(IndexError, cat.get, 3, 'val')
 
 
 @timer
@@ -101,29 +99,31 @@ def test_fits_catalog():
 
     cat2 = galsim.Catalog('catalog.fits', 'config_input', hdu=1, file_type='FITS')
     assert cat2 == cat
+    assert len(cat2) == cat2.nobjects == cat2.getNObjects() == cat.nobjects
+    assert cat2.ncols == cat.ncols
 
+    # Special _nobjects_only option sets nobjects, but doesn't finish setting up object.
     cat3 = galsim.Catalog('catalog.fits', 'config_input', _nobjects_only=True)
     assert cat3 == cat
     assert len(cat3) == cat3.nobjects == cat3.getNObjects() == cat.nobjects
     with assert_raises(AttributeError):
         assert cat3.ncols
     with assert_raises(AttributeError):
-        cat3.get(1,'angle2')
+        cat3.get(1, 'angle2')
 
-    with assert_raises(galsim.GalSimValueError):
-        galsim.Catalog('catalog.fita', 'config_input', file_type='invalid')
+    # Check construction errors
+    assert_raises(galsim.GalSimValueError, galsim.Catalog, 'catalog.fits', file_type='invalid')
+    assert_raises((IOError, OSError), galsim.Catalog, 'catalog.fits')  # Wrong dir
+    assert_raises((IOError, OSError), galsim.Catalog, 'invalid.fits', 'config_input')
 
-    with assert_raises(IndexError):
-        cat.get(-1, 'angle2')
-    with assert_raises(IndexError):
-        cat.get(3, 'angle2')
-    with assert_raises(KeyError):
-        cat.get(1, 'invalid')
-    with assert_raises(KeyError):
-        cat.get(1, 3)
-    with assert_raises(IndexError):
-        cat.get('val', 'angle2')
+    # Check indexing errors
+    assert_raises(IndexError, cat.get, -1, 'angle2')
+    assert_raises(IndexError, cat.get, 3, 'angle2')
+    assert_raises(KeyError, cat.get, 1, 'invalid')
+    assert_raises(KeyError, cat.get, 1, 3)
+    assert_raises(IndexError, cat.get, 'val', 'angle2')
 
+    # Check non-default hdu
     cat2 = galsim.Catalog('catalog2.fits', 'config_input', hdu=2)
     assert len(cat2) == cat2.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat2.data, cat.data)
@@ -134,14 +134,12 @@ def test_fits_catalog():
     assert cat3.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat3.data, cat.data)
     assert cat3 != cat
-    assert cat3 != cat2  # Even though these are the same, it doesn't no 'data' is hdu 2.
+    assert cat3 != cat2  # Even though these are the same, it doesn't know 'data' is hdu 2.
     do_pickle(cat3)
 
     cat2n = galsim.Catalog('catalog2.fits', 'config_input', hdu=2, _nobjects_only=True)
     assert cat2n.nobjects == 3
 
-    with assert_raises((IOError, OSError)):
-        galsim.Catalog('invalid.fits', 'config_input')
 
 
 @timer

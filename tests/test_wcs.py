@@ -1852,6 +1852,11 @@ def test_pyastwcs():
         approx = tag in [ 'SIP' ]
         do_ref(wcs, ref_list, 'PyAstWCS '+tag, approx)
 
+        if tag == 'TAN':
+            # Also check origin.  (Now that reference checks are done.)
+            wcs = galsim.PyAstWCS(file_name, dir=dir, compression='none', hdu=0,
+                                  origin=galsim.PositionD(3,4))
+
         do_celestial_wcs(wcs, 'PyAst file '+file_name)
 
         # TAN-FLIP has an error of 4mas after write and read here, which I don't really understand.
@@ -1876,6 +1881,10 @@ def test_pyastwcs():
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
         galsim.PyAstWCS('SBProfile_comparison_images/kolmogorov.fits')
+
+    # This file does not have any WCS information in it.
+    with assert_raises(OSError):
+        galsim.PyAstWCS('fits_files/blankimg.fits')
 
     assert_raises(TypeError, galsim.PyAstWCS)
     assert_raises(TypeError, galsim.PyAstWCS, file_name, header='dummy')
@@ -1926,9 +1935,13 @@ def test_wcstools():
 
         do_wcs_image(wcs, 'WcsToolsWCS_'+tag)
 
-    # TAN-PV is one of the ones that WcsToolsWCS doesn't support.
-    #with assert_raises(galsim.GalSimValueError):
-    galsim.WcsToolsWCS(references['TAN-PV'][0], dir=dir)
+    # HPX is one of the ones that WcsToolsWCS doesn't support.
+    with assert_raises(galsim.GalSimError):
+        galsim.WcsToolsWCS(references['HPX'][0], dir=dir)
+
+    # This file does not have any WCS information in it.
+    with assert_raises(OSError):
+        galsim.WcsToolsWCS('fits_files/blankimg.fits')
 
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
@@ -1961,6 +1974,11 @@ def test_gsfitswcs():
 
         do_ref(wcs, ref_list, 'GSFitsWCS '+tag)
 
+        if tag == 'TAN':
+            # Also check origin.  (Now that reference checks are done.)
+            wcs = galsim.GSFitsWCS(file_name, dir=dir, compression='none', hdu=0,
+                                   origin=galsim.PositionD(3,4))
+
         do_celestial_wcs(wcs, 'GSFitsWCS '+file_name)
 
         do_wcs_image(wcs, 'GSFitsWCS_'+tag)
@@ -1972,6 +1990,10 @@ def test_gsfitswcs():
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
         galsim.GSFitsWCS('SBProfile_comparison_images/kolmogorov.fits')
+
+    # This file does not have any WCS information in it.
+    with assert_raises(galsim.GalSimError):
+        galsim.GSFitsWCS('fits_files/blankimg.fits')
 
     assert_raises(TypeError, galsim.GSFitsWCS)
     assert_raises(TypeError, galsim.GSFitsWCS, file_name, header='dummy')
@@ -2081,6 +2103,10 @@ def test_fitswcs():
     # This does support LINEAR WCS types.
     linear = galsim.FitsWCS('SBProfile_comparison_images/kolmogorov.fits')
     assert isinstance(linear, galsim.OffsetWCS)
+
+    # This file does not have any WCS information in it.
+    pixel = galsim.FitsWCS('fits_files/blankimg.fits')
+    assert pixel == galsim.PixelScale(1.0)
 
     assert_raises(TypeError, galsim.FitsWCS)
     assert_raises(TypeError, galsim.FitsWCS, file_name, header='dummy')

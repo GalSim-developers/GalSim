@@ -531,11 +531,11 @@ def test_SED_withFlux():
                                                  "Calculating SED flux from sed * bp failed.")
 
     # Invalid for dimensionless SED
-    c = galsim.SED(2.0, 'nm', '1')
+    flat = galsim.SED(2.0, 'nm', '1')
     with assert_raises(galsim.GalSimSEDError):
-        c.withFlux(1.0, rband)
+        flat.withFlux(1.0, rband)
     with assert_raises(galsim.GalSimSEDError):
-        c.calculateFlux(rband)
+        flat.calculateFlux(rband)
 
 
 @timer
@@ -558,9 +558,9 @@ def test_SED_withFluxDensity():
                 a(500), 3.0, 5, "Setting SED flux density failed.")
 
     # Invalid for dimensionless SED
-    c = galsim.SED(2.0, 'nm', '1')
+    flat = galsim.SED(2.0, 'nm', '1')
     with assert_raises(galsim.GalSimSEDError):
-        c.withFluxDensity(1.0, 500)
+        flat.withFluxDensity(1.0, 500)
 
 
 @timer
@@ -624,9 +624,9 @@ def test_SED_calculateMagnitude():
         assert (abs((AB_mag - vega_mag) - conversion) < thresh)
 
     # Invalid for dimensionless SED
-    c = galsim.SED(2.0, 'nm', '1')
+    flat = galsim.SED(2.0, 'nm', '1')
     with assert_raises(galsim.GalSimSEDError):
-        c.withMagnitude(24.0, bandpass)
+        flat.withMagnitude(24.0, bandpass)
 
     # Zeropoint needs to be set.
     bp = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
@@ -749,6 +749,10 @@ def test_SED_calculateSeeingMomentRatio():
     den = np.trapz(sed(waves), waves)
     np.testing.assert_almost_equal(relative_size, num/den, 4)
 
+    # Invalid for dimensionless SED
+    flat = galsim.SED(2.0, 'nm', '1')
+    with assert_raises(galsim.GalSimSEDError):
+        flat.calculateSeeingMomentRatio(bandpass)
 
 @timer
 def test_SED_sampleWavelength():

@@ -499,6 +499,7 @@ def test_wfirst_detectors():
     np.testing.assert_array_equal(
         im_2.array, im_1.array,
         err_msg='Persistence results depend on function used.')
+    assert_raises(TypeError, galsim.wfirst.applyPersistence, im_2, im0)
 
     # Then we do IPC:
     im_1 = im.copy()
@@ -540,7 +541,7 @@ def test_wfirst_psfs():
     # - achromatic PSFs without loading the pupil plane image.
 
     # First test: check that if we don't specify SCAs, then we get all the expected ones.
-    wfirst_psfs = galsim.wfirst.getPSF(approximate_struts=True)
+    wfirst_psfs = galsim.wfirst.getPSF()
     got_scas = np.array(list(wfirst_psfs.keys()))
     expected_scas = np.arange(1, galsim.wfirst.n_sca+1, 1)
     np.testing.assert_array_equal(

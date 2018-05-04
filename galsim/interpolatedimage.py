@@ -414,7 +414,7 @@ class InterpolatedImage(GSObject):
         # as large as we need in any direction.
         if noise_pad_size:
             if noise_pad_size < 0:
-                raise GalSimValuesError("noise_pad_size may not be negative", noise_pad_size)
+                raise GalSimValueError("noise_pad_size may not be negative", noise_pad_size)
             if not noise_pad:
                 raise GalSimIncompatibleValuesError(
                         "Must provide noise_pad if noise_pad_size > 0",
