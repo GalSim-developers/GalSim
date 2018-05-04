@@ -163,6 +163,7 @@ def test_roundtrip():
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczos3A')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczosF')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
+    assert_raises(NotImplementedError, galsim.Interpolant)
 
 @timer
 def test_fluxnorm():
@@ -271,6 +272,7 @@ def test_exceptions():
     assert_raises(ValueError, galsim.InterpolatedImage, im, pad_factor=-1.)
     assert_raises(ValueError, galsim.InterpolatedImage, im, noise_pad_size=33, noise_pad=im.wcs)
     assert_raises(ValueError, galsim.InterpolatedImage, im, noise_pad_size=33, noise_pad=-1.)
+    assert_raises(ValueError, galsim.InterpolatedImage, im, noise_pad_size=-33, noise_pad=1.)
 
 
 @timer

@@ -243,6 +243,9 @@ def test_uniform():
     assert_raises(TypeError, galsim.UniformDeviate, list())
     assert_raises(TypeError, galsim.UniformDeviate, set())
 
+    assert_raises(TypeError, u.seed, '123')
+    assert_raises(TypeError, u.seed, 12.3)
+
 
 @timer
 def test_gaussian():
@@ -388,6 +391,8 @@ def test_gaussian():
     assert_raises(TypeError, galsim.GaussianDeviate, dict())
     assert_raises(TypeError, galsim.GaussianDeviate, list())
     assert_raises(TypeError, galsim.GaussianDeviate, set())
+
+    assert_raises(ValueError, galsim.GaussianDeviate, testseed, mean=1, sigma=-1)
 
 
 @timer

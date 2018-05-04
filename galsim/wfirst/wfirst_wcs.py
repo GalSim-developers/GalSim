@@ -446,7 +446,7 @@ def _populate_required_fields(header):
         ('INSTRUME', instr_name, "identifier for instrument used to acquire data"),
     ])
 
-def _parse_sip_file(file):
+def _parse_sip_file(file):  # pragma: no cover
     """
     Utility routine to parse the file with the SIP coefficients and hand back some arrays to be used
     for later calculations.

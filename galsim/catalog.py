@@ -122,15 +122,9 @@ class Catalog(object):
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an
         # error if one tries to convert them to float at some point.
-        self.data = np.loadtxt(self.file_name, comments=comments, dtype=bytes)
+        self.data = np.loadtxt(self.file_name, comments=comments, dtype=bytes, ndmin=2)
         # Convert the bytes to str.  For Py2, this is a no op.
         self.data = self.data.astype(str)
-
-        # If only one row, then the shape comes in as one-d.
-        if len(self.data.shape) == 1:
-            self.data = self.data.reshape(1, -1)
-        if len(self.data.shape) != 2:
-            raise OSError('Unable to parse the input catalog as a 2-d array')
 
         self.nobjects = self.data.shape[0]
         self.ncols = self.data.shape[1]
@@ -283,12 +277,10 @@ class Dict(object):
             import yaml
             with open(self.file_name, 'r') as f:
                 self.dict = yaml.load(f)
-        elif file_type == 'JSON':
+        else:  # JSON
             import json
             with open(self.file_name, 'r') as f:
                 self.dict = json.load(f)
-        else:
-            raise GalSimValueError("Invalid file_type", file_type, ('Pickle', 'YAML', 'JSON'))
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter

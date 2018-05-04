@@ -2319,18 +2319,25 @@ def test_ne():
             galsim.ChromaticDeconvolution(cgal1, gsparams=gsp)]
     all_obj_diff(gals)
 
-    # ChromaticAutoConvolution.  Only params here are obj to deconvolve and gsparams.
+    # ChromaticAutoConvolution.
     gals = [galsim.ChromaticAutoConvolution(cgal1),
             galsim.ChromaticAutoConvolution(cgal2),
             galsim.ChromaticAutoConvolution(cgal3),
             galsim.ChromaticAutoConvolution(cgal1, gsparams=gsp)]
     all_obj_diff(gals)
 
-    # ChromaticAutoCorrelation.  Only params here are obj to deconvolve and gsparams.
+    # ChromaticAutoCorrelation.
     gals = [galsim.ChromaticAutoCorrelation(cgal1),
             galsim.ChromaticAutoCorrelation(cgal2),
             galsim.ChromaticAutoCorrelation(cgal3),
             galsim.ChromaticAutoCorrelation(cgal1, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # ChromaticFourierSqrt.
+    gals = [galsim.ChromaticFourierSqrtProfile(cgal1),
+            galsim.ChromaticFourierSqrtProfile(cgal2),
+            galsim.ChromaticFourierSqrtProfile(cgal3),
+            galsim.ChromaticFourierSqrtProfile(cgal1, gsparams=gsp)]
     all_obj_diff(gals)
 
     # ChromaticOpticalPSF.  Params include: lam, (diam or lam_over_diam), aberrations, nstruts,

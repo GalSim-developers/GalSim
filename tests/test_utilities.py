@@ -71,16 +71,20 @@ def test_pos():
     assert isinstance(pd5.x, float)
     assert isinstance(pd5.y, float)
 
+    assert_raises(TypeError, galsim.PositionI, 11)
     assert_raises(TypeError, galsim.PositionI, 11, 23, 9)
     assert_raises(TypeError, galsim.PositionI, x=11, z=23)
     assert_raises(TypeError, galsim.PositionI, x=11)
-    assert_raises(TypeError, galsim.PositionI, 11)
+    assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
+    assert_raises(TypeError, galsim.PositionI, 11, 23, x=13, z=21)
     assert_raises(TypeError, galsim.PositionI, 11, 23.5)
 
+    assert_raises(TypeError, galsim.PositionD, 11)
     assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
     assert_raises(TypeError, galsim.PositionD, x=11, z=23)
     assert_raises(TypeError, galsim.PositionD, x=11)
-    assert_raises(TypeError, galsim.PositionD, 11)
+    assert_raises(TypeError, galsim.PositionD, x=11, y=23, z=17)
+    assert_raises(TypeError, galsim.PositionD, 11, 23, x=13, z=21)
     assert_raises(ValueError, galsim.PositionD, 11, "blue")
 
     # Can't use base class directly.
@@ -129,9 +133,14 @@ def test_pos():
     assert pd9 == 0*pd1
     assert isinstance(pd9, galsim.PositionD)
 
+    assert_raises(TypeError, pd1.__add__, 11)
+    assert_raises(TypeError, pd1.__sub__, 11)
     assert_raises(TypeError, pd1.__mul__, "11")
     assert_raises(TypeError, pd1.__mul__, None)
     assert_raises(TypeError, pd1.__div__, "11e")
+
+    assert_raises(TypeError, pi1.__add__, 11)
+    assert_raises(TypeError, pi1.__sub__, 11)
     assert_raises(TypeError, pi1.__mul__, "11e")
     assert_raises(TypeError, pi1.__mul__, None)
     assert_raises(TypeError, pi1.__div__, 11.5)
@@ -165,7 +174,10 @@ def test_bounds():
     bi11 = galsim.BoundsI(galsim.BoundsD(11.,23.,17.,50.))
     bi12 = galsim.BoundsI(xmin=11,ymin=17,xmax=23,ymax=50)
     bi13 = galsim._BoundsI(11,23,17,50)
-    for b in [bi1, bi2, bi3, bi4, bi5, bi6, bi7, bi8, bi9, bi10, bi11, bi12, bi13]:
+    bi14 = galsim.BoundsI()
+    bi14 += galsim.PositionI(11,17)
+    bi14 += galsim.PositionI(23,50)
+    for b in [bi1, bi2, bi3, bi4, bi5, bi6, bi7, bi8, bi9, bi10, bi11, bi12, bi13, bi14]:
         assert b.isDefined()
         assert b == bi1
         assert isinstance(b.xmin, int)
@@ -198,7 +210,10 @@ def test_bounds():
     bd11 = galsim.BoundsD(galsim.BoundsI(11,23,17,50))
     bd12 = galsim.BoundsD(xmin=11.0,ymin=17.0,xmax=23.0,ymax=50.0)
     bd13 = galsim._BoundsD(11,23,17,50)
-    for b in [bd1, bd2, bd3, bd4, bd5, bd6, bd7, bd8, bd9, bd10, bd11, bd12, bd13]:
+    bd14 = galsim.BoundsD()
+    bd14 += galsim.PositionD(11.,17.)
+    bd14 += galsim.PositionD(23,50)
+    for b in [bd1, bd2, bd3, bd4, bd5, bd6, bd7, bd8, bd9, bd10, bd11, bd12, bd13, bd14]:
         assert b.isDefined()
         assert b == bd1
         assert isinstance(b.xmin, float)
@@ -209,19 +224,27 @@ def test_bounds():
         assert b.center == galsim.PositionD(17, 33.5)
         assert b.true_center == galsim.PositionD(17, 33.5)
 
+    assert_raises(TypeError, galsim.BoundsI, 11)
+    assert_raises(TypeError, galsim.BoundsI, 11, 23)
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9)
     assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
-    assert_raises(TypeError, galsim.BoundsI, 11)
     assert_raises(TypeError, galsim.BoundsI, 11, 23.5, 17, 50.9)
+    assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, xmin=19, xmax=2)
+    with assert_raises(TypeError):
+        bi1 += (11,23)
 
+    assert_raises(TypeError, galsim.BoundsD, 11)
+    assert_raises(TypeError, galsim.BoundsD, 11, 23)
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9)
     assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
     assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
-    assert_raises(TypeError, galsim.BoundsD, 11)
     assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
+    assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, xmin=19, xmax=2)
+    with assert_raises(TypeError):
+        bd1 += (11,23)
 
     # Can't use base class directly.
     assert_raises(TypeError, galsim.Bounds, 11, 23, 9, 12)
@@ -232,11 +255,24 @@ def test_bounds():
     assert bi1 == bi1 & galsim.BoundsI(0,100,0,100)
     assert bi1 == galsim.BoundsI(0,23,0,50) & galsim.BoundsI(11,100,17,100)
     assert bi1 == galsim.BoundsI(0,23,17,100) & galsim.BoundsI(11,100,0,50)
+    assert not (bi1 & galsim.BoundsI()).isDefined()
+    assert not (galsim.BoundsI() & bi1).isDefined()
 
     assert bd1 == galsim.BoundsD(0,100,0,100) & bd1
     assert bd1 == bd1 & galsim.BoundsD(0,100,0,100)
     assert bd1 == galsim.BoundsD(0,23,0,50) & galsim.BoundsD(11,100,17,100)
     assert bd1 == galsim.BoundsD(0,23,17,100) & galsim.BoundsD(11,100,0,50)
+    assert not (bd1 & galsim.BoundsD()).isDefined()
+    assert not (galsim.BoundsD() & bd1).isDefined()
+
+    with assert_raises(TypeError):
+        bi1 & galsim.PositionI(1,2)
+    with assert_raises(TypeError):
+        bi1 & galsim.PositionD(1,2)
+    with assert_raises(TypeError):
+        bd1 & galsim.PositionI(1,2)
+    with assert_raises(TypeError):
+        bd1 & galsim.PositionD(1,2)
 
     # Check withBorder
     assert bi1.withBorder(4) == galsim.BoundsI(7,27,13,54)
@@ -721,6 +757,7 @@ def test_interleaveImages():
 
     assert_raises(TypeError, interleaveImages, im_list=img, N=n, offsets=offset_list)
     assert_raises(ValueError, interleaveImages, [img], N=1, offsets=offset_list)
+    assert_raises(ValueError, interleaveImages, im_list, n, offset_list[:-1])
     assert_raises(TypeError, interleaveImages, [im.array for im in im_list], n, offset_list)
     assert_raises(TypeError, interleaveImages,
                   [im_list[0]] + [im.array for im in im_list[1:]],

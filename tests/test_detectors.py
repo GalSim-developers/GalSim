@@ -353,19 +353,25 @@ def test_IPC_basic():
     # Testing for flux conservation
     np.random.seed(1234)
     ipc_kernel = galsim.Image(abs(np.random.randn(3,3))) # a random kernel
-    ipc_kernel /= ipc_kernel.array.sum() # but make it normalized so we do not get warnings
     im_new = im.copy()
     # Set edges to zero since flux is not conserved at the edges otherwise
     im_new.array[0,:] = 0.0
     im_new.array[-1,:] = 0.0
     im_new.array[:,0] = 0.0
     im_new.array[:,-1] = 0.0
-    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=True)
+    with assert_warns(galsim.GalSimWarning):  # warn about the sum not being 1
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend')
     np.testing.assert_almost_equal(im_new.array.sum(), im.array[1:-1,1:-1].sum(), 4,
         err_msg="Normalized IPC kernel does not conserve the total flux for 'extend' option.")
 
+    # With kernel_normalization = False, it won't warn, but it also won't conserve flux.
     im_new = im.copy()
-    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=True)
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
+    assert np.abs(im_new.array.sum() - im.array[1:-1,1:-1].sum()) > 1.e-8
+
+    im_new = im.copy()
+    ipc_kernel /= ipc_kernel.array.sum()  # Explicitly normalizing also avoids warning.
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap')
     np.testing.assert_almost_equal(im_new.array.sum(), im.array.sum(), 4,
         err_msg="Normalized IPC kernel does not conserve the total flux for 'wrap' option.")
 
@@ -375,7 +381,7 @@ def test_IPC_basic():
     ipc_kernel.setValue(2,3,0.125)
     # This kernel should correspond to each pixel getting contribution from the pixel above it.
     im1 = im.copy()
-    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop')
     np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[2:,1:-1],
         im1.array[1:-1,1:-1], 7, err_msg="Difference in directionality for up kernel in applyIPC")
     # Checking for one pixel in the central bulk
@@ -387,7 +393,7 @@ def test_IPC_basic():
     ipc_kernel.setValue(1,2,0.125)
     # This kernel should correspond to each pixel getting contribution from the pixel to its left.
     im1 = im.copy()
-    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop')
     np.testing.assert_array_almost_equal(im1.array[1:-1,1:-1], im1.array[1:-1,1:-1], 7,
         err_msg="Difference in directionality for left kernel in applyIPC")
     # Checking for one pixel in the central bulk

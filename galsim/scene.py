@@ -309,14 +309,10 @@ class COSMOSCatalog(object):
 
             # Some fit parameters can indicate a likely sky subtraction error: very high sersic n
             # AND abnormally large half-light radius (>1 arcsec).
-            if 'hlr' not in self.param_cat.dtype.names:
-                # This is the circularized HLR in arcsec, which we have to compute from the stored
-                # parametric fits.
-                hlr = cosmos_pix_scale * self.param_cat['sersicfit'][:,1] * \
-                    np.sqrt(self.param_cat['sersicfit'][:,2])
-            else:
-                # This is the pre-computed circularized HLR in arcsec.
-                hlr = self.param_cat['hlr'][:,0]
+            if 'hlr' not in self.param_cat.dtype.names:  # pragma: no cover
+                raise OSError("You still have the old COSMOS catalog.  Run the program "
+                              "`galsim_download_cosmos -s %s` to upgrade."%(self.use_sample))
+            hlr = self.param_cat['hlr'][:,0]
             n = self.param_cat['sersicfit'][:,2]
             mask &= ( (n < 5) | (hlr < 1.) )
 

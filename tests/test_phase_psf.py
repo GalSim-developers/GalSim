@@ -37,7 +37,7 @@ def test_aperture():
     aper1 = galsim.Aperture(diam=1.7)
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
     aper2 = galsim.Aperture(diam=1.7, pupil_plane_im=im)
-    aper3 = galsim.Aperture(diam=1.7, nstruts=4)
+    aper3 = galsim.Aperture(diam=1.7, nstruts=4, gsparams=galsim.GSParams(maximum_fft_size=4096))
     do_pickle(aper1)
     do_pickle(aper2)
     do_pickle(aper3)

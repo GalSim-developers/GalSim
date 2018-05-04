@@ -108,6 +108,7 @@ def test_Image_basic():
         assert im1.array.dtype.type == np_array_type
         assert im1.array.flags.writeable == True
         assert im1.array.flags.c_contiguous == True
+        assert im1.dtype == np_array_type
 
         im1.fill(23)
         np.testing.assert_array_equal(im1.array, 23.)
@@ -154,6 +155,7 @@ def test_Image_basic():
         assert im2_view.ymax == nrow
         assert im2_view.bounds == bounds
         assert im2_view.array.dtype.type == np_array_type
+        assert im2_view.dtype == np_array_type
 
         assert im2_cview.xmin == 1
         assert im2_cview.xmax == ncol
@@ -161,6 +163,7 @@ def test_Image_basic():
         assert im2_cview.ymax == nrow
         assert im2_cview.bounds == bounds
         assert im2_cview.array.dtype.type == np_array_type
+        assert im2_cview.dtype == np_array_type
 
         assert im1.real.bounds == bounds
         assert im1.imag.bounds == bounds
@@ -171,14 +174,14 @@ def test_Image_basic():
         assert im2_cview.real.bounds == bounds
         assert im2_cview.imag.bounds == bounds
         if tchar[i] == 'CF':
-            assert im1.real.array.dtype.type == np.float32
-            assert im1.imag.array.dtype.type == np.float32
+            assert im1.real.dtype == np.float32
+            assert im1.imag.dtype == np.float32
         elif tchar[i] == 'CD':
-            assert im1.real.array.dtype.type == np.float64
-            assert im1.imag.array.dtype.type == np.float64
+            assert im1.real.dtype == np.float64
+            assert im1.imag.dtype == np.float64
         else:
-            assert im1.real.array.dtype.type == np_array_type
-            assert im1.imag.array.dtype.type == np_array_type
+            assert im1.real.dtype == np_array_type
+            assert im1.imag.dtype == np_array_type
 
         # Check various ways to set and get values
         for y in range(1,nrow+1):
@@ -506,6 +509,9 @@ def test_Image_FITS_IO():
         assert_raises(TypeError, ref_image.write)
         assert_raises(TypeError, ref_image.write, file_name=test_file, hdu_list=hdu)
 
+        # If clobbert = False, then trying to overwrite will raise an OSError
+        assert_raises(OSError, ref_image.write, test_file, clobber=False)
+
         #
         # Test various compression schemes
         #
@@ -515,6 +521,8 @@ def test_Image_FITS_IO():
         # will run, so when working on the code, it is a good idea to run the tests that way.
         if i > 0 and __name__ != "__main__":
             continue
+
+        test_file0 = test_file  # Save the name of the uncompressed file.
 
         # Test full-file gzip
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.gz")
@@ -537,6 +545,13 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for auto full-file gzip")
 
+        # With compression = None or 'none', astropy automatically figures it out anyway.
+        test_image = galsim.fits.read(test_file, compression=None)
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
+                err_msg="Image"+tchar[i]+" write failed for auto full-file gzip")
+
+        assert_raises(OSError, galsim.fits.read, test_file0, compression='gzip')
+
         # Test full-file bzip2
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.bz2")
         test_image = galsim.fits.read(test_file, compression='bzip2')
@@ -557,6 +572,13 @@ def test_Image_FITS_IO():
         test_image = galsim.fits.read(test_file)
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for auto full-file bzip2")
+
+        # With compression = None or 'none', astropy automatically figures it out anyway.
+        test_image = galsim.fits.read(test_file, compression=None)
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
+                err_msg="Image"+tchar[i]+" write failed for auto full-file gzip")
+
+        assert_raises(OSError, galsim.fits.read, test_file0, compression='bzip2')
 
         # Test rice
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.fz")
@@ -579,12 +601,18 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for auto rice")
 
+        assert_raises(OSError, galsim.fits.read, test_file0, compression='rice')
+        assert_raises(OSError, galsim.fits.read, test_file, compression='none')
+
         # Test gzip_tile
         test_file = os.path.join(datadir, "test"+tchar[i]+"_internal.fits.gzt")
         ref_image.write(test_file, compression='gzip_tile')
         test_image = galsim.fits.read(test_file, compression='gzip_tile')
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for gzip_tile")
+
+        assert_raises(OSError, galsim.fits.read, test_file0, compression='gzip_tile')
+        assert_raises(OSError, galsim.fits.read, test_file, compression='none')
 
         # Test hcompress
         test_file = os.path.join(datadir, "test"+tchar[i]+"_internal.fits.hc")
@@ -593,6 +621,9 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for hcompress")
 
+        assert_raises(OSError, galsim.fits.read, test_file0, compression='hcompress')
+        assert_raises(OSError, galsim.fits.read, test_file, compression='none')
+
         # Test plio (only valid on positive integer values)
         if tchar[i] in ['S', 'I']:
             test_file = os.path.join(datadir, "test"+tchar[i]+"_internal.fits.plio")
@@ -600,6 +631,9 @@ def test_Image_FITS_IO():
             test_image = galsim.fits.read(test_file, compression='plio')
             np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                     err_msg="Image"+tchar[i]+" write failed for plio")
+
+        assert_raises(OSError, galsim.fits.read, test_file0, compression='plio')
+        assert_raises(OSError, galsim.fits.read, test_file, compression='none')
 
 
 @timer
@@ -724,6 +758,8 @@ def test_Image_MultiFITS_IO():
                       compression='invalid')
         assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='rice')
         assert_raises(OSError, galsim.fits.readFile, test_multi_file, compression='rice')
+        assert_raises(OSError, galsim.fits.readMulti, hdu_list=pyfits.HDUList())
+        assert_raises(OSError, galsim.fits.readMulti, hdu_list=pyfits.HDUList(), compression='rice')
 
         assert_raises(TypeError, galsim.fits.readMulti)
         assert_raises(TypeError, galsim.fits.readMulti, test_multi_file, hdu_list=hdu)
@@ -733,18 +769,24 @@ def test_Image_MultiFITS_IO():
         assert_raises(TypeError, galsim.fits.writeMulti, image_list,
                       file_name=test_multi_file, hdu_list=hdu)
 
+        assert_raises(OSError, galsim.fits.writeMulti, image_list, test_multi_file, clobber=False)
+
         assert_raises(TypeError, galsim.fits.writeFile)
         assert_raises(TypeError, galsim.fits.writeFile, image_list)
-        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+        assert_raises(ValueError, galsim.fits.writeFile, test_multi_file, image_list,
                       compression='invalid')
-        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+        assert_raises(ValueError, galsim.fits.writeFile, test_multi_file, image_list,
                       compression='rice')
-        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+        assert_raises(ValueError, galsim.fits.writeFile, test_multi_file, image_list,
                       compression='gzip_tile')
-        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+        assert_raises(ValueError, galsim.fits.writeFile, test_multi_file, image_list,
                       compression='hcompress')
-        assert_raises(ValueError, galsim.fits.writeFile, image_list, test_multi_file,
+        assert_raises(ValueError, galsim.fits.writeFile, test_multi_file, image_list,
                       compression='plio')
+
+        galsim.fits.writeFile(test_multi_file, hdu_list)
+        assert_raises(OSError, galsim.fits.writeFile, test_multi_file, image_list, clobber=False)
+
 
         #
         # Test various compression schemes
@@ -755,6 +797,8 @@ def test_Image_MultiFITS_IO():
         # will run, so when working on the code, it is a good idea to run the tests that way.
         if i > 0 and __name__ != "__main__":
             continue
+
+        test_multi_file0 = test_multi_file
 
         # Test full-file gzip
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.gz")
@@ -785,6 +829,15 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeMulti failed for auto full-file gzip")
 
+        # With compression = None or 'none', astropy automatically figures it out anyway.
+        test_image_list = galsim.fits.readMulti(test_multi_file, compression=None)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" writeMulti failed for auto full-file gzip")
+
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='gzip')
+
         # Test full-file bzip2
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.bz2")
         test_image_list = galsim.fits.readMulti(test_multi_file, compression='bzip2')
@@ -813,6 +866,15 @@ def test_Image_MultiFITS_IO():
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeMulti failed for auto full-file bzip2")
+
+        # With compression = None or 'none', astropy automatically figures it out anyway.
+        test_image_list = galsim.fits.readMulti(test_multi_file, compression=None)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" writeMulti failed for auto full-file gzip")
+
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='bzip2')
 
         # Test rice
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.fz")
@@ -843,6 +905,9 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeMulti failed for auto rice")
 
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='rice')
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='none')
+
         # Test gzip_tile
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.gzt")
         galsim.fits.writeMulti(image_list,test_multi_file, compression='gzip_tile')
@@ -851,6 +916,9 @@ def test_Image_MultiFITS_IO():
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeMulti failed for gzip_tile")
+
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='gzip_tile')
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='none')
 
         # Test hcompress
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.hc")
@@ -861,6 +929,9 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeMulti failed for hcompress")
 
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='hcompress')
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='none')
+
         # Test plio (only valid on positive integer values)
         if tchar[i] in ['S', 'I']:
             test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.plio")
@@ -870,6 +941,9 @@ def test_Image_MultiFITS_IO():
                 np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                         test_image_list[k].array,
                         err_msg="Image"+tchar[i]+" writeMulti failed for plio")
+
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='plio')
+        assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='none')
 
 
 @timer
@@ -1028,6 +1102,8 @@ def test_Image_CubeFITS_IO():
         assert_raises(TypeError, galsim.fits.writeCube, image_list,
                       file_name=test_cube_file, hdu_list=hdu_list)
 
+        assert_raises(OSError, galsim.fits.writeCube, image_list, test_cube_file, clobber=False)
+
         assert_raises(ValueError, galsim.fits.writeCube, image_list[:0], test_cube_file)
         assert_raises(ValueError, galsim.fits.writeCube,
                       [image_list[0], image_list[1].subImage(galsim.BoundsI(0,4,0,4))],
@@ -1042,6 +1118,8 @@ def test_Image_CubeFITS_IO():
         # will run, so when working on the code, it is a good idea to run the tests that way.
         if i > 0 and __name__ != "__main__":
             continue
+
+        test_cube_file0 = test_cube_file
 
         # Test full-file gzip
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.gz")
@@ -1072,6 +1150,15 @@ def test_Image_CubeFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeCube failed for auto full-file gzip")
 
+        # With compression = None or 'none', astropy automatically figures it out anyway.
+        test_image_list = galsim.fits.readCube(test_cube_file, compression=None)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" writeCube failed for auto full-file gzip")
+
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='gzip')
+
         # Test full-file bzip2
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.bz2")
         test_image_list = galsim.fits.readCube(test_cube_file, compression='bzip2')
@@ -1100,6 +1187,15 @@ def test_Image_CubeFITS_IO():
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeCube failed for auto full-file bzip2")
+
+        # With compression = None or 'none', astropy automatically figures it out anyway.
+        test_image_list = galsim.fits.readCube(test_cube_file, compression=None)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" writeCube failed for auto full-file gzip")
+
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='bzip2')
 
         # Test rice
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.fz")
@@ -1130,6 +1226,10 @@ def test_Image_CubeFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeCube failed for auto rice")
 
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='rice')
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file, hdu=1, compression='none')
+
         # Test gzip_tile
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.gzt")
         galsim.fits.writeCube(image_list,test_cube_file, compression='gzip_tile')
@@ -1139,7 +1239,20 @@ def test_Image_CubeFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" writeCube failed for gzip_tile")
 
-        # Note: hcompress is invalid for data cubes
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='gzip_tile')
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
+
+        # Test hcompress
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.hc")
+        galsim.fits.writeCube(image_list,test_cube_file, compression='hcompress')
+        test_image_list = galsim.fits.readCube(test_cube_file, compression='hcompress')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" writeCube failed for hcompress")
+
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='hcompress')
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
 
         # Test plio (only valid on positive integer values)
         if tchar[i] in ['S', 'I']:
@@ -1150,6 +1263,9 @@ def test_Image_CubeFITS_IO():
                 np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                         test_image_list[k].array,
                         err_msg="Image"+tchar[i]+" writeCube failed for plio")
+
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='plio')
+        assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
 
 
 @timer
@@ -2263,6 +2379,9 @@ def test_Image_writeheader():
     new_header = galsim.FitsHeader(test_file)
     assert key_name.upper() in new_header.keys()
     assert new_header['CD1_1'] == 0.0
+
+    # If clobbert = False, then trying to overwrite will raise an OSError
+    assert_raises(OSError, im_test.write, test_file, clobber=False)
 
 
 @timer

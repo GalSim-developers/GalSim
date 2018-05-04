@@ -335,6 +335,7 @@ def test_realspace_convolve():
     # non-analytic profiles cannot do real_space
     d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
     assert_warns(galsim.GalSimWarning, galsim.Convolve, [g, d], real_space=True)
+    assert_raises(TypeError, galsim.Convolve, [g, d], real_space='true')
 
     # Repeat some of the above for AutoConvolve and AutoCorrelate
     conv = galsim.AutoConvolve(psf,real_space=True)
@@ -351,6 +352,8 @@ def test_realspace_convolve():
     assert_warns(galsim.GalSimWarning, galsim.AutoConvolve, d, real_space=True)
     assert_warns(galsim.GalSimWarning, galsim.AutoCorrelate, psf, real_space=False)
     assert_warns(galsim.GalSimWarning, galsim.AutoCorrelate, d, real_space=True)
+    assert_raises(TypeError, galsim.AutoConvolve, d, real_space='true')
+    assert_raises(TypeError, galsim.AutoCorrelate, d, real_space='true')
 
 
 @timer

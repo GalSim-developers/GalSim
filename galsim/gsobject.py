@@ -2268,11 +2268,6 @@ class GSObject(object):
             if nx is not None or ny is not None:
                 raise GalSimIncompatibleValuesError(
                     "Cannot provide nx,ny if image is provided", nx=nx, ny=ny, image=image)
-            if not image.bounds.isDefined():
-                if add_to_image:
-                    raise GalSimIncompatibleValuesError(
-                        "Cannot add_to_image if image bounds are not defined",
-                        add_to_image=add_to_image, image=image)
 
         # Can't both recenter a provided image and add to it.
         if recenter and image.center != PositionI(0,0) and add_to_image:
