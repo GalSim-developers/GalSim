@@ -503,6 +503,7 @@ def test_Image_FITS_IO():
         assert_raises(ValueError, galsim.fits.read, test_file, compression='invalid')
         assert_raises(ValueError, ref_image.write, test_file, compression='invalid')
         assert_raises(OSError, galsim.fits.read, test_file, compression='rice')
+        assert_raises(OSError, galsim.fits.read, 'invalid.fits')
 
         assert_raises(TypeError, galsim.fits.read)
         assert_raises(TypeError, galsim.fits.read, test_file, hdu_list=hdu)
@@ -760,6 +761,8 @@ def test_Image_MultiFITS_IO():
         assert_raises(OSError, galsim.fits.readFile, test_multi_file, compression='rice')
         assert_raises(OSError, galsim.fits.readMulti, hdu_list=pyfits.HDUList())
         assert_raises(OSError, galsim.fits.readMulti, hdu_list=pyfits.HDUList(), compression='rice')
+        assert_raises(OSError, galsim.fits.readMulti, 'invalid.fits')
+        assert_raises(OSError, galsim.fits.readFile, 'invalid.fits')
 
         assert_raises(TypeError, galsim.fits.readMulti)
         assert_raises(TypeError, galsim.fits.readMulti, test_multi_file, hdu_list=hdu)
@@ -1093,6 +1096,7 @@ def test_Image_CubeFITS_IO():
         assert_raises(ValueError, galsim.fits.writeFile, image_list, test_cube_file,
                       compression='invalid')
         assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='rice')
+        assert_raises(OSError, galsim.fits.readCube, 'invalid.fits')
 
         assert_raises(TypeError, galsim.fits.readCube)
         assert_raises(TypeError, galsim.fits.readCube, test_cube_file, hdu_list=hdu)

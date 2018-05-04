@@ -1797,6 +1797,10 @@ def test_astropywcs():
     wcs2 = galsim.AstropyWCS(header=wcs.header)
     do_celestial_wcs(wcs2, 'AstropyWCS from header', test_pickle=True)
 
+    # Astropy gives an error when trying to read this one.
+    with assert_raises(OSError):
+        wcs = galsim.AstropyWCS(references['TAN-PV'][0], dir=dir)
+
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
         galsim.AstropyWCS('SBProfile_comparison_images/kolmogorov.fits')

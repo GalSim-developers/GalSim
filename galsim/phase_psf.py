@@ -510,7 +510,7 @@ class Aperture(object):
             tmp = self.illuminated.astype(np.int16).tolist()
             s += ", pupil_plane_im=array(%r"%tmp+", dtype='int16')"
             s += ", pupil_plane_scale=%r"%self.pupil_plane_scale
-        if hasattr(self, '_gsparams') and self._gsparams is not None:
+        if self._gsparams != GSParams():
             s += ", gsparams=%r"%self._gsparams
         s += ")"
         return s

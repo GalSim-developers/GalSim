@@ -387,10 +387,6 @@ class Image(object):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
 
-    # dtype is read-only
-    @property
-    def dtype(self): return self._dtype
-
     @staticmethod
     def _get_xmin_ymin(array, kwargs):
         """A helper function for parsing xmin, ymin, bounds options with a given array
