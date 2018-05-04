@@ -138,21 +138,20 @@ class AstropyWCS(CelestialWCS):
             if file_name is not None:
                 header = hdu.header
 
-            # At least as late as version 2.0.4, astropy thinks it knows how to parse ZPX files,
-            # but can at least sometimes seg fault when it tries to parse the header.  Check for
-            # that explicitly here and raise an exception before getting to _load_from_header
-            # TODO: If they ever fix this bug, use the correct version here.
-            if (astropy.__version__ < '999' and header is not None and
-                'CTYPE1' in header and 'ZPX' in header['CTYPE1'].upper()):
-                raise GalSimError("AstropyWCS cannot (always) parse ZPX files")
-
             # Load the wcs from the header.
             if header is not None:
                 if wcs is not None:
                     raise GalSimIncompatibleValuesError(
                         "Cannot provide both pyfits header and wcs", header=header, wcs=wcs)
                 self.header = fits.FitsHeader(header)
-                wcs = self._load_from_header(self.header)
+                try:
+                    wcs = self._load_from_header(self.header)
+                except (TypeError, AttributeError, ValueError) as e:
+                    # When parsing ZPX files, astropy raises a very unhelpful error message.
+                    # Ignore that (ValueError in that case, but ignore any similarly mundane error)
+                    # and turn it into a more appropriate OSError.
+                    raise OSError("Astropy failed to read WCS from %s. Original error: %s"%(
+                                  file_name, e))
             else:
                 self.header = None
 
@@ -165,20 +164,6 @@ class AstropyWCS(CelestialWCS):
             if file_name is not None:
                 fits.closeHDUList(hdu_list, fin)
 
-        # If astropy.wcs cannot parse the header, it won't notice from just doing the
-        # WCS(header) command.  It will silently move on, thinking things are fine until
-        # later when if will fail (with `RuntimeError: NULL error object in wcslib`).
-        # We'd rather get that to happen now rather than later.
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                ra, dec = wcs.all_pix2world( [ [0, 0] ], 1)[0]
-        except KeyboardInterrupt:
-            raise
-        except Exception as err:
-            raise OSError("AstropyWCS was unable to read the WCS specification in the header."
-                          "Caught error: %r"%err)
-
         if not wcs.is_celestial:
             raise GalSimError("The WCS read in does not define a pair of celestial axes" )
         self._wcs = wcs
@@ -186,19 +171,13 @@ class AstropyWCS(CelestialWCS):
     def _load_from_header(self, header):
         import astropy.wcs
         from . import fits
-        self._fix_header(header)
         with warnings.catch_warnings():
             # The constructor might emit warnings if it wants to fix the header
             # information (e.g. RADECSYS -> RADESYSa).  We'd rather ignore these
             # warnings, since we don't much care if the input file is non-standard
             # so long as we can make it work.
             warnings.simplefilter("ignore")
-            # Some versions of astropy don't like to accept a galsim.FitsHeader object
-            # as the header attribute here, even though they claim that dict-like objects
-            # are ok.  So pull out the astropy.io.header object in this case.
-            if isinstance(header,fits.FitsHeader):
-                header = header.header
-            wcs = astropy.wcs.WCS(header)
+            wcs = astropy.wcs.WCS(header.header)
         return wcs
 
     @property
@@ -207,41 +186,11 @@ class AstropyWCS(CelestialWCS):
     @property
     def origin(self): return self._origin
 
-    def _fix_header(self, header):
-        # We allow for the option to fix up the header information when a modification can
-        # make it readable by astropy.wcs.
-
-        # Older versions of astropy had trouble with files where the axes were swapped.
-        # So fix them if necessary.  I know >= 1.0.1 works.  0.2.4 and 0.3.1 both fail.
-        import astropy
-        if astropy.__version__ < '1.0.1':  # pragma: no cover
-            ctype1 = header.get('CTYPE1', 'RA---')
-            ctype2 = header.get('CTYPE2', 'DEC--')
-            if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
-                for key1, key2 in [ ('CTYPE1', 'CTYPE2'),
-                                    ('CRVAL1', 'CRVAL2'),
-                                    ('CDELT1', 'CDELT2'),
-                                    ('CD1_1', 'CD2_1'),
-                                    ('CD1_2', 'CD2_2'),
-                                    ('PC1_1', 'PC2_1'),
-                                    ('PC1_2', 'PC2_2'),
-                                    ('CUNIT1', 'CUNIT2') ]:
-                    if key1 in header and key2 in header:
-                        header[key1], header[key2] = header[key2], header[key1]
-
     def _radec(self, x, y, color=None):
         x1 = np.atleast_1d(x)
         y1 = np.atleast_1d(y)
 
-        try:
-            # Old versions fail with an AttributeError about astropy.wcs.Wcsprm.lattype
-            # cf. https://github.com/astropy/astropy/pull/1463
-            # This has been fixed for a while now, but leave in this workaround for old versions.
-            ra, dec = self.wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
-        except AttributeError:  # pragma: no cover
-            # If that failed, then we should be on version < 1.0.1, and the header should have
-            # been fixed above by _fix_header.  So this should work correctly.
-            ra, dec = self.wcs.all_pix2world(x1, y1, 1)
+        ra, dec = self.wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
         factor = degrees / radians
@@ -263,60 +212,9 @@ class AstropyWCS(CelestialWCS):
         import astropy
         factor = radians / degrees
         rd = np.atleast_2d([ra, dec]) * factor
-        # Here we have to work around another astropy.wcs bug.  The way they use scipy's
-        # Broyden's method doesn't work.  So I implement a fix here.
-        if astropy.__version__ >= '1.0.1':
-            # This works now on recent vesions of astropy.  At least >= 1.0.1, but possibly
-            # 1.0 also included the fix.
-            # cf. https://github.com/astropy/astropy/issues/1977
-
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                xy = self.wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
-        else: # pragma: no cover
-            # This section is basically a copy of astropy.wcs's _all_world2pix function, but
-            # simplified a bit to remove some features we don't need, and with corrections
-            # to make it work correctly.
-            import astropy.wcs
-            import scipy.optimize
-
-            origin = 1
-            tolerance = 1.e-6
-
-            # This call emits a RuntimeWarning about:
-            #     [...]/site-packages/scipy/optimize/nonlin.py:943: RuntimeWarning: invalid value encountered in divide
-            #       d = v / vdot(df, v)
-            # It seems to be harmless, so we explicitly ignore it here:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                xy0 = self.wcs.wcs_world2pix(rd, origin)
-
-            # Note that the fmod bit accounts for the possibility that ra and the ra returned
-            # from all_pix2world have a different wrapping around 360.  We fmod dec too even
-            # though it won't do anything, since that's how the numpy array fmod2 has to work.
-            func = lambda pix: (
-                    (np.fmod(self.wcs.all_pix2world(np.atleast_2d(pix),origin) -
-                             rd + 180,360) - 180).ravel() )
-
-            # This is the main bit that the astropy function is missing.
-            # The scipy.optimize.broyden1 function can't handle starting at exactly the right
-            # solution.  It iterates to its limit and then ends with
-            #     Traceback (most recent call last):
-            #       [... snip ...]
-            #       File "[...]/site-packages/scipy/optimize/nonlin.py", line 331, in nonlin_solve
-            #         raise NoConvergence(_array_like(x, x0))
-            #     scipy.optimize.nonlin.NoConvergence: [ 113.74961526  179.99982209]
-            #
-            # Providing a good estimate of the scale size gets rid of this.  And even if we aren't
-            # starting at exactly the right value, it is hugely more efficient to give it an
-            # estimate of alpha, since it is not typically near unity in this case, so it is much
-            # faster to start with something closer to the right value.
-            alpha = np.mean(np.abs(self.wcs.wcs.get_cdelt()))
-
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                xy = [ scipy.optimize.broyden1(func, xy_init, x_tol=tolerance, alpha=alpha)
-                            for xy_init in xy0 ]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            xy = self.wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
         x, y = xy
         return x, y
 
@@ -1653,16 +1551,11 @@ fits_wcs_types = [
 
     PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
                     # number of WCS types of any of these.  In fact, it worked for every one
-                    # we tried in our unit tests (which was not exhaustive).  This is a bit
-                    # slower than Astropy, but I think mostly due to their initial reading of
-                    # the fits header -- that seems to take a lot of time for some reason.
-                    # Once it is loaded, the actual usage seems to be quite fast.
+                    # we tried in our unit tests (which was not exhaustive).
 
-    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  So far, they only handle
-                    # the standard official WCS types.  So not TPV, for instance.  Also, it is
-                    # a little faster than PyAst, so we prefer PyAst when it is available.
-                    # (But only because of our fix in the _xy function to not use the astropy
-                    # version of all_world2pix function!)
+    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  It doesn't support quite as
+                    # many WCS types as PyAst.  It's also usually a little slower, so we prefer
+                    # PyAstWCS when it is available.
 
     WcsToolsWCS,    # This requires the wcstool command line functions to be installed.
                     # It is very slow, so it should only be used as a last resort.
