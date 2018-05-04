@@ -847,21 +847,23 @@ def _parse_files_dirs(file_name, image_dir, sample):
             use_sample = None
     else:
         use_sample = sample
-        if use_sample not in ('23.5', '25.2'):
-            raise GalSimValueError("Sample name not recognized.",use_sample, ('23.5', '25.2'))
-    # after that piece of code, use_sample is either "23.5", "25.2" (if using one of the default
-    # catalogs) or it is still None, if a file_name was given.
 
     if file_name is None:
         file_name = 'real_galaxy_catalog_' + use_sample + '.fits'
         if image_dir is None:
+            use_meta_dir = True  # Used to give a more helpful error message
             image_dir = os.path.join(meta_data.share_dir,
                                      'COSMOS_'+use_sample+'_training_sample')
+        else:
+            use_meta_dir = False
         full_file_name = os.path.join(image_dir,file_name)
-        if not os.path.isfile(full_file_name):
-            raise OSError('No RealGalaxy catalog found in %s. Run the program '
-                          'galsim_download_cosmos -s %s to download catalog and accompanying '
-                          'image files.'%(image_dir, use_sample))
+        if not os.path.isfile(full_file_name) and use_meta_dir:
+            if use_sample not in ('23.5', '25.2'):
+                raise GalSimValueError("Sample name not recognized.",use_sample, ('23.5', '25.2'))
+            else:
+                raise OSError('No RealGalaxy catalog found in %s. Run the program '
+                              'galsim_download_cosmos -s %s to download catalog and accompanying '
+                              'image files.'%(image_dir, use_sample))
     elif image_dir is None:
         full_file_name = file_name
         image_dir = os.path.dirname(file_name)
