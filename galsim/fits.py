@@ -75,12 +75,25 @@ class _ReadFile:
         # (with zcat being a symlink to uncompress instead).
         # Also, I'd rather all these use `with subprocess.Popen(...) as p:`, but that's not
         # supported in 2.7.  So need to keep things this way for now.
-        p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
-        fin = BytesIO(p.communicate()[0])
-        if p.returncode != 0:
+        try:
+            p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, close_fds=True)
+        except OSError:
+            # This OSError should mean that the gunzip call itself was invalid on this system.
+            # Convert to a NotImplementedError, so we can try a different method.
+            raise NotImplementedError()
+        ret = p.communicate()
+        if ret == '':
+            raise OSError("Error running gunzip. stderr output = %s"%ret[1])
+        if p.returncode != 0:  # pragma: no cover
             raise OSError("Error running gunzip. Return code = %s"%p.returncode)
+        fin = BytesIO(ret[0])
         p.wait()
-        hdu_list = pyfits.open(fin, 'readonly')
+        try:
+            hdu_list = pyfits.open(fin, 'readonly')
+        except (OSError, AttributeError, TypeError, ValueError): # pragma: no cover
+            # In case astropy fails.
+            raise NotImplementedError()
         return hdu_list, fin
 
     # Note: the above gzip_call function succeeds on travis, so the rest don't get run.
@@ -90,99 +103,62 @@ class _ReadFile:
         from ._pyfits import pyfits
         fin = gzip.open(file, 'rb')
         hdu_list = pyfits.open(fin, 'readonly')
-        # Sometimes this doesn't work.  The symptoms may be that this raises an
-        # exception, or possibly the hdu_list comes back empty, in which case the
-        # next line will raise an exception.
-        hdu = hdu_list[0]
         # pyfits doesn't actually read the file yet, so we can't close fin here.
         # Need to pass it back to the caller and let them close it when they are
         # done with hdu_list.
         return hdu_list, fin
 
-    def pyfits_open(self, file):  # pragma: no cover
-        from ._pyfits import pyfits
-        # This usually works, although pyfits internally may (depending on the version)
-        # use a temporary file, which is why we prefer the above in-memory code if it works.
-        # For some versions of pyfits, this is actually the same as the in_mem version.
-        hdu_list = pyfits.open(file, 'readonly')
-        return hdu_list, None
-
-    def gzip_tmp(self, file):  # pragma: no cover
-        import gzip
-        from ._pyfits import pyfits
-        # Finally, just in case, if everything else failed, here is an implementation that
-        # should always work.
-        fin = gzip.open(file, 'rb')
-        data = fin.read()
-        tmp = file + '.tmp'
-        # It would be pretty odd for this filename to already exist, but just in case...
-        while os.path.isfile(tmp):
-            tmp = tmp + '.tmp'
-        with open(tmp,"w") as tmpout:
-            tmpout.write(data)
-        hdu_list = pyfits.open(tmp)
-        return hdu_list, tmp
-
     def bunzip2_call(self, file):
         import subprocess
         from io import BytesIO
         from ._pyfits import pyfits
-        p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
-        fin = BytesIO(p.communicate()[0])
-        if p.returncode != 0:
+        try:
+            p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, close_fds=True)
+        except OSError:
+            # This OSError should mean that the gunzip call itself was invalid on this system.
+            # Convert to a NotImplementedError, so we can try a different method.
+            raise NotImplementedError()
+        ret = p.communicate()
+        if ret == '':
+            raise OSError("Error running bunzip2. stderr output = %s"%ret[1])
+        if p.returncode != 0:  # pragma: no cover
             raise OSError("Error running bunzip2. Return code = %s"%p.returncode)
+        fin = BytesIO(ret[0])
         p.wait()
-        hdu_list = pyfits.open(fin, 'readonly')
+        try:
+            hdu_list = pyfits.open(fin, 'readonly')
+        except (OSError, AttributeError, TypeError, ValueError): # pragma: no cover
+            # In case astropy fails.
+            raise NotImplementedError()
         return hdu_list, fin
 
     def bz2_in_mem(self, file): # pragma: no cover
         import bz2
         from ._pyfits import pyfits
-        # This normally works.  But it might not on old versions of pyfits.
         fin = bz2.BZ2File(file, 'rb')
         hdu_list = pyfits.open(fin, 'readonly')
-        # Sometimes this doesn't work.  The symptoms may be that this raises an
-        # exception, or possibly the hdu_list comes back empty, in which case the
-        # next line will raise an exception.
-        hdu = hdu_list[0]
         return hdu_list, fin
 
-    def bz2_tmp(self, file):  # pragma: no cover
-        import bz2
-        from ._pyfits import pyfits
-        fin = bz2.BZ2File(file, 'rb')
-        data = fin.read()
-        tmp = file + '.tmp'
-        # It would be pretty odd for this filename to already exist, but just in case...
-        while os.path.isfile(tmp):
-            tmp = tmp + '.tmp'
-        with open(tmp,"w") as tmpout:
-            tmpout.write(data)
-        hdu_list = pyfits.open(tmp)
-        return hdu_list, tmp
-
     def __init__(self):
-        # For each compression type, we try them in rough order of efficiency and keep track of
-        # which method worked for next time.  Whenever one doesn't work, we increment the
-        # method number and try the next one.  The *_call methods are usually the fastest,
-        # sometimes much, much faster than the *_in_mem version.  At least for largish files,
-        # which are precisely the ones that people would most likely want to compress.
-        # However, we can't require the user to have the system executables installed.  So if
-        # that fails, we move on to the other options.  It varies which of the other options
-        # is fastest, but they all usually succeed, which is the most important thing for a
-        # backup method, so it probably doesn't matter much what order we do the rest.
+        # We used to have multiple options for gzip and bzip2.  However, with recent versions of
+        # astropy for the fits I/O, the in memory version should always work.  So we first
+        # try the command line method, which is usually faster.  Then if that fails, we let
+        # astropy do the compression.
         self.gz_index = 0
         self.bz2_index = 0
-        self.gz_methods = [self.gunzip_call, self.gzip_in_mem, self.pyfits_open, self.gzip_tmp]
-        self.bz2_methods = [self.bunzip2_call, self.bz2_in_mem, self.bz2_tmp]
+        self.gz_methods = [self.gunzip_call, self.gzip_in_mem]
+        self.bz2_methods = [self.bunzip2_call, self.bz2_in_mem]
         self.gz = self.gz_methods[0]
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, file_compress):
         from ._pyfits import pyfits
         if dir:
-            import os
             file = os.path.join(dir,file)
+
+        if not os.path.isfile(file):
+            raise OSError("File %s not found"%file)
 
         if not file_compress:
             hdu_list = pyfits.open(file, 'readonly')
@@ -195,11 +171,12 @@ class _ReadFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(file)
-                except KeyboardInterrupt:
-                    raise
-                except: # pragma: no cover
-                    self.gz_index += 1
-                    self.gz = self.gz_methods[self.gz_index]
+                except (ImportError, NotImplementedError): # pragma: no cover
+                    if self.gz_index == len(self.gz_methods-1):
+                        raise
+                    else:
+                        self.gz_index += 1
+                        self.gz = self.gz_methods[self.gz_index]
             else:  # pragma: no cover
                 raise GalSimError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
@@ -207,11 +184,12 @@ class _ReadFile:
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(file)
-                except KeyboardInterrupt:
-                    raise
-                except: # pragma: no cover
-                    self.bz2_index += 1
-                    self.bz2 = self.bz2_methods[self.bz2_index]
+                except (ImportError, NotImplementedError): # pragma: no cover
+                    if self.bz2_index == len(self.bz2_methods-1):
+                        raise
+                    else:
+                        self.bz2_index += 1
+                        self.bz2 = self.bz2_methods[self.bz2_index]
             else:  # pragma: no cover
                 raise GalSimError("None of the options for bunzipping were successful.")
         else:  # pragma: no cover  (can't get here from public API)
@@ -222,36 +200,20 @@ _read_file = _ReadFile()
 class _WriteFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gzip_call2(self, hdu_list, file):  # pragma: no cover
-        root, ext = os.path.splitext(file)
-        import subprocess
-        if os.path.isfile(root):
-            tmp = root + '.tmp'
-            # It would be pretty odd for this filename to already exist, but just in case...
-            while os.path.isfile(tmp):
-                tmp = tmp + '.tmp'
-            hdu_list.writeto(tmp)
-            p = subprocess.Popen(["gzip", tmp], close_fds=True)
-            p.communicate()
-            if p.returncode != 0:
-                raise OSError("Error running gzip. Return code = %s"%p.returncode)
-            p.wait()
-            os.rename(tmp+".gz",file)
-        else:
-            hdu_list.writeto(root)
-            p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
-            p.communicate()
-            if p.returncode != 0:
-                raise OSError("Error running gzip. Return code = %s"%p.returncode)
-            p.wait()
-
     def gzip_call(self, hdu_list, file):
         import subprocess
         with open(file, 'wb') as fout:
-            p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
-            hdu_list.writeto(p.stdin)
+            try:
+                p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout,
+                                     close_fds=True)
+                hdu_list.writeto(p.stdin)
+            except (OSError, AttributeError, TypeError, ValueError): # pragma: no cover
+                # This OSError should mean that the gunzip call itself was invalid on this system.
+                # Convert to a NotImplementedError, so we can try a different method.
+                # The others are in case astropy fails.
+                raise NotImplementedError()
             p.communicate()
-            if p.returncode != 0:
+            if p.returncode != 0:  # pragma: no cover
                 raise OSError("Error running gzip. Return code = %s"%p.returncode)
             p.wait()
 
@@ -268,51 +230,19 @@ class _WriteFile:
         with gzip.open(file, 'wb') as fout:
             fout.write(data)
 
-    def gzip_tmp(self, hdu_list, file):  # pragma: no cover
-        import gzip
-        # Old pyfits versions did not support writing to a buffer, so the # above code will fail.
-        # This is probably not necessary anymore, but left here as another option in case useful.
-        tmp = file + '.tmp'
-        # It would be pretty odd for this filename to already exist, but just in case...
-        while os.path.isfile(tmp):
-            tmp = tmp + '.tmp'
-        hdu_list.writeto(tmp)
-        with open(tmp,"r") as buf:
-            data = buf.read()
-        os.remove(tmp)
-        with gzip.open(file, 'wb') as fout:
-            fout.write(data)
-
-    def bzip2_call2(self, hdu_list, file):  # pragma: no cover
-        root, ext = os.path.splitext(file)
-        import subprocess
-        if os.path.isfile(root) or ext != '.bz2':
-            tmp = root + '.tmp'
-            # It would be pretty odd for this filename to already exist, but just in case...
-            while os.path.isfile(tmp):
-                tmp = tmp + '.tmp'
-            hdu_list.writeto(tmp)
-            p = subprocess.Popen(["bzip2", tmp], close_fds=True)
-            p.communicate()
-            if p.returncode != 0:
-                raise OSError("Error running bzip2. Return code = %s"%p.returncode)
-            p.wait()
-            os.rename(tmp+".bz2",file)
-        else:
-            hdu_list.writeto(root)
-            p = subprocess.Popen(["bzip2", root], close_fds=True)
-            p.communicate()
-            if p.returncode != 0:
-                raise OSError("Error running bzip2. Return code = %s"%p.returncode)
-            p.wait()
-
     def bzip2_call(self, hdu_list, file):
         import subprocess
         with open(file, 'wb') as fout:
-            p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
-            hdu_list.writeto(p.stdin)
+            try:
+                p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+                hdu_list.writeto(p.stdin)
+            except (OSError, AttributeError, TypeError, ValueError): # pragma: no cover
+                # This OSError should mean that the gunzip call itself was invalid on this system.
+                # Convert to a NotImplementedError, so we can try a different method.
+                # The others are in case astropy fails.
+                raise NotImplementedError()
             p.communicate()
-            if p.returncode != 0:
+            if p.returncode != 0:  # pragma: no cover
                 raise OSError("Error running bzip2. Return code = %s"%p.returncode)
             p.wait()
 
@@ -325,39 +255,19 @@ class _WriteFile:
         with bz2.BZ2File(file, 'wb') as fout:
             fout.write(data)
 
-    def bz2_tmp(self, hdu_list, file):  # pragma: no cover
-        import bz2
-        tmp = file + '.tmp'
-        while os.path.isfile(tmp):
-            tmp = tmp + '.tmp'
-        hdu_list.writeto(tmp)
-        with open(tmp,"r") as buf:
-            data = buf.read()
-        os.remove(tmp)
-        with bz2.BZ2File(file, 'wb') as fout:
-            fout.write(data)
-
     def __init__(self):
-        # For each compression type, we try them in rough order of efficiency and keep track of
-        # which method worked for next time.  Whenever one doesn't work, we increment the
-        # method number and try the next one.  The *_call methods seem to be usually the fastest,
-        # and we expect that they will usually work.  However, we can't require the user
-        # to have the system executables.  Also, some versions of pyfits can't handle writing
-        # to the stdin pipe of a subprocess.  So if that fails, the next one, *_call2 is often
-        # fastest if the failure was due to pyfits.  If the user does not have gzip or bzip2 (then
-        # why are they requesting this compression?), we switch to *_in_mem, which is often
-        # almost as good.  (Sometimes it is faster than the call2 option, but when it is slower it
-        # can be much slower.)  And finally, if this fails, which I think may happen for very old
-        # versions of pyfits, *_tmp is the fallback option.
+        # Again, we used to have a number of methods here for gzip and bzip2, but now only two.
+        # We first try using a command-line call to either gzip or bzip2.  But if that doesn't
+        # work, we use either the gzip or bz2 module in memory, which is usually not quite as
+        # fast, but should always work.
         self.gz_index = 0
         self.bz2_index = 0
-        self.gz_methods = [self.gzip_call, self.gzip_call2, self.gzip_in_mem, self.gzip_tmp]
-        self.bz2_methods = [self.bzip2_call, self.bzip2_call2,  self.bz2_in_mem, self.bz2_tmp]
+        self.gz_methods = [self.gzip_call, self.gzip_in_mem]
+        self.bz2_methods = [self.bzip2_call, self.bz2_in_mem]
         self.gz = self.gz_methods[0]
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
-        import os
         if dir:
             file = os.path.join(dir,file)
 
@@ -373,22 +283,24 @@ class _WriteFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(hdu_list, file)
-                except KeyboardInterrupt:
-                    raise
-                except:  # pragma: no cover
-                    self.gz_index += 1
-                    self.gz = self.gz_methods[self.gz_index]
+                except (ImportError, NotImplementedError):  # pragma: no cover
+                    if self.gz_index == len(self.gz_methods)-1:
+                        raise
+                    else:
+                        self.gz_index += 1
+                        self.gz = self.gz_methods[self.gz_index]
             else:  # pragma: no cover
                 raise GalSimError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(hdu_list, file)
-                except KeyboardInterrupt:
-                    raise
-                except:  # pragma: no cover
-                    self.bz2_index += 1
-                    self.bz2 = self.bz2_methods[self.bz2_index]
+                except (ImportError, NotImplementedError):  # pragma: no cover
+                    if self.bz2_index == len(self.bz2_methods)-1:
+                        raise
+                    else:
+                        self.bz2_index += 1
+                        self.bz2 = self.bz2_methods[self.bz2_index]
             else:  # pragma: no cover
                 raise GalSimError("None of the options for bunzipping were successful.")
         else:  # pragma: no cover  (can't get here from public API)
@@ -461,14 +373,7 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin:
-        if isinstance(fin, basestring): # pragma: no cover
-            # In this case, it is a file name that we need to delete.
-            # Note: This is relevant for the _tmp versions that are not run on Travis, so
-            # don't include this bit in the coverage report.
-            import os
-            os.remove(fin)
-        else:
-            fin.close()
+        fin.close()
 
 ##############################################################################################
 #
@@ -1163,7 +1068,6 @@ class FitsHeader(object):
 
         if file_name is not None:
             if dir is not None:
-                import os
                 self._tag = 'file_name='+repr(os.path.join(dir,file_name))
             else:
                 self._tag = 'file_name='+repr(file_name)
@@ -1175,7 +1079,6 @@ class FitsHeader(object):
             if text_file:
                 self._tag += ', text_file=True'
                 if dir is not None:
-                    import os
                     file_name = os.path.join(dir,file_name)
                 with open(file_name,"r") as fin:
                     lines = [ line.strip() for line in fin ]
