@@ -26,7 +26,6 @@
 #include "OneDimensionalDeviate.h"
 #include "Table.h"
 #include "SBAiryImpl.h"
-#include <boost/move/unique_ptr.hpp>
 
 namespace galsim {
 
