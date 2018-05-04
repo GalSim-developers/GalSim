@@ -308,7 +308,8 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     vec['image'] = np.concatenate(vec['image'])
     vec['seg'] = np.concatenate(vec['seg'])
     vec['weight'] = np.concatenate(vec['weight'])
-    vec['psf'] = np.concatenate(vec['psf'])
+    if obj.psf is not None:
+        vec['psf'] = np.concatenate(vec['psf'])
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
@@ -417,13 +418,11 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
-    image_cutouts   = pyfits.ImageHDU( vec['image'] , name='image_cutouts'  )
-    weight_cutouts  = pyfits.ImageHDU( vec['weight'], name='weight_cutouts' )
-    seg_cutouts     = pyfits.ImageHDU( vec['seg']   , name='seg_cutouts'    )
-    psf_cutouts     = pyfits.ImageHDU( vec['psf']   , name='psf'            )
+    image_cutouts   = pyfits.ImageHDU( vec['image'] , name='image_cutouts')
+    weight_cutouts  = pyfits.ImageHDU( vec['weight'], name='weight_cutouts')
+    seg_cutouts     = pyfits.ImageHDU( vec['seg']   , name='seg_cutouts')
 
-    # write all
-    hdu_list = pyfits.HDUList([
+    hdu_list = [
         primary,
         object_data,
         image_info,
@@ -431,9 +430,13 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         image_cutouts,
         weight_cutouts,
         seg_cutouts,
-        psf_cutouts
-    ])
-    galsim.fits.writeFile(file_name, hdu_list)
+    ]
+
+    if obj.psf is not None:
+        psf_cutouts     = pyfits.ImageHDU( vec['psf'], name='psf')
+        hdu_list.append(psf_cutouts)
+
+    galsim.fits.writeFile(file_name, pyfits.HDUList(hdu_list))
 
 
 # Make the class that will
