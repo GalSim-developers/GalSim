@@ -41,6 +41,7 @@ from .chromatic import ChromaticSum
 from .position import PositionD
 from .utilities import doc_inherit
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimIndexError
 
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
@@ -710,7 +711,7 @@ class RealGalaxyCatalog(object):
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
         if i >= len(self.gal_file_name):
-            raise IndexError(
+            raise GalSimIndexError(
                 'index %d given to getGalImage is out of range (0..%d)'
                 % (i,len(self.gal_file_name)-1))
         f = self._getFile(self.gal_file_name[i])
@@ -729,7 +730,7 @@ class RealGalaxyCatalog(object):
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
         if i >= len(self.psf_file_name):
-            raise IndexError(
+            raise GalSimIndexError(
                 'index %d given to getPSFImage is out of range (0..%d)'
                 % (i,len(self.psf_file_name)-1))
         f = self._getFile(self.psf_file_name[i])
@@ -759,7 +760,7 @@ class RealGalaxyCatalog(object):
             im = None
         else:
             if i >= len(self.noise_file_name):
-                raise IndexError(
+                raise GalSimIndexError(
                     'index %d given to getNoise is out of range (0..%d)'%(
                         i,len(self.noise_file_name)-1))
             if self.noise_file_name[i] in self.saved_noise_im:
