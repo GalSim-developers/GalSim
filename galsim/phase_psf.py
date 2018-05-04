@@ -1705,16 +1705,17 @@ class OpticalPSF(GSObject):
         self._force_maxk = _force_maxk
         self._ii_pad_factor = ii_pad_factor
 
-        # Finally, put together to make the PSF.
-        self._psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                   aper=aper, interpolant=self._interpolant,
+    @lazy_property
+    def _psf(self):
+        psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+                                   aper=self._aper, interpolant=self._interpolant,
                                    scale_unit=self._scale_unit, gsparams=self._gsparams,
                                    suppress_warning=self._suppress_warning,
                                    geometric_shooting=self._geometric_shooting,
-                                   _force_stepk=_force_stepk, _force_maxk=_force_maxk,
-                                   ii_pad_factor=ii_pad_factor)
-
-        self._psf._prepareDraw()  # No need to delay an OpticalPSF.
+                                   _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
+                                   ii_pad_factor=self._ii_pad_factor)
+        psf._prepareDraw()  # No need to delay an OpticalPSF.
+        return psf
 
     def __str__(self):
         screen = self._psf._screen_list[0]
@@ -1777,21 +1778,11 @@ class OpticalPSF(GSObject):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()
-        d['aper'] = d['_psf'].aper
-        del d['_psf']
+        d.pop('_psf', None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        aper = self.__dict__.pop('aper')
-        self._psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                   aper=aper, interpolant=self._interpolant,
-                                   scale_unit=self._scale_unit, gsparams=self._gsparams,
-                                   suppress_warning=self._suppress_warning,
-                                   _force_stepk=self._force_stepk,
-                                   _force_maxk=self._force_maxk,
-                                   ii_pad_factor=self._ii_pad_factor)
-        self._psf._prepareDraw()
 
     @property
     def _maxk(self):
