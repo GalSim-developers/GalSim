@@ -1464,7 +1464,7 @@ class WeakMethod(object):
         self.f = f.__func__
         self.c = weakref.ref(f.__self__)
     def __call__(self, *args):
-        if self.c() is None :
+        if self.c() is None :  # pragma: no cover
             raise TypeError('Method called on dead object')
         return self.f(self.c(), *args)
 
@@ -1484,14 +1484,14 @@ def EnsureDir(target):
     if not exists:
         try:
             os.makedirs(dir)
-        except OSError as err:
+        except OSError as err:  # pragma: no cover
             # check if the file now exists, which can happen if some other
             # process created the directory between the os.path.exists call
             # above and the time of the makedirs attempt.  This is OK
             if err.errno != _ERR_FILE_EXISTS:
                 raise err
 
-    elif exists and not os.path.isdir(dir):
+    elif exists and not os.path.isdir(dir):  # pragma: no cover
         raise OSError("tried to make directory '%s' "
                       "but a non-directory file of that "
                       "name already exists" % dir)

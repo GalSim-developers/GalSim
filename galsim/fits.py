@@ -84,7 +84,7 @@ class _ReadFile:
             # Convert to a NotImplementedError, so we can try a different method.
             raise NotImplementedError()
         ret = p.communicate()
-        if ret == '':
+        if ret == '':  # pragma: no cover
             raise OSError("Error running gunzip. stderr output = %s"%ret[1])
         if p.returncode != 0:  # pragma: no cover
             raise OSError("Error running gunzip. Return code = %s"%p.returncode)
@@ -121,7 +121,7 @@ class _ReadFile:
             # Convert to a NotImplementedError, so we can try a different method.
             raise NotImplementedError()
         ret = p.communicate()
-        if ret == '':
+        if ret == '':  # pragma: no cover
             raise OSError("Error running bunzip2. stderr output = %s"%ret[1])
         if p.returncode != 0:  # pragma: no cover
             raise OSError("Error running bunzip2. Return code = %s"%p.returncode)
