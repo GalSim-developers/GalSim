@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimRangeError, GalSimIncompatibleValuesError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Moffat(GSObject):
@@ -103,7 +103,8 @@ class Moffat(GSObject):
             if self._trunc > 0. and self._trunc <= math.sqrt(2.) * self._hlr:
                 raise GalSimRangeError("Moffat trunc must be > sqrt(2) * half_light_radius.",
                                        self._trunc, math.sqrt(2.) * self._hlr)
-            self._r0 = _galsim.MoffatCalculateSRFromHLR(self._hlr, self._trunc, self._beta)
+            with convert_cpp_errors():
+                self._r0 = _galsim.MoffatCalculateSRFromHLR(self._hlr, self._trunc, self._beta)
             self._fwhm = 0.
         elif fwhm is not None:
             if scale_radius is not None:
@@ -124,7 +125,9 @@ class Moffat(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBMoffat(self._beta, self._r0, self._trunc, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBMoffat(self._beta, self._r0, self._trunc, self._flux,
+                                    self.gsparams._gsp)
 
     def getFWHM(self):
         """Return the FWHM for this Moffat profile.

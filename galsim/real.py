@@ -39,9 +39,14 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .chromatic import ChromaticSum
 from .position import PositionD
-from .utilities import doc_inherit
+from .utilities import doc_inherit, convert_interpolant
+from .interpolant import Quintic
+from .interpolatedimage import InterpolatedImage, _InterpolatedKImage
+from .image import ImageCD
+from .correlatednoise import CovarianceSpectrum
+from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimIndexError
+from .errors import GalSimIndexError, convert_cpp_errors
 
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
@@ -1147,12 +1152,6 @@ class ChromaticRealGalaxy(ChromaticSum):
     def _initialize(self, imgs, bands, xis, PSFs,
                     SEDs=None, k_interpolant=None, maxk=None, pad_factor=4., area_norm=1.0,
                     noise_pad_size=0, gsparams=None):
-        from .interpolant import Quintic
-        from .interpolatedimage import InterpolatedImage, _InterpolatedKImage
-        from .image import ImageCD
-        from . import utilities
-        from . import _galsim
-        from .correlatednoise import CovarianceSpectrum
 
         if SEDs is None:
             SEDs = self._poly_SEDs(bands)
@@ -1161,7 +1160,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         if k_interpolant is None:
             k_interpolant = Quintic(tol=1e-4)
         else:
-            k_interpolant = utilities.convert_interpolant(k_interpolant)
+            k_interpolant = convert_interpolant(k_interpolant)
 
         self._area_norm = area_norm
         self._k_interpolant = k_interpolant
@@ -1253,10 +1252,11 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.  Take advantage of symmetries.
-        _galsim.ComputeCRGCoefficients(
-            coef.ctypes.data, Sigma.ctypes.data,
-            w.ctypes.data, kimgs.ctypes.data, PSF_eff_kimgs.ctypes.data,
-            NSED, Nim, nk, nk)
+        with convert_cpp_errors():
+            _galsim.ComputeCRGCoefficients(
+                coef.ctypes.data, Sigma.ctypes.data,
+                w.ctypes.data, kimgs.ctypes.data, PSF_eff_kimgs.ctypes.data,
+                NSED, Nim, nk, nk)
 
         # Reorder these so they correspond to (NSED, nky, nkx) and (NSED, NSED, nky, nkx) shapes.
         coef = np.transpose(coef, (2,0,1))

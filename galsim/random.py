@@ -25,6 +25,7 @@ import weakref
 
 from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import convert_cpp_errors
 
 class BaseDeviate(object):
     """Base class for all the various random deviates.
@@ -118,9 +119,11 @@ class BaseDeviate(object):
         if isinstance(seed, BaseDeviate):
             self._reset(seed)
         elif isinstance(seed, (str, int)):
-            self._rng = self._rng_type(_galsim.BaseDeviateImpl(seed), *self._rng_args)
+            with convert_cpp_errors():
+                self._rng = self._rng_type(_galsim.BaseDeviateImpl(seed), *self._rng_args)
         elif seed is None:
-            self._rng = self._rng_type(_galsim.BaseDeviateImpl(0), *self._rng_args)
+            with convert_cpp_errors():
+                self._rng = self._rng_type(_galsim.BaseDeviateImpl(0), *self._rng_args)
         else:
             raise TypeError("BaseDeviate must be initialized with either an int or another "
                             "BaseDeviate")
@@ -129,7 +132,8 @@ class BaseDeviate(object):
         """Equivalent to self.reset(rng), but rng must be a BaseDeviate (not an int), and there
         is no type checking.
         """
-        self._rng = self._rng_type(rng._rng, *self._rng_args)
+        with convert_cpp_errors():
+            self._rng = self._rng_type(rng._rng, *self._rng_args)
 
     def duplicate(self):
         """Create a duplicate of the current Deviate object.  The subsequent series from each copy
@@ -157,8 +161,9 @@ class BaseDeviate(object):
         """
         ret = BaseDeviate.__new__(self.__class__)
         ret.__dict__.update(self.__dict__)
-        rng = _galsim.BaseDeviateImpl(self.serialize())
-        ret._rng = self._rng_type(rng, *ret._rng_args)
+        with convert_cpp_errors():
+            rng = _galsim.BaseDeviateImpl(self.serialize())
+            ret._rng = self._rng_type(rng, *ret._rng_args)
         return ret
 
     def __copy__(self):
@@ -172,8 +177,9 @@ class BaseDeviate(object):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        rng = _galsim.BaseDeviateImpl(d['rng_str'])
-        self._rng = self._rng_type(rng, *self._rng_args)
+        with convert_cpp_errors():
+            rng = _galsim.BaseDeviateImpl(d['rng_str'])
+            self._rng = self._rng_type(rng, *self._rng_args)
 
     def clearCache(self):
         """Clear the internal cache of the Deviate, if any.  This is currently only relevant for

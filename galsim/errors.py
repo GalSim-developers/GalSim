@@ -20,28 +20,30 @@
 # obviously one of the standard python errors.
 
 from builtins import super
+from contextlib import contextmanager
 
 # Note to developers about which exception to throw.
 #
 # Aside from the below classes, which should be preferred for most errors, we also
 # throw the following in some cases.
 #
-# TypeError:    Use this for errors that in a more strongly typed language would probably
-#               be a compiler error.  For instance, it is used for the following errors:
-#                - a parameter has the wrong type
-#                - the wrong number of unnamed args when processing `*args` by hand.
-#                - missing or invalid kwargs when processing `**kwargs` by hand.
+# TypeError:            Use this for errors that in a more strongly typed language would probably
+#                       be a compiler error.  For instance, it is used for the following errors:
+#                       - a parameter has the wrong type
+#                       - the wrong number of unnamed args when processing `*args` by hand.
+#                       - missing or invalid kwargs when processing `**kwargs` by hand.
 #
-# OSError:      Use this for errors related to I/O, disk access, etc.  Note: In Python 2,
-#               there was a distinction between IOError and OSError, but there was never much
-#               difference in reality, and in Python 3, they made everything OSError.
-#               We should just use OSError for all such kinds of errors.
+# OSError:              Use this for errors related to I/O, disk access, etc.  Note: In Python 2,
+#                       there was a distinction between IOError and OSError, but there was never
+#                       much difference in reality, and in Python 3, they made everything OSError.
+#                       We should just use OSError for all such kinds of errors.
 #
-# KeyError:     Use this for the equivalent of accessing a dict-like object with an invalid key.
-#               E.g. FitsHeader and Catalog raise this for accessing invalid columns.
+# KeyError:             Use this for the equivalent of accessing a dict-like object with an invalid
+#                       key. E.g. FitsHeader and Catalog raise this for accessing invalid columns.
 #
-# IndexError:   Use this for the equivalent of accessing a list-like object with an invalid index.
-#               E.g. RealGalaxyCatalog and Catalog raise this for accessing invalid rows.
+# IndexError:           Use this for the equivalent of accessing a list-like object with an invalid
+#                       index. E.g. RealGalaxyCatalog and Catalog raise this for accessing invalid
+#                       rows.
 #
 # NotImplementedError:  Use this for features that we have not implemented.  Even if there is
 #                       no future intent to do so.  E.g. GSObject defines uses this for a number
@@ -52,22 +54,66 @@ from builtins import super
 #                       valid for derived classes.  E.g. GSObject and Position use this for their
 #                       __init__ implementations.
 #
-# AttributeError:   Use this only for an attempt to access an attribute that an object does not
-#                   have.  We don't currently raise this anywhere in GalSim.
+# AttributeError:       Use this only for an attempt to access an attribute that an object does not
+#                       have.  We don't currently raise this anywhere in GalSim.
 #
-# RuntimeError: Don't use this.  Use GalSimError (or a subclass) for any run-time errors.
+# RuntimeError:         Don't use this.  Use GalSimError (or a subclass) for any run-time errors.
 #
-# ValueError:   Don't use this.  Use one of the below exceptions that derive from ValueError.
+# ValueError:           Don't use this.  Use one of the below exceptions that derive from
+#                       ValueError.
 #
-# std::runtime_error:   Use this for errors in the C++ layer, and put a try/except guard around
-#                       the C++ call in the Python layer to convert to a GalSimError.  E.g.
-#                       GSFitsWCS._invert_pv uses this for non-convergence, but we convert to
-#                       a GalSimError in Python.
-#                       When possible, try to guard against any such events by making appropriate
-#                       checks in the Python layer before dropping down into C++.  E.g. Image
-#                       checks for anything that might cause the C++ Image class to throw an
-#                       exception and raises some kind of GalSim exception first.
-
+# std::runtime_error:   Use this for errors in the C++ layer, and use the catch_cpp_errors()
+#                       context to convert these errors into GalSimErrors.  E.g.
+#                       GSFitsWCS._invert_pv uses this for non-convergence, which is converted
+#                       into  a GalSimError in Python.
+#                       When possible, it is preferable to guard against any such events by making
+#                       appropriate checks in the Python layer before dropping down into C++.
+#                       E.g. Image checks for anything that might cause the C++ Image class to
+#                       throw an exception and raises some kind of GalSim exception first.
+#                       Nonetheless, it is good practice to use the `with convert_cpp_errors()`
+#                       context for all calls to the C++ layer, just in case.
+#
+# GalSim-specific error classes:
+# ------------------------------
+#
+# GalSimError:          Use this for what would normally be a RuntimeError.  Usually some
+#                       exceptional occurrence in otherwise correct code.  E.g. an algorithm not
+#                       converging, or some invalid data values.  This is also the catch-all
+#                       exception to use when none of the other GalSim exceptions are appropriate.
+#
+# GalSimValueError:     Use this for when a user provides an invalid value for a parameter.
+#                       Note: it has an optional argument to give a list of allowed values when
+#                       that is appropriate.
+#
+# GalSimRangeError:     Use this when a a user provides an value outside of some allowed range.
+#                       You should also give the min/max values of the allowed range.  The max
+#                       is optional, because it's not uncommon for their to be no upper limit.
+#                       If only the upper limit is relevant and not the lower limit, you may
+#                       use min=None to indicate this.
+#
+# GalSimBoundsError:    Use this when a position is outside the allowed bounds.  It's basically
+#                       the same as GalSimRangeError, but in two dimensions.
+#
+# GalSimUndefinedBoundsError:   Use this when the user tries to performa an operation on an
+#                               Image with undefined bounds that requires the bounds to be
+#                               defined.
+#
+# GalSimImmutableError: Use this when the user tries to modify an immutable Image in some way.
+#
+# GalSimIncompatibleValuesError:    Use this when two or more parameters are invalid when used
+#                                   in combination.  E.g. providing more than one size parameter
+#                                   to Moffat, Sersic, Gaussian, etc.
+#
+# GalSimSEDError:       Use this when an SED is required to be either spectral or dimensionless
+#                       and the wrong kind of SED is provided.
+#
+# GalSimHSMError:       Use this for errors from the HSM algorithm.
+#
+# GalSimConfigError:    Use this for errors processing a config dict.
+#
+# GalSimConfigValueERror:   Use this when a config dict has a value that is invalid.  Basically,
+#                           whenever you would normally use GalSimValueError when processing
+#                           a config dict, you should use this instead.
 
 class GalSimError(RuntimeError):
     """The base class for GalSim-specific run-time errors.
@@ -282,3 +328,10 @@ class GalSimDeprecationWarning(GalSimWarning):
     """A GalSim-specific warning class used for deprecation warnings.
     """
     def __repr__(self): return 'galsim.GalSimDeprecationWarning(%r)'%(str(self))
+
+@contextmanager
+def convert_cpp_errors(error_type=GalSimError):
+    try:
+        yield
+    except RuntimeError as err:
+        raise error_type(str(err))

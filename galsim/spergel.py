@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimRangeError, GalSimIncompatibleValuesError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Spergel(GSObject):
@@ -131,7 +131,8 @@ class Spergel(GSObject):
                     "Only one of scale_radius or half_light_radius may be specified",
                     half_light_radius=half_light_radius, scale_radius=scale_radius)
             self._hlr = float(half_light_radius)
-            self._r0 = self._hlr / _galsim.SpergelCalculateHLR(self._nu)
+            with convert_cpp_errors():
+                self._r0 = self._hlr / _galsim.SpergelCalculateHLR(self._nu)
         elif scale_radius is not None:
             self._r0 = float(scale_radius)
             self._hlr = 0.
@@ -142,7 +143,8 @@ class Spergel(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBSpergel(self._nu, self._r0, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBSpergel(self._nu, self._r0, self._flux, self.gsparams._gsp)
 
     @property
     def nu(self): return self._nu
@@ -151,7 +153,8 @@ class Spergel(GSObject):
     @property
     def half_light_radius(self):
         if self._hlr == 0.:
-            self._hlr = self._r0 * _galsim.SpergelCalculateHLR(self._nu)
+            with convert_cpp_errors():
+                self._hlr = self._r0 * _galsim.SpergelCalculateHLR(self._nu)
         return self._hlr
 
     def calculateIntegratedFlux(self, r):

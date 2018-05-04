@@ -24,7 +24,7 @@ import numpy as np
 from functools import reduce
 
 from . import _galsim
-from .errors import GalSimError, GalSimRangeError, GalSimValueError
+from .errors import GalSimError, GalSimRangeError, GalSimValueError, convert_cpp_errors
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
@@ -53,7 +53,8 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     max = float(max)
     rel_err = float(rel_err)
     abs_err = float(abs_err)
-    success, result = _galsim.PyInt1d(func,min,max,rel_err,abs_err)
+    with convert_cpp_errors():
+        success, result = _galsim.PyInt1d(func,min,max,rel_err,abs_err)
     if success:
         return result
     else:

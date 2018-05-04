@@ -28,7 +28,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit, WeakMethod
 from .position import PositionD
-from .errors import GalSimError
+from .errors import GalSimError, convert_cpp_errors
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None):
     """A function for transforming either a GSObject or ChromaticObject.
@@ -163,11 +163,9 @@ class Transformation(GSObject):
     @lazy_property
     def _sbp(self):
         dudx, dudy, dvdx, dvdy = self._jac.ravel()
-        try:
+        with convert_cpp_errors():
             return _galsim.SBTransform(self._original._sbp, dudx, dudy, dvdx, dvdy,
                                        self._offset._p, self._flux_ratio, self.gsparams._gsp)
-        except RuntimeError as e:
-            raise GalSimError(str(e))
 
     @lazy_property
     def _noise(self):

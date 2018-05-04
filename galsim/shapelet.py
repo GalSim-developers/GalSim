@@ -28,7 +28,7 @@ from .position import PositionD
 from .image import Image
 from .utilities import doc_inherit
 from . import _galsim
-from .errors import GalSimValueError, GalSimIncompatibleValuesError
+from .errors import GalSimValueError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Shapelet(GSObject):
@@ -140,8 +140,9 @@ class Shapelet(GSObject):
                     "bvec is the wrong size for the provided order", bvec=bvec, order=order)
             self._bvec = np.ascontiguousarray(bvec, dtype=float)
 
-        self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
-                                       self.gsparams._gsp)
+        with convert_cpp_errors():
+            self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
+                                           self.gsparams._gsp)
 
     @classmethod
     def size(cls, order):
@@ -190,8 +191,9 @@ class Shapelet(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
-                                       self.gsparams._gsp)
+        with convert_cpp_errors():
+            self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
+                                           self.gsparams._gsp)
 
     @property
     def _maxk(self):
@@ -288,14 +290,16 @@ class Shapelet(GSObject):
         # Make it double precision if it is not.
         image = Image(image, dtype=np.float64, copy=False)
 
-        _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
-                                 image._image, image.scale, center._p)
+        with convert_cpp_errors():
+            _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
+                                     image._image, image.scale, center._p)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             ret._bvec /= image.scale**2
 
         # Update the SBProfile, since it doesn't have the right bvector anymore.
-        ret._sbp = _galsim.SBShapelet(ret._sigma, ret._order, ret._bvec.ctypes.data,
-                                      ret.gsparams._gsp)
+        with convert_cpp_errors():
+            ret._sbp = _galsim.SBShapelet(ret._sigma, ret._order, ret._bvec.ctypes.data,
+                                          ret.gsparams._gsp)
 
         return ret

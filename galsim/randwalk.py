@@ -23,7 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .position import PositionD
 from .utilities import lazy_property, doc_inherit
-from .errors import GalSimRangeError
+from .errors import GalSimRangeError, convert_cpp_errors
 
 class RandomWalk(GSObject):
     """
@@ -125,9 +125,10 @@ class RandomWalk(GSObject):
         fluxper=self._flux/self._npoints
 
         for p in self._points:
-            d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
-            d = _galsim.SBTransform(d, 1.0, 0.0, 0.0, 1.0, _galsim.PositionD(p[0],p[1]), 1.0,
-                                    self.gsparams._gsp)
+            with convert_cpp_errors():
+                d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
+                d = _galsim.SBTransform(d, 1.0, 0.0, 0.0, 1.0, _galsim.PositionD(p[0],p[1]), 1.0,
+                                        self.gsparams._gsp)
             deltas.append(d)
         return deltas
 
@@ -136,7 +137,8 @@ class RandomWalk(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBAdd(self.deltas, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBAdd(self.deltas, self.gsparams._gsp)
 
     @property
     def input_half_light_radius(self):

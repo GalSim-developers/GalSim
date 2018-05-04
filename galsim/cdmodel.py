@@ -27,7 +27,7 @@ import numpy as np
 
 from .image import Image
 from . import _galsim
-from .errors import GalSimValueError
+from .errors import GalSimValueError, convert_cpp_errors
 
 class BaseCDModel(object):
     """Base class for the most generic, i.e. no with symmetries or distance scaling relationships
@@ -94,9 +94,10 @@ class BaseCDModel(object):
                            flat and science images have the same gain value
         """
         ret = image.copy()
-        _galsim._ApplyCD(
-            ret._image, image._image, self.a_l._image, self.a_r._image, self.a_b._image,
-            self.a_t._image, int(self.n), float(gain_ratio))
+        with convert_cpp_errors():
+            _galsim._ApplyCD(
+                ret._image, image._image, self.a_l._image, self.a_r._image, self.a_b._image,
+                self.a_t._image, int(self.n), float(gain_ratio))
         return ret
 
     def applyBackward(self, image, gain_ratio=1.):

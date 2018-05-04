@@ -24,6 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
+from .errors import convert_cpp_errors
 
 
 class Box(GSObject):
@@ -67,7 +68,8 @@ class Box(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBBox(self._width, self._height, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBBox(self._width, self._height, self._flux, self.gsparams._gsp)
 
     @property
     def width(self): return self._width
@@ -225,7 +227,8 @@ class TopHat(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBTopHat(self._radius, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBTopHat(self._radius, self._flux, self.gsparams._gsp)
 
     @property
     def radius(self): return self._radius

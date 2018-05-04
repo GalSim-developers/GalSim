@@ -71,7 +71,6 @@ from builtins import range
 from heapq import heappush, heappop
 import numpy as np
 
-from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .angle import radians, degrees, arcsec, Angle, AngleUnit
