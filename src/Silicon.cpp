@@ -504,7 +504,7 @@ namespace galsim {
                     "the previous run.");
 #endif
             assert(_resume_next_recalc != -1);
-            assert(_imagepolys.size() == nxny);
+            assert(int(_imagepolys.size()) == nxny);
 
             next_recalc = _resume_next_recalc;
             // We already added delta to target.  But to get the right values when we next
