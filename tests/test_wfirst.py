@@ -550,14 +550,19 @@ def test_wfirst_psfs():
 
     # Check that if we specify SCAs, then we get the ones we specified.
     expected_scas = [5, 7, 14]
-    wfirst_psfs = galsim.wfirst.getPSF(SCAs=expected_scas,
-                                       approximate_struts=True)
+    wfirst_psfs = galsim.wfirst.getPSF(SCAs=expected_scas)
     got_scas = list(wfirst_psfs.keys())
     # Have to sort it in numerical order for this comparison.
     got_scas.sort()
     got_scas = np.array(got_scas)
     np.testing.assert_array_equal(
         got_scas, expected_scas, err_msg='List of SCAs was not as requested')
+    for sca in got_scas:
+        assert isinstance(wfirst_psfs[sca], galsim.ChromaticObject)
+
+    # Providing a wavelength returns achromatic PSFs
+    psfs_5 = galsim.wfirst.getPSF(SCAs=5, wavelength=1950.)
+    assert isinstance(psfs_5[5], galsim.GSObject)
 
     # Check that if we specify a particular wavelength, the PSF that is drawn is the same as if we
     # had gotten chromatic PSFs and then used evaluateAtWavelength.  Note that this nominally seems
@@ -616,9 +621,9 @@ def test_wfirst_psfs():
         'wavelength disagree.')
 
     # Check some invalid inputs.
-    # Note, this is a total cheat for getting test coverage of the high_accuracy and
-    # non-approximate_struts branches in getPSF.  The actual test of this functionality comes
-    # below, but it is only run for __name__==__main__ runs (i.e. run_all_tests).
+    # Note, this is a total cheat for getting test coverage of the high_accuracy branches
+    # in getPSF.  The actual test of this functionality comes below, but it is only run for
+    # __name__==__main__ runs (i.e. run_all_tests).
     with assert_raises(galsim.GalSimIncompatibleValuesError):
         galsim.wfirst.getPSF(SCAs=use_sca, n_waves=2,
                              approximate_struts=False, high_accuracy=True,
