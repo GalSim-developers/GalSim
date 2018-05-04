@@ -9,14 +9,14 @@ coverage:
   status:
     project:
       default:
-        target: 95%
+        target: 100%
         threshold: 0%
         branches: null
 
     patch:
       default:
         target: 100%
-        threshold: 1%
+        threshold: 0%
         branches: null
 
     changes: false
