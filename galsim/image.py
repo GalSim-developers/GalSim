@@ -28,7 +28,7 @@ from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from . import utilities
 from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
-from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError
+from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -715,7 +715,8 @@ class Image(object):
         # possibly writing data past the edge of the image.
         ret = self.subImage(bounds)
         if not hermitian:
-            _galsim.wrapImage(self._image, bounds._b, False, False)
+            with convert_cpp_errors():
+                _galsim.wrapImage(self._image, bounds._b, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
                 raise GalSimIncompatibleValuesError(
@@ -725,7 +726,8 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires bounds.xmin == 0",
                     hermitian=hermitian, bounds=bounds)
-            _galsim.wrapImage(self._image, bounds._b, True, False)
+            with convert_cpp_errors():
+                _galsim.wrapImage(self._image, bounds._b, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise GalSimIncompatibleValuesError(
@@ -735,7 +737,8 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires bounds.ymin == 0",
                     hermitian=hermitian, bounds=bounds)
-            _galsim.wrapImage(self._image, bounds._b, False, True)
+            with convert_cpp_errors():
+                _galsim.wrapImage(self._image, bounds._b, False, True)
         else:
             raise GalSimValueError("Invalid value for hermitian", hermitian, (False, 'x', 'y'))
         return ret;
@@ -745,7 +748,8 @@ class Image(object):
         without some of the sanity checks that the regular function does.
         """
         ret = self.subImage(bounds)
-        _galsim.wrapImage(self._image, bounds._b, hermx, hermy)
+        with convert_cpp_errors():
+            _galsim.wrapImage(self._image, bounds._b, hermx, hermy)
         return ret
 
     def bin(self, nx, ny):
@@ -898,7 +902,8 @@ class Image(object):
         dk = np.pi / (No2 * dx)
 
         out = Image(BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
-        _galsim.rfft(ximage._image, out._image, True, True)
+        with convert_cpp_errors():
+            _galsim.rfft(ximage._image, out._image, True, True)
         out *= dx*dx
         out.setOrigin(0,-No2)
         return out
@@ -953,7 +958,8 @@ class Image(object):
 
         # For the inverse, we need a bit of extra space for the fft.
         out_extra = Image(BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
-        _galsim.irfft(kimage._image, out_extra._image, True, True)
+        with convert_cpp_errors():
+            _galsim.irfft(kimage._image, out_extra._image, True, True)
         # Now cut off the bit we don't need.
         out = out_extra.subImage(BoundsI(-No2,No2-1,-No2,No2-1))
         out *= (dk * No2 / np.pi)**2
@@ -968,7 +974,8 @@ class Image(object):
         going to be performing FFTs on an image, these will tend to be faster at performing
         the FFT.
         """
-        return _galsim.goodFFTSize(int(input_size))
+        with convert_cpp_errors():
+            return _galsim.goodFFTSize(int(input_size))
 
     def copyFrom(self, rhs):
         """Copy the contents of another image
@@ -1323,7 +1330,8 @@ class Image(object):
         are defined.
         """
         # C++ version skips 0's to 1/0 -> 0 instead of inf.
-        _galsim.invertImage(self._image)
+        with convert_cpp_errors():
+            _galsim.invertImage(self._image)
 
     def replaceNegative(self, replace_value=0):
         """Replace any negative values currently in the image with 0 (or some other value).

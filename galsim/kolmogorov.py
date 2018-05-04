@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimIncompatibleValuesError
+from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Kolmogorov(GSObject):
@@ -196,7 +196,8 @@ class Kolmogorov(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBKolmogorov(self._lor0, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBKolmogorov(self._lor0, self._flux, self.gsparams._gsp)
 
     @property
     def lam_over_r0(self): return self._lor0

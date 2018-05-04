@@ -25,7 +25,7 @@ from .utilities import lazy_property, doc_inherit
 from .exponential import Exponential
 from .angle import Angle
 from .position import PositionD
-from .errors import GalSimRangeError, GalSimIncompatibleValuesError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class InclinedExponential(GSObject):
@@ -145,8 +145,9 @@ class InclinedExponential(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBInclinedExponential(self._inclination.rad, self._r0, 
-                                             self._h0, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBInclinedExponential(self._inclination.rad, self._r0,
+                                                 self._h0, self._flux, self.gsparams._gsp)
 
     @property
     def inclination(self): return self._inclination
@@ -325,12 +326,14 @@ class InclinedSersic(GSObject):
                 raise GalSimRangeError("half_light_radius must be > 0.", half_light_radius, 0.)
             self._hlr = float(half_light_radius)
             if self._trunc == 0. or flux_untruncated:
-                self._r0 = self._hlr / _galsim.SersicHLR(self._n, 1.)
+                with convert_cpp_errors():
+                    self._r0 = self._hlr / _galsim.SersicHLR(self._n, 1.)
             else:
                 if self._trunc <= math.sqrt(2.) * self._hlr:
                     raise GalSimRangeError("Sersic trunc must be > sqrt(2) * half_light_radius",
                                            self._trunc, math.sqrt(2.) * self._hlr)
-                self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
+                with convert_cpp_errors():
+                    self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
         else:
             raise GalSimIncompatibleValuesError(
                 "Either scale_radius or half_light_radius must be specified",
@@ -360,7 +363,8 @@ class InclinedSersic(GSObject):
         # If flux_untrunctated, then the above picked the right radius, but the flux needs
         # to be updated.
         if self._trunc > 0.:
-            self._flux_fraction = _galsim.SersicIntegratedFlux(self._n, self._trunc/self._r0)
+            with convert_cpp_errors():
+                self._flux_fraction = _galsim.SersicIntegratedFlux(self._n, self._trunc/self._r0)
             if flux_untruncated:
                 self._flux *= self._flux_fraction
                 self._hlr = 0.  # This will be updated by getHalfLightRadius if necessary.
@@ -369,8 +373,9 @@ class InclinedSersic(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return  _galsim.SBInclinedSersic(self._n, self._inclination.rad, self._r0, self._h0,
-                                         self._flux, self._trunc, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return  _galsim.SBInclinedSersic(self._n, self._inclination.rad, self._r0, self._h0,
+                                             self._flux, self._trunc, self.gsparams._gsp)
 
     @property
     def n(self): return self._n
@@ -389,7 +394,8 @@ class InclinedSersic(GSObject):
     @property
     def disk_half_light_radius(self):
         if self._hlr == 0.:
-            self._hlr = self._r0 * _galsim.SersicHLR(self._n, self._flux_fraction)
+            with convert_cpp_errors():
+                self._hlr = self._r0 * _galsim.SersicHLR(self._n, self._flux_fraction)
         return self._hlr
 
     def __eq__(self, other):

@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimIncompatibleValuesError
+from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Airy(GSObject):
@@ -146,7 +146,8 @@ class Airy(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBAiry(self._lod, self._obscuration, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBAiry(self._lod, self._obscuration, self._flux, self.gsparams._gsp)
 
     @property
     def lam_over_diam(self): return self._lod

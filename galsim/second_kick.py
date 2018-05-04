@@ -34,6 +34,7 @@ from .utilities import lazy_property, doc_inherit
 from .position import PositionD
 from .angle import arcsec, AngleUnit, radians
 from .deltafunction import DeltaFunction
+from .errors import convert_cpp_errors
 
 class SecondKick(GSObject):
     """Class describing the expectation value of the high-k turbulence portion of an atmospheric PSF
@@ -118,21 +119,25 @@ class SecondKick(GSObject):
     @lazy_property
     def _sbs(self):
         lam_over_r0 = (1.e-9*self._lam/self._r0)*self._scale
-        return _galsim.SBSecondKick(lam_over_r0, self._kcrit, self._flux, self._gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBSecondKick(lam_over_r0, self._kcrit, self._flux, self._gsparams._gsp)
 
     @lazy_property
     def _sba(self):
         lam_over_diam = (1.e-9*self._lam/self._diam)*self._scale
-        return _galsim.SBAiry(lam_over_diam, self._obscuration, 1., self._gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBAiry(lam_over_diam, self._obscuration, 1., self._gsparams._gsp)
 
     @lazy_property
     def _sbd(self):
-        return _galsim.SBDeltaFunction(self._sbs.getDelta(), self._gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBDeltaFunction(self._sbs.getDelta(), self._gsparams._gsp)
 
     @lazy_property
     def _sbp(self):
-        full_sbs = _galsim.SBAdd([self._sbs, self._sbd], self._gsparams._gsp)
-        return _galsim.SBConvolve([full_sbs, self._sba], False, self._gsparams._gsp)
+        with convert_cpp_errors():
+            full_sbs = _galsim.SBAdd([self._sbs, self._sbd], self._gsparams._gsp)
+            return _galsim.SBConvolve([full_sbs, self._sba], False, self._gsparams._gsp)
 
     @property
     def flux(self):

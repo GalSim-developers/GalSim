@@ -31,7 +31,6 @@ from .random import GaussianDeviate
 from .table import LookupTable
 from . import utilities
 from . import integ
-from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
 
 def theoryToObserved(gamma1, gamma2, kappa):

@@ -59,7 +59,7 @@ from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimWarning
+from .errors import GalSimWarning, convert_cpp_errors
 
 
 class GSObject(object):
@@ -1836,7 +1836,8 @@ class GSObject(object):
         # Perform the fourier transform.
         breal = _BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
         real_image = Image(breal, dtype=float)
-        _galsim.irfft(kimage_wrap._image, real_image._image, True, True)
+        with convert_cpp_errors():
+            _galsim.irfft(kimage_wrap._image, real_image._image, True, True)
 
         # Add (a portion of) this to the original image.
         temp = real_image.subImage(image.bounds)

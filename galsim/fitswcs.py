@@ -29,7 +29,7 @@ from .position import PositionD, PositionI
 from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
-from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimWarning, convert_cpp_errors
 
 #########################################################################################
 #
@@ -1289,20 +1289,23 @@ class GSFitsWCS(CelestialWCS):
 
     def _apply_pv(self, u, v):
         # Do this in C++ layer for speed.
-        _galsim.ApplyPV(len(u), 4, u.ctypes.data, v.ctypes.data, self.pv.ctypes.data)
+        with convert_cpp_errors():
+            _galsim.ApplyPV(len(u), 4, u.ctypes.data, v.ctypes.data, self.pv.ctypes.data)
         return u, v
 
     def _apply_ab(self, x, y):
         # Do this in C++ layer for speed.
         dx = x.copy()
         dy = y.copy()
-        _galsim.ApplyPV(len(x), len(self.ab[0]), dx.ctypes.data, dy.ctypes.data,
-                        self.ab.ctypes.data)
+        with convert_cpp_errors():
+            _galsim.ApplyPV(len(x), len(self.ab[0]), dx.ctypes.data, dy.ctypes.data,
+                            self.ab.ctypes.data)
         return x+dx, y+dy
 
     def _apply_cd(self, x, y):
         # Do this in C++ layer for speed.
-        _galsim.ApplyCD(len(x), x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
+        with convert_cpp_errors():
+            _galsim.ApplyCD(len(x), x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
         return x, y
 
     def _uv(self, x, y):
@@ -1350,18 +1353,14 @@ class GSFitsWCS(CelestialWCS):
 
     def _invert_pv(self, u, v):
         # Do this in C++ layer for speed.
-        try:
+        with convert_cpp_errors():
             return _galsim.InvertPV(u, v, self.pv.ctypes.data)
-        except RuntimeError as err:  # pragma: no cover
-            raise GalSimError(str(err))
 
     def _invert_ab(self, x, y):
         # Do this in C++ layer for speed.
         abp_data = 0 if self.abp is None else self.abp.ctypes.data
-        try:
+        with convert_cpp_errors():
             return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
-        except RuntimeError as err:  # pragma: no cover
-            raise GalSimError(str(err))
 
     def _xy(self, ra, dec, color=None):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)

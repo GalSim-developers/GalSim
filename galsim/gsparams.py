@@ -20,6 +20,7 @@ This file defines the GSParams class.
 """
 
 from . import _galsim
+from .errors import convert_cpp_errors
 
 class GSParams(object):
     """GSParams stores a set of numbers that govern how GSObjects make various speed/accuracy
@@ -148,7 +149,8 @@ class GSParams(object):
         self._small_fraction_of_flux = small_fraction_of_flux
 
         # This is the thing that is needed for any c++ calls.
-        self._gsp = _galsim.GSParams(*self._getinitargs())
+        with convert_cpp_errors():
+            self._gsp = _galsim.GSParams(*self._getinitargs())
 
     # Make all the attributes read-only
     @property

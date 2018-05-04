@@ -22,6 +22,8 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticSum
 from .utilities import lazy_property, doc_inherit
+from . import _galsim
+from .errors import convert_cpp_errors
 
 def Add(*args, **kwargs):
     """A function for adding 2 or more GSObject or ChromaticObject instances.
@@ -149,10 +151,10 @@ class Sum(GSObject):
 
     @property
     def _sbp(self):
-        from . import _galsim
         # NB. I only need this until compound and transform are reimplemented in Python...
         sb_list = [obj._sbp for obj in self.obj_list]
-        return _galsim.SBAdd(sb_list, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBAdd(sb_list, self.gsparams._gsp)
 
     @lazy_property
     def _flux(self):

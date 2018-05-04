@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimRangeError, GalSimIncompatibleValuesError
+from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 class Sersic(GSObject):
     """A class describing a Sersic profile.
@@ -233,7 +233,8 @@ class Sersic(GSObject):
                 if self._trunc <= math.sqrt(2.) * self._hlr:
                     raise GalSimRangeError("Sersic trunc must be > sqrt(2) * half_light_radius",
                                            self._trunc, math.sqrt(2.) * self._hlr)
-                self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
+                with convert_cpp_errors():
+                    self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
         elif scale_radius is not None:
             self._r0 = float(scale_radius)
             self._hlr = 0.
@@ -253,16 +254,19 @@ class Sersic(GSObject):
 
     def calculateIntegratedFlux(self, r):
         """Return the fraction of the total flux enclosed within a given radius, r"""
-        return _galsim.SersicIntegratedFlux(self._n, float(r)/self._r0)
+        with convert_cpp_errors():
+            return _galsim.SersicIntegratedFlux(self._n, float(r)/self._r0)
 
     def calculateHLRFactor(self):
         """Calculate the half-light-radius in units of the scale radius.
         """
-        return _galsim.SersicHLR(self._n, self._flux_fraction)
+        with convert_cpp_errors():
+            return _galsim.SersicHLR(self._n, self._flux_fraction)
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBSersic(self._n, self._r0, self._flux, self._trunc, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBSersic(self._n, self._r0, self._flux, self._trunc, self.gsparams._gsp)
 
     @property
     def n(self): return self._n

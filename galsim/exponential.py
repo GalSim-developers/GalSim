@@ -24,7 +24,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
-from .errors import GalSimIncompatibleValuesError
+from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Exponential(GSObject):
@@ -93,7 +93,8 @@ class Exponential(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBExponential(self._r0, self._flux, self.gsparams._gsp)
+        with convert_cpp_errors():
+            return _galsim.SBExponential(self._r0, self._flux, self.gsparams._gsp)
 
     @property
     def scale_radius(self): return self._r0
