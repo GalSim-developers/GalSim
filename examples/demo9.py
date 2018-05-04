@@ -405,7 +405,7 @@ def main(argv):
             gal = gal.shear(total_shear)
 
             # Build the final object
-            final = galsim.Convolve([psf, gal])
+            final = galsim.Convolve([gal, psf])
 
             # Draw the stamp image
             # To draw the image at a position other than the center of the image, you can
