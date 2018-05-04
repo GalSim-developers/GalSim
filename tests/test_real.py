@@ -108,6 +108,11 @@ def test_real_galaxy_catalog():
     assert_raises(OSError, galsim.RealGalaxyCatalog, file_name='25.2.fits', dir=image_dir)
     assert_raises(OSError, galsim.RealGalaxyCatalog, file_name='23.5.fits', dir='invalid')
 
+    # Test the catalog used by a few demos.
+    rgc = galsim.RealGalaxyCatalog(sample='23.5_example', dir='../examples/data')
+    assert(rgc.sample == '23.5_example')
+    assert(len(rgc.ident) == 100)
+
     # Now test out the real ones.  But if they aren't installed, abort gracefully.
     try:
         rgc = galsim.RealGalaxyCatalog(sample='25.2')
@@ -128,6 +133,18 @@ def test_real_galaxy_catalog():
         print('len(ident) = ',len(rgc.ident))
         assert(rgc.sample == '23.5')
         assert(len(rgc.ident) == 56062)
+
+    # Check error message if COSMOS galaxies aren't in share_dir.  Do this by temporarily
+    # changing share_dir value.
+    save = galsim.meta_data.share_dir
+    galsim.meta_data.share_dir = image_dir
+    try:
+        rgc = galsim.RealGalaxyCatalog(sample='23.5')
+    except OSError as err:
+        assert 'Run the program galsim_download_cosmos -s 23.5' in str(err)
+    else:
+        assert False, "Automatic sample=23.5 should have failed with share_dir = " + image_dir
+    galsim.meta_data.share_dir = save
 
 
 @timer
