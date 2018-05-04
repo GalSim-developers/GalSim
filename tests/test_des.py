@@ -148,6 +148,10 @@ def test_meds():
     with assert_raises(galsim.GalSimValueError):
         galsim.des.MultiExposureObject(images=[img11], wcs=[celestial_wcs])
 
+    # Check the one with no psf, weight, etc.
+    filename_meds2 = 'output/test_meds_image_only.fits'
+    galsim.des.WriteMEDS([obj3], filename_meds2, clobber=True)
+
 
     # Note that while there are no tests prior to this, the above still checks for
     # syntax errors in the meds creation software, so it's still worth running as part
@@ -165,6 +169,7 @@ def test_meds():
     # Run meds module's validate function
     try:
         meds.util.validate_meds(filename_meds)
+        meds.util.validate_meds(filename_meds2)
     except AttributeError:
         print('Seems to be the wrong meds package.  Unable to do tests of meds file.')
         return
