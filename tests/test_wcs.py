@@ -1775,6 +1775,11 @@ def test_astropywcs():
 
         do_ref(wcs, ref_list, 'AstropyWCS '+tag)
 
+        if tag == 'TAN':
+            # Also check origin.  (Now that reference checks are done.)
+            wcs = galsim.AstropyWCS(file_name, dir=dir, compression='none', hdu=0,
+                                    origin=galsim.PositionD(3,4))
+
         do_celestial_wcs(wcs, 'Astropy file '+file_name)
 
         do_wcs_image(wcs, 'AstropyWCS_'+tag)
@@ -1796,15 +1801,24 @@ def test_astropywcs():
     with assert_raises(galsim.GalSimError):
         galsim.AstropyWCS('SBProfile_comparison_images/kolmogorov.fits')
 
+    # This file does not have any WCS information in it.
+    with assert_raises(galsim.GalSimError):
+        galsim.AstropyWCS('fits_files/blankimg.fits')
+
     assert_raises(TypeError, galsim.AstropyWCS)
     assert_raises(TypeError, galsim.AstropyWCS, file_name, header='dummy')
     assert_raises(TypeError, galsim.AstropyWCS, file_name, wcs=wcs)
     assert_raises(TypeError, galsim.AstropyWCS, wcs=wcs, header='dummy')
 
     # Astropy thinks it can handle ZPX files, but as of version 2.0.4, they don't work right.
-    # Check that we raise an exception for any attempt to read these with astropy.
-    # (And if they ever fix this, add 'ZPX' to the test_tags above and remvoe this check.)
-    assert_raises(galsim.GalSimError, galsim.AstropyWCS, references['ZPX'][0], dir=dir)
+    # It reads it in ok, and even works with it fine.  But it doesn't round trip through
+    # its own write and read.  Even worse, it natively gives a fairly obscure error, which
+    # we convert into an OSError by hand.
+    # This test will let us know when they finally fix it.  If it fails, we can remove this
+    # test and add 'ZPX' to the list of working astropy.wcs types above.
+    with assert_raises(OSError):
+        wcs = galsim.AstropyWCS(references['ZPX'][0], dir=dir)
+        do_wcs_image(wcs, 'AstropyWCS_ZPX')
 
 @timer
 def test_pyastwcs():
