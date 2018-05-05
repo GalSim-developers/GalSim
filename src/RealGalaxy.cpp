@@ -20,6 +20,9 @@
 #ifdef USE_TMV
 #include "TMV.h"
 #else
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#endif
 #include "Eigen/Dense"
 #endif
 
