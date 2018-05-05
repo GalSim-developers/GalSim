@@ -54,6 +54,9 @@ damages of any kind.
 typedef tmv::Matrix<double> MatrixXd;
 typedef tmv::Vector<double> VectorXd;
 #else
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#endif
 #include "Eigen/Dense"
 using Eigen::MatrixXd;
 using Eigen::VectorXd;

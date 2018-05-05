@@ -1601,6 +1601,9 @@ PyMODINIT_FUNC initcheck_tmv(void)
 
 def CheckEigen(config):
     eigen_source_file = """
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#endif
 #include "Python.h"
 #include "Eigen/Core"
 #include "Eigen/Cholesky"

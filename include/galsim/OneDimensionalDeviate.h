@@ -108,7 +108,11 @@ namespace galsim {
             _xUpper(xUpper),
             _isRadial(isRadial),
             _gsparams(gsparams),
-            _fluxIsReady(false) {}
+            _fluxIsReady(false),
+            _useRejectionMethod(false),
+            _invMaxAbsDensity(0.),
+            _invMeanAbsDensity(0.)
+        {}
 
         Interval(const Interval& rhs) :
             _fluxDensityPtr(rhs._fluxDensityPtr),
@@ -120,7 +124,7 @@ namespace galsim {
             _useRejectionMethod(rhs._useRejectionMethod),
             _invMaxAbsDensity(rhs._invMaxAbsDensity),
             _invMeanAbsDensity(rhs._invMeanAbsDensity)
-            {}
+        {}
 
         Interval& operator=(const Interval& rhs)
         {

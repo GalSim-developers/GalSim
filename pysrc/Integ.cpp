@@ -24,6 +24,11 @@
 namespace galsim {
 namespace integ {
 
+#if defined(__GNUC__) && __GNUC__ >= 6
+// Workaround for a bug in some versions of gcc 6-8.
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=80947
+#pragma GCC visibility push(hidden)
+#endif
     // A C++ function object that just calls a python function.
     class PyFunc :
         public std::unary_function<double, double>
@@ -35,6 +40,9 @@ namespace integ {
     private:
         const py::object& _func;
     };
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC visibility pop
+#endif
 
     // Integrate a python function using int1d.
     py::tuple PyInt1d(const py::object& func, double min, double max,
