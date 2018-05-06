@@ -26,22 +26,24 @@ namespace galsim {
     template <typename T, typename W>
     static void WrapTemplates(W& wrapper) {
         typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-                                                 ImageView<T>, Position<int>);
+                                                 ImageView<T>, Position<int>, bool);
+        typedef void (Silicon::*area_fn)(ImageView<T>, Position<int>);
+
         wrapper.def("accumulate", (accumulate_fn)&Silicon::accumulate);
+        wrapper.def("fill_with_pixel_areas", (area_fn)&Silicon::fillWithPixelAreas);
     }
 
     static Silicon* MakeSilicon(
         int NumVertices, double NumElect, int Nx, int Ny, int QDist,
         double Nrecalc, double DiffStep, double PixelSize,
         double SensorThickness, size_t idata,
-        const Table& treeRingTable,
-        const Position<double>& treeRingCenter,
-        const Table& abs_length_table)
+        const Table& treeRingTable, const Position<double>& treeRingCenter,
+        const Table& abs_length_table, bool transpose)
     {
         double* data = reinterpret_cast<double*>(idata);
         return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                            Nrecalc, DiffStep, PixelSize, SensorThickness, data,
-                           treeRingTable, treeRingCenter, abs_length_table);
+                           treeRingTable, treeRingCenter, abs_length_table, transpose);
     }
 
     void pyExportSilicon(PY_MODULE& _galsim)

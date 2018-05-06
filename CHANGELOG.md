@@ -57,8 +57,6 @@ Bug Fixes
 ---------
 
 
-
-
 Deprecated Features
 -------------------
 
@@ -68,6 +66,18 @@ Deprecated Features
 New Features
 ------------
 
-
-New config features
--------------------
+- Added Zernike submodule. (#832, #951)
+- Updated PhaseScreen wavefront and wavefront_gradient methods to accept `None`
+  as a valid time argument, which means to use the internally stored time in
+  the screen(s). (#864)
+- Added SecondKick profile GSObject. (#864)
+- Updated PhaseScreenPSFs to automatically include SecondKick objects when
+  being drawn with geometric photon shooting. (#864)
+- Added option to use circular weight function in HSM adaptive moments code.
+  (#917)
+- Added VonKarman profile GSObject. (#940)
+- Added PhotonDCR surface op to apply DCR for photon shooting. (#955)
+- Added astropy units as allowed values of wave_type in Bandpass. (#955)
+- Added ability to get net pixel areas from the Silicon code for a given flux
+  image. (#963)
+- Added ability to transpose the meaning of (x,y) in the Silicon class. (#963)

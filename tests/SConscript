@@ -57,7 +57,7 @@ def run_tests(target, source, env):
             print('If you have trouble with the parallel test run, you may disable it by typing:')
             print('    scons tests -j1')
             print('Also, if you get an error about unrecognized arguments, you might need to run:')
-            print('    pip install pytest-xdist pytest-timeout --user')
+            print('    pip install pytest-xdist pytest-timeout')
         else:
             print('pytest is version %s'%env['PYTEST'])
         cmd += ' test*.py'

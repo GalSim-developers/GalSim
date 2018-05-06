@@ -58,6 +58,17 @@
 #pragma GCC diagnostic ignored "-Wplacement-new"
 #endif
 
+// Something about mangled names changing in C++17.
+#if defined(__GNUC__) && __GNUC__ >= 7
+#pragma GCC diagnostic ignored "-Wnoexcept-type"
+#endif
+
+// This looks like a bug in the boost/python extract function.  Not sure which gcc version it
+// started showing up.  4.8 doesn't warn, but 7.1 does.
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 #ifdef __clang__
 // Only clang seems to have this
 #if __has_warning("-Wlogical-op-parentheses")
