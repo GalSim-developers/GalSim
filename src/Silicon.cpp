@@ -88,7 +88,7 @@ namespace galsim {
         _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
-        _abs_length_table(abs_length_table), _transpose(transpose), _resume_next_recalc(-1)
+        _abs_length_table(abs_length_table), _transpose(transpose), _resume_next_recalc(-999)
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
@@ -489,21 +489,23 @@ namespace galsim {
         double next_recalc;
         if (resume) {
             // These two tests are now done at the python layer.
-#if 0
+            // However, Jim is reporting that he's hitting the assert statement below, which
+            // I (MJ) thought shouldn't happen.  So rather than bomb out, raise an exception.
+#if 1
             // _resume_next_recalc initialized to -1, so this is our sign that we haven't run
             // accumulate yet.
-            if (_resume_next_recalc == -1)
+            if (_resume_next_recalc == -999)
                 throw std::runtime_error(
                     "Silicon::accumulate called with resume, but accumulate hasn't been run yet.");
 
             // This isn't a complete check that it is the same image.  But it prevents
             // seg faults if the user messes up.
-            if (_imagepolys.size() != nxny)
+            if (int(_imagepolys.size()) != nxny)
                 throw std::runtime_error(
                     "Silicon::accumulate called with resume, but image is not the same shape as "
                     "the previous run.");
 #endif
-            assert(_resume_next_recalc != -1);
+            assert(_resume_next_recalc != -999);
             assert(int(_imagepolys.size()) == nxny);
 
             next_recalc = _resume_next_recalc;
