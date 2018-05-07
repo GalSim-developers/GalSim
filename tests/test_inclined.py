@@ -335,7 +335,7 @@ def test_edge_on():
         for inclination in inclinations:
             # Set up the profile
             prof = get_prof(mode, inclination * galsim.radians, scale_radius=scale_radius,
-                            scale_h_over_r=0.1, n=n, gsparams=galsim.GSParams(maximum_fft_size=5132))
+                            scale_h_over_r=0.1, n=n)
 
             check_basic(prof, "Edge-on " + mode)
 

@@ -106,6 +106,7 @@ from .errors import GalSimError, GalSimRangeError, GalSimValueError
 from .errors import GalSimKeyError, GalSimIndexError, GalSimNotImplementedError
 from .errors import GalSimBoundsError, GalSimUndefinedBoundsError, GalSimImmutableError
 from .errors import GalSimIncompatibleValuesError, GalSimSEDError, GalSimHSMError
+from .errors import GalSimFFTSizeError
 from .errors import GalSimConfigError, GalSimConfigValueError
 from .errors import GalSimWarning, GalSimDeprecationWarning
 

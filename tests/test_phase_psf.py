@@ -74,12 +74,12 @@ def test_aperture():
         np.testing.assert_almost_equal(maxk, np.pi/scale)
 
     # If the constructed pupil plane would be too large, raise an error
-    assert_raises(galsim.GalSimError, galsim.Aperture, 1.7, pupil_plane_scale=1.e-4)
+    assert_raises(galsim.GalSimFFTSizeError, galsim.Aperture, 1.7, pupil_plane_scale=1.e-4)
 
     # Similar if the given image is too large.
     # Here, we change gsparams.maximum_fft_size, rather than build a really large image to load.
-    assert_raises(galsim.GalSimError, galsim.Aperture, 1.7, pupil_plane_im=im,
-                  gsparams=galsim.GSParams(maximum_fft_size=64))
+    with assert_raises(galsim.GalSimFFTSizeError):
+        galsim.Aperture(1.7, pupil_plane_im=im, gsparams=galsim.GSParams(maximum_fft_size=64))
 
     # Other choices just give warnings
     with assert_warns(galsim.GalSimWarning):

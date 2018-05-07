@@ -80,7 +80,7 @@ from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
-from .errors import GalSimWarning
+from .errors import GalSimFFTSizeError, GalSimWarning
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -325,9 +325,7 @@ class Aperture(object):
 
         # Check FFT size
         if self.npix > self._gsparams.maximum_fft_size:
-            raise GalSimError("Created pupil plane array that is too large, {0} "
-                              "If you can handle the large FFT, you may update "
-                              "gsparams.maximum_fft_size".format(self.npix))
+            raise GalSimFFTSizeError("Created pupil plane array that is too large.",self.npix)
 
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
@@ -391,9 +389,7 @@ class Aperture(object):
 
         # Check FFT size
         if self.npix > self._gsparams.maximum_fft_size:
-            raise GalSimError("Loaded pupil plane array that is too large, {0} "
-                              "If you can handle the large FFT, you may update "
-                              "gsparams.maximum_fft_size".format(self.npix))
+            raise GalSimFFTSizeError("Loaded pupil plane array that is too large.", self.npix)
 
         # Sanity checks
         if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:

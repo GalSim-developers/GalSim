@@ -112,6 +112,10 @@ from contextlib import contextmanager
 #
 # GalSimHSMError:       Use this for errors from the HSM algorithm.
 #
+# GalSimFFTSizeError:   Use this when a requested FFT would exceed the relevant maximum_fft_size
+#                       for the object, so the recommendation is raise this parameter if that
+#                       is possible.
+#
 # GalSimConfigError:    Use this for errors processing a config dict.
 #
 # GalSimConfigValueError:   Use this when a config dict has a value that is invalid.  Basically,
@@ -311,6 +315,25 @@ class GalSimHSMError(GalSimError):
     """
     def __repr__(self):
         return 'galsim.GalSimHSMError(%r)'%(str(self))
+
+
+class GalSimFFTSizeError(GalSimError):
+    """A GalSim-specific exception class indicating that a requested FFT exceeds the relevant
+    maximum_fft_size.
+    """
+    def __init__(self, message, size):
+        self.message = message
+        self.size = size
+        mem = size * size * 24. / 1024**3
+        message += "\nThe required FFT size would be {0} x {0}, which requires ".format(size)
+        message += "{0:.2f} GB of memory.\n".format(mem)
+        message += "If you can handle the large FFT, you may update gsparams.maximum_fft_size."
+        super().__init__(message)
+
+    def __repr__(self):
+        return 'galsim.GalSimFFTSizeError(%r,%r)'%(self.message, self.size)
+    def __reduce__(self):
+        return GalSimFFTSizeError, (self.message, self.size)
 
 
 class GalSimConfigError(GalSimError, ValueError):
