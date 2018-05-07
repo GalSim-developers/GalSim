@@ -22,6 +22,7 @@ addition of the docstring and few extra features.
 Also, a simple 2D table for gridded input data: LookupTable2D.
 """
 import numpy as np
+import numbers
 
 from . import _galsim
 
@@ -494,8 +495,7 @@ class LookupTable2D(object):
         if not self._inbounds(x, y):
             raise ValueError("Extrapolating beyond input range.")
 
-        from numbers import Real
-        if isinstance(x, Real):
+        if isinstance(x, numbers.Real):
             return self.table(x, y)
         else:
             x = np.array(x, dtype=float)
@@ -513,8 +513,7 @@ class LookupTable2D(object):
         return self._call_raise(x, y)
 
     def _call_constant(self, x, y):
-        from numbers import Real
-        if isinstance(x, Real):
+        if isinstance(x, numbers.Real):
             if self._inbounds(x, y):
                 return self.table(x, y)
             else:
@@ -547,11 +546,9 @@ class LookupTable2D(object):
         if not self._inbounds(x, y):
             raise ValueError("Extrapolating beyond input range.")
 
-        try:
-            xx = float(x)
-            yy = float(y)
-            return self.table.gradient(xx, yy)
-        except TypeError:
+        if isinstance(x, numbers.Real):
+            return self.table.gradient(x, y)
+        else:
             dfdx = np.empty_like(x)
             dfdy = np.empty_like(x)
             self.table.gradientMany(x.ravel(), y.ravel(), dfdx.ravel(), dfdy.ravel())
@@ -562,8 +559,7 @@ class LookupTable2D(object):
         return self._gradient_raise(x, y)
 
     def _gradient_constant(self, x, y):
-        from numbers import Real
-        if isinstance(x, Real):
+        if isinstance(x, numbers.Real):
             if self._inbounds(x, y):
                 return self.table.gradient(x, y)
             else:
