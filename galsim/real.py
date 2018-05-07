@@ -769,7 +769,7 @@ class RealGalaxyCatalog(object):
             else:
                 self.noise_lock.acquire()
                 # Again, a second check in case two processes get here at the same time.
-                if self.noise_file_name[i] in self.saved_noise_im:
+                if self.noise_file_name[i] in self.saved_noise_im:  # pragma: no cover
                     im = self.saved_noise_im[self.noise_file_name[i]]
                     if self.logger:
                         self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
