@@ -26,7 +26,7 @@ from . import _galsim
 from .random import UniformDeviate
 from .angle import radians, arcsec
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
-from .errors import convert_cpp_errors
+from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
 # Add on more methods in the python layer
 
@@ -212,7 +212,8 @@ class PhotonArray(object):
     def convolve(self, rhs, rng=None):
         "Convolve this PhotonArray with another."
         if rhs.size() != self.size():
-            raise GalSimError("PhotonArray.convolve with unequal size arrays")
+            raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
+                                                self_pa=self, rhs=rhs)
         ud = UniformDeviate(rng)
         self._pa.convolve(rhs._pa, ud._rng)
 

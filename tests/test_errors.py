@@ -216,6 +216,7 @@ def test_galsim_fft_size_error():
                         "which requires 2.34 GB of memory.\nIf you can handle "
                         "the large FFT, you may update gsparams.maximum_fft_size.")
     assert err.size == 10240
+    np.testing.assert_almost_equal(err.mem, 2.34375)
     assert isinstance(err, galsim.GalSimError)
     do_pickle(err)
 

@@ -291,7 +291,7 @@ class _WriteFile:
                         self.gz_index += 1
                         self.gz = self.gz_methods[self.gz_index]
             else:  # pragma: no cover
-                raise GalSimError("None of the options for gunzipping were successful.")
+                raise GalSimError("None of the options for gzipping were successful.")
         elif file_compress == 'bzip2':
             while self.bz2_index < len(self.bz2_methods):
                 try:
@@ -303,7 +303,7 @@ class _WriteFile:
                         self.bz2_index += 1
                         self.bz2 = self.bz2_methods[self.bz2_index]
             else:  # pragma: no cover
-                raise GalSimError("None of the options for bunzipping were successful.")
+                raise GalSimError("None of the options for bzipping were successful.")
         else:  # pragma: no cover  (can't get here from public API)
             raise GalSimValueError("Unknown file_compression", file_compress, ('gzip', 'bzip2'))
 

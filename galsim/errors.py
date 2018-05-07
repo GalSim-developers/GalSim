@@ -28,40 +28,39 @@ from contextlib import contextmanager
 # throw the following in some cases.
 #
 # TypeError:            Use this for errors that in a more strongly typed language would probably
-#                       be a compiler error.  For instance, it is used for the following errors:
-#                       - a parameter has the wrong type
+#                       be a compiler error. For instance, it is used for the following errors:
+#                       - a parameter with the wrong type
 #                       - the wrong number of unnamed args when processing `*args` by hand.
 #                       - missing or invalid kwargs when processing `**kwargs` by hand.
 #
-# OSError:              Use this for errors related to I/O, disk access, etc.  Note: In Python 2,
-#                       there was a distinction between IOError and OSError, but there was never
-#                       much difference in reality, and in Python 3, they made everything OSError.
-#                       We should just use OSError for all such kinds of errors.
+# OSError:              Use this for errors related to I/O, disk access, etc.
+#                       Note: In Python 2, there was a distinction between IOError and OSError, but
+#                       there was never much difference in reality, and in Python 3, they made both
+#                       OSError. We should just use OSError for all such kinds of errors.
 #
 # NotImplementedError:  Use this for code that is not implemented by design and which will never
-#                       be implemented.  E.g. GSObject and Position use this for their __init__
+#                       be implemented. E.g. GSObject and Position use this for their __init__
 #                       implementations, since it is invalid to instantiate the base class.
-#                       Use GalSimNotImplementedError for features which might someday be
+#                       Use GalSimNotImplementedError for features that might someday be
 #                       implemented.
 #
 # AttributeError:       Use this only for an attempt to access an attribute that an object does not
-#                       have.  Like TypeError, this should be reserved for things which a more
+#                       have. Like TypeError, this should be reserved for things that a more
 #                       strongly typed language would catch at compile time. We don't currently
 #                       raise this anywhere in GalSim.
 #
-# RuntimeError:         Don't use this.  Use GalSimError (or a subclass) for any run-time errors.
+# RuntimeError:         Don't use this. Use GalSimError (or a subclass) for any run-time errors.
 #
-# ValueError:           Don't use this.  Use one of the below exceptions that derive from
-#                       ValueError.
+# ValueError:           Don't use this. Use one of the below exceptions that derive from ValueError.
 #
-# KeyError:             Don't use this.  Use GalSimKeyError instead
+# KeyError:             Don't use this. Use GalSimKeyError instead
 #
-# IndexError:           Don't use this.  Use GalSimIndexError instead.
+# IndexError:           Don't use this. Use GalSimIndexError instead.
 #
 # std::runtime_error:   Use this for errors in the C++ layer, and use the catch_cpp_errors()
-#                       context to convert these errors into GalSimErrors.  E.g.
-#                       GSFitsWCS._invert_pv uses this for non-convergence, which is converted
-#                       into  a GalSimError in Python.
+#                       context to convert these errors into GalSimErrors. E.g. GSFitsWCS._invert_pv
+#                       uses this for non-convergence, which gets converted into GalSimError in
+#                       the Python layer.
 #                       When possible, it is preferable to guard against any such events by making
 #                       appropriate checks in the Python layer before dropping down into C++.
 #                       E.g. Image checks for anything that might cause the C++ Image class to
@@ -72,12 +71,14 @@ from contextlib import contextmanager
 # GalSim-specific error classes:
 # ------------------------------
 #
-# GalSimError:          Use this for what would normally be a RuntimeError.  Usually some
-#                       exceptional occurrence in otherwise correct code.  E.g. an algorithm not
-#                       converging, or some invalid data values.  This is also the catch-all
-#                       exception to use when none of the other GalSim exceptions are appropriate.
+# GalSimError:          Use this for what would normally be a RuntimeError. Usually some exceptional
+#                       occurrence in otherwise correct code. E.g. an algorithm not converging or
+#                       a singular matrix encountered. It can also be used when the program does
+#                       things out of order; e.g. PowerSpectrum raises this when getShear and the
+#                       like are called before `buildGrid`. This is also the catch-all exception
+#                       to use when none of the other GalSim exceptions are appropriate.
 #
-# GalSimValueError:     Use this for when a user provides an invalid value for a parameter.
+# GalSimValueError:     Use this when a user provides an invalid value for a parameter.
 #                       Note: it has an optional argument to give a list of allowed values when
 #                       that is appropriate.
 #
@@ -88,29 +89,35 @@ from contextlib import contextmanager
 #                       invalid index. E.g. RealGalaxyCatalog and Catalog raise this for accessing
 #                       invalid rows.
 #
-# GalSimRangeError:     Use this when a a user provides an value outside of some allowed range.
-#                       You should also give the min/max values of the allowed range.  The max
-#                       is optional, because it's not uncommon for their to be no upper limit.
+# GalSimRangeError:     Use this when a user provides an value outside of some allowed range.
+#                       You should also give the min/max values of the allowed range. The max
+#                       is optional, because it's not uncommon for there to be no upper limit.
 #                       If only the upper limit is relevant and not the lower limit, you may
 #                       use min=None to indicate this.
 #
-# GalSimBoundsError:    Use this when a position is outside the allowed bounds.  It's basically
+# GalSimBoundsError:    Use this when a position is outside its allowed bounds. It's basically
 #                       the same as GalSimRangeError, but in two dimensions.
 #
 # GalSimUndefinedBoundsError:   Use this when the user tries to performa an operation on an
-#                               Image with undefined bounds that requires the bounds to be
-#                               defined.
+#                               Image with undefined bounds (and which requires the bounds to be
+#                               defined).
 #
 # GalSimImmutableError: Use this when the user tries to modify an immutable Image in some way.
 #
 # GalSimIncompatibleValuesError:    Use this when two or more parameters are invalid when used
-#                                   in combination.  E.g. providing more than one size parameter
-#                                   to Moffat, Sersic, Gaussian, etc.
+#                                   in combination. E.g. providing more than one size parameter
+#                                   to Moffat, Sersic, Gaussian, etc. The conflicting values
+#                                   should be given as extra keywords to the constructor, which
+#                                   are mentioned in the error message.
+#                                   Note: if one of the conflicting values is self (e.g. adding two
+#                                   SEDs with different redshifts), then don't name the kwarg self.
+#                                   Instead use something like `self_sed=self`.
 #
-# GalSimSEDError:       Use this when an SED is required to be either spectral or dimensionless
-#                       and the wrong kind of SED is provided.
+# GalSimSEDError:       Use this when an SED is required to be either spectral or dimensionless,
+#                       and the other kind of SED is provided.
 #
-# GalSimHSMError:       Use this for errors from the HSM algorithm.
+# GalSimHSMError:       Use this for errors from the HSM algorithm.  They are emitted in C++, but
+#                       we use `with convert_cpp_errors(GalSimHSMError):` to convert them.
 #
 # GalSimFFTSizeError:   Use this when a requested FFT would exceed the relevant maximum_fft_size
 #                       for the object, so the recommendation is raise this parameter if that
@@ -118,12 +125,12 @@ from contextlib import contextmanager
 #
 # GalSimConfigError:    Use this for errors processing a config dict.
 #
-# GalSimConfigValueError:   Use this when a config dict has a value that is invalid.  Basically,
+# GalSimConfigValueError:   Use this when a config dict has a value that is invalid. Basically,
 #                           whenever you would normally use GalSimValueError when processing
 #                           a config dict, you should use this instead.
 #
 # GalSimNotImplementedError Use this for features that we have not yet implemented, but which may
-#                           be implemented someday.  So it's not a necessarily invalid usage, just
+#                           be implemented someday. So it's not a necessarily invalid usage, just
 #                           something that doesn't work currently.
 
 class GalSimError(RuntimeError):
@@ -138,7 +145,7 @@ class GalSimError(RuntimeError):
 class GalSimValueError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input value is invalid.
 
-    Attrubutes:
+    Attributes:
 
         value = the invalid value
         allowed_values = a list of allowed values if appropriate (may be None)
@@ -162,6 +169,10 @@ class GalSimValueError(GalSimError, ValueError):
 class GalSimKeyError(GalSimError, KeyError):
     """A GalSim-specific exception class indicating an attempt to access a dict-like object
     with an invalid key.
+
+    Attributes:
+
+        key = the invalid key
     """
     def __init__(self, message, key):
         self.message = message
@@ -178,6 +189,10 @@ class GalSimKeyError(GalSimError, KeyError):
 class GalSimIndexError(GalSimError, IndexError):
     """A GalSim-specific execption class indicating an attempt to access a list-like object
     with an invalid index.
+
+    Attributes:
+
+        index = the invalid index
     """
     def __init__(self, message, index):
         self.message = message
@@ -195,7 +210,7 @@ class GalSimRangeError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input value is
     outside of the allowed range of values.
 
-    Attrubutes:
+    Attributes:
 
         value = the invalid value
         min = the minimum allowed value (may be None)
@@ -220,7 +235,7 @@ class GalSimBoundsError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input position is
     outside of the allowed bounds.
 
-    Attrubutes:
+    Attributes:
 
         pos = the invalid position
         bounds = the bounds in which it was expected to fall
@@ -240,8 +255,8 @@ class GalSimBoundsError(GalSimError, ValueError):
 
 
 class GalSimUndefinedBoundsError(GalSimError):
-    """A GalSim-specific exception class indicating an attempt to access the range of bounds
-    that have not yet been defined.
+    """A GalSim-specific exception class indicating an attempt to access the extent of
+    a Bounds instance that has not yet been defined.
     """
     def __repr__(self):
         return 'galsim.GalSimUndefinedBoundsError(%r)'%(str(self))
@@ -250,7 +265,7 @@ class GalSimUndefinedBoundsError(GalSimError):
 class GalSimImmutableError(GalSimError):
     """A GalSim-specific exception class indicating an attempt to modify an immutable image.
 
-    Attrubutes:
+    Attributes:
 
         image = the image that the user attempted to modify
     """
@@ -271,7 +286,7 @@ class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
     """A GalSim-specific exception class indicating that 2 or more user-input values are
     incompatible as given.
 
-    Attrubutes:
+    Attributes:
 
         values = a dict of {name : value} giving the values that in combination are invalid.
     """
@@ -293,7 +308,7 @@ class GalSimSEDError(GalSimError, TypeError):
     kind of SED that is present.  Typically involving a dimensionless SED where a spectral SED
     is required (or vice versa).
 
-    Attrubutes:
+    Attributes:
 
         sed = the invalid SED
     """
@@ -320,13 +335,18 @@ class GalSimHSMError(GalSimError):
 class GalSimFFTSizeError(GalSimError):
     """A GalSim-specific exception class indicating that a requested FFT exceeds the relevant
     maximum_fft_size.
+
+    Attributes:
+
+        size = the size that was deemed too large
+        mem = the estimated memory that would be required (in GB) for the FFT.
     """
     def __init__(self, message, size):
         self.message = message
         self.size = size
-        mem = size * size * 24. / 1024**3
+        self.mem = size * size * 24. / 1024**3
         message += "\nThe required FFT size would be {0} x {0}, which requires ".format(size)
-        message += "{0:.2f} GB of memory.\n".format(mem)
+        message += "{0:.2f} GB of memory.\n".format(self.mem)
         message += "If you can handle the large FFT, you may update gsparams.maximum_fft_size."
         super().__init__(message)
 
@@ -347,7 +367,7 @@ class GalSimConfigError(GalSimError, ValueError):
 class GalSimConfigValueError(GalSimValueError, GalSimConfigError):
     """A GalSim-specific exception class indicating that a config entry has an invalid value.
 
-    Attrubutes:
+    Attributes:
 
         value = the invalid value
         allowed_values = a list of allowed values if appropriate (may be None)
