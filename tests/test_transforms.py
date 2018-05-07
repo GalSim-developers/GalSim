@@ -633,8 +633,7 @@ def test_flip():
                        gsparams=galsim.GSParams(realspace_relerr=1.e-6)),
             # Without being convolved by anything with a reasonable k cutoff, this needs
             # a very large fft.
-            galsim.DeVaucouleurs(half_light_radius=0.17, flux=1.7,
-                                 gsparams=galsim.GSParams(maximum_fft_size=8000)),
+            galsim.DeVaucouleurs(half_light_radius=0.17, flux=1.7),
             # I don't really understand why this needs a lower maxk_threshold to work, but
             # without it, the k-space tests fail.
             galsim.Exponential(scale_radius=0.17, flux=1.7,

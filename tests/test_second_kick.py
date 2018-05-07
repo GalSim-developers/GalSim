@@ -29,7 +29,6 @@ def test_init():
     """Test generation of SecondKick profiles
     """
     obscuration = 0.5
-    bigGSP = galsim.GSParams(maximum_fft_size=8192)
 
     if __name__ == '__main__':
         lams = [300.0, 500.0, 1100.0]
@@ -46,7 +45,6 @@ def test_init():
                 t0 = time.time()
                 kwargs = {'lam':lam, 'r0':r0, 'kcrit':kcrit, 'diam':4.0}
                 print(kwargs)
-                kwargs['gsparams'] = bigGSP
 
                 sk = galsim.SecondKick(flux=2.2, **kwargs)
                 t1 = time.time()

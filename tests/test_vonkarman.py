@@ -29,7 +29,6 @@ from galsim_test_helpers import *
 def test_vk(slow=False):
     """Test the generation of VonKarman profiles
     """
-    gsp = galsim.GSParams(maximum_fft_size=8192)
     if slow:
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.05, 0.15, 0.3]
@@ -52,7 +51,7 @@ def test_vk(slow=False):
                         print("Skip this combination, since delta > maxk_threshold")
                         continue
 
-                    vk = galsim.VonKarman(flux=2.2, gsparams=gsp, **kwargs)
+                    vk = galsim.VonKarman(flux=2.2, **kwargs)
                     np.testing.assert_almost_equal(vk.flux, 2.2)
 
                     check_basic(vk, "VonKarman")

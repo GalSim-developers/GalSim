@@ -1269,7 +1269,7 @@ def test_gsparam():
     # getting properly forwarded through the internals of ChromaticObjects.
     gsparams = galsim.GSParams(maximum_fft_size=16)
     gal = galsim.Gaussian(fwhm=1, gsparams=gsparams) * bulge_SED
-    with assert_raises(galsim.GalSimError):
+    with assert_raises(galsim.GalSimFFTSizeError):
         gal.drawImage(bandpass)
 
     # Repeat, putting the gsparams argument in after the ChromaticObject constructor.

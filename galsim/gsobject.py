@@ -59,7 +59,8 @@ from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimNotImplementedError, GalSimWarning, convert_cpp_errors
+from .errors import GalSimFFTSizeError, GalSimNotImplementedError
+from .errors import GalSimWarning, convert_cpp_errors
 
 
 class GSObject(object):
@@ -190,19 +191,20 @@ class GSObject(object):
         >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
         >>> conv = galsim.Convolve([gal,psf])
-        >>> im = galsim.Image(1000,1000, scale=0.05)        # Note the very small pixel scale!
+        >>> im = galsim.Image(1000,1000, scale=0.02)        # Note the very small pixel scale!
         >>> im = conv.drawImage(image=im)                   # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "galsim/gsobject.py", line 1615, in drawImage
+          File "galsim/gsobject.py", line 1666, in drawImage
             added_photons = prof.drawFFT(draw_image, add)
-          File "galsim/gsobject.py", line 1827, in drawFFT
+          File "galsim/gsobject.py", line 1877, in drawFFT
             kimage, wrap_size = self.drawFFT_makeKImage(image)
-          File "galsim/gsobject.py", line 1753, in drawFFT_makeKImage
-            "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
-        RuntimeError: drawFFT requires an FFT that is too large: 6144.
+          File "galsim/gsobject.py", line 1802, in drawFFT_makeKImage
+            raise GalSimFFTSizeError("drawFFT requires an FFT that is too large.", Nk)
+        galsim.errors.GalSimFFTSizeError: drawFFT requires an FFT that is too large.
+        The required FFT size would be 12288 x 12288, which requires 3.38 GB of memory.
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
-        >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
+        >>> big_fft_params = galsim.GSParams(maximum_fft_size=12300)
         >>> conv = galsim.Convolve([gal,psf],gsparams=big_fft_params)
         >>> im = conv.drawImage(image=im)                   # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
@@ -1798,9 +1800,7 @@ class GSObject(object):
             Nk = int(np.ceil(maxk/dk)) * 2
 
         if Nk > self.gsparams.maximum_fft_size:
-            raise GalSimError(
-                "drawFFT requires an FFT that is too large: %s. If you can handle "
-                "the large FFT, you may update gsparams.maximum_fft_size."%(Nk))
+            raise GalSimFFTSizeError("drawFFT requires an FFT that is too large.", Nk)
 
         bounds = _BoundsI(0,Nk//2,-Nk//2,Nk//2)
         if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:

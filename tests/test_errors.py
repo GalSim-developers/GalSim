@@ -206,6 +206,21 @@ def test_galsim_hsm_error():
 
 
 @timer
+def test_galsim_fft_size_error():
+    """Test basic usage of GalSimFFTSizeError
+    """
+    err = galsim.GalSimFFTSizeError("Test FFT is too big.", 10240)
+    print('str = ',str(err))
+    print('repr = ',repr(err))
+    assert str(err) == ("Test FFT is too big.\nThe required FFT size would be 10240 x 10240, "
+                        "which requires 2.34 GB of memory.\nIf you can handle "
+                        "the large FFT, you may update gsparams.maximum_fft_size.")
+    assert err.size == 10240
+    assert isinstance(err, galsim.GalSimError)
+    do_pickle(err)
+
+
+@timer
 def test_galsim_config_error():
     """Test basic usage of GalSimConfigError
     """
@@ -295,6 +310,7 @@ if __name__ == "__main__":
     test_galsim_incompatible_values_error()
     test_galsim_sed_error()
     test_galsim_hsm_error()
+    test_galsim_fft_size_error()
     test_galsim_config_error()
     test_galsim_config_value_error()
     test_galsim_notimplemented_error()
