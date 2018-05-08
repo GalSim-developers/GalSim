@@ -1382,6 +1382,9 @@ class PhaseScreenPSF(GSObject):
             self._prepareDraw()
             return self.ii.shoot(n_photons, rng)
 
+        if n_photons == 0:
+            return galsim._galsim.PhotonArray(0)
+
         ud = galsim.UniformDeviate(rng)
 
         t = np.empty((n_photons,), dtype=float)

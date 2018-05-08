@@ -721,6 +721,10 @@ def test_phase_gradient_shoot():
         assert psf.second_kick == second_kick
         img = psf.drawImage(nx=64, ny=64, scale=0.1, method='phot', n_photons=100)
 
+    # Verify that we can phase_gradient_shoot with 0 or 1 photons.
+    psf.shoot(0)
+    psf.shoot(1)
+
 
 @timer
 def test_input():
