@@ -403,21 +403,43 @@ def test_scale_unit():
 def test_stepk_maxk():
     """Test options to specify (or not) stepk and maxk.
     """
+    import time
     aper = galsim.Aperture(diam=1.0)
     rng = galsim.BaseDeviate(123456)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
-    stepk = psf.stepk
-    maxk = psf.maxk
+    t0 = time.time()
+    stepk1 = psf.stepk
+    maxk1 = psf.maxk
+    t1 = time.time()
+    print('stepk1 = ',stepk1)
+    print('maxk1 = ',maxk1)
+    print('t1 = ',t1-t0)
+
+    psf._prepareDraw()
+    stepk2 = psf.stepk
+    maxk2 = psf.maxk
+    t2 = time.time()
+    print('stepk2 = ',stepk2)
+    print('maxk2 = ',maxk2)
+    print('t2 = ',t2-t1)
+
+    # stepk is only accurate to about 25%.  maxk is quite a bit better.
+    np.testing.assert_allclose(stepk1, stepk2, rtol=0.25)
+    np.testing.assert_allclose(maxk1, maxk2, rtol=0.05)
+
+    # Also make sure that prepareDraw wasn't called to calculate the first one.
+    # Should be very quick to do the first stepk, maxk, but slow to do the second.
+    assert t1-t0 < t2-t1
 
     psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
-                                 _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
+                                 _force_stepk=stepk2/1.5, _force_maxk=maxk2*2.0)
     np.testing.assert_almost_equal(
-            psf2.stepk, stepk/1.5, decimal=7,
+            psf2.stepk, stepk2/1.5, decimal=7,
             err_msg="PhaseScreenPSF did not adopt forced value for stepk")
     np.testing.assert_almost_equal(
-            psf2.maxk, maxk*2.0, decimal=7,
+            psf2.maxk, maxk2*2.0, decimal=7,
             err_msg="PhaseScreenPSF did not adopt forced value for maxk")
     do_pickle(psf)
     do_pickle(psf2)
