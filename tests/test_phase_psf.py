@@ -433,6 +433,19 @@ def test_stepk_maxk():
     # Should be very quick to do the first stepk, maxk, but slow to do the second.
     assert t1-t0 < t2-t1
 
+    # Check that stepk changes when gsparams.folding_threshold become more extreme.
+    # (Note: maxk is independent of maxk_threshold because of the hard edge of the aperture.)
+    psf1 = galsim.PhaseScreenPSF(atm, 500.0, diam=1.0, scale_unit=galsim.arcsec,
+                                 gsparams=galsim.GSParams(folding_threshold=1.e-3,
+                                                          maxk_threshold=1.e-4))
+    stepk3 = psf1.stepk
+    maxk3 = psf1.maxk
+    print('stepk3 = ',stepk3)
+    print('maxk3 = ',maxk3)
+    assert stepk3 < stepk1
+    assert maxk3 == maxk1
+
+    # Check that it respects the force_stepk and force_maxk parameters
     psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
                                  _force_stepk=stepk2/1.5, _force_maxk=maxk2*2.0)
     np.testing.assert_almost_equal(
