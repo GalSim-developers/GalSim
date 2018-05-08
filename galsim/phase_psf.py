@@ -1267,14 +1267,6 @@ class PhaseScreenPSF(GSObject):
         return self._ii.maxk
 
     @property
-    def nyquist_scale(self):
-        """The Image pixel spacing that does not alias maxk.
-        """
-        # Use this instead of self._ii.nyquistScale() so we don't need to _prepareDraw when
-        # photon-shooting into an automatically-sized image.
-        return np.pi/self.aper._maxK(self.lam, self.scale_unit)
-
-    @property
     def stepk(self):
         """The sampling in k space necessary to avoid folding of image in x space.
         """
