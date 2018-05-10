@@ -832,7 +832,7 @@ def test_gc():
     # First check that no PhaseScreenPSFs are known to the garbage collector
     assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
-    # Make a PhaseScreenPSF and check that it s known to the garbage collector
+    # Make a PhaseScreenPSF and check that it's known to the garbage collector
     psf = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
     assert any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
