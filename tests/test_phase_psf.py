@@ -423,10 +423,10 @@ def test_stepk_maxk():
     t2 = time.time()
     print('stepk2 = ',stepk2)
     print('maxk2 = ',maxk2)
+    print('goodImageSize = ',psf.getGoodImageSize(0.2))
     print('t2 = ',t2-t1)
 
-    # stepk is only accurate to about 25%.  maxk is quite a bit better.
-    np.testing.assert_allclose(stepk1, stepk2, rtol=0.25)
+    np.testing.assert_allclose(stepk1, stepk2, rtol=0.05)
     np.testing.assert_allclose(maxk1, maxk2, rtol=0.05)
 
     # Also make sure that prepareDraw wasn't called to calculate the first one.
@@ -442,6 +442,7 @@ def test_stepk_maxk():
     maxk3 = psf1.maxk
     print('stepk3 = ',stepk3)
     print('maxk3 = ',maxk3)
+    print('goodImageSize = ',psf1.getGoodImageSize(0.2))
     assert stepk3 < stepk1
     assert maxk3 == maxk1
 
