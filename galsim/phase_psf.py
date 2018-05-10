@@ -1122,7 +1122,7 @@ class PhaseScreenPSF(GSObject):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
-        self._screen_list = screen_list
+        self._screen_list = galsim.PhaseScreenList(screen_list)
         self.t0 = float(t0)
         self.lam = float(lam)
         self.exptime = float(exptime)
@@ -1169,10 +1169,9 @@ class PhaseScreenPSF(GSObject):
         if _force_stepk > 0.:
             dummy_stepk = _force_stepk
         else:
-            R = 0.5 * self.aper.diam / self.aper.pupil_plane_scale
-            R = (R**2 + 6**2)**0.5  # 6 = Quintic.xrange, which is the normal x_interpoalnt used.
-            R *= self.scale
-            dummy_stepk = np.pi / R
+            dummy_stepk = self._screen_list._stepK(lam=self.lam, diam=self.aper.diam,
+                                                   obscuration=self.aper.obscuration,
+                                                   gsparams=self._gsparams)
         if _force_maxk > 0.:
             dummy_maxk = _force_maxk
         else:
