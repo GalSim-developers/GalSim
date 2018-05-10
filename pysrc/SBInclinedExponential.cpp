@@ -17,43 +17,16 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBInclinedExponential.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBInclinedExponential
+    void pyExportSBInclinedExponential(PY_MODULE& _galsim)
     {
-
-        static void wrap()
-        {
-            bp::class_<SBInclinedExponential,bp::bases<SBProfile> >("SBInclinedExponential", bp::no_init)
-                .def(bp::init<Angle,double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("inclination")=bp::object(),
-                         bp::arg("scale_radius")=bp::object(),
-                         bp::arg("scale_height")=bp::object(),
-                         bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object()))
-                )
-                .def(bp::init<const SBInclinedExponential &>())
-                .def("getInclination", &SBInclinedExponential::getInclination)
-                .def("getScaleRadius", &SBInclinedExponential::getScaleRadius)
-                .def("getScaleHeight", &SBInclinedExponential::getScaleHeight)
-                .enable_pickling()
-                ;
-        }
-    };
-
-    void pyExportSBInclinedExponential()
-    {
-        PySBInclinedExponential::wrap();
+        py::class_<SBInclinedExponential, BP_BASES(SBProfile)>(
+            GALSIM_COMMA "SBInclinedExponential" BP_NOINIT)
+            .def(py::init<double,double,double,double, GSParams>());
     }
 
 } // namespace galsim

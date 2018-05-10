@@ -203,6 +203,7 @@ class PowerSpectrumEstimator(object):
                                 value of power at each point on the grid, and then see what results
                                 it gives for our chosen ell binning. [default: None]
         """
+        from .table import LookupTable
         # Check for the expected square geometry consistent with the previously-defined grid size.
         if g1.shape != g2.shape:
             raise ValueError("g1 and g2 grids do not have the same shape!")
@@ -246,7 +247,7 @@ class PowerSpectrumEstimator(object):
             new_CEE = np.zeros_like(new_ell)
             new_CEE[1:len(self.ell)+1] = np.real(C_EE)
             new_CEE[len(self.ell)+1] = new_CEE[len(self.ell)]
-            EE_table = galsim.LookupTable(new_ell, new_CEE)
+            EE_table = LookupTable(new_ell, new_CEE)
             ell_weight = EE_table(self.l_abs)
             C_EE = self._bin_power(E*np.conjugate(E), ell_weight=ell_weight)*(self.dx/self.N)**2
 
@@ -254,7 +255,7 @@ class PowerSpectrumEstimator(object):
             new_CBB = np.zeros_like(new_ell)
             new_CBB[1:len(self.ell)+1] = np.real(C_BB)
             new_CBB[len(self.ell)+1] = new_CBB[len(self.ell)]
-            BB_table = galsim.LookupTable(new_ell, new_CBB)
+            BB_table = LookupTable(new_ell, new_CBB)
             ell_weight = BB_table(self.l_abs)
             C_BB = self._bin_power(B*np.conjugate(B), ell_weight=ell_weight)*(self.dx/self.N)**2
 

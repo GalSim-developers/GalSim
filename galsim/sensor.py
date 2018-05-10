@@ -27,9 +27,15 @@ bottom of the detector.
 """
 
 import numpy as np
-import galsim
 import glob
 import os
+
+from . import _galsim
+from .table import LookupTable
+from .position import PositionI, PositionD
+from .table import LookupTable
+from .random import UniformDeviate
+from . import meta_data
 
 class Sensor(object):
     """
@@ -142,11 +148,11 @@ class SiliconSensor(Sensor):
                             stronger along the x direction. [default: False]
     """
     def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000, treering_func=None, treering_center=galsim.PositionD(0,0),
+                 nrecalc=10000, treering_func=None, treering_center=PositionD(0,0),
                  transpose=False):
         self.name = name
         self.strength = float(strength)
-        self.rng = galsim.UniformDeviate(rng)
+        self.rng = UniformDeviate(rng)
         self.diffusion_factor = float(diffusion_factor)
         self.qdist = int(qdist)
         self.nrecalc = float(nrecalc)
@@ -158,11 +164,11 @@ class SiliconSensor(Sensor):
         self.config_file = name + '.cfg'
         self.vertex_file = name + '.dat'
         if not os.path.isfile(self.config_file):
-            cfg_file = os.path.join(galsim.meta_data.share_dir, 'sensors', self.config_file)
+            cfg_file = os.path.join(meta_data.share_dir, 'sensors', self.config_file)
             if not os.path.isfile(cfg_file):
                 raise IOError("Cannot locate file %s or %s"%(self.config_file, cfg_file))
             self.config_file = cfg_file
-            self.vertex_file = os.path.join(galsim.meta_data.share_dir, 'sensors', self.vertex_file)
+            self.vertex_file = os.path.join(meta_data.share_dir, 'sensors', self.vertex_file)
         if not os.path.isfile(self.vertex_file):
             raise IOError("Cannot locate vertex file %s"%(self.vertex_file))
 
@@ -172,14 +178,14 @@ class SiliconSensor(Sensor):
         if treering_func is None:
             # This is a dummy table in the case where no function is specified
             # A bit kludgy, but it works
-            self.treering_func = galsim.LookupTable(x=[0.0,1.0], f=[0.0,0.0], interpolant='linear')
-        elif not isinstance(treering_func, galsim.LookupTable):
+            self.treering_func = LookupTable(x=[0.0,1.0], f=[0.0,0.0], interpolant='linear')
+        elif not isinstance(treering_func, LookupTable):
             raise ValueError("treering_func must be a galsim.LookupTable")
-        if not isinstance(treering_center, galsim.PositionD):
+        if not isinstance(treering_center, PositionD):
             raise ValueError("treering_center must be a galsim.PositionD")
 
         # Now we read in the absorption length table:
-        abs_file = os.path.join(galsim.meta_data.share_dir, 'sensors', 'abs_length.dat')
+        abs_file = os.path.join(meta_data.share_dir, 'sensors', 'abs_length.dat')
         self._read_abs_length(abs_file)
         self._init_silicon()
 
@@ -196,14 +202,15 @@ class SiliconSensor(Sensor):
         nrecalc = float(self.nrecalc) / self.strength
         vertex_data = np.loadtxt(self.vertex_file, skiprows = 1)
 
-        if vertex_data.size != 5 * Nx * Ny * (4 * NumVertices + 4):
+        if vertex_data.shape != (Nx * Ny * (4 * NumVertices + 4), 5):
             raise IOError("Vertex file %s does not match config file %s"%(
                           self.vertex_file, self.config_file))
 
-        self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                               diff_step, PixelSize, SensorThickness, vertex_data,
-                                               self.treering_func.table, self.treering_center,
-                                               self.abs_length_table.table, self.transpose)
+        self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
+                                        diff_step, PixelSize, SensorThickness,
+                                        vertex_data.ctypes.data,
+                                        self.treering_func._tab, self.treering_center._p,
+                                        self.abs_length_table._tab, self.transpose)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.name
@@ -244,7 +251,7 @@ class SiliconSensor(Sensor):
         self.__dict__ = d
         self._init_silicon()  # Build the _silicon object.
 
-    def accumulate(self, photons, image, orig_center=galsim.PositionI(0,0), resume=False):
+    def accumulate(self, photons, image, orig_center=PositionI(0,0), resume=False):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
@@ -268,9 +275,10 @@ class SiliconSensor(Sensor):
                 raise RuntimeError("accumulate called with resume, but provided image does "
                                    "not match one used in the previous accumulate call.")
         self._last_image = image
-        return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center, resume)
+        return self._silicon.accumulate(photons._pa, self.rng._rng, image._image, orig_center._p,
+                                        resume)
 
-    def calculate_pixel_areas(self, image, orig_center=galsim.PositionI(0,0)):
+    def calculate_pixel_areas(self, image, orig_center=PositionI(0,0)):
         """Create an image with the corresponding pixel areas according to the Silicon model.
 
         The input image gives the flux values used to set the current levels of the brighter-fatter
@@ -288,9 +296,10 @@ class SiliconSensor(Sensor):
 
         @returns a galsim.Image with the pixel areas
         """
+        from .wcs import PixelScale
         area_image = image.copy()
-        area_image.wcs = galsim.PixelScale(1.0)
-        self._silicon.fill_with_pixel_areas(area_image._image.view(), orig_center)
+        area_image.wcs = PixelScale(1.0)
+        self._silicon.fill_with_pixel_areas(area_image._image, orig_center._p)
         return area_image
 
     def _read_config_file(self, filename):
@@ -322,7 +331,7 @@ class SiliconSensor(Sensor):
         abs_data = np.loadtxt(filename, skiprows = 1)
         xarray = abs_data[:,0]
         farray = abs_data[:,1]
-        table = galsim.LookupTable(x=xarray, f=farray, interpolant='linear')
+        table = LookupTable(x=xarray, f=farray, interpolant='linear')
         self.abs_length_table = table
         return
 
@@ -370,4 +379,4 @@ class SiliconSensor(Sensor):
         if dr is None:
             dr = period/100.
         npoints = int(r_max / dr) + 1
-        return galsim.LookupTable.from_func(func, x_min=0., x_max=r_max, npoints=npoints)
+        return LookupTable.from_func(func, x_min=0., x_max=r_max, npoints=npoints)

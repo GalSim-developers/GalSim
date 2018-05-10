@@ -22,14 +22,9 @@ import os
 import sys
 import time
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 @timer
 def test_simple():
@@ -299,9 +294,8 @@ def test_silicon():
 
     assert_raises(IOError, galsim.SiliconSensor, name='junk')
     assert_raises(IOError, galsim.SiliconSensor, name='output')
-    assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
+    assert_raises(TypeError, galsim.SiliconSensor, rng=3.4)
     assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', rng1)
-
 
 @timer
 def test_silicon_fft():
@@ -357,10 +351,11 @@ def test_silicon_fft():
     np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
 
     # Repeat with 20X more photons where the brighter-fatter effect should kick in more.
+    # (Also not in true_center, to hit a different branch about offset in the drawImage code.)
     obj *= 200
-    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
-    obj.drawImage(im2, method='fft', sensor=simple, rng=rng)
-    obj.drawImage(im3, method='fft')
+    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng, use_true_center=False)
+    obj.drawImage(im2, method='fft', sensor=simple, rng=rng, use_true_center=False)
+    obj.drawImage(im3, method='fft', use_true_center=False)
 
     r1 = im1.calculateMomentRadius(flux=obj.flux)
     r2 = im2.calculateMomentRadius(flux=obj.flux)

@@ -27,11 +27,13 @@ handles the high frequency modes."""
 
 import numpy as np
 
-import galsim
-
 from . import _galsim
 from .gsobject import GSObject
-
+from .gsparams import GSParams
+from .utilities import lazy_property, doc_inherit
+from .position import PositionD
+from .angle import arcsec, AngleUnit, radians
+from .deltafunction import DeltaFunction
 
 class SecondKick(GSObject):
     """Class describing the expectation value of the high-k turbulence portion of an atmospheric PSF
@@ -87,13 +89,23 @@ class SecondKick(GSObject):
     @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
                              details. [default: None]
     """
+    _req_params = { "lam" : float, "r0" : float, "diam" : float }
+    _opt_params = { "obscuration" : float, "kcrit" : float, "flux" : float, "scale_unit" : str }
+    _single_params = []
+    _takes_rng = False
+
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = False
+    _is_analytic_k = True
+
     def __init__(self, lam, r0, diam, obscuration=0, kcrit=0.2, flux=1,
-                 scale_unit=galsim.arcsec, gsparams=None):
+                 scale_unit=arcsec, gsparams=None):
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
-        # Need _scale_unit for repr roundtriping.
-        self._scale_unit = scale_unit
-        scale = scale_unit/galsim.arcsec
+            self._scale_unit = AngleUnit.from_name(scale_unit)
+        else:
+            self._scale_unit = scale_unit
+        self._scale = radians / self._scale_unit
 
         self._flux = float(flux)
         self._r0 = float(r0)
@@ -101,14 +113,26 @@ class SecondKick(GSObject):
         self._diam = float(diam)
         self._obscuration = float(obscuration)
         self._kcrit = float(kcrit)
+        self._gsparams = GSParams.check(gsparams)
 
-        lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)
-        self._sbs = galsim._galsim.SBSecondKick(lam_over_r0, kcrit, flux, gsparams)
-        lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
-        self._sba = galsim._galsim.SBAiry(lam_over_diam, obscuration, 1., gsparams)
-        self._sbd = galsim._galsim.SBDeltaFunction(self._sbs.getDelta())
-        full_sbs = galsim._galsim.SBAdd([self._sbs, self._sbd], gsparams)
-        self._sbp = galsim._galsim.SBConvolve([full_sbs, self._sba], False, gsparams)
+    @lazy_property
+    def _sbs(self):
+        lam_over_r0 = (1.e-9*self._lam/self._r0)*self._scale
+        return _galsim.SBSecondKick(lam_over_r0, self._kcrit, self._flux, self._gsparams._gsp)
+
+    @lazy_property
+    def _sba(self):
+        lam_over_diam = (1.e-9*self._lam/self._diam)*self._scale
+        return _galsim.SBAiry(lam_over_diam, self._obscuration, 1., self._gsparams._gsp)
+
+    @lazy_property
+    def _sbd(self):
+        return _galsim.SBDeltaFunction(self._sbs.getDelta(), self._gsparams._gsp)
+
+    @lazy_property
+    def _sbp(self):
+        full_sbs = _galsim.SBAdd([self._sbs, self._sbd], self._gsparams._gsp)
+        return _galsim.SBConvolve([full_sbs, self._sba], False, self._gsparams._gsp)
 
     @property
     def flux(self):
@@ -142,7 +166,7 @@ class SecondKick(GSObject):
         return self._sbs.structureFunction(rho)
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.SecondKick) and
+        return (isinstance(other, SecondKick) and
         self.lam == other.lam and
         self.r0 == other.r0 and
         self.diam == other.diam and
@@ -166,7 +190,7 @@ class SecondKick(GSObject):
         out += ", kcrit=%r"%self.kcrit
         if self.flux != 1:
             out += ", flux=%r"%self.flux
-        if self.scale_unit != galsim.arcsec:
+        if self.scale_unit != arcsec:
             out += ", scale_unit=%r"%self.scale_unit
         out += ", gsparams=%r)"%self.gsparams
         return out
@@ -174,8 +198,41 @@ class SecondKick(GSObject):
     def __str__(self):
         return "galsim.SecondKick(lam=%r, r0=%r, kcrit=%r)"%(self.lam, self.r0, self.kcrit)
 
-_galsim.SBSecondKick.__getinitargs__ = lambda self: (
-    self.getLamOverR0(), self.getKCrit(), self.getFlux()+self.getDelta(), self.getGSParams())
-_galsim.SBSecondKick.__getstate__ = lambda self: None
-_galsim.SBSecondKick.__repr__ = lambda self: \
-    "galsim._galsim.SBSecondKick(%r, %r, %r, %r)"%self.__getinitargs__()
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        d.pop('_sba',None)
+        d.pop('_sbd',None)
+        d.pop('_sbs',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    @property
+    def _maxk(self):
+        return self._sbp.maxK()
+
+    @property
+    def _stepk(self):
+        return self._sbp.stepK()
+
+    @property
+    def _max_sb(self):
+        return DeltaFunction._mock_inf
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

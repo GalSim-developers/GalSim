@@ -28,14 +28,8 @@ try:
 except ImportError:
     no_astroplan = True
 
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
@@ -129,6 +123,63 @@ def test_photon_array():
     np.testing.assert_array_equal(photon_array.dxdz, 0.23)
     np.testing.assert_array_equal(photon_array.dydz, 0.88)
     np.testing.assert_array_equal(photon_array.wavelength, 912)
+
+    # Check toggling is_corr
+    assert not photon_array.isCorrelated()
+    photon_array.setCorrelated()
+    assert photon_array.isCorrelated()
+    photon_array.setCorrelated(False)
+    assert not photon_array.isCorrelated()
+    photon_array.setCorrelated(True)
+    assert photon_array.isCorrelated()
+
+    # Check rescaling the total flux
+    flux = photon_array.flux.sum()
+    np.testing.assert_almost_equal(photon_array.getTotalFlux(), flux)
+    photon_array.scaleFlux(17)
+    np.testing.assert_almost_equal(photon_array.getTotalFlux(), 17*flux)
+    photon_array.setTotalFlux(199)
+    np.testing.assert_almost_equal(photon_array.getTotalFlux(), 199)
+
+    # Check rescaling the positions
+    x = photon_array.x.copy()
+    y = photon_array.y.copy()
+    photon_array.scaleXY(1.9)
+    np.testing.assert_almost_equal(photon_array.x, 1.9*x)
+    np.testing.assert_almost_equal(photon_array.y, 1.9*y)
+
+    # Check ways to assign to photons
+    pa1 = galsim.PhotonArray(50)
+    pa1.x = photon_array.x[:50]
+    for i in range(50):
+        pa1.y[i] = photon_array.y[i]
+    pa1.flux[0:50] = photon_array.flux[:50]
+    pa1.dxdz = photon_array.dxdz[:50]
+    pa1.dydz = photon_array.dydz[:50]
+    pa1.wavelength = photon_array.wavelength[:50]
+    np.testing.assert_almost_equal(pa1.x, photon_array.x[:50])
+    np.testing.assert_almost_equal(pa1.y, photon_array.y[:50])
+    np.testing.assert_almost_equal(pa1.flux, photon_array.flux[:50])
+    np.testing.assert_almost_equal(pa1.dxdz, photon_array.dxdz[:50])
+    np.testing.assert_almost_equal(pa1.dydz, photon_array.dydz[:50])
+    np.testing.assert_almost_equal(pa1.wavelength, photon_array.wavelength[:50])
+
+    # Check assignAt
+    pa2 = galsim.PhotonArray(100)
+    pa2.assignAt(0, pa1)
+    pa2.assignAt(50, pa1)
+    np.testing.assert_almost_equal(pa2.x[:50], pa1.x)
+    np.testing.assert_almost_equal(pa2.y[:50], pa1.y)
+    np.testing.assert_almost_equal(pa2.flux[:50], pa1.flux)
+    np.testing.assert_almost_equal(pa2.dxdz[:50], pa1.dxdz)
+    np.testing.assert_almost_equal(pa2.dydz[:50], pa1.dydz)
+    np.testing.assert_almost_equal(pa2.wavelength[:50], pa1.wavelength)
+    np.testing.assert_almost_equal(pa2.x[50:], pa1.x)
+    np.testing.assert_almost_equal(pa2.y[50:], pa1.y)
+    np.testing.assert_almost_equal(pa2.flux[50:], pa1.flux)
+    np.testing.assert_almost_equal(pa2.dxdz[50:], pa1.dxdz)
+    np.testing.assert_almost_equal(pa2.dydz[50:], pa1.dydz)
+    np.testing.assert_almost_equal(pa2.wavelength[50:], pa1.wavelength)
 
     # Check picklability again with non-zero values for everything
     do_pickle(photon_array)
@@ -276,7 +327,7 @@ def test_photon_io():
     rng = galsim.UniformDeviate(1234)
     image = obj.drawImage(method='phot', n_photons=nphotons, save_photons=True, rng=rng)
     photons = image.photons
-    assert photons.size() == nphotons
+    assert photons.size() == len(photons) == nphotons
 
     file_name = 'output/photons1.dat'
     photons.write(file_name)
@@ -693,5 +744,6 @@ if __name__ == '__main__':
     test_photon_angles()
     test_photon_io()
     test_dcr()
-    test_dcr_angles()
+    if not no_astroplan:
+        test_dcr_angles()
     test_dcr_moments()

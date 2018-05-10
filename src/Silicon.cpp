@@ -24,14 +24,11 @@
  * Routines for integrating the CCD simulations into GalSim
  */
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cmath>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <vector>
-
 #include <algorithm>
 
 // Uncomment this for debugging output
@@ -81,9 +78,8 @@ namespace galsim {
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                      double diffStep, double pixelSize,
                      double sensorThickness, double* vertex_data,
-                     const Table<double, double>& tr_radial_table,
-                     Position<double> treeRingCenter,
-                     const Table<double, double>& abs_length_table, bool transpose) :
+                     const Table& tr_radial_table, Position<double> treeRingCenter,
+                     const Table& abs_length_table, bool transpose) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _qDist(qDist),
         _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
@@ -117,7 +113,6 @@ namespace galsim {
             assert(index == (i * _ny + j) * _nv + n);
             double x0 = vertex_data[5*index+0];
             double y0 = vertex_data[5*index+1];
-            double th = vertex_data[5*index+2];
             double x1 = vertex_data[5*index+3];
             double y1 = vertex_data[5*index+4];
             if (_transpose) {

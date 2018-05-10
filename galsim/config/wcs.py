@@ -233,7 +233,7 @@ class TanWCSBuilder(WCSBuilder):
 
         affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
         world_origin = galsim.CelestialCoord(ra, dec)
-        units = galsim.angle.get_angle_unit(units)
+        units = galsim.AngleUnit.from_name(units)
 
         return galsim.TanWCS(affine=affine, world_origin=world_origin, units=units)
 

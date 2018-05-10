@@ -21,14 +21,9 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # Below are a set of tests to make sure that we have achieved consistency in defining shears and
 # ellipses using different conventions.  The underlying idea is that in test_base.py we already

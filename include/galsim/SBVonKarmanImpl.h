@@ -45,12 +45,13 @@ namespace galsim {
 
         double stepK() const { return _stepk; }
         double maxK() const { return _maxk; }
-        double getDeltaAmplitude() const { return _deltaAmplitude; }
+        double getDelta() const { return _delta; }
         double getHalfLightRadius() const { return _hlr; }
 
         double kValue(double) const;
         double xValue(double) const;
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        double structureFunction(double rho) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double kValueNoTrunc(double) const;
         double rawXValue(double) const;
@@ -65,16 +66,16 @@ namespace galsim {
         double _L053; // (r0/L0)^(-5/3)
         double _stepk;
         double _maxk;
-        double _deltaAmplitude;
-        double _deltaScale;  // 1/(1-_deltaAmplitude)
+        double _delta;
+        double _deltaScale;  // 1/(1-_delta)
         double _lam_arcsec;  // _lam * ARCSEC2RAD / 2pi
         bool _doDelta;
         double _hlr; // half-light-radius
 
-        const GSParamsPtr _gsparams;
+        const GSParamsPtr& _gsparams;
 
-        TableDD _radial;
-        boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        TableBuilder _radial;
+        shared_ptr<OneDimensionalDeviate> _sampler;
 
         void _buildRadialFunc();
     };
@@ -91,7 +92,7 @@ namespace galsim {
     {
     public:
         SBVonKarmanImpl(double lam, double r0, double L0, double flux, double scale, bool doDelta,
-                        const GSParamsPtr& gsparams);
+                        const GSParams& gsparams);
         ~SBVonKarmanImpl() {}
 
         bool isAxisymmetric() const { return true; }
@@ -101,7 +102,7 @@ namespace galsim {
 
         double maxK() const;
         double stepK() const;
-        double getDeltaAmplitude() const;
+        double getDelta() const;
         double getHalfLightRadius() const;
 
         Position<double> centroid() const { return Position<double>(0., 0.); }
@@ -122,7 +123,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double xValue(const Position<double>& p) const;
         double xValue(double r) const;
@@ -160,13 +161,13 @@ namespace galsim {
         double _scale;
         bool _doDelta;
 
-        boost::shared_ptr<VonKarmanInfo> _info;
+        shared_ptr<VonKarmanInfo> _info;
 
         // Copy constructor and op= are undefined.
         SBVonKarmanImpl(const SBVonKarmanImpl& rhs);
         void operator=(const SBVonKarmanImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
+        static LRUCache<Tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
     };
 
     double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053);

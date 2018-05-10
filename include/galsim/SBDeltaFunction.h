@@ -46,7 +46,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBDeltaFunction(double flux, const GSParamsPtr& gsparams);
+        SBDeltaFunction(double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBDeltaFunction(const SBDeltaFunction& rhs);

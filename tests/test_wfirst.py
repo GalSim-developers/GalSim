@@ -21,18 +21,10 @@
 from __future__ import print_function
 import numpy as np
 
+import galsim
+import galsim.wfirst
 from galsim_test_helpers import *
 
-try:
-    import galsim
-    import galsim.wfirst
-except ImportError:
-    import os
-    import sys
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-    import galsim.wfirst
 
 @timer
 def skip_wfirst_wcs():

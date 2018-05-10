@@ -53,7 +53,7 @@ namespace galsim {
         double xValueRaw(double) const;
         double xValueExact(double) const;
         double structureFunction(double rho) const;
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
     private:
         SKInfo(const SKInfo& rhs); ///<Hide the copy constructor
@@ -66,9 +66,9 @@ namespace galsim {
 
         const GSParamsPtr _gsparams;
 
-        TableDD _radial;
-        TableDD _kvLUT;
-        boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        TableBuilder _radial;
+        TableBuilder _kvLUT;
+        shared_ptr<OneDimensionalDeviate> _sampler;
 
         void _buildRadial();
         void _buildKVLUT();
@@ -105,15 +105,7 @@ namespace galsim {
         double getKCrit() const { return _kcrit; }
         double maxSB() const { return _flux * _info->xValue(0.); }
 
-        /**
-         * @brief SBSecondKick photon-shooting is done numerically with `OneDimensionalDeviate`
-         * class.
-         *
-         * @param[in] N Total number of photons to produce.
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
-         */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double xValue(const Position<double>& p) const;
         double xValue(double r) const;
@@ -136,13 +128,13 @@ namespace galsim {
         double _flux;
         double _xnorm;
 
-        boost::shared_ptr<SKInfo> _info;
+        shared_ptr<SKInfo> _info;
 
         // Copy constructor and op= are undefined.
         SBSecondKickImpl(const SBSecondKickImpl& rhs);
         void operator=(const SBSecondKickImpl& rhs);
 
-        static LRUCache<boost::tuple<double,GSParamsPtr>,SKInfo> cache;
+        static LRUCache<Tuple<double,GSParamsPtr>,SKInfo> cache;
     };
 }
 

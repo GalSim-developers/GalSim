@@ -8,3 +8,9 @@ We had to copy a few extra files as well in order to make sure this is compatibl
 with native boost distributions.  We have tested that this works when the 
 native boost is 1.35 through 1.50, but if yours is older or newer than that,
 there's a possibility that it won't work.
+
+There are some includes from the main boost distro: <boost/...>.  These are guarded
+with #ifdef USE_BOOST, which by default is not defined, so they are not used.
+However, most of these files involve boost workarounds for various compiler issues,
+so if you have trouble compiling this and have a local boost installation, you
+can compile with `scons USE_BOOST=true` to enable this.

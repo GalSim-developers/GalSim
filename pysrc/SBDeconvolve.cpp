@@ -17,38 +17,15 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBDeconvolve.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBDeconvolve
+    void pyExportSBDeconvolve(PY_MODULE& _galsim)
     {
-
-        static void wrap()
-        {
-            bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
-                .def(bp::init<const SBProfile &,boost::shared_ptr<GSParams> >(
-                        (bp::arg("adaptee"),
-                         bp::arg("gsparams")=bp::object())
-                ))
-                .def(bp::init<const SBDeconvolve &>())
-                .def("getObj", &SBDeconvolve::getObj)
-                ;
-        }
-
-    };
-
-    void pyExportSBDeconvolve()
-    {
-        PySBDeconvolve::wrap();
+        py::class_<SBDeconvolve, BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeconvolve" BP_NOINIT)
+            .def(py::init<const SBProfile &, GSParams>());
     }
 
 } // namespace galsim

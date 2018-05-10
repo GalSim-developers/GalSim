@@ -3,11 +3,11 @@ from __future__ import print_function
 
 import os, sys
 import glob
+import re
 
 try:
     sys.path = [GetBuildPath('#galsim')] + sys.path
     from _version import __version__ as version
-    from _version import __version_info__ as version_info
 except Exception as e:
     print('Caught exception: ',e)
     # If SCons is using an old python (2.4 is relatively common still), then the above may fail.
@@ -15,8 +15,9 @@ except Exception as e:
     vfilename = os.path.join(GetBuildPath('#galsim'),'_version.py')
     exec(compile(open(vfilename, "rb").read(), vfilename, 'exec'))
     version = __version__
-    version_info = __version_info__
 
+vi = re.split('\.|-',version)
+version_info = tuple([int(x) for x in vi if x.isdigit()])
 full_version_info = version_info
 if len(full_version_info) == 2:
     full_version_info = version_info + (0,)
@@ -70,7 +71,7 @@ header_dir = 'include'
 lib_install_dir = os.path.join(env1['INSTALL_PREFIX'], lib_dir)
 header_install_dir = os.path.join(env1['INSTALL_PREFIX'], header_dir)
 
-subdirs = ['.','hsm']
+subdirs = ['.','hsm','math']
 
 lib_files = []
 for d in subdirs:

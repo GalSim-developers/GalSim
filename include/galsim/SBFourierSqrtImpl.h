@@ -28,7 +28,7 @@ namespace galsim {
     class SBFourierSqrt::SBFourierSqrtImpl : public SBProfile::SBProfileImpl
     {
     public:
-        SBFourierSqrtImpl(const SBProfile& adaptee, const GSParamsPtr& gsparams);
+        SBFourierSqrtImpl(const SBProfile& adaptee, const GSParams& gsparams);
         ~SBFourierSqrtImpl() {}
 
         // xValue() not implemented for SBFourierSqrt.
@@ -55,7 +55,7 @@ namespace galsim {
         double maxSB() const;
 
         // shoot also not implemented.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>

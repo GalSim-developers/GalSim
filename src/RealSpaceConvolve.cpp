@@ -254,7 +254,7 @@ namespace galsim {
 
     double RealSpaceConvolve(
         const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
-        const GSParamsPtr& gsparams)
+        const GSParams& gsparams)
     {
         // Coming in, if only one of them is axisymmetric, it should be p1.
         // This cuts down on some of the logic below.
@@ -365,8 +365,8 @@ namespace galsim {
 #endif
 
         double result = integ::int2d(conv, xreg, yreg,
-                                     gsparams->realspace_relerr,
-                                     gsparams->realspace_abserr * flux);
+                                     gsparams.realspace_relerr,
+                                     gsparams.realspace_abserr * flux);
 
 #ifdef TIMING
         gettimeofday(&tp,0);

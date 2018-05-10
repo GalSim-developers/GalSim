@@ -54,7 +54,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBExponential(double r0, double flux, const GSParamsPtr& gsparams);
+        SBExponential(double r0, double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBExponential(const SBExponential& rhs);

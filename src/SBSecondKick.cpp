@@ -19,18 +19,14 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/gamma.hpp>
-#include <boost/math/special_functions/bessel.hpp>
-
 #include "SBSecondKick.h"
 #include "SBSecondKickImpl.h"
 #include "SBVonKarmanImpl.h"
 #include "fmath/fmath.hpp"
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/Bessel.h"
+#include "math/Gamma.h"
+#include "math/BesselRoots.h"
 
 #ifdef DEBUGLOGGING
 #include <ctime>
@@ -121,8 +117,8 @@ namespace galsim {
 
     SKInfo::SKInfo(double kcrit, const GSParamsPtr& gsparams) :
         _kcrit(kcrit), _gsparams(gsparams),
-        _radial(TableDD::spline),
-        _kvLUT(TableDD::spline)
+        _radial(Table::spline),
+        _kvLUT(Table::spline)
     {
         // build the radial function
 #ifdef DEBUGLOGGING
@@ -165,7 +161,7 @@ namespace galsim {
         SKISFIntegrand I(rho, _kcrit);
         integ::IntRegion<double> reg(0., integ::MOCK_INF);
         for (int s=1; s<10; s++) {
-            double zero = bessel::getBesselRoot0(s)/(2*M_PI*rho);
+            double zero = math::getBesselRoot0(s)/(2*M_PI*rho);
             reg.addSplit(zero);
         }
         double result = integ::int1d(I, reg,
@@ -186,6 +182,7 @@ namespace galsim {
             _kvLUT.addEntry(0, 0.);
             _kvLUT.addEntry(0.5, 0.);
             _kvLUT.addEntry(1., 0.);
+            _kvLUT.finalize();
             return;
         }
 
@@ -227,6 +224,7 @@ namespace galsim {
                 break;
             }
         }
+        _kvLUT.finalize();
         xdbg<<"kvLUT.size() = "<<_kvLUT.size()<<'\n';
         //set_verbose(1);
     }
@@ -260,7 +258,7 @@ namespace galsim {
         if (r > 0) {
             // Add BesselJ0 zeros up to _maxk
             for (int s=1; s<10; ++s) {
-                double zero=bessel::getBesselRoot0(s)/r;
+                double zero=math::getBesselRoot0(s)/r;
                 if (zero >= _maxk) break;
                 reg.addSplit(zero);
             }
@@ -294,7 +292,7 @@ namespace galsim {
         if (r > 0) {
             // Add BesselJ0 zeros up to maxk
             for (int s=1; s<10; ++s) {
-                double zero=bessel::getBesselRoot0(s)/r;
+                double zero=math::getBesselRoot0(s)/r;
                 if (zero >= _maxk) break;
                 reg.addSplit(zero);
             }
@@ -313,12 +311,13 @@ namespace galsim {
             _radial.addEntry(0, 0.);
             _radial.addEntry(1., 0.);
             _radial.addEntry(2., 0.);
+            _radial.finalize();
             _stepk = 1.e10;
             std::vector<double> range(2,0.);
             range[1] = _radial.argMax();
             dbg<<"range = "<<range[0]<<"  "<<range[1]<<std::endl;
             dbg<<"Make ODD\n";
-            _sampler.reset(new OneDimensionalDeviate(_radial, range, true, _gsparams));
+            _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *_gsparams));
             dbg<<"Made ODD\n";
             return;
         }
@@ -390,6 +389,7 @@ namespace galsim {
             if (R == 0. && sum > thresh1) R = r;
             if (sum > thresh2) break;
         }
+        _radial.finalize();
         dbg<<"Finished building radial function.\n";
         dbg<<"_radial.size() = "<<_radial.size()<<'\n';
         dbg<<"sum*2*pi*dr + delta = "<<sum*2.*M_PI*dr+_delta<<"   (should >= 0.999)\n";
@@ -405,19 +405,18 @@ namespace galsim {
 
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, _gsparams));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *_gsparams));
         dbg<<"made sampler\n";
         //set_verbose(1);
     }
 
-    boost::shared_ptr<PhotonArray> SKInfo::shoot(int N, UniformDeviate ud) const
+    void SKInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        return result;
+        _sampler->shoot(photons,ud);
     }
 
-    LRUCache<boost::tuple<double,GSParamsPtr>,SKInfo>
+    LRUCache<Tuple<double,GSParamsPtr>,SKInfo>
         SBSecondKick::SBSecondKickImpl::cache(sbp::max_SK_cache);
 
     //
@@ -430,11 +429,11 @@ namespace galsim {
 
     SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam_over_r0, double kcrit, double flux,
                                                      const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams),
+        SBProfileImpl(*gsparams),
         _lam_over_r0(lam_over_r0), _k0(2.*M_PI/lam_over_r0), _inv_k0(1./_k0),
         _kcrit(kcrit), _flux(flux), _xnorm(flux * _k0*_k0),
-        _info(cache.get(boost::make_tuple(kcrit, this->gsparams.duplicate())))
-    { }
+        _info(cache.get(MakeTuple(kcrit, GSParamsPtr(gsparams))))
+    {}
 
     double SBSecondKick::SBSecondKickImpl::maxK() const
     { return _info->maxK()*_k0; }
@@ -453,7 +452,7 @@ namespace galsim {
             <<getLamOverR0()<<", "
             <<getKCrit()<<", "
             <<getFlux()<<", "
-            <<"galsim.GSParams("<<*gsparams<<"))";
+            <<"galsim.GSParams("<<this->gsparams<<"))";
         return oss.str();
     }
 
@@ -502,18 +501,15 @@ namespace galsim {
         return _info->xValueExact(r*_k0)*_xnorm;
     }
 
-    boost::shared_ptr<PhotonArray> SBSecondKick::SBSecondKickImpl::shoot(
-        int N, UniformDeviate ud) const
+    void SBSecondKick::SBSecondKickImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"SK shoot: N = "<<N<<std::endl;
+        dbg<<"SK shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the SKInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        dbg<<"SK shoot returned flux = "<<result->getTotalFlux()<<std::endl;
-        result->setTotalFlux(getFlux());
-        result->scaleXY(_inv_k0);
-        dbg<<"SK Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.setTotalFlux(getFlux());
+        photons.scaleXY(_inv_k0);
+        dbg<<"SK Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 }

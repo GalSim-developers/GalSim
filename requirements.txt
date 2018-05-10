@@ -1,0 +1,21 @@
+# I didn't try to figure out which versions of these are really required.  These are the
+# current versions at the time of writing this (Jan, 2018), and they are known to work.
+
+# These are in conda_requirements.txt.  If using that, you may prefer to do
+#   conda install -c conda-forge --file conda_requirements.txt
+# prior to running pip install -r requirements.txt
+setuptools>=38
+#eigency>=1.78  # 1.77 still doesn't work.  Oops.  (My fault.)
+numpy>=1.13
+future>=0.15
+astropy>=2.0
+pybind11>=2.2
+pip==9.0.3  # For now, pybind11 in conjunction with pip version 10.0 is broken.  Use 9.0.3.
+
+# Not technically required, but useful.
+pyyaml>=3.12
+pandas>=0.20
+
+# This is not in conda.  Let pip install these.
+LSSTDESC.Coord>=1.0.5
+starlink-pyast>=3.9.0  # Also not required, but useful.

@@ -19,16 +19,9 @@
 from __future__ import print_function
 import os
 import numpy as np
+
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-
-except ImportError:
-    import sys
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.
@@ -91,7 +84,7 @@ def test_structure_function():
                                           r0_500=r0_500, L0=L0, rng=rng)
         screen.instantiate()
         vk = galsim.VonKarman(lam=lam, r0=r0_500*(lam/500.0)**1.2, L0=L0)
-        phase = screen._tab2d.table.getVals()[:-1, :-1] * 2 * np.pi / 500.0  # nm -> radians
+        phase = screen._tab2d.getVals()[:-1, :-1] * 2 * np.pi / 500.0  # nm -> radians
 
         var = np.var(phase)
         # Conan 2008 eq 16
@@ -388,7 +381,7 @@ def test_scale_unit():
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
     im1 = psf.drawImage(nx=32, ny=32, scale=0.1, method='no_pixel')
-    psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcmin)
+    psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit='arcmin')
     im2 = psf2.drawImage(nx=32, ny=32, scale=0.1/60.0, method='no_pixel')
     np.testing.assert_almost_equal(
             im1.array, im2.array, 8,
@@ -809,6 +802,9 @@ def test_speedup():
     significant speedup.
     """
     import time
+    #import cProfile, pstats
+    #pr = cProfile.Profile()
+    #pr.enable()
     atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=0.2)
     # Should be ~seconds if _prepareDraw() gets executed, ~0.01s otherwise.
     psf = atm.makePSF(lam=500.0, diam=1.0, exptime=15.0, time_step=0.025)
@@ -820,7 +816,6 @@ def test_speedup():
     t1 = time.time()
     print("Time for geometric approximation draw: {:6.4f}s".format(t1-t0))
     assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
-
 
 @timer
 def test_gc():

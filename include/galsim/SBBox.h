@@ -47,7 +47,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBBox(double width, double height, double flux, const GSParamsPtr& gsparams);
+        SBBox(double width, double height, double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBBox(const SBBox& rhs);
@@ -87,7 +87,7 @@ namespace galsim {
          * @param[in] gsparams  GSParams object storing constants that control the accuracy of
          *                      image operations and rendering, if different from the default.
          */
-        SBTopHat(double radius, double flux, const GSParamsPtr& gsparams);
+        SBTopHat(double radius, double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBTopHat(const SBTopHat& rhs);

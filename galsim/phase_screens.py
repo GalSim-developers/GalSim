@@ -19,7 +19,13 @@
 from builtins import range, zip
 
 import numpy as np
-import galsim
+from .random import BaseDeviate, GaussianDeviate
+from .image import Image
+from .angle import radians
+from .table import LookupTable2D
+from . import utilities
+from . import fft
+from . import zernike
 
 
 class AtmosphericScreen(object):
@@ -107,7 +113,7 @@ class AtmosphericScreen(object):
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
-        self.npix = galsim.Image.good_fft_size(int(np.ceil(screen_size/screen_scale)))
+        self.npix = Image.good_fft_size(int(np.ceil(screen_size/screen_scale)))
         self.screen_scale = screen_scale
         self.screen_size = screen_scale * self.npix
         self.altitude = altitude
@@ -122,7 +128,7 @@ class AtmosphericScreen(object):
         self._time = 0.0
 
         if rng is None:
-            rng = galsim.BaseDeviate()
+            rng = BaseDeviate()
         self._suppress_warning = suppress_warning
 
         self._orig_rng = rng.duplicate()
@@ -155,7 +161,7 @@ class AtmosphericScreen(object):
     # not equal to an otherwise identical uninstantiated screen.
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.AtmosphericScreen) and
+        return (isinstance(other, AtmosphericScreen) and
                 self.screen_size == other.screen_size and
                 self.screen_scale == other.screen_scale and
                 self.altitude == other.altitude and
@@ -252,9 +258,9 @@ class AtmosphericScreen(object):
 
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self._psi**2"""
-        gd = galsim.GaussianDeviate(self.rng)
-        noise = galsim.utilities.rand_arr(self._psi.shape, gd)
-        return galsim.fft.ifft2(galsim.fft.fft2(noise)*self._psi).real
+        gd = GaussianDeviate(self.rng)
+        noise = utilities.rand_arr(self._psi.shape, gd)
+        return fft.ifft2(fft.fft2(noise)*self._psi).real
 
     def _seek(self, t):
         """Set layer's internal clock to time t."""
@@ -274,8 +280,7 @@ class AtmosphericScreen(object):
                 for _ in range(n_updates):
                     self._screen *= self.alpha
                     self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
-                self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen,
-                                                   edge_mode='wrap')
+                self._tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
         self._time = float(t)
 
     def _reset(self):
@@ -289,11 +294,11 @@ class AtmosphericScreen(object):
             self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
                                    endpoint=False)
             self._ys = self._xs
-            self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+            self._tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def _stepK(self, **kwargs):
+    def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
@@ -302,12 +307,13 @@ class AtmosphericScreen(object):
                            details. [default: None]
         @returns  Good pupil scale size in meters.
         """
+        from .kolmogorov import Kolmogorov
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
-        obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
+        obj = Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
         return obj.stepk
 
-    def wavefront(self, u, v, t=None, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute wavefront due to atmospheric phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
@@ -370,7 +376,7 @@ class AtmosphericScreen(object):
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d(u, v)
 
-    def wavefront_gradient(self, u, v, t=None, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront_gradient(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute gradient of wavefront due to atmospheric phase screen.
 
         @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
@@ -540,23 +546,24 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
     """
+    from .phase_psf import PhaseScreenList
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
-    kwargs['screen_size'] = galsim.utilities.listify(screen_size)
+    kwargs['screen_size'] = utilities.listify(screen_size)
 
     # Set default r0_500 here; it will get broadcasted below such that the _total_ r0_500 from _all_
     # screens is 0.2 m.
     if 'r0_500' not in kwargs:
         kwargs['r0_500'] = [0.2]
-    kwargs['r0_500'] = galsim.utilities.listify(kwargs['r0_500'])
+    kwargs['r0_500'] = utilities.listify(kwargs['r0_500'])
 
     # Turn speed, direction into vx, vy
     if 'speed' in kwargs:
-        kwargs['speed'] = galsim.utilities.listify(kwargs['speed'])
+        kwargs['speed'] = utilities.listify(kwargs['speed'])
         if 'direction' not in kwargs:
-            kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
-        kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
-                                         for v, d in zip(kwargs['speed'],
-                                                         kwargs['direction'])])
+            kwargs['direction'] = [0*radians]*len(kwargs['speed'])
+        kwargs['vx'], kwargs['vy'] = zip(*[v * np.array(d.sincos())
+                                           for v, d in zip(kwargs['speed'],
+                                                           kwargs['direction'])])
         del kwargs['speed']
         del kwargs['direction']
 
@@ -574,11 +581,9 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
         raise ValueError("Cannot use r0_weights if r0_500 is specified as a list.")
 
     if rng is None:
-        rng = galsim.BaseDeviate()
-    kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
-
-    return galsim.PhaseScreenList(
-        [AtmosphericScreen(**kw) for kw in galsim.utilities.dol_to_lod(kwargs, nmax)])
+        rng = BaseDeviate()
+    kwargs['rng'] = [BaseDeviate(rng.raw()) for i in range(nmax)]
+    return PhaseScreenList([AtmosphericScreen(**kw) for kw in utilities.dol_to_lod(kwargs, nmax)])
 
 
 class OpticalScreen(object):
@@ -664,20 +669,13 @@ class OpticalScreen(object):
 
         R_outer = self.diam/2
         if self.annular_zernike and self.obscuration != 0:
-            self._zernike = galsim.zernike.Zernike(self.aberrations, R_outer=R_outer,
-                                                   R_inner=R_outer*self.obscuration)
+            self._zernike = zernike.Zernike(self.aberrations, R_outer=R_outer,
+                                            R_inner=R_outer*self.obscuration)
         else:
-            self._zernike = galsim.zernike.Zernike(self.aberrations, R_outer=R_outer)
+            self._zernike = zernike.Zernike(self.aberrations, R_outer=R_outer)
 
         self.dynamic = False
         self.reversible = True
-
-    @property
-    def coef_array(self):
-        from .deprecated import depr
-        depr('optical_screen.coef_array', 1.5, 'optical_screen._coef_array',
-             'This is officially an implementation detail that users should not need to use.')
-        return self._zernike._coef_array
 
     def __str__(self):
         return "galsim.OpticalScreen(diam=%s, lam_0=%s)" % (self.diam, self.lam_0)
@@ -693,7 +691,7 @@ class OpticalScreen(object):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.OpticalScreen)
+        return (isinstance(other, OpticalScreen)
                 and self.diam == other.diam
                 and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
                 and self.annular_zernike == other.annular_zernike)
@@ -707,7 +705,7 @@ class OpticalScreen(object):
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def _stepK(self, **kwargs):
+    def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this phase screen.
 
         @param lam         Wavelength in nanometers.
@@ -717,12 +715,13 @@ class OpticalScreen(object):
                            details. [default: None]
         @returns stepk in inverse arcsec.
         """
+        from .airy import Airy
         lam = kwargs['lam']
         diam = kwargs['diam']
         obscuration = kwargs.get('obscuration', 0.0)
         gsparams = kwargs.get('gsparams', None)
         # Use an Airy for get appropriate stepk.
-        obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
+        obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
         return obj.stepk
 
     def wavefront(self, u, v, t=None, theta=None):

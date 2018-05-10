@@ -17,48 +17,18 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBSecondKick.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSecondKick
+    void pyExportSBSecondKick(PY_MODULE& _galsim)
     {
-        static void wrap()
-        {
-            double (SBSecondKick::*kv)(double) const = &SBSecondKick::kValue;
-            double (SBSecondKick::*xv)(double) const = &SBSecondKick::xValue;
-
-            bp::class_<SBSecondKick,bp::bases<SBProfile> >("SBSecondKick", bp::no_init)
-                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("lam_over_r0"), bp::arg("kcrit"), bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object()))
-                )
-                .def(bp::init<const SBSecondKick &>())
-                .def("getLamOverR0", &SBSecondKick::getLamOverR0)
-                .def("getKCrit", &SBSecondKick::getKCrit)
-                .def("getDelta", &SBSecondKick::getDelta)
-                .def("structureFunction", &SBSecondKick::structureFunction)
-                .def("kValueRaw", &SBSecondKick::kValueRaw)
-                .def("xValueRaw", &SBSecondKick::xValueRaw)
-                .def("kValueDouble", kv)
-                .def("xValueDouble", xv)
-                .def("xValueExact", &SBSecondKick::xValueExact)
-                .enable_pickling()
-                ;
-        }
-    };
-
-    void pyExportSBSecondKick()
-    {
-        PySBSecondKick::wrap();
+        py::class_<SBSecondKick, BP_BASES(SBProfile)>(GALSIM_COMMA "SBSecondKick" BP_NOINIT)
+            .def(py::init<double,double,double,GSParams>())
+            .def("getDelta", &SBSecondKick::getDelta)
+            .def("structureFunction", &SBSecondKick::structureFunction)
+            ;
     }
 
 } // namespace galsim

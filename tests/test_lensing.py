@@ -21,15 +21,11 @@ import numpy as np
 import math
 import os
 import sys
+import warnings
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 refdir = os.path.join(".", "lensing_reference_data") # Directory containing the reference
 
@@ -670,6 +666,25 @@ def test_shear_get():
     np.testing.assert_almost_equal(mu.flatten(), test_mu_2, 9,
                                    err_msg="Magnifications from grid and getLensing disagree!")
 
+    # Test single position versions
+    np.testing.assert_almost_equal(my_ps.getShear((x[0,0], y[0,0])), (g1_r[0,0], g2_r[0,0]))
+    np.testing.assert_almost_equal(my_ps.getShear((x[0,0], y[0,0]), reduced=False),
+                                   (g1[0,0], g2[0,0]))
+    np.testing.assert_almost_equal(my_ps.getConvergence((x[0,0], y[0,0])), kappa[0,0])
+    np.testing.assert_almost_equal(my_ps.getMagnification((x[0,0], y[0,0])), mu[0,0])
+    np.testing.assert_almost_equal(my_ps.getLensing((x[0,0], y[0,0])),
+                                   (g1_r[0,0], g2_r[0,0], mu[0,0]))
+
+    # Test outside of bounds
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        np.testing.assert_almost_equal(my_ps.getShear((5000,5000)), (0,0))
+        np.testing.assert_almost_equal(my_ps.getShear((5000,5000), reduced=False), (0,0))
+        np.testing.assert_almost_equal(my_ps.getConvergence((5000,5000)), 0)
+        np.testing.assert_almost_equal(my_ps.getMagnification((5000,5000)), 1)
+        np.testing.assert_almost_equal(my_ps.getLensing((5000,5000)), (0,0,1))
+
+
 
 @timer
 def test_shear_units():
@@ -678,22 +693,23 @@ def test_shear_units():
 
     grid_size = 10. # degrees
     ngrid = 100
+    grid_spacing = 3600. * grid_size / ngrid
 
     # Define a PS with some normalization value P(k=1/arcsec)=1 arcsec^2.
     # For this case we are getting the shears using units of arcsec for everything.
     ps = galsim.PowerSpectrum(lambda k : k)
-    g1, g2 = ps.buildGrid(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
+    g1, g2 = ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
                           rng = galsim.BaseDeviate(rand_seed))
     # The above was done with all inputs given in arcsec.  Now, redo it, inputting the PS
     # information in degrees and the grid info in arcsec.
     # We know that if k=1/arcsec, then when expressed as 1/degrees, it is
     # k=3600/degree.  So define the PS as P(k=3600/degree)=(1/3600.)^2 degree^2.
     ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units=galsim.degrees)
-    g1_2, g2_2 = ps.buildGrid(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
+    g1_2, g2_2 = ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
                               rng=galsim.BaseDeviate(rand_seed))
     # Finally redo it, inputting the PS and grid info in degrees.
     ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units='degrees')
-    g1_3, g2_3 = ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
+    g1_3, g2_3 = ps.buildGrid(grid_spacing=grid_spacing/3600., ngrid=ngrid,
                               units='degrees', rng=galsim.BaseDeviate(rand_seed))
 
     # Since same random seed was used, require complete equality of shears, which would show that
@@ -707,6 +723,23 @@ def test_shear_units():
     np.testing.assert_array_almost_equal(g2, g2_3, decimal=9,
                                          err_msg='Incorrect unit handling in lensing engine')
 
+    # Can also change the units in the getShear function
+    origin = galsim.PositionD(-grid_size/2. * 3600. + grid_spacing/2.,
+                              -grid_size/2. * 3600. + grid_spacing/2.)
+    g1_4, g2_4 = ps.getShear(origin, reduced=False)
+    np.testing.assert_almost_equal(g1_4, g1[0,0], decimal=12)
+    np.testing.assert_almost_equal(g2_4, g2[0,0], decimal=12)
+
+    origin /= 3600.
+    g1_5, g2_5 = ps.getShear(origin, reduced=False, units=galsim.degrees)
+    np.testing.assert_almost_equal(g1_5, g1[0,0], decimal=12)
+    np.testing.assert_almost_equal(g2_5, g2[0,0], decimal=12)
+
+    origin *= 60.
+    g1_6, g2_6 = ps.getShear(origin, reduced=False, units='arcmin')
+    np.testing.assert_almost_equal(g1_6, g1[0,0], decimal=12)
+    np.testing.assert_almost_equal(g2_6, g2[0,0], decimal=12)
+
     # Check ne
     ps = galsim.PowerSpectrum('k', 'k**2', False, 'arcsec')
     assert ps == galsim.PowerSpectrum(e_power_function='k', b_power_function='k**2')
@@ -718,7 +751,6 @@ def test_shear_units():
                     galsim.PowerSpectrum('k', 'k**2', True, 'arcsec'),
                     galsim.PowerSpectrum('k', 'k**2', False, 'arcmin')]
     all_obj_diff(diff_ps_list)
-
 
 @timer
 def test_tabulated():
@@ -792,22 +824,18 @@ def test_tabulated():
 
     # check for appropriate response to inputs when making/using LookupTable
     ## mistaken interpolant choice
-    with assert_raises(ValueError):
-        galsim.LookupTable(k_arr, p_arr, interpolant='splin')
+    assert_raises(ValueError, galsim.LookupTable, k_arr, p_arr, interpolant='splin')
     ## k, P arrays not the same size
-    with assert_raises(ValueError):
-        galsim.LookupTable(0.01*np.arange(100.), p_arr)
+    assert_raises(ValueError, galsim.LookupTable, 0.01*np.arange(100.), p_arr)
     ## arrays too small
-    with assert_raises(ValueError):
-        galsim.LookupTable((1.,2.), (1., 2.))
+    assert_raises(ValueError, galsim.LookupTable, (1.,2.), (1., 2.))
     ## try to make shears, but grid includes k values that were not part of the originally
     ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
     ## exception should be raised)
     t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
     limited_ps = galsim.PowerSpectrum(t)
     do_pickle(limited_ps)
-    with assert_raises(RuntimeError):
-        limited_ps.buildGrid(grid_spacing=1.7, ngrid=100)
+    assert_raises(ValueError, limited_ps.buildGrid, grid_spacing=1.7, ngrid=100)
 
     ## try to interpolate in log, but with zero values included
     assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), x_log=True)
@@ -1062,6 +1090,11 @@ def test_corr_func():
     np.testing.assert_allclose(test_xip, theory_xip, rtol=1.e-5,
                                err_msg='Integrated xi+ differs from reference values')
 
+    # Repeat with different units
+    t, test_xip2, _ = ps.calculateXi(grid_spacing=grid_spacing/3600, ngrid=ngrid, n_theta=n_theta,
+                                     bandlimit='hard', units='deg')
+    np.testing.assert_array_almost_equal(test_xip2, test_xip, decimal=12)
+
     # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
     # engine output:
     #    xi-(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_4(kr) k dk
@@ -1083,12 +1116,12 @@ def test_corr_func():
     # zero: (k+1e-12)^{-4} instead of k^{-4}
     ps = galsim.PowerSpectrum(lambda k : (k+1.e-12)**(-4))
     t, _, test_xim = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
-                                    bandlimit='hard')
+                                           bandlimit='hard')
     # Now we have to calculate the theoretical values.
     theory_xim = np.zeros_like(t)
     for ind in range(len(theory_xim)):
-        theory_xim[ind] = \
-            galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 - galsim.bessel.jn(3,t[ind]*kmax)/kmax**3
+        theory_xim[ind] = (galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 -
+                           galsim.bessel.jn(3,t[ind]*kmax)/kmax**3)
     theory_xim /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
     np.testing.assert_allclose(test_xim, theory_xim, rtol=1.e-5,
@@ -1125,6 +1158,11 @@ def test_corr_func():
                                      bandlimit='hard')
     np.testing.assert_allclose(eb_xim/theory_xim, 0., atol=1.e-5,
                                err_msg='E+B xi- differs from reference values')
+
+    # Repeat with different units
+    t, _, test_xim2 = ps.calculateXi(grid_spacing=grid_spacing/3600, ngrid=ngrid, n_theta=n_theta,
+                                     bandlimit='hard', units='deg')
+    np.testing.assert_array_almost_equal(test_xim2, test_xim, decimal=12)
 
 
 

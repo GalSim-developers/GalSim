@@ -53,8 +53,6 @@ def test_init():
                 print('   stepk, maxk = ',sk.stepk, sk.maxk)
                 np.testing.assert_almost_equal(sk.flux, 2.2)
                 do_pickle(sk)
-                do_pickle(sk._sbs)
-                do_pickle(sk._sbs, lambda x: (x.getFlux(), x.getGSParams()))
                 t2 = time.time()
 
                 # Raw sk objects are hard to draw due to a large maxk/stepk ratio.
@@ -197,17 +195,17 @@ def test_sk_scale():
     np.testing.assert_almost_equal(sk_arcsec.kValue(0.0, 0.0), sk_arcmin.kValue(0.0, 0.0))
     np.testing.assert_almost_equal(sk_arcsec.kValue(0.0, 1.0), sk_arcmin.kValue(0.0, 60.0))
     np.testing.assert_almost_equal(sk_arcsec.kValue(0.0, 10.0), sk_arcmin.kValue(0.0, 600.0))
-    np.testing.assert_almost_equal(sk_arcsec._sbs.xValue(galsim.PositionD(0.0, 6.0)),
-                                   sk_arcmin._sbs.xValue(galsim.PositionD(0.0, 0.1))/60**2,
+    np.testing.assert_almost_equal(sk_arcsec._sbs.xValue(galsim.PositionD(0.0, 6.0)._p),
+                                   sk_arcmin._sbs.xValue(galsim.PositionD(0.0, 0.1)._p)/60**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(sk_arcsec._sbs.xValue(galsim.PositionD(0.0, 0.6)),
-                                   sk_arcmin._sbs.xValue(galsim.PositionD(0.0, 0.01))/60**2,
+    np.testing.assert_almost_equal(sk_arcsec._sbs.xValue(galsim.PositionD(0.0, 0.6)._p),
+                                   sk_arcmin._sbs.xValue(galsim.PositionD(0.0, 0.01)._p)/60**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(sk_arcsec._sba.xValue(galsim.PositionD(0.0, 6.0)),
-                                   sk_arcmin._sba.xValue(galsim.PositionD(0.0, 0.1))/60**2,
+    np.testing.assert_almost_equal(sk_arcsec._sba.xValue(galsim.PositionD(0.0, 6.0)._p),
+                                   sk_arcmin._sba.xValue(galsim.PositionD(0.0, 0.1)._p)/60**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(sk_arcsec._sba.xValue(galsim.PositionD(0.0, 0.6)),
-                                   sk_arcmin._sba.xValue(galsim.PositionD(0.0, 0.01))/60**2,
+    np.testing.assert_almost_equal(sk_arcsec._sba.xValue(galsim.PositionD(0.0, 0.6)._p),
+                                   sk_arcmin._sba.xValue(galsim.PositionD(0.0, 0.01)._p)/60**2,
                                    decimal=5)
 
     if __name__ == '__main__':
