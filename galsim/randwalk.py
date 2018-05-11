@@ -74,8 +74,6 @@ class RandomWalk(GSObject):
         .npoints
         .input_half_light_radius
         .flux
-        .deltas
-            The list of galsim.DeltaFunction objects representing the points
         .points
             The array of x,y offsets used to create the point sources
 
@@ -119,26 +117,17 @@ class RandomWalk(GSObject):
         self._set_gaussian_rng()
         self._points = self._get_points()
 
-    @property
-    def deltas(self):
-        deltas = []
+    @lazy_property
+    def _sbp(self):
         fluxper=self._flux/self._npoints
-
-        for p in self._points:
-            with convert_cpp_errors():
+        deltas = []
+        with convert_cpp_errors():
+            for p in self._points:
                 d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
                 d = _galsim.SBTransform(d, 1.0, 0.0, 0.0, 1.0, _galsim.PositionD(p[0],p[1]), 1.0,
                                         self.gsparams._gsp)
-            deltas.append(d)
-        return deltas
-
-    # For backwards compatibility in case anyone referenced this attribute.
-    gaussians = deltas
-
-    @lazy_property
-    def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBAdd(self.deltas, self.gsparams._gsp)
+                deltas.append(d)
+            return _galsim.SBAdd(deltas, self.gsparams._gsp)
 
     @property
     def input_half_light_radius(self):

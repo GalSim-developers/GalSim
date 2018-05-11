@@ -42,7 +42,7 @@ def test_randwalk_defaults():
     assert rw.input_half_light_radius==hlr,\
         "expected hlr==%g, got %g" % (hlr, rw.input_half_light_radius)
 
-    nobj=len(rw.deltas)
+    nobj=len(rw.points)
     assert nobj == npoints,"expected %d objects, got %d" % (npoints, nobj)
 
     pts=rw.points
@@ -84,11 +84,9 @@ def test_randwalk_valid_inputs():
     assert rw.flux==flux,\
         "expected flux==%g, got %g" % (flux, rw.flux)
 
-    d=rw.deltas
-    nobj=len(d)
-    assert nobj == npoints==npoints,"expected %d objects, got %d" % (npoints, nobj)
-
     pts=rw.points
+    nobj=len(pts)
+    assert nobj == npoints==npoints,"expected %d objects, got %d" % (npoints, nobj)
     assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
 
 @timer
@@ -218,14 +216,13 @@ def test_randwalk_config():
     assert rw.input_half_light_radius==rwc.input_half_light_radius,\
         "expected hlr==%g, got %g" % (rw.input_half_light_radius, rw.input_half_light_radius)
 
-    nobj=len(rw.deltas)
-    nobjc=len(rwc.deltas)
+    nobj=len(rw.points)
+    nobjc=len(rwc.points)
     assert nobj==nobjc,"expected %d objects, got %d" % (nobj,nobjc)
 
     pts=rw.points
     ptsc=rwc.points
-    assert (pts.shape == ptsc.shape),\
-            "expected %s shape for points, got %s" % (pts.shape,ptsc.shape)
+    assert pts.shape == ptsc.shape, "expected %s shape for points, got %s" % (pts.shape,ptsc.shape)
 
 
 @timer
