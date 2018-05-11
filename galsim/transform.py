@@ -181,6 +181,14 @@ class Transformation(GSObject):
                                flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._original = self.original.withGSParams(gsparams)
+        return ret
+
     def __eq__(self, other):
         return (isinstance(other, Transformation) and
                 self.original == other.original and

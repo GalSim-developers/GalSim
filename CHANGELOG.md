@@ -63,14 +63,12 @@ API Changes
   aliases for galsim -f yaml and galsim -f json respectively. (#809f)
 - Removed lsst module, which depended on the LSST stack and had gotten quite
   out of sync and broken. (#964)
-
-
-Bug Fixes
----------
-=======
-- Removed the lsst module, which depended on the LSST stack and had gotten
-  quite out of sync and broken. (#964)
->>>>>>> Change default maximum_fft_size to 8192
+- Changed how gsparams work for objects that wrap other objects (e.g. Sum,
+  Convolution, etc.). Now if you specify a gsparams at that level, it is
+  propagated to all of the component objects.  If you do not specify one,
+  then the most restrictive combination of parameters from the components are
+  applied to all of them. This is how gsparams should have worked originally,
+  but it was not really possible in 1.x. (#968)
 
 
 Deprecated Features
@@ -92,3 +90,4 @@ New Features
   sure that the errors you wanted to catch are still being caught. (#755)
 - Changed the type of warnings raised by GalSim to GalSimWarning, which is
   a subclass of UserWarning. (#755)
+- Added the withGSParams() method for all GSObjects. (#968)

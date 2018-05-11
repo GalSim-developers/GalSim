@@ -67,6 +67,11 @@ def test_moffat():
 
     # Use non-unity values.
     moffat = galsim.Moffat(beta=3.7, flux=1.7, half_light_radius=2.3, trunc=8.2)
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    moffat2 = galsim.Moffat(beta=3.7, flux=1.7, half_light_radius=2.3, trunc=8.2, gsparams=gsp)
+    assert moffat2 != moffat
+    assert moffat2 == moffat.withGSParams(gsp)
+
     check_basic(moffat, "Moffat")
 
     # Test photon shooting.

@@ -1536,7 +1536,7 @@ class CovarianceSpectrum(object):
         PSF_eff_kimgs = np.empty((NSED, nk, nk), dtype=np.complex128)
         for i, sed in enumerate(self.SEDs):
             # Assume that PSF does not yet include pixel contribution, so add it in.
-            conv = Convolve(PSF, Pixel(wcs.scale)) * sed
+            conv = Convolve(PSF, Pixel(wcs.scale, gsparams=PSF.gsparams)) * sed
             PSF_eff_kimgs[i] = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk).array
         pkout = np.zeros((nk, nk), dtype=np.float64)
         for i in range(NSED):

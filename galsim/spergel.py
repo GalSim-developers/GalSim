@@ -197,7 +197,7 @@ class Spergel(GSObject):
     @property
     def _maxk(self):
         # (1+k^2)^(-1-nu) = maxk_threshold
-        return math.sqrt(self._gsparams.maxk_threshold ** (-1./(1.+self._nu)) - 1.0) / self._r0
+        return math.sqrt(self.gsparams.maxk_threshold ** (-1./(1.+self._nu)) - 1.0) / self._r0
 
     @property
     def _stepk(self):

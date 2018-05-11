@@ -56,6 +56,7 @@ import numpy as np
 import math
 
 from . import _galsim
+from .gsparams import GSParams
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
@@ -286,6 +287,7 @@ class GSObject(object):
     def flux(self):
         "The flux of the profile"
         return self._flux
+
     @property
     def gsparams(self):
         "A GSParams object that sets various parameters relevant for speed/accuracy trade-offs"
@@ -732,6 +734,19 @@ class GSObject(object):
         """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
         """
         raise NotImplementedError("%s does not implement kValue"%self.__class__.__name__)
+
+    def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
+              those component objects will also have their gsparams updated to the new value.
+        """
+        # Note to developers: objects that wrap other objects should override this in order
+        # to apply the new gsparams to the components.
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        return ret
 
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.

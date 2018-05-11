@@ -64,6 +64,11 @@ def test_exponential():
 
     # Use non-unity values.
     expon = galsim.Exponential(flux=1.7, scale_radius=0.91)
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    expon2 = galsim.Exponential(flux=1.7, scale_radius=0.91, gsparams=gsp)
+    assert expon2 != expon
+    assert expon2 == expon.withGSParams(gsp)
+
     check_basic(expon, "Exponential")
 
     # Test photon shooting.

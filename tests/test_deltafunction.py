@@ -45,6 +45,11 @@ def test_deltaFunction():
     check_basic(delta, "DeltaFunction")
     do_pickle(delta)
 
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    delta2 = galsim.DeltaFunction(flux=test_flux, gsparams=gsp)
+    assert delta2 != delta
+    assert delta2 == delta.withGSParams(gsp)
+
     # Test operations with no-ops on DeltaFunction
     delta_shr = delta.shear(g1=0.3, g2=0.1)
     np.testing.assert_almost_equal(delta_shr.flux, test_flux)
