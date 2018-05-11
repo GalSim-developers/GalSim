@@ -53,6 +53,11 @@ def test_init():
                 do_pickle(sk)
                 t2 = time.time()
 
+                gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+                sk2 = galsim.SecondKick(flux=2.2, gsparams=gsp, **kwargs)
+                assert sk2 != sk
+                assert sk2 == sk.withGSParams(gsp)
+
                 # Raw sk objects are hard to draw due to a large maxk/stepk ratio.
                 # Decrease maxk by convolving in a smallish Gaussian.
                 obj = galsim.Convolve(sk, galsim.Gaussian(fwhm=0.2))

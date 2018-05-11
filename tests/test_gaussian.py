@@ -75,6 +75,10 @@ def test_gaussian():
 
     # Use non-unity values.
     gauss = galsim.Gaussian(flux=1.7, sigma=2.3)
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    gauss2 = galsim.Gaussian(flux=1.7, sigma=2.3, gsparams=gsp)
+    assert gauss2 != gauss
+    assert gauss2 == gauss.withGSParams(gsp)
     check_basic(gauss, "Gaussian")
 
     # Test photon shooting.

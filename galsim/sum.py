@@ -96,11 +96,15 @@ class Sum(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Note: if `gsparams` is unspecified (or None), then the Sum instance inherits the same GSParams
-    as the first item in the list.  Also, note that parameters related to the Fourier-space
-    calculations must be set when initializing the individual GSObject instances that go into the
-    Sum, NOT when creating the Sum (at which point the accuracy and threshold parameters will simply
-    be ignored).
+    Note: if `gsparams` is unspecified (or None), then the Sum instance will use the most
+    restrictive combination of parameters from each of the component objects. Normally, this means
+    the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
+    parameters, the largest numerical value is used.  See GSParams.combine for details.
+
+    Furthermore, the gsparams used for the Sum (either given explicitly or derived from the
+    components) will be applied to each of the components.  It doesn't make much sense to apply
+    stricter-than-normal accuracy or threshold values to one component but not another in a Sum,
+    so this ensures that they all have consistent rendering behavior.
 
     Methods
     -------
@@ -144,7 +148,18 @@ class Sum(GSObject):
         for obj in args:
             if not isinstance(obj, GSObject):
                 raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
-        self._gsparams = GSParams.check(gsparams, self._obj_list[0].gsparams)
+
+        # Figure out what gsparams to use
+        if gsparams is None:
+            # If none is given, take the most restrictive combination from the obj_list.
+            self._gsparams = GSParams.combine([obj.gsparams for obj in args])
+        else:
+            # If something explicitly given, then use that.
+            self._gsparams = GSParams.check(gsparams)
+
+        # Apply gsparams to all in obj_list.
+        self._obj_list = [obj.withGSParams(self._gsparams) for obj in args]
+
 
     @property
     def obj_list(self): return self._obj_list
@@ -173,6 +188,14 @@ class Sum(GSObject):
                 else:
                     _noise += obj.noise
         return _noise
+
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+        return ret
 
     def __eq__(self, other):
         return (isinstance(other, Sum) and

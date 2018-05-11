@@ -64,6 +64,11 @@ def test_kolmogorov():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with GSParams() disagrees with expected result")
 
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    kolm2 = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=gsp)
+    assert kolm2 != kolm
+    assert kolm2 == kolm.withGSParams(gsp)
+
     check_basic(kolm, "Kolmogorov")
 
     # Test photon shooting.

@@ -60,6 +60,10 @@ def test_box():
 
     # Use non-unity values.
     pixel = galsim.Pixel(flux=1.7, scale=2.3)
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    pixel2 = galsim.Pixel(flux=1.7, scale=2.3, gsparams=gsp)
+    assert pixel2 != pixel
+    assert pixel2 == pixel.withGSParams(gsp)
 
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
@@ -98,6 +102,11 @@ def test_box():
         np.testing.assert_array_equal(
                 box.height, height,
                 err_msg="Box height returned wrong value")
+
+        gsp2 = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+        box2 = galsim.Box(width=width, height=height, flux=test_flux, gsparams=gsp2)
+        assert box2 != box
+        assert box2 == box.withGSParams(gsp2)
 
     # Check picklability
     do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
@@ -166,6 +175,10 @@ def test_tophat():
 
     # Use non-unity values.
     tophat = galsim.TopHat(flux=1.7, radius=2.3)
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    tophat2 = galsim.TopHat(flux=1.7, radius=2.3, gsparams=gsp)
+    assert tophat2 != tophat
+    assert tophat2 == tophat.withGSParams(gsp)
 
     # Test photon shooting.
     do_shoot(tophat,myImg,"TopHat")

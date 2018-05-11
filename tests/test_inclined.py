@@ -131,6 +131,13 @@ def test_regression():
             # Now make a test image
             test_profile = get_prof(mode, inc_angle * galsim.radians, scale_radius,
                                     scale_height, flux=flux)
+
+            gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+            test2 = get_prof(mode, inc_angle * galsim.radians, scale_radius, scale_height,
+                             flux=flux, gsparams=gsp)
+            assert test2 != test_profile
+            assert test2 == test_profile.withGSParams(gsp)
+
             check_basic(test_profile, mode)
 
             # Rotate it by the position angle

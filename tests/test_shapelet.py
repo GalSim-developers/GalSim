@@ -91,6 +91,11 @@ def test_shapelet_drawImage():
             print('shapelet vector = ',bvec)
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
+            gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+            shapelet2 = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec, gsparams=gsp)
+            assert shapelet2 != shapelet
+            assert shapelet2 == shapelet.withGSParams(gsp)
+
             check_basic(shapelet, "Shapelet", approx_maxsb=True)
 
             # Test normalization  (This is normally part of do_shoot.  When we eventually

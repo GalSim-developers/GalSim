@@ -102,11 +102,15 @@ class Convolution(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same
-    GSParams as the first item in the list.  Also, note that parameters related to the Fourier-
-    space calculations must be set when initializing the individual GSObjects that go into the
-    Convolution, NOT when creating the Convolution (at which point the accuracy and threshold
-    parameters will simply be ignored).
+    Note: if `gsparams` is unspecified (or None), then the Convolution instance will use the most
+    restrictive combination of parameters from each of the component objects. Normally, this means
+    the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
+    parameters, the largest numerical value is used.  See GSParams.combine for details.
+
+    Furthermore, the gsparams used for the Convolution (either given explicitly or derived from the
+    components) will be applied to each of the components.  It doesn't make much sense to apply
+    stricter-than-normal accuracy or threshold values to one component but not another in a
+    Convolution, so this ensures that they all have consistent rendering behavior.
 
     Methods
     -------
@@ -187,8 +191,17 @@ class Convolution(GSObject):
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
         self._real_space = bool(real_space)
-        self._obj_list = args
-        self._gsparams = GSParams.check(gsparams, self._obj_list[0].gsparams)
+
+        # Figure out what gsparams to use
+        if gsparams is None:
+            # If none is given, take the most restrictive combination from the obj_list.
+            self._gsparams = GSParams.combine([obj.gsparams for obj in args])
+        else:
+            # If something explicitly given, then use that.
+            self._gsparams = GSParams.check(gsparams)
+
+        # Apply gsparams to all in obj_list.
+        self._obj_list = [obj.withGSParams(self._gsparams) for obj in args]
 
     @property
     def obj_list(self): return self._obj_list
@@ -221,6 +234,14 @@ class Convolution(GSObject):
                 else:
                     _noise = _noise.convolvedWith(Convolve(others))
         return _noise
+
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+        return ret
 
     def __eq__(self, other):
         return (isinstance(other, Convolution) and
@@ -473,6 +494,14 @@ class Deconvolution(GSObject):
             galsim_warn("Unable to propagate noise in galsim.Deconvolution")
         return None
 
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        return ret
+
     def __eq__(self, other):
         return (isinstance(other, Deconvolution) and
                 self.orig_obj == other.orig_obj and
@@ -665,6 +694,14 @@ class AutoConvolution(Convolution):
             galsim_warn("Unable to propagate noise in galsim.AutoConvolution")
         return None
 
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        return ret
+
     def __eq__(self, other):
         return (isinstance(other, AutoConvolution) and
                 self.orig_obj == other.orig_obj and
@@ -800,6 +837,14 @@ class AutoCorrelation(Convolution):
         if self.orig_obj.noise is not None:
             galsim_warn("Unable to propagate noise in galsim.AutoCorrelation")
         return None
+
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        return ret
 
     def __eq__(self, other):
         return (isinstance(other, AutoCorrelation) and

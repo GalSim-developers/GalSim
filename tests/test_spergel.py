@@ -55,6 +55,11 @@ def test_spergel():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Spergel disagrees with expected result")
 
+        gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+        spergel2 = galsim.Spergel(nu=nu, half_light_radius=1.0, gsparams=gsp)
+        assert spergel2 != spergel
+        assert spergel2 == spergel.withGSParams(gsp)
+
         # nu < 0 has inf for xValue(0,0), so the x tests fail for them.
         check_basic(spergel, "Spergel with nu=%f"%nu, do_x=(nu > 0))
 
