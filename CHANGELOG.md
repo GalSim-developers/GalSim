@@ -3,7 +3,8 @@ Changes from v1.6 to v2.0
 
 The principal change in GalSim 2.0 is that it is now pip installable.
 See the updated INSTALL file for details on how to install GalSim using
-either pip or setup.py.
+either pip or setup.py.  The functionality is essentially equivalent to
+v1.6, although there are a few (mostly minor) API changes in some classes.
 
 Dependency Changes
 ------------------
@@ -30,6 +31,9 @@ Dependency Changes
 API Changes
 -----------
 
+- Changed the default maximum_fft_size in GSParams to 8192 from 4096.  This
+  increases the potential memory used by an FFT when drawing an object with
+  an FFT from 256 MB to 1 GB. (#755)
 - Changed the order of arguments of galsim.wfirst.allDetectorEffects. (#755)
 - Most of the functionality associated with C++-layer objects has been
   redesigned or removed.  These were non-public-API features, so if you have
@@ -86,6 +90,3 @@ New Features
   parameters outside of allowed ranges. (#755)
 - Changed the type of warnings raised by GalSim to GalSimWarning, which is
   a subclass of UserWarning. (#755)
-- Changed the default maximum_fft_size in GSParams to 8192 from 4096.  This
-  increases the potential memory used by an FFT when drawing an object with
-  an FFT from 256 MB to 1 GB. (#755)
