@@ -244,19 +244,7 @@ class Aperture(object):
             raise GalSimIncompatibleValuesError(
                 "Wavelength `lam` must be specified with `screen_list`.",
                 screen_list=screen_list, lam=lam)
-
-        # Although the user can set the pupil plane size and scale directly if desired, in most
-        # cases it's nicer to have GalSim try to pick good values for these.
-
-        # For the pupil plane size, we'll achieve Nyquist sampling in the focal plane if we sample
-        # out to twice the diameter of the actual aperture in the pupil plane (completely
-        # independent of wavelength, struts, obscurations, GSparams, and so on!).  This corresponds
-        # to oversampling=1.0.  In fact, if we were willing to always use sinc interpolation, there
-        # would never be any reason to go beyond this.  In practice, we usually use a faster, but
-        # less accurate, quintic interpolant, which means we can benefit from improved sampling
-        # (oversampling > 1.0) in some cases, especially when we're *not* modeling an atmosphere
-        # which would otherwise tend to damp contributions at large k.
-        good_pupil_size = 2 * diam * oversampling
+        self._oversampling = oversampling
 
         # For the pupil plane sampling interval, details like the obscuration and GSParams *are*
         # important as they affect the amount of aliasing encountered.  (An Airy profile has an
@@ -285,7 +273,7 @@ class Aperture(object):
         # array.
         if pupil_plane_im is not None:  # Use image of pupil plane
             self._load_pupil_plane(pupil_plane_im, pupil_angle, pupil_plane_scale,
-                                   good_pupil_scale, good_pupil_size)
+                                   good_pupil_scale)
         else:  # Use geometric parameters.
             if pupil_plane_scale is not None:
                 # Check input scale and warn if looks suspicious.
@@ -299,17 +287,32 @@ class Aperture(object):
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
                 # Check input size and warn if looks suspicious
-                if pupil_plane_size < good_pupil_size:
-                    ratio = good_pupil_size / pupil_plane_size
+                if pupil_plane_size < self.good_pupil_size:
+                    ratio = self.good_pupil_size / pupil_plane_size
                     galsim_warn("Input pupil_plane_size may be too small for good focal-plane"
                                 "sampling.\n"
                                 "Consider increasing pupil_plane_size by a factor %f, and/or "
                                 "check PhaseScreenPSF outputs for signs of undersampling."%ratio)
             else:
-                pupil_plane_size = good_pupil_size
+                pupil_plane_size = self.good_pupil_size
             self._generate_pupil_plane(circular_pupil,
                                        nstruts, strut_thick, strut_angle,
                                        pupil_plane_scale, pupil_plane_size)
+    @property
+    def good_pupil_size(self):
+        # Although the user can set the pupil plane size and scale directly if desired, in most
+        # cases it's nicer to have GalSim try to pick good values for these.
+
+        # For the pupil plane size, we'll achieve Nyquist sampling in the focal plane if we sample
+        # out to twice the diameter of the actual aperture in the pupil plane (completely
+        # independent of wavelength, struts, obscurations, GSparams, and so on!).  This corresponds
+        # to oversampling=1.0.  In fact, if we were willing to always use sinc interpolation, there
+        # would never be any reason to go beyond this.  In practice, we usually use a faster, but
+        # less accurate, quintic interpolant, which means we can benefit from improved sampling
+        # (oversampling > 1.0) in some cases, especially when we're *not* modeling an atmosphere
+        # which would otherwise tend to damp contributions at large k.
+        return 2 * self.diam * self._oversampling
+
 
     def _generate_pupil_plane(self, circular_pupil, nstruts, strut_thick, strut_angle,
                               pupil_plane_scale, pupil_plane_size):
@@ -357,8 +360,7 @@ class Aperture(object):
                 rot_u, rot_v = rotate_xy(rot_u, rot_v, -rotang)
                 self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
-    def _load_pupil_plane(self, pupil_plane_im, pupil_angle, pupil_plane_scale, good_pupil_scale,
-                          good_pupil_size):
+    def _load_pupil_plane(self, pupil_plane_im, pupil_angle, pupil_plane_scale, good_pupil_scale):
         """ Create an array of illuminated pixels with appropriate size and scale from an input
         image of the pupil.  The basic strategy is:
 
@@ -416,9 +418,9 @@ class Aperture(object):
         self.pupil_plane_size = self.pupil_plane_scale * self.npix
 
         # Check the pupil plane size here and bump it up if necessary.
-        if self.pupil_plane_size < good_pupil_size:
+        if self.pupil_plane_size < self.good_pupil_size:
             new_npix = Image.good_fft_size(int(np.ceil(
-                    good_pupil_size/self.pupil_plane_scale)))
+                    self.good_pupil_size/self.pupil_plane_scale)))
             pad_width = (new_npix-self.npix)//2
             pp_arr = np.pad(pp_arr, [(pad_width, pad_width)]*2, mode='constant')
             self.npix = new_npix
