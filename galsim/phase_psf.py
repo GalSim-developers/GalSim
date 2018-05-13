@@ -1155,28 +1155,56 @@ class PhaseScreenPSF(GSObject):
         self._kcrit = kcrit
         # We'll set these more intelligently as needed below
         self._second_kick = second_kick
-
-        # Need to put in a placeholder SBProfile so that calls to stepk and maxk work
-        # without having to do _prepareDraw.
-        # All we really need is for the stepk and maxk to be correct, so use the
-        # force_ options to set them how we want.
-        if _force_stepk > 0.:
-            dummy_stepk = _force_stepk
-        else:
-            dummy_stepk = self._screen_list._getStepK(lam=self.lam, diam=self.aper.diam,
-                                                      obscuration=self.aper.obscuration,
-                                                      gsparams=self._gsparams)
-        if _force_maxk > 0.:
-            dummy_maxk = _force_maxk
-        else:
-            dummy_maxk = self.aper._getMaxK(self.lam, self.scale_unit)
-        dummy_image = _Image(np.array([[self._flux]], dtype=np.float),
-                             _BoundsI(1, 1, 1, 1), PixelScale(1.))
-        dummy_interpolant = 'delta'  # Use delta so it doesn't contribute to stepk
-        self._ii = InterpolatedImage(
-                dummy_image, pad_factor=1.0, x_interpolant=dummy_interpolant,
-                _force_stepk=dummy_stepk, _force_maxk=dummy_maxk)
         self._screen_list._delayCalculation(self)
+        self.finalized = False
+
+    @lazy_property
+    def _real_ii(self):
+        ii = InterpolatedImage(
+                self.img, x_interpolant=self.interpolant,
+                _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
+                pad_factor=self._ii_pad_factor,
+                use_true_center=False, gsparams=self._gsparams)
+
+        if not self._suppress_warning:
+            specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
+            observed_stepk = ii.stepk
+
+            if observed_stepk < specified_stepk:
+                galsim_warn(
+                    "The calculated stepk (%g) for PhaseScreenPSF is smaller than what was used "
+                    "to build the wavefront (%g). This could lead to aliasing problems. "
+                    "Increasing pad_factor is recommended."%(observed_stepk, specified_stepk))
+        return ii
+
+    @lazy_property
+    def _dummy_ii(self):
+        # If we need self._ii before we've done _prepareDraw, then build a placeholder that has
+        # roughly the right properties. All we really need is for the stepk and maxk to be
+        # correct, so use the force_ options to set them how we want.
+        if self._force_stepk > 0.:
+            stepk = self._force_stepk
+        else:
+            stepk = self._screen_list._getStepK(lam=self.lam, diam=self.aper.diam,
+                                                obscuration=self.aper.obscuration,
+                                                gsparams=self._gsparams)
+        if self._force_maxk > 0.:
+            maxk = self._force_maxk
+        else:
+            maxk = self.aper._getMaxK(self.lam, self.scale_unit)
+        image = _Image(np.array([[self._flux]], dtype=np.float),
+                             _BoundsI(1, 1, 1, 1), PixelScale(1.))
+        interpolant = 'delta'  # Use delta so it doesn't contribute to stepk
+        return InterpolatedImage(
+                image, pad_factor=1.0, x_interpolant=interpolant,
+                _force_stepk=stepk, _force_maxk=maxk)
+
+    @property
+    def _ii(self):
+        if self.finalized:
+            return self._real_ii
+        else:
+            return self._dummy_ii
 
     @property
     def kcrit(self):
@@ -1273,21 +1301,7 @@ class PhaseScreenPSF(GSObject):
         b = _BoundsI(1,self.aper.npix,1,self.aper.npix)
         self.img = _Image(self.img, b, PixelScale(self.scale))
 
-        self._ii = InterpolatedImage(
-                self.img, x_interpolant=self.interpolant,
-                _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
-                pad_factor=self._ii_pad_factor,
-                use_true_center=False, gsparams=self._gsparams)
-
-        if not self._suppress_warning:
-            specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
-            observed_stepk = self._ii.stepk
-
-            if observed_stepk < specified_stepk:
-                galsim_warn(
-                    "The calculated stepk (%g) for PhaseScreenPSF is smaller than what was used "
-                    "to build the wavefront (%g). This could lead to aliasing problems. "
-                    "Increasing pad_factor is recommended."%(observed_stepk, specified_stepk))
+        self.finalized = True
 
     @property
     def _sbp(self):
@@ -1299,17 +1313,12 @@ class PhaseScreenPSF(GSObject):
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
-        del d['_ii']
+        d.pop('_dummy_ii',None)
+        d.pop('_real_ii',None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._ii = InterpolatedImage(self.img, x_interpolant=self.interpolant,
-                                     use_true_center=False,
-                                     pad_factor=self._ii_pad_factor,
-                                     _force_stepk=self._force_stepk,
-                                     _force_maxk=self._force_maxk,
-                                     gsparams=self._gsparams)
 
     @property
     def _maxk(self):
