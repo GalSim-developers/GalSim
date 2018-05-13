@@ -461,12 +461,18 @@ def test_scale_unit():
 def test_stepk_maxk():
     """Test options to specify (or not) stepk and maxk.
     """
+    # Make a dummy Kolmogorov just in case this test is the first to do so.  Don't want the
+    # building of the KolmogorovInfo lookup table to mess up the timing test.
+    kolm = galsim.Kolmogorov(fwhm=2)
+    kolm._sbp
+
     import time
     aper = galsim.Aperture(diam=1.0)
     rng = galsim.BaseDeviate(123456)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
+
     t0 = time.time()
     stepk1 = psf.stepk
     maxk1 = psf.maxk
@@ -529,6 +535,7 @@ def test_stepk_maxk():
                                  _force_stepk=stepk2/3.5)
     with assert_warns(galsim.GalSimWarning):
         psf4._prepareDraw()
+        psf4._ii  # Don't need to actually draw it.  Just access this attribute.
 
     # Can suppress this warning if desired.
     psf5 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
