@@ -85,7 +85,7 @@ class InterpolationDataNoConfig:
         if angle is None:
             self.angle = 0.
         else:
-            self.angle = angle.rad() * 180. / np.pi
+            self.angle = angle.rad * 180. / np.pi
         if shift is None:
             self.shiftx = 0.
             self.shifty = 0.
@@ -207,7 +207,8 @@ def draw_sersic_images(narr, hlrarr, gobsarr, random_seed=None, nmin=0.3, nmax=4
         sersic_image = galsim.ImageD(image_size, image_size)
         sersic_image.scale = pixel_scale
         # Build the galaxy
-        galaxy = galsim.Sersic(n=n, half_light_radius=hlr)
+        galaxy = galsim.Sersic(n=n, half_light_radius=hlr,
+                               gsparams=galsim.GSParams(maximum_fft_size=8192))
         # Apply the ellipticity of the correct magnitude with a random rotation
         theta_rot = 2. * np.pi * u() # Random orientation
         galaxy = galaxy.shear(g1=gobs*np.cos(2.*theta_rot), g2=gobs*np.sin(2.*theta_rot))

@@ -8,5 +8,6 @@ test*out
 *.toc
 *.sh
 *.fls
+*.dat
 *.fdb_latexmk
 *.synctex.gz
