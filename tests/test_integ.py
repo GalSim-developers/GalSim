@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,16 +21,9 @@
 from __future__ import print_function
 import numpy as np
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    import os
-    import sys
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 test_sigma = 7.                   # test value of Gaussian sigma for integral tests
 test_rel_err = 1.e-7              # the relative accuracy at which to test

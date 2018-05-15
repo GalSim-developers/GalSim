@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,10 +20,10 @@
 #ifndef GalSim_GSParams_H
 #define GalSim_GSParams_H
 
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
 #include <cassert>
 #include <ostream>
+
+#include "Std.h"
 
 namespace galsim {
 
@@ -175,11 +175,12 @@ namespace galsim {
     struct GSParamsPtr
     {
         /**
-         * @brief Basically equivalent to boost::shared_ptr<GSParams>, but adds op<, so
+         * @brief Basically equivalent to shared_ptr<GSParams>, but adds op<, so
          * we can use it in stl containers.
          */
         GSParamsPtr(GSParams* p) : _p(p) {}
-        GSParamsPtr(boost::shared_ptr<GSParams> p) : _p(p) {}
+        GSParamsPtr(shared_ptr<GSParams> p) : _p(p) {}
+        GSParamsPtr(const GSParams& gsp) : _p(new GSParams(gsp)) {}
         GSParamsPtr() {}
         GSParamsPtr(const GSParamsPtr& rhs) : _p(rhs._p) {}
         GSParamsPtr& operator=(const GSParamsPtr& rhs) { _p = rhs._p; return *this; }
@@ -190,28 +191,22 @@ namespace galsim {
         GSParams* operator->() { assert(_p); return _p.get(); }
         const GSParams* operator->() const { assert(_p); return _p.get(); }
 
-        boost::shared_ptr<GSParams> getSharedPtr() { return _p; }
-        const boost::shared_ptr<GSParams> getSharedPtr() const { return _p; }
+        shared_ptr<GSParams> getSharedPtr() { return _p; }
+        const shared_ptr<GSParams> getSharedPtr() const { return _p; }
 
         const GSParams* get() const { return _p.get(); }
         GSParams* get() { return _p.get(); }
         operator bool() const { return _p.get(); }
-        const boost::shared_ptr<GSParams> getP() const { return _p; }
-        boost::shared_ptr<GSParams> getP() { return _p; }
+        const shared_ptr<GSParams> getP() const { return _p; }
+        shared_ptr<GSParams> getP() { return _p; }
 
         GSParamsPtr duplicate() const { return GSParamsPtr(new GSParams(*_p)); }
-
-        static const GSParamsPtr& getDefault()
-        {
-            static GSParamsPtr def(new GSParams());
-            return def;
-        }
 
         bool operator==(const GSParamsPtr& rhs) const { return *_p == *rhs; }
         bool operator<(const GSParamsPtr& rhs) const { return *_p < *rhs; }
 
     private :
-        boost::shared_ptr<GSParams> _p;
+        shared_ptr<GSParams> _p;
     };
 
 }

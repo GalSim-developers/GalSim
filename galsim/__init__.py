@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -53,7 +53,7 @@ Use the galsim tag to flag it as a question about GalSim.
 
 
 
-Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
 
 Redistribution and use in source and binary forms, with or without
@@ -76,13 +76,15 @@ software or any products related to or derived from the software, or for
 lost profits, business interruption, or indirect special or consequential
 damages of any kind.
 """
+import re
 
 # The version is stored in _version.py as recommended here:
 # http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
 # We don't use setup.py, so it's not so important to do it this way, but if we ever switch...
 # And it does make it a bit easier to get the version number in SCons too.
-from ._version import __version__, __version_info__
-
+from ._version import __version__
+vi = re.split('\.|-',__version__)
+__version_info__ = tuple([int(x) for x in vi if x.isdigit()])
 
 # Define the current code version, in addition to the hidden attribute, to be consistent with
 # previous GalSim versions that indicated the version number in this way.
@@ -91,10 +93,10 @@ version = __version__
 # Import things from other files we want to be in the galsim namespace
 
 # First some basic building blocks that don't usually depend on anything else
-from .position import PositionI, PositionD
-from .bounds import BoundsI, BoundsD, _BoundsI
+from .position import Position, PositionI, PositionD
+from .bounds import Bounds, BoundsI, BoundsD, _BoundsI, _BoundsD
 from .shear import Shear, _Shear
-from .angle import Angle, _Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec
+from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, arcsec
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
@@ -103,7 +105,7 @@ from .table import LookupTable, LookupTable2D
 from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image
 
 # PhotonArray
-from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles
+from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles, PhotonDCR
 
 # Noise
 from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
@@ -115,25 +117,34 @@ from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise,
 # GSObject
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
-from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
-from .real import RealGalaxy, RealGalaxyCatalog, simReal, ChromaticRealGalaxy
+from .gaussian import Gaussian
+from .moffat import Moffat
+from .airy import Airy
+from .kolmogorov import Kolmogorov
+from .box import Pixel, Box, TopHat
+from .exponential import Exponential
+from .sersic import Sersic, DeVaucouleurs
+from .spergel import Spergel
+from .deltafunction import DeltaFunction
+from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen, OpticalScreenField
 from .shapelet import Shapelet
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet
-from .inclinedexponential import InclinedExponential
-from .inclinedsersic import InclinedSersic
-from .interpolatedimage import Interpolant
-from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
-from .interpolatedimage import InterpolatedImage, InterpolatedKImage, _InterpolatedKImage
-from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
-from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
-from .compound import FourierSqrt, FourierSqrtProfile
-from .compound import RandomWalk
+from .inclined import InclinedExponential, InclinedSersic
+from .interpolant import Interpolant
+from .interpolant import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
+from .interpolatedimage import InterpolatedImage, _InterpolatedImage
+from .interpolatedimage import InterpolatedKImage, _InterpolatedKImage
+from .sum import Add, Sum
+from .convolve import Convolve, Convolution, Deconvolve, Deconvolution
+from .convolve import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
+from .fouriersqrt import FourierSqrt, FourierSqrtProfile
+from .randwalk import RandomWalk
 from .transform import Transform, Transformation, _Transform
 from .vonkarman import VonKarman
+from .second_kick import SecondKick
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
@@ -172,7 +183,7 @@ from . import hsm
 from . import dcr
 from . import meta_data
 from . import cdmodel
-from . import optics
 from . import utilities
 from . import fft
+from . import download_cosmos
 from . import zernike

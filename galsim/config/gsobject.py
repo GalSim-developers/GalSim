@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,11 +28,6 @@ import inspect
 # The keys will be the (string) names of the object types, and the values are the function
 # to call to build an object of that type.
 valid_gsobject_types = {}
-
-# A list of gsobject types that define a block of inter-related stamps.  This is only necessary
-# to support the deprecated Ring gsobject type.  Once that feature is fully removed, we can
-# remove this structure.
-block_gsobject_types = []
 
 class SkipThisObject(Exception):
     """
@@ -194,7 +189,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 def UpdateGSParams(gsparams, config, base):
     """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
-    opt = galsim.GSObject._gsparams
+    opt = galsim.GSObject._gsparams_opt
     kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
     # When we update gsparams, we don't want to corrupt the original, so we need to
     # make a copy first, then update with kwargs.
@@ -451,24 +446,7 @@ def _Shift(gsobject, config, key, base, logger):
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 
-def _GetMinimumBlock(config, base):
-    """Get the minimum number of objects that should be done on the same process for a
-    particular object configuration.
-
-    This function is only needed for backwards-compatibility support of gsobject type=Ring.
-
-    @param config       A dict with the configuration information.
-    @param base         The base dict of the configuration. [default: config]
-    """
-    type_name = config.get('type',None)
-    if type_name in block_gsobject_types: # pragma: no cover
-        num = galsim.config.ParseValue(config, 'num', base, int)[0]
-        return num
-    else:
-        return 1
-
-
-def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
+def RegisterObjectType(type_name, build_func, input_type=None):
     """Register an object type for use by the config apparatus.
 
     A few notes about the signature of the build functions:
@@ -496,19 +474,10 @@ def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
                             type here.  (If it uses more than one, this may be a list.)
                             [default: None]
     """
-    # Note: the _is_block parameter is an undocumented feature only needed to support the
-    # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
-    # parameter here.
     valid_gsobject_types[type_name] = build_func
-    if _is_block: # pragma: no cover
-        block_gsobject_types.append(type_name)
     if input_type is not None:
         from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):  # pragma: no cover
-            for key in input_type:
-                RegisterInputConnectedType(key, type_name)
-        else:
-            RegisterInputConnectedType(input_type, type_name)
+        RegisterInputConnectedType(input_type, type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

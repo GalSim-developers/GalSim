@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,6 +24,7 @@ import galsim
 import galsim.wfirst
 import numpy as np
 import os
+import coord
 
 # Basic WFIRST reference info, with lengths in mm.
 pixel_size_mm = 0.01
@@ -236,8 +237,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         # coordinate for the SCA center is `crval`, which goes into the WCS as CRVAL1, CRVAL2.
         u = -sca_xc_tp_f * cos_pa - sca_yc_tp_f * sin_pa
         v = -sca_xc_tp_f * sin_pa + sca_yc_tp_f * cos_pa
-        crval = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec),
-                                    projection='gnomonic')
+        crval = world_pos.deproject(u, v, projection='gnomonic')
         crval1 = crval.ra
         crval2 = crval.dec
         header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
@@ -249,8 +249,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         sca_tp_rot = pa_fpa + sca_rot[i_sca]*galsim.degrees
 
         # Go some reasonable distance from crval in the +y direction.  Say, 1 degree.
-        plus_y = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec + 3600),
-                                    projection='gnomonic')
+        plus_y = world_pos.deproject(u, v + 1*galsim.degrees, projection='gnomonic')
         # Find the angle between this point, crval and due north.
         north = galsim.CelestialCoord(0.*galsim.degrees, 90.*galsim.degrees)
         pa_sca = sca_tp_rot - crval.angleBetween(plus_y, north)
@@ -519,7 +518,7 @@ def allowedPos(world_pos, date):
              date.
     """
     # Find the Sun's location on the sky on this date.
-    lam = galsim.celestial._sun_position_ecliptic(date)
+    lam = coord.util.sun_position_ecliptic(date)
     sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
 
     # Find the angle between that and the supplied position
@@ -552,14 +551,15 @@ def bestPA(world_pos, date):
 
     # Find the location of the sun on this date.  +X_observatory points out into the sky, towards
     # world_pos, while +Z is in the plane of the sky pointing towards the sun as much as possible.
-    lam = galsim.celestial._sun_position_ecliptic(date)
+    lam = coord.util.sun_position_ecliptic(date)
     sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
     # Now we do a projection onto the sky centered at world_pos to find the (u, v) for the Sun.
-    sun_tp = world_pos.project(sun, 'gnomonic')
+    sun_tp_x, sun_tp_y = world_pos.project(sun, 'gnomonic')
+
     # We want to rotate around by 90 degrees to find the +Y obs direction.  Specifically, we want
     # (+X, +Y, +Z)_obs to form a right-handed coordinate system.
-    y_obs_tp = galsim.PositionD(-sun_tp.y, sun_tp.x)
-    y_obs = world_pos.deproject(y_obs_tp, 'gnomonic')
+    y_obs_tp_x, y_obs_tp_y = -sun_tp_y, sun_tp_x
+    y_obs = world_pos.deproject(y_obs_tp_x, y_obs_tp_y, 'gnomonic')
 
     # Finally the observatory position angle is defined by the angle between +Y_observatory and the
     # celestial north pole.  It is defined as position angle east of north.

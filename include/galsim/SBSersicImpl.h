@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -80,11 +80,10 @@ namespace galsim {
          * Sersic profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.
          *
-         * @param[in] N  Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
     private:
 
@@ -94,7 +93,7 @@ namespace galsim {
         // Input variables:
         double _n;       ///< Sersic index.
         double _trunc;   ///< Truncation radius `trunc` in units of r0.
-        const GSParamsPtr _gsparams; ///< The GSParams object.
+        GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
         double _invn;      ///< 1/n
@@ -111,7 +110,7 @@ namespace galsim {
         mutable double _flux;    ///< Flux relative to the untruncated profile.
 
         // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform.
+        mutable TableBuilder _ft;  ///< Lookup table for Fourier transform.
         mutable double _kderiv2; ///< Quadratic dependence of F near k=0.
         mutable double _kderiv4; ///< Quartic dependence of F near k=0.
         mutable double _ksq_min; ///< Minimum ksq to use lookup table.
@@ -120,8 +119,8 @@ namespace galsim {
         mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
 
         // Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<FluxDensity> _radial;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
         void buildFT() const;
@@ -132,9 +131,8 @@ namespace galsim {
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double size, RadiusType rType, double flux,
-                     double trunc, bool flux_untruncated,
-                     const GSParamsPtr& gsparams);
+        SBSersicImpl(double n, double scale_radius, double flux, double trunc,
+                     const GSParams& gsparams);
 
         ~SBSersicImpl() {}
 
@@ -147,20 +145,20 @@ namespace galsim {
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
+            if (_trunc==0.) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
             else { xmin = -_trunc; xmax = _trunc; }
         }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (_trunc==0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else { ymin = -_trunc; ymax = _trunc; }
         }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (_trunc==0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
             else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
 
@@ -168,7 +166,7 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return _truncated; }
+        bool hasHardEdges() const { return _trunc != 0.; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
@@ -180,7 +178,7 @@ namespace galsim {
         double maxSB() const { return _xnorm; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the Sersic index n
         double getN() const { return _n; }
@@ -217,7 +215,6 @@ namespace galsim {
         double _r0;      ///< Scale radius specified at the constructor.
         double _re;      ///< Half-light radius specified at the constructor.
         double _trunc;   ///< The truncation radius (if any)
-        bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
@@ -227,7 +224,7 @@ namespace galsim {
         double _inv_r0_sq;
         double _trunc_sq;
 
-        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
+        shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,
@@ -266,7 +263,7 @@ namespace galsim {
         SBSersicImpl(const SBSersicImpl& rhs);
         void operator=(const SBSersicImpl& rhs);
 
-        static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
+        static LRUCache<Tuple<double, double, GSParamsPtr>, SersicInfo> cache;
 
         friend class SBInclinedSersic;
         friend class SBInclinedSersic::SBInclinedSersicImpl;

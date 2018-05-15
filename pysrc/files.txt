@@ -1,5 +1,4 @@
 module.cpp
-Angle.cpp
 Bounds.cpp
 PhotonArray.cpp
 Image.cpp
@@ -23,13 +22,12 @@ SBSpergel.cpp
 SBInclinedExponential.cpp
 SBInclinedSersic.cpp
 SBVonKarman.cpp
+SBSecondKick.cpp
 Random.cpp
-Noise.cpp
 HSM.cpp
 Integ.cpp
 Table.cpp
 Interpolant.cpp
-CorrelatedNoise.cpp
 Bessel.cpp
 CDModel.cpp
 Silicon.cpp

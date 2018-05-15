@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -75,10 +75,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         # Update this in case the config value is -1
         nproc = galsim.config.UpdateNProc(nproc, nfiles, config, logger)
         # We'll want a pristine version later to give to the workers.
-        orig_config = galsim.config.CopyConfig(config)
     else:
         nproc = 1
-        orig_config = config
+    orig_config = galsim.config.CopyConfig(config)
 
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num, logger)

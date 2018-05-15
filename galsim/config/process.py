@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -831,6 +831,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
     @returns a list of the outputs from job_func for each job
     """
     import time
+    import traceback
 
     # The worker function will be run once in each process.
     # It pulls tasks off the task_queue, runs them, and puts the results onto the results_queue
@@ -871,7 +872,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                import traceback
                 tr = traceback.format_exc()
                 logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
                 results_queue.put( (e, k, tr, proc) )
@@ -932,45 +932,59 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             p.start()
             p_list.append(p)
 
-        # In the meanwhile, the main process keeps going.  We pull each set of images off of the
-        # results_queue and put them in the appropriate place in the lists.
-        # This loop is happening while the other processes are still working on their tasks.
-        results = [ None for k in range(njobs) ]
-        for kk in range(njobs):
-            res, k, t, proc = results_queue.get()
-            if isinstance(res,Exception):
-                # res is really the exception, e
-                # t is really the traceback
-                # k is the index for the job that failed
-                if except_func is not None:  # pragma: no branch
-                    except_func(logger, proc, k, res, t)
-                if except_abort or isinstance(res,KeyboardInterrupt):
-                    for j in range(nproc):
-                        p_list[j].terminate()
-                    del config['current_nproc']
-                    raise res
-            else:
-                # The normal case
-                if done_func is not None:  # pragma: no branch
-                    done_func(logger, proc, k, res, t)
-                results[k] = res
+        raise_error = None
 
-        # Stop the processes
-        # The 'STOP's could have been put on the task list before starting the processes, or you
-        # can wait.  In some cases it can be useful to clear out the results_queue (as we just did)
-        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
-        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
-        # This is important, because the program will keep running as long as there are running
-        # processes, even if the main process gets to the end.  So you do want to make sure to
-        # add those 'STOP's at some point!
-        for j in range(nproc):
-            task_queue.put('STOP')
-        for j in range(nproc):
-            p_list[j].join()
-        task_queue.close()
+        try:
+            # In the meanwhile, the main process keeps going.  We pull each set of images off of the
+            # results_queue and put them in the appropriate place in the lists.
+            # This loop is happening while the other processes are still working on their tasks.
+            results = [ None for k in range(njobs) ]
+            for kk in range(njobs):
+                res, k, t, proc = results_queue.get()
+                if isinstance(res, Exception):
+                    # res is really the exception, e
+                    # t is really the traceback
+                    # k is the index for the job that failed
+                    if except_func is not None:  # pragma: no branch
+                        except_func(logger, proc, k, res, t)
+                    if except_abort or isinstance(res, KeyboardInterrupt):
+                        for j in range(nproc):
+                            p_list[j].terminate()
+                        raise_error = res
+                        break
+                else:
+                    # The normal case
+                    if done_func is not None:  # pragma: no branch
+                        done_func(logger, proc, k, res, t)
+                    results[k] = res
 
-        # And clear this out, so we know that we're not multiprocessing anymore.
-        del config['current_nproc']
+        except Exception as e:  # pragma: no cover
+            logger.error("Caught a fatal exception during multiprocessing:\n%r",e)
+            logger.error("%s",traceback.format_exc())
+            # Clear any unclaimed jobs that are still in the queue
+            while not task_queue.empty():
+                task_queue.get()
+            # And terminate any jobs that might still be running.
+            for j in range(nproc):
+                p_list[j].terminate()
+            raise_error = e
+
+        finally:
+            # Stop the processes
+            # Once you are done with the processes, putting nproc 'STOP's will stop them all.
+            # This is important, because the program will keep running as long as there are running
+            # processes, even if the main process gets to the end.  So you do want to make sure to
+            # add those 'STOP's at some point!
+            for j in range(nproc):
+                task_queue.put('STOP')
+            for j in range(nproc):
+                p_list[j].join()
+            task_queue.close()
+
+            del config['current_nproc']
+
+        if raise_error is not None:
+            raise raise_error
 
     else : # nproc == 1
         results = [ None ] * njobs
@@ -988,11 +1002,10 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 except KeyboardInterrupt:
                     raise
                 except Exception as e:
-                    import traceback
                     tr = traceback.format_exc()
                     if except_func is not None: # pragma: no branch
                         except_func(logger, None, k, e, tr)
-                    if except_abort or isinstance(e,KeyboardInterrupt):
+                    if except_abort or isinstance(e, KeyboardInterrupt):
                         raise
 
     # If there are any failures, then there will still be some Nones in the results list.

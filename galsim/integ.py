@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -187,14 +187,6 @@ class SampleIntegrator(ImageIntegrator):
                             galsim.integ.trapzRule  --  Use the trapezoidal integration rule
     """
     def __init__(self, rule):
-        if rule == midpt:
-            from galsim.deprecated import depr
-            depr('galsim.integ.midpt', 1.5, 'galsim.integ.midptRule')
-            rule = midptRule
-        elif rule == np.trapz:
-            from galsim.deprecated import depr
-            depr('np.trapz', 1.5, 'galsim.integ.trapzRule')
-            rule = trapzRule
         self.rule = rule
 
     def calculateWaves(self, bandpass):
@@ -228,14 +220,6 @@ class ContinuousIntegrator(ImageIntegrator):
                         set to False in this case.  [default: True]
     """
     def __init__(self, rule, N=250, use_endpoints=True):
-        if rule == midpt:
-            from galsim.deprecated import depr
-            depr('galsim.integ.midpt', 1.5, 'galsim.integ.midptRule')
-            rule = midptRule
-        elif rule == np.trapz:
-            from galsim.deprecated import depr
-            depr('galsim.integ.trapz', 1.5, 'galsim.integ.trapzRule')
-            rule = trapzRule
         self.rule = rule
         self.N = N
         self.use_endpoints = use_endpoints

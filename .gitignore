@@ -1,6 +1,7 @@
 .sconf_temp
 .sconsign.dblite
 config.log
+tests.log
 *.so
 *.os
 *.pyc
@@ -14,10 +15,14 @@ docs/doxygen_example_output/*
 tests/nosetests.xml
 examples/output/*
 devutils/sizeof_SIFD
-gs.error
+gs_error.txt
 *junk*
 debug.out
 tmp*
 examples_bin
 *~
 .cache
+*.egg*
+build
+dist
+.pytest_cache

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -62,8 +62,6 @@ def test_vk(slow=False):
 
                     check_basic(vk, "VonKarman")
                     do_pickle(vk)
-                    do_pickle(vk._sbp)
-                    do_pickle(vk._sbp, lambda x: (x.getFlux(), x.getGSParams()))
 
                     img = galsim.Image(16, 16, scale=0.2)
                     if not do_delta:
@@ -137,7 +135,7 @@ def test_vk_ne():
 def test_vk_eq_kolm():
     lam = 500.0
     r0 = 0.2
-    L0 = 3e5  # Need to make this surprisingly large to make vk -> kolm.
+    L0 = 1e10  # Need to make this surprisingly large to make vk -> kolm.
     flux = 3.3
     kolm = galsim.Kolmogorov(lam=lam, r0=r0, flux=flux)
     vk = galsim.VonKarman(lam=lam, r0=r0, L0=L0, flux=flux)
@@ -146,7 +144,7 @@ def test_vk_eq_kolm():
 
     kolm_img = kolm.drawImage(nx=24, ny=24, scale=0.2)
     vk_img = vk.drawImage(nx=24, ny=24, scale=0.2)
-    np.testing.assert_allclose(kolm_img.array, vk_img.array, atol=flux*1e-5, rtol=0)
+    np.testing.assert_allclose(kolm_img.array, vk_img.array, atol=flux*4e-5, rtol=0)
 
 
 @timer

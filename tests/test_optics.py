@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,16 +21,10 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 testshape = (512, 512)  # shape of image arrays for all tests
@@ -92,6 +86,8 @@ def test_OpticalPSF_flux():
     do_pickle(optics_test)
     do_pickle(optics_test._psf)
     do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_basic(optics_test, "OpticalPSF")
+    assert optics_test._screens.r0_500_effective is None
 
 
 @timer
@@ -236,12 +232,18 @@ def test_OpticalPSF_aberrations_struts():
     # Make sure it doesn't have some weird error if strut_angle=0 (should be the easiest case, but
     # check anyway...)
     optics_2 = galsim.OpticalPSF(
-        lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=0.*galsim.degrees,
+        lod, obscuration=obscuration, nstruts=4, strut_thick=0.05, strut_angle=0.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
     myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
         err_msg="Optical PSF (with struts) disagrees with expected result")
+    # These are also the defaults for strut_thick and strut_angle
+    optics_3 = galsim.OpticalPSF(
+        lod, obscuration=obscuration, nstruts=4,
+        astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
+    assert optics_3 == optics_2
+    do_pickle(optics_3)
 
     # make sure it doesn't completely explode when asked to return a PSF with non-circular pupil and
     # non-zero obscuration
@@ -831,9 +833,9 @@ def test_geometric_shoot():
         np.testing.assert_allclose(
             shoot_moments.moments_centroid.y, fft_moments.moments_centroid.y, rtol=0, atol=0.025,
             err_msg="")
-        # 1% size tolerance
+        # 2% size tolerance
         np.testing.assert_allclose(
-            shoot_moments.moments_sigma, fft_moments.moments_sigma, rtol=0.01, atol=0,
+            shoot_moments.moments_sigma, fft_moments.moments_sigma, rtol=0.02, atol=0,
             err_msg="")
         # Not amazing ellipticity consistency at the moment.  0.01 tolerance.
         print(fft_moments.observed_shape)

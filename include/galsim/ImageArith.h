@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -43,7 +43,7 @@ namespace galsim {
      *  @brief Call a unary function on each pixel value
      */
     template <typename T, typename Op>
-    Op for_each_pixel(const BaseImage<T>& image, Op f)
+    void for_each_pixel_ref(const BaseImage<T>& image, Op& f)
     {
         const T* ptr = image.getData();
         if (ptr) {
@@ -59,14 +59,17 @@ namespace galsim {
                     for (int i=0; i<ncol; i++, ptr+=step) f(*ptr);
             }
         }
-        return f;
     }
+
+    template <typename T, typename Op>
+    void for_each_pixel(const BaseImage<T>& image, Op f)
+    { for_each_pixel_ref(image, f); }
 
     /**
      *  @brief Call a function of (value, i, j) on each pixel value
      */
     template <typename T, typename Op>
-    Op for_each_pixel_ij(const BaseImage<T>& image, Op f)
+    void for_each_pixel_ij_ref(const BaseImage<T>& image, Op& f)
     {
         const T* ptr = image.getData();
         if (ptr) {
@@ -84,14 +87,17 @@ namespace galsim {
                     for (int i=xmin; i<=xmax; i++, ptr+=step) f(*ptr,i,j);
             }
         }
-        return f;
     }
+
+    template <typename T, typename Op>
+    void for_each_pixel_ij(const BaseImage<T>& image, Op f)
+    { for_each_pixel_ij_ref(image, f); }
 
     /**
      *  @brief Replace image with a function of its pixel values.
      */
     template <typename T, typename Op>
-    Op transform_pixel(ImageView<T> image, Op f)
+    void transform_pixel_ref(ImageView<T> image, Op& f)
     {
         T* ptr = image.getData();
         if (ptr) {
@@ -107,14 +113,17 @@ namespace galsim {
                     for (int i=0; i<ncol; i++, ptr+=step) *ptr = f(*ptr);
             }
         }
-        return f;
     }
+
+    template <typename T, typename Op>
+    void transform_pixel(ImageView<T> image, Op f)
+    { transform_pixel_ref(image, f); }
 
     /**
      *  @brief Assign function of 2 images to 1st
      */
     template <typename T1, typename T2, typename Op>
-    Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2, Op f)
+    void transform_pixel_ref(ImageView<T1> image1, const BaseImage<T2>& image2, Op& f)
     {
         T1* ptr1 = image1.getData();
         if (ptr1) {
@@ -137,8 +146,11 @@ namespace galsim {
                     for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 = f(*ptr1,T1(*ptr2));
             }
         }
-        return f;
     }
+
+    template <typename T1, typename T2, typename Op>
+    void transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2, Op f)
+    { transform_pixel_ref(image1, image2, f); }
 
     // Some functionals that are useful for operating on images:
     template <typename T>
@@ -159,12 +171,39 @@ namespace galsim {
     };
 
     template <typename T, typename T2>
+    class AddConstant
+    {
+        const T2 _x;
+    public:
+        AddConstant(const T2 x) : _x(x) {}
+        inline T operator()(const T val) const { return T(_x + val); }
+    };
+
+    template <typename T, typename T2>
     class MultiplyConstant
     {
         const T2 _x;
     public:
         MultiplyConstant(const T2 x) : _x(x) {}
         inline T operator()(const T val) const { return T(_x * val); }
+    };
+
+    template <typename T, typename T2, bool is_int>
+    class DivideConstant // is_int=False
+    {
+        const T2 _invx;
+    public:
+        DivideConstant(const T2 x) : _invx(T2(1)/x) {}
+        inline T operator()(const T val) const { return T(val * _invx); }
+    };
+
+    template <typename T, typename T2>
+    class DivideConstant<T,T2,true>
+    {
+        const T2 _x;
+    public:
+        DivideConstant(const T2 x) : _x(x) {}
+        inline T operator()(const T val) const { return T(val / _x); }
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -237,7 +276,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<T> operator+=(ImageView<T> im, T x)
-    { transform_pixel(im, bind2nd(std::plus<T>(),x)); return im; }
+    { transform_pixel(im, AddConstant<T,T>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<T>& operator+=(ImageAlloc<T>& im, const T& x)
@@ -253,7 +292,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<CT> operator+=(ImageView<CT> im, T x)
-    { transform_pixel(im, bind2nd(std::plus<CT>(),x)); return im; }
+    { transform_pixel(im, AddConstant<CT,T>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<CT>& operator+=(ImageAlloc<CT>& im, const T& x)
@@ -269,7 +308,7 @@ namespace galsim {
     { return SumIX<T,T>(im,-x); }
 
     template <typename T>
-    inline ImageView<T> operator-=(ImageView<T> im, T x)
+    inline ImageView<T> operator-=(ImageView<T> im, const T& x)
     { im += T(-x); return im; }
 
     template <typename T>
@@ -315,7 +354,7 @@ namespace galsim {
     { return ProdIX<T,T>(im,x); }
 
     template <typename T>
-    inline ImageView<T> operator*=(ImageView<T> im, T x)
+    inline ImageView<T> operator*=(ImageView<T> im, const T& x)
     { transform_pixel(im, MultiplyConstant<T,T>(x)); return im; }
 
     template <typename T>
@@ -370,9 +409,10 @@ namespace galsim {
     inline QuotIX<T,T> operator/(const BaseImage<T>& im, T x)
     { return QuotIX<T,T>(im,x); }
 
+#define INT(T) std::numeric_limits<T>::is_integer
     template <typename T>
     inline ImageView<T> operator/=(ImageView<T> im, T x)
-    { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
+    { transform_pixel(im, DivideConstant<T,T,INT(T)>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<T>& operator/=(ImageAlloc<T>& im, const T& x)
@@ -384,7 +424,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<CT> operator/=(ImageView<CT> im, T x)
-    { transform_pixel(im, bind2nd(std::divides<CT>(),x)); return im; }
+    { transform_pixel(im, DivideConstant<CT,T,INT(T)>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<CT>& operator/=(ImageAlloc<CT>& im, const T& x)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,14 +22,9 @@ import os
 import sys
 import warnings
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # These positions will be used a few times below, so define them here.
 # One of the tests requires that the last pair are integers, so don't change that.
@@ -737,20 +732,20 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
         origin = galsim.PositionD(0,0)
         uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
         uv_pos2 = wcs.local(origin).toWorld(image_pos)
-        uv_pos3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
+        u3, v3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
         np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-1, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-1, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
 
         origin = galsim.PositionD(x0+0.5, y0-0.5)
         uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
         uv_pos2 = wcs.local(origin).toWorld(image_pos - origin)
-        uv_pos3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
+        u3, v3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
         np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-2, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-2, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
 
         # Test drawing the profile on an image with the given wcs
         ix0 = int(x0)
@@ -1380,15 +1375,10 @@ def test_radecfunction():
         wcs1 = galsim.UVFunction(ufunc, vfunc)
         for cenra, cendec in centers:
             center = galsim.CelestialCoord(cenra * galsim.degrees, cendec * galsim.degrees)
-            # Unit test the hms, dms parsers:
-            np.testing.assert_almost_equal(
-                galsim.Angle.from_hms(center.ra.hms()).wrap() / galsim.arcsec,
-                center.ra.wrap() / galsim.arcsec, digits, 'HMS parser error')
-            np.testing.assert_almost_equal(
-                galsim.Angle.from_dms(center.dec.dms()) / galsim.arcsec,
-                center.dec / galsim.arcsec, digits, 'DMS parser error')
 
-            radec_func = lambda x,y: center.deproject_rad(ufunc(x,y), vfunc(x,y))
+            scale = galsim.arcsec / galsim.radians
+            radec_func = lambda x,y: center.deproject_rad(ufunc(x,y)*scale, vfunc(x,y)*scale,
+                                                          projection='lambert')
             wcs2 = galsim.RaDecFunction(radec_func)
 
             # Also test with one that doesn't work with numpy arrays to test that the
@@ -1396,17 +1386,19 @@ def test_radecfunction():
             # try the numpy option first and do something else if it fails.
             # This also tests the alternate initialization using separate ra_func, dec_fun.
             ra_func = lambda x,y: center.deproject(
-                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).ra.rad
+                    ufunc(x,y)*galsim.arcsec, vfunc(x,y)*galsim.arcsec,
+                    projection='lambert').ra.rad
             dec_func = lambda x,y: center.deproject(
-                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec.rad
+                    ufunc(x,y)*galsim.arcsec, vfunc(x,y)*galsim.arcsec,
+                    projection='lambert').dec.rad
             wcs3 = galsim.RaDecFunction(ra_func, dec_func)
 
             # The pickle tests need to have a string for ra_func, dec_func, which is
             # a bit tough with the ufunc,vfunc stuff.  So do something simpler for that.
-            radec_str = '%r.deproject_rad(x,y)'%center
+            radec_str = '%r.deproject_rad(x*%f,y*%f,projection="lambert")'%(center,scale,scale)
             wcs4 = galsim.RaDecFunction(radec_str, origin=galsim.PositionD(17.,34.))
-            ra_str = '%r.deproject(galsim.PositionD(x,y)).ra.rad'%center
-            dec_str = '%r.deproject(galsim.PositionD(x,y)).dec.rad'%center
+            ra_str = '%r.deproject(x*galsim.arcsec,y*galsim.arcsec,projection="lambert").ra.rad'%center
+            dec_str = '%r.deproject(x*galsim.arcsec,y*galsim.arcsec,projection="lambert").dec.rad'%center
             wcs5 = galsim.RaDecFunction(ra_str, dec_str, origin=galsim.PositionD(-9.,-8.))
 
             # Check that distance, jacobian for some x,y positions match the UV values.
@@ -1415,20 +1407,23 @@ def test_radecfunction():
                 # First do some basic checks of project, deproject for the given (u,v)
                 u = ufunc(x,y)
                 v = vfunc(x,y)
-                coord = center.deproject(galsim.PositionD(u,v))
+                coord = center.deproject(u*galsim.arcsec, v*galsim.arcsec, projection='lambert')
                 ra, dec = radec_func(x,y)
                 np.testing.assert_almost_equal(ra, coord.ra.rad, 8,
                                                'rafunc produced wrong value')
                 np.testing.assert_almost_equal(dec, coord.dec.rad, 8,
                                                'decfunc produced wrong value')
-                pos = center.project(coord)
-                np.testing.assert_almost_equal(pos.x, u, digits, 'project x was inconsistent')
-                np.testing.assert_almost_equal(pos.y, v, digits, 'project y was inconsistent')
+                pos = center.project(coord, projection='lambert')
+                np.testing.assert_almost_equal(pos[0]/galsim.arcsec, u, digits,
+                                               'project x was inconsistent')
+                np.testing.assert_almost_equal(pos[1]/galsim.arcsec, v, digits,
+                                               'project y was inconsistent')
                 d1 = np.sqrt(u*u+v*v)
                 d2 = center.distanceTo(coord)
                 # The distances aren't expected to match.  Instead, for a Lambert projection,
                 # d1 should match the straight line distance through the sphere.
-                d2 = 2.*np.sin(d2/2) * galsim.radians / galsim.arcsec
+                import math
+                d2 = 2.*np.sin(d2/2.) * galsim.radians / galsim.arcsec
                 np.testing.assert_almost_equal(
                         d2, d1, digits, 'deprojected dist does not match expected value.')
 
@@ -1492,8 +1487,7 @@ def test_radecfunction():
                     angle = 180 * galsim.degrees - A - B
 
                     # Now we can use this angle to correct the jacobian from test_wcs.
-                    c = np.cos(angle)
-                    s = np.sin(angle)
+                    s,c = angle.sincos()
                     rot_dudx = c*jac2.dudx + s*jac2.dvdx
                     rot_dudy = c*jac2.dudy + s*jac2.dvdy
                     rot_dvdx = -s*jac2.dudx + c*jac2.dvdx

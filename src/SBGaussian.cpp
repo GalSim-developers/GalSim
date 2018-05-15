@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,7 @@
 
 #include "SBGaussian.h"
 #include "SBGaussianImpl.h"
+#include "math/Angle.h"
 #include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
@@ -36,8 +37,7 @@
 namespace galsim {
 
 
-    SBGaussian::SBGaussian(double sigma, double flux,
-                           const GSParamsPtr& gsparams) :
+    SBGaussian::SBGaussian(double sigma, double flux, const GSParams& gsparams) :
         SBProfile(new SBGaussianImpl(sigma, flux, gsparams)) {}
 
     SBGaussian::SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
@@ -55,12 +55,12 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBGaussian("<<getSigma()<<", "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux,
-                                               const GSParamsPtr& gsparams) :
+                                               const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _sigma(sigma), _sigma_sq(_sigma*_sigma),
         _inv_sigma(1./_sigma), _inv_sigma_sq(_inv_sigma*_inv_sigma)
@@ -68,12 +68,12 @@ namespace galsim {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // exp(-k^2*sigma^2/2) = kvalue_accuracy
-        _ksq_max = -2. * std::log(this->gsparams->kvalue_accuracy);
+        _ksq_max = -2. * std::log(this->gsparams.kvalue_accuracy);
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the exp.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 1/48 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 48., 1./3.);
+        _ksq_min = std::pow(this->gsparams.kvalue_accuracy * 48., 1./3.);
 
         _norm = _flux * _inv_sigma_sq / (2. * M_PI);
 
@@ -89,7 +89,7 @@ namespace galsim {
 
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBGaussian::SBGaussianImpl::maxK() const
-    { return sqrt(-2.*std::log(this->gsparams->maxk_threshold))*_inv_sigma; }
+    { return sqrt(-2.*std::log(this->gsparams.maxk_threshold))*_inv_sigma; }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
@@ -97,11 +97,11 @@ namespace galsim {
     {
         // int( exp(-r^2/2) r, r=0..R) = 1 - exp(-R^2/2)
         // exp(-R^2/2) = folding_threshold
-        double R = sqrt(-2.*std::log(this->gsparams->folding_threshold));
+        double R = sqrt(-2.*std::log(this->gsparams.folding_threshold));
         // Make sure it is at least 5 hlr
         // half-light radius = sqrt(2ln(2)) * sigma
         const double hlr = 1.177410022515475;
-        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
+        R = std::max(R,gsparams.stepk_minimum_hlr*hlr);
         return M_PI / (R*_sigma);
     }
 
@@ -284,35 +284,34 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<PhotonArray> SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const
+    void SBGaussian::SBGaussianImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Gaussian shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
 #ifdef USE_COS_SIN
-            double theta = 2.*M_PI*u();
-            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double theta = 2.*M_PI*ud();
+            double rsq = ud(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            math::sincos(theta, sint, cost);
             // Then map radius to the desired Gaussian with analytic transformation
             double rFactor = _sigma * std::sqrt( -2. * std::log(rsq));
-            result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
+                xu = 2.*ud()-1.;
+                yu = 2.*ud()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the desired Gaussian with analytic transformation
             double rFactor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
-            result->setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
 #endif
         }
-        dbg<<"Gaussian Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Gaussian Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

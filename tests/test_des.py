@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,17 +20,10 @@ from __future__ import print_function
 import numpy
 import os
 import sys
+
 import galsim
 import galsim.des
-
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-
 from galsim._pyfits import pyfits
 
 @timer

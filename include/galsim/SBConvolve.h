@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,7 +30,7 @@ namespace galsim {
     // Defined in RealSpaceConvolve.cpp
     double RealSpaceConvolve(
         const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
-        const GSParamsPtr& gsparams);
+        const GSParams& gsparams);
 
     /**
      * @brief Convolve SBProfiles.
@@ -77,8 +77,7 @@ namespace galsim {
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering, if different from the default.
          */
-        SBConvolve(const std::list<SBProfile>& slist, bool real_space,
-                   const GSParamsPtr& gsparams);
+        SBConvolve(const std::list<SBProfile>& slist, bool real_space, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBConvolve(const SBConvolve& rhs);
@@ -113,7 +112,7 @@ namespace galsim {
          * @param[in] real_space  Do convolution in real space?
          * @param[in] gsparams    GSParams to use, if different from the default.
          */
-        SBAutoConvolve(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+        SBAutoConvolve(const SBProfile& s, bool real_space, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBAutoConvolve(const SBAutoConvolve& rhs);
@@ -149,7 +148,7 @@ namespace galsim {
          * @param[in] real_space  Do convolution in real space?
          * @param[in] gsparams    GSParams to use, if different from the default.
          */
-        SBAutoCorrelate(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+        SBAutoCorrelate(const SBProfile& s, bool real_space, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBAutoCorrelate(const SBAutoCorrelate& rhs);

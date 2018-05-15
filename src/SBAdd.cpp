@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-    SBAdd::SBAdd(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams) :
+    SBAdd::SBAdd(const std::list<SBProfile>& slist, const GSParams& gsparams) :
         SBProfile(new SBAddImpl(slist,gsparams)) {}
 
     SBAdd::SBAdd(const SBAdd& rhs) : SBProfile(rhs) {}
@@ -52,13 +52,12 @@ namespace galsim {
         ConstIter sptr = _plist.begin();
         oss << sptr->serialize();
         for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
-        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        oss << "], galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
-    SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
-                                const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams)
+    SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist, const GSParams& gsparams) :
+        SBProfileImpl(gsparams)
     {
         for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
             add(*sptr);
@@ -223,15 +222,13 @@ namespace galsim {
         return result;
     }
 
-    boost::shared_ptr<PhotonArray> SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const
+    void SBAdd::SBAddImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Add shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         double fluxPerPhoton = totalAbsoluteFlux / N;
-
-        // Initialize the output array
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         double remainingAbsoluteFlux = totalAbsoluteFlux;
         int remainingN = N;
@@ -248,16 +245,17 @@ namespace galsim {
             ++nextPtr;
             if (nextPtr!=_plist.end()) {
                 // otherwise allocate a randomized fraction of the remaining photons to this summand:
-                BinomialDeviate bd(u, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux);
+                BinomialDeviate bd(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux);
                 thisN = bd();
             }
             if (thisN > 0) {
-                boost::shared_ptr<PhotonArray> thisPA = pptr->shoot(thisN, u);
+                PhotonArray thisPA(thisN);
+                pptr->shoot(thisPA, ud);
                 // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
                 // whereas the shoot() routine would have made them each nominally
                 // thisAbsoluteFlux/thisN
-                thisPA->scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
-                result->assignAt(istart, *thisPA);
+                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
+                photons.assignAt(istart, thisPA);
                 istart += thisN;
             }
             remainingN -= thisN;
@@ -266,12 +264,10 @@ namespace galsim {
             if (remainingAbsoluteFlux <= 0.) break;
         }
 
-        dbg<<"Add Realized flux = "<<result->getTotalFlux()<<std::endl;
+        dbg<<"Add Realized flux = "<<photons.getTotalFlux()<<std::endl;
 
         // This process produces correlated photons, so mark the resulting array as such.
-        if (_plist.size() > 1) result->setCorrelated();
-
-        return result;
+        if (_plist.size() > 1) photons.setCorrelated();
     }
 
 }

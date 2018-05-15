@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -51,20 +51,3 @@ def depr(f, v, s1, s2=None):
     if s2:
         s += '  ' + s2
     warnings.warn(s, GalSimDeprecationWarning)
-
-from . import angle
-from . import bandpass
-from . import base
-from . import bounds
-from . import chromatic
-from . import correlatednoise
-from . import gsobject_ring
-from . import image
-from . import interpolatedimage
-from . import noise
-from . import optics
-from . import random
-from . import sed
-from . import shapelet
-from . import shear
-from . import photon_array

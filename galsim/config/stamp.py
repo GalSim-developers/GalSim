@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -226,7 +226,8 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
     if isinstance(world_pos, galsim.CelestialCoord):
         # Then project this position relative to the image center.
         world_center = config.get('world_center', config['wcs'].toWorld(config['image_center']))
-        world_pos = world_center.project(world_pos, projection='gnomonic')
+        u, v = world_center.project(world_pos, projection='gnomonic')
+        world_pos = galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec)
 
     if image_pos is not None:
         # The image_pos refers to the location of the true center of the image, which is
@@ -351,7 +352,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             if not skip:
                 try :
                     psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
-                                                    logger=logger)[0]
+                                                      logger=logger)[0]
                     prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
                 except galsim.config.gsobject.SkipThisObject as e:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
@@ -892,16 +893,6 @@ class StampBuilder(object):
         if prof is None:
             return False
 
-        # Check that we aren't on a second or later item in a Ring.
-        # This check can be removed once we do not need to support the deprecated gsobject
-        # type=Ring.
-        if 'gal' in base:  # pragma: no cover
-            block_size = galsim.config.gsobject._GetMinimumBlock(base['gal'], base)
-            if base['obj_num'] % block_size != 0:
-                # Don't reject, since the first item passed.
-                # If we reject now, it will mess things up.
-                return False
-
         if 'reject' in config:
             if galsim.config.ParseValue(config, 'reject', base, bool)[0]:
                 logger.info('obj %d: reject evaluated to True',base['obj_num'])
@@ -992,15 +983,7 @@ class StampBuilder(object):
 
         @returns a list of tasks
         """
-        # For backwards compatibility with the old Ring gsobject type, we actually check for that
-        # here and make a list of tasks that work for that.  This is undocumented though, since the
-        # gsobject type=Ring is now deprecated.
-        block_size = 1
-        if 'gal' in base:
-            block_size = galsim.config.gsobject._GetMinimumBlock(base['gal'], base)
-        tasks = [ [ (jobs[j], j) for j in range(k,min(k+block_size,len(jobs))) ]
-                    for k in range(0, len(jobs), block_size) ]
-        return tasks
+        return [ [(job, k)] for k, job in enumerate(jobs) ]
 
 
 def RegisterStampType(stamp_type, builder):

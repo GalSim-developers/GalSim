@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,46 +18,45 @@
 #    and/or other materials provided with the distribution.
 #
 
-python=../bin/installed_python  # For python scripts
-bin=../bin  # For galsim executable
+python='/usr/bin/env python'
 
 /bin/rm -rf output
 /bin/rm -rf output_yaml
 
 time $python demo1.py || exit
-time $bin/galsim -v2 demo1.yaml || exit
+time galsim -v2 demo1.yaml || exit
 
 time $python demo2.py || exit
-time $bin/galsim -v2 demo2.yaml || exit
+time galsim -v2 demo2.yaml || exit
 
 time $python demo3.py || exit
-time $bin/galsim -v2 demo3.yaml || exit
+time galsim -v2 demo3.yaml || exit
 
 time $python demo4.py || exit
-time $bin/galsim -v2 demo4.yaml || exit
+time galsim -v2 demo4.yaml || exit
 
 time $python demo5.py || exit
-time $bin/galsim -v2 demo5.yaml || exit
+time galsim -v2 demo5.yaml || exit
 
 time $python demo6.py || exit
-time $bin/galsim -v2 demo6.yaml || exit
+time galsim -v2 demo6.yaml || exit
 
 time $python demo7.py || exit
-time $bin/galsim -v2 demo7.yaml || exit
+time galsim -v2 demo7.yaml || exit
 
 time $python demo8.py || exit
-time $bin/galsim -v2 demo8.yaml || exit
+time galsim -v2 demo8.yaml || exit
 
 time $python demo9.py || exit
-time $bin/galsim -v1 -n 3 -j 1 demo9.yaml || exit
-time $bin/galsim -v1 -n 3 -j 2 demo9.yaml || exit
-time $bin/galsim -v1 -n 3 -j 3 demo9.yaml || exit
+time galsim -v1 -n 3 -j 1 demo9.yaml || exit
+time galsim -v1 -n 3 -j 2 demo9.yaml || exit
+time galsim -v1 -n 3 -j 3 demo9.yaml || exit
 
 time $python demo10.py || exit
-time $bin/galsim -v2 demo10.yaml || exit
+time galsim -v2 demo10.yaml || exit
 
 time $python demo11.py || exit
-time $bin/galsim -v2 demo11.yaml || exit
+time galsim -v2 demo11.yaml || exit
 
 echo 'Checking diffs: (No output means success)'
 

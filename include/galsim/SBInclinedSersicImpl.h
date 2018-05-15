@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,9 +32,8 @@ namespace galsim {
     class SBInclinedSersic::SBInclinedSersicImpl : public SBProfileImpl
     {
     public:
-        SBInclinedSersicImpl(double n, Angle inclination, double size, RadiusType rType,
-                double height, HeightType hType, double flux,
-                double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
+        SBInclinedSersicImpl(double n, double inclination, double scale_radius,
+                double height, double flux, double trunc, const GSParams& gsparams);
 
         ~SBInclinedSersicImpl() {}
 
@@ -60,12 +59,12 @@ namespace galsim {
         double maxSB() const;
 
         /// @brief photon shooting is not yet implemented
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the Sersic index n
         double getN() const { return _n; }
         /// @brief Returns the inclination angle
-        Angle getInclination() const { return _inclination; }
+        double getInclination() const { return _inclination; }
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
@@ -89,13 +88,12 @@ namespace galsim {
 
     private:
         double _n;       ///< Sersic index.
-        Angle _inclination; ///< Inclination angle
+        double _inclination; ///< Inclination angle
         double _flux;    ///< Actual flux (may differ from that specified at the constructor).
         double _r0;      ///< Scale radius specified at the constructor.
         double _re;      ///< Half-light radius specified at the constructor.
         double _h0;          ///< Scale height specified at the constructor.
         double _trunc;   ///< The truncation radius (if any)
-        bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
 
@@ -112,7 +110,7 @@ namespace galsim {
         double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         double _stepk;   ///< Sampling in k space necessary to avoid folding.
 
-        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
+        shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
 
         void doFillKImage(ImageView<std::complex<double> > im,
                           double kx0, double dkx, int izero,

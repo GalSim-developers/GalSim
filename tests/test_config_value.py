@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,14 +22,8 @@ import os
 import sys
 import math
 
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 @timer
@@ -1299,7 +1293,7 @@ def test_pos_value():
     np.testing.assert_almost_equal(sum1.y, -0.3 + 0.2 + 0.0)
 
     radec = galsim.config.ParseValue(config,'radec',config, galsim.CelestialCoord)[0]
-    np.testing.assert_almost_equal(radec.ra / galsim.hours, 13.4 - 24) # wraps around to negative.
+    np.testing.assert_almost_equal(radec.ra / galsim.hours, 13.4)
     np.testing.assert_almost_equal(radec.dec / galsim.degrees, -0.3)
 
 

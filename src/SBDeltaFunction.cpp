@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-    SBDeltaFunction::SBDeltaFunction(double flux, const GSParamsPtr& gsparams) :
+    SBDeltaFunction::SBDeltaFunction(double flux, const GSParams& gsparams) :
         SBProfile(new SBDeltaFunctionImpl(flux, gsparams)) {}
 
     SBDeltaFunction::SBDeltaFunction(const SBDeltaFunction& rhs) : SBProfile(rhs) {}
@@ -36,14 +36,13 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBDeltaFunction("<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBDeltaFunction::SBDeltaFunctionImpl::SBDeltaFunctionImpl(double flux,
-                                               const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams),
-        _flux(flux)
+                                                              const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _flux(flux)
     {
         dbg<<"DeltaFunction:\n";
         dbg<<"_flux = "<<_flux<<std::endl;
@@ -80,18 +79,16 @@ namespace galsim {
         return result;
     }
 
-    boost::shared_ptr<PhotonArray> SBDeltaFunction::SBDeltaFunctionImpl::shoot(int N, UniformDeviate u) const
+    void SBDeltaFunction::SBDeltaFunctionImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Delta Function shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
-            result->setPhoton(i, 0.0, 0.0, fluxPerPhoton);
+            photons.setPhoton(i, 0.0, 0.0, fluxPerPhoton);
         }
-        dbg<<"Realized flux = "<<result->getTotalFlux()<<std::endl;
-
-        return result;
+        dbg<<"Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

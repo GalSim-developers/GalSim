@@ -13,12 +13,14 @@
 #ifndef BOOST_RANDOM_WEIBULL_DISTRIBUTION_HPP
 #define BOOST_RANDOM_WEIBULL_DISTRIBUTION_HPP
 
-#include "galsim/boost1_48_0/config/no_tr1/cmath.hpp"
 #include <iosfwd>
 #include <istream>
+#ifdef USE_BOOST
+#include <boost/config/no_tr1/cmath.hpp>
 #include <boost/config.hpp>
 #include <boost/limits.hpp>
-#include "galsim/boost1_48_0/random/detail/operators.hpp"
+#include <boost/random/detail/operators.hpp>
+#endif
 #include "galsim/boost1_48_0/random/uniform_01.hpp"
 
 namespace boost {
@@ -55,6 +57,7 @@ public:
         /** Returns the "b" parameter of the distribution. */
         RealType b() const { return _b; }
 
+#ifdef USE_BOOST
         /** Writes a @c param_type to a @c std::ostream. */
         BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, param_type, parm)
         { os << parm._a << ' ' << parm._b; return os; }
@@ -69,6 +72,7 @@ public:
         
         /** Returns true if the two sets of parameters are the different. */
         BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(param_type)
+#endif
 
     private:
         RealType _a;
@@ -136,6 +140,7 @@ public:
      */
     void reset() { }
 
+#ifdef USE_BOOST
     /** Writes a @c weibull_distribution to a @c std::ostream. */
     BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, weibull_distribution, wd)
     {
@@ -165,6 +170,7 @@ public:
      * return different sequences of values given equal generators.
      */
     BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(weibull_distribution)
+#endif
 
 private:
     RealType _a;

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -72,11 +72,10 @@ namespace galsim {
          * Airy profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
     protected:
         double _stepk; ///< Sampling in k space necessary to avoid folding
@@ -84,7 +83,7 @@ namespace galsim {
         virtual void checkSampler() const = 0;
 
         ///< Class that can sample radial distribution
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
 
     private:
         AiryInfo(const AiryInfo& rhs); ///< Hides the copy constructor.
@@ -134,14 +133,14 @@ namespace galsim {
             double _obscuration; ///< Central obstruction size
             double _obssq; ///< _obscuration*_obscuration
             double _norm; ///< Calculated value M_PI / (1-obs^2)
-            const GSParamsPtr _gsparams;
+            GSParamsPtr _gsparams;
         };
 
         double _obscuration; ///< Radius ratio of central obscuration.
         double _obssq; ///< _obscuration*_obscuration
 
         RadialFunction _radial;  ///< Class that embodies the radial Airy function.
-        const GSParamsPtr _gsparams;
+        GSParamsPtr _gsparams;
 
         /// Circle chord length at `h < r`.
         double chord(double r, double h, double rsq, double hsq) const;
@@ -158,7 +157,7 @@ namespace galsim {
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
     };
 
-    // The definition for obs -= 0
+    // The definition for obs == 0
     class AiryInfoNoObs : public AiryInfo
     {
     public:
@@ -177,12 +176,12 @@ namespace galsim {
             double operator()(double radius) const;
 
         private:
-            const GSParamsPtr _gsparams;
+            GSParamsPtr _gsparams;
         };
 
 
         RadialFunction _radial;  ///< Class that embodies the radial Airy function.
-        const GSParamsPtr _gsparams;
+        GSParamsPtr _gsparams;
 
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
     };
@@ -190,8 +189,7 @@ namespace galsim {
     class SBAiry::SBAiryImpl : public SBProfileImpl
     {
     public:
-        SBAiryImpl(double lam_over_D, double obs, double flux,
-                   const GSParamsPtr& gsparams);
+        SBAiryImpl(double lam_over_D, double obs, double flux, const GSParams& gsparams);
 
         ~SBAiryImpl() {}
 
@@ -217,11 +215,10 @@ namespace galsim {
         /**
          * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>
@@ -300,10 +297,10 @@ namespace galsim {
 
         /// Info object that stores things that are common to all Airy functions with this
         /// obscuration value.
-        const boost::shared_ptr<AiryInfo> _info;
+        const shared_ptr<AiryInfo> _info;
 
         /// One static map of all `AiryInfo` structures for whole program.
-        static LRUCache< std::pair< double, GSParamsPtr >, AiryInfo > cache;
+        static LRUCache<Tuple<double, GSParamsPtr>, AiryInfo> cache;
     };
 }
 

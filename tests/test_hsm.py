@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,14 +30,9 @@ import sys
 import numpy as np
 import math
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # define a range of input parameters for the Gaussians that we are testing
 gaussian_sig_values = [0.5, 1.0, 2.0]
@@ -162,7 +157,7 @@ def test_moments_basic():
                                                decimal = decimal_shape)
 
                 # if this is the first time through this loop, just make sure it runs and gives the
-                # same result for ImageView and ConstImageViews:
+                # same result whether const or not.
                 if first_test:
                     result = gal_image.view().FindAdaptiveMom()
                     first_test=False
@@ -180,14 +175,14 @@ def test_moments_basic():
                     result = gal_image.view(make_const=True).FindAdaptiveMom()
                     np.testing.assert_almost_equal(
                         np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
-                        err_msg = "- incorrect dsigma (ConstImageView)", decimal = decimal)
+                        err_msg = "- incorrect dsigma (make_const=True)", decimal = decimal)
                     np.testing.assert_almost_equal(
                         result.observed_shape.e1,
-                        distortion_1, err_msg = "- incorrect e1 (ConstImageView)",
+                        distortion_1, err_msg = "- incorrect e1 (make_const=True)",
                         decimal = decimal_shape)
                     np.testing.assert_almost_equal(
                         result.observed_shape.e2,
-                        distortion_2, err_msg = "- incorrect e2 (ConstImageView)",
+                        distortion_2, err_msg = "- incorrect e2 (make_const=True)",
                         decimal = decimal_shape)
 
 
@@ -566,7 +561,6 @@ def test_hsmparams():
                                    failed_moments=99.))
     do_pickle(res)
     do_pickle(res2)
-    do_pickle(galsim._galsim.CppShapeData())
 
     # Then check failure modes: force it to fail by changing HSMParams.
     new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)

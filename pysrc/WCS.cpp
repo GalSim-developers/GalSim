@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,13 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
+#include "PyBind11Helper.h"
 #include "WCS.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
@@ -33,7 +28,7 @@ namespace galsim {
         double* yar = reinterpret_cast<double*>(y_data);
         const double* cdar = reinterpret_cast<const double*>(cd_data);
         ApplyCD(n, xar, yar, cdar);
-    };
+    }
 
     void CallApplyPV(int n, int m, size_t u_data, size_t v_data, size_t pv_data)
     {
@@ -41,28 +36,29 @@ namespace galsim {
         double* var = reinterpret_cast<double*>(v_data);
         const double* pvar = reinterpret_cast<const double*>(pv_data);
         ApplyPV(n, m, uar, var, pvar);
-    };
+    }
 
-    bp::tuple CallInvertPV(double u, double v, size_t pv_data)
+    py::tuple CallInvertPV(double u, double v, size_t pv_data)
     {
         const double* pvar = reinterpret_cast<const double*>(pv_data);
         InvertPV(u, v, pvar);
-        return bp::make_tuple(u,v);
-    };
+        return py::make_tuple(u,v);
+    }
 
-    bp::tuple CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data)
+    py::tuple CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data)
     {
         const double* abar = reinterpret_cast<const double*>(ab_data);
         const double* abpar = reinterpret_cast<const double*>(abp_data);
         InvertAB(m, x, y, abar, abpar);
-        return bp::make_tuple(x,y);
-    };
+        return py::make_tuple(x,y);
+    }
 
-    void pyExportWCS() {
-        bp::def("ApplyPV", &CallApplyPV);
-        bp::def("ApplyCD", &CallApplyCD);
-        bp::def("InvertPV", &CallInvertPV);
-        bp::def("InvertAB", &CallInvertAB);
+    void pyExportWCS(PY_MODULE& _galsim)
+    {
+        GALSIM_DOT def("ApplyPV", &CallApplyPV);
+        GALSIM_DOT def("ApplyCD", &CallApplyCD);
+        GALSIM_DOT def("InvertPV", &CallInvertPV);
+        GALSIM_DOT def("InvertAB", &CallInvertAB);
     }
 
 } // namespace galsim

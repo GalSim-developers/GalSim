@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,17 +19,13 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/gamma.hpp>
-#include <boost/math/special_functions/bessel.hpp>
-
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/Bessel.h"
+#include "math/BesselRoots.h"
+#include "math/Gamma.h"
 #include "fmath/fmath.hpp"
 
 namespace galsim {
@@ -37,9 +33,9 @@ namespace galsim {
     inline double fast_pow(double x, double y)
     { return fmath::expd(y * std::log(x)); }
 
-    SBSersic::SBSersic(double n, double size, RadiusType rType, double flux,
-                       double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
-        SBProfile(new SBSersicImpl(n, size, rType, flux, trunc, flux_untruncated, gsparams)) {}
+    SBSersic::SBSersic(double n, double scale_radius, double flux,
+                       double trunc, const GSParams& gsparams) :
+        SBProfile(new SBSersicImpl(n, scale_radius, flux, trunc, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
 
@@ -87,86 +83,28 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBSersic("<<getN()<<", "<<getScaleRadius();
         oss <<", None, "<<getFlux()<<", "<<getTrunc()<<", False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
-    LRUCache< boost::tuple<double, double, GSParamsPtr >, SersicInfo >
+    LRUCache<Tuple<double, double, GSParamsPtr>, SersicInfo>
         SBSersic::SBSersicImpl::cache(sbp::max_sersic_cache);
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double size, RadiusType rType, double flux,
-                                         double trunc, bool flux_untruncated,
-                                         const GSParamsPtr& gsparams) :
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double scale_radius, double flux,
+                                         double trunc, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
-        _n(n), _flux(flux), _trunc(trunc), _trunc_sq(trunc*trunc),
-        // Start with untruncated SersicInfo regardless of value of trunc
-        _info(cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
+        _n(n), _flux(flux), _r0(scale_radius), _trunc(trunc),
+        _r0_sq(_r0*_r0), _inv_r0(1./_r0), _inv_r0_sq(_inv_r0*_inv_r0), _trunc_sq(trunc*trunc),
+        _info(cache.get(MakeTuple(_n, _trunc/_r0, GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
-        dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
-        dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"trunc = "<<_trunc<<"  flux_untruncated = "<<flux_untruncated<<std::endl;
-
-        _truncated = (_trunc > 0.);
-
-        // Set size of this instance according to type of size given in constructor
-        switch (rType) {
-          case HALF_LIGHT_RADIUS:
-               {
-                   _re = size;
-                   if (_truncated) {
-                       if (flux_untruncated) {
-                           // Then given HLR and flux are the values for the untruncated profile.
-                           _r0 = _re / _info->getHLR(); // getHLR() is in units of r0.
-                       } else {
-                           // This is the one case that is a bit complicated, since the
-                           // half-light radius and trunc are both given in physical units,
-                           // so we need to solve for what scale radius this corresponds to.
-                           _r0 = _info->calculateScaleForTruncatedHLR(_re, _trunc);
-                       }
-
-                       // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                           this->gsparams.duplicate()));
-
-                       if (flux_untruncated) {
-                           // Update the stored _flux and _re with the correct values
-                           _flux *= _info->getFluxFraction();
-                           _re = _r0 * _info->getHLR();
-                       }
-                   } else {
-                       // Then given HLR and flux are the values for the untruncated profile.
-                       _r0 = _re / _info->getHLR();
-                   }
-               }
-               break;
-          case SCALE_RADIUS:
-               {
-                   _r0 = size;
-                   if (_truncated) {
-                       // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                           this->gsparams.duplicate()));
-
-                       if (flux_untruncated) {
-                           // Update the stored _flux with the correct value
-                           _flux *= _info->getFluxFraction();
-                       }
-                   }
-                   // In all cases, _re is the real HLR
-                   _re = _r0 * _info->getHLR();
-               }
-               break;
-          default:
-               throw SBError("Unknown SBSersic::RadiusType");
-        }
-        dbg<<"hlr = "<<_re<<std::endl;
         dbg<<"r0 = "<<_r0<<std::endl;
+        dbg<<"flux = "<<_flux<<std::endl;
+        dbg<<"trunc = "<<_trunc<<std::endl;
 
-        _r0_sq = _r0*_r0;
-        _inv_r0 = 1./_r0;
-        _inv_r0_sq = _inv_r0*_inv_r0;
+        _re = _r0 * _info->getHLR();
+        dbg<<"hlr = "<<_re<<std::endl;
 
         _shootnorm = _flux * _info->getXNorm(); // For shooting, we don't need the 1/r0^2 factor.
         _xnorm = _shootnorm * _inv_r0_sq;
@@ -373,9 +311,9 @@ namespace galsim {
         _n(n), _trunc(trunc), _gsparams(gsparams),
         _invn(1./_n), _inv2n(0.5*_invn),
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
-        _gamma2n(boost::math::tgamma(2.*_n)),
+        _gamma2n(math::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
-        _ft(Table<double,double>::spline),
+        _ft(Table::spline),
         _kderiv2(0.), _kderiv4(0.)
     {
         dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
@@ -413,16 +351,20 @@ namespace galsim {
         return _re;
     }
 
+    double SersicIntegratedFlux(double n, double r)
+    {
+        double z = fast_pow(r, 1./n);
+        return math::gamma_p(2.*n, z);
+    }
+
     double SersicInfo::getFluxFraction() const
     {
         if (_flux == 0.) {
             // Calculate the flux of a truncated profile (relative to the integral for
             // an untruncated profile).
             if (_truncated) {
-                double z = fast_pow(_trunc, 1./_n);
                 // integrate from 0. to _trunc
-                double gamma2nz = boost::math::tgamma_lower(2.*_n, z);
-                _flux = gamma2nz / _gamma2n;  // _flux < 1
+                _flux = SersicIntegratedFlux(_n, _trunc);
                 dbg << "Flux fraction = " << _flux << std::endl;
             } else {
                 _flux = 1.;
@@ -443,7 +385,7 @@ namespace galsim {
     double SersicInfo::kValue(double ksq) const
     {
         assert(ksq >= 0.);
-        if (_ft.size() == 0) buildFT();
+        if (!_ft.finalized()) buildFT();
 
         if (ksq>=_ksq_max)
             return (_highk_a + _highk_b/sqrt(ksq))/ksq; // high-k asymptote
@@ -462,7 +404,7 @@ namespace galsim {
         SersicHankel(double invn, double k): _invn(invn), _k(k) {}
 
         double operator()(double r) const
-        { return r*fmath::expd(-fast_pow(r, _invn))*j0(_k*r); }
+        { return r*fmath::expd(-fast_pow(r, _invn)) * math::j0(_k*r); }
 
     private:
         double _invn;
@@ -478,14 +420,14 @@ namespace galsim {
         double gamma6n;
         double gamma8n;
         if (!_truncated) {
-            gamma4n = boost::math::tgamma(4.*_n);
-            gamma6n = boost::math::tgamma(6.*_n);
-            gamma8n = boost::math::tgamma(8.*_n);
+            gamma4n = math::tgamma(4.*_n);
+            gamma6n = math::tgamma(6.*_n);
+            gamma8n = math::tgamma(8.*_n);
         } else {
             double z = std::pow(_trunc, 1./_n);
-            gamma4n = boost::math::tgamma_lower(4.*_n, z);
-            gamma6n = boost::math::tgamma_lower(6.*_n, z);
-            gamma8n = boost::math::tgamma_lower(8.*_n, z);
+            gamma4n = math::gamma_p(4.*_n, z) * math::tgamma(4.*_n);
+            gamma6n = math::gamma_p(6.*_n, z) * math::tgamma(6.*_n);
+            gamma8n = math::gamma_p(8.*_n, z) * math::tgamma(8.*_n);
         }
         // The quadratic term of small-k expansion:
         _kderiv2 = -gamma4n / (4.*_gamma2n) / getFluxFraction();
@@ -545,7 +487,8 @@ namespace galsim {
             SersicHankel I(_invn, k);
 
 #ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+            std::ostream* integ_dbgout = verbose_level >= 3 ?
+                &Debugger::instance().get_dbgout() : 0;
             integ::IntRegion<double> reg(0, integ_maxr, integ_dbgout);
 #else
             integ::IntRegion<double> reg(0, integ_maxr);
@@ -554,7 +497,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = bessel::getBesselRoot0(s);
+                double root = math::getBesselRoot0(s);
                 if (root > k * integ_maxr) break;
                 reg.addSplit(root/k);
             }
@@ -608,6 +551,7 @@ namespace galsim {
             }
             fit_vals.push_front(f0);
         }
+        _ft.finalize();
         // If didn't find a good approximation for large k, just use the largest k we put in
         // in the table.  (Need to use some approximation after this anyway!)
         if (_ksq_max <= 0.) _ksq_max = fmath::expd(2. * _ft.argMax());
@@ -648,7 +592,7 @@ namespace galsim {
         // Provide z = r^1/n, rather than r.
         double operator()(double z) const
         {
-            double f = boost::math::tgamma(_2n, z);  // integrates the tail from z to inf
+            double f = (1.-math::gamma_p(_2n, z)) * math::tgamma(_2n);
             xdbg<<"func("<<z<<") = "<<f<<"-"<<_target<<" = "<< f-_target<<std::endl;
             return f - _target;
         }
@@ -723,22 +667,22 @@ namespace galsim {
         return R;
     }
 
-    void SersicInfo::calculateHLR() const
+    static double CalculateB(double n, double invn, double gamma2n, double flux_fraction)
     {
-        dbg<<"Find HLR for (n,gamma2n) = ("<<_n<<","<<_gamma2n<<")"<<std::endl;
+        dbg<<"Find HLR for (n,gamma2n) = ("<<n<<","<<gamma2n<<")"<<std::endl;
         // Find solution to gamma(2n,re^(1/n)) = gamma2n / 2
         // where gamma2n is the truncated gamma function Gamma(2n,trunc^(1/n))
         // We initially solve for b = re^1/n, and then calculate re from that.
         // Start with the approximation from Ciotti & Bertin, 1999:
         // b ~= 2n - 1/3 + 4/(405n) + 46/(25515n^2) + 131/(1148175n^3) - ...
         // Then we use a non-linear solver to tweak it up.
-        double invnsq = _invn*_invn;
-        double b1 = 2.*_n-1./3.;
-        double b2 = b1 + (8./405.)*_invn + (46./25515.)*invnsq + (131./1148175.)*_invn*invnsq;
+        double invnsq = invn*invn;
+        double b1 = 2.*n-1./3.;
+        double b2 = b1 + (8./405.)*invn + (46./25515.)*invnsq + (131./1148175.)*invn*invnsq;
         // Note: This is the value if the profile is untruncated.  It will be smaller if
-        // the profile is actually truncated and _gamma2n < Gamma(2n)
+        // the profile is actually truncated and gamma2n < Gamma(2n)
 
-        SersicMissingFlux func(_n, (1. - 0.5*getFluxFraction())*_gamma2n);
+        SersicMissingFlux func(n, (1. - 0.5*flux_fraction)*gamma2n);
         Solve<SersicMissingFlux> solver(func,b1,b2);
         xdbg<<"Initial range is "<<b1<<" .. "<<b2<<std::endl;
         solver.setMethod(Brent);
@@ -747,12 +691,24 @@ namespace galsim {
             solver.getUpperBound()<<std::endl;
         // We store b in case we need it again for calculateScaleForTruncatedHLR(), so we
         // can save a pow call.
-        _b = solver.root();
-        dbg<<"Root is "<<_b<<std::endl;
+        double b = solver.root();
+        dbg<<"Root is "<<b<<std::endl;
+        return b;
+    }
+
+    void SersicInfo::calculateHLR() const
+    {
+        _b = CalculateB(_n, _invn, _gamma2n, getFluxFraction());
 
         // re = b^n
         _re = std::pow(_b,_n);
         dbg<<"re is "<<_re<<std::endl;
+    }
+
+    double SersicHLR(double n, double flux_fraction)
+    {
+        double b = CalculateB(n, 1./n, math::tgamma(2*n), flux_fraction);
+        return std::pow(b,n);
     }
 
     // Function object for finding the r that encloses all except a particular flux fraction.
@@ -764,18 +720,20 @@ namespace galsim {
 
         double operator()(double b) const
         {
-            double f1 = boost::math::tgamma_lower(_2n, b);
-            double f2 = boost::math::tgamma_lower(_2n, _x*b);
+            double f1 = math::gamma_p(_2n, b);
+            double f2 = math::gamma_p(_2n, _x*b);
             // Solve for f1 = f2/2
             xdbg<<"func("<<b<<") = 2*"<<f1<<" - "<<f2<<" = "<< 2.*f1-f2<<std::endl;
-            return 2.*f1-f2;
+            return (2.*f1-f2) * math::tgamma(_2n);
         }
     private:
         double _2n;
         double _x;
     };
 
-    double SersicInfo::calculateScaleForTruncatedHLR(double re, double trunc) const
+    // This helper function does the dimensionless version of the problem.
+    // trunc is given in units of re, and the returned scale radius is also in units of re.
+    double CalculateTruncatedScale(double n, double invn, double b, double trunc)
     {
         // This is the limit for profiles that round off in the center, since you can locally
         // approximate the profile as flat within the truncation radius.  This isn't true for
@@ -783,7 +741,7 @@ namespace galsim {
         // the annulus between re and sqrt(2) re), but I don't know of an analytic formula for
         // the correct limit.  So we check for this here, and then if we encounter problems
         // later on, we throw a different error.
-        if (trunc <= sqrt(2.) * re) {
+        if (trunc <= sqrt(2.)) {
             throw SBError("Sersic truncation must be larger than sqrt(2)*half_light_radius.");
         }
 
@@ -794,7 +752,7 @@ namespace galsim {
         // Equivalently, if b = (re/r0)^(1/n) and z = (trunc/r0)^(1/n) = b * (trunc/re)^(1/n)
         // then solve for b.
         // gamma(2n,b) = 1/2 gamma(2n,x*b), where x = (trunc/re)^(1/n)
-        double x = std::pow(trunc/re,_invn);
+        double x = std::pow(trunc,invn);
         dbg<<"x = "<<x<<std::endl;
 
         // For an initial guess, we start with the asymptotic expansing from A&S (6.5.32):
@@ -804,14 +762,10 @@ namespace galsim {
         // b^(2n-1) exp(-b) = 1/2 (xb)^(2n-1) exp(-xb)
         // exp( (x-1) b ) = 1/2 x^(2n-1)
         // (x-1) b = log(1/2) + (2n-1) log(x)
-        double b1 = (std::log(0.5) + (2.*_n-1) * std::log(x)) / (x-1.);
+        double b1 = (std::log(0.5) + (2.*n-1) * std::log(x)) / (x-1.);
         dbg<<"Initial guess b = "<<b1<<std::endl;
         // Note: This isn't a very good initial guess, but the solver tends to converge pretty
         // rapidly anyway.
-
-        // We need _b below, so call getHLR(), since it may not be calculated yet.
-        // We don't care about the return value, but it also stores the b value in _b.
-        getHLR();
 
         // If trunc = sqrt(2) * re, then x = 2^(1/2n), and the initial guess for b is:
         // b = log( 0.5 * 2^(1/2n)^(2n-1) ) / (sqrt(2)-1)
@@ -820,32 +774,47 @@ namespace galsim {
         // on trunc/re is.  It's possible that the full formulae can give a positive solution
         // even if the initial estimate is negative.  But unless someone complains (and proposes
         // a better prescription for this), we'll take this as a de facto limit.
-        if (b1 < 1.e-3 * _b) {
+        if (b1 < 1.e-3 * b) {
             //throw SBError("Sersic truncation is too small for the given half_light_radius.");
             // Update: Ricardo Herbonnet (rightly) complained.
             // He pointed out that this formula for b1 is always == 0 for n = 0.5.
             // So we can't just be throwing an exception here.
-            // Since we expand the bracket below anyway, switch to just using _b/2 and
+            // Since we expand the bracket below anyway, switch to just using b/2 and
             // letting the expansion happen.
-            // I also updated the above check from b1 <= 0 to b1 < 1.e-3 * _b.
+            // I also updated the above check from b1 <= 0 to b1 < 1.e-3 * b.
             // Probably if we are getting really close to zero, it is better to start with
-            // _b/2 instead and expand it down.
-            b1 = _b/2;
+            // b/2 instead and expand it down.
+            b1 = b/2;
         }
 
         // The upper limit to b corresponds to the half-light radius of the untruncated profile.
-        double b2 = _b;
-        SersicTruncatedHLR func(_n, x);
+        double b2 = b;
+        SersicTruncatedHLR func(n, x);
         Solve<SersicTruncatedHLR> solver(func,b1,b2);
         solver.setMethod(Brent);
         solver.bracketLowerWithLimit(0.);    // expand lower bracket if necessary
         xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
-        double b = solver.root();
+        b = solver.root();
         dbg<<"Root is "<<b<<std::endl;
 
         // r0 = re / b^n
-        return re / std::pow(b,_n);
+        return 1. / std::pow(b,n);
+    }
+
+    double SersicInfo::calculateScaleForTruncatedHLR(double re, double trunc) const
+    {
+        // We need _b, so call getHLR(), since it may not be calculated yet.
+        // We don't care about the return value, but it also stores the b value in _b.
+        getHLR();
+        return re * CalculateTruncatedScale(_n, _invn, _b, trunc/re);
+    }
+
+    double SersicTruncatedScale(double n, double hlr, double trunc)
+    {
+        double invn = 1./n;
+        double b = CalculateB(n, invn, math::tgamma(2*n), 1.);
+        return hlr * CalculateTruncatedScale(n, invn, b, trunc/hlr);
     }
 
     class SersicRadialFunction: public FluxDensity
@@ -857,9 +826,8 @@ namespace galsim {
         double _invn;
     };
 
-    boost::shared_ptr<PhotonArray> SersicInfo::shoot(int N, UniformDeviate ud) const
+    void SersicInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
 
         if (!_sampler) {
@@ -869,24 +837,22 @@ namespace galsim {
             double shoot_maxr = calculateMissingFluxRadius(_gsparams->shoot_accuracy);
             if (_truncated && _trunc < shoot_maxr) shoot_maxr = _trunc;
             range[1] = shoot_maxr;
-            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
         }
 
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"SersicInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"SersicInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
+    void SBSersic::SBSersicImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Sersic shoot: N = "<<N<<std::endl;
+        dbg<<"Sersic shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_shootnorm);
-        result->scaleXY(_r0);
-        dbg<<"Sersic Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_shootnorm);
+        photons.scaleXY(_r0);
+        dbg<<"Sersic Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

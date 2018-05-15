@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -183,9 +183,9 @@ def main(argv):
     # A Sersic profile may be truncated if desired.
     # The units for this are expected to be arcsec (or specifically -- whatever units
     # you are using for all the size values as defined by the pixel_scale).
-    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2, trunc = 8.5, gsparams=gsparams)
-    disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5, gsparams=gsparams)
-    gal5 = 0.4*bulge + 0.6*disk  # Net half-light radius is only approximate for this one.
+    bulge = galsim.Sersic(flux=0.4, half_light_radius=0.7, n=3.2, trunc=8.5, gsparams=gsparams)
+    disk = galsim.Sersic(flux=0.6, half_light_radius=1.2, n=1.5, gsparams=gsparams)
+    gal5 = bulge + disk  # Net half-light radius is only approximate for this one.
     gals = [gal1, gal2, gal3, gal4, gal5]
     gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge + Disk"]
     gal_times = [0,0,0,0,0]

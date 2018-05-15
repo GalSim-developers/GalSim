@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,8 @@
 # Typical usage:
 #
 # Copy the old copyright notice to oldcr, and the new one to newcr.
+# You can grab the canonical text from GalSim_License_statement.txt.
+#
 # Then type things like the following:
 #
 #     ls ../*/*.py | updatecr
@@ -30,7 +32,11 @@
 # After you've finished the obvious cases, it's a good idea to check
 # that you didn't miss anything with lines like
 #
-#     grep Copyright */*/* | grep 2017
+#     grep Copyright */*/* | grep 2018
+#
+# Also do `git diff` before committing to make sure you didn't mess up any
+# files that didn't have a copyright at the start.  You should only see
+# lines where the year changed.
 #
 # There are a few other random things that may be easier to update manually.
 # Especially when the copyright notice doesn't start on the first line (this

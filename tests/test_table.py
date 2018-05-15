@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -27,15 +27,10 @@ from __future__ import print_function
 import os
 import numpy as np
 
+import galsim
 from galsim_test_helpers import *
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
-try:
-    import galsim
-except ImportError:
-    import sys
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 TESTDIR=os.path.join(path, "table_comparison_files")
 
@@ -61,6 +56,12 @@ def test_table():
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
         assert len(table1) == len(args1)
+
+        np.testing.assert_array_equal(table1.getArgs(), args1)
+        np.testing.assert_array_equal(table1.getVals(), vals1)
+        assert table1.interpolant == interp
+        assert table1.isLogX() == False
+        assert table1.isLogF() == False
 
         # The 4th item is in the args list, so it should be exactly the same as the
         # corresponding item in the vals list.
@@ -95,11 +96,10 @@ def test_table():
                     "data for non-evenly-spaced args, with interpolant %s."%interp)
 
         # Check that out of bounds arguments, or ones with some crazy shape, raise an exception:
-        assert_raises(RuntimeError,table1,args1[0]-0.01)
-        assert_raises(RuntimeError,table1,args1[-1]+0.01)
-        assert_raises(RuntimeError,table2,args2[0]-0.01)
-        assert_raises(RuntimeError,table2,args2[-1]+0.01)
-        assert_raises(ValueError,table1,np.zeros((3,3,3))+args1[0])
+        assert_raises(ValueError,table1,args1[0]-0.01)
+        assert_raises(ValueError,table1,args1[-1]+0.01)
+        assert_raises(ValueError,table2,args2[0]-0.01)
+        assert_raises(ValueError,table2,args2[-1]+0.01)
 
         # These shouldn't raise any exception:
         table1(args1[0]+0.01)
@@ -116,12 +116,10 @@ def test_table():
         table1(np.array(testargs1).reshape((2,3)))
 
         # Check picklability
-        do_pickle(table1, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
-        do_pickle(table2, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
+        do_pickle(table1, lambda x: (tuple(x.getArgs()), tuple(x.getVals()), x.getInterp()))
+        do_pickle(table2, lambda x: (tuple(x.getArgs()), tuple(x.getVals()), x.getInterp()))
         do_pickle(table1)
         do_pickle(table2)
-        do_pickle(table1.table)
-        do_pickle(table2.table)
 
 
 @timer
@@ -260,13 +258,11 @@ def test_from_func():
 @timer
 def test_roundoff():
     table1 = galsim.LookupTable([1,2,3,4,5,6,7,8,9,10], [1,2,3,4,5,6,7,8,9,10])
-    try:
-        table1(1.0 - 1.e-7)
-        table1(10.0 + 1.e-7)
-    except:
-        raise ValueError("c++ LookupTable roundoff guard failed.")
-    assert_raises(RuntimeError, table1, 1.0-1.e5)
-    assert_raises(RuntimeError, table1, 10.0+1.e5)
+    # These should work without raising an exception
+    np.testing.assert_almost_equal(table1(1.0 - 1.e-7), 1.0, decimal=6)
+    np.testing.assert_almost_equal(table1(10.0 + 1.e-7), 10.0, decimal=6)
+    assert_raises(ValueError, table1, 1.0-1.e5)
+    assert_raises(ValueError, table1, 10.0+1.e5)
 
 
 @timer
@@ -295,7 +291,12 @@ def test_table2d():
 
     tab2d = galsim.LookupTable2D(x, y, z)
     do_pickle(tab2d)
-    do_pickle(tab2d.table)
+
+    np.testing.assert_array_equal(tab2d.getXArgs(), x)
+    np.testing.assert_array_equal(tab2d.getYArgs(), y)
+    np.testing.assert_array_equal(tab2d.getVals(), z)
+    assert tab2d.interpolant == 'linear'
+    assert tab2d.edge_mode == 'raise'
 
     newx = np.linspace(0.2, 3.1, 45)
     newy = np.linspace(0.3, 10.1, 85)

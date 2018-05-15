@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -33,9 +33,9 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImageImpl(
             const BaseImage<T>& image,
-            boost::shared_ptr<Interpolant2d> xInterp,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
+            const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
+            const Interpolant& xInterp, const Interpolant& kInterp,
+            double stepk, double maxk, const GSParams& gsparams);
 
         ~SBInterpolatedImageImpl();
 
@@ -70,7 +70,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
-        double getFlux() const { return _flux; }
+        double getFlux() const;
         double maxSB() const;
 
         /**
@@ -92,11 +92,10 @@ namespace galsim {
          *
          * Photon shooting with the Sinc kernel is a bad idea and is currently forbidden.
          *
-         * @param[in] N Total umber of photons to produce.
-         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
+         * @param[in] photons PhotonArray in which to write the photon information
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
@@ -108,11 +107,11 @@ namespace galsim {
         //////////////////////////////
         // Additional subclass methods
 
-        boost::shared_ptr<Interpolant> getXInterp() const;
-        boost::shared_ptr<Interpolant> getKInterp() const;
-        double getPadFactor() const { return _pad_factor; }
-        ConstImageView<double> getImage() const;
+        const Interpolant& getXInterp() const;
+        const Interpolant& getKInterp() const;
         ConstImageView<double> getPaddedImage() const;
+        ConstImageView<double> getNonZeroImage() const;
+        ConstImageView<double> getImage() const;
 
         void calculateMaxK(double max_stepk) const;
         void calculateStepK(double max_maxk) const;
@@ -121,20 +120,20 @@ namespace galsim {
 
     private:
 
-        int _Ninitial, _Ninitx, _Ninity;
         int _Nk;
+        Bounds<int> _image_bounds;
         Bounds<int> _init_bounds;
-        double _xcentroid;
-        double _ycentroid;
+        Bounds<int> _nonzero_bounds;
 
-        boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
-        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
-        boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
-        mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
-        const double _pad_factor;
+        InterpolantXY _xInterp; ///< Interpolant used in real space.
+        InterpolantXY _kInterp; ///< Interpolant used in k space.
+        shared_ptr<XTable> _xtab; ///< Final real-space image.
+        mutable shared_ptr<KTable> _ktab; ///< Final k-space image.
         mutable double _stepk;
         mutable double _maxk;
-        double _flux;
+        mutable double _flux;
+        mutable double _xcentroid;
+        mutable double _ycentroid;
 
         double _maxk1; ///< maxk based just on the xInterp urange
         double _uscale; ///< conversion from k to u for xInterpolant
@@ -208,14 +207,12 @@ namespace galsim {
         template <typename T>
         SBInterpolatedKImageImpl(
             const BaseImage<T>& kimage, double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
+            const Interpolant& kInterp, const GSParams& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
-            const BaseImage<double>& data,
-            double stepk, double maxk,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParamsPtr& gsparams);
+            const BaseImage<double>& data, double stepk, double maxk,
+            const Interpolant& kInterp, const GSParams& gsparams);
 
         ~SBInterpolatedKImageImpl();
 
@@ -226,7 +223,7 @@ namespace galsim {
         { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
         std::complex<double> kValue(const Position<double>& p) const;
 
-        boost::shared_ptr<Interpolant> getKInterp() const;
+        const Interpolant& getKInterp() const;
 
         double maxK() const { return _maxk; }
         double stepK() const { return _stepk; }
@@ -242,7 +239,7 @@ namespace galsim {
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
         double maxSB() const;
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
+        void shoot(PhotonArray& photons, UniformDeviate ud) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
 
 
@@ -258,8 +255,8 @@ namespace galsim {
         mutable double _xcentroid;
         mutable double _ycentroid;
 
-        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
-        boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+        InterpolantXY _kInterp; ///< Interpolant used in k space.
+        shared_ptr<KTable> _ktab; ///< Final k-space image.
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
         double _flux;

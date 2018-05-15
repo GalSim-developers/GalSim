@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,10 +28,8 @@
 
 namespace galsim {
 
-    template <typename T>
     /**
-     *  @brief Return a copy of an input image to which the Antilogus et al (2014) charge deflection
-     *  model has been applied.
+     *  @brief Tranform an input image using the Antilogus et al (2014) charge deflection model.
      *
      *  The four (2dmax+1)x(2dmax+1) 'aX' matrices are supplied as flattened ConstImageView objects
      *  that are ordered as, e.g.,
@@ -40,9 +38,10 @@ namespace galsim {
      *  gain_ratio is gain_img/gain_flat when 'aX' matrices were derived from flat field images with
      *  a gain differing from that in the supplied image.
      */
-    ImageAlloc<T> ApplyCD(const BaseImage<T> &image, ConstImageView<double> aL,
-                          ConstImageView<double> aR, ConstImageView<double> aB,
-                          ConstImageView<double> aT, const int dmax, const double gain_ratio);
-
+    template <typename T>
+    void ApplyCD(ImageView<T>& output, const BaseImage<T>& input,
+                 const BaseImage<double>& aL, const BaseImage<double>& aR,
+                 const BaseImage<double>& aB, const BaseImage<double>& aT,
+                 const int dmax, const double gain_ratio);
 }
 #endif

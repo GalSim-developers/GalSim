@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,13 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
+#include "PyBind11Helper.h"
 #include "RealGalaxy.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
@@ -40,8 +35,8 @@ namespace galsim {
         ComputeCRGCoefficients(coef, Sigma, w, kimgs, psf, nsed, nband, nkx, nky);
     };
 
-    void pyExportRealGalaxy() {
-        bp::def("ComputeCRGCoefficients", &CallComputeCRGCoefficients);
+    void pyExportRealGalaxy(PY_MODULE& _galsim) {
+        GALSIM_DOT def("ComputeCRGCoefficients", &CallComputeCRGCoefficients);
     }
 
 } // namespace galsim

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,15 +19,11 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import *
 import sys
+from astropy import units
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
+import galsim
+from galsim_test_helpers import *
 
 datapath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 
@@ -36,13 +32,6 @@ datapath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 def test_Bandpass_basic():
     """Basic tests of Bandpass functionality
     """
-    # Cannot initialize bandpass without wave_type:
-    with assert_raises(TypeError):
-        galsim.Bandpass(throughput=lambda x:x)
-    # eval-str must return a Real
-    with assert_raises(ValueError):
-        galsim.Bandpass(throughput="'spam'", wave_type='A')
-
     # All of these should be equivalent
     b_list = [
         galsim.Bandpass(throughput=lambda x: x/1000, wave_type='nm', blue_limit=400, red_limit=550),
@@ -53,13 +42,14 @@ def test_Bandpass_basic():
         galsim.Bandpass('wave/numpy.sqrt(1.e6)', 'nm', 400, 550, 30.),
         galsim.Bandpass('wave/math.sqrt(1.e6)', 'nm', 400, 550, 30.),
         galsim.Bandpass(galsim.LookupTable([400,550], [0.4, 0.55], interpolant='linear'),
-                        wave_type='nm'),
+                        wave_type=units.Unit('nm')),
         galsim.Bandpass(galsim.LookupTable([4000,5500], [0.4, 0.55], interpolant='linear'),
-                        wave_type='ang'),
+                        wave_type=units.Unit('Angstrom')),
         galsim.Bandpass(galsim.LookupTable([3000,8700], [0.3, 0.87], interpolant='linear'),
-                        wave_type='Angstroms', red_limit=5500, blue_limit=4000),
-        galsim.Bandpass(galsim.LookupTable(np.arange(300,651,10),np.arange(0.3,0.651,0.01)),
-                        'nm', 400, 550),
+                        wave_type='ang', red_limit=5500, blue_limit=4000),
+        galsim.Bandpass(galsim.LookupTable(np.arange(3.e-7,6.51e-7,1.e-8),
+                                           np.arange(0.3,0.651,0.01)),
+                        units.Unit('m'), 4.e-7, 5.5e-7),
         galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', wave_type='nm'),
         galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', wave_type='nm',
                         blue_limit=400, red_limit=550),
@@ -125,98 +115,139 @@ def test_Bandpass_basic():
             do_pickle(b)
             do_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
 
+    assert_raises(ValueError, galsim.Bandpass, throughput="'eggs'", wave_type='nm',
+                  blue_limit=400, red_limit=700)
+    assert_raises(ValueError, galsim.Bandpass, throughput="'eggs)", wave_type='nm',
+                  blue_limit=400, red_limit=700)
+    assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
+    assert_raises(ValueError, galsim.Bandpass, throughput="'spam'", wave_type='A',
+                  blue_limit=400, red_limit=700)
+    assert_raises(TypeError, galsim.Bandpass, throughput='1', wave_type='nm')
+    assert_raises(TypeError, galsim.Bandpass, throughput=lambda w: 1, wave_type='nm')
+    assert_raises(ValueError, galsim.Bandpass, throughput='1', wave_type='nm',
+                  blue_limit=700, red_limit=400)
+    assert_raises(ValueError, galsim.Bandpass, throughput=lambda w: 1, wave_type='inches')
+    assert_raises(ValueError, galsim.Bandpass, throughput=lambda w: 1, wave_type=units.Unit('Hz'))
+
 
 @timer
 def test_Bandpass_mul():
     """Check that Bandpasses multiply like I think they should...
     """
-    a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
+    a_lt = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
+    a_fn = galsim.Bandpass('wave', 'nm', blue_limit=1, red_limit=5)
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
 
-    # Bandpass * Bandpass
-    c = a*b
-    np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
-                                   err_msg="Found wrong blue limit in Bandpass.__mul__")
-    np.testing.assert_almost_equal(c.red_limit, 5.0, 10,
-                                   err_msg="Found wrong red limit in Bandpass.__mul__")
-    np.testing.assert_almost_equal(c(3.0), 3.0 * 3.33, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_almost_equal(c(1.1), a(1.1)*1.11, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_almost_equal(c(5.0), b(5.0)*5, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_array_almost_equal(c.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
-                                         err_msg="wrong wave_list in Bandpass.__mul__")
+    for a in [a_lt, a_fn]:
+        # Bandpass * Bandpass
+        c = a*b
+        np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
+                                       err_msg="Found wrong blue limit in Bandpass.__mul__")
+        np.testing.assert_almost_equal(c.red_limit, 5.0, 10,
+                                       err_msg="Found wrong red limit in Bandpass.__mul__")
+        np.testing.assert_almost_equal(c(3.0), 3.0 * 3.33, 10,
+                                       err_msg="Found wrong value in Bandpass.__mul__")
+        np.testing.assert_almost_equal(c(1.1), a(1.1)*1.11, 10,
+                                       err_msg="Found wrong value in Bandpass.__mul__")
+        np.testing.assert_almost_equal(c(5.0), b(5.0)*5, 10,
+                                       err_msg="Found wrong value in Bandpass.__mul__")
+        if a is a_lt:
+            combined_wave_list = [1.1, 2, 2.2, 3, 4., 4.4, 5]
+        else:
+            combined_wave_list = [1.1, 2.2, 3, 4.4, 5]
 
-    # Bandpass * fn
-    d = lambda w: w**2
-    e = c*d
-    np.testing.assert_almost_equal(e(3.0), 3.0 * 3.33 * 3.0**2, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_array_almost_equal(e.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
-                                         err_msg="wrong wave_list in Bandpass.__mul__")
+        np.testing.assert_array_almost_equal(c.wave_list, combined_wave_list,
+                                             err_msg="wrong wave_list in Bandpass.__mul__")
 
-    # fn * Bandpass
-    e = d*c
-    np.testing.assert_almost_equal(e(3.0), 3.0 * 3.33 * 3.0**2, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_array_almost_equal(e.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
-                                         err_msg="wrong wave_list in Bandpass.__mul__")
+        # Bandpass * fn
+        d = lambda w: w**2
+        e = c*d
+        np.testing.assert_almost_equal(e(3.0), 3.0 * 3.33 * 3.0**2, 10,
+                                       err_msg="Found wrong value in Bandpass.__mul__")
+        np.testing.assert_array_almost_equal(e.wave_list, combined_wave_list,
+                                             err_msg="wrong wave_list in Bandpass.__mul__")
 
-    # Bandpass * scalar
-    f = b * 1.21
-    np.testing.assert_almost_equal(f(3.0), 3.33 * 1.21, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3, 4.4, 5.5],
-                                         err_msg="wrong wave_list in Bandpass.__mul__")
-    do_pickle(f)
+        # fn * Bandpass
+        e = d*c
+        np.testing.assert_almost_equal(e(3.0), 3.0 * 3.33 * 3.0**2, 10,
+                                       err_msg="Found wrong value in Bandpass.__mul__")
+        np.testing.assert_array_almost_equal(e.wave_list, combined_wave_list,
+                                             err_msg="wrong wave_list in Bandpass.__mul__")
 
-    # scalar * Bandpass
-    f = 1.21 * a
-    np.testing.assert_almost_equal(f(3.0), 3.0 * 1.21, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_array_almost_equal(f.wave_list, [1, 2, 3, 4, 5],
+        # Bandpass * scalar
+        f = b * 1.21
+        np.testing.assert_almost_equal(f(3.0), 3.33 * 1.21, 10,
+                                       err_msg="Found wrong value in Bandpass.__mul__")
+        np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3, 4.4, 5.5],
                                          err_msg="wrong wave_list in Bandpass.__mul__")
-    do_pickle(f)
+        do_pickle(f)
+
+        # scalar * Bandpass
+        f = 1.21 * a
+        np.testing.assert_almost_equal(f(3.0), 3.0 * 1.21, 10,
+                                       err_msg="Found wrong value in Bandpass.__mul__")
+        if a is a_lt:
+            np.testing.assert_array_almost_equal(f.wave_list, [1, 2, 3, 4, 5],
+                                             err_msg="wrong wave_list in Bandpass.__mul__")
+        else:
+            np.testing.assert_array_almost_equal(f.wave_list, [],
+                                             err_msg="wrong wave_list in Bandpass.__mul__")
+
+        if a is a_lt:
+            do_pickle(f)
 
 
 @timer
 def test_Bandpass_div():
     """Check that Bandpasses multiply like I think they should...
     """
-    a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
+    a_lt = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
+    a_fn = galsim.Bandpass('wave', 'nm', blue_limit=1, red_limit=5)
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
 
-    # Bandpass / Bandpass
-    c = a/b
-    np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
-                                   err_msg="Found wrong blue limit in Bandpass.__div__")
-    np.testing.assert_almost_equal(c.red_limit, 5.0, 10,
-                                   err_msg="Found wrong red limit in Bandpass.__div__")
-    np.testing.assert_almost_equal(c(3.0), 3.0 / 3.33, 10,
-                                   err_msg="Found wrong value in Bandpass.__div__")
-    np.testing.assert_almost_equal(c(1.1), a(1.1)/1.11, 10,
-                                   err_msg="Found wrong value in Bandpass.__div__")
-    np.testing.assert_almost_equal(c(5.0), 5/b(5.0), 10,
-                                   err_msg="Found wrong value in Bandpass.__div__")
-    np.testing.assert_array_almost_equal(c.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
-                                         err_msg="wrong wave_list in Bandpass.__div__")
+    for a in [a_lt, a_fn]:
+        # Bandpass / Bandpass
+        c = a/b
+        np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
+                                       err_msg="Found wrong blue limit in Bandpass.__div__")
+        np.testing.assert_almost_equal(c.red_limit, 5.0, 10,
+                                       err_msg="Found wrong red limit in Bandpass.__div__")
+        np.testing.assert_almost_equal(c(3.0), 3.0 / 3.33, 10,
+                                       err_msg="Found wrong value in Bandpass.__div__")
+        np.testing.assert_almost_equal(c(1.1), a(1.1)/1.11, 10,
+                                       err_msg="Found wrong value in Bandpass.__div__")
+        np.testing.assert_almost_equal(c(5.0), 5/b(5.0), 10,
+                                       err_msg="Found wrong value in Bandpass.__div__")
+        if a is a_lt:
+            combined_wave_list = [1.1, 2, 2.2, 3, 4., 4.4, 5]
+        else:
+            combined_wave_list = [1.1, 2.2, 3, 4.4, 5]
+        np.testing.assert_array_almost_equal(c.wave_list, combined_wave_list,
+                                             err_msg="wrong wave_list in Bandpass.__div__")
 
-    # Bandpass / fn
-    d = lambda w: w**2
-    e = c/d
-    np.testing.assert_almost_equal(e(3.0), c(3.0) / 3.0**2, 10,
-                                   err_msg="Found wrong value in Bandpass.__div__")
-    np.testing.assert_array_almost_equal(e.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
-                                         err_msg="wrong wave_list in Bandpass.__div__")
+        # Bandpass / fn
+        d = lambda w: w**2
+        e = c/d
+        np.testing.assert_almost_equal(e(3.0), c(3.0) / 3.0**2, 10,
+                                       err_msg="Found wrong value in Bandpass.__div__")
+        np.testing.assert_array_almost_equal(e.wave_list, combined_wave_list,
+                                             err_msg="wrong wave_list in Bandpass.__div__")
 
-    # Bandpass / scalar
-    f = b / 1.21
-    np.testing.assert_almost_equal(f(3.0), b(3.0)/1.21, 10,
-                                   err_msg="Found wrong value in Bandpass.__div__")
-    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3, 4.4, 5.5],
-                                         err_msg="wrong wave_list in Bandpass.__div__")
-    do_pickle(f)
+        # Bandpass / scalar
+        f = a / 1.21
+        np.testing.assert_almost_equal(f(3.0), a(3.0)/1.21, 10,
+                                       err_msg="Found wrong value in Bandpass.__div__")
+        if a is a_lt:
+            np.testing.assert_array_almost_equal(f.wave_list, [1, 2, 3, 4, 5],
+                                                 err_msg="wrong wave_list in Bandpass.__div__")
+            do_pickle(f)
+        else:
+            np.testing.assert_array_almost_equal(f.wave_list, [],
+                                                 err_msg="wrong wave_list in Bandpass.__div__")
+
+    sed = galsim.SED('1', wave_type='nm', flux_type='1')
+    assert_raises(TypeError, a_lt.__div__, sed)
+    assert_raises(TypeError, a_fn.__div__, sed)
 
 
 @timer

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,8 +19,9 @@
 Redefinition of the Shear class at the Python layer.
 """
 
-import galsim
 import numpy as np
+
+from .angle import Angle, _Angle, radians
 
 class Shear(object):
     """A class to represent shears in a variety of ways.
@@ -138,7 +139,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when g is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             g = kwargs.pop('g')
@@ -152,7 +153,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when e is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             e = kwargs.pop('e')
@@ -166,7 +167,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when eta is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             eta = kwargs.pop('eta')
@@ -180,7 +181,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when q is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             q = kwargs.pop('q')
@@ -198,88 +199,6 @@ class Shear(object):
             raise TypeError(
                 "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
 
-    # define all the methods to get shear values
-    def getG1(self):
-        """Return the g1 component of the reduced shear.
-        Note: s.getG1() is equivalent to s.g1
-        """
-        from .deprecated import depr
-        depr("shear.getG1()", 1.5, "shear.g1")
-        return self.g1
-
-    def getG2(self):
-        """Return the g2 component of the reduced shear.
-        Note: s.getG2() is equivalent to s.g2
-        """
-        from .deprecated import depr
-        depr("shear.getG2()", 1.5, "shear.g2")
-        return self.g2
-
-    def getG(self):
-        """Return the magnitude of the reduced shear |g1 + i g2| = sqrt(g1**2 + g2**2)
-        Note: s.getG() is equivalent to s.g
-        """
-        from .deprecated import depr
-        depr("shear.getG()", 1.5, "shear.g")
-        return self.g
-
-    def getBeta(self):
-        """Return the position angle of the reduced shear g exp(2i beta) == g1 + i g2
-        Note: s.getBeta() is equivalent to s.beta
-        """
-        from .deprecated import depr
-        depr("shear.getBeta()", 1.5, "shear.beta")
-        return self.beta
-
-    def getShear(self):
-        """Return the reduced shear as a complex number g1 + 1j * g2
-        Note: s.getShear() is equivalent to s.shear
-        """
-        from .deprecated import depr
-        depr("shear.getShear()", 1.5, "shear.shear")
-        return self.shear
-
-    def getE1(self):
-        """Return the e1 component of the distortion.
-        Note: s.getE1() is equivalent to s.e1
-        """
-        from .deprecated import depr
-        depr("shear.getE1()", 1.5, "shear.e1")
-        return self.e1
-
-    def getE2(self):
-        """Return the e2 component of the distortion.
-        Note: s.getE2() is equivalent to s.e2
-        """
-        from .deprecated import depr
-        depr("shear.getE2()", 1.5, "shear.e2")
-        return self.e2
-
-    def getE(self):
-        """Return the magnitude of the distortion |e1 + i e2| = sqrt(e1**2 + e2**2)
-        Note: s.getE() is equivalent to s.e
-        """
-        from .deprecated import depr
-        depr("shear.getE()", 1.5, "shear.e")
-        return self.e
-
-    def getESq(self):
-        """Return the magnitude squared of the distortion |e1 + i e2|**2 = e1**2 + e2**2
-        Note: s.getESq() is equivalent to s.esq
-        """
-        from .deprecated import depr
-        depr("shear.getESq()", 1.5, "shear.esq")
-        return self.esq
-
-    def getEta(self):
-        """Return the magnitude of the conformal shear eta = atanh(e) = 2 atanh(g)
-        Note: s.getEta() is equivalent to s.eta
-        """
-        from .deprecated import depr
-        depr("shear.getEta()", 1.5, "shear.eta")
-        return self.eta
-
-    # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
     @property
     def g1(self): return self._g.real
 
@@ -288,7 +207,7 @@ class Shear(object):
     @property
     def g(self): return abs(self._g)
     @property
-    def beta(self): return galsim._Angle(0.5 * np.angle(self._g))
+    def beta(self): return _Angle(0.5 * np.angle(self._g))
 
     @property
     def shear(self): return self._g
@@ -386,7 +305,7 @@ class Shear(object):
         S3 = self.getMatrix().dot(other.getMatrix()[:,:1])
         R = (-(self + other)).getMatrix().dot(S3)
         theta = np.arctan2(R[1,0], R[0,0])
-        return theta * galsim.radians
+        return theta * radians
 
     def __repr__(self):
         return 'galsim.Shear(%r)'%(self.shear)

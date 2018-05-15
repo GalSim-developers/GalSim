@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,6 +26,10 @@
 #include "SBProfile.h"
 
 namespace galsim {
+
+    double SersicHLR(double n, double flux_fraction);
+    double SersicIntegratedFlux(double n, double r);
+    double SersicTruncatedScale(double n, double hlr, double trunc);
 
     namespace sbp {
 
@@ -81,31 +85,21 @@ namespace galsim {
     class SBSersic : public SBProfile
     {
     public:
-        enum  RadiusType
-        {
-            HALF_LIGHT_RADIUS,
-            SCALE_RADIUS
-        };
 
         /**
          * @brief Constructor.
          *
          * @param[in] n                 Sersic index.
-         * @param[in] size              Size specification.
-         * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
-         *                              SCALE_RADIUS).
+         * @param[in] scale_radius      Scale radius
          * @param[in] flux              Flux.
          * @param[in] trunc             Outer truncation radius in same physical units as size;
          *                              `trunc = 0.` for no truncation.
-         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
-         *                              Sersic profile with the same index `n`.  Ignored if
-         *                              `trunc = 0.`.
          * @param[in] gsparams          GSParams object storing constants that control the accuracy
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBSersic(double n, double size, RadiusType rType, double flux,
-                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
+        SBSersic(double n, double scale_radius, double flux, double trunc,
+                 const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs);

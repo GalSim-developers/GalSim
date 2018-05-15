@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,7 +25,6 @@
  */
 
 #include <cmath>
-#include <vector>
 #include <algorithm>
 
 #include "Std.h"
@@ -45,56 +44,54 @@ namespace galsim {
     {
     public:
         /**
-         * @brief Construct an array of given size with zero-flux photons
+         * @brief Construct a PhotonArray of the given size, allocating the arrays locally.
          *
-         * This will only allocate memory for x,y,flux, which are often the only things needed.
-         * Memory for angles and wavelength will be allocated as needed.
+         * Note: PhotonArrays made this way can only be used locally in the C++ layer, not
+         * returned back to Python.  Also, only x,y,flux will be allocated.
          *
-         * @param[in] N Size of desired array.
+         * @param[in] N         Size of array
          */
-        explicit PhotonArray(int N);
+        PhotonArray(int N);
 
         /**
-         * @brief Turn an image into an array of photons
+         * @brief Construct a PhotonArray of the given size with the given arrays, which should
+         * be allocated separately (in Python typically).
          *
-         * The flux in each non-zero pixel will be turned into 1 or more photons according
-         * to the maxFlux parameter which sets an upper limit for the absolute value of the
-         * flux of any photon.  Pixels with abs values > maxFlux will spawn multiple photons.
+         * If angles or wavelengths are not set, these may be 0.
          *
-         * The positions of the photons will be random within the area of each pixel.
-         * TODO: This corresponds to the Nearest interpolant.  Consider implementing other
-         * interpolation options here.
-         *
-         * @param image     The image to use for the photon fluxes and positions.
-         * @param maxFlux   The maximum flux that any photon should have.
-         * @param ud        A UniformDeviate in case we need to shuffle.
+         * @param[in] N         Size of array
+         * @param[in] x         An array of the initial x values
+         * @param[in] y         An array of the initial y values
+         * @param[in] flux      An array of the initial flux values
+         * @param[in] dxdz      An array of the initial dxdz values (may be 0)
+         * @param[in] dydz      An array of the initial dydz values (may be 0)
+         * @param[in] wave      An array of the initial wavelength values (may be 0)
+         * @param[in] is_corr   A boolean indicating whether the current values are correlated.
          */
-        template <class T>
-        PhotonArray(const BaseImage<T>& image, double maxFlux, UniformDeviate ud);
+        PhotonArray(size_t N, double* x, double* y, double* flux,
+                    double* dxdz, double* dydz, double* wave, bool is_corr) :
+            _N(N), _x(x), _y(y), _flux(flux), _dxdz(dxdz), _dydz(dydz), _wave(wave),
+            _is_correlated(is_corr) {}
 
         /**
          * @brief Accessor for array size
          *
          * @returns Array size
          */
-        size_t size() const { return _x.size(); }
+        size_t size() const { return _N; }
 
         /**
          * @{
-         * @brief Allocate memory for optional arrays
+         * @brief Accessors that provide access as numpy arrays in Python layer
          */
-        void allocateAngleVectors();
-        void allocateWavelengthVector();
-        /**
-         * @}
-         */
-
-        /**
-         * @{
-         * @brief Return whether the optional arrays are allocated
-         */
-        bool hasAllocatedAngles() const;
-        bool hasAllocatedWavelengths() const;
+        double* getXArray() { return _x; }
+        double* getYArray() { return _y; }
+        double* getFluxArray() { return _flux; }
+        double* getDXDZArray() { return _dxdz; }
+        double* getDYDZArray() { return _dydz; }
+        double* getWavelengthArray() { return _wave; }
+        bool hasAllocatedAngles() const { return _dxdz != 0 && _dydz != 0; }
+        bool hasAllocatedWavelengths() const { return _wave != 0; }
         /**
          * @}
          */
@@ -161,22 +158,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns wavelength of photon
          */
-        double getWavelength(int i) const { return _wavelength[i]; }
-
-        /**
-         * @{
-         * @brief Accessors that provide access as numpy arrays in Python layer
-         */
-        std::vector<double>& getXVector() { return _x; }
-        std::vector<double>& getYVector() { return _y; }
-        std::vector<double>& getFluxVector() { return _flux; }
-        std::vector<double>& getDXDZVector() { allocateAngleVectors(); return _dxdz; }
-        std::vector<double>& getDYDZVector() { allocateAngleVectors(); return _dydz; }
-        std::vector<double>& getWavelengthVector()
-        { allocateWavelengthVector(); return _wavelength; }
-        /**
-         * @}
-         */
+        double getWavelength(int i) const { return _wave[i]; }
 
         /**
          * @brief Return sum of all photons' fluxes
@@ -242,14 +224,6 @@ namespace galsim {
         void convolveShuffle(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
-         * @brief Take x displacement from this, and y displacement from x of another array,
-         * multiplying fluxes.
-         *
-         * @param[in] rhs Source of y displacements
-         */
-        void takeYFrom(const PhotonArray& rhs);
-
-        /**
          * @brief Add flux of photons to an image by binning into pixels.
          *
          * Photon in this PhotonArray are binned into the pixels of the input
@@ -264,23 +238,53 @@ namespace galsim {
         double addTo(ImageView<T> target) const;
 
         /**
-         * @brief Declare that the photons in this array are correlated.
+         * @brief Set photon positions based on flux in an image.
+         *
+         * The flux in each non-zero pixel will be turned into 1 or more photons according
+         * to the maxFlux parameter which sets an upper limit for the absolute value of the
+         * flux of any photon.  Pixels with abs values > maxFlux will spawn multiple photons.
+         *
+         * The positions of the photons will be random within the area of each pixel.
+         * TODO: This corresponds to the Nearest interpolant.  Consider implementing other
+         * interpolation options here.
+         *
+         * @param image     The image to use for the photon fluxes and positions.
+         * @param maxFlux   The maximum flux that any photon should have.
+         * @param ud        A UniformDeviate in case we need to shuffle.
+         *
+         * @returns the total number of photons set.
          */
-        void setCorrelated(bool new_val=true) { _is_correlated = new_val; }
+        template <class T>
+        int setFrom(const BaseImage<T>& image, double maxFlux, UniformDeviate ud);
 
         /**
          * @brief Check if the current array has correlated photons.
          */
         bool isCorrelated() const { return _is_correlated; }
 
+        /**
+         * @brief Set whether the current array has correlated photons.
+         */
+        void setCorrelated(bool is_corr=true) { _is_correlated = is_corr; }
+
     private:
-        std::vector<double> _x;         // Vector holding x coords of photons
-        std::vector<double> _y;         // Vector holding y coords of photons
-        std::vector<double> _flux;      // Vector holding flux of photons
-        std::vector<double> _dxdz;      // Vector holding dxdz of photons
-        std::vector<double> _dydz;      // Vector holding dydz of photons
-        std::vector<double> _wavelength; // Vector holding wavelength of photons
-        bool _is_correlated;            // Are the photons correlated?
+        size_t _N;              // The length of the arrays
+        double* _x;             // Array holding x coords of photons
+        double* _y;             // Array holding y coords of photons
+        double* _flux;          // Array holding flux of photons
+        double* _dxdz;          // Array holding dxdz of photons
+        double* _dydz;          // Array holding dydz of photons
+        double* _wave;          // Array holding wavelength of photons
+        bool _is_correlated;    // Are the photons correlated?
+
+        // Most of the time the arrays are constructed in Python and passed in, so we don't
+        // do any memory management of them.  However, for some use cases, we need to make a
+        // temporary PhotonArray with arrays allocated in the C++ layer.  The easiest way
+        // to do this safely is to make these vectors and let the standard library handle
+        // the memory allocation and deletion.
+        std::vector<double> _vx;
+        std::vector<double> _vy;
+        std::vector<double> _vflux;
     };
 
 } // end namespace galsim

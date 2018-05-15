@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,7 +22,6 @@
 
 #include "SBProfile.h"
 #include "integ/Int.h"
-#include "TMV.h"
 
 namespace galsim {
 
@@ -31,7 +30,7 @@ namespace galsim {
     public:
 
         // Constructor
-        SBProfileImpl(const GSParamsPtr& _gsparams);
+        SBProfileImpl(const GSParams& _gsparams);
 
         // Virtual destructor
         virtual ~SBProfileImpl() {}
@@ -106,7 +105,7 @@ namespace galsim {
         virtual Position<double> centroid() const = 0;
         virtual double getFlux() const =0;
         virtual double maxSB() const =0;
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
+        virtual void shoot(PhotonArray& photons, UniformDeviate ud) const=0;
 
         // Functions with default implementations:
         virtual void getXRange(double& xmin, double& xmax, std::vector<double>& /*splits*/) const
@@ -124,7 +123,7 @@ namespace galsim {
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
         // Public so it can be directly used from SBProfile.
-        const GSParamsPtr gsparams;
+        GSParams gsparams;
 
         virtual std::string serialize() const = 0;
 

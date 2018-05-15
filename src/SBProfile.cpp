@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,6 +22,7 @@
 #include "SBProfile.h"
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
+#include "math/Angle.h"
 
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
@@ -67,10 +68,10 @@ namespace galsim {
         return _pimpl->repr();
     }
 
-    const boost::shared_ptr<GSParams> SBProfile::getGSParams() const
+    GSParams SBProfile::getGSParams() const
     {
         assert(_pimpl.get());
-        return _pimpl->gsparams.getP();
+        return _pimpl->gsparams;
     }
 
     double SBProfile::xValue(const Position<double>& p) const
@@ -158,10 +159,10 @@ namespace galsim {
         return _pimpl->maxSB();
     }
 
-    boost::shared_ptr<PhotonArray> SBProfile::shoot(int N, UniformDeviate ud) const
+    void SBProfile::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         assert(_pimpl.get());
-        return _pimpl->shoot(N,ud);
+        return _pimpl->shoot(photons,ud);
     }
 
     double SBProfile::getPositiveFlux() const
@@ -178,30 +179,17 @@ namespace galsim {
 
     SBProfile::SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
 
-    SBProfile::SBProfileImpl::SBProfileImpl(const GSParamsPtr& gsparams) :
-        gsparams(gsparams ? gsparams : GSParamsPtr::getDefault()) {}
+    SBProfile::SBProfileImpl::SBProfileImpl(const GSParams& _gsparams) :
+        gsparams(_gsparams) {}
 
     SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs)
     { return rhs._pimpl.get(); }
 
-    SBTransform SBProfile::scaleFlux(double fluxRatio) const
-    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
-
-    SBTransform SBProfile::expand(double scale) const
-    { return SBTransform(*this,scale,0.,0.,scale); }
-
-    SBTransform SBProfile::rotate(const Angle& theta) const
-    {
-        double sint,cost;
-        theta.sincos(sint,cost);
-        return SBTransform(*this,cost,-sint,sint,cost);
-    }
-
     SBTransform SBProfile::transform(double dudx, double dudy, double dvdx, double dvdy) const
-    { return SBTransform(*this, dudx, dudy, dvdx, dvdy); }
-
-    SBTransform SBProfile::shift(const Position<double>& delta) const
-    { return SBTransform(*this,1.,0.,0.,1., delta); }
+    {
+        return SBTransform(*this, dudx, dudy, dvdx, dvdy,
+                           Position<double>(0,0), 1., getGSParams());
+    }
 
     //
     // Common methods of Base Class "SBProfile"
@@ -313,61 +301,34 @@ namespace galsim {
     }
 
     template <typename T>
-    double SBProfile::draw(ImageView<T> image, double dx, bool add) const
+    void SBProfile::draw(ImageView<T> image, double dx) const
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
+        assert(image.getStep() == 1);
 
-        const int m = image.getNCol();
-        const int n = image.getNRow();
         const int xmin = image.getXMin();
         const int ymin = image.getYMin();
         const int izero = xmin < 0 ? -xmin : 0;
         const int jzero = ymin < 0 ? -ymin : 0;
 
-        if (add) {
-            ImageAlloc<T> im2(image.getBounds());
-            _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
-            if (dx != 1.) im2 *= dx*dx;
-            image += im2;
-            return im2.sumElements();
-        } else if (image.getStep() != 1) {
-            ImageAlloc<T> im2(image.getBounds());
-            _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
-            if (dx != 1.) im2 *= dx*dx;
-            image = im2;
-            return im2.sumElements();
-        } else {
-            _pimpl->fillXImage(image, xmin*dx, dx, izero, ymin*dx, dx, jzero);
-            if (dx != 1.) image *= dx*dx;
-            return image.sumElements();
-        }
+        _pimpl->fillXImage(image, xmin*dx, dx, izero, ymin*dx, dx, jzero);
+        if (dx != 1.) image *= dx*dx;
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk, bool add) const
+    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk) const
     {
         dbg<<"Start drawK: \n";
         assert(_pimpl.get());
+        assert(image.getStep() == 1);
 
-        const int m = image.getNCol();
-        const int n = image.getNRow();
         const int xmin = image.getXMin();
         const int ymin = image.getYMin();
         const int izero = xmin < 0 ? -xmin : 0;
         const int jzero = ymin < 0 ? -ymin : 0;
 
-        if (add) {
-            ImageAlloc<std::complex<T> > im2(image.getBounds());
-            _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
-            image += im2;
-        } else if (image.getStep() != 1) {
-            ImageAlloc<std::complex<T> > im2(image.getBounds());
-            _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
-            image = im2;
-        } else {
-            _pimpl->fillKImage(image.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
-        }
+        _pimpl->fillKImage(image.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
     }
 
     // The type of T (real or complex) determines whether the call-back is to
@@ -399,7 +360,6 @@ namespace galsim {
         dbg<<x0<<" "<<dx<<" "<<m1<<"   "<<y0<<" "<<dy<<" "<<n1<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        const int stride = im.getStride();
         T* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
@@ -489,7 +449,6 @@ namespace galsim {
         // if at least one of the extreme values of kx or ky is > kmax.
         if (std::abs(kx0) > kmax || std::abs(kx0+m*dkx) > kmax ||
             std::abs(ky0) > kmax || std::abs(ky0+m+dky) > kmax) {
-            double ky0sq = ky0*ky0;
             // first and last i are where
             //   (kx0 + i*dkx)^2 + (ky0 + i*dkyx)^2 = ksq_max
             //   (dkx^2 + dky^2) i^2 + 2 (dkx kx0 + dky ky0) i + (kx0^2 + ky0^2 - ksqmax) = 0
@@ -536,13 +495,11 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::draw(ImageView<float> image, double dx, bool add) const;
-    template double SBProfile::draw(ImageView<double> image, double dx, bool add) const;
+    template void SBProfile::draw(ImageView<float> image, double dx) const;
+    template void SBProfile::draw(ImageView<double> image, double dx) const;
 
-    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk,
-                                   bool add) const;
-    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk,
-                                   bool add) const;
+    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk) const;
+    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
 
     template void SBProfile::SBProfileImpl::defaultFillXImage(
         ImageView<double> im,

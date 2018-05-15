@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -57,7 +57,6 @@ New features introduced in this demo:
 import sys
 import os
 import math
-import numpy
 import logging
 import time
 import galsim
@@ -405,7 +404,7 @@ def main(argv):
             gal = gal.shear(total_shear)
 
             # Build the final object
-            final = galsim.Convolve([psf, gal])
+            final = galsim.Convolve([gal, psf])
 
             # Draw the stamp image
             # To draw the image at a position other than the center of the image, you can

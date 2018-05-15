@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -363,7 +363,7 @@ def _GetAngleValue(param):
     try :
         value, unit = param.rsplit(None,1)
         value = float(value)
-        unit = galsim.angle.get_angle_unit(unit)
+        unit = galsim.AngleUnit.from_name(unit)
         return galsim.Angle(value, unit)
     except (TypeError, AttributeError) as e: # pragma: no cover
         raise AttributeError("Unable to parse %s as an Angle.  Caught %s"%(param,e))
@@ -485,7 +485,7 @@ def _GenerateFromRTheta(config, base, value_type):
     theta = kwargs['theta']
     import math
     #print(base['obj_num'],'Generate from RTheta: kwargs = ',kwargs)
-    return galsim.PositionD(r*math.cos(theta.rad), r*math.sin(theta.rad)), safe
+    return galsim.PositionD(r*theta.cos(), r*theta.sin()), safe
 
 def _GenerateFromRADec(config, base, value_type):
     """@brief Return a CelestialCoord constructed from given (ra,dec)

@@ -25,13 +25,28 @@ development.  For details of algorithms and code validation, please see
     http://adsabs.harvard.edu/abs/2015A%26C....10..121R
 
 
-Distribution
+Installation
 ------------
 
-The current released version of GalSim is version 1.5.  To get the code, you
+Normally, to install GalSim, you should just need to run
+
+    pip install galsim
+
+Depending on your setup, you may need to add either sudo to the start
+or --user to the end of this command as you normally do when pip installing
+packages.
+
+See INSTALL.md for full details including one dependency (FFTW) that is not
+pip installable, so you may need to install before running this command.
+
+
+Source Distribution
+-------------------
+
+The current released version of GalSim is version 2.0.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.5.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v2.0.0
 
 Also, feel free to fork the repository:
 
@@ -41,11 +56,6 @@ Or clone the repository with either of the following:
 
     git clone git@github.com:GalSim-developers/GalSim.git
     git clone https://github.com/GalSim-developers/GalSim.git
-
-although after doing so, if you are not a developer, you should probably
-checkout the latest release tag, rather than use the master branch:
-
-    git checkout v1.5.0
 
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
@@ -104,26 +114,15 @@ If none of these communication avenues seem appropriate, you can also contact
 us directly at the above email addresses.
 
 
-Installation
-------------
-
-For installation instructions, please see the file `INSTALL.md` in the main
-repository directory.
-
-There are tagged versions of the code corresponding to specific project
-releases and development milestones. (For more info, see the "Tagged versions"
-section below, and `devel/git.txt`)
-
-
 Getting started
 ---------------
 
-* Install the code as in `INSTALL.md`.
+* Install the code as above (see also INSTALL.md).
 
 * Optional, but recommended whenever you try a new version of the code: run the
   unit tests to make sure that there are no errors.  You can do this by running
-  `scons tests`.  If there are any issues, please open an Issue on our GitHub
-  page.
+  `python setup.py test`.  If there are any issues, please open an Issue on our
+  GitHub page.
 
 * Optional: run `doxygen` to generate documentation, using `Doxyfile` in the
   main repository directory to specify all doxygen settings.  Alternatively,
@@ -195,6 +194,7 @@ As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to `examples/`
 to illustrate what GalSim can do.
 
+
 Tagged versions
 ---------------
 
@@ -210,7 +210,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.5.0
+    git checkout v1.6.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"
@@ -288,20 +288,20 @@ Summary of planned future development
 We plan to add the following additional capabilities in future versions of
 GalSim:
 
-* Easier installation -- removing the boost dependency in particular.  We are
-  planning to have v2.0 be pip installable, rather than using SCons, which
-  will make it much easier to install for many systems.  This requires ripping
-  out the Boost Python wrapping and replacing with either cffi or pybind11
-  (probably the latter, but still TBD).  This effort is proceeding in issue
-  #809, with changes being merged to branch "noboost".
-
 * Wavelength-dependent photon shooting.  Currently, the chromatic functionality
   is only available for FFT rendering, which is quite slow.  For most use
   cases, photon shooting should be orders of magnitude faster, so this is
-  a near-term priority to get done.  (cf. Issue #540.)
+  a near-term priority to get done.  (cf. Issue #540)
 
 * Simulating more sophisticated detector defects and image artifacts.  E.g.
-  cosmic rays, saturation, bleeding, ...
+  vignetting, fringing, cosmic rays, saturation, bleeding, ... (cf. Issues
+  #553, #828)
+
+* Proper modeling of extinction due to dust. (cf. Issues #541, #550)
+
+* Various speed improvements.  (cf. Issues #205, #566, #875, #935)
+
+* Switch docs to Sphinx. (cf. Issue #160)
 
 There are many others as well.  Please see
 

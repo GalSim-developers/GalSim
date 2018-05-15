@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,13 +19,9 @@
 from __future__ import print_function
 import os
 import numpy as np
+
+import galsim
 from galsim_test_helpers import *
-try:
-    import galsim
-except ImportError:
-    import sys
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
@@ -2044,6 +2040,10 @@ def test_ne():
     gals = [galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees),
             galsim.ChromaticAtmosphere(gal2, 500.0, zenith_angle=30*galsim.degrees),
             galsim.ChromaticAtmosphere(gal1, 600.0, zenith_angle=30*galsim.degrees),
+            galsim.ChromaticAtmosphere(gal1, 600.0, zenith_angle=30*galsim.degrees,
+                                       scale_unit=galsim.degrees),
+            galsim.ChromaticAtmosphere(gal1, 600.0, zenith_angle=30*galsim.degrees,
+                                       scale_unit='arcmin'),
             galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees, alpha=-0.1),
             galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees,
                                        parallactic_angle=45*galsim.degrees),
@@ -2129,6 +2129,7 @@ def test_ne():
     gals = [galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0),
             galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1),
             galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1, scale_unit=galsim.arcmin),
+            galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1, scale_unit='radians'),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, obscuration=0.5),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, aberrations=[0, 0, 0, 0, 0.1]),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, defocus=0.2),
@@ -2141,6 +2142,7 @@ def test_ne():
     gals = [galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0),
             galsim.ChromaticAiry(lam=1.0, diam=1.0),
             galsim.ChromaticAiry(lam=1.0, diam=1.0, scale_unit=galsim.arcmin),
+            galsim.ChromaticAiry(lam=1.0, diam=1.0, scale_unit='deg'),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, obscuration=0.5),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, flux=1.1),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, gsparams=gsp)]

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -95,10 +95,33 @@ def make_movie(args):
               "and r0_500 {:5.3f} m."
               .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
     if args.nlayers > 0:
-        atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
-                                screen_size=args.screen_size, screen_scale=args.screen_scale)
+        # Make two identical Atmospheres.  They will diverge when one gets drawn using Fourier
+        # optics and the other gets drawn with geometric optics.
+        fft_atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts,
+                                    rng=rng.duplicate(),
+                                    screen_size=args.screen_size, screen_scale=args.screen_scale)
+        geom_atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts,
+                                     rng=rng.duplicate(), screen_size=args.screen_size,
+                                     screen_scale=args.screen_scale)
     else:
-        atm = galsim.PhaseScreenList()
+        fft_atm = galsim.PhaseScreenList()
+        geom_atm = galsim.PhaseScreenList()
+
+    # Before either of this has been instantiated, they are identical
+    assert fft_atm == geom_atm
+
+    # If any AtmosphericScreens are included, we manually instantiate here so we can have a
+    # uniformly updating ProgressBar both here and below when actually drawing PSFs.  Normally, it's
+    # okay to let the atms automatically instantiate, which happens when the first PSF is drawn, or
+    # the first wavefront is queried.
+    if args.nlayers > 0:
+        print("Instantiating screens")
+        with ProgressBar(2*args.nlayers) as bar:
+            fft_atm.instantiate(_bar=bar)
+            r0 = args.r0_500*(args.lam/500)**1.2
+            geom_atm.instantiate(kmax=0.2/r0, _bar=bar)
+            # After instantiation, they're only equal if there's no atmosphere.
+            assert fft_atm != geom_atm
 
     # Setup Fourier and geometric apertures
     fft_aper = galsim.Aperture(args.diam, args.lam, obscuration=args.obscuration,
@@ -172,15 +195,19 @@ def make_movie(args):
     if subdir and not os.path.isdir(subdir):
         os.makedirs(subdir)
 
+    print("Drawing PSFs")
     with ProgressBar(args.n) as bar:
         with writer.saving(fig, fullpath, 100):
             t0 = 0.0
             for i, aberration in enumerate(aberrations):
                 optics = galsim.OpticalScreen(args.diam, obscuration=args.obscuration,
                                               aberrations=[0]+aberration.tolist())
-                psl = galsim.PhaseScreenList(atm._layers+[optics])
-                fft_psf = psl.makePSF(lam=args.lam, aper=fft_aper, t0=t0, exptime=args.time_step)
-                geom_psf = psl.makePSF(lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
+                fft_psl = galsim.PhaseScreenList(fft_atm._layers+[optics])
+                geom_psl = galsim.PhaseScreenList(geom_atm._layers+[optics])
+                fft_psf = fft_psl.makePSF(
+                        lam=args.lam, aper=fft_aper, t0=t0, exptime=args.time_step)
+                geom_psf = geom_psl.makePSF(
+                        lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
 
                 fft_img0 = fft_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale)
 
@@ -358,8 +385,8 @@ Atmosphere only simulation:
     parser.add_argument("--screen_size", type=float, default=102.4,
                         help="Size of atmospheric screen in meters.  Note that the screen wraps "
                              "with periodic boundary conditions.  Default: 102.4")
-    parser.add_argument("--screen_scale", type=float, default=0.1,
-                        help="Resolution of atmospheric screen in meters.  Default: 0.1")
+    parser.add_argument("--screen_scale", type=float, default=0.025,
+                        help="Resolution of atmospheric screen in meters.  Default: 0.025")
     parser.add_argument("--max_speed", type=float, default=20.0,
                         help="Maximum wind speed in m/s.  Default: 20.0")
 

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -62,8 +62,11 @@ namespace galsim {
         bool contains(const Point& point) const;
 
         // Two functions that check whether the point is trivially inside or outside.
-        bool triviallyContains(const Point& point) const;
-        bool mightContain(const Point& point) const;
+        inline bool triviallyContains(const Point& point) const
+        { return _inner.includes(point); }
+
+        inline bool mightContain(const Point& point) const
+        { return _outer.includes(point); }
 
         // Some methods that let Polygon act (in some ways) like a vector<Point>
         size_t size() const { return _points.size(); }
@@ -75,9 +78,15 @@ namespace galsim {
         // Make the Polygon a scaled version of a reference one (relative to an empty Polygon).
         void scale(const Polygon& refpoly, const Polygon& emptypoly, double factor);
 
+        // Distort positions by a scaled version of a reference polgon
+        void distort(const Polygon& refpoly, double factor);
+
         // Update the inner and outer bounds approximations of the polygon.  Need to make
         // sure you do this any time you update the positions of the points.
         void updateBounds();
+
+        const Bounds<double>& getInnerBounds() const { return _inner; }
+        const Bounds<double>& getOuterBounds() const { return _outer; }
 
     private:
 

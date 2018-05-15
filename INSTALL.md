@@ -5,524 +5,456 @@ System requirements: GalSim currently only supports Linux and Mac OSX.
 
 Table of Contents:
 
-0) [Overall summary](#0-overall-summary)
+1) [Overall summary](#overall-summary)
 
-1) [Software required before building GalSim](#1-software-required-before-building-galsim)
+2) [Installing FFTW](#installing-fftw)
+   * [Installing FFTW yourself](#i-installing-fftw-yourself)
+   * [Using an existing installation](#ii-using-an-existing-installation-of-fftw)
+   * [Using conda](#iii-installing-fftw-with-conda)
+   * [Using apt-get](#iv-installing-fftw-with-apt-get)
+   * [Using fink](#v-installing-fftw-with-fink)
+   * [Using MacPorts](#vi-installing-fftw-with-macports)
 
-2) [Installing the GalSim Python package](#2-installing-the-galsim-python-package)
+3) [Installing Eigen](#installing-eigen)
+   * [Installing Eigen yourself](#i-installing-eigen-yourself)
+   * [Using an existing installation](#ii-using-an-existing-installation-of-eigen)
+   * [Using conda](#iii-installing-eigen-with-conda)
+   * [Using apt-get](#iv-installing-eigen-with-apt-get)
+   * [Using fink](#v-installing-eigen-with-fink)
+   * [Using MacPorts](#vi-installing-eigen-with-macports)
+   * [Using eigency](#vii-using-eigency)
 
-3) [Running tests and installing example executables](#3-running-tests-and-installing-example-executables)
+4) [Using Conda](#using-conda)
 
-4) [Running example scripts](#4-running-example-scripts)
+5) [Installing With SCons](#installing-with-scons)
 
-5) [Platform-specific notes](#5-platform-specific-notes)
+6) [Running tests](#running-tests)
 
-6) [More SCons options](#6-more-scons-options)
+7) [Running example scripts](#running-example-scripts)
 
 
-0. Overall summary
-==================
+Overall summary
+===============
 
-While the sections below detail how to install GalSim including its required and
-optional dependencies, this section gives a brief summary.  A minimal
-installation of GalSim requires the following dependencies. This dependency list
-includes a canonical version number that is known to work. In most cases, other
-recent versions will also work:
+GalSim is a python module that has much of its implementation in C++ for
+improved computational efficiency.  GalSim supports both Python 2 and
+Python 3.  It is regularly tested on Python versions (2.7, 3.4, 3.5, 3.6).
 
-- Python (2.7, 3.4, 3.5, 3.6)
-- SCons (2.1.0)
-- NumPy (1.11)
-- Astropy (1.1.1)
+The usual way to install GalSim is now (starting with version 2.0) simply
+
+    pip install galsim
+
+which will install the latest official release of GalSim.
+
+Note that you may need to use sudo with the above command if you are installing
+into system directories.  If you do not have write privileges for the directory
+it is trying to install into, you can use the --user flag to install into a
+local directory instead.  (Normally something like $HOME/Library/Python/2.7
+or $HOME/.local, depending on your system.)
+
+If you would rather install from source (e.g. to work on a development branch),
+you can do
+
+    git clone git@github.com:GalSim-developers/GalSim.git
+    cd GalSim
+    pip install -r requirements.txt
+    python setup.py install
+
+(again possibly with either sudo or --user).
+
+**Note**: If you use Anaconda Python, you can use that to install most of the
+requirements with their conda installer.  See [Using Conda](using-conda)
+below.
+
+Either of these installation methods should handle most of the required
+dependencies for you if you do not have them already installed on your machine.
+There is one exception, however.  FFTW is not directly pip installable, so if
+the above installation fails, you may need to install it separately. See
+section 2 below for more details about how to do this.
+
+The other dependencies should all be installed by pip, but we list them here
+for completeness along with versions that are known to work.  In most cases,
+other recent (especially later) versions will also work:
+
+- Eigen (3.2.5)
+- NumPy (1.13.1)
 - Future (0.16.0)
-- FFTW (3.3)
-- TMV (0.73)
-- Boost (1.61)
+- Astropy (2.0.1)
+- PyBind11 (2.2.1)
+- LSSTDESC.Coord (1.0.5)
 
-A few optional dependencies provide additional functionality, but GalSim can
-otherwise be compiled and used without them.  Basic WCS functionality is native
-to GalSim, but for users with more complicated WCS needs, we recommend
-installing starlink-pyast. Thee Astropy WCS package is also supported, but note
-that it requires scipy as an additional dependency.  To use yaml for config
-parsing, the pyyaml module is needed.  Faster text file parsing for reading in
-bandpasses and SEDs can be enabled if you have the pandas module (but the code
-will work, albeit more slowly, without this module).
+There are a few others modules are not technically required, but we let pip
+install them along with GalSim, because they either add useful functionality
+or efficiency to GalSim.  These are listed in the requirements.txt file that
+pip uses to determine what else to install.  But if you install with
+`python setup.py install`, then these will not be installed.
 
-The sections below give a lot more details about how to obtain these
-dependencies; many are available from sources like pip or easy_install, rather
-than having to be installed from source. Third party packages like Anaconda
-often include many of these dependencies automatically.  GalSim and all of its
-dependencies can be installed via fink, for users with Macs.
-
-1. Software required before building GalSim
-===========================================
-
-Please note: Mac users who want to use fink can skip down to Section 5.ii and
-use that to satisfy all dependencies before installing.
-
-i) Python (2.7, 3.4, 3.5, or 3.6 series), with some additional modules installed
---------------------------------------------------------------------------------
-
-The interface to the GalSim code is via the Python package `galsim`, and its
-associated modules. Therefore you must have Python installed on your system.
-Python is free, and available from a number of sources online (see below).
-Currently GalSim supports Python versions 2.7, 3.4, 3.5, and 3.6.  It is likely
-that other Python 3.x versions are compatible, but these two are the only ones
-actively tested.
-
-Many systems have a version of Python pre-installed. To check whether you
-already have a compatible version, type
-
-    python --version
-
-at the terminal prompt. If you get a "Command not found" error, or the reported
-version is not one of the supported versions, you should read the "Getting
-Python and required modules" section below.
-
-It may be that there is or soon will be more than one version of Python
-installed on your operating system, in which case please see the "Making sure
-you are using the right Python" Section below.
-
-### Getting Python and required modules ###
-
-For a list of places to download Python, see http://www.python.org/download/.
-
-The GalSim package also requires
-
-* the numerical Python module NumPy (http://www.numpy.org).  Currently GalSim is
-  regularly tested to ensure it works with NumPy 1.11.2, but other versions will
-  likely work.
-
-* the astronomical FITS file input/output module PyFITS available
-  either as a standalone package:
-      http://www.stsci.edu/institute/software_hardware/pyfits
-  or as part of the astropy library:
-      http://www.astropy.org/
-  The latter is preferred, since this is now where all future development of
-  this package is happening.  Currently GalSim is regularly tested to ensure
-  it works with astropy version 1.1.1, but it is likely that most recent
-  versions will also work.
-
-* the future module, which is used to ease compatibility between Python 2
-  and Python 3.  Currently GalSim is regularly tested to ensure
-  it works with version 0.16.0 of this module, but other versions may work.
-
-* the PyYAML package for parsing YAML files (http://pyyaml.org/wiki/PyYAML)
-  Note: PyYAML is only technically required if you are using the `galsim`
-  executable for parsing YAML config files.  Users who will only use GalSim
-  in Python (or use only JSON config files) may skip this dependency.
-  Currently GalSim is regularly tested to ensure it works with version 3.12
-  of this package, but other versions may work.
-
-* Optional dependency: PyAst WCS package.  This is a really nice front end
-  for the Starlink AST astrometry code.  It seems to support pretty much
-  every WCS encoding there is.  (At least every one we tried.)  Their
-  preferred installation method is via pip:
-      pip install starlink-pyast
-  For more information, see their website:
-      https://pypi.python.org/pypi/starlink-pyast/
-  With this installed, you can use the galsim.PyAstWCS class, which in
-  turn means that galsim.FitsWCS will pretty much always work.
-
-* Optional dependency: Astropy WCS package.  We already mentioned astropy
-  above for astropy.io.fits.  Another package we can use from astropy is
-  their WCS package, astropy.wcs.  They cannot read all that many WCS types
-  (compared to PyAst at least), but hopefully the functionality will include
-  in time.  Unfortunately, this package has scipy as a dependency, which
-  is kind of a gargantuan package.  But if you are willing to install that
-  too, then you can use the galsim.AstropyWCS class.
-
-* Optional dependency: Astropy Units package.  This is now required for
-  GalSim chromatic functionality, but can be omitted if you are not using
-  this part of GalSim.
-
-* Optional dependency: Pandas.  This has a very fast function for reading ASCII
-  tables.  If this is not available (e.g. when reading in Bandpass or SED
-  files) then we fall back to the (much) slower numpy loadtxt function.
-
-These should installed onto your Python system so that they can be imported by:
-
-    >>> import numpy
-    >>> import astropy.io.fits  [ Either this (preferred)... ]
-    >>> import pyfits           [ ... or this.               ]
-    >>> import future
-    >>> import yaml
-    >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
-    >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
-    >>> import pandas           [ for faster ASCII table input ]
-
-within Python.  You can test this by loading up the Python interpreter for the
-version of Python you will be using with the GalSim toolkit. This is usually
-achieved by typing `python` or `/path/to/executable/bin/python` if your desired
-Python is not the system default, and typing the `import` commands above.  If
-you get no warning message, things are OK.
-
-If you do not have these modules, follow the links above or alternatively try
-`easy_install` (or equivalently `/path/to/executable/bin/easy_install` if your
-desired Python is not the default).
-
-As an example, if using the default system Python, connected to the internet
-and with root/admin privileges simply type
-
-    easy_install numpy
-    easy_install pyfits
-    easy_install future
-    easy_install pyyaml
-
-at the prompt.  If not using an admin account, prefix the commands above with
-`sudo` and enter your admin password when prompted. The required modules should
-then be installed.
-
-See http://packages.python.org/distribute/easy_install.html#using-easy-install
-for more details about the extremely useful `easy_install` feature.
-
-Another option for installing these packages is pip.  See pypi.python.org for
-details about getting this installed if you do not already have it on your
-system.  Then
-
-    pip install numpy
-    pip install astropy
-    pip install future
-    pip install pyyaml
-    pip install starlink-pyast
-    pip install scipy
-
-### Third party-maintained Python packages ###
-
-There are a number of third party-maintained packages which bundle Python with
-many of the numerical and scientific libraries that are commonly used, and
-many of these are free for non-commercial or academic use.
-
-One good example of such a package, which includes all of the Python
-dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
-pytest; see Section 2 below) was the Enthought Python Distribution (EPD; see
-https://enthought.com/products/canopy/academic/ for the academic download
-instructions).
-
-The new Enthought "Canopy" package, a successor to EPD, provides the same
-functionality.  However, it has been found that Canopy on Mac OSX can give
-problems building against Boost.Python, another GalSim dependency.  A solution
-to these issues is described here:
-https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-canopy
-
-Other re-packaged Python downloads can be found at
-http://www.python.org/download/.
-
-### Making sure you are using the right Python ###
-
-Some users will find they have a few versions of Python around their operating
-system (determined, for example, using `locate python` at the prompt). A common
-way this will happen if there is already an older build (e.g. Python 2.4.X)
-being used by the operating system and then you install a newer version from
-one of the sources described above.
-
-It will be important to make sure that the version of Python for which NumPy,
-PyFITS and PyYAML etc. are installed is also the one being used for GalSim,
-and that this is the one *you* want to use GalSim from! Knowing which installed
-version of Python will be used is also important for the installation of the
-Boost libraries (see Section 1.v, below).
-
-To check which Python is your default you can identify the location of the
-executable by, for example, typing
-
-    which python
-
-at the prompt. This will tell you the location of the executable, something like
-    /path/to/executable/bin/python
-
-If this is not the Python you want, please edit your startup scripts (e.g.
-`.profile` or `.bashrc`), and be sure to specify where your desired Python
-version resides when installing the Boost C++ libraries (see Section 1.v).
-
-See Section 5 of this document for some suggestions about getting Python, Boost
-and all the other dependencies all working well together on your specific
-system.
+- Starlink (3.10.0)  (Improved WCS functionality)
+- PyYaml (3.12)      (Reads YAML config files)
+- Pandas (0.20)      (Faster reading of ASCII input files)
 
 
-ii) SCons (http://www.scons.org)
---------------------------------
+Installing FFTW
+===============
 
-GalSim uses SCons to configure and run its installation procedures, and so SCons
-needs to be installed in advance. Versions 2.0 and 2.1 of SCons get reasonable
-testing with GalSim, but it should also work with 1.x versions. You can check
-if it is installed, and if so which version, by typing
+GalSim uses FFTW (The Fastest Fourier Transform in the West) for performing
+fast fourier transforms.
 
-    scons --version
+We require FFTW version >= 3.0.  Most tests have been done with FFTW 3.3.7,
+so if you have trouble with an earlier version, try upgrading to 3.3.7 or later.
 
-See Section 5 for some more suggestions about installing this on your platform.
+i) Installing FFTW yourself
+-------------------------
+
+FFTW is available at the URL
+
+    http://www.fftw.org/download.html
+
+As of this writing, version 3.3.7 is the current latest release, for which
+the following commands should work to download and install it:
+
+    wget http://www.fftw.org/fftw-3.3.7.tar.gz
+    tar xfz fftw-3.3.7.tar.gz
+    cd fftw-3.3.7
+    ./configure --enable-shared
+    make
+    sudo make install
+
+If you want to install into a different directory (e.g. because you do not
+have sudo privileges on your machine), then specify the alternate directory
+with the --prefix flag to configure.  E.g.
+
+    ./configure --enable-shared --prefix=$HOME
+
+which will install the library into $HOME/lib and the header file into
+$HOME/include.  In this case, leave off the sudo from the last line.
+Also, you should make sure these directories are in your LD_LIBRARY_PATH
+and C_INCLUDE_PATH environment variables, respectively.
+
+Alternatively, if you do not want to modify your LD_LIBRARY_PATH and/or
+C_INCLUDE_PATH, you can instead set an environment variable to tell GalSim
+where the files are
+
+    export FFTW_DIR=/path/to/fftw/prefix
+
+E.g. in the above case where prefix is $HOME, you would do
+
+    export FFTW_DIR=$HOME
+
+Probably, you should put this into your shell login file (e.g. .bash_profile)
+so it always gets set when you log in.
 
 
-iii) FFTW (http://www.fftw.org)
+ii) Using an existing installation of FFTW
+------------------------------------------
+
+If FFTW is already installed on your system, there may be nothing to do.
+If it is in a standard location like /usr/local/lib or in some other
+directory in your LD_LIBRARY_PATH, then GalSim should find it without
+any extra work on your part.
+
+If it is in a non-standard location, and you do not want to add this path
+to your LD_LIBRARY_PATH (or you are on a modern Mac that hides such system
+variables from setup.py), then you can instead set the FFTW_DIR environment
+variable to tell GalSim where to look
+
+    export FFTW_DIR=/some/path/to/fftw
+
+For instance, if libfftw3.so is located in /opt/cray/pe/lib64, you could use
+that with
+
+    export FFTW_DIR=/opt/cray/pe/lib64
+
+This command would normally be done in your .bash_profile file so it gets
+executed every time you log in.
+
+If you have multiple versions of FFTW installed on your system, this variable
+can be used to specify which version you want GalSim to use as this will be
+the first location it will check during the installation process.
+
+
+iii) Installing FFTW with conda
 -------------------------------
 
-These Fast Fourier Transform libraries must be installed, as GalSim will link
-to them during the build. We require version 3 (or greater presumably), which
-is often distributed as fftw3.  See Section 5 for some suggestions about
-installing this on your platform.
+If you use conda, FFTW can be install with
 
+    conda install fftw
 
-iv) TMV (https://github.com/rmjarvis/tmv/) (version >= 0.72 required)
------------------------------------------------------------------------
+This will put it into the anaconda/lib directory on your system (within your
+active environment if appropriate).  GalSim knows to look here, so there is
+nothing additional you need to do.
 
-GalSim uses the TMV library for its linear algebra routines. You should
-download it from the site above and follow the instructions in its INSTALL
-file for how to install it. Usually installing TMV just requires the command
 
-    scons install PREFIX=<installdir>
+iv) Installing FFTW with apt-get
+--------------------------------
 
-but there are additional options you might consider, so you should read the TMV
-INSTALL file for full details. Also note, you may not need to specify the
-installation directory if you are comfortable installing it into `/usr/local`.
-However, if you are trying to install it into a system directory then you need
-to use sudo scons install [PREFIX=<installdir>].
+On Linux machines that use apt-get, FFTW can be installed with
 
-Note: On Mac OS 10.7, the Apple BLAS library has problems when run using
-multiple processes.  So if you have such a system, we recommend getting a
-different BLAS library, such as ATLAS (and making sure TMV finds it instead
-of the system BLAS) or compiling TMV with no BLAS library at all (using
-the SCons option `WITH_BLAS=false`).  Otherwise, Galsim programs may hang
-when run with multiple processes.  e.g. `scons tests` by default uses
-multiple processes, and multiple people reported problems using the Apple
-system BLAS on OS 10.7.
+    apt-get install libfftw3-dev
 
 
-v) Boost C++ (http://www.boost.org)
------------------------------------
+v) Installing FFTW with fink
+----------------------------
 
-GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
-must be installed. Currently GalSim is regularly tested to ensure it works with
-Boost version 1.61, but it is likely that most versions released within the
-last several years will also work. It is particularly important that your installed
-Boost library links to the same version of Python with which you will be using
-GalSim and on which you have installed NumPy and PyFITS (see Section ii, above).
-Boost can be downloaded from the above website, and must be installed per the
-(rather limited) instructions there, which essentially amount to using a command
+If you use fink on a Mac, FFTW can be installed with
 
-    ./bootstrap.sh
+    fink install fftw3
 
-(Additional `bootstrap.sh` options may be necessary to ensure Boost is built
-against the correct version of Python; see below).
+(Make sure to use fftw3, not fftw, since fftw is version 2.)
 
-followed by
+This will put it into the /sw/lib directory on your system. GalSim knows to
+look here, so there is nothing additional you need to do.
 
-    ./b2 link=shared
-    ./b2 --prefix=<INSTALL_DIR> link=shared install
 
-If you are installing to a system directory, the second needs to be run as
-root, of course: `sudo ./b2`...  Also, you should be aware that if you are
-running `b2` a second time, you should use `b2 -a` to tell boost to
-recompile everything rather than use the existing libraries.
+vi) Installing FFTW with MacPorts
+---------------------------------
 
-The `link=shared` is necessary to ensure that they are built as shared
-libraries; this is automatic on some platforms, but not all.
+If you use MacPorts, FFTW can be installed with
 
-Note: if you do not want to install everything related to Boost (which takes a
-while), you can restrict to Boost Python and math by using `--with-python`
-`--with-math` on the `./b2` commands.  Currently we are only using Boost Python
-and parts of the math library so compiling and installing these two will likely
-be sufficient for the foreseeable future.
+    port install fftw-3
 
-Once you have installed Boost, you can check that it links to the version of
-Python that will be used for GalSim and on which you have installed NumPy and
-PyFITS by typing
+This will put it into the /opt/local/lib directory on your system. GalSim knows
+to look here, so there is nothing additional you need to do.
 
-    ldd <YOUR_BOOST_LIB_DIR>/libboost_python<POSSIBLE_SUFFIX>.so (Linux)
-    otool -L <YOUR_BOOST_LIB_DIR>/libboost_python<POSSIBLE_SUFFIX>.dylib (OSX)
 
-(If the ldd command on Linux does not show the Python version, the command
-`ls -l <YOUR_BOOST_LIB_LOCATION>/libboost_python*` may show the version of
-libboost_python.so linked to, for example, `libboost_python_py26.so.1.40.0`.
-In such a case you can tell both the Python and Boost versions being used, 2.6
-and `1.40.0`, respectively, in this example.)  On some Linux systems,
-ldd will not indicate the Python library against which boost was
-compiled; in this case, continue with the installation procedure and
-any issues will be revealed at a later stage.
+Installing Eigen
+================
 
-If the Python library listed is the one you will be using, all is well. If not,
-Boost can be forced to use a different version by specifying the following
-options to the ./bootstrap.sh installation script (defaults in `[]` brackets):
+GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
+header-only library, which means that nothing needs to be compiled to use it.
+You can download the header files yourself, but if you do not, then we use
+the pip-installable eigency module, which bundles the header files in their
+installed python directory.  So usually, this dependency should require no
+work on your part.
 
-* `--with-python=PYTHON` specify the Python executable [python]
+However, it might become useful to install Eigen separately from eigency
+e.g. if you want to upgrade to a newer version of Eigen than the one that is
+bundled with eigency.  (Eigen 3.2.8 is bundled with eigency 1.77.)  Therefore,
+this section describes several options for how to obtain and install Eigen.
 
-* `--with-python-root=DIR` specify the root of the Python installation
-                           [automatically detected, but some users have found
-                           they have to force it to use a specific one because
-                           it detected the wrong one]
+We require Eigen version >= 3.0.  Most tests have been done with Eigen 3.2.8
+or 3.3.4, but we have also tested on 3.0.4, so probably any 3.x version will
+work.  However, if you have trouble with another version, try upgrading to
+3.2.8 or later.
 
+Note: Prior to version 2.0, GalSim used TMV for the linear algebra back end.
+This is still an option if you prefer (e.g. it may be faster for some use
+cases, since it can use an optimized BLAS library on your system), but to
+use TMV, you need to use the SCons installation option described below.
 
-2. Installing the GalSim Python package
-=======================================
 
-Once you have installed all the dependencies described above, you are ready to
-build GalSim. From the GalSim base directory (in which this INSTALL.md file is
-found) type
+i) Installing Eigen yourself
+----------------------------
 
-    scons
+Eigen is available at the URL
 
-If everything above was installed in fairly standard locations, this may work
-the first time. Otherwise, you may have to tell SCons where to find some of
-those libraries. There are quite a few options that you can use to tell SCons
-where to look, as well as other things about the build process. To see a list
-of options you can pass to SCons, type
+    http://eigen.tuxfamily.org/index.php
 
-    scons -h
+As of this writing, version 3.3.4 is the current latest release, for which
+the following commands should work to download and install it:
 
-(See also Section 5 below.)
+    wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
+    tar xfj 3.3.4.tar.bz2
+    sudo cp eigen-eigen-5a0156e40feb/Eigen /usr/local/include
 
-As an example, to specify where your TMV library is located, you can type
+In the final cp line, the MD5 hash (5a0156e40feb) will presumably change for
+other versions, so use whatever directory tar expands into if you are using
+a different version than 3.3.4.
 
-    scons TMV_DIR=<tmv-dir>
+If you do not have sudo privileges, you can copy to a different directory such
+as $HOME/include instead and leave off the sudo from the cp command.  In this
+case, make sure this directory is in your C_INCLUDE_PATH environment variable.
 
-where `<tmv-dir>` would be the same as the `PREFIX` you specified when
-installing TMV, i.e. The TMV library and include files are installed in
-`<tmv-dir>/lib` and `<tmv-dir>/include`. Some important options that you may
-need to set are:
+Finally, you can also skip the last command above and instead set EIGEN_DIR
+as an environment variable to tell GalSim where the files are
 
-* `TMV_DIR`: Explicitly give the TMV prefix
+    export EIGEN_DIR=/some/path/to/eigen
 
-* `FFTW_DIR`: Explicitly give the FFTW prefix
+This should be the directory in which the Eigen subdirectory is found.  E.g.
 
-* `BOOST_DIR`: Explicitly give the Boost prefix
+    export EIGEN_DIR=$HOME/eigen-eigen-5a0156e40feb
 
-* `EXTRA_LIBS`: Additional libraries to send to the linker
+Probably, you should put this into your .bash_profile file so it always gets
+set when you log in.
 
-* `EXTRA_INCLUDE_PATH`: Extra paths for header files (separated by : if more
-                        than 1)
 
-* `EXTRA_FLAGS`: Extra flags to send to the compiler other than what is
-                 automatically used. (e.g. -m64 to force 64 bit compilation)
+ii) Using an existing installation of Eigen
+-------------------------------------------
 
-Again, you can see the full list of options using `scons -h`.
+If Eigen is already installed on your system, there may be nothing to do.
+If it is in a standard location like /usr/local/include or in some other
+directory in your C_INCLUDE_PATH, then GalSim should find it without
+any extra work on your part.
 
-Another common option is `CXX=<c++compiler>`. So, to compile with `icpc` rather
-than the default `g++`, type
+If it is in a non-standard location, and you do not want to add this path
+to your C_INCLUDE_PATH, then you can instead set the EIGEN_DIR environment
+variable to tell GalSim where to look
 
-    scons CXX=icpc
+    export EIGEN_DIR=/some/path/to/eigen
 
-On El Capitan, Apple instituted a new security measure wherein system calls
-lose some of the system environment variables, including DYLD_LIBRARY_PATH
-among others.  If your system is set up to use that environment variable to
-resolve library locations at runtime, then this will cause problems when SCons
-is trying to figure out if things are installed correctly.  To override this
-behavior, you can explicitly send this environment variable to SCons by writing
+For instance, if Eigen was installed into /usr/include/eigen3, then you
+could use that with
 
-    scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+    export EIGEN_DIR=/usr/include/eigen3
 
-and it will be able to re-set this value within the SCons processing.
+This command would normally be done in your .bash_profile file so it gets
+executed every time you log in.
 
-One nice feature of SCons is that once you have specified a parameter, it will
-save that value for future builds in the file `gs_scons.conf`, so once you have
-the build process working, for later builds you only need to type `scons`. It
-can also be useful to edit this file directly -- mostly if you want to unset a
-parameter and return to the default value, it can be easier to just delete the
-line from this file, rather than explicitly set it back to the default value.
+If you have multiple versions of Eigen installed on your system, this variable
+can be used to specify which version you want GalSim to use as this will be
+the first location it will check during the installation process.
 
-SCons caches the results of the various checks it does for the required
-external libraries (TMV, Boost, etc.). This is usually very helpful, since
-they do not generally change, so it makes later builds much faster.  However,
-sometimes (rarely) SCons can get confused and not realized that things on your
-system have changed, which might cause problems for you. You can delete
-everything scons knows about what it has tried to build previously with
 
-    /bin/rm -rf .scon*
+iii) Installing Eigen with conda
+--------------------------------
 
-This will force SCons to recheck and recompile everything from scratch.
+If you use conda, Eigen can be install with
 
-Once you have a successful build, you can install the GalSim library, Python
-modules, and header files into standard locations (like `/usr/local` and your
-Python site-packages directory) with
+    conda install eigen
 
-    scons install
+This will put it into the anaconda/include directory on your system (within
+your active environment if appropriate).  GalSim knows to look here, so there
+is nothing additional you need to do.
 
-or
 
-    sudo scons install
+iv) Installing Eigen with apt-get
+---------------------------------
 
-If you want to install into a different location, the prefix for the library
-and header files can be specified with `PREFIX=<installdir>`, and the location
-for the Python modules can be specified with `PYPREFIX=<pythondir>`. So the
-command would be
+On Linux machines that use apt-get, Eigen can be installed with
 
-    scons install PREFIX=<installdir> PYPREFIX=<pythondir>
+    apt-get install libeigen3-dev
 
-Note: if you specify a specific directory for the Python modules with PYPREFIX,
-this directory should be in the sys.path search path for the version of
-Python you are using.  You can check with
 
-    python -c "import sys; print sys.path"
+v) Installing Eigen with fink
+-----------------------------
 
-If your `PYPREFIX` directory is not there, then Python will not be able to find
-the installed galsim module.  You should therefore add this directory to your
-PYTHONPATH environment variable.  For example, if you use bash, then you
-should add the line
+If you use fink on a Mac, Eigen can be installed with
 
-    export PYTHONPATH=$PYTHONPATH:<pythondir>
+    fink install eigen
 
-where `<pythondir>` is the same directory you used above for `PYPREFIX`.
+This will put it into the /sw/include directory on your system. GalSim knows
+to look here, so there is nothing additional you need to do.
 
-The installed files can be removed with the command
 
-    scons uninstall
+vi) Installing Eigen with MacPorts
+----------------------------------
 
-Finally, to clean all compiled objects from the `GalSim` directory, you can use
+If you use MacPorts, Eigen can be installed with
 
-    scons -c
+    port install eigen
 
-This is rather like a `make clean` command.
+This will put it into the /opt/local/include directory on your system. GalSim
+knows to look here, so there is nothing additional you need to do.
 
-If you are having trouble with installing, you may find some helpful hints at
-the GalSim Installation FAQ page on the Wiki:
-https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ
 
-You can ask also about your particular problem on stackoverflow.com.  Some of
-the GalSim developers have automatic alerts set up for the tag 'galsim'.  So
-yout can ask your question there, and there is a good chance that it will be
-answered.  You might also try searching that site to see if anyone else asked
-about the same problem.
+vii) Using eigency
+------------------
 
-If you are still having trouble, please consider opening a new issue on the
-GalSim Github page at https://github.com/GalSim-developers/GalSim/issues
-explaining what your particular problem is, and hopefully someone can help
-you figure out a solution.
+Eigency is a pip-installable module that bundles the Eigen header files, so it
+can also be used to install these files on your system.  Indeed, as mentioned
+above, we will use eigency automatically if Eigen is not found in one of the
+above locations.  So the above installations will take precendence, but
+eigency should work as a fall-back.
 
+Note: At the time of this writing, installation of eigency depends on having
+cython already installed.  I thought I fixed this with PR #26, but it was
+not quite complete.  There is now an open PR #27, which I believe will
+finish making pip install eigency work, even if you do not have cython
+installed.  But for now, you need to do
 
-3. Running tests and installing example executables
-===================================================
+    pip install cython
+    pip install eigency
+
+(in that order) for it to work.
+
+
+Using Conda
+===========
+
+If you use conda (normally via the Anaconda Python distribution), then all of
+the prerequisites are available from the conda-forge channel, so you can use
+that as follows (from within the main GalSim directory):
+
+    conda create -y -n galsim
+    conda activate galsim
+    conda install -y -c conda-forge --file conda_requirements.txt
+    pip install -r requirements.txt
+    pip install .
+
+The first two lines are optional, but they let you keep the GalSim installation
+separate from any other conda environments you might have.
+
+If your conda version is 4.3 or earlier, replace the above conda activate line
+with
+
+    source activate galsim
+
+which does the same thing.  They just changed the name of this command to use
+the conda executable instead of source.
+
+Also, if you prefer to use the defaults channel, then (at least as of this
+writing), it had all the items in conda_requirements.txt, except for pybind11.
+So if you have conda-forge in your list of channels, but it comes after
+defaults, then that should still work and pybind11 will be the only one that
+will need the conda-forge channel.
+
+
+Installing With SCons
+=====================
+
+Prior to version 2.0, GalSim installation used SCons.  This installation
+mode is still supported, but is not recommended unless you have difficulties
+with the setup.py installation.
+
+Note: Two options that are available with the SCons installation method,
+but not the setup.py method, are (1) using TMV instead of Eigen for the linear
+algebra back end, and (2) using Boost.Python instead of PyBind11 for the
+wrapping the C++ code to be called from Python.  If you need either of these
+options, then you should use the SCons installation.
+
+See the file INSTALL_SCONS.md for complete details about this method of
+installation.
+
+
+Running tests
+=============
 
 You can run our test suite by typing
 
-    scons tests
+    python setup.py test
 
-This should compile the test suite and run it. The tests of our C++ library
-will always be run, but we use `pytest` for our Python test suite, so that
-will only be run if `pytest` is present on your system.  We do not require
-this as a dependency, since you can still do everything with the GalSim library
-without this.  But it is required for a complete run of the test suite.
+This should run all the python-layer tests with pytest and also compile and
+run the C++ test suite.
 
-To install `pytest`, you can also use easy_install as described in Section 1
-above (see also https://docs.pytest.org/en/latest/). Many third party-
-maintained Python distributions, such as the Enthought Python Distribution,
-include `pytest`.
+There are a number of packages that are used by the tests, but which are not
+required for GalSim installation and running.  These should be installed
+automatically by the above command, but you can install them manually via
 
-By default, the python tests will use the pytest plugins `pytest-xdist` (for 
-running tests in parallel) and `pytest-timeout` (to manage how much time each 
-test is allowed to run).  These plugins are usually installable using pip:
+    pip install -r test_requirements.txt
 
-    pip install pytest-xdist pytest-timeout
-    
-Sometimes the `--user` flag may be needed in the above command to make the 
-plugins discoverable.  If you want to run the python tests without these
-plugins (serially!), you can still do this via
+(As usually, you may need to add either `sudo` or `--user`.)
 
-    scons tests -j1
+By default, the tests will run in parallel using the pytest plugins
+`pytest-xdist` and `pytest-timeout` (to manage how much time each test is
+allowed to run).  If you want to run the python tests in serial instead,
+you can do this via
 
-Note: if your system does not have `pytest` installed, and you do not want to
-install it, you can run all the Python tests with the script run_all_tests in
-the `tests` directory. If this finishes without an error, then all the tests
-have passed.
+    python setup.py test -j1
+
+You can also use this to modify how many jobs will be spawned for running the
+tests.
+
+**Note**: If your system does not have `pytest` installed, and you do not want
+to install it, you can run all the Python tests with the script run_all_tests
+in the `tests` directory. If this finishes without an error, then all the tests
+have passed.  However, note that this script runs more tests than our normal
+test run using pytest, so it may take quite a while to finish.  (The *all* in
+the file name means run all the tests including the slow ones that we normally
+skip.)
 
 
-4. Running example scripts
-==========================
+Running example scripts
+=======================
 
 The `examples` directory has a series of demo scripts:
 
@@ -533,15 +465,6 @@ through these in order will introduce you to how to use most of the features of
 GalSim in Python.  To run these scripts, type (e.g.):
 
     python demo1.py
-
-You can also create executable versions of these scripts if you prefer by typing
-
-    scons examples
-
-This will put executable versions (with the first line `#!/bin/env python`) in
-the `examples_bin` directory.  (We do not include that first line by
-default, since you might specify a different python to be used.  Running
-`scons examples` will put whatever python executable you specify after `#!`.)
 
 There are also a corresponding set of config files:
 
@@ -558,349 +481,3 @@ learning the config file usage of GalSim.
 All demo scripts are designed to be run in the `GalSim/examples` directory.
 Some of them access files in subdirectories of the `examples` directory, so they
 would not work correctly from other locations.
-
-
-5. Platform-specific notes
-==========================
-
-i) Linux
---------
-The vast majority of Linux distributions provide installable packages for most
-of our dependencies. In many cases, however, it is also necessary to install
-"-devel" or "-dev" packages (e.g. `python-dev` or `libboost-dev` on Debian-
-derivatives). However, as above we stress that you should make sure that the
-version of Python that Boost is built against must be the same as that you
-intend to use for running GalSim.
-
-The solution may be to install Boost C++ manually. This can be done by following
-the instructions of Section 1.v), above.
-
-ii) Mac OSX 10.8 and earlier
-----------------------------
-a) Use of Fink -- the `fink` (http://www.finkproject.org) package management
-software is popular with Mac users.  Once it is installed, you can get either
-most or all of the prerequisites using it, depending on whether you want
-to use GalSim with the fink version of Python (e.g. that in `/sw/bin/python`) or
-the system Python (`/usr/bin/python`) or something else still.
-
-It is in general a good idea to update fink prior to installing any new modules:
-
-    fink selfupdate
-    fink update-all
-
-If you are happy with running GalSim using the fink version of python 2.7, you
-can install everything with the following command:
-
-    fink install galsim
-
-and it should just work.  However, there are some caveats that are worth knowing
-about (assuming your fink installation is in `/sw`):
-
-1. This will install GalSim as a module of the python2.7 installed by fink.
-This is not the default Python (usually `/usr/bin/python` or some other package,
-such as EPD, if installed).  Any Python scripts you write that use the galsim
-module should therefore have `#!/sw/bin/python2.7` as the  first line rather
-than the usual `#!/usr/bin/env python`.  Similarly, if you want to use galsim
-in an interactive Python session, you should run `/sw/bin/python2.7` (simply
-`python2.7` may also work) rather than just `python`.  (Of course, you can
-always change your `PATH` environment variable to make the fink Python the
-system default if you wish...)
-
-2. The executable `galsim`, which parses YAML or JSON configuration files,
-will be installed in `/sw/bin`.  You should not need to do anything special
-to use these, since `/sw/bin` should already be in your path if using fink.
-
-3. If you want to run through the example scripts (such as the demo tutorials
-`demo1.py`, `demo2.py` etc. and the `.yaml` and `.json` config versions of the
-same demos), you will still need to download the GalSim tarball.  But you can
-skip all the instructions above about installation and just use the fink
-version.  So `python2.7 demo1.py` (assuming `which python2.7` is the fink one)
-and `galsim demo1.yaml` should run those scripts for you.
-
-4.  If you want to work with GalSim as a developer, rather than just a user,
-then you cannot use the fink-installed GalSim.  However, the process above will
-have installed all the prerequisites.  So `fink uninstall galsim` will leave
-you able to install GalSim using the master branch with:
-
-    scons TMV_DIR=/sw PYTHON=/sw/bin/python2.7 BOOST_DIR=/sw/opt/boost-1_58
-
-from within the repository base directory.
-
-To run the unit tests, you will also need pytest, which you can also get from
-fink:
-
-    fink install pytest-py27
-    scons tests PYTEST=/sw/bin/pytest
-
-If you want to use the system Python, or some other version, then the fink
-Python installations will not work.  You will need to manually install
-NumPy, PyFITS, PyYAML and pytest, for example using easy_install, with your
-chosen Python.
-
-For the system Python, you can use fink for Boost, but you will want a
-different package than the boost1.58.python27 that gets installed using
-`fink install galsim` above:
-
-    fink install scons fftw3 tmv0 boost1.58-systempython
-    pip install future
-    scons TMV_DIR=/sw BOOST_DIR=/sw/opt/boost-1_58
-
-For other Python versions, the fink-installed Boost usually will not work, so
-you can only use fink for SCons, FFTW and TMV.  So you will probably need to
-install Boost manually.  This can be done by following the instructions of
-Section 1.v), above.
-
-b) MacPorts -- this is another popular Mac package management project
-(http://www.macports.org/) with similar functionality to fink.  Neither TMV nor
-GalSim are currently on the official MacPorts distribution list, so users cannot
-find them by searching the MacPorts site.  However, it is possible to install
-both TMV and GalSim, plus the other dependencies of GalSim, using MacPorts
-following the instructions below.
-
-It is in general a good idea to upgrade all modules, prior to installing any new
-modules:
-
-    sudo port selfupdate
-    sudo port upgrade outdated
-
-Below is a list of steps to take to install GalSim using MacPorts:
-
-    i) Take the `Portfiles` from the GalSim repository:
-    https://github.com/GalSim-developers/GalSim/blob/master/devel/ports.tar.gz
-    (If you do not clone the repository, there is a "copy" button on the website
-    that you can use to download the file directly.)
-    ii) Place the file in your home directory.
-    iii) `tar xvzf ports.tar.gz`
-    iv) `cd ports`
-    v) `sudo portindex`
-    vi) `sudo port install python27`
-    vii) `sudo port select --set python python27`
-    viii) `sudo sh -c "echo file:///Users/username/ports >>
-          /opt/local/etc/macports/sources.conf"`
-    ix) `sudo port install galsim`
-    x) Add /opt/local/lib to DYLD_LIBRARY_PATH
-
-Some users may find that the last step results in an inability to import the
-GalSim module.  In that case, you can clear that addition to DYLD_LIBRARY_PATH
-and instead add /opt/local/lib to DYLD_FALLBACK_LIBRARY_PATH.
-
-Notes on MacPorts with Mac OS X 10.8:
-The use of `sudo` in the above commands may elicit an error message that says
-"dyld: DYLD_ environment variables being ignored because main executable
-(/usr/bin/sudo) is setuid or setgid".  This is the result of a bug in Mac OS X
-10.8, and will not prevent the installation of GalSim with the above steps from
-being successful.
-
-Notes on MacPorts version of gcc with Mac OS X 10.5.8:
-If you have installed a MacPorts version of gcc (e.g., "mp-gcc47"), it may not
-link correctly with the other MacPorts installed modules, which are compiled in
-the system gcc versions.  To check what gcc versions are available to you, try
-the command
-
-    port select --list gcc
-
-then switch to the system gcc version (either 4.0 or 4.2) with
-
-    sudo port select --set gcc gcc42
-
-and compile GalSim with the system gcc.
-
-c) Homebrew (http://mxcl.github.com/homebrew/) -- another package manager for
-Max OSX.  Currently GalSim is available on homebrew, so it (plus dependencies)
-should be installable via
-
-    brew tap camphogg/science
-    brew install gal-sim
-
-
-iii) Mac OSX 10.9 (Mavericks)
------------------------------
-
-Most of what applies above for earlier Mac OSX versions seems to apply for
-GalSim on Mavericks too, although not all combinations have yet been tested.
-
-However, it has been found that GalSim and its dependencies can be sensitive
-(e.g. Issue #483) to the fact that under Mavericks the system `gcc` is NOT in
-fact the Gnu Compiler Collection, but in fact Clang masquerading as such.  This
-can lead to problems when linking libraries, as described in the following
-GalSim Wiki FAQ item:
-https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-what-should-i-do-about-undefined-symbols-for-architecture-x86_64-errors
-
-The best success seems to be achieved in Mavericks by *explicitly* specifying
-`clang` and `clang++` as the compiler to GalSim and all its dependencies when
-building (as in the example above).
-
-iv) Docker
-----------
-
-Karen Ng has created a Docker file for containerizing GalSim.  See her repo:
-
-    https://github.com/karenyyng/GalSim_dockerfile
-
-for instructions about how to either use her image or create your own.
-
-6. More SCons options
-=====================
-
-Here is a fairly complete list of the options you can pass to SCons to control
-the build process. The options are listed with their default value. You change
-them simply by specifying a different value on the command line.
-
-For example:
-
-    scons CXX=icpc TMV_DIR=~
-
-(Unlike autotools, SCons correctly expands ~ to your home directory.)
-You can list these options from the command line with
-
-    scons -h
-
-### Basic flags about the C++ compilation (default values in parentheses) ###
-
-* `CXX` (g++) specifies which C++ compiler to use.
-
-* `FLAGS` ('') specifies the basic flags to pass to the compiler.  The default
-   behavior is to automatically choose good flags to use according to which
-   kind of compiler you are using. This option overrides that and lets you
-   specify exactly what flags to use.
-
-* `EXTRA_FLAGS` ('') specifies some extra flags that you want to use in addition
-   to the defaults that SCons determines on its own. Unlike the above option,
-   this do not override the defaults, it just adds to them.
-
-* `LINK_FLAGS` ('') specifies some extra flags at the linking step to use in
-   addition to the defaults that SCons determines it needs on its own.
-
-* `DEBUG` (True) specifies whether to keep the debugging assert statements in
-   the compiled library code. They are not much of a performance hit, so it is
-   generally worth keeping them in, but if you need to squeeze out every last
-   bit of performance, you can set this to False.
-
-* `EXTRA_DEBUG` (False) specifies whether to add a flag to keep the original
-   code information in the compiled library (-g3 for g++ compiler).  This
-   increases the size of the compiled library, but makes debugging with things
-   like gdb easier.  Probably end users will never need to use this.
-
-* `WARN` (False) specifies whether to add warning compiler flags such as
-   `-Wall`.
-
-* `PYTHON` (/usr/bin/env python) specifies which version of Python you are
-   planning to use GalSim with.  If you choose not to use the default here,
-   then you need to remember to use the correct Python version
-
-### Flags about where to install the library and modules ###
-
-* `PREFIX` (/usr/local) specifies where to install the library when running
-   `scons install`.
-
-* `PYPREFIX` ([your python dir]/site-packages) specifies where to install the
-   Python modules when running `scons install`.
-
-* `FINAL_PREFIX` (`PREFIX`) specifies the final installation prefix if different
-   from PREFIX.  (This is only needed for things like fink, where they install
-   into a staging area first before copying over to the final location.)
-
-* `WITH_UPS` (False) specified whether to install the ups directory for use
-   with EUPS.
-
-### Flags that specify where to look for external libraries ###
-
-* `TMV_DIR` ('') specifies the location of TMV if it is not in a standard
-   location. This should be the same value as you used for PREFIX when
-   installing TMV.
-
-* `TMV_LINK` ('') specifies the location of the tmv-link file. Normally, this is
-   in `TMV_DIR/share`, but if not, you can specify the correct location here.
-
-* `FFTW_DIR` ('') specifies the root location of FFTW. The header files should
-   be in `FFTW_DIR/include` and the library files in `FFTW_DIR/lib`.
-
-* `BOOST_DIR` ('') specifies the root location of BOOST The header files should
-   be in `BOOST_DIR/include/boost` and the library files in `BOOST_DIR/lib`.
-
-* `EXTRA_INCLUDE_PATH` ('') specifies extra directories in which to search for
-   header files in addition to the standard locations such as `/usr/include` and
-   `/usr/local/include` and the ones derived from the above options.  Sometimes
-   the above options do not quite work, so you may need to specify other
-   locations, which is what this option is for.  These directories are specified
-   as `-I` flags to the compiler.  If you are giving multiple directories, they
-   should be separated by colons.
-
-* `EXTRA_LIB_PATH` ('') specifies extra directories in which to search for
-   libraries in addition to the standard locations such as `/usr/lib` and
-   `/usr/local/lib`.  These directories are specified as `-L` flags to the
-   linker. If you are giving multiple directories, they should be separated by
-   colons.  To add the library `/blah/libfoo.a`, specify
-   `EXTRA_LIB_PATH=/blah/ EXTRA_LIBS=foo`.
-
-* `EXTRA_PATH` ('') specifies directories in which to search for executables
-   (notably the compiler, although you can also just give the full path in the
-   CXX parameter) in addition to the standard locations such as `/usr/bin` and
-   `/usr/local/bin`.  If you are giving multiple directories, they should be
-   separated by colons.
-
-* `IMPORT_PATHS` (False) specifies whether to import extra path directories
-   from the environment variables: `PATH`, `C_INCLUDE_PATH`, `LD_LIBRARY_PATH`
-   and `LIBRARY_PATH`.  If you have a complicated setup in which you use these
-   environment variables to control everything, this can be an easy way to let
-   SCons know about these locations.
-
-* `IMPORT_ENV` (True) specifies whether to import the entire environment from
-   the calling shell.  The default is for SCons to use the same environment as
-   the shell from which it is called.  However, sometimes it can be useful to
-   start with a clean environment and manually add paths for various things, in
-   which case you would want to set this to False.
-
-* `EXTRA_LIBS` ('') specifies libraries to use in addition to what SCons finds
-   on its own. This might be useful if you have a non-standard name for one of
-   the external libraries. e.g. If you want to use the Intel MKL library for the
-   FFTW library, SCons will not automatically try that, so you could add those
-   libraries here.  If there is more than one, they should be quoted with spaces
-   between the different libraries. e.g.
-   `EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"`
-
-* `IMPORT_PREFIX` (True) specifies whether to include the directories
-   `PREFIX/include`, `PREFIX/lib` and `PREFIX/bin` as part of the standard
-   path lists.  Normally, you install everything in the same place, so it is
-   useful to search those locations for some of the prerequisite packages, so
-   the default is True.  But occasionally, this might be inconvenient, so you
-   can turn this feature off.
-
-* `DYLD_LIBRARY_PATH` ('') Set the DYLD_LIBRARY_PATH inside of SCons.
-   Particularly useful on El Capitan (and later), since Apple strips out
-   DYLD_LIBRARY_PATH from the environment that SCons sees, so if you need it,
-   this option enables SCons to set it back in for you by doing
-       `scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH`.
-
-* `DYLD_FALLBACK_LIBRARY_PATH` ('') Set the DYLD_FALLBACK_LIBRARY_PATH inside
-   of SCons.  cf. DYLD_LIBRARY_PATH for why this may be useful.
-
-* `LD_LIBRARY_PATH` ('') Set the LD_LIBRARY_PATH inside of SCons.
-   cf. DYLD_LIBRARY_PATH for why this may be useful.
-
-### Miscellaneous flags ###
-
-* `PYTEST` (pytest) specifies which version of pytest you want to use
-   for running the unit tests.  If you specified a non-default Python, then
-   there is a possibility that the standard pytest executable in your path
-   will not work (since it might be for a different version of Python).  In
-   that case, specify the correct pytest here.
-
-* `CACHE_LIB` (True) specifies whether to cache the results of the library
-   checks.  While you are working one getting the prerequisites installed
-   properly, it can be useful to set this to False to force SCons to redo all of
-   its library checks each time. Once you have a successful build, you should
-   set it back to True so that later builds can skip those checks.
-
-* `WITH_PROF` (False) specifies whether to use the compiler flag `-pg` to
-   include profiling info for `gprof`.
-
-* `MEM_TEST` (False) specifies whether to test the code for memory leaks.
-
-* `TMV_DEBUG` (False) specifies whether to turn on extra (slower) debugging
-   statements within the TMV library.
-
-* `USE_UNKNOWN_VARS` (False) specifies whether to accept scons parameters other
-   than the ones listed here.  Normally, another name would indicate a typo, so
-   we catch it and let you know.  But if you want to use other scons options
-   that we did not list here, you would want to also set this to True.

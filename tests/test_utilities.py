@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,18 +21,300 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-import galsim.utilities
 
 testshape = (512, 512)  # shape of image arrays for all tests
 decimal = 6     # Last decimal place used for checking equality of float arrays, see
                 # np.testing.assert_array_almost_equal(), low since many are ImageF
+
+
+@timer
+def test_pos():
+    """Simple tests of Position classes
+    """
+    pi1 = galsim.PositionI(11,23)
+    assert pi1.x == 11
+    assert pi1.y == 23
+    assert isinstance(pi1.x, int)
+    assert isinstance(pi1.y, int)
+
+    pi2 = galsim.PositionI((11,23))
+    pi3 = galsim.PositionI(x=11.0, y=23.0)
+    pi4 = galsim.PositionI(pi1)
+    pi5 = galsim.PositionI(galsim.PositionD(11.0,23.0))
+    assert pi2 == pi1
+    assert pi3 == pi1
+    assert pi4 == pi1
+    assert pi5 == pi1
+    assert isinstance(pi3.x, int)
+    assert isinstance(pi3.y, int)
+    assert isinstance(pi5.x, int)
+    assert isinstance(pi5.y, int)
+
+    pd1 = galsim.PositionD(11.,23.)
+    assert pd1.x == 11.
+    assert pd1.y == 23.
+    assert isinstance(pd1.x, float)
+    assert isinstance(pd1.y, float)
+
+    pd2 = galsim.PositionD((11,23))
+    pd3 = galsim.PositionD(x=11.0, y=23.0)
+    pd4 = galsim.PositionD(pd1)
+    pd5 = galsim.PositionD(pi1)
+    assert pd2 == pd1
+    assert pd3 == pd1
+    assert pd4 == pd1
+    assert pd5 == pd1
+    assert isinstance(pd3.x, float)
+    assert isinstance(pd3.y, float)
+    assert isinstance(pd5.x, float)
+    assert isinstance(pd5.y, float)
+
+    assert_raises(TypeError, galsim.PositionI, 11, 23, 9)
+    assert_raises(TypeError, galsim.PositionI, x=11, z=23)
+    assert_raises(TypeError, galsim.PositionI, x=11)
+    assert_raises(TypeError, galsim.PositionI, 11)
+    assert_raises(ValueError, galsim.PositionI, 11, 23.5)
+
+    assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
+    assert_raises(TypeError, galsim.PositionD, x=11, z=23)
+    assert_raises(TypeError, galsim.PositionD, x=11)
+    assert_raises(TypeError, galsim.PositionD, 11)
+    assert_raises(ValueError, galsim.PositionD, 11, "blue")
+
+    # Check arithmetic
+    for p1 in [pi1, pd1]:
+
+        p2 = p1 * 2
+        assert p2.x == p1.x * 2
+        assert p2.y == p1.y * 2
+
+        p3 = p2 / 2
+        assert p3 == p1
+
+        p4 = 2 * p1
+        assert p4 == p2
+
+        p5 = -p1
+        assert p5.x == -p1.x
+        assert p5.y == -p1.y
+
+        p6 = p1 + p2
+        assert p6.x == 3 * p1.x
+        assert p6.y == 3 * p1.y
+
+        p7 = p2 - p1
+        assert p7.x == p1.x
+        assert p7.y == p1.y
+
+    # Cross type arithemetic -> PositionD
+    pd6 = pi1 + pd1
+    assert pd6 == 2*pd1
+    assert isinstance(pd6, galsim.PositionD)
+
+    pd7 = pd1 + pi1
+    assert pd7 == 2*pd1
+    assert isinstance(pd7, galsim.PositionD)
+
+    pd8 = pi1 - pd1
+    assert pd8 == 0*pd1
+    assert isinstance(pd8, galsim.PositionD)
+
+    pd9 = pd1 - pi1
+    assert pd9 == 0*pd1
+    assert isinstance(pd9, galsim.PositionD)
+
+    assert_raises(ValueError, pd1.__mul__, "11")
+    assert_raises(ValueError, pd1.__mul__, None)
+    assert_raises(ValueError, pd1.__div__, "11e")
+    assert_raises(ValueError, pi1.__mul__, "11e")
+    assert_raises(ValueError, pi1.__mul__, None)
+    assert_raises(ValueError, pi1.__div__, 11.5)
+
+    do_pickle(pi1)
+    do_pickle(pd1)
+
+@timer
+def test_bounds():
+    """Simple tests of Bounds classes
+    """
+    bi1 = galsim.BoundsI(11,23,17,50)
+    assert bi1.xmin == bi1.getXMin() == 11
+    assert bi1.xmax == bi1.getXMax() == 23
+    assert bi1.ymin == bi1.getYMin() == 17
+    assert bi1.ymax == bi1.getYMax() == 50
+    assert isinstance(bi1.xmin, int)
+    assert isinstance(bi1.xmax, int)
+    assert isinstance(bi1.ymin, int)
+    assert isinstance(bi1.ymax, int)
+
+    bi2 = galsim.BoundsI(galsim.PositionI(11,17), galsim.PositionI(23,50))
+    bi3 = galsim.BoundsI(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
+    bi4 = galsim.BoundsI(galsim.PositionD(11.,17.)) + galsim.BoundsI(galsim.PositionI(23,50))
+    bi5 = galsim.BoundsI(galsim.PositionI(11,17)) + galsim.PositionI(23,50)
+    bi6 = galsim.PositionI(11,17) + galsim.BoundsI(galsim.PositionI(23,50))
+    bi7 = galsim.BoundsI(bi1)
+    bi8 = bi1 + galsim.BoundsI()
+    bi9 = galsim.BoundsI() + bi1
+    bi10 = galsim.BoundsI() + galsim.PositionI(11,17) + galsim.PositionI(23,50)
+    bi11 = galsim.BoundsI(galsim.BoundsD(11.,23.,17.,50.))
+    bi12 = galsim.BoundsI(xmin=11,ymin=17,xmax=23,ymax=50)
+    bi13 = galsim._BoundsI(11,23,17,50)
+    for b in [bi1, bi2, bi3, bi4, bi5, bi6, bi7, bi8, bi9, bi10, bi11, bi12, bi13]:
+        assert b.isDefined()
+        assert b == bi1
+        assert isinstance(b.xmin, int)
+        assert isinstance(b.xmax, int)
+        assert isinstance(b.ymin, int)
+        assert isinstance(b.ymax, int)
+        assert b.origin == galsim.PositionI(11, 17)
+        assert b.center == galsim.PositionI(17, 34)
+        assert b.true_center == galsim.PositionD(17, 33.5)
+
+    bd1 = galsim.BoundsD(11.,23.,17.,50.)
+    assert bd1.xmin == bd1.getXMin() == 11.
+    assert bd1.xmax == bd1.getXMax() == 23.
+    assert bd1.ymin == bd1.getYMin() == 17.
+    assert bd1.ymax == bd1.getYMax() == 50.
+    assert isinstance(bd1.xmin, float)
+    assert isinstance(bd1.xmax, float)
+    assert isinstance(bd1.ymin, float)
+    assert isinstance(bd1.ymax, float)
+
+    bd2 = galsim.BoundsD(galsim.PositionI(11,17), galsim.PositionI(23,50))
+    bd3 = galsim.BoundsD(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
+    bd4 = galsim.BoundsD(galsim.PositionD(11.,17.)) + galsim.BoundsD(galsim.PositionI(23,50))
+    bd5 = galsim.BoundsD(galsim.PositionI(11,17)) + galsim.PositionD(23,50)
+    bd6 = galsim.PositionD(11,17) + galsim.BoundsD(galsim.PositionI(23,50))
+    bd7 = galsim.BoundsD(bd1)
+    bd8 = bd1 + galsim.BoundsD()
+    bd9 = galsim.BoundsD() + bd1
+    bd10 = galsim.BoundsD() + galsim.PositionD(11,17) + galsim.PositionD(23,50)
+    bd11 = galsim.BoundsD(galsim.BoundsI(11,23,17,50))
+    bd12 = galsim.BoundsD(xmin=11.0,ymin=17.0,xmax=23.0,ymax=50.0)
+    bd13 = galsim._BoundsD(11,23,17,50)
+    for b in [bd1, bd2, bd3, bd4, bd5, bd6, bd7, bd8, bd9, bd10, bd11, bd12, bd13]:
+        assert b.isDefined()
+        assert b == bd1
+        assert isinstance(b.xmin, float)
+        assert isinstance(b.xmax, float)
+        assert isinstance(b.ymin, float)
+        assert isinstance(b.ymax, float)
+        assert b.origin == galsim.PositionD(11, 17)
+        assert b.center == galsim.PositionD(17, 33.5)
+        assert b.true_center == galsim.PositionD(17, 33.5)
+
+    assert_raises(TypeError, galsim.BoundsI, 11, 23, 9)
+    assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, 59)
+    assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
+    assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
+    assert_raises(TypeError, galsim.BoundsI, 11)
+    assert_raises(ValueError, galsim.BoundsI, 11, 23.5, 17, 50.9)
+
+    assert_raises(TypeError, galsim.BoundsD, 11, 23, 9)
+    assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
+    assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
+    assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
+    assert_raises(TypeError, galsim.BoundsD, 11)
+    assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
+
+    # Check intersection
+    assert bi1 == galsim.BoundsI(0,100,0,100) & bi1
+    assert bi1 == bi1 & galsim.BoundsI(0,100,0,100)
+    assert bi1 == galsim.BoundsI(0,23,0,50) & galsim.BoundsI(11,100,17,100)
+    assert bi1 == galsim.BoundsI(0,23,17,100) & galsim.BoundsI(11,100,0,50)
+
+    assert bd1 == galsim.BoundsD(0,100,0,100) & bd1
+    assert bd1 == bd1 & galsim.BoundsD(0,100,0,100)
+    assert bd1 == galsim.BoundsD(0,23,0,50) & galsim.BoundsD(11,100,17,100)
+    assert bd1 == galsim.BoundsD(0,23,17,100) & galsim.BoundsD(11,100,0,50)
+
+    # Check withBorder
+    assert bi1.withBorder(4) == galsim.BoundsI(7,27,13,54)
+    assert bi1.withBorder(0) == galsim.BoundsI(11,23,17,50)
+    assert bi1.withBorder(-1) == galsim.BoundsI(12,22,18,49)
+    assert bd1.withBorder(4.1) == galsim.BoundsD(6.9,27.1,12.9,54.1)
+    assert bd1.withBorder(0) == galsim.BoundsD(11,23,17,50)
+    assert bd1.withBorder(-1) == galsim.BoundsD(12,22,18,49)
+    assert_raises(ValueError, bi1.withBorder, 'blue')
+    assert_raises(ValueError, bi1.withBorder, 4.1)
+    assert_raises(ValueError, bi1.withBorder, '4')
+    assert_raises(ValueError, bi1.withBorder, None)
+    assert_raises(ValueError, bd1.withBorder, 'blue')
+    assert_raises(ValueError, bd1.withBorder, '4.1')
+    assert_raises(ValueError, bd1.withBorder, None)
+
+    # Check expand
+    assert bi1.expand(2) == galsim.BoundsI(5,29,0,67)
+    assert bi1.expand(1.1) == galsim.BoundsI(10,24,15,52)
+    assert bd1.expand(2) == galsim.BoundsD(5,29,0.5,66.5)
+    np.testing.assert_almost_equal(bd1.expand(1.1)._getinitargs(), (10.4,23.6,15.35,51.65))
+
+    # Check shift
+    assert bi1.shift(galsim.PositionI(2,5)) == galsim.BoundsI(13,25,22,55)
+    assert bd1.shift(galsim.PositionD(2,5)) == galsim.BoundsD(13,25,22,55)
+    assert bd1.shift(galsim.PositionD(2.3,5.9)) == galsim.BoundsD(13.3,25.3,22.9,55.9)
+    assert_raises(TypeError, bi1.shift, galsim.PositionD(2,5))
+    assert_raises(TypeError, bd1.shift, galsim.PositionI(2,5))
+
+    # Check area
+    assert bd1.area() == 12 * 33
+    assert bi1.area() == 13 * 34
+    assert galsim.BoundsI(galsim.PositionI(11,23)).area() == 1
+    assert galsim.BoundsD(galsim.PositionI(11,23)).area() == 0
+
+    # Check includes
+    for b in [bi1, bd1]:
+        assert b.includes(galsim.PositionI(11,23))
+        assert b.includes(galsim.BoundsI(14,18,30,38))
+        assert b.includes(galsim.BoundsD(14.7,18.1,30.2,38.6))
+        assert b.includes(17, 23)
+        assert b.includes(17.9, 23.9)
+        assert b.includes(galsim.PositionD(11.9,40.7))
+        assert b.includes(galsim.PositionI(23,41))
+
+        assert not bd1.includes(galsim.PositionD(10.99,38))
+        assert not bd1.includes(galsim.PositionI(11,51))
+        assert not bd1.includes(17,16.99)
+        assert not bd1.includes(galsim.BoundsD(0,100,0,100))
+        assert not bd1.includes(galsim.BoundsI(14,29,20,30))
+        assert not bd1.includes(galsim.BoundsD(22,23.01,49,50.01))
+
+        assert_raises(TypeError, b.includes, 'blue')
+        assert_raises(TypeError, b.includes)
+        assert_raises(TypeError, b.includes, galsim.PositionI(17,23), galsim.PositionI(12,13))
+        assert_raises(TypeError, b.includes, 2, 3, 4)
+
+    # Check undefined bounds
+    assert not galsim.BoundsI().isDefined()
+    assert galsim.BoundsI() == galsim.BoundsI() & bi1
+    assert galsim.BoundsI() == bi1 & galsim.BoundsI()
+    assert galsim.BoundsI() == galsim.BoundsI() & galsim.BoundsI()
+    assert galsim.BoundsI() == galsim.BoundsI() + galsim.BoundsI()
+    assert galsim.BoundsI().area() == 0
+
+    assert not galsim.BoundsD().isDefined()
+    assert galsim.BoundsD() == galsim.BoundsD() & bd1
+    assert galsim.BoundsD() == bd1 & galsim.BoundsD()
+    assert galsim.BoundsD() == galsim.BoundsD() & galsim.BoundsD()
+    assert galsim.BoundsD() == galsim.BoundsD() + galsim.BoundsD()
+    assert galsim.BoundsD().area() == 0
+
+    assert galsim.BoundsI(23, 11, 17, 50) == galsim.BoundsI()
+    assert galsim.BoundsI(11, 23, 50, 17) == galsim.BoundsI()
+    assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
+    assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
+
+    assert_raises(ValueError, getattr, galsim.BoundsI(), 'center')
+    assert_raises(ValueError, getattr, galsim.BoundsD(), 'center')
+    assert_raises(ValueError, getattr, galsim.BoundsI(), 'true_center')
+    assert_raises(ValueError, getattr, galsim.BoundsD(), 'true_center')
+
+    do_pickle(bi1)
+    do_pickle(bd1)
+    do_pickle(galsim.BoundsI())
+    do_pickle(galsim.BoundsD())
 
 
 @timer
@@ -640,6 +922,8 @@ def test_nCr():
         assert sum([galsim.utilities.nCr(n, r) for r in range(n+1)]) == 2**n
 
 if __name__ == "__main__":
+    test_pos()
+    test_bounds()
     test_roll2d_circularity()
     test_roll2d_fwdbck()
     test_roll2d_join()

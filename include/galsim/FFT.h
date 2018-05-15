@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -60,11 +60,8 @@
 #include <stdexcept>
 #include <deque>
 #include <complex>
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
 
-#include "fftw3.h"
-#include "TMV.h"
+#include <fftw3.h>
 
 #include "Std.h"
 #include "Interpolant.h"
@@ -151,16 +148,9 @@ namespace galsim {
             return *this;
         }
 
-        ~FFTW_Array() {}
+        ~FFTW_Array();
 
-        void resize(size_t n)
-        {
-            if (_n != n) {
-                _n = n;
-                _array.resize(n);
-                _p = _array.get();
-            }
-        }
+        void resize(size_t n);
 
         void fill(T val)
         {
@@ -182,9 +172,6 @@ namespace galsim {
 
     private:
         size_t _n;
-        // fftw_malloc doesn't seem to actually guarantee 16 byte alignment, so we instead
-        // use TMV's AlignedArray class to handle the byte alignment for us.
-        tmv::AlignedArray<T> _array;
         T* _p;
     };
 
@@ -237,7 +224,7 @@ namespace galsim {
          *
          * This version returns a pointer to the result in real space.
          */
-        boost::shared_ptr<XTable> transform() const;
+        shared_ptr<XTable> transform() const;
 
         /**
          * @brief Fourier transform from (complex) k to x.
@@ -290,7 +277,7 @@ namespace galsim {
 
         /// Produce a new KTable which wraps this one onto range +-Nout/2.  Nout will
         /// be raised to even value.  In other words, aliases the data.
-        boost::shared_ptr<KTable> wrap(int Nout) const;
+        shared_ptr<KTable> wrap(int Nout) const;
 
         /// Get the size of the table.
         int getN() const { return _N; }
@@ -305,7 +292,7 @@ namespace galsim {
         template <class T> void fill( const T& f) ;
 
         /// New table is function of this one:
-        boost::shared_ptr<KTable> function(function2 func) const;
+        shared_ptr<KTable> function(function2 func) const;
 
         /// Integrate a function over d^2k:
         std::complex<double> integrate(function2 func) const;
@@ -408,7 +395,7 @@ namespace galsim {
          *
          * This version returns a pointer to the result in Fourier space.
          */
-        boost::shared_ptr<KTable> transform() const;
+        shared_ptr<KTable> transform() const;
 
         /**
          * @brief Fourier transform from x to (complex) k.
@@ -450,7 +437,7 @@ namespace galsim {
 
         /// Produce a new XTable which wraps this one onto range +-Nout/2.  Nout will
         /// be raised to even value.
-        boost::shared_ptr<XTable> wrap(int Nout) const;
+        shared_ptr<XTable> wrap(int Nout) const;
 
         /// Get the size of the table.
         int getN() const { return _N; }

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,15 +23,13 @@
 #define GalSim_Std_H
 
 #include <cmath>
-#define _USE_MATH_DEFINES  // To make sure M_PI is defined.
-// It should be in math.h, but not necessarily in cmath.
-#include <math.h>
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
 #include <string>
 #include <cassert>
 #include <stdexcept>
+#include <cstddef>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -49,6 +47,22 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+
+// Bring either std::tr1::shared_ptr or std::shared_ptr into local namespace
+// cf. https://stackoverflow.com/questions/18831151/is-c-0x-tr1-safe-to-use-when-portability-matters
+#ifdef _LIBCPP_VERSION
+// using libc++
+
+#include <memory>
+using std::shared_ptr;
+
+#else  // !_LIBCPP_VERSION
+// not using libc++
+
+#include <tr1/memory>
+using std::tr1::shared_ptr;
+
+#endif  // _LIBCPP_VERSION
 
 // Check if ptr is aligned on 128 bit boundary
 inline bool IsAligned(const void* p) { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
@@ -68,6 +82,7 @@ public:
     void set_dbgout(std::ostream* new_dbgout) { dbgout = new_dbgout; }
     void set_verbose(int level) { verbose_level = level; }
     bool do_level(int level) { return verbose_level >= level; }
+    int get_level() { return verbose_level; }
 
     static Debugger& instance()
     {
@@ -89,6 +104,7 @@ private:
 #define xxdbg if(Debugger::instance().do_level(3)) Debugger::instance().get_dbgout()
 #define set_dbgout(dbgout) Debugger::instance().set_dbgout(dbgout)
 #define set_verbose(level) Debugger::instance().set_verbose(level)
+#define verbose_level Debugger::instance().get_level()
 #define xassert(x) assert(x)
 #else
 #define dbg if(false) (std::cerr)

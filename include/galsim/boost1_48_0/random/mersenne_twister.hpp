@@ -20,20 +20,33 @@
 #include <iosfwd>
 #include <istream>
 #include <stdexcept>
+#ifdef USE_BOOST
 #include <boost/config.hpp>
 #include <boost/integer/integer_mask.hpp>
+#else
+#include "galsim/boost1_48_0/config/suffix.hpp"
+#endif
 
-// New features to cstdint.hpp added sometime between 1.41 and 1.48, which are 
-// needed in this file.  So copy that here too.
-#include "galsim/boost1_48_0/random/cstdint.hpp"
-
-#include "galsim/boost1_48_0/random/detail/config.hpp"
+#ifdef USE_BOOST
+#include <boost/cstdint.hpp>
+#include <boost/random/detail/config.hpp>
+#endif
 #include "galsim/boost1_48_0/random/detail/ptr_helper.hpp"
 #include "galsim/boost1_48_0/random/detail/seed.hpp"
-#include "galsim/boost1_48_0/random/detail/seed_impl.hpp"
+#ifdef USE_BOOST
+// Note: seed_impl is only needed for features that we don't ever use.
+//       And since it has a huge dependency tree, it's easier to just not include it and
+//       disable the features here that depend on it (blocked out by #ifdef USE_BOOST guards).
+#include <boost/random/detail/seed_impl.hpp>
+#endif
 #include "galsim/boost1_48_0/random/detail/generator_seed_seq.hpp"
 
 namespace boost {
+
+#ifndef USE_BOOST
+    namespace { typedef unsigned long long uintmax_t; }
+#endif
+
 namespace random {
 
 /**
@@ -153,6 +166,7 @@ public:
         }
     }
     
+#ifdef USE_BOOST
     /**
      * Seeds a mersenne_twister_engine using values produced by seq.generate().
      */
@@ -169,7 +183,9 @@ public:
             x[0] = static_cast<UIntType>(1) << (w-1);
         }
     }
+#endif
 
+#ifdef USE_BOOST
     /** Sets the state of the generator using values from an iterator range. */
     template<class It>
     void seed(It& first, It last)
@@ -185,21 +201,30 @@ public:
             x[0] = static_cast<UIntType>(1) << (w-1);
         }
     }
+#endif
   
     /** Returns the smallest value that the generator can produce. */
     static result_type min BOOST_PREVENT_MACRO_SUBSTITUTION ()
     { return 0; }
     /** Returns the largest value that the generator can produce. */
     static result_type max BOOST_PREVENT_MACRO_SUBSTITUTION ()
-    { return boost::low_bits_mask_t<w>::sig_bits; }
+    {
+#ifdef USE_BOOST
+        return boost::low_bits_mask_t<w>::sig_bits;
+#else
+        return ~( ~( (unsigned long)( 0u )) << w);
+#endif
+    }
     
     /** Produces the next value of the generator. */
     result_type operator()();
 
+#ifdef USE_BOOST
     /** Fills a range with random values */
     template<class Iter>
     void generate(Iter first, Iter last)
     { detail::generate_from_int(*this, first, last); }
+#endif
 
     /**
      * Advances the state of the generator by @c z steps.  Equivalent to
@@ -492,11 +517,13 @@ typedef mersenne_twister_engine<uint32_t,32,351,175,19,0xccab8ee7,
 typedef mersenne_twister_engine<uint32_t,32,624,397,31,0x9908b0df,
     11,0xffffffff,7,0x9d2c5680,15,0xefc60000,18,1812433253> mt19937;
 
+#ifdef USE_BOOST
 #if !defined(BOOST_NO_INT64_T) && !defined(BOOST_NO_INTEGRAL_INT64_T)
 typedef mersenne_twister_engine<uint64_t,64,312,156,31,
     UINT64_C(0xb5026f5aa96619e9),29,UINT64_C(0x5555555555555555),17,
     UINT64_C(0x71d67fffeda60000),37,UINT64_C(0xfff7eee000000000),43,
     UINT64_C(6364136223846793005)> mt19937_64;
+#endif
 #endif
 
 /// \cond show_deprecated
@@ -538,7 +565,9 @@ public:
 
 using random::mt11213b;
 using random::mt19937;
+#ifdef USE_BOOST
 using random::mt19937_64;
+#endif
 
 } // namespace boost
 

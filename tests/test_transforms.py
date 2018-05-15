@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,17 +21,12 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images.
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # for flux normalization tests
 test_flux = 1.8
@@ -167,7 +162,6 @@ def test_largeshear():
     # Check picklability
     do_pickle(gauss, lambda x: x.drawImage())
     do_pickle(gauss)
-    do_pickle(gauss._sbp)
 
 
 @timer
@@ -218,7 +212,6 @@ def test_rotate():
     # Check picklability
     do_pickle(gal, lambda x: x.drawImage())
     do_pickle(gal)
-    do_pickle(gal._sbp)
 
 
 @timer
@@ -299,7 +292,6 @@ def test_mag():
     # Check picklability
     do_pickle(gal, lambda x: x.drawImage())
     do_pickle(gal)
-    do_pickle(gal._sbp)
 
 
 @timer
@@ -372,7 +364,6 @@ def test_shift():
     # Check picklability
     do_pickle(gauss, lambda x: x.drawImage())
     do_pickle(gauss)
-    do_pickle(gauss._sbp)
 
 
 @timer
@@ -518,7 +509,6 @@ def test_rescale():
     # Check picklability
     do_pickle(sersic2, lambda x: x.drawImage())
     do_pickle(sersic2)
-    do_pickle(sersic2._sbp)
 
 
 @timer
@@ -907,15 +897,15 @@ def test_compound():
     automatically or not.
     """
     gal1 = galsim.Gaussian(fwhm=1.7, flux=2.3)
-    gal2 = gal1.shear(g1=0.21, g2=0.12).rotate(33 * galsim.degrees).shift(0.1,0.4) * 11.
-    gal3 = gal2.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 89.
+    gal2 = gal1.shear(g1=0.21, g2=0.12).rotate(33 * galsim.degrees).shift(0.1,0.4) * 1.1
+    gal3 = gal2.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 8.9
     # These should have compounded automatically into a single transformation
     print('gal3 = ',gal3)
     print('gal3.original = ',gal3.original)
     assert gal3.original == gal1
 
     gal4 = gal2 + 0. * gal1  # Equivalent to gal2, but the sum kills the automatic compounding.
-    gal5 = gal4.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 89.
+    gal5 = gal4.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 8.9
     print('gal5 = ',gal5)
     print('gal5.original = ',gal5.original)
     assert gal5.original != gal1
@@ -969,7 +959,6 @@ def test_compound():
     np.testing.assert_array_almost_equal(im3_cf.array, im5_cf.array, decimal=3)
     np.testing.assert_array_almost_equal(im3_cf.array, im3_cd.array, decimal=3)
     np.testing.assert_array_almost_equal(im5_cf.array, im5_cd.array, decimal=3)
-
 
 if __name__ == "__main__":
     test_smallshear()

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,36 +22,33 @@
 
 #include "galsim/IgnoreWarnings.h"
 
-#define BOOST_NO_CXX11_SMART_PTR
-
-#include <boost/math/special_functions/gamma.hpp>
-
 #include "SBInclinedSersic.h"
 #include "SBInclinedSersicImpl.h"
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
+#include <math/Gamma.h>
 
 namespace galsim {
 
     // Helper functor to solve for the proper _maxk
     class SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicKValueFunctor
     {
-        public:
-            SBInclinedSersicKValueFunctor(const SBInclinedSersic::SBInclinedSersicImpl * p_owner,
-        double target_k_value);
+    public:
+        SBInclinedSersicKValueFunctor(const SBInclinedSersic::SBInclinedSersicImpl * p_owner,
+                                      double target_k_value);
         double operator() (double k) const;
-        private:
+    private:
         const SBInclinedSersic::SBInclinedSersicImpl * _p_owner;
         double _target_k_value;
     };
 
-    SBInclinedSersic::SBInclinedSersic(double n, Angle inclination, double size, SBInclinedSersic::RadiusType rType,
-            double height, SBInclinedSersic::HeightType hType, double flux,
-            double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
-        SBProfile(new SBInclinedSersicImpl(n, inclination, size, rType, height, hType, flux, trunc,
-                flux_untruncated, gsparams)) {}
+    SBInclinedSersic::SBInclinedSersic(double n, double inclination, double scale_radius,
+                                       double height, double flux, double trunc,
+                                       const GSParams& gsparams) :
+        SBProfile(new SBInclinedSersicImpl(n, inclination, scale_radius, height, flux, trunc,
+                                           gsparams)) {}
 
     SBInclinedSersic::SBInclinedSersic(const SBInclinedSersic& rhs) : SBProfile(rhs) {}
 
@@ -63,7 +60,7 @@ namespace galsim {
         return static_cast<const SBInclinedSersicImpl&>(*_pimpl).getN();
     }
 
-    Angle SBInclinedSersic::getInclination() const
+    double SBInclinedSersic::getInclination() const
     {
         assert(dynamic_cast<const SBInclinedSersicImpl*>(_pimpl.get()));
         return static_cast<const SBInclinedSersicImpl&>(*_pimpl).getInclination();
@@ -100,106 +97,46 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInclinedSersic("<<getN()<<", "<<getInclination()<<", "<<getScaleRadius();
         oss <<", "<<getScaleHeight()<<", None, "<<getFlux()<<", "<<getTrunc()<<", False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
-    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(double n, Angle inclination, double size, RadiusType rType,
-                                         double height, HeightType hType, double flux,
-                                         double trunc, bool flux_untruncated,
-                                         const GSParamsPtr& gsparams) :
+    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(
+        double n, double inclination, double scale_radius,
+        double height, double flux, double trunc, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _n(n),
         _inclination(inclination),
         _flux(flux),
+        _r0(scale_radius),
+        _h0(height),
         _trunc(trunc),
-        _cosi(std::abs(inclination.cos())),
+        _cosi(std::abs(std::cos(inclination))),
         _trunc_sq(trunc*trunc),
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
+        _info(SBSersic::SBSersicImpl::cache.get(MakeTuple(_n, _trunc/_r0,
+                                                          GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBInclinedSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"inclination = "<<_inclination<<std::endl;
-        dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
+        dbg<<"scale_radius = "<<scale_radius<<std::endl;
+        dbg<<"height = "<<height<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"trunc = "<<_trunc<<"  flux_untruncated = "<<flux_untruncated<<std::endl;
+        dbg<<"trunc = "<<_trunc<<std::endl;
 
-        _truncated = (_trunc > 0.);
-
-        // Set size of this instance according to type of size given in constructor
-        switch (rType) {
-          case HALF_LIGHT_RADIUS:
-               {
-                   _re = size;
-                   if (_truncated) {
-                       if (flux_untruncated) {
-                           // Then given HLR and flux are the values for the untruncated profile.
-                           _r0 = _re / _info->getHLR(); // getHLR() is in units of r0.
-                       } else {
-                           // This is the one case that is a bit complicated, since the
-                           // half-light radius and trunc are both given in physical units,
-                           // so we need to solve for what scale radius this corresponds to.
-                           _r0 = _info->calculateScaleForTruncatedHLR(_re, _trunc);
-                       }
-
-                       // Update _info with the correct truncated version.
-                       _info = SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                           this->gsparams.duplicate()));
-
-                       if (flux_untruncated) {
-                           // Update the stored _flux and _re with the correct values
-                           _flux *= _info->getFluxFraction();
-                           _re = _r0 * _info->getHLR();
-                       }
-                   } else {
-                       // Then given HLR and flux are the values for the untruncated profile.
-                       _r0 = _re / _info->getHLR();
-                   }
-               }
-               break;
-          case SCALE_RADIUS:
-              {
-                  _r0 = size;
-                  if (_truncated) {
-                      // Update _info with the correct truncated version.
-                      _info = SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                          this->gsparams.duplicate()));
-                       if (flux_untruncated) {
-                          // Update the stored _flux with the correct value
-                          _flux *= _info->getFluxFraction();
-                      }
-                  }
-                  // In all cases, _re is the real HLR
-                  _re = _r0 * _info->getHLR();
-              }
-              break;
-          default:
-              throw SBError("Unknown SBInclinedSersic::RadiusType");
-        }
+        _re = _r0 * _info->getHLR();
         dbg << "hlr = " <<_re << std::endl;
         dbg << "r0 = " <<_r0 << std::endl;
 
         _inv_r0 = 1./_r0;
         dbg << "inv_r0 = " << _inv_r0 << std::endl;
 
-        // Get the scale height, depending on what height parameter we were given
-        switch (hType) {
-        case SCALE_H_OVER_R:
-            _h0 = height * _r0;
-            break;
-        case SCALE_HEIGHT:
-            _h0 = height;
-            break;
-        default:
-            throw SBError("Unknown SBInclinedSersic::HeightType");
-        }
-
         dbg << "scale height = "<<_h0<<std::endl;
 
-        _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(_inclination.sin())/_r0;
+        _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(std::sin(_inclination))/_r0;
 
         dbg << "half_pi_h_sini_over_r = " << _half_pi_h_sini_over_r << std::endl;
 
@@ -216,14 +153,14 @@ namespace galsim {
         // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
         // This is a bit conservative, note, assuming kx = 0
         double kderiv6 = 31./15120.*_half_pi_h_sini_over_r;
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy / kderiv6, 1./3.);
+        _ksq_min = std::pow(this->gsparams.kvalue_accuracy / kderiv6, 1./3.);
 
         dbg << "ksq_min = " << _ksq_min << std::endl;
 
         // Solve for the proper _maxk and _ksq_max
 
-        double maxk_min = std::pow(this->gsparams->maxk_threshold, -1./3.);
-        double clipk_min = std::pow(this->gsparams->kvalue_accuracy, -1./3.);
+        double maxk_min = std::pow(this->gsparams.maxk_threshold, -1./3.);
+        double clipk_min = std::pow(this->gsparams.kvalue_accuracy, -1./3.);
 
         // Bracket it appropriately, starting with guesses based on the 1/cosi scaling
         double maxk_max, clipk_max;
@@ -247,11 +184,11 @@ namespace galsim {
             clipk_max = 100*clipk_min;
         }
 
-        xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
+        xdbg << "maxk_threshold = " << this->gsparams.maxk_threshold << std::endl;
         xdbg << "F(" << maxk_min << ") = " << std::max(kValueHelper(maxk_min,0.),kValueHelper(0.,maxk_min)) << std::endl;
         xdbg << "F(" << maxk_max << ") = " << std::max(kValueHelper(maxk_max,0.),kValueHelper(0.,maxk_max)) << std::endl;
 
-        SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
+        SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams.maxk_threshold);
         Solve<SBInclinedSersicKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
 
         maxk_solver.setMethod(Brent);
@@ -268,11 +205,11 @@ namespace galsim {
         xdbg << "_maxk = " << _maxk << std::endl;
         xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
 
-        xdbg << "kvalue_accuracy = " << this->gsparams->kvalue_accuracy << std::endl;
+        xdbg << "kvalue_accuracy = " << this->gsparams.kvalue_accuracy << std::endl;
         xdbg << "F(" << clipk_min << ") = " << kValueHelper(0.,clipk_min) << std::endl;
         xdbg << "F(" << clipk_max << ") = " << kValueHelper(0.,clipk_max) << std::endl;
 
-        SBInclinedSersicKValueFunctor clipk_func(this,this->gsparams->kvalue_accuracy);
+        SBInclinedSersicKValueFunctor clipk_func(this,this->gsparams.kvalue_accuracy);
         Solve<SBInclinedSersicKValueFunctor> clipk_solver(clipk_func, clipk_min, clipk_max);
 
         if(clipk_func(clipk_min)<=0)
@@ -303,7 +240,7 @@ namespace galsim {
         // Empirically, it is vaguely linearish in ln(maxsb) vs. sqrt(cosi), so we use that for
         // the interpolation.
         double sc = sqrt(std::abs(_cosi));
-        maxsb *= std::exp((1.-sc)*std::log((_r0 * boost::math::tgamma(_n) ) / _h0*_n));
+        maxsb *= std::exp((1.-sc)*std::log((_r0 * math::tgamma(_n) ) / _h0*_n));
 
         // Err on the side of overestimating by multiplying by conservative_factor,
         // which was found to work for the worst-case scenario
@@ -445,7 +382,8 @@ namespace galsim {
         return res;
     }
 
-    boost::shared_ptr<PhotonArray> SBInclinedSersic::SBInclinedSersicImpl::shoot(int N, UniformDeviate ud) const
+    void SBInclinedSersic::SBInclinedSersicImpl::shoot(
+        PhotonArray& photons, UniformDeviate ud) const
     {
         throw std::runtime_error(
             "Photon shooting not yet implemented for SBInclinedSersic profile.");

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -40,7 +40,7 @@ def test_Zernike_orthonormality():
     jmax = 30  # Going up to 30 filled Zernikes takes about ~1 sec on my laptop
     diam = 4.0
     R_outer = diam/2
-    pad_factor = 3.0  # Increasing pad_factor eliminates test failures caused by pixelization.
+
     x = np.linspace(-R_outer, R_outer, 256)
     dx = x[1]-x[0]
     x, y = np.meshgrid(x, x)
@@ -136,7 +136,7 @@ def test_annular_Zernike_limit():
 @timer
 def test_noll():
     # This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
-    # It used to be in phase_screen.py, but now we use a faster lookup-table implementation.
+    # It used to be in zernike.py, but now we use a faster lookup-table implementation.
     # This reference version is still useful as a test.
     def noll_to_zern(j):
         if (j == 0):
@@ -149,10 +149,10 @@ def test_noll():
         m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
         return (n, m)
 
-    # Test that the version of _noll_to_zern in phase_screens.py is accurate.
+    # Test that the version of noll_to_zern in zernike.py is accurate.
     for j in range(1,30):
         true_n,true_m = noll_to_zern(j)
-        n,m = galsim.zernike._noll_to_zern(j)
+        n,m = galsim.zernike.noll_to_zern(j)
         #print('j=%d, noll = %d,%d, true_noll = %d,%d'%(j,n,m,true_n,true_m))
         assert n == true_n
         assert m == true_m
@@ -161,7 +161,7 @@ def test_noll():
         mm = -m if (n//2)%2 == 0 else m
         assert j == n*(n+1)/2 + (abs(2*mm+1)+1)//2
 
-    # Again, the reference version of this function used to be in phase_screens.py
+    # Again, the reference version of this function used to be in zernike.py
     def zern_rho_coefs(n, m):
         """Compute coefficients of radial part of Zernike (n, m).
         """
@@ -173,7 +173,7 @@ def test_noll():
         return A
 
     for j in range(1,30):
-        n,m = galsim.zernike._noll_to_zern(j)
+        n,m = galsim.zernike.noll_to_zern(j)
         true_coefs = zern_rho_coefs(n,m)
         coefs = galsim.zernike._zern_rho_coefs(n,m)
         #print('j=%d, coefs = %s'%(j,coefs))
@@ -239,7 +239,6 @@ def test_ne():
 @timer
 def test_Zernike_basis():
     """Test the zernikeBasis function"""
-    eps = 0.2
     diam = 2.4
     jmax = 30
     R_outer = diam/2
@@ -291,7 +290,7 @@ def test_fit():
         z = galsim.utilities.horner2d(x, y, cartesian_coefs)
 
         basis = galsim.zernike.zernikeBasis(21, x, y, R_outer=R_outer, R_inner=R_inner)
-        coefs, _, _, _ = np.linalg.lstsq(basis.T, z)
+        coefs, _, _, _ = np.linalg.lstsq(basis.T, z, rcond=-1.)
         resids = (galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
                   .evalCartesian(x, y)
                   - z)
@@ -338,7 +337,7 @@ def test_fit():
         basis = galsim.zernike.zernikeBasis(21, x, y, R_outer=R_outer, R_inner=R_inner)
         assert basis.shape == (22, 25, 40)
         # lstsq doesn't handle the extra dimension though...
-        coefs, _, _, _ = np.linalg.lstsq(basis.reshape(21+1, 1000).T, z.ravel())
+        coefs, _, _, _ = np.linalg.lstsq(basis.reshape(21+1, 1000).T, z.ravel(), rcond=-1.)
         resids = (galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
                   .evalCartesian(x, y)
                   - z)
@@ -349,6 +348,70 @@ def test_fit():
         np.testing.assert_allclose(resids2, 0, atol=1e-14)
 
 
+@timer
+def test_gradient():
+    # Start with a few that just quote the literature, e.g., Stephenson (2014).
+
+    Z11 = galsim.zernike.Zernike([0]*11+[1])
+
+    x = np.linspace(-1, 1, 100)
+    x, y = np.meshgrid(x, x)
+
+    def Z11_grad(x, y):
+        # Z11 = sqrt(5) (6(x^2+y^2)^2 - 6(x^2+y^2)+1)
+        r2 = x**2 + y**2
+        gradx = 12*np.sqrt(5)*x*(2*r2-1)
+        grady = 12*np.sqrt(5)*y*(2*r2-1)
+        return gradx, grady
+
+    # import matplotlib.pyplot as plt
+    # fig, axes = plt.subplots(ncols=3, figsize=(12, 3))
+    # scat0 = axes[0].scatter(x, y, c=Z11.evalCartesianGrad(x, y)[0])
+    # fig.colorbar(scat0, ax=axes[0])
+    # scat1 = axes[1].scatter(x, y, c=Z11_grad(x, y)[0])
+    # fig.colorbar(scat1, ax=axes[1])
+    # scat2 = axes[2].scatter(x, y, c=Z11.evalCartesianGrad(x, y)[0] - Z11_grad(x, y)[0])
+    # fig.colorbar(scat2, ax=axes[2])
+    # plt.show()
+
+    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=0, atol=1e-12)
+
+    Z28 = galsim.zernike.Zernike([0]*28+[1])
+
+    def Z28_grad(x, y):
+        # Z28 = sqrt(14) (x^6 - 15 x^4 y^2 + 15 x^2 y^4 - y^6)
+        gradx = 6*np.sqrt(14)*x*(x**4 - 10*x**2*y**2 + 5*y**4)
+        grady = -6*np.sqrt(14)*y*(5*x**4 - 10*x**2*y**2 + y**4)
+        return gradx, grady
+
+    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=0, atol=1e-12)
+
+    # Now try some finite differences on a broader set of input
+
+    def finite_difference_gradient(Z, x, y):
+        dh = 1e-5
+        return ((Z.evalCartesian(x+dh, y)-Z.evalCartesian(x-dh, y))/(2*dh),
+                (Z.evalCartesian(x, y+dh)-Z.evalCartesian(x, y-dh))/(2*dh))
+
+    u = galsim.UniformDeviate(1234)
+
+    # Test finite difference against analytic result for 25 different Zernikes with random number of
+    # random coefficients and random inner/outer radii.
+    for j in range(25):
+        nj = 1+int(u()*55)
+        R_inner = 0.2+0.6*u()
+        R_outer = R_inner + 0.2+0.6*u()
+        Z = galsim.zernike.Zernike([0]+[u() for _ in range(nj)], R_inner=R_inner, R_outer=R_outer)
+
+        np.testing.assert_allclose(
+                finite_difference_gradient(Z, x, y),
+                Z.evalCartesianGrad(x, y),
+                rtol=1e-5, atol=1e-5)
+
+    # Make sure the gradient of the zero-Zernike works
+    Z = galsim.zernike.Zernike([0,0])
+    assert Z == Z.gradX == Z.gradX.gradX == Z.gradY == Z.gradY.gradY
+
 if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
@@ -357,3 +420,4 @@ if __name__ == "__main__":
     test_ne()
     test_Zernike_basis()
     test_fit()
+    test_gradient()

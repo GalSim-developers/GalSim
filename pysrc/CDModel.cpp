@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,43 +17,25 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
+#include "PyBind11Helper.h"
 #include "CDModel.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PyCDModels
+    template <typename T>
+    static void WrapTemplates(PY_MODULE& _galsim)
     {
+        typedef void (*ApplyCD_func)(ImageView<T>& , const BaseImage<T>& ,
+                                     const BaseImage<double>& , const BaseImage<double>& ,
+                                     const BaseImage<double>& , const BaseImage<double>& ,
+                                     const int , const double );
+        GALSIM_DOT def("_ApplyCD", ApplyCD_func(&ApplyCD));
+    }
 
-        template <typename U>
-        static void wrapTemplates() {
-
-            typedef ImageAlloc<U> (*ApplyCD_func)(const BaseImage<U>&, ConstImageView<double>,
-                ConstImageView<double>, ConstImageView<double>, ConstImageView<double>,
-                const int, const double);
-            bp::def("_ApplyCD",
-                ApplyCD_func(&ApplyCD),
-                (bp::arg("image"), bp::arg("aL"), bp::arg("aR"), bp::arg("aB"), bp::arg("aT"),
-                bp::arg("dmax"), bp::arg("gain_ratio")),
-                "Apply an Antilogus et al (2014) charge deflection model to an image.");
-
-        };
-
-        static void wrap(){
-            wrapTemplates<float>();
-            wrapTemplates<double>();
-        }
-
-    };
-
-    void pyExportCDModel()
+    void pyExportCDModel(PY_MODULE& _galsim)
     {
-        PyCDModels::wrap();
+        WrapTemplates<float>(_galsim);
+        WrapTemplates<double>(_galsim);
     }
 
 } // namespace galsim

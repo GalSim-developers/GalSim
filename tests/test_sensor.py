@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,15 +20,11 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
+import time
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 @timer
 def test_simple():
@@ -298,9 +294,8 @@ def test_silicon():
 
     assert_raises(IOError, galsim.SiliconSensor, name='junk')
     assert_raises(IOError, galsim.SiliconSensor, name='output')
-    assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
-    assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', 'hello')
-
+    assert_raises(TypeError, galsim.SiliconSensor, rng=3.4)
+    assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', rng1)
 
 @timer
 def test_silicon_fft():
@@ -356,10 +351,11 @@ def test_silicon_fft():
     np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
 
     # Repeat with 20X more photons where the brighter-fatter effect should kick in more.
+    # (Also not in true_center, to hit a different branch about offset in the drawImage code.)
     obj *= 200
-    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
-    obj.drawImage(im2, method='fft', sensor=simple, rng=rng)
-    obj.drawImage(im3, method='fft')
+    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng, use_true_center=False)
+    obj.drawImage(im2, method='fft', sensor=simple, rng=rng, use_true_center=False)
+    obj.drawImage(im3, method='fft', use_true_center=False)
 
     r1 = im1.calculateMomentRadius(flux=obj.flux)
     r2 = im2.calculateMomentRadius(flux=obj.flux)
@@ -383,6 +379,112 @@ def test_silicon_fft():
     np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
     print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), 2.*sigma_r))
     assert r1-r3 > 2.*sigma_r
+
+@timer
+def test_silicon_area():
+    """Test the Silicon class calculate_pixel_areas() function.
+    """
+    # Adding this test to compare to Poisson simulation
+    # Craig Lage - 27Apr18
+    # Draw a very small spot with 80K electrons
+    # This puts all of the charge in the central pixel to
+    # match how the Poisson simulations are done
+    obj = galsim.Gaussian(flux=8.0E4, sigma=0.02)
+    im = obj.drawImage(nx=9, ny=9, scale=0.3, dtype=float)
+    im.setCenter(0,0)
+
+    rng = galsim.BaseDeviate(5678)
+    silicon = galsim.SiliconSensor(rng=rng)
+    area_image = silicon.calculate_pixel_areas(im)
+    # Get the area data from the Poisson simulation
+    area_filename = silicon.vertex_file.split('/')[-1].strip('.dat')+'_areas.dat'
+    area_dir = os.path.join(os.getcwd(),'sensor_validation/')
+    area_data = np.loadtxt(area_dir+area_filename, skiprows = 1)    
+    # Now test that they are almost equal
+    for line in area_data:
+        nx = int(line[0]-4)
+        ny = int(line[1]-4)
+        poisson_area = line[2]
+        galsim_area = area_image[nx,ny]
+        #print(nx,ny,poisson_area,galsim_area)
+        np.testing.assert_almost_equal(poisson_area/100.0, galsim_area, decimal=3)
+
+    
+    # Draw a smallish but very bright Gaussian image
+    obj = galsim.Gaussian(flux=5.e5, sigma=0.2)
+    im = obj.drawImage(nx=17, ny=17, scale=0.3, dtype=float)
+    im.setCenter(0,0)
+
+    print('im min = ',im.array.min())
+    print('im max = ',im.array.max())
+    print('im(0,0) = ',im(0,0))
+    assert im(0,0) == im.array.max()
+    np.testing.assert_almost_equal(im(0,0), 149462.06966413918)
+
+    rng = galsim.BaseDeviate(5678)
+    silicon = galsim.SiliconSensor(rng=rng)
+    area_image = silicon.calculate_pixel_areas(im)
+    print('area min = ',area_image.array.min())
+    print('area max = ',area_image.array.max())
+    print('area(0,0) = ',area_image(0,0))
+    assert area_image(0,0) == area_image.array.min()
+    # Regression test based on values current for GalSim version 1.6.
+    np.testing.assert_almost_equal(area_image(0,0), 0.8962292034379046)
+    np.testing.assert_almost_equal(area_image.array.max(), 1.0112006254350212)
+
+    # The Silicon code is asymmetric.  Charge flows more easily along columns than rows.
+    # It's not completely intuitive, since there are competing effects in play, but the net
+    # result on the areas for this image is that the pixels above and below the central pixel
+    # are slightly larger than the ones to the left and right.
+    print('+- 1 along column: ',area_image(0,1),area_image(0,-1))
+    print('+- 1 along row:    ',area_image(1,0),area_image(-1,0))
+    np.testing.assert_almost_equal((area_image(0,1) + area_image(0,-1))/2., 0.9789158236482416)
+    np.testing.assert_almost_equal((area_image(1,0) + area_image(-1,0))/2., 0.9686605382489861)
+
+    # Just to confirm that the bigger effect really is along the column directions, draw the
+    # object with the silicon sensor in play.
+    im2 = obj.drawImage(nx=17, ny=17, scale=0.3, method='phot', sensor=silicon, rng=rng)
+    im2.setCenter(0,0)
+    print('im min = ',im2.array.min())
+    print('im max = ',im2.array.max())
+    print('im(0,0) = ',im2(0,0))
+    print('+- 1 along column: ',im2(0,1),im2(0,-1))
+    print('+- 1 along row:    ',im2(1,0),im2(-1,0))
+    assert im2(0,0) == im2.array.max()
+    assert im2(0,1) + im2(0,-1) > im2(1,0) + im2(-1,0)
+    np.testing.assert_almost_equal(im2(0,0), 133749)
+    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 58784.5)
+    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 58477.5)
+
+    # Repeat with transpose=True to check that things are transposed properly.
+    siliconT = galsim.SiliconSensor(rng=rng, transpose=True)
+    area_imageT = siliconT.calculate_pixel_areas(im)
+    print('with transpose=True:')
+    print('area min = ',area_imageT.array.min())
+    print('area max = ',area_imageT.array.max())
+    print('area(0,0) = ',area_imageT(0,0))
+    print('+- 1 along column: ',area_imageT(0,1),area_imageT(0,-1))
+    print('+- 1 along row:    ',area_imageT(1,0),area_imageT(-1,0))
+    np.testing.assert_almost_equal(area_imageT(0,0), 0.8962292034379046)
+    np.testing.assert_almost_equal((area_imageT(0,1) + area_imageT(0,-1))/2., 0.9686605382489861)
+    np.testing.assert_almost_equal((area_imageT(1,0) + area_imageT(-1,0))/2., 0.9789158236482416)
+    np.testing.assert_almost_equal(area_imageT.array, area_image.array.T, decimal=15)
+
+    im2T = obj.drawImage(nx=17, ny=17, scale=0.3, method='phot', sensor=siliconT, rng=rng)
+    im2T.setCenter(0,0)
+    print('im min = ',im2T.array.min())
+    print('im max = ',im2T.array.max())
+    print('im(0,0) = ',im2T(0,0))
+    print('+- 1 along column: ',im2T(0,1),im2T(0,-1))
+    print('+- 1 along row:    ',im2T(1,0),im2T(-1,0))
+    assert im2T(0,0) == im2T.array.max()
+    assert im2T(0,1) + im2T(0,-1) < im2T(1,0) + im2T(-1,0)
+    # Actual values are different, since rng is in different state. But qualitatively transposed.
+    np.testing.assert_almost_equal(im2T(0,0), 134220)
+    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58216.5)
+    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59255)
+
+    do_pickle(siliconT)
 
 
 @timer
@@ -638,10 +740,250 @@ def test_treerings():
             np.testing.assert_almost_equal(ref_mom['My'] + treering_amplitude * center[1] / 1000,
                                            mom['My'], decimal=1)
 
+@timer
+def test_resume():
+    """Test that the resume option for accumulate works properly.
+    """
+    # Note: This test is based on a script devel/lsst/treering_skybg_check.py
+
+    rng = galsim.UniformDeviate(314159)
+
+    if __name__ == "__main__":
+        flux_per_pixel = 40
+        nx = 200
+        ny = 200
+        block_size = int(1.3e5)
+        nrecalc = 1.e6
+    else:
+        flux_per_pixel = 40
+        nx = 20
+        ny = 20
+        block_size = int(1.3e3)
+        nrecalc = 1.e4
+
+    expected_num_photons = nx * ny * flux_per_pixel
+    pd = galsim.PoissonDeviate(rng, mean=expected_num_photons)
+    num_photons = int(pd())  # Poisson realization of the given expected number of photons.
+    #nrecalc = num_photons / 2  # Only recalc once.
+    flux_per_photon = 1
+    print('num_photons = ',num_photons,' .. expected = ',expected_num_photons)
+
+    # Use treerings to make sure that aspect of the setup is preserved properly on resume
+    treering_func = galsim.SiliconSensor.simple_treerings(0.5, 250.)
+    treering_center = galsim.PositionD(-1000,0)
+    sensor1 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+    sensor2 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+    sensor3 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+
+    waves = galsim.WavelengthSampler(sed = galsim.SED('1', 'nm', 'fphotons'),
+                                     bandpass = galsim.Bandpass('LSST_r.dat', 'nm'),
+                                     rng=rng)
+    angles = galsim.FRatioAngles(1.2, 0.4, rng)
+
+    im1 = galsim.ImageF(nx,ny)  # Will not use resume
+    im2 = galsim.ImageF(nx,ny)  # Will use resume
+    im3 = galsim.ImageF(nx,ny)  # Will run all photons in one pass
+
+    t_resume = 0
+    t_no_resume = 0
+
+    all_photons = galsim.PhotonArray(num_photons)
+    n_added = 0
+
+    first = True
+    while num_photons > 0:
+        print(num_photons,'photons left. image min/max =',im1.array.min(),im1.array.max())
+        nphot = min(block_size, num_photons)
+        num_photons -= nphot
+
+        t0 = time.time()
+        photons = galsim.PhotonArray(int(nphot))
+        rng.generate(photons.x) # 0..1 so far
+        photons.x *= nx
+        photons.x += 0.5  # Now from xmin-0.5 .. xmax+0.5
+        rng.generate(photons.y)
+        photons.y *= ny
+        photons.y += 0.5
+        photons.flux = flux_per_photon
+        waves.applyTo(photons)
+        angles.applyTo(photons)
+
+        all_photons.x[n_added:n_added+nphot] = photons.x
+        all_photons.y[n_added:n_added+nphot] = photons.y
+        all_photons.flux[n_added:n_added+nphot] = photons.flux
+        all_photons.dxdz[n_added:n_added+nphot] = photons.dxdz
+        all_photons.dydz[n_added:n_added+nphot] = photons.dydz
+        all_photons.wavelength[n_added:n_added+nphot] = photons.wavelength
+        n_added += nphot
+
+        t1 = time.time()
+        sensor1.accumulate(photons, im1)
+
+        t2 = time.time()
+        sensor2.accumulate(photons, im2, resume = not first)
+        first = False
+        t3 = time.time()
+        print('Times = ',t1-t0,t2-t1,t3-t2)
+        t_resume += t3-t2
+        t_no_resume += t2-t1
+
+    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    print('max rel diff = ',np.max(np.abs(im1.array - im2.array)/np.abs(im2.array)))
+    np.testing.assert_almost_equal(im2.array/expected_num_photons, im1.array/expected_num_photons,
+                                   decimal=5)
+    print('Time with resume = ',t_resume)
+    print('Time without resume = ',t_no_resume)
+    assert t_resume < t_no_resume
+
+    # The resume path should be exactly the same as doing all the photons at once.
+    sensor3.accumulate(all_photons, im3)
+    np.testing.assert_array_equal(im2.array, im3.array)
+
+    # If resume is used either with the wrong image or on the first call to accumulate, then
+    # this should raise an exception.
+    assert_raises(RuntimeError, sensor3.accumulate, all_photons, im1, resume=True)
+    sensor4 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+                                   treering_func=treering_func, treering_center=treering_center)
+    assert_raises(RuntimeError, sensor4.accumulate, all_photons, im1, resume=True)
+
+@timer
+def test_flat():
+    """Test building a flat field image using the Silicon class.
+    """
+    # Note: This test is based on a script devel/lsst/treering_flat.py
+
+    if __name__ == '__main__':
+        nx = 200
+        ny = 200
+        nflats = 20
+        niter = 50
+        toler = 0.01
+    else:
+        nx = 50
+        ny = 50
+        nflats = 3
+        niter = 20  # Seem to really need 20 or more iterations to get covariances close.
+        toler = 0.05
+
+    counts_total = 80.e3
+    counts_per_iter = counts_total / niter
+
+    # Silicon sensor with tree rings
+    seed = 31415
+    rng = galsim.UniformDeviate(seed)
+    treering_func = galsim.SiliconSensor.simple_treerings(0.26, 47)
+    treering_center = galsim.PositionD(0,0)
+    sensor = galsim.SiliconSensor(rng=rng,
+                                   treering_func=treering_func, treering_center=treering_center)
+
+    # Use a non-trivial WCS to make sure that works properly.
+    wcs = galsim.FitsWCS('fits_files/tnx.fits')
+    # We add on a border of 2 pixels, since the outer row/col get a little messed up by photons
+    # falling off the edge, but not coming on from the other direction.
+    # We do 2 rows/cols rather than just 1 to be safe, since I think diffusion can probably go
+    # 2 pixels, even though the deficit is only really evident on the outer pixel.
+    nborder = 2
+    base_image = galsim.ImageF(nx+2*nborder, ny+2*nborder, wcs=wcs)
+    base_image.wcs.makeSkyImage(base_image, sky_level=1.)
+
+    # Rescale so that the mean sky level per pixel is skyCounts
+    mean_pixel_area = base_image.array.mean()
+    sky_level_per_iter = counts_per_iter / mean_pixel_area  # in ADU/arcsec^2 now.
+    base_image *= sky_level_per_iter
+
+    # The base_image now has the right level to account for the WCS distortion, but not any sensor
+    # effects.
+    # This is the noise-free level that we want to add each iteration modulated by the sensor.
+
+    noise = galsim.PoissonNoise(rng)
+    flats = []
+
+    for n in range(nflats):
+        print('n = ',n)
+        # image is the image that we will build up in steps.
+        image = galsim.ImageF(nx+2*nborder, ny+2*nborder, wcs=wcs)
+
+        for i in range(niter):
+            # temp is the additional flux we will add to the image in this iteration.
+            # Start with the right area due to the sensor effects.
+            temp = sensor.calculate_pixel_areas(image)
+            temp /= temp.array.mean()
+
+            # Multiply by the base image to get the right mean level and wcs effects
+            temp *= base_image
+
+            # Finally, add noise.  What we have here so far is the expectation value in each pixel.
+            # We need to realize this according to Poisson statistics with these means.
+            temp.addNoise(noise)
+
+            # Add this to the image we are building up.
+            image += temp
+
+        # Cut off the outer border where things don't work quite right.
+        image = image.subImage(galsim.BoundsI(1+nborder,nx+nborder,1+nborder,ny+nborder))
+        flats.append(image.array)
+
+    # These are somewhat noisy, so compute for all pairs and average them.
+    mean = var = cov01 = cov10 = cov11a = cov11b = cov02 = cov20 = 0
+    n = len(flats)
+    npairs = 0
+
+    for i in range(n):
+        flati = flats[i]
+        print('mean ',i,' = ',flati.mean())
+        mean += flati.mean()
+        for j in range(i+1,n):
+            flatj = flats[j]
+            diff = flati - flatj
+            var += diff.var()/2
+            cov01 += np.mean(diff[1:,:] * diff[:-1,:])
+            cov10 += np.mean(diff[:,1:] * diff[:,:-1])
+            cov11a += np.mean(diff[1:,1:] * diff[:-1,:-1])
+            cov11b += np.mean(diff[1:,:-1] * diff[:-1,1:])
+            cov02 += np.mean(diff[2:,:] * diff[:-2,:])
+            cov20 += np.mean(diff[:,2:] * diff[:,:-2])
+            npairs += 1
+    mean /= n
+    var /= npairs
+    cov01 /= npairs
+    cov10 /= npairs
+    cov11a /= npairs
+    cov11b /= npairs
+    cov02 /= npairs
+    cov20 /= npairs
+
+    print('var(diff)/2 = ',var, 0.93*counts_total)
+    print('cov01 = ',cov01, 0.03*counts_total)   # Note: I don't actually know if these are
+    print('cov10 = ',cov10, 0.015*counts_total)  # the right covariances...
+    print('cov11a = ',cov11a, cov11a/counts_total)
+    print('cov11b = ',cov11b, cov11b/counts_total)
+    print('cov02 = ',cov02, cov02/counts_total)
+    print('cov20 = ',cov20, cov20/counts_total)
+
+    # Mean should be close to target counts
+    np.testing.assert_allclose(mean, counts_total, rtol=toler)
+    # Variance is a bit less than the mean due to B/F.
+    np.testing.assert_allclose(var, 0.93 * counts_total, rtol=toler)
+    # 01 and 10 covariances are significant.
+    np.testing.assert_allclose(cov01, 0.03 * counts_total, rtol=30*toler)
+    np.testing.assert_allclose(cov10, 0.015 * counts_total, rtol=60*toler)
+    # The rest are small
+    np.testing.assert_allclose(cov11a / counts_total, 0., atol=2*toler)
+    np.testing.assert_allclose(cov11b / counts_total, 0., atol=2*toler)
+    np.testing.assert_allclose(cov20 / counts_total, 0., atol=2*toler)
+    np.testing.assert_allclose(cov02 / counts_total, 0., atol=2*toler)
+
+
 if __name__ == "__main__":
     test_simple()
     test_silicon()
     test_silicon_fft()
+    test_silicon_area()
     test_sensor_wavelengths_and_angles()
     test_bf_slopes()
     test_treerings()
+    test_resume()
+    test_flat()

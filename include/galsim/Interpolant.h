@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,8 +21,6 @@
 #define GalSim_Interpolant_H
 
 #include <cmath>
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
 #include <map>
 
 #include "Std.h"
@@ -33,10 +31,6 @@
 #include "SBProfile.h"
 
 namespace galsim {
-
-    // This is used both here and by SBBox.
-    // This particular definition is sinc(x) = sin(Pi x) / (Pi x)
-    double sinc(double x);
 
     class Interpolant;
 
@@ -70,7 +64,7 @@ namespace galsim {
          * @param[in] gsparams  GSParams object storing constants that control the accuracy of
          *                      operations, if different from the default.
          */
-        Interpolant(const GSParamsPtr& gsparams) : _gsparams(gsparams), _interp(*this) {}
+        Interpolant(const GSParams& gsparams) : _gsparams(gsparams), _interp(*this) {}
 
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
         Interpolant(const Interpolant& rhs): _gsparams(rhs._gsparams), _interp(rhs._interp) {}
@@ -172,18 +166,18 @@ namespace galsim {
          * @param[in] ud UniformDeviate used to generate random values
          * @returns a PhotonArray containing the vector of displacements for interpolation kernel.
          */
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const
-        { checkSampler(); return _sampler->shoot(N, ud); }
+        virtual void shoot(PhotonArray& photons, UniformDeviate ud) const
+        { checkSampler(); _sampler->shoot(photons, ud, true); }
 
         virtual std::string makeStr() const =0;
 
     protected:
 
-        const GSParamsPtr _gsparams;
+        GSParams _gsparams;
         InterpolantFunction _interp;
 
         // Class that draws photons from this Interpolant
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const
@@ -226,46 +220,46 @@ namespace galsim {
 
         virtual double getPositiveFlux() const=0;
         virtual double getNegativeFlux() const=0;
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
+        virtual void shoot(PhotonArray& photons, UniformDeviate ud) const=0;
     };
 
     /**
      * @brief An interpolant that is product of same 1d `Interpolant` in x and y
      *
-     * The 1d interpolant gets passed in by shared_ptr, so there is no need to worry about keeping
-     * the 1d interpolant in existence elsewhere.
+     * The 1d interpolant gets passed in by reference, so it needs to exist elsewhere.
+     * (Typically in Python layer.)
      */
     class InterpolantXY : public Interpolant2d
     {
     public:
-        InterpolantXY(boost::shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
+        InterpolantXY(const Interpolant& i1d) : _i1d(i1d) {}
         ~InterpolantXY() {}
 
         // All of the calls below implement base class methods.
-        double xrange() const { return _i1d->xrange(); }
-        int ixrange() const { return _i1d->ixrange(); }
-        double urange() const { return _i1d->urange(); }
-        double getTolerance() const { return _i1d->getTolerance(); }
+        double xrange() const { return _i1d.xrange(); }
+        int ixrange() const { return _i1d.ixrange(); }
+        double urange() const { return _i1d.urange(); }
+        double getTolerance() const { return _i1d.getTolerance(); }
 
-        double xval(double x, double y) const { return _i1d->xval(x)*_i1d->xval(y); }
+        double xval(double x, double y) const { return _i1d.xval(x)*_i1d.xval(y); }
         double xvalWrapped(double x, double y, int N) const
-        { return _i1d->xvalWrapped(x,N)*_i1d->xvalWrapped(y,N); }
-        double uval(double u, double v) const { return _i1d->uval(u)*_i1d->uval(v); }
-        bool isExactAtNodes() const { return _i1d->isExactAtNodes(); }
+        { return _i1d.xvalWrapped(x,N)*_i1d.xvalWrapped(y,N); }
+        double uval(double u, double v) const { return _i1d.uval(u)*_i1d.uval(v); }
+        bool isExactAtNodes() const { return _i1d.isExactAtNodes(); }
 
         // Photon-shooting routines:
         double getPositiveFlux() const;
         double getNegativeFlux() const;
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Access the 1d interpolant functions for more efficient 2d interps:
-        double xval1d(double x) const { return _i1d->xval(x); }
-        double xvalWrapped1d(double x, int N) const { return _i1d->xvalWrapped(x,N); }
-        double uval1d(double u) const { return _i1d->uval(u); }
-        boost::shared_ptr<Interpolant> get1d() const { return _i1d; }
+        double xval1d(double x) const { return _i1d.xval(x); }
+        double xvalWrapped1d(double x, int N) const { return _i1d.xvalWrapped(x,N); }
+        double uval1d(double u) const { return _i1d.uval(u); }
+        const Interpolant& get1d() const { return _i1d; }
 
     private:
-        boost::shared_ptr<Interpolant> _i1d;  // The 1d function used in both axes here.
+        const Interpolant& _i1d;  // The 1d function used in both axes here.
     };
 
     /**
@@ -289,7 +283,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Delta(double width=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        Delta(double width, const GSParams& gsparams) :
             Interpolant(gsparams), _width(width) {}
         ~Delta() {}
 
@@ -308,7 +302,7 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 
@@ -337,7 +331,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Nearest(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        Nearest(double tol, const GSParams& gsparams) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
 
@@ -352,7 +346,7 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 
@@ -380,7 +374,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        SincInterpolant(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        SincInterpolant(double tol, const GSParams& gsparams) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~SincInterpolant() {}
 
@@ -393,7 +387,7 @@ namespace galsim {
         double xvalWrapped(double x, int N) const;
         double uval(double u) const;
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 
@@ -420,7 +414,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Linear(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        Linear(double tol, const GSParams& gsparams) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Linear() {}
 
@@ -436,7 +430,7 @@ namespace galsim {
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
         // Linear interpolant has fast photon-shooting by adding two uniform deviates per
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 
@@ -462,7 +456,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Cubic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
+        Cubic(double tol, const GSParams& gsparams);
         ~Cubic() {}
 
         double xrange() const { return _range; }
@@ -484,14 +478,14 @@ namespace galsim {
         double _range;
 
         double _tolerance;
-        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        shared_ptr<TableBuilder> _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
         double uCalc(double u) const;
 
         // Store the tables in a map, so repeat constructions are quick.
-        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab;
+        static std::map<double,shared_ptr<TableBuilder> > _cache_tab;
         static std::map<double,double> _cache_umax;
     };
 
@@ -510,7 +504,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Quintic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
+        Quintic(double tol, const GSParams& gsparams);
         ~Quintic() {}
 
         double xrange() const { return _range; }
@@ -520,6 +514,12 @@ namespace galsim {
 
         double xval(double x) const;
         double uval(double u) const;
+
+        // Override numerical calculation with known analytic integral
+        // Not as simple as the Cubic one, but still a straightforward integral for Maple.
+        // For the curious, the + flux is (13018561 / 11595672) + (17267 / 14494590) * sqrt(31).
+        double getPositiveFlux() const { return 1.1293413499280066555; }
+        double getNegativeFlux() const { return 0.1293413499280066555; }
 
         std::string makeStr() const;
 
@@ -531,14 +531,14 @@ namespace galsim {
     private:
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double _tolerance;
-        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        shared_ptr<TableBuilder> _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
         double uCalc(double u) const;
 
         // Store the tables in a map, so repeat constructions are quick.
-        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab;
+        static std::map<double,shared_ptr<TableBuilder> > _cache_tab;
         static std::map<double,double> _cache_umax;
     };
 
@@ -572,8 +572,7 @@ namespace galsim {
          * @param[in] gsparams       GSParams object storing constants that control the accuracy of
          *                           operations, if different from the default.
          */
-        Lanczos(int n, bool conserve_dc=true, double tol=1.e-4,
-                const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
+        Lanczos(int n, bool conserve_dc, double tol, const GSParams& gsparams);
         ~Lanczos() {}
 
         double xrange() const { return _range; }
@@ -597,8 +596,8 @@ namespace galsim {
         double _uMax;  // truncation point for Fourier transform
         std::vector<double> _K; // coefficients for flux correction in xval
         std::vector<double> _C; // coefficients for flux correction in uval
-        boost::shared_ptr<Table<double,double> > _xtab; // Table for x values
-        boost::shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
+        shared_ptr<TableBuilder> _xtab; // Table for x values
+        shared_ptr<TableBuilder> _utab; // Table for Fourier transform
 
         double xCalc(double x) const;
         double uCalc(double u) const;
@@ -606,8 +605,8 @@ namespace galsim {
 
         // Store the tables in a map, so repeat constructions are quick.
         typedef std::pair<int,std::pair<bool,double> > KeyType;
-        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_xtab;
-        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_utab;
+        static std::map<KeyType,shared_ptr<TableBuilder> > _cache_xtab;
+        static std::map<KeyType,shared_ptr<TableBuilder> > _cache_utab;
         static std::map<KeyType,double> _cache_umax;
     };
 

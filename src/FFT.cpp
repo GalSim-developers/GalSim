@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,6 +32,26 @@
 #endif
 
 namespace galsim {
+
+    template <typename T>
+    void FFTW_Array<T>::resize(size_t n)
+    {
+        if (_n != n) {
+            _n = n;
+            // cf. BaseImage::allocateMem, which uses the same code.
+            char* mem = new char[_n * sizeof(T) + sizeof(char*) + 15];
+            _p = reinterpret_cast<T*>( (uintptr_t)(mem + sizeof(char*) + 15) & ~(size_t) 0x0F );
+            ((char**)_p)[-1] = mem;
+        }
+    }
+
+    template <typename T>
+    FFTW_Array<T>::~FFTW_Array()
+    {
+        if (_p) {
+            delete [] ((char**)_p)[-1];
+        }
+    }
 
     KTable::KTable(int N, double dk, std::complex<double> value) : _dk(dk), _invdk(1./dk)
     {
@@ -99,7 +119,7 @@ namespace galsim {
             _array[i] *= scale;
     }
 
-    boost::shared_ptr<KTable> KTable::wrap(int Nout) const
+    shared_ptr<KTable> KTable::wrap(int Nout) const
     {
         dbg<<"Start KTable wrap: N = "<<_N<<", Nout = "<<Nout<<std::endl;
         // MJ: I found that when using this routing with N not being a multiple of Nout, that
@@ -116,7 +136,7 @@ namespace galsim {
         // Make it even:
         Nout = 2*((Nout+1)/2);
         int Nouto2 = Nout>>1;
-        boost::shared_ptr<KTable> out(new KTable(Nout, _dk, std::complex<double>(0.,0.)));
+        shared_ptr<KTable> out(new KTable(Nout, _dk, std::complex<double>(0.,0.)));
         for (int iyin=-_No2; iyin<=_No2; ++iyin) {
             int iyout = iyin;
             while (iyout < -Nouto2) iyout += Nout;
@@ -151,13 +171,13 @@ namespace galsim {
         return out;
     }
 
-    boost::shared_ptr<XTable> XTable::wrap(int Nout) const
+    shared_ptr<XTable> XTable::wrap(int Nout) const
     {
         if (Nout < 0) FormatAndThrow<FFTError>() << "XTable::wrap invalid Nout= " << Nout;
         // Make it even:
         Nout = 2*((Nout+1)/2);
         int Nouto2 = Nout>>1;
-        boost::shared_ptr<XTable> out(new XTable(Nout, _dx, 0.));
+        shared_ptr<XTable> out(new XTable(Nout, _dx, 0.));
         // What is (-N/2) wrapped to (+- Nout/2)?
         int excess = (_N % Nout) / 2;  // Note N and Nout are positive.
         const int startOut = (excess==0) ? -Nouto2 : Nouto2 - excess;
@@ -624,10 +644,10 @@ namespace galsim {
     }
 
     // Make a new table that is function of old.
-    boost::shared_ptr<KTable> KTable::function(KTable::function2 func) const
+    shared_ptr<KTable> KTable::function(KTable::function2 func) const
     {
         check_array();
-        boost::shared_ptr<KTable> lhs(new KTable(_N,_dk));
+        shared_ptr<KTable> lhs(new KTable(_N,_dk));
         std::complex<double> val;
         double kx, ky;
         const std::complex<double>* zptr=_array.get();
@@ -1055,9 +1075,9 @@ namespace galsim {
     }
 
     // Same thing, but return a new XTable
-    boost::shared_ptr<XTable> KTable::transform() const
+    shared_ptr<XTable> KTable::transform() const
     {
-        boost::shared_ptr<XTable> xt(new XTable( _N, 2.*M_PI*_invNd*_invdk ));
+        shared_ptr<XTable> xt(new XTable( _N, 2.*M_PI*_invNd*_invdk ));
         transform(*xt);
         return xt;
     }
@@ -1106,12 +1126,14 @@ namespace galsim {
     }
 
     // Same thing, but return a new KTable
-    boost::shared_ptr<KTable> XTable::transform() const
+    shared_ptr<KTable> XTable::transform() const
     {
-        boost::shared_ptr<KTable> kt(new KTable( _N, 2.*M_PI*_invNd*_invdx ));
+        shared_ptr<KTable> kt(new KTable( _N, 2.*M_PI*_invNd*_invdx ));
         transform(*kt);
         return kt;
     }
 
+    template class FFTW_Array<double>;
+    template class FFTW_Array<std::complex<double> >;
 
 }

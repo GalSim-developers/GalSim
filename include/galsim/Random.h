@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -31,33 +31,6 @@
  * Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting client code.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-// Variable defined to use a private copy of Boost.Random, modified
-// to avoid any reference to Boost.Random elements that might be on
-// the local machine.
-// Undefine this to use Boost.Random from the local distribution.
-#define DIVERT_BOOST_RANDOM
-
-#ifdef DIVERT_BOOST_RANDOM
-#include "galsim/boost1_48_0/random/mersenne_twister.hpp"
-#include "galsim/boost1_48_0/random/normal_distribution.hpp"
-#include "galsim/boost1_48_0/random/binomial_distribution.hpp"
-#include "galsim/boost1_48_0/random/poisson_distribution.hpp"
-#include "galsim/boost1_48_0/random/uniform_real_distribution.hpp"
-#include "galsim/boost1_48_0/random/weibull_distribution.hpp"
-#include "galsim/boost1_48_0/random/gamma_distribution.hpp"
-#include "galsim/boost1_48_0/random/chi_squared_distribution.hpp"
-#else
-#include "boost/random/mersenne_twister.hpp"
-#include "boost/random/normal_distribution.hpp"
-#include "boost/random/binomial_distribution.hpp"
-#include "boost/random/poisson_distribution.hpp"
-#include "boost/random/uniform_real_distribution.hpp"
-#include "boost/random/weibull_distribution.hpp"
-#include "boost/random/gamma_distribution.hpp"
-#include "boost/random/chi_squared_distribution.hpp"
-#endif
 #include <sstream>
 
 #include "Image.h"
@@ -107,10 +80,6 @@ namespace galsim {
      */
     class BaseDeviate
     {
-        // Note that this class could be templated with the type of Boost.Random generator that
-        // you want to use instead of mt19937
-        typedef boost::mt19937 rng_type;
-
     public:
         /**
          * @brief Construct and seed a new BaseDeviate, using the provided value as seed.
@@ -122,26 +91,17 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        explicit BaseDeviate(long lseed) : _rng(new rng_type()) { seed(lseed); }
+        explicit BaseDeviate(long lseed);
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
          */
-        BaseDeviate(const BaseDeviate& rhs) : _rng(rhs._rng) {}
+        BaseDeviate(const BaseDeviate& rhs);
 
         /**
          * @brief Construct a new BaseDeviate from a serialization string
          */
-        BaseDeviate(const char * str_c) : _rng(new rng_type())
-        {
-            if (str_c==NULL) {
-                seed(0);
-            } else {
-                std::string str=str_c;
-                std::istringstream iss(str);
-                iss >> *_rng;
-            }
-        }
+        BaseDeviate(const char* str_c);
 
         /**
          * @brief Destructor
@@ -151,15 +111,7 @@ namespace galsim {
         virtual ~BaseDeviate() {}
 
         /// @brief return a serialization string for this BaseDeviate
-        std::string serialize()
-        {
-            // When serializing, we need to make sure there is no cache being stored
-            // by the derived class.
-            clearCache();
-            std::ostringstream oss;
-            oss << *_rng;
-            return oss.str();
-        }
+        std::string serialize();
 
         /**
          * @brief Construct a duplicate of this BaseDeviate object.
@@ -201,14 +153,14 @@ namespace galsim {
          * Other Deviates that had been using the same RNG will be unaffected, while this
          * Deviate will obtain a fresh RNG seed according to lseed.
          */
-        void reset(long lseed) { _rng.reset(new rng_type()); seed(lseed); }
+        void reset(long lseed);
 
         /**
          * @brief Make this object share its random number generator with another Deviate.
          *
          * It discards whatever rng it had been using and starts sharing the one held by dev.
          */
-        void reset(const BaseDeviate& dev) { _rng = dev._rng; clearCache(); }
+        void reset(const BaseDeviate& dev);
 
         /**
          * @brief Clear the internal cache of the rng object.
@@ -227,12 +179,12 @@ namespace galsim {
         /**
          * @brief Discard some number of values from the random number generator.
          */
-        void discard(int n) { _rng->discard(n); }
+        void discard(int n);
 
         /**
          * @brief Get a random value in its raw form as a long integer.
          */
-        long raw() { return (*_rng)(); }
+        long raw();
 
         /**
          * @brief Draw a new random number from the distribution
@@ -241,7 +193,12 @@ namespace galsim {
          * However, we don't make it pure virtual, since we want to be able to make
          * BaseDeviate objects as a direct way to define a common seed for other Deviates.
          */
-        double operator()() { return _val(); }
+        double operator()()
+        { return generate1(); }
+
+        // This is the virtual function that is overridden in subclasses.
+        virtual double generate1()
+        { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
         /**
          * @brief Draw N new random numbers from the distribution and save the values in
@@ -252,13 +209,18 @@ namespace galsim {
          */
         void generate(int N, double* data);
 
+        /**
+         * @brief Draw N new random numbers from the distribution and add them to the values in
+         * an array
+         *
+         * @param N     The number of values to draw
+         * @param data  The array into which to add the values
+         */
+        void addGenerate(int N, double* data);
+
    protected:
-
-        boost::shared_ptr<rng_type> _rng;
-
-        // This is the virtual function that is actually overridden.
-        virtual double _val()
-        { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
+        struct BaseDeviateImpl;
+        shared_ptr<BaseDeviateImpl> _impl;
 
         /// Helper to make the repr with or without the (lengthy!) seed item.
         virtual std::string make_repr(bool incl_seed);
@@ -290,16 +252,16 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        UniformDeviate(long lseed) : BaseDeviate(lseed), _urd(0.,1.) {}
+        UniformDeviate(long lseed);
 
         /// @brief Construct a new UniformDeviate, sharing the random number generator with rhs.
-        UniformDeviate(const BaseDeviate& rhs) : BaseDeviate(rhs), _urd(0.,1.) {}
+        UniformDeviate(const BaseDeviate& rhs);
 
         /// @brief Construct a copy that shares the RNG with rhs.
-        UniformDeviate(const UniformDeviate& rhs) : BaseDeviate(rhs), _urd(0.,1.) {}
+        UniformDeviate(const UniformDeviate& rhs);
 
         /// @brief Construct a new UniformDeviate from a serialization string
-        UniformDeviate(const char* str_c) : BaseDeviate(str_c), _urd(0.,1.) {}
+        UniformDeviate(const char* str_c);
 
         /**
          * @brief Construct a duplicate of this UniformDeviate object.
@@ -310,16 +272,23 @@ namespace galsim {
         { return UniformDeviate(serialize().c_str()); }
 
         /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A uniform deviate in the interval [0.,1.)
+         */
+        double generate1();
+
+        /**
          * @brief Clear the internal cache
          */
-        void clearCache() { _urd.reset(); }
+        void clearCache();
 
     protected:
-        double _val() { return _urd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
-        boost::random::uniform_real_distribution<> _urd;
+        struct UniformDeviateImpl;
+        shared_ptr<UniformDeviateImpl> _devimpl;
     };
 
     /**
@@ -341,8 +310,7 @@ namespace galsim {
          * @param[in] mean  Mean of the output distribution
          * @param[in] sigma Standard deviation of the distribution
          */
-        GaussianDeviate(long lseed, double mean, double sigma) :
-            BaseDeviate(lseed), _normal(mean,sigma) {}
+        GaussianDeviate(long lseed, double mean, double sigma);
 
         /**
          * @brief Construct a new Gaussian-distributed RNG, sharing the random number
@@ -352,19 +320,17 @@ namespace galsim {
          * @param[in] mean  Mean of the output distribution
          * @param[in] sigma Standard deviation of the distribution
          */
-        GaussianDeviate(const BaseDeviate& rhs, double mean, double sigma) :
-            BaseDeviate(rhs), _normal(mean,sigma) {}
+        GaussianDeviate(const BaseDeviate& rhs, double mean, double sigma);
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        GaussianDeviate(const GaussianDeviate& rhs) : BaseDeviate(rhs), _normal(rhs._normal) {}
+        GaussianDeviate(const GaussianDeviate& rhs);
 
         /// @brief Construct a new GaussianDeviate from a serialization string
-        GaussianDeviate(const char* str_c, double mean, double sigma) :
-            BaseDeviate(str_c), _normal(mean,sigma) {}
+        GaussianDeviate(const char* str_c, double mean, double sigma);
 
         /**
          * @brief Construct a duplicate of this GaussianDeviate object.
@@ -372,29 +338,35 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         GaussianDeviate duplicate()
-        { return GaussianDeviate(serialize().c_str(),getMean(),getSigma()); }
+        { return GaussianDeviate(serialize().c_str(), getMean(), getSigma()); }
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A Gaussian deviate with current mean and sigma
+         */
+        double generate1();
 
         /**
          * @brief Get current distribution mean
          *
          * @return Mean of distribution
          */
-        double getMean() { return _normal.mean(); }
+        double getMean();
 
         /**
          * @brief Get current distribution standard deviation
          *
          * @return Standard deviation of distribution
          */
-        double getSigma() { return _normal.sigma(); }
+        double getSigma();
 
         /**
          * @brief Set current distribution mean
          *
          * @param[in] mean New mean for distribution
          */
-        void setMean(double mean)
-        { _normal.param(boost::random::normal_distribution<>::param_type(mean,_normal.sigma())); }
+        void setMean(double mean);
 
         /**
          * @brief Set current distribution standard deviation
@@ -402,8 +374,7 @@ namespace galsim {
          * @param[in] sigma New standard deviation for distribution.  Behavior for non-positive
          * value is undefined.
          */
-        void setSigma(double sigma)
-        { _normal.param(boost::random::normal_distribution<>::param_type(_normal.mean(),sigma)); }
+        void setSigma(double sigma);
 
         /**
          * @brief Clear the internal cache
@@ -411,14 +382,22 @@ namespace galsim {
          * This one is definitely required, since _normal generates two deviates at a time
          * and stores one for later.  So this clears that out when necessary.
          */
-        void clearCache() { _normal.reset(); }
+        void clearCache();
+
+        /**
+         * @brief Replace data with Gaussian draws using the existing data as the variances.
+         *
+         * @param N     The number of values to draw
+         * @param data  The array with the given variances to replace with Gaussian draws.
+         */
+        void generateFromVariance(int N, double* data);
 
     protected:
-        double _val() { return _normal(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
-        boost::random::normal_distribution<> _normal;
+        struct GaussianDeviateImpl;
+        shared_ptr<GaussianDeviateImpl> _devimpl;
     };
 
 
@@ -441,7 +420,7 @@ namespace galsim {
          * @param[in] N Number of "coin flips" per trial
          * @param[in] p Probability of success per coin flip.
          */
-        BinomialDeviate(long lseed, int N, double p) : BaseDeviate(lseed), _bd(N,p) {}
+        BinomialDeviate(long lseed, int N, double p);
 
         /**
          * @brief Construct a new binomial-distributed RNG, sharing the random number
@@ -451,17 +430,17 @@ namespace galsim {
          * @param[in] N Number of "coin flips" per trial
          * @param[in] p Probability of success per coin flip.
          */
-        BinomialDeviate(const BaseDeviate& rhs, int N, double p) : BaseDeviate(rhs), _bd(N,p) {}
+        BinomialDeviate(const BaseDeviate& rhs, int N, double p);
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        BinomialDeviate(const BinomialDeviate& rhs) : BaseDeviate(rhs), _bd(rhs._bd) {}
+        BinomialDeviate(const BinomialDeviate& rhs);
 
         /// @brief Construct a new BinomialDeviate from a serialization string
-        BinomialDeviate(const char* str_c, int N, double p) : BaseDeviate(str_c), _bd(N,p) {}
+        BinomialDeviate(const char* str_c, int N, double p);
 
         /**
          * @brief Construct a duplicate of this BinomialDeviate object.
@@ -469,51 +448,54 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         BinomialDeviate duplicate()
-        { return BinomialDeviate(serialize().c_str(),getN(),getP()); }
+        { return BinomialDeviate(serialize().c_str(), getN(), getP()); }
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A binomial deviate with current N and p
+         */
+        double generate1();
 
         /**
          * @brief Report current value of N
          *
          * @return Current value of N
          */
-        int getN() { return _bd.t(); }
+        int getN();
 
         /**
          * @brief Report current value of p
          *
          * @return Current value of p
          */
-        double getP() { return _bd.p(); }
+        double getP();
 
         /**
          * @brief Reset value of N
          *
          * @param[in] N New value of N
          */
-        void setN(int N) {
-            _bd.param(boost::random::binomial_distribution<>::param_type(N,_bd.p()));
-        }
+        void setN(int N);
 
         /**
          * @brief Reset value of p
          *
          * @param[in] p New value of p
          */
-        void setP(double p) {
-            _bd.param(boost::random::binomial_distribution<>::param_type(_bd.t(),p));
-        }
+        void setP(double p);
 
         /**
          * @brief Clear the internal cache
          */
-        void clearCache() { _bd.reset(); }
+        void clearCache();
 
     protected:
-        double _val() { return _bd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
-        boost::random::binomial_distribution<> _bd;
+        struct BinomialDeviateImpl;
+        shared_ptr<BinomialDeviateImpl> _devimpl;
     };
 
     /**
@@ -534,9 +516,7 @@ namespace galsim {
          * @param[in] lseed Seed to use
          * @param[in] mean  Mean of the output distribution
          */
-        PoissonDeviate(long lseed, double mean) :
-            BaseDeviate(lseed), _getValue(&PoissonDeviate::getPDValue)
-        { setMean(mean); }
+        PoissonDeviate(long lseed, double mean);
 
         /**
          * @brief Construct a new Poisson-distributed RNG, sharing the random number
@@ -545,22 +525,24 @@ namespace galsim {
          * @param[in] rhs   Other deviate with which to share the RNG
          * @param[in] mean  Mean of the output distribution
          */
-        PoissonDeviate(const BaseDeviate& rhs, double mean) :
-            BaseDeviate(rhs), _getValue(&PoissonDeviate::getPDValue)
-        { setMean(mean); }
+        PoissonDeviate(const BaseDeviate& rhs, double mean);
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        PoissonDeviate(const PoissonDeviate& rhs) :
-            BaseDeviate(rhs), _getValue(rhs._getValue), _pd(rhs._pd), _gd(rhs._gd) {}
+        PoissonDeviate(const PoissonDeviate& rhs);
 
         /// @brief Construct a new PoissonDeviate from a serialization string
-        PoissonDeviate(const char* str_c, double mean) :
-            BaseDeviate(str_c), _getValue(&PoissonDeviate::getPDValue)
-        { setMean(mean); }
+        PoissonDeviate(const char* str_c, double mean);
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A Poisson deviate with current mean
+         */
+        double generate1();
 
         /**
          * @brief Construct a duplicate of this PoissonDeviate object.
@@ -568,14 +550,14 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         PoissonDeviate duplicate()
-        { return PoissonDeviate(serialize().c_str(),getMean()); }
+        { return PoissonDeviate(serialize().c_str(), getMean()); }
 
         /**
          * @brief Report current distribution mean
          *
          * @return Current mean value
          */
-        double getMean() { return _pd.mean(); }
+        double getMean();
 
         /**
          * @brief Reset distribution mean
@@ -587,23 +569,24 @@ namespace galsim {
         /**
          * @brief Clear the internal cache
          */
-        void clearCache() { _pd.reset(); if (_gd) _gd->reset(); }
+        void clearCache();
+
+        /**
+         * @brief Replace data with Poisson draws using the existing data as the expectation
+         * value.
+         *
+         * @param N     The number of values to draw
+         * @param data  The array with the given data to replace with Poisson draws.
+         */
+        void generateFromExpectation(int N, double* data);
+
 
     protected:
-        double _val();
-
-        double (PoissonDeviate::*_getValue)(); // A variable equal to either getPDValue (normal)
-                                               // or getGDValue (if mean > 2^30)
-
         std::string make_repr(bool incl_seed);
 
-        double getPDValue();
-        double getGDValue();
-
-
     private:
-        boost::random::poisson_distribution<> _pd;
-        boost::shared_ptr<boost::random::normal_distribution<> > _gd;
+        struct PoissonDeviateImpl;
+        shared_ptr<PoissonDeviateImpl> _devimpl;
     };
 
     /**
@@ -631,8 +614,7 @@ namespace galsim {
          * @param[in] a    Shape parameter of the output distribution, must be > 0.
          * @param[in] b    Scale parameter of the distribution, must be > 0.
          */
-        WeibullDeviate(long lseed, double a, double b) :
-            BaseDeviate(lseed), _weibull(a,b) {}
+        WeibullDeviate(long lseed, double a, double b);
 
         /**
          * @brief Construct a new Weibull-distributed RNG, sharing the random number
@@ -642,19 +624,17 @@ namespace galsim {
          * @param[in] a    Shape parameter of the output distribution, must be > 0.
          * @param[in] b    Scale parameter of the distribution, must be > 0.
          */
-        WeibullDeviate(const BaseDeviate& rhs, double a, double b) :
-            BaseDeviate(rhs), _weibull(a,b) {}
+        WeibullDeviate(const BaseDeviate& rhs, double a, double b);
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        WeibullDeviate(const WeibullDeviate& rhs) : BaseDeviate(rhs), _weibull(rhs._weibull) {}
+        WeibullDeviate(const WeibullDeviate& rhs);
 
         /// @brief Construct a new WeibullDeviate from a serialization string
-        WeibullDeviate(const char* str_c, double a, double b) :
-            BaseDeviate(str_c), _weibull(a,b) {}
+        WeibullDeviate(const char* str_c, double a, double b);
 
         /**
          * @brief Construct a duplicate of this WeibullDeviate object.
@@ -662,21 +642,28 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         WeibullDeviate duplicate()
-        { return WeibullDeviate(serialize().c_str(),getA(),getB()); }
+        { return WeibullDeviate(serialize().c_str(), getA(), getB()); }
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Weibull deviate with current shape k and scale lam.
+         */
+        double generate1();
 
         /**
          * @brief Get current distribution shape parameter a.
          *
          * @return Shape parameter a of distribution.
          */
-        double getA() { return _weibull.a(); }
+        double getA();
 
         /**
          * @brief Get current distribution scale parameter b.
          *
          * @return Scale parameter b of distribution.
          */
-        double getB() { return _weibull.b(); }
+        double getB();
 
         /**
          * @brief Set current distribution shape parameter a.
@@ -684,9 +671,7 @@ namespace galsim {
          * @param[in] a  New shape parameter for distribution. Behaviour for non-positive value
          * is undefined.
          */
-        void setA(double a) {
-            _weibull.param(boost::random::weibull_distribution<>::param_type(a, _weibull.b()));
-        }
+        void setA(double a);
 
         /**
          * @brief Set current distribution scale parameter b.
@@ -694,21 +679,19 @@ namespace galsim {
          * @param[in] b  New scale parameter for distribution.  Behavior for non-positive
          * value is undefined.
          */
-        void setB(double b) {
-            _weibull.param(boost::random::weibull_distribution<>::param_type(_weibull.a(), b));
-        }
+        void setB(double b);
 
         /**
          * @brief Clear the internal cache
          */
-        void clearCache() { _weibull.reset(); }
+        void clearCache();
 
     protected:
-        double _val() { return _weibull(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
-        boost::random::weibull_distribution<> _weibull;
+        struct WeibullDeviateImpl;
+        shared_ptr<WeibullDeviateImpl> _devimpl;
     };
 
     /**
@@ -734,8 +717,7 @@ namespace galsim {
          * @param[in] k      Shape parameter of the output distribution, must be > 0.
          * @param[in] theta  Scale parameter of the distribution, must be > 0.
          */
-        GammaDeviate(long lseed, double k, double theta) :
-            BaseDeviate(lseed), _gamma(k,theta) {}
+        GammaDeviate(long lseed, double k, double theta);
 
         /**
          * @brief Construct a new Gamma-distributed RNG, sharing the random number
@@ -745,19 +727,17 @@ namespace galsim {
          * @param[in] k      Shape parameter of the output distribution, must be > 0.
          * @param[in] theta  Scale parameter of the distribution, must be > 0.
          */
-        GammaDeviate(const BaseDeviate& rhs, double k, double theta) :
-            BaseDeviate(rhs), _gamma(k,theta) {}
+        GammaDeviate(const BaseDeviate& rhs, double k, double theta);
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        GammaDeviate(const GammaDeviate& rhs) : BaseDeviate(rhs), _gamma(rhs._gamma) {}
+        GammaDeviate(const GammaDeviate& rhs);
 
         /// @brief Construct a new GammaDeviate from a serialization string
-        GammaDeviate(const char* str_c, double k, double theta) :
-            BaseDeviate(str_c), _gamma(k,theta) {}
+        GammaDeviate(const char* str_c, double k, double theta);
 
         /**
          * @brief Construct a duplicate of this GammaDeviate object.
@@ -765,21 +745,28 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         GammaDeviate duplicate()
-        { return GammaDeviate(serialize().c_str(),getK(),getTheta()); }
+        { return GammaDeviate(serialize().c_str(), getK(), getTheta()); }
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Gamma deviate with current shape k and scale theta.
+         */
+        double generate1();
 
         /**
          * @brief Get current distribution shape parameter k.
          *
          * @return Shape parameter k of distribution.
          */
-        double getK() { return _gamma.alpha(); }
+        double getK();
 
         /**
          * @brief Get current distribution scale parameter theta.
          *
          * @return Scale parameter theta of distribution.
          */
-        double getTheta() { return _gamma.beta(); }
+        double getTheta();
 
         /**
          * @brief Set current distribution shape parameter k.
@@ -787,9 +774,7 @@ namespace galsim {
          * @param[in] k  New shape parameter for distribution. Behaviour for non-positive value
          *               is undefined.
          */
-        void setK(double k) {
-            _gamma.param(boost::random::gamma_distribution<>::param_type(k, _gamma.beta()));
-        }
+        void setK(double k);
 
         /**
          * @brief Set current distribution scale parameter theta.
@@ -797,23 +782,21 @@ namespace galsim {
          * @param[in] theta  New scale parameter for distribution.  Behavior for non-positive
          *                   value is undefined.
          */
-        void setTheta(double theta) {
-            _gamma.param(boost::random::gamma_distribution<>::param_type(_gamma.alpha(), theta));
-        }
+        void setTheta(double theta);
 
         /**
          * @brief Clear the internal cache
          */
-        void clearCache() { _gamma.reset(); }
+        void clearCache();
 
     protected:
-        double _val() { return _gamma(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
         // Note: confusingly, boost calls the internal values alpha and beta, even though they
         // don't conform to the normal beta=1/theta.  Rather, they have beta=theta.
-        boost::random::gamma_distribution<> _gamma;
+        struct GammaDeviateImpl;
+        shared_ptr<GammaDeviateImpl> _devimpl;
     };
 
     /**
@@ -838,7 +821,7 @@ namespace galsim {
          * @param[in] lseed Seed to use
          * @param[in] n     Number of degrees of freedom for the output distribution, must be > 0.
          */
-        Chi2Deviate(long lseed, double n) : BaseDeviate(lseed), _chi_squared(n) {}
+        Chi2Deviate(long lseed, double n);
 
         /**
          * @brief Construct a new Chi^2-distributed RNG, sharing the random number
@@ -847,17 +830,17 @@ namespace galsim {
          * @param[in] rhs   Other deviate with which to share the RNG
          * @param[in] n     Number of degrees of freedom for the output distribution, must be > 0.
          */
-        Chi2Deviate(const BaseDeviate& rhs, double n) : BaseDeviate(rhs), _chi_squared(n) {}
+        Chi2Deviate(const BaseDeviate& rhs, double n);
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        Chi2Deviate(const Chi2Deviate& rhs) : BaseDeviate(rhs), _chi_squared(rhs._chi_squared) {}
+        Chi2Deviate(const Chi2Deviate& rhs);
 
         /// @brief Construct a new Chi2Deviate from a serialization string
-        Chi2Deviate(const char* str_c, double n) : BaseDeviate(str_c), _chi_squared(n) {}
+        Chi2Deviate(const char* str_c, double n);
 
         /**
          * @brief Construct a duplicate of this Chi2Deviate object.
@@ -865,14 +848,21 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         Chi2Deviate duplicate()
-        { return Chi2Deviate(serialize().c_str(),getN()); }
+        { return Chi2Deviate(serialize().c_str(), getN()); }
+
+        /**
+         * @brief Draw a new random number from the distribution.
+         *
+         * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
+         */
+        double generate1();
 
         /**
          * @brief Get current distribution degrees-of-freedom parameter n.
          *
          * @return Degrees-of-freedom parameter n of distribution.
          */
-        double getN() { return _chi_squared.n(); }
+        double getN();
 
         /**
          * @brief Set current distribution degrees-of-freedom parameter n.
@@ -880,21 +870,20 @@ namespace galsim {
          * @param[in] n  New degrees-of-freedom parameter n for distribution. Behaviour for
          *               non-positive value is undefined.
          */
-        void setN(double n) {
-            _chi_squared.param(boost::random::chi_squared_distribution<>::param_type(n));
-        }
+        void setN(double n);
 
         /**
          * @brief Clear the internal cache
          */
-        void clearCache() { _chi_squared.reset(); }
+        void clearCache();
 
     protected:
-        double _val() { return _chi_squared(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
-        boost::random::chi_squared_distribution<> _chi_squared;
+
+        struct Chi2DeviateImpl;
+        shared_ptr<Chi2DeviateImpl> _devimpl;
     };
 
 }  // namespace galsim

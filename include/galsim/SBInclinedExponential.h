@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,7 +23,6 @@
  * @file SBInclinedExponential.h @brief SBProfile that implements an inclined exponential profile.
  */
 
-#include "Angle.h"
 #include "SBProfile.h"
 
 namespace galsim {
@@ -54,8 +53,8 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBInclinedExponential(Angle inclination, double scale_radius, double scale_height, double flux,
-                 const GSParamsPtr& gsparams);
+        SBInclinedExponential(double inclination, double scale_radius, double scale_height,
+                              double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBInclinedExponential(const SBInclinedExponential& rhs);
@@ -63,8 +62,8 @@ namespace galsim {
         /// @brief Destructor.
         ~SBInclinedExponential();
 
-        /// @brief Returns the inclination angle of the profile as an Angle instance
-        Angle getInclination() const;
+        /// @brief Returns the inclination angle of the profile in radians
+        double getInclination() const;
 
         /// @brief Returns the scale radius r0 of the disk profile
         double getScaleRadius() const;

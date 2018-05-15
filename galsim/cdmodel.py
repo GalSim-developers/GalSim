@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,8 +24,9 @@ additional symmetries or a simple prescription for setting the many free paramet
 """
 from builtins import int
 import numpy as np
-import galsim
 
+from .image import Image
+from . import _galsim
 
 class BaseCDModel(object):
     """Base class for the most generic, i.e. no with symmetries or distance scaling relationships
@@ -76,10 +77,10 @@ class BaseCDModel(object):
         if (self.n < 1):
             raise ValueError("Input arrays must be at least 3x3")
 
-        self.a_l = galsim.Image(a_l, dtype=np.float64, make_const=True)
-        self.a_r = galsim.Image(a_r, dtype=np.float64, make_const=True)
-        self.a_b = galsim.Image(a_b, dtype=np.float64, make_const=True)
-        self.a_t = galsim.Image(a_t, dtype=np.float64, make_const=True)
+        self.a_l = Image(a_l, dtype=np.float64, make_const=True)
+        self.a_r = Image(a_r, dtype=np.float64, make_const=True)
+        self.a_b = Image(a_b, dtype=np.float64, make_const=True)
+        self.a_t = Image(a_t, dtype=np.float64, make_const=True)
 
     def applyForward(self, image, gain_ratio=1.):
         """Apply the charge deflection model in the forward direction.
@@ -91,12 +92,11 @@ class BaseCDModel(object):
                            flat fields; default value is 1., which assumes the common case that your
                            flat and science images have the same gain value
         """
-        retimage = galsim.Image(
-            image=galsim._galsim._ApplyCD(
-                image._image, self.a_l._image, self.a_r._image, self.a_b._image, self.a_t._image,
-                int(self.n), float(gain_ratio)),
-            wcs=image.wcs)
-        return retimage
+        ret = image.copy()
+        _galsim._ApplyCD(
+            ret._image, image._image, self.a_l._image, self.a_r._image, self.a_b._image,
+            self.a_t._image, int(self.n), float(gain_ratio))
+        return ret
 
     def applyBackward(self, image, gain_ratio=1.):
         """Apply the charge deflection model in the backward direction (accurate to linear order).

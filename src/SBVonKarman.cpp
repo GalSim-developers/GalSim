@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,17 +19,13 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/gamma.hpp>
-#include <boost/math/special_functions/bessel.hpp>
-
 #include "SBVonKarman.h"
 #include "SBVonKarmanImpl.h"
-#include "fmath/fmath.hpp"
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/Bessel.h"
+#include "math/Gamma.h"
+#include "math/BesselRoots.h"
+#include "fmath/fmath.hpp"
 
 namespace galsim {
 
@@ -48,7 +44,7 @@ namespace galsim {
     //
 
     SBVonKarman::SBVonKarman(double lam, double r0, double L0, double flux,
-                             double scale, bool doDelta, const GSParamsPtr& gsparams) :
+                             double scale, bool doDelta, const GSParams& gsparams) :
         SBProfile(new SBVonKarmanImpl(lam, r0, L0, flux, scale, doDelta, gsparams)) {}
 
     SBVonKarman::SBVonKarman(const SBVonKarman &rhs) : SBProfile(rhs) {}
@@ -85,10 +81,10 @@ namespace galsim {
         return static_cast<const SBVonKarmanImpl&>(*_pimpl).getDoDelta();
     }
 
-    double SBVonKarman::getDeltaAmplitude() const
+    double SBVonKarman::getDelta() const
     {
         assert(dynamic_cast<const SBVonKarmanImpl*>(_pimpl.get()));
-        return static_cast<const SBVonKarmanImpl&>(*_pimpl).getDeltaAmplitude();
+        return static_cast<const SBVonKarmanImpl&>(*_pimpl).getDelta();
     }
 
     double SBVonKarman::getHalfLightRadius() const
@@ -125,30 +121,31 @@ namespace galsim {
     };
 
     // gamma(11/6) gamma(5/6) / pi^(8/3) * (24/5 gamma(6/5))^(5/6)
-    const double magic4 = 0.1726286598236691505;
+    const double magic1 = 0.1726286598236691505;
 
     // Note: lam and L0 are both in units of r0, so are dimensionless within VKInfo.
     VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
                                  const GSParamsPtr& gsparams) :
-        _lam(lam), _L0(L0), _r0L0m53(pow(L0, 5./3)),
-        _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
-        _deltaScale(1./(1.-_deltaAmplitude)),
+        _lam(lam), _L0(L0),
+        _L0_invcuberoot(fast_pow(_L0, -1./3)), _L053(fast_pow(L0, 5./3)),
+        _delta(exp(-0.5*magic1*_L053)),
+        _deltaScale(1./(1.-_delta)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
         _doDelta(doDelta), _gsparams(gsparams),
-        _radial(TableDD::spline)
+        _radial(Table::spline)
     {
         // determine maxK
         // want kValue(maxK)/kValue(0.0) = _gsparams->maxk_threshold;
         // note that kValue(0.0) = 1.
         double mkt = _gsparams->maxk_threshold;
         if (_doDelta) {
-            if (mkt < _deltaAmplitude) {
+            if (mkt < _delta) {
                 // If the delta function amplitude is too large, then no matter how far out in k we
                 // go, kValue never drops below that amplitude.
                 // _maxk = std::numeric_limits<double>::infinity();
                 _maxk = MOCK_INF;
             } else {
-                mkt = mkt*(1.-_deltaAmplitude)+_deltaAmplitude;
+                mkt = mkt*(1.-_delta)+_delta;
             }
         }
         if (_maxk != MOCK_INF) {
@@ -160,42 +157,44 @@ namespace galsim {
         }
         dbg<<"_maxk = "<<_maxk<<" arcsec^-1\n";
         dbg<<"SB(maxk) = "<<kValue(_maxk)<<'\n';
-        dbg<<"_deltaAmplitude = "<<_deltaAmplitude<<'\n';
+        dbg<<"_delta = "<<_delta<<'\n';
 
         // build the radial function, and along the way, set _stepk, _hlr.
         _buildRadialFunc();
     }
 
-    double VonKarmanInfo::structureFunction(double rho) const {
+    double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053) {
         // rho in units of r0
 
         // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
-        static const double magic1 = 0.1716613621245708932;
+        static const double magic2 = 0.1716613621245708932;
         // gamma(5/6) / 2^(1/6)
-        static const double magic2 = 1.005634917998590172;
-        // magic1 * gamma(-5/6) / 2^(11/6)
-        static const double magic3 = -0.3217609479366896341;
+        static const double magic3 = 1.005634917998590172;
+        // 8 sqrt(2) (3/5 gamma(6/5))^(5/6)
+        static const double magic4 = 6.883877182293811615;
+        // 24 (sqrt(2) gamma(5/6)(3/5 gamma(6/5))^(5/6) gamma(11/6)) / pi^(2/3)
+        static const double magic5 = 10.222659484499054723;
 
-        double rhoL0 = rho/_L0;
+        double rhoL0 = rho/L0;
         if (rhoL0 < 1e-6) {
-            return -magic3*fast_pow(2*M_PI*rho, 5./3.);
+            return magic4*fast_pow(rho, 5./3.)-magic5*L0_invcuberoot*rho*rho;
         } else {
             double x = 2.*M_PI*rhoL0;
-            return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
+            return magic2*L053*(magic3-fast_pow(x, 5./6.)*math::cyl_bessel_k(5./6., x));
         }
     }
 
     double VonKarmanInfo::kValueNoTrunc(double k) const {
         // k in inverse arcsec
-        return fmath::expd(-0.5*structureFunction(_lam_arcsec*k));
+        return fmath::expd(-0.5*vkStructureFunction(_lam_arcsec*k, _L0, _L0_invcuberoot, _L053));
     }
 
     double VonKarmanInfo::kValue(double k) const {
         // k in inverse arcsec
         // We're subtracting the asymptotic kValue limit here so that kValue->0 as k->inf.
-        // This means we should also rescale by (1-_deltaAmplitude) though, so we still retain
+        // This means we should also rescale by (1-_delta) though, so we still retain
         // kValue(0)=1.d
-        double val = (kValueNoTrunc(k) - _deltaAmplitude) * _deltaScale;
+        double val = (kValueNoTrunc(k) - _delta) * _deltaScale;
         if (std::abs(val) < std::numeric_limits<double>::epsilon())
             return 0.0;
         else
@@ -224,7 +223,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = bessel::getBesselRoot0(s);
+                double root = math::getBesselRoot0(s);
                 xdbg<<"Add split at "<<root/r<<std::endl;
                 reg.addSplit(root/r);
             }
@@ -242,11 +241,11 @@ namespace galsim {
         dbg<<"Start buildRadialFunc:\n";
         dbg<<"lam = "<<_lam<<std::endl;
         dbg<<"L0 = "<<_L0<<std::endl;
-        dbg<<"doDelta = "<<_doDelta<<"  "<<_deltaAmplitude<<"  "<<_deltaScale<<std::endl;
+        dbg<<"doDelta = "<<_doDelta<<"  "<<_delta<<"  "<<_deltaScale<<std::endl;
         set_verbose(2);
         double val = rawXValue(0.0); // This is the value without the delta function (clearly).
         _radial.addEntry(0., val);
-        dbg<<"(1/L0)^-5/3 = "<<_r0L0m53<<std::endl;
+        dbg<<"L0^5/3 = "<<_L053<<std::endl;
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
         // For small values of r, the function goes as
@@ -273,7 +272,7 @@ namespace galsim {
         dbg<<"dlogr = "<<dlogr<<"\n";
 
         double sum = 0.0;
-        if (_doDelta) sum += _deltaAmplitude;
+        if (_doDelta) sum += _delta;
 
         xdbg<<"sum = "<<sum<<'\n';
 
@@ -301,6 +300,7 @@ namespace galsim {
             if (_hlr == 0. && sum > thresh0) _hlr = r;
             if (R == 0. && sum > thresh1) R = r;
         }
+        _radial.finalize();
         if (_hlr == 0.)
             throw SBError("Cannot find von Karman half-light-radius.");
         if (R == 0.) R = maxR;
@@ -317,16 +317,16 @@ namespace galsim {
 
         std::vector<double> range(2, 0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, _gsparams));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *_gsparams));
     }
 
-    boost::shared_ptr<PhotonArray> VonKarmanInfo::shoot(int N, UniformDeviate ud) const
+    void VonKarmanInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         assert(_sampler.get());
-        return _sampler->shoot(N,ud);
+        _sampler->shoot(photons,ud);
     }
 
-    LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo>
+    LRUCache<Tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo>
         SBVonKarman::SBVonKarmanImpl::cache(sbp::max_vonKarman_cache);
 
     //
@@ -339,7 +339,7 @@ namespace galsim {
 
     SBVonKarman::SBVonKarmanImpl::SBVonKarmanImpl(double lam, double r0, double L0, double flux,
                                                   double scale, bool doDelta,
-                                                  const GSParamsPtr& gsparams) :
+                                                  const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _lam(lam),
         _r0(r0),
@@ -347,8 +347,8 @@ namespace galsim {
         _flux(flux),
         _scale(scale),
         _doDelta(doDelta),
-        _info(cache.get(boost::make_tuple(1e-9*lam/r0, L0/r0, doDelta, this->gsparams.duplicate())))
-    { }
+        _info(cache.get(MakeTuple(1e-9*lam/r0, L0/r0, doDelta, GSParamsPtr(gsparams))))
+    {}
 
     double SBVonKarman::SBVonKarmanImpl::maxK() const
     { return _info->maxK()*_scale; }
@@ -356,8 +356,8 @@ namespace galsim {
     double SBVonKarman::SBVonKarmanImpl::stepK() const
     { return _info->stepK()*_scale; }
 
-    double SBVonKarman::SBVonKarmanImpl::getDeltaAmplitude() const
-    { return _info->getDeltaAmplitude()*_flux; }
+    double SBVonKarman::SBVonKarmanImpl::getDelta() const
+    { return _info->getDelta()*_flux; }
 
     double SBVonKarman::SBVonKarmanImpl::getHalfLightRadius() const
     { return _info->getHalfLightRadius()/_scale; }
@@ -373,14 +373,15 @@ namespace galsim {
             <<getFlux()<<", "
             <<getScale()<<", "
             <<getDoDelta()<<", "
-            <<"galsim.GSParams("<<*gsparams<<"))";
+            <<"galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     double SBVonKarman::SBVonKarmanImpl::structureFunction(double rho) const
     {
         xdbg<<"rho = "<<rho<<'\n';
-        return _info->structureFunction(rho);
+        return vkStructureFunction(rho/_r0, _L0/_r0, fast_pow(_r0/_L0, 1./3),
+                                   fast_pow(_L0/_r0, 5./3));
     }
 
     std::complex<double> SBVonKarman::SBVonKarmanImpl::kValue(const Position<double>& p) const
@@ -395,17 +396,15 @@ namespace galsim {
         return _flux * _info->xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
     }
 
-    boost::shared_ptr<PhotonArray> SBVonKarman::SBVonKarmanImpl::shoot(
-        int N, UniformDeviate ud) const
+    void SBVonKarman::SBVonKarmanImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"VonKarman shoot: N = "<<N<<std::endl;
+        dbg<<"VonKarman shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the VonKarmanInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_flux);
-        result->scaleXY(_scale);
-        dbg<<"VonKarman Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+         _info->shoot(photons,ud);
+        photons.scaleFlux(_flux);
+        photons.scaleXY(_scale);
+        dbg<<"VonKarman Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     template <typename T>

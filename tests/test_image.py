@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -47,17 +47,10 @@ from __future__ import print_function
 import os
 import sys
 import numpy as np
-
-from galsim_test_helpers import *
 from distutils.version import LooseVersion
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-
+import galsim
+from galsim_test_helpers import *
 from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change
@@ -109,7 +102,7 @@ def test_Image_basic():
         # Check basic constructor from ncol, nrow
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
 
-        # Check basic features of array built by ImageAlloc constructor
+        # Check basic features of array built by Image
         np.testing.assert_array_equal(im1.array, 0.)
         assert im1.array.shape == (nrow,ncol)
         assert im1.array.dtype.type == np_array_type
@@ -193,7 +186,8 @@ def test_Image_basic():
                 im1.setValue(x, y, 100 + 10*x + y)
                 im1a.setValue(x+3, y+6, 100 + 10*x + y)
                 im1b.setValue(x=x-1, y=y-1, value=100 + 10*x + y)
-                im2_view.setValue(x=x, y=y, value=100 + 10*x + y)
+                im2_view._setValue(x, y, 100 + 10*x)
+                im2_view._addValue(x, y, y)
 
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
@@ -226,7 +220,7 @@ def test_Image_basic():
                 assert im1.view(make_const=True).getValue(x,y) == value2
                 assert im2.getValue(x=x, y=y) == value2
                 assert im2_view.getValue(x,y) == value2
-                assert im2_cview.getValue(x,y) == value2
+                assert im2_cview._getValue(x,y) == value2
 
                 assert im1.real(x,y) == value2
                 assert im1.view().real(x,y) == value2
@@ -338,14 +332,6 @@ def test_Image_basic():
         do_pickle(im3_view)
         do_pickle(im4_view)
 
-        # Check the c++ classes directly too.
-        do_pickle(im1._image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im1_view._image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2._image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_view._image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_cview._image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im3_view._image, lambda x: (x.array.tolist(), x.bounds))
-
     # Also check picklability of Bounds, Position here.
     do_pickle(galsim.PositionI(2,3))
     do_pickle(galsim.PositionD(2.2,3.3))
@@ -400,6 +386,21 @@ def test_undefined_image():
         assert im8.array.shape == (1,1)
         if types[i] == np.complex128:
             assert im8 == im1
+
+        im9 = galsim.Image(0, 0)
+        assert not im9.bounds.isDefined()
+        assert im9.array.shape == (1,1)
+        assert im9 == im1
+
+        im10 = galsim.Image(10, 0)
+        assert not im10.bounds.isDefined()
+        assert im10.array.shape == (1,1)
+        assert im10 == im1
+
+        im11 = galsim.Image(0, 19)
+        assert not im11.bounds.isDefined()
+        assert im11.array.shape == (1,1)
+        assert im11 == im1
 
         assert_raises(RuntimeError,im1.setValue,0,0,1)
         assert_raises(RuntimeError,im1.__call__,0,0)
@@ -1530,6 +1531,19 @@ def test_Image_inplace_divide():
                 err_msg="Inplace divide in Image class does not match reference for dtype = "
                 +str(types[i]))
 
+        # Test image.invertSelf()
+        # Intentionally make some elements zero, so we test that 1/0 -> 0.
+        image1 = galsim.Image((ref_array // 11 - 3).astype(types[i]))
+        image2 = image1.copy()
+        mask1 = image1.array == 0
+        mask2 = image1.array != 0
+        image2.invertSelf()
+        np.testing.assert_array_equal(image2.array[mask1], 0,
+                err_msg="invertSelf did not do 1/0 -> 0.")
+        np.testing.assert_array_equal(image2.array[mask2],
+                (1./image1.array[mask2]).astype(types[i]),
+                err_msg="invertSelf gave wrong answer for non-zero elements")
+
         for j in range(i): # Only divide simpler types into this one.
             decimal = 4 if (types[i] == np.complex64 or types[j] == np.complex64) else 12
             image2_init_func = eval("galsim.Image"+tchar[j])
@@ -1845,7 +1859,7 @@ def test_Image_resize():
                 for y in range(ymin,ymax+1):
                     val = simple_types[i](ud()*500)
                     im1.setValue(x,y,val)
-                    im2.setValue(x,y,val)
+                    im2._setValue(x,y,val)
                     im3.setValue(x,y,val)
 
             # They should be equal now.  This doesn't completely guarantee that nothing is
@@ -2049,7 +2063,7 @@ def test_Image_view():
     """
     im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22,
                        galsim.PositionI(13,13)))
-    im.fill(17)
+    im._fill(17)
     assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
     assert im.bounds == galsim.BoundsI(1,25,1,25)
     assert im(11,19) == 17  # I'll keep editing this pixel to new values.
@@ -2202,6 +2216,15 @@ def test_copy():
     im3.setValue(3,8,11.)
     assert im(3,8) != 11.
 
+    # If copy=False is specified, then it shares the same array
+    im3b = galsim.Image(im, copy=False)
+    assert im3b.wcs == im.wcs
+    assert im3b.bounds == im.bounds
+    np.testing.assert_array_equal(im3b.array, im.array)
+    im3b.setValue(2,3,2.)
+    assert im3b(2,3) == 2.
+    assert im(2,3) == 2.
+
     # Constructor can change the wcs
     im4 = galsim.Image(im, scale=0.6)
     assert im4.wcs != im.wcs            # wcs is not equal this time.
@@ -2249,6 +2272,23 @@ def test_copy():
     im9.setValue(2,3,11.)
     assert im9(2,3) == 11.
     assert im_slice(2,3) != 11.
+
+    # Can also copy by giving the array and specify copy=True
+    im10 = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=False)
+    assert im10.wcs == im.wcs
+    assert im10.bounds == im.bounds
+    np.testing.assert_array_equal(im10.array, im.array)
+    im10[2,3] = 17
+    assert im10(2,3) == 17.
+    assert im(2,3) == 17.
+
+    im10b = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=True)
+    assert im10b.wcs == im.wcs
+    assert im10b.bounds == im.bounds
+    np.testing.assert_array_equal(im10b.array, im.array)
+    im10b[2,3] = 27
+    assert im10b(2,3) == 27.
+    assert im(2,3) != 27.
 
     # copyFrom copies the data only.
     im5.copyFrom(im8)

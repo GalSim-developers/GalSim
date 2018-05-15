@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,10 +21,12 @@ This file implements the von Karman atmospheric PSF profile.
 
 import numpy as np
 
-import galsim
-
 from . import _galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .utilities import lazy_property, doc_inherit
+from .position import PositionD
+from .angle import arcsec, AngleUnit
 
 
 class VonKarman(GSObject):
@@ -79,77 +81,104 @@ class VonKarman(GSObject):
     @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
                              details. [default: None]
     """
-    def __init__(self, lam, r0, L0=25.0, flux=1, scale_unit=galsim.arcsec,
+    _req_params = { "lam" : float, "r0" : float }
+    _opt_params = { "L0" : float, "flux" : float, "scale_unit" : str, "do_delta" : bool }
+    _single_params = []
+    _takes_rng = False
+
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    #_is_analytic_x = True  # = not do_delta  defined below.
+    _is_analytic_k = True
+
+    def __init__(self, lam, r0, L0=25.0, flux=1, scale_unit=arcsec,
                  do_delta=False, suppress_warning=False, gsparams=None):
+
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
         if L0 > 1e10:
             L0 = 1e10
+
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
-        # Need _scale_unit for repr roundtriping.
-        self._scale_unit = scale_unit
-        scale = scale_unit/galsim.arcsec
-        self._sbvk = _galsim.SBVonKarman(lam, r0, L0, flux, scale, do_delta, gsparams)
-        self._delta_amplitude = self._sbvk.getDeltaAmplitude()
-        self._suppress_warning = suppress_warning
-        if not suppress_warning:
-            if self._delta_amplitude > self._sbvk.getGSParams().maxk_threshold:
+            self._scale_unit = AngleUnit.from_name(scale_unit)
+        else:
+            self._scale_unit = scale_unit
+        self._scale = self._scale_unit/arcsec
+
+        self._lam = float(lam)
+        self._r0 = float(r0)
+        self._L0 = float(L0)
+        self._flux = float(flux)
+        self._do_delta = bool(do_delta)
+        self._gsparams = GSParams.check(gsparams)
+        self._suppress = bool(suppress_warning)
+        self._sbvk  # Make this now, so we get the warning if appropriate.
+
+    @lazy_property
+    def _sbvk(self):
+        sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0, self._flux,
+                                   self._scale, self._do_delta, self._gsparams._gsp)
+        self._delta = sbvk.getDelta()
+        if not self._suppress:
+            if self._delta > self._gsparams.maxk_threshold:
                 import warnings
                 warnings.warn("VonKarman delta-function component is larger than maxk_threshold.  "
-                              "Please see docstring for information about this component and how to"
-                              " toggle it.")
+                              "Please see docstring for information about this component and how "
+                              "to toggle it.")
+        if self._do_delta:
+            sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0,
+                                       self._flux-self._delta, self._scale,
+                                       self._do_delta, self._gsparams._gsp)
+        return sbvk
 
-
+    @lazy_property
+    def _sbp(self):
         # Add in a delta function with appropriate amplitude if requested.
-        if do_delta:
-            self._sbdelta = _galsim.SBDeltaFunction(self._delta_amplitude, gsparams=gsparams)
-            # A bit wasteful maybe, but params should be cached so not too bad to recreate _sbvk?
-            self._sbvk = _galsim.SBVonKarman(lam, r0, L0, flux-self._delta_amplitude, scale,
-                                             do_delta, gsparams)
-
-            self._sbp = _galsim.SBAdd([self._sbvk, self._sbdelta], gsparams=gsparams)
+        if self._do_delta:
+            sbvk = self._sbvk
+            sbdelta = _galsim.SBDeltaFunction(self._delta, self._gsparams._gsp)
+            return _galsim.SBAdd([sbvk, sbdelta], self._gsparams._gsp)
         else:
-            self._sbp = self._sbvk
+            return self._sbvk
 
     @property
     def lam(self):
-        return self._sbvk.getLam()
+        return self._lam
 
     @property
     def r0(self):
-        return self._sbvk.getR0()
+        return self._r0
 
     @property
     def L0(self):
-        return self._sbvk.getL0()
+        return self._L0
 
     @property
     def scale_unit(self):
         return self._scale_unit
-        # Type conversion makes the following not repr-roundtrip-able, so we store init input as a
-        # hidden attribute.
-        # return galsim.AngleUnit(self._sbvk.getScale())
 
     @property
     def do_delta(self):
-        return self._sbvk.getDoDelta()
+        return self._do_delta
+
+    @property
+    def _is_analytic_x(self):
+        return not self._do_delta
 
     @property
     def delta_amplitude(self):
-        # Don't use self._sbvk.getDeltaAmplitude, since we might have rescaled the flux of the sbvk
-        # component when including a SBDeltaFunction.
-        return self._delta_amplitude
+        self._sbvk  # This is where _delta is calculated.
+        return self._delta
 
     @property
     def half_light_radius(self):
         return self._sbvk.getHalfLightRadius()
 
-    def _structure_function(self, rho):  # pragma: no cover
+    def _structure_function(self, rho):
         return self._sbvk.structureFunction(rho)
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.VonKarman) and
+        return (isinstance(other, VonKarman) and
         self.lam == other.lam and
         self.r0 == other.r0 and
         self.L0 == other.L0 and
@@ -165,11 +194,11 @@ class VonKarman(GSObject):
     def __repr__(self):
         out = "galsim.VonKarman(lam=%r, r0=%r, L0=%r"%(self.lam, self.r0, self.L0)
         out += ", flux=%r"%self.flux
-        if self.scale_unit != galsim.arcsec:
+        if self.scale_unit != arcsec:
             out += ", scale_unit=%r"%self.scale_unit
         if self.do_delta:
             out += ", do_delta=True"
-        if self._suppress_warning:
+        if self._suppress:
             out += ", suppress_warning=True"
         out += ", gsparams=%r"%self.gsparams
         out += ")"
@@ -178,9 +207,43 @@ class VonKarman(GSObject):
     def __str__(self):
         return "galsim.VonKarman(lam=%r, r0=%r, L0=%r)"%(self.lam, self.r0, self.L0)
 
-_galsim.SBVonKarman.__getinitargs__ = lambda self: (
-    self.getLam(), self.getR0(), self.getL0(), self.getFlux(), self.getScale(),
-    self.getDoDelta(), self.getGSParams())
-_galsim.SBVonKarman.__getstate__ = lambda self: None
-_galsim.SBVonKarman.__repr__ = lambda self: \
-    "galsim._galsim.SBVonKarman(%r, %r, %r, %r, %r, %r, %r)"%self.__getinitargs__()
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        d.pop('_sbvk',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    @property
+    def _maxk(self):
+        return self._sbvk.maxK()
+
+    @property
+    def _stepk(self):
+        return self._sbvk.stepK()
+
+    @property
+    def _max_sb(self):
+        return self._sbvk.xValue(PositionD(0,0)._p)
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._sbvk.xValue(pos._p)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._sbvk.draw(image._image, image.scale)
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

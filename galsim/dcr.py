@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,8 +22,6 @@ This file defines functions that return the refraction angle (the angle between 
 apparent zenith angles of an object), as a function of zenith angle, wavelength, temperature,
 pressure, and water vapor content.
 """
-
-import galsim
 
 def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2O_pressure=1.067):
     """Return the refractive index of air as function of wavelength.
@@ -92,12 +90,58 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
 
     @returns the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
     """
+    from .celestial import CelestialCoord
+    from .angle import degrees
     if zenith_coord is None:
         if HA is None or latitude is None:
             raise ValueError("Need to provide either zenith_coord or (HA, latitude) to"
                              +"zenith_parallactic_angles()")
-        zenith_coord = galsim.CelestialCoord(HA + obj_coord.ra, latitude)
+        zenith_coord = CelestialCoord(HA + obj_coord.ra, latitude)
     zenith_angle = obj_coord.distanceTo(zenith_coord)
-    NCP = galsim.CelestialCoord(0.0*galsim.degrees, 90*galsim.degrees)
-    parallactic_angle = obj_coord.angleBetween(zenith_coord, NCP)
+    NCP = CelestialCoord(0.0*degrees, 90*degrees)
+    parallactic_angle = obj_coord.angleBetween(NCP, zenith_coord)
     return zenith_angle, parallactic_angle
+
+def parse_dcr_angles(**kwargs):
+    """Parse the various options for specifying the zenith angle and parallactic angle
+    in ChromaticAtmosphere.
+
+    @param zenith_angle         Angle from object to zenith, expressed as an Angle
+                                [default: 0]
+    @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
+                                from North through East.  [default: 0]
+    @param obj_coord            Celestial coordinates of the object being drawn as a
+                                CelestialCoord. [default: None]
+    @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
+                                [default: None]
+    @param HA                   Hour angle of the object as an Angle. [default: None]
+    @param latitude             Latitude of the observer as an Angle. [default: None]
+    @param **kw                 For convenience, any other kwargs are returned back for further
+                                processing.
+
+    @returns zenith_angle, parallactic_angle, kw, where kw is any other kwargs that aren't relevant.
+    """
+    from .angle import degrees, Angle
+    if 'zenith_angle' in kwargs:
+        zenith_angle = kwargs.pop('zenith_angle')
+        parallactic_angle = kwargs.pop('parallactic_angle', 0.0*degrees)
+        if not isinstance(zenith_angle, Angle) or \
+                not isinstance(parallactic_angle, Angle):
+            raise TypeError("zenith_angle and parallactic_angle must be galsim.Angles.")
+    elif 'obj_coord' in kwargs:
+        obj_coord = kwargs.pop('obj_coord')
+        if 'zenith_coord' in kwargs:
+            zenith_coord = kwargs.pop('zenith_coord')
+            zenith_angle, parallactic_angle = zenith_parallactic_angles(
+                obj_coord=obj_coord, zenith_coord=zenith_coord)
+        else:
+            if 'HA' not in kwargs or 'latitude' not in kwargs:
+                raise TypeError("Either zenith_coord or (HA, latitude) is required " +
+                                "when obj_coord is specified.")
+            HA = kwargs.pop('HA')
+            latitude = kwargs.pop('latitude')
+            zenith_angle, parallactic_angle = zenith_parallactic_angles(
+                obj_coord=obj_coord, HA=HA, latitude=latitude)
+    else:
+        raise TypeError("Need to specify zenith_angle and parallactic_angle.")
+    return zenith_angle, parallactic_angle, kwargs

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,8 +30,8 @@ namespace galsim {
     class SBMoffat::SBMoffatImpl : public SBProfileImpl
     {
     public:
-        SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux,
-                     const GSParamsPtr& gsparams);
+        SBMoffatImpl(double beta, double scale_radius, double trunc, double flux,
+                     const GSParams& gsparams);
 
         ~SBMoffatImpl() {}
 
@@ -40,7 +40,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams->maxk_threshold; }
+        bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams.maxk_threshold; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
@@ -71,14 +71,17 @@ namespace galsim {
          * distribution.
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
+         *
+         * @param[in] photons PhotonArray in which to write the photon information
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }
-        double getFWHM() const { return _FWHM; }
         double getTrunc() const { return _trunc; }
         double getHalfLightRadius() const;
+        double getFWHM() const;
 
         // Overrides for better efficiency
         template <typename T>
@@ -106,20 +109,18 @@ namespace galsim {
         double _norm; ///< Normalization. (Including the flux)
         double _knorm; ///< Normalization for kValue. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
-        double _maxR; ///< Maximum `r`
-        double _maxRrD; ///< maxR/rD
-        double _FWHM;  ///< Full Width at Half Maximum.
-        double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
-        double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _rD_sq;
         double _inv_rD;
         double _inv_rD_sq;
+        double _maxR; ///< Maximum `r`
+        double _maxRrD; ///< maxR/rD
+        double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
+        double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _maxRrD_sq;
         double _maxR_sq;
 
-        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+        mutable TableBuilder _ft;  ///< Lookup table for Fourier transform of Moffat.
 
-        mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
         mutable double _stepk;
         mutable double _maxk; ///< Maximum k with kValue > 1.e-3
 

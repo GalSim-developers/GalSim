@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,16 +21,9 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-    from galsim.cdmodel import *
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-    from galsim.cdmodel import *
 
 # Use a deterministic random number generator so we don't fail tests because of rare flukes in the
 # random numbers.
@@ -66,13 +59,13 @@ def test_simplegeometry():
     it.setValue(center,center+1,level)
 
     # set up models, images
-    cdr0   = PowerLawCD(2,shiftcoeff,0,0,0,0,0,0)
+    cdr0   = galsim.cdmodel.PowerLawCD(2,shiftcoeff,0,0,0,0,0,0)
     i0cdr0 = cdr0.applyForward(i0)
 
-    cdt0   = PowerLawCD(2,0,shiftcoeff,0,0,0,0,0)
+    cdt0   = galsim.cdmodel.PowerLawCD(2,0,shiftcoeff,0,0,0,0,0)
     i0cdt0 = cdt0.applyForward(i0)
-    cdrx   = PowerLawCD(2,0,0,shiftcoeff,0,0,0,0)
-    cdtx   = PowerLawCD(2,0,0,0,shiftcoeff,0,0,0)
+    cdrx   = galsim.cdmodel.PowerLawCD(2,0,0,shiftcoeff,0,0,0,0)
+    cdtx   = galsim.cdmodel.PowerLawCD(2,0,0,0,shiftcoeff,0,0,0)
 
     # these should do something
     ircdtx = cdtx.applyForward(ir)
@@ -169,7 +162,8 @@ def test_simplegeometry():
     # a model that should not change anything here
     u = galsim.UniformDeviate(rseed)
 
-    cdnull = PowerLawCD(2, 0, 0, shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), 0)
+    cdnull = galsim.cdmodel.PowerLawCD(
+        2, 0, 0, shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), 0)
     i0cdnull = cdnull.applyForward(i0)
 
     # setting all pixels to 0 that we expect to be not 0...
@@ -224,7 +218,7 @@ def test_fluxconservation():
     image.addNoise(galsim.GaussianNoise(sigma=noise, rng=urng))
 
     flat = galsim.Image(size, size, dtype=np.float64, init_value=1.)
-    cd = PowerLawCD(
+    cd = galsim.cdmodel.PowerLawCD(
         2, shiftcoeff, 0.94 * shiftcoeff, shiftcoeff/2.4, shiftcoeff/5., shiftcoeff/3.7,
         shiftcoeff/1.8, alpha)
     imagecd = cd.applyForward(image)
@@ -267,7 +261,7 @@ def test_forwardbackward():
     # Define a consistent rng for repeatability
     urng = galsim.UniformDeviate(rseed)
     image.addNoise(galsim.GaussianNoise(sigma=noise, rng=urng))
-    cd = PowerLawCD(
+    cd = galsim.cdmodel.PowerLawCD(
         2, shiftcoeff * 0.0234, shiftcoeff * 0.05234, shiftcoeff * 0.01312, shiftcoeff * 0.00823,
         shiftcoeff * 0.07216, shiftcoeff * 0.01934, alpha)
 
@@ -301,7 +295,8 @@ def test_gainratio():
     gal2   = galsim.Gaussian(flux=0.5*galflux, sigma=galsigma)
     image2 = gal2.drawImage(scale=1.,dtype=np.float64)
 
-    cd = PowerLawCD(2, shiftcoeff, 1.389*shiftcoeff, shiftcoeff/7.23, 2.*shiftcoeff/2.4323,
+    cd = galsim.cdmodel.PowerLawCD(
+        2, shiftcoeff, 1.389*shiftcoeff, shiftcoeff/7.23, 2.*shiftcoeff/2.4323,
         shiftcoeff/1.8934, shiftcoeff/3.1, alpha)
 
     image_cd  = cd.applyForward(image)
@@ -321,7 +316,7 @@ def test_exampleimage():
     shiftcoeff = 1.e-7
 
     #n, r0, t0, rx, tx, r, t, alpha
-    cd = PowerLawCD(
+    cd = galsim.cdmodel.PowerLawCD(
         5, 2. * shiftcoeff, shiftcoeff, 1.25 * shiftcoeff, 1.25 * shiftcoeff, 0.75 * shiftcoeff,
         0.5 * shiftcoeff, 0.3)
     # model used externally to bring cdtest1 to cdtest2

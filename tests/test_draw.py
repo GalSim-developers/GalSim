@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,14 +21,9 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # for flux normalization tests
 test_flux = 1.8
@@ -1133,6 +1128,8 @@ def test_fft():
     im1 = obj.drawKImage()
     N = 1162  # NB. It is useful to have this come out not a multiple of 4, since some of the
               #     calculation needs to be different when N/2 is odd.
+    np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
+                            "obj.drawKImage() produced image with wrong bounds")
     nyq_scale = obj.nyquist_scale
 
     # If we inverse_fft the above automatic image, it should match the automatic real image

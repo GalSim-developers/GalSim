@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,14 +21,8 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 @timer
@@ -1349,15 +1343,13 @@ def test_usertype():
     """Test a user-defined type
     """
     # A custom GSObject class that will use BuildSimple
-    class PseudoDelta(galsim.GSObject):
+    class PseudoDelta(galsim.Gaussian):
         _req_params = {}
         _opt_params = { "flux" : float }
         _single_params = []
         _takes_rng = False
         def __init__(self, flux=1., gsparams=None):
-            obj = galsim.Gaussian(sigma=1.e-8, flux=flux, gsparams=gsparams)
-            self._sbp = obj._sbp
-            self._gsparams = gsparams
+            super(PseudoDelta, self).__init__(sigma=1.e-8, flux=flux, gsparams=gsparams)
 
     galsim.config.RegisterObjectType('PseudoDelta', PseudoDelta)
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,16 +20,9 @@ from __future__ import print_function
 import time
 import numpy as np
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    import os
-    import sys
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # Use a deterministic random number generator so we don't fail tests because of rare flukes
 # in the random numbers.
@@ -922,7 +915,7 @@ def test_convolve_cosmos():
     cn = galsim.getCOSMOSNoise(rng=gd, cosmos_scale=cosmos_scale)
     cn = cn.withVariance(300.) # Again non-unity so as to produce ~unity output variance
     # Define a PSF with which to convolve the noise field, one WITHOUT 2-fold rotational symmetry
-    # (see test_autocorrelate in test_SBProfile.py for more info as to why this is relevant)
+    # (see test_autocorrelate in test_compound.py for more info as to why this is relevant)
     # Make a relatively realistic mockup of a GREAT3 target image
     lam_over_diam_cosmos = (814.e-9 / 2.4) * (180. / np.pi) * 3600. # ~lamda/D in arcsec
     lam_over_diam_ground = lam_over_diam_cosmos * 2.4 / 4. # Generic 4m at same lambda

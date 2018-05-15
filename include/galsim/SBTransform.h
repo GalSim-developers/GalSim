@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -55,9 +55,7 @@ namespace galsim {
          *                        image operations and rendering, if different from the default.
          */
         SBTransform(const SBProfile& sbin, double mA, double mB, double mC, double mD,
-                    const Position<double>& cen=Position<double>(0.,0.),
-                    double ampScaling=1.,
-                    const GSParamsPtr& gsparams=GSParamsPtr());
+                    const Position<double>& cen, double ampScaling, const GSParams& gsparams);
 
         /// @brief Copy constructor
         SBTransform(const SBTransform& rhs);

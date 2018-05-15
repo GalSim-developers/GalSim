@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-    SBShapelet::SBShapelet(double sigma, LVector bvec, const GSParamsPtr& gsparams) :
+    SBShapelet::SBShapelet(double sigma, LVector bvec, const GSParams& gsparams) :
         SBProfile(new SBShapeletImpl(sigma, bvec, gsparams)) {}
 
     SBShapelet::SBShapelet(const SBShapelet& rhs) : SBProfile(rhs) {}
@@ -43,24 +43,31 @@ namespace galsim {
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
+    void SBShapelet::rotate(double theta)
+    {
+        assert(dynamic_cast<SBShapeletImpl*>(_pimpl.get()));
+        LVector& bvec = static_cast<SBShapeletImpl&>(*_pimpl).getBVec();
+        bvec.rotate(theta);
+    }
+
     std::string SBShapelet::SBShapeletImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBShapelet("<<getSigma()<<", "<<getBVec().repr();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
-                                               const GSParamsPtr& gsparams) :
+                                               const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _sigma(sigma), _bvec(bvec.copy()) {}
 
     double SBShapelet::SBShapeletImpl::maxK() const
     {
         // Start with value for plain old Gaussian:
-        double maxk = sqrt(-2.*std::log(this->gsparams->maxk_threshold))/_sigma;
+        double maxk = sqrt(-2.*std::log(this->gsparams.maxk_threshold))/_sigma;
         // Grow as sqrt of (order+1)
         // Note: this is an approximation.  The right value would require looking at
         // the actual coefficients and doing something smart with them.
@@ -71,7 +78,7 @@ namespace galsim {
     double SBShapelet::SBShapeletImpl::stepK() const
     {
         // Start with value for plain old Gaussian:
-        double R = std::max(4., sqrt(-2.*std::log(this->gsparams->folding_threshold)));
+        double R = std::max(4., sqrt(-2.*std::log(this->gsparams.folding_threshold)));
         // Grow as sqrt of (order+1)
         R *= sqrt(double(_bvec.getOrder()+1));
         return M_PI / (R*_sigma);
@@ -142,6 +149,34 @@ namespace galsim {
 
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }
     const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
+    LVector& SBShapelet::SBShapeletImpl::getBVec() { return _bvec; }
+
+    void FillXValue(const LVector& bvec, double sigma,
+                    VectorXd& val, const VectorXd& x, const VectorXd& y)
+    {
+        dbg<<"order = "<<bvec.getOrder()<<", sigma = "<<sigma<<std::endl;
+        xdbg<<"FillXValue with bvec = "<<bvec<<std::endl;
+        MatrixXd psi(val.size(),bvec.size());
+        LVector::basis(x,y,psi,bvec.getOrder(),sigma);
+        val = psi * bvec.rVector();
+    }
+
+    void FillKValue(const LVector& bvec, double sigma,
+                    VectorXcd& val, const VectorXd& kx, const VectorXd& ky)
+    {
+        dbg<<"order = "<<bvec.getOrder()<<", sigma = "<<sigma<<std::endl;
+        xdbg<<"fillKValue with bvec = "<<bvec<<std::endl;
+        MatrixXcd psi_k(val.size(),bvec.size());
+        LVector::kBasis(kx,ky,psi_k,bvec.getOrder(),sigma);
+#ifdef USE_TMV
+        // Note: the explicit cast to Vector<complex<double> > shouldn't be necessary.
+        // But not doing so fails for Apple's default BLAS library.  It should be a pretty
+        // minimal efficiency difference, so we always do the explicit cast to be safe.
+        val = psi_k * VectorXcd(bvec.rVector());
+#else
+        val = psi_k * bvec.rVector();
+#endif
+    }
 
     template <typename T>
     void SBShapelet::SBShapeletImpl::fillXImage(ImageView<T> im,
@@ -162,20 +197,19 @@ namespace galsim {
         y0 /= _sigma;
         dy /= _sigma;
 
-        tmv::Matrix<double> mx(m,n);
-        for (int i=0; i<m; ++i,x0+=dx) mx.row(i).setAllTo(x0);
-        tmv::Matrix<double> my(m,n);
-        for (int j=0; j<n; ++j,y0+=dy) my.col(j).setAllTo(y0);
+        VectorXd mx(m*n);
+        for (int i=0; i<m; ++i,x0+=dx)
+            for (int j=0; j<n; ++j) mx[j*m + i] = x0;
+        VectorXd my(m*n);
+        for (int j=0, k=0; j<n; ++j,y0+=dy)
+            for (int i=0; i<m; ++i, ++k) my[k] = y0;
 
-        tmv::Matrix<double> val(m,n);
-        fillXValue(val.view(),mx,my);
+        VectorXd val(m*n);
+        FillXValue(_bvec,_sigma,val,mx,my);
 
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        It valit = val.linearView().begin();
-        for (int j=0; j<n; ++j,ptr+=skip) {
-            for (int i=0; i<m; ++i)
-                *ptr++ = *valit++;
-        }
+        for (int j=0,k=0; j<n; ++j,ptr+=skip)
+            for (int i=0; i<m; ++i,++k)
+                *ptr++ = val[k];
     }
 
     template <typename T>
@@ -199,25 +233,22 @@ namespace galsim {
         dy /= _sigma;
         dyx /= _sigma;
 
-        tmv::Matrix<double> mx(m,n);
-        tmv::Matrix<double> my(m,n);
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        It xit = mx.linearView().begin();
-        It yit = my.linearView().begin();
-        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy) {
+        VectorXd mx(m*n);
+        VectorXd my(m*n);
+        for (int j=0,k=0; j<n; ++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            for (int i=0; i<m; ++i,x+=dx,y+=dyx) { *xit++ = x; *yit++ = y; }
+            for (int i=0; i<m; ++i,++k,x+=dx,y+=dyx) {
+                mx[k] = x; my[k] = y;
+            }
         }
 
-        tmv::Matrix<double> val(m,n);
-        fillXValue(val.view(),mx,my);
+        VectorXd val(m*n);
+        FillXValue(_bvec,_sigma,val,mx,my);
 
-        It valit = val.linearView().begin();
-        for (int j=0; j<n; ++j,ptr+=skip) {
-            for (int i=0; i<m; ++i)
-                *ptr++ = *valit++;
-        }
+        for (int j=0,k=0; j<n; ++j,ptr+=skip)
+            for (int i=0; i<m; ++i,++k)
+                *ptr++ = val[k];
     }
 
     template <typename T>
@@ -239,20 +270,19 @@ namespace galsim {
         ky0 *= _sigma;
         dky *= _sigma;
 
-        tmv::Matrix<double> mkx(m,n);
-        for (int i=0; i<m; ++i,kx0+=dkx) mkx.row(i).setAllTo(kx0);
-        tmv::Matrix<double> mky(m,n);
-        for (int j=0; j<n; ++j,ky0+=dky) mky.col(j).setAllTo(ky0);
+        VectorXd mkx(m*n);
+        for (int i=0; i<m; ++i,kx0+=dkx)
+            for (int j=0; j<n; ++j) mkx[j*m + i] = kx0;
+        VectorXd mky(m*n);
+        for (int j=0, k=0; j<n; ++j,ky0+=dky)
+            for (int i=0; i<m; ++i, ++k) mky[k] = ky0;
 
-        tmv::Matrix<std::complex<double> > val(m,n);
-        fillKValue(val.view(),mkx,mky);
+        VectorXcd val(m*n);
+        FillKValue(_bvec,_sigma,val,mkx,mky);
 
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        CIt valit = val.linearView().begin();
-        for (int j=0; j<n; ++j,ptr+=skip) {
-            for (int i=0; i<m; ++i)
-                *ptr++ = *valit++;
-        }
+        for (int j=0,k=0; j<n; ++j,ptr+=skip)
+            for (int i=0; i<m; ++i,++k)
+                *ptr++ = val[k];
      }
 
     template <typename T>
@@ -276,61 +306,22 @@ namespace galsim {
         dky *= _sigma;
         dkyx *= _sigma;
 
-        tmv::Matrix<double> mkx(m,n);
-        tmv::Matrix<double> mky(m,n);
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        It kxit = mkx.linearView().begin();
-        It kyit = mky.linearView().begin();
-        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky) {
+        VectorXd mkx(m*n);
+        VectorXd mky(m*n);
+        for (int j=0,k=0; j<n; ++j,kx0+=dkxy,ky0+=dky) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) { *kxit++ = kx; *kyit++ = ky; }
+            for (int i=0; i<m; ++i,++k,kx+=dkx,ky+=dkyx) {
+                mkx[k] = kx; mky[k] = ky;
+            }
         }
 
-        tmv::Matrix<std::complex<double> > val(m,n);
-        fillKValue(val.view(),mkx,mky);
+        VectorXcd val(m*n);
+        FillKValue(_bvec,_sigma,val,mkx,mky);
 
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        CIt valit = val.linearView().begin();
-        for (int j=0; j<n; ++j,ptr+=skip) {
-            for (int i=0; i<m; ++i)
-                *ptr++ = *valit++;
-        }
-    }
-
-    void SBShapelet::SBShapeletImpl::fillXValue(
-        tmv::MatrixView<double> val,
-        const tmv::Matrix<double>& x, const tmv::Matrix<double>& y) const
-    {
-        dbg<<"order = "<<_bvec.getOrder()<<", sigma = "<<_sigma<<std::endl;
-        xdbg<<"fillXValue with bvec = "<<_bvec<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        tmv::Matrix<double> psi(m*n,_bvec.size());
-        LVector::basis(x.constLinearView(),y.constLinearView(),psi.view(),
-                       _bvec.getOrder(),_sigma);
-        val.linearView() = psi * _bvec.rVector();
-    }
-
-    void SBShapelet::SBShapeletImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
-        const tmv::Matrix<double>& kx, const tmv::Matrix<double>& ky) const
-    {
-        dbg<<"order = "<<_bvec.getOrder()<<", sigma = "<<_sigma<<std::endl;
-        xdbg<<"fillKValue with bvec = "<<_bvec<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        tmv::Matrix<std::complex<double> > psi_k(m*n,_bvec.size());
-        LVector::kBasis(kx.constLinearView(),ky.constLinearView(),psi_k.view(),
-                        _bvec.getOrder(),_sigma);
-        // Note: the explicit cast to Vector<complex<double> > shouldn't be necessary.
-        // But not doing so fails for Apple's default BLAS library.  It should be a pretty
-        // minimal efficiency difference, so we always do the explicit cast to be safe.
-        val.linearView() = psi_k * tmv::Vector<std::complex<double> >(_bvec.rVector());
+        for (int j=0,k=0; j<n; ++j,ptr+=skip)
+            for (int i=0; i<m; ++i,++k)
+                *ptr++ = val[k];
     }
 
     template <typename T>
@@ -350,9 +341,9 @@ namespace galsim {
         xdbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
         const int npts = nx * ny;
         xdbg<<"npts = "<<npts<<std::endl;
-        tmv::Vector<double> x(npts);
-        tmv::Vector<double> y(npts);
-        tmv::Vector<double> I(npts);
+        VectorXd x(npts);
+        VectorXd y(npts);
+        VectorXd I(npts);
         int i=0;
         for (int ix = image.getXMin(); ix <= image.getXMax(); ++ix) {
             for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy,++i) {
@@ -365,13 +356,17 @@ namespace galsim {
         xxdbg<<"y = "<<y<<std::endl;
         xxdbg<<"I = "<<I<<std::endl;
 
-        tmv::Matrix<double> psi(npts,bvec.size());
-        LVector::basis(x.view(),y.view(),psi.view(),bvec.getOrder(),sigma);
+        MatrixXd psi(npts,bvec.size());
+        LVector::basis(x,y,psi,bvec.getOrder(),sigma);
         // I = psi * b
+#ifdef USE_TMV
         // TMV solves this by writing b = I/psi.
         // We use QRP in case the psi matrix is close to singular (although it shouldn't be).
         psi.divideUsing(tmv::QRP);
         bvec.rVector() = I/psi;
+#else
+        bvec.rVector() = psi.colPivHouseholderQr().solve(I);
+#endif
         xdbg<<"Done FitImage: bvec = "<<bvec<<std::endl;
     }
 

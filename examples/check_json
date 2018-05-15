@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,47 +18,46 @@
 #    and/or other materials provided with the distribution.
 #
 
-python=../bin/installed_python  # For python scripts
-bin=../bin  # For galsim executable
+python='/usr/bin/env python'  # For python scripts
 
 /bin/rm -rf output
 /bin/rm -rf output_json
 
 time $python demo1.py || exit
-time $bin/galsim -v2 json/demo1.json || exit
+time galsim -v2 json/demo1.json || exit
 
 time $python demo2.py || exit
-time $bin/galsim -v2 json/demo2.json || exit
+time galsim -v2 json/demo2.json || exit
 
 time $python demo3.py || exit
-time $bin/galsim -v2 json/demo3.json || exit
+time galsim -v2 json/demo3.json || exit
 
 time $python demo4.py || exit
-time $bin/galsim -v2 json/demo4.json || exit
+time galsim -v2 json/demo4.json || exit
 
 time $python demo5.py || exit
-time $bin/galsim -v2 json/demo5.json || exit
+time galsim -v2 json/demo5.json || exit
 
 time $python demo6.py || exit
-time $bin/galsim -v2 json/demo6a.json || exit
-time $bin/galsim -v2 json/demo6b.json || exit
+time galsim -v2 json/demo6a.json || exit
+time galsim -v2 json/demo6b.json || exit
 
 time $python demo7.py || exit
-time $bin/galsim -v2 json/demo7.json || exit
+time galsim -v2 json/demo7.json || exit
 
 time $python demo8.py || exit
-time $bin/galsim -v2 json/demo8a.json || exit
-time $bin/galsim -v2 json/demo8b.json || exit
+time galsim -v2 json/demo8a.json || exit
+time galsim -v2 json/demo8b.json || exit
 
 time $python demo9.py || exit
-time $bin/galsim -v1 json/demo9.json output.skip='{"type":"List","items":[0,0,0,0,0,1]}' || exit
-time $bin/galsim -v1 json/demo9.json output.noclobber=True || exit
+time galsim -v1 json/demo9.json output.skip='{"type":"List","items":[0,0,0,0,0,1]}' || exit
+time galsim -v1 json/demo9.json output.noclobber=True || exit
 
 time $python demo10.py || exit
-time $bin/galsim -v2 json/demo10.json || exit
+time galsim -v2 json/demo10.json || exit
 
 time $python demo11.py || exit
-time $bin/galsim -v2 json/demo11.json || exit
+time galsim -v2 json/demo11.json || exit
 
 echo 'Checking diffs: (No output means success)'
 

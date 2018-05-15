@@ -17,14 +17,18 @@
 #ifndef BOOST_RANDOM_NORMAL_DISTRIBUTION_HPP
 #define BOOST_RANDOM_NORMAL_DISTRIBUTION_HPP
 
-#include "galsim/boost1_48_0/config/no_tr1/cmath.hpp"
 #include <istream>
 #include <iosfwd>
+#ifdef USE_BOOST
+#include <boost/config/no_tr1/cmath.hpp>
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
-#include "galsim/boost1_48_0/random/detail/config.hpp"
-#include "galsim/boost1_48_0/random/detail/operators.hpp"
+#include <boost/random/detail/config.hpp>
+#include <boost/random/detail/operators.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
+#endif
 #include "galsim/boost1_48_0/random/uniform_01.hpp"
 
 namespace boost {
@@ -70,6 +74,7 @@ public:
         /** Returns the standand deviation of the distribution. */
         RealType sigma() const { return _sigma; }
 
+#ifdef USE_BOOST
         /** Writes a @c param_type to a @c std::ostream. */
         BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, param_type, parm)
         { os << parm._mean << " " << parm._sigma ; return os; }
@@ -84,6 +89,7 @@ public:
         
         /** Returns true if the two sets of parameters are the different. */
         BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(param_type)
+#endif
 
     private:
         RealType _mean;
@@ -101,7 +107,9 @@ public:
       : _mean(mean_arg), _sigma(sigma_arg),
         _r1(0), _r2(0), _cached_rho(0), _valid(false)
     {
+#ifdef USE_BOOST
         BOOST_ASSERT(_sigma >= RealType(0));
+#endif
     }
 
     /**
@@ -173,6 +181,7 @@ public:
         return normal_distribution(parm)(urng);
     }
 
+#ifdef USE_BOOST
     /** Writes a @c normal_distribution to a @c std::ostream. */
     BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, normal_distribution, nd)
     {
@@ -206,6 +215,7 @@ public:
      * return different sequences of values given equal generators.
      */
     BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(normal_distribution)
+#endif
 
 private:
     RealType _mean, _sigma;

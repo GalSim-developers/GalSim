@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,7 +28,7 @@ namespace galsim {
     class SBBox::SBBoxImpl : public SBProfileImpl
     {
     public:
-        SBBoxImpl(double width, double height, double flux, const GSParamsPtr& gsparams);
+        SBBoxImpl(double width, double height, double flux, const GSParams& gsparams);
         ~SBBoxImpl() {}
 
         double xValue(const Position<double>& p) const;
@@ -57,7 +57,7 @@ namespace galsim {
         double getWidth() const { return _width; }
         double getHeight() const { return _height; }
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>
@@ -130,7 +130,7 @@ namespace galsim {
     class SBTopHat::SBTopHatImpl : public SBProfileImpl
     {
     public:
-        SBTopHatImpl(double radius, double flux, const GSParamsPtr& gsparams);
+        SBTopHatImpl(double radius, double flux, const GSParams& gsparams);
         ~SBTopHatImpl() {}
 
         double xValue(const Position<double>& p) const;
@@ -165,7 +165,7 @@ namespace galsim {
 
         double getRadius() const { return _r0; }
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>

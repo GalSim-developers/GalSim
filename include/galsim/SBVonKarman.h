@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -48,7 +48,7 @@ namespace galsim {
          * @param[in] gsparams     GSParams.
          */
         SBVonKarman(double lam, double r0, double L0, double flux,
-                    double scale, bool doDelta, const GSParamsPtr& gsparams);
+                    double scale, bool doDelta, const GSParams& gsparams);
 
         /// @brief Copy constructor
         SBVonKarman(const SBVonKarman& rhs);
@@ -62,7 +62,7 @@ namespace galsim {
         double getL0() const;
         double getScale() const;
         bool getDoDelta() const;
-        double getDeltaAmplitude() const;
+        double getDelta() const;
         double getHalfLightRadius() const;
 
         double structureFunction(double) const;

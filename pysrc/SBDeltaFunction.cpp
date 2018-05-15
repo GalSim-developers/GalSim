@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,35 +17,15 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBDeltaFunction.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBDeltaFunction
+    void pyExportSBDeltaFunction(PY_MODULE& _galsim)
     {
-        static void wrap()
-        {
-            bp::class_<SBDeltaFunction,bp::bases<SBProfile> >("SBDeltaFunction", bp::no_init)
-                .def(bp::init<double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("flux")=1., bp::arg("gsparams")=bp::object())
-                ))
-                .def(bp::init<const SBDeltaFunction &>())
-                .enable_pickling()
-                ;
-        }
-    };
-
-    void pyExportSBDeltaFunction()
-    {
-        PySBDeltaFunction::wrap();
+        py::class_<SBDeltaFunction, BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeltaFunction" BP_NOINIT)
+            .def(py::init<double, GSParams>());
     }
 
 } // namespace galsim

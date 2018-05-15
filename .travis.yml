@@ -1,18 +1,14 @@
 branches:
     only:
         - master
+        - noboost
 
 language: python
 python:
-    #- 2.6  # disabled until Travis fixes their issue #6732
-            # https://github.com/travis-ci/travis-ci/issues/6732
     - 2.7
     - 3.4
     - 3.5
-    #- 3.6  # disabled until Travis fixes their issue #4990
-            # https://github.com/travis-ci/travis-ci/issues/4990
-            # i.e. has python 3.6 pre-installed.  Otherwise it can time out from having to install
-            # all the python 3.6 stuff from scratch.
+    - 3.6
 
 compiler:
     - g++
@@ -20,79 +16,54 @@ compiler:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
-    - sudo apt-get install -y python-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran libav-tools
+    - sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
-    - if test -d $HOME/tmv-0.73; then ls -l $HOME/tmv-0.73; fi
-    - if test -d $HOME/boost_1_61_0; then ls -l $HOME/boost_1_61_0; fi
     - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
-
-    # Add ~/bin and ~/lib, etc. to the appropriate paths where scons install will put things.
-    - export PYHOME=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}
-    - export PATH=$HOME/bin:$PATH
-    - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
-
-    # Fix a directory name in 3.x installations so boost can find it.
-    - if test -d $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m; then ln -s $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m $PYHOME/include/python${TRAVIS_PYTHON_VERSION}; fi
-
-    # To get coverage of the WcsToolsWCS class:
-    #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
-    #- sudo apt-get -qq update
-    #- sudo apt-get install -y wcstools
-    # Hm. This didn't work, and I can't figure out why.  I get the following error:
-    #     Reading package lists... Done
-    #     Building dependency tree
-    #     Reading state information... Done
-    #     E: Unable to locate package wcstools
-    # Perhaps someone with more familiarity with apt-get can figure this out, but for now, we'll
-    # live with lack of coverage of WcsToolsWCS.
-
-    # Only get TMV if not cached
-    - pushd $HOME
-    - if ! test -d tmv-0.73 || ! test -f tmv-0.73/SConstruct; then wget https://github.com/rmjarvis/tmv/archive/v0.73.tar.gz && tar -xf v0.73.tar.gz ; else echo Using cached TMV; fi
-    # But always install it to /usr/local
-    - cd tmv-0.73 && sudo scons install
-    - popd
-
-    # Only get Boost if not cached
-    - pushd $HOME
-    - if ! test -d boost_1_61_0 || ! test -f boost_1_61_0/bootstrap.sh; then wget https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.bz2 --no-check-certificate && tar --bzip2 -xf boost_1_61_0.tar.bz2 && cd boost_1_61_0 && ./bootstrap.sh --with-python=python$TRAVIS_PYTHON_VERSION && ./b2 link=shared && cd ..; else echo Using cached Boost; fi
-    - cd boost_1_61_0 && sudo ./b2 -d0 link=shared install
-    - popd
 
     # Get the des data needed for the check_des test.
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
     - ln -s $HOME/des_data examples/des/
 
 cache:
+    ccache: true
     pip: true
     directories:
-    - $HOME/tmv-0.73
-    - $HOME/boost_1_61_0
     - $HOME/des_data
 
 install:
+    # Install the requirements
+    # Use -U to make sure we get the latest versions of everything so we notice any
+    # incompatibilities as soon as possible.
+    - pip install -U -r requirements.txt
+
+    # Also some things just required for tests
+    # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
+    - travis_wait 30 pip install -U -r test_requirements.txt
+    # astroplan isn't available on 2.7
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan; fi
+
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time
-    # if it's not in the cache yet.
-    - travis_wait 30 pip install numpy astropy future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.0 scipy pandas coverage
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install simplejson ordereddict; fi
+    - pip install matplotlib 
+
+    # Finally, a few things for the code coverage
+    - pip install nose codecov coveralls coverage
+
+    - pip list
 
 script:
-    # This lets scons work even on Python 3 builds
-    # cf. https://github.com/travis-ci/travis-ci/issues/5961
-    - source $HOME/virtualenv/python2.7/bin/activate
-    # But now we need to manually set the python, since it's not the default in this virtualenv.
-    - scons PREFIX=$HOME PYTHON=$PYHOME/bin/python PYPREFIX=$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages BOOST_DIR=$PYHOME && scons install
-    - if test -f gs.error; then cat gs.error; fi
-    # Go back to the regular python environment for the tests
-    - source $PYHOME/bin/activate
+    # Install GalSim
+    - python setup.py install
+
     # If galsim_download_cosmos.py changed, then run it.
-    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
+    - echo $TRAVIS_COMMIT_RANGE
+    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
+
     - cd tests
-    # Use this rather than scons tests, so we can get the coverage options.
+
+    # Use this rather than setup.py test, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
     # Without cover-erase, this will append to the .coverage file
     - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"

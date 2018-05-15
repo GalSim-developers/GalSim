@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,7 +32,7 @@ namespace galsim {
     class SBDeltaFunction::SBDeltaFunctionImpl : public SBProfileImpl
     {
     public:
-        SBDeltaFunctionImpl(double flux, const GSParamsPtr& gsparams);
+        SBDeltaFunctionImpl(double flux, const GSParams& gsparams);
 
         ~SBDeltaFunctionImpl() {}
 
@@ -55,11 +55,10 @@ namespace galsim {
         /**
          * @brief Shoot photons through this SBDeltaFunction.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string serialize() const;
 

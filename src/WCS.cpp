@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,7 +21,17 @@
 
 #include "Std.h"
 #include "WCS.h"
+#ifdef USE_TMV
 #include "TMV.h"
+typedef tmv::Vector<double> VectorXd;
+typedef tmv::Matrix<double> MatrixXd;
+typedef tmv::VectorView<double> MapVectorXd;
+#else
+#include "Eigen/Dense"
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+typedef Eigen::Map<Eigen::VectorXd> MapVectorXd;
+#endif
 
 namespace galsim {
 
@@ -42,28 +52,46 @@ namespace galsim {
         }
     }
 
-    void setup_pow(tmv::VectorView<double>& x, tmv::Matrix<double>& xpow)
+    void setup_pow(MapVectorXd& x, MatrixXd& xpow)
     {
+#ifdef USE_TMV
         xpow.col(0).setAllTo(1.);
         xpow.col(1) = x;
         for (int i=2; i<xpow.rowsize(); ++i)
             xpow.col(i) = ElemProd(xpow.col(i-1), x);
+#else
+        xpow.col(0).setConstant(1.);
+        xpow.col(1) = x;
+        for (int i=2; i<xpow.cols(); ++i)
+            xpow.col(i).array() = xpow.col(i-1).array() * x.array();
+#endif
     }
 
     void ApplyPV(int n, const int m, double* uar, double* var, const double* pvar)
     {
-        tmv::ConstMatrixView<double> pvu(pvar, m, m, m, 1, tmv::NonConj);
-        tmv::ConstMatrixView<double> pvv(pvar + m*m, m, m, m, 1, tmv::NonConj);
+#ifdef USE_TMV
+        tmv::ConstMatrixView<double> pvuT(pvar, m, m, 1, m, tmv::NonConj);
+        tmv::ConstMatrixView<double> pvvT(pvar + m*m, m, m, 1, m, tmv::NonConj);
+#else
+        Eigen::Map<const Eigen::MatrixXd> pvuT(pvar, m, m);
+        Eigen::Map<const Eigen::MatrixXd> pvvT(pvar + m*m, m, m);
+#endif
         while (n) {
             // Do this in blocks of at most 256 to avoid blowing up the memory usage when
             // this is run on a large image. It's also a bit faster this way, since there
             // are fewer cache misses.
             const int nn = n >= 256 ? 256 : n;
-            tmv::VectorView<double> u(uar, nn, 1, tmv::NonConj);
-            tmv::VectorView<double> v(var, nn, 1, tmv::NonConj);
 
-            tmv::Matrix<double> upow(nn,m);
-            tmv::Matrix<double> vpow(nn,m);
+#ifdef USE_TMV
+            MapVectorXd u(uar, nn, 1, tmv::NonConj);
+            MapVectorXd v(var, nn, 1, tmv::NonConj);
+#else
+            MapVectorXd u(uar, nn);
+            MapVectorXd v(var, nn);
+#endif
+            MatrixXd upow(nn, m);
+            MatrixXd vpow(nn, m);
+
             setup_pow(u, upow);
             setup_pow(v, vpow);
 
@@ -77,13 +105,25 @@ namespace galsim {
             // above formulae.  So we use the fact that
             //     diag(AT . B) = sum_rows(A * B)
 
-            tmv::Vector<double> ones(m, 1.);
-            tmv::Matrix<double> temp = vpow * pvu.transpose();
+#ifdef USE_TMV
+            VectorXd ones(m, 1.);
+#else
+            VectorXd ones = Eigen::VectorXd::Ones(m);
+#endif
+            MatrixXd temp = vpow * pvuT;
+#ifdef USE_TMV
             temp = ElemProd(upow, temp);
+#else
+            temp.array() *= upow.array();
+#endif
             u = temp * ones;
 
-            temp = vpow * pvv.transpose();
+            temp = vpow * pvvT;
+#ifdef USE_TMV
             temp = ElemProd(upow, temp);
+#else
+            temp.array() *= upow.array();
+#endif
             v = temp * ones;
 
             uar += nn;
@@ -109,19 +149,30 @@ namespace galsim {
 
         double u0 = u;
         double v0 = v;
-        tmv::ConstMatrixView<double> pvu(pvar, 4, 4, 4, 1, tmv::NonConj);
-        tmv::ConstMatrixView<double> pvv(pvar + 16, 4, 4, 4, 1, tmv::NonConj);
+#ifdef USE_TMV
+        tmv::ConstMatrixView<double> pvuT(pvar, 4, 4, 1, 4, tmv::NonConj);
+        tmv::ConstMatrixView<double> pvvT(pvar + 16, 4, 4, 1, 4, tmv::NonConj);
+        typedef tmv::SmallVector<double,4> Vector4d;
+        typedef tmv::SmallMatrix<double,2,2> Matrix2d;
+        typedef tmv::SmallVector<double,2> Vector2d;
+#else
+        Eigen::Map<const Eigen::Matrix4d> pvuT(pvar);
+        Eigen::Map<const Eigen::Matrix4d> pvvT(pvar + 16);
+        using Eigen::Vector4d;
+        using Eigen::Matrix2d;
+        using Eigen::Vector2d;
+#endif
 
         // Some temporary vectors/matrices we'll use within the loop below.
-        tmv::SmallVector<double,4> upow;
-        tmv::SmallVector<double,4> vpow;
-        tmv::SmallVector<double,4> pvu_vpow;
-        tmv::SmallVector<double,4> pvv_vpow;
-        tmv::SmallVector<double,4> dupow;
-        tmv::SmallVector<double,4> dvpow;
-        tmv::SmallMatrix<double,2,2> j1;
-        tmv::SmallVector<double,2> diff;
-        tmv::SmallVector<double,2> duv;
+        Vector4d upow;
+        Vector4d vpow;
+        Vector4d pvu_vpow;
+        Vector4d pvv_vpow;
+        Vector4d dupow;
+        Vector4d dvpow;
+        Matrix2d j1;
+        Vector2d diff;
+        Vector2d duv;
 
         double prev_err = -1.;
         for (int iter=0; iter<MAX_ITER; ++iter) {
@@ -130,10 +181,15 @@ namespace galsim {
             upow << 1., u, usq, usq*u;
             vpow << 1., v, vsq, vsq*v;
 
-            pvu_vpow = pvu * vpow;
-            pvv_vpow = pvv * vpow;
+            pvu_vpow = pvuT.transpose() * vpow;
+            pvv_vpow = pvvT.transpose() * vpow;
+#ifdef USE_TMV
             double du = upow * pvu_vpow - u0;
             double dv = upow * pvv_vpow - v0;
+#else
+            double du = upow.dot(pvu_vpow) - u0;
+            double dv = upow.dot(pvv_vpow) - v0;
+#endif
 
             // Check that things are improving...
             double err = std::max(std::abs(du),std::abs(dv));
@@ -147,10 +203,19 @@ namespace galsim {
             else {
                 dupow << 0., 1., 2.*u, 3.*usq;
                 dvpow << 0., 1., 2.*v, 3.*vsq;
-                j1 << dupow * pvu_vpow,  upow * pvu * dvpow,
-                      dupow * pvv_vpow,  upow * pvv * dvpow;
+#ifdef USE_TMV
+                j1 << dupow * pvu_vpow,  upow * (pvuT.transpose() * dvpow),
+                      dupow * pvv_vpow,  upow * (pvvT.transpose() * dvpow);
+#else
+                j1 << dupow.dot(pvu_vpow),  upow.dot(pvuT.transpose() * dvpow),
+                      dupow.dot(pvv_vpow),  upow.dot(pvvT.transpose() * dvpow);
+#endif
                 diff << du, dv;
+#ifdef USE_TMV
                 duv = diff / j1;
+#else
+                duv = j1.lu().solve(diff);
+#endif
                 u -= duv[0];
                 v -= duv[1];
                 // If we're hitting the limits of double precision, stop iterating.
@@ -161,8 +226,9 @@ namespace galsim {
         throw std::runtime_error("Unable to solve for image_pos (max iter reached)");
     }
 
-    void setup_pow(double x, tmv::Vector<double>& xpow)
+    void setup_pow(double x, VectorXd& xpow)
     {
+        xpow[0] = 1.;
         xpow[1] = x;
         for (int i=2; i<xpow.size(); ++i) xpow[i] = xpow[i-1] * x;
     }
@@ -173,30 +239,49 @@ namespace galsim {
         double x0 = x;
         double y0 = y;
 
-        tmv::ConstMatrixView<double> abx(abar, m, m, m, 1, tmv::NonConj);
-        tmv::ConstMatrixView<double> aby(abar + m*m, m, m, m, 1, tmv::NonConj);
-        dbg<<"abx = "<<abx<<std::endl;
-        dbg<<"aby = "<<aby<<std::endl;
+#ifdef USE_TMV
+        tmv::ConstMatrixView<double> abxT(abar, m, m, 1, m, tmv::NonConj);
+        tmv::ConstMatrixView<double> abyT(abar + m*m, m, m, 1, m, tmv::NonConj);
+        typedef tmv::SmallMatrix<double,2,2> Matrix2d;
+        typedef tmv::SmallVector<double,2> Vector2d;
+#else
+        Eigen::Map<const Eigen::MatrixXd> abxT(abar, m, m);
+        Eigen::Map<const Eigen::MatrixXd> abyT(abar + m*m, m, m);
+        using Eigen::Matrix2d;
+        using Eigen::Vector2d;
+#endif
+        dbg<<"abx = "<<abxT.transpose()<<std::endl;
+        dbg<<"aby = "<<abyT.transpose()<<std::endl;
 
-        tmv::Vector<double> xpow(m,1.);
-        tmv::Vector<double> ypow(m,1.);
-        tmv::Vector<double> abx_ypow(m);
-        tmv::Vector<double> aby_ypow(m);
-        tmv::Vector<double> dxpow(m,0.);
-        tmv::Vector<double> dypow(m,0.);
-        tmv::SmallMatrix<double,2,2> j1;
-        tmv::SmallVector<double,2> diff;
-        tmv::SmallVector<double,2> dxy;
+        VectorXd xpow(m);
+        VectorXd ypow(m);
+        VectorXd abx_ypow(m);
+        VectorXd aby_ypow(m);
+        VectorXd dxpow(m); dxpow.setZero();
+        VectorXd dypow(m); dypow.setZero();
+        Matrix2d j1;
+        Vector2d diff;
+        Vector2d dxy;
 
         if (abpar) {
             setup_pow(x, xpow);
             setup_pow(y, ypow);
-            tmv::ConstMatrixView<double> abpx(abpar, m, m, m, 1, tmv::NonConj);
-            tmv::ConstMatrixView<double> abpy(abpar + m*m, m, m, m, 1, tmv::NonConj);
-            abx_ypow = abpx * ypow;
-            aby_ypow = abpy * ypow;
+#ifdef USE_TMV
+            tmv::ConstMatrixView<double> abpxT(abpar, m, m, 1, m, tmv::NonConj);
+            tmv::ConstMatrixView<double> abpyT(abpar + m*m, m, m, 1, m, tmv::NonConj);
+#else
+            Eigen::Map<const Eigen::MatrixXd> abpxT(abpar, m, m);
+            Eigen::Map<const Eigen::MatrixXd> abpyT(abpar + m*m, m, m);
+#endif
+            abx_ypow = abpxT.transpose() * ypow;
+            aby_ypow = abpyT.transpose() * ypow;
+#ifdef USE_TMV
             x += xpow * abx_ypow;
             y += xpow * aby_ypow;
+#else
+            x += xpow.dot(abx_ypow);
+            y += xpow.dot(aby_ypow);
+#endif
         }
 
         // We do this iteration even if we have AP and BP matrices, since the inverse
@@ -214,10 +299,15 @@ namespace galsim {
             setup_pow(x, xpow);
             setup_pow(y, ypow);
 
-            abx_ypow = abx * ypow;
-            aby_ypow = aby * ypow;
+            abx_ypow = abxT.transpose() * ypow;
+            aby_ypow = abyT.transpose() * ypow;
+#ifdef USE_TMV
             double dx = xpow * abx_ypow + x - x0;
             double dy = xpow * aby_ypow + y - y0;
+#else
+            double dx = xpow.dot(abx_ypow) + x - x0;
+            double dy = xpow.dot(aby_ypow) + y - y0;
+#endif
             dbg<<"diff = "<<dx<<" "<<dy<<std::endl;
 
             // Check that things are improving...
@@ -233,12 +323,22 @@ namespace galsim {
                 for(int i=1; i<m; ++i) dxpow[i] = i * xpow[i-1];
                 for(int i=1; i<m; ++i) dypow[i] = i * ypow[i-1];
 
-                j1 << dxpow * abx_ypow,  xpow * abx * dypow,
-                      dxpow * aby_ypow,  xpow * aby * dypow;
+#ifdef USE_TMV
+                j1 << dxpow * abx_ypow,  xpow * abxT.transpose() * dypow,
+                      dxpow * aby_ypow,  xpow * abyT.transpose() * dypow;
                 j1.diag().addToAll(1.);
+#else
+                j1 << dxpow.dot(abx_ypow),  xpow.dot(abxT.transpose() * dypow),
+                      dxpow.dot(aby_ypow),  xpow.dot(abyT.transpose() * dypow);
+                j1.diagonal().array() += 1.;
+#endif
                 dbg<<"j1 = "<<j1<<std::endl;
                 diff << dx, dy;
+#ifdef USE_TMV
                 dxy = diff / j1;
+#else
+                dxy = j1.lu().solve(diff);
+#endif
                 dbg<<"dxy = "<<dxy<<std::endl;
                 x -= dxy[0];
                 y -= dxy[1];

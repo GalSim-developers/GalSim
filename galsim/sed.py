@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,9 +21,16 @@ Spectral energy distribution class.  Used by galsim/chromatic.py
 
 from past.builtins import basestring
 import numpy as np
+from astropy import units
+from astropy import constants
+import weakref
 
-import galsim
-
+from .gsobject import GSObject
+from .table import LookupTable
+from . import utilities
+from . import integ
+from . import dcr
+from .utilities import WeakMethod, lazy_property, combine_wave_list
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -103,87 +110,202 @@ class SED(object):
     @param redshift      Optionally shift the spectrum to the given redshift. [default: 0]
     @param fast          Convert units on initialization instead of on __call__. [default: True]
     """
+    # We'll use these multiple times below, and they are ridiculously slow to construct,
+    # so just make them once at the class level.
+    _fphotons_base = units.astrophys.photon/(units.s * units.cm**2)
+    _flambda_base = units.erg/(units.s * units.cm**2)
+    _fphotons = _fphotons_base / units.nm
+    _flambda = _flambda_base / units.nm
+    _fnu = units.erg / (units.s * units.Hz * units.cm**2)
+    _spec_nm = units.spectral_density(1*units.nm)
+    _c = constants.c.to('nm/s').value
+    _h = constants.h.to('erg s').value
+    _dimensionless = units.dimensionless_unscaled
+
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
-                 _blue_limit=0.0, _red_limit=float('inf'), _wave_list=None, _spectral=None):
-        from astropy import units
-
-        self._orig_spec = spec  # Save this for pickling
-
+                 _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
+        self._flux_type = flux_type  # Need to save the original for repr
+        # Parse the various options for wave_type
         if isinstance(wave_type, str):
             if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
-                wave_type = units.nm
+                self.wave_type = 'nm'
+                self.wave_factor = 1.
             elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
-                wave_type = units.AA
+                self.wave_type = 'Angstrom'
+                self.wave_factor = 10.
             else:
                 raise ValueError("Unknown wave_type '{0}'".format(wave_type))
-        self.wave_type = wave_type
+        else:
+            self.wave_type = wave_type
+            try:
+                self.wave_factor = (1*units.nm).to(self.wave_type).value
+                if self.wave_factor == 1.:
+                    self.wave_type = 'nm'
+                elif abs(self.wave_factor-10.) < 2.e-15:  # This doesn't come out exactly 10.
+                    self.wave_type = 'Angstrom'
+                    self.wave_factor = 10.
+            except units.UnitConversionError:
+                self.wave_factor = None
 
+        # Parse the various options for flux_type
+        self.flux_factor = None
         if isinstance(flux_type, str):
             if flux_type.lower() == 'flambda':
-                flux_type = units.erg / (units.s * self.wave_type * units.cm**2)
-                _spectral = True
+                self.flux_type = 'flambda'
+                self.spectral = True
+                self.flux_factor = 1. / (SED._h * SED._c)
             elif flux_type.lower() == 'fphotons':
-                flux_type = units.astrophys.photon/(units.s * units.cm**2 * self.wave_type)
-                _spectral = True
+                self.spectral = True
+                if self.wave_factor is not None:
+                    self.flux_type = 'fphotons'
+                    self.flux_factor = self.wave_factor
+                else:
+                    self.flux_type = SED._fphotons
             elif flux_type.lower() == 'fnu':
-                flux_type = units.erg / (units.s * units.Hz * units.cm**2)
-                _spectral = True
-            elif flux_type.lower() == '1':
-                flux_type = units.dimensionless_unscaled
-                _spectral = False
+                self.spectral = True
+                if self.wave_factor is not None:
+                    self.flux_type = 'fnu'
+                    self.flux_factor = self.wave_factor / SED._h
+                else:
+                    self.flux_type = SED._fnu
+            elif flux_type == '1':
+                self.flux_type = '1'
+                self.spectral = False
             else:
                 raise ValueError("Unknown flux_type '{0}'".format(flux_type))
-        self.flux_type = flux_type
-        if _spectral is None:
-            _spectral = self.check_spectral()
-            dimensionless = self.check_dimensionless()
         else:
-            dimensionless = not _spectral
-
-        if not (dimensionless or _spectral):
-            raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
-        self.spectral = _spectral
+            self.flux_type = flux_type
+            self.spectral = self.check_spectral()
+            if not self.spectral and not self.check_dimensionless():
+                raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
+            try:
+                if self.wave_factor and self.spectral:
+                    self.flux_factor = (1*self.flux_type).to(SED._fphotons).value
+                    self.flux_type = 'fphotons'
+            except units.UnitConversionError:
+                try:
+                    self.flux_factor = (1*self.flux_type).to(SED._flambda).value
+                    self.flux_factor /= SED._h * SED._c * self.wave_factor
+                    self.flux_type = 'flambda'
+                except units.UnitConversionError:
+                    try:
+                        self.flux_factor = (1*self.flux_type).to(SED._fnu).value
+                        self.flux_factor *= self.wave_factor / SED._h
+                        self.flux_type = 'fnu'
+                    except units.UnitConversionError:
+                        self.wave_type = units.Unit(self.wave_type)
 
         self.redshift = redshift
         self.fast = fast
+
         # Convert string input into a real function (possibly a LookupTable)
-        self._const = False
+        self._orig_spec = spec  # Save this for pickling
         self._initialize_spec()
 
-        # Finish re-evaluating __init__() here.
+        # Setup the wave_list, red_limit, blue_limit
         if _wave_list is not None:
             self.wave_list = _wave_list
-            # Cast numpy.float to python float for more consistent reprs
             self.blue_limit = float(_blue_limit)
-            self.red_limit = float('inf') if _red_limit == "float('inf')" else float(_red_limit)
-            return
-
-        if isinstance(self._spec, galsim.LookupTable):
-            self.wave_list = ((self._spec.getArgs() * self.wave_type)
-                              .to(units.nm, units.spectral()).value)
-            self.wave_list *= (1.0 + self.redshift)
+            self.red_limit = float(_red_limit)
+        elif isinstance(self._spec, LookupTable):
+            self.wave_list = np.array(self._spec.getArgs())
+            if self.wave_factor:
+                self.wave_list *= (1.0 + self.redshift) / self.wave_factor
+            else:
+                self.wave_list = (self.wave_list*self.wave_type).to(units.nm, units.spectral()).value
+                self.wave_list *= (1.0 + self.redshift)
             self.blue_limit = float(np.min(self.wave_list))
             self.red_limit = float(np.max(self.wave_list))
         else:
             self.blue_limit = 0.0
-            self.red_limit = float('inf')
+            self.red_limit = np.inf
             self.wave_list = np.array([], dtype=float)
+
+        # Define the appropriate functions to call
+        self._setup_funcs()
+
+    def _setup_funcs(self):
+        # Set up the various functions we use to do the right calculation based on which
+        # wave type and/or flux type we have for _spec.
+        # The astropy unit functions are horribly slow, so we want to avoid them as much as
+        # possible.  If the wave_type and flux_type are one of the simpler (and most common)
+        # types, then we have custom functions that do the necessary conversions directly.
+        if self.wave_factor == 1:
+            self._get_native_waves = WeakMethod(self._get_native_waves_trivial)
+        elif self.wave_factor:
+            self._get_native_waves = WeakMethod(self._get_native_waves_fast)
+        else:
+            self._get_native_waves = WeakMethod(self._get_native_waves_slow)
+
+        if self.redshift == 0.:
+            self._get_rest_native_waves = self._get_native_waves
+        elif self.wave_factor:
+            self._get_rest_native_waves = WeakMethod(self._get_rest_native_waves_fast)
+        else:
+            self._get_rest_native_waves = WeakMethod(self._get_rest_native_waves_slow)
+
+        if self.flux_type == 'fphotons':
+            assert self.flux_factor is not None
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_fphot)
+        elif self.flux_type == 'flambda':
+            assert self.flux_factor is not None
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_flam)
+        elif self.flux_type == 'fnu':
+            assert self.flux_factor is not None
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_fnu)
+        else:
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_slow)
+
+        if self.fast:
+            self._call = WeakMethod(self._call_fast)
+        else:
+            self._call = WeakMethod(self._call_slow)
+
+    # Here are the definitions for the various functions we can use depending on the wave_type
+    # and flux_type (cf. _setup_funcs).
+    def _get_native_waves_trivial(self, wave):
+        return wave
+
+    def _get_native_waves_fast(self, wave):
+        return np.asarray(wave) * self.wave_factor
+
+    def _get_native_waves_slow(self, wave):
+        return (wave * units.nm).to(self.wave_type, units.spectral()).value
+
+    def _get_rest_native_waves_fast(self, wave):
+        return np.asarray(wave) * (self.wave_factor / (1.0+self.redshift))
+
+    def _get_rest_native_waves_slow(self, wave):
+        return (wave / (1.0+self.redshift) * units.nm).to(self.wave_type, units.spectral()).value
+
+    def _flux_to_photons_fphot(self, flux_native, wave_native):
+        return flux_native * self.flux_factor
+
+    def _flux_to_photons_flam(self, flux_native, wave_native):
+        return flux_native * wave_native * self.flux_factor
+
+    def _flux_to_photons_fnu(self, flux_native, wave_native):
+        return flux_native / wave_native * self.flux_factor
+
+    def _flux_to_photons_slow(self, flux_native, wave_native):
+        return (flux_native * self.flux_type).to(
+                SED._fphotons, units.spectral_density(wave_native * self.wave_type)).value
+
 
     def _initialize_spec(self):
         # Turn the input _orig_spec into a real function _spec.
         # The function cannot be pickled, so will need to do this in getstate as well as init.
 
-        if hasattr(self, '_spec'):
-            return
+        self._const = False
         if isinstance(self._orig_spec, (int, float)):
             if not self.dimensionless:
                 raise ValueError("Attempt to set spectral SED using float or integer.")
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
         elif isinstance(self._orig_spec, basestring):
-            isfile, filename = galsim.utilities.check_share_file(self._orig_spec, 'SEDs')
+            isfile, filename = utilities.check_share_file(self._orig_spec, 'SEDs')
             if isfile:
-                self._spec = galsim.LookupTable.from_file(filename, interpolant='linear')
+                self._spec = LookupTable.from_file(filename, interpolant='linear')
             else:
                 # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
                 # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which
@@ -192,64 +314,50 @@ class SED(object):
                 # a valid spectrum specification.
                 # Are there any other types of errors we should trap here?
                 try:
-                    self._spec = galsim.utilities.math_eval('lambda wave : ' + self._orig_spec)
-                    from numbers import Real
-                    if not isinstance(self._spec(700.0), Real):
-                        raise ValueError("The given SED function, %r, did not return a valid"
-                                         " number at test wavelength %s"%(
-                                         self._spec, 700.0))
+                    self._spec = utilities.math_eval('lambda wave : ' + self._orig_spec)
+                    test_value = self._spec(700.0)
                 except ArithmeticError:
-                    pass
+                    test_value = 0
                 except Exception as e:
                     raise ValueError(
                         "String spec must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
                         "Input provided: {0!r}\n".format(self._orig_spec) +
                         "Caught error: {0}".format(e))
+                from numbers import Real
+                if not isinstance(test_value, Real):
+                    raise ValueError("The given SED function, %r, did not return a valid"
+                                     " number at test wavelength %s: got %s"%(
+                                     self._spec, 700.0, test_value))
 
         else:
             self._spec = self._orig_spec
 
     def check_spectral(self):
         """Return boolean indicating if SED has units compatible with a spectral density."""
-        from astropy import units
-        _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
-
-        return self.flux_type.is_equivalent(_photons, units.spectral_density(1*units.nm))
+        return self.flux_type.is_equivalent(SED._fphotons, SED._spec_nm)
 
     def check_dimensionless(self):
         """Return boolean indicating if SED is dimensionless."""
-        from astropy import units
-
-        return self.flux_type.is_equivalent(units.dimensionless_unscaled)
-
+        if self.flux_type.is_equivalent(SED._dimensionless):
+            self._flux_type = '1'
+            # The astropy.units.dimensionless_unscaled object isn't properly reprable.
+            # So switch to using '1' in these cases.
+            return True
+        else:
+            return False
 
     @property
     def dimensionless(self):  # for convenience
         return not self.spectral
 
     def _rest_nm_to_photons(self, wave):
-        from astropy import units
-        _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
-
-        wave_native_quantity = (wave * units.nm).to(self.wave_type, units.spectral())
-        wave_native_value = wave_native_quantity.value
-        flux_native_quantity = self._spec(wave_native_value) * self.flux_type
-        return (flux_native_quantity
-                .to(_photons, units.spectral_density(wave_native_quantity))
-                .value)
-
-    def _obs_nm_to_photons(self, wave):
-        return self._rest_nm_to_photons(wave / (1.0 + self.redshift))
+        wave_native = self._get_native_waves(wave)
+        flux_native = self._spec(wave_native)
+        return self._flux_to_photons(flux_native, wave_native)
 
     def _rest_nm_to_dimensionless(self, wave):
-        from astropy import units
-        wave_native_value = (wave * units.nm).to(self.wave_type, units.spectral()).value
-        return self._spec(wave_native_value)
-
-    # Does it ever actually make sense for an SED with a redshift to be dimensionless?
-    def _obs_nm_to_dimensionless(self, wave):
-        return self._rest_nm_to_dimensionless(wave / (1.0 + self.redshift))
+        return self._spec(self._get_native_waves(wave))
 
     def _check_bounds(self, wave):
         if hasattr(wave, '__iter__'):
@@ -266,28 +374,24 @@ class SED(object):
             raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
                              .format(wmax, self.red_limit))
 
-    def _make_fast_spec(self):
+    @lazy_property
+    def _fast_spec(self):
         # Create a fast version of self._spec by constructing a LookupTable on self.wave_list
-        if not hasattr(self, '_fast_spec'):
-            from astropy import units
-            _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
-
-            if (self.wave_type == units.nm
-                and self.flux_type == _photons):
-                    self._fast_spec = self._spec
-            else:
-                if len(self.wave_list) == 0:
-                    if self.spectral:
-                        self._fast_spec = self._rest_nm_to_photons
-                    else:
-                        self._fast_spec = self._rest_nm_to_dimensionless
+        if self.wave_factor == 1. and self.flux_factor == 1.:
+            return self._spec
+        else:
+            if len(self.wave_list) == 0:
+                if self.spectral:
+                    return WeakMethod(self._rest_nm_to_photons)
                 else:
-                    x = self.wave_list / (1.0 + self.redshift)
-                    if self.spectral:
-                        f = self._rest_nm_to_photons(x)
-                    else:
-                        f = self._rest_nm_to_dimensionless(x)
-                    self._fast_spec = galsim.LookupTable(x, f, interpolant='linear')
+                    return WeakMethod(self._rest_nm_to_dimensionless)
+            else:
+                x = self.wave_list / (1.0 + self.redshift)
+                if self.spectral:
+                    f = self._rest_nm_to_photons(x)
+                else:
+                    f = self._rest_nm_to_dimensionless(x)
+                return LookupTable(x, f, interpolant='linear')
 
     def _call_fast(self, wave):
         """ Return either flux in photons / sec / cm^2 / nm, or dimensionless normalization.
@@ -299,15 +403,7 @@ class SED(object):
         @returns     Flux or normalization.
         """
         self._check_bounds(wave)
-
-        self._make_fast_spec()
-
-        if isinstance(wave, tuple):
-            return tuple(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
-        elif isinstance(wave, list):
-            return list(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
-        else:  # ndarray or scalar
-            return self._fast_spec(wave / (1.0 + self.redshift))
+        return self._fast_spec(np.asarray(wave) / (1.0 + self.redshift))
 
     def _call_slow(self, wave):
         """ Return flux in photons / sec / cm^2 / nm or dimensionless normalization.
@@ -319,9 +415,6 @@ class SED(object):
                      nanometers.
         @returns     Flux.
         """
-        from astropy import units
-        _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
-
         wave_in = wave
         # Convert wave to nanometers if needed.
         if isinstance(wave, units.Quantity):
@@ -330,24 +423,14 @@ class SED(object):
         self._check_bounds(wave)
 
         # Figure out rest-frame wave_type wavelength array for query to self._spec.
-        rest_wave = wave / (1.0 + self.redshift)
-        rest_wave_quantity = rest_wave * units.nm
-        rest_wave_native = rest_wave_quantity.to(self.wave_type, units.spectral()).value
+        rest_wave_native = self._get_rest_native_waves(wave)
 
         out = self._spec(rest_wave_native)
 
         # Manipulate output units
         if self.spectral:
-            out = out * self.flux_type
-            out = out.to(_photons, units.spectral_density(rest_wave_quantity)).value
-
-        # Return same format as received (except Quantity -> ndarray)
-        if isinstance(wave_in, tuple):
-            return tuple(out)
-        elif isinstance(wave_in, list):
-            return list(out)
-        else:
-            return out # Works for np.ndarray, Quantity, or scalar.
+            out = self._flux_to_photons(out, rest_wave_native)
+        return out
 
     def __call__(self, wave):
         """ Return photon flux density or dimensionless normalization at wavelength `wave`.
@@ -356,17 +439,88 @@ class SED(object):
         attributes, the SED is considered undefined, and this method will raise an exception if a
         wavelength outside the defined range is passed as an argument.
 
-        @param wave     Wavelength in nanometers at which to evaluate the SED.
+        @param wave     Wavelength in nanometers at which to evaluate the SED. May be a scalar,
+                        a numpy.array, or an astropy.units.Quantity
 
         @returns photon flux density in units of photons/nm/cm^2/s if self.spectral, or
                  dimensionless normalization if self.dimensionless.
         """
-        if self.fast:
-            return self._call_fast(wave)
+        return self._call(wave)
+
+    def _mul_sed(self, other):
+        """Equivalent to self * other when other is an SED, but no sanity checks."""
+        if self.spectral:
+            redshift = self.redshift
+        elif other.spectral:
+            redshift = other.redshift
         else:
-            return self._call_slow(wave)
+            redshift = 0.0
+
+        fast = self.fast and other.fast
+
+        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
+        if fast:
+            zfactor1 = (1.+redshift) / (1.+self.redshift)
+            zfactor2 = (1.+redshift) / (1.+other.redshift)
+            spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
+        else:
+            spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
+        _spectral = self.spectral or other.spectral
+        return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
+                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
+                   _spectral=_spectral)
+
+    def _mul_bandpass(self, other):
+        """Equivalent to self * other when other is a Bandpass"""
+        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
+        zfactor = (1.0+self.redshift) / other.wave_factor
+        if self.fast:
+            if (isinstance(self._fast_spec, LookupTable)
+                and not self._fast_spec.x_log
+                and not self._fast_spec.f_log
+                and self._fast_spec.interpolant == 'linear'):
+                x = wave_list / (1.0 + self.redshift)
+                f = self._fast_spec(x) * other._tp(x*zfactor)
+                spec = LookupTable(x, f, interpolant='linear')
+            else:
+                spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
+        else:
+            spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
+        return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
+                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
+                   _spectral=self.spectral)
+
+
+    def _mul_scalar(self, other):
+        """Equivalent to self * other when other is a scalar"""
+        # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
+        if isinstance(self._spec, LookupTable):
+            wave_type = self.wave_type
+            flux_type = self.flux_type
+            x = self._spec.getArgs()
+            f = np.array(self._spec.getVals()) * other
+            spec = LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
+                               interpolant=self._spec.interpolant)
+        elif self._const:
+            spec = self._spec(42.0) * other
+            wave_type = 'nm'
+            flux_type = '1'
+        else:
+            wave_type = 'nm'
+            flux_type = 'fphotons' if self.spectral else '1'
+            if self.fast:
+                spec = lambda w: self._fast_spec(w) * other
+            else:
+                spec = lambda w: self(w*(1.0+self.redshift)) * other
+        return SED(spec, wave_type, flux_type, redshift=self.redshift, fast=self.fast,
+                   _blue_limit=self.blue_limit, _red_limit=self.red_limit,
+                   _wave_list=self.wave_list,
+                   _spectral=self.spectral)
+
 
     def __mul__(self, other):
+        from .transform import Transform
+        from .bandpass import Bandpass
         # Watch out for 5 types of `other`:
         # 1.  SED: Check that not both spectral densities.
         # 2.  GSObject: return a ChromaticObject().
@@ -377,60 +531,28 @@ class SED(object):
         # Additionally, check for shortcuts when self._const
 
         # Product of two SEDs
-        if isinstance(other, galsim.SED):
+        if isinstance(other, SED):
             if self.spectral and other.spectral:
                 raise TypeError("Cannot multiply two spectral densities together.")
 
             if other._const:
-                return self.__mul__(other._spec(42.0))  # const, so can eval anywhere.
+                return self._mul_scalar(other._spec(42.0))  # const, so can eval anywhere.
             elif self._const:
-                return other.__mul__(self._spec(42.0))
-
-            if self.spectral:
-                redshift = self.redshift
-            elif other.spectral:
-                redshift = other.redshift
+                return other._mul_scalar(self._spec(42.0))
             else:
-                redshift = 0.0
-
-            fast = self.fast and other.fast
-
-            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-            if fast:
-                # Make sure _fast_spec exists in both
-                self._make_fast_spec()
-                other._make_fast_spec()
-                zfactor1 = (1.+redshift) / (1.+self.redshift)
-                zfactor2 = (1.+redshift) / (1.+other.redshift)
-                spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
-            else:
-                spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
-            _spectral = self.spectral or other.spectral
-            return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
-                       _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                       _spectral=_spectral)
+                return self._mul_sed(other)
 
         # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
-        if isinstance(other, galsim.GSObject):
-            return galsim.Transform(other, flux_ratio=self)
+        elif isinstance(other, GSObject):
+            return Transform(other, flux_ratio=self)
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
-        if isinstance(other, galsim.Bandpass):
-            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-            zfactor = (1.0+self.redshift) * other.wave_factor
-            if self.fast:
-                self._make_fast_spec()
-                spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
-            else:
-                spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
-            return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
-                       _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                       _spectral=self.spectral)
+        elif isinstance(other, Bandpass):
+            return self._mul_bandpass(other)
 
         # Product of SED with generic callable is also a (filtered) SED, with retained `redshift`.
-        if hasattr(other, '__call__'):
+        elif hasattr(other, '__call__'):
             if self.fast:
-                self._make_fast_spec()
                 spec = lambda w: self._fast_spec(w) * other(w*(1.0+self.redshift))
             else:
                 spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+self.redshift))
@@ -440,49 +562,29 @@ class SED(object):
                        _wave_list=self.wave_list,
                        _spectral=self.spectral)
 
-        if isinstance(other, (int, float)):
-            # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
-            if isinstance(self._spec, galsim.LookupTable):
-                wave_type = self.wave_type
-                flux_type = self.flux_type
-                x = self._spec.getArgs()
-                f = [ val * other for val in self._spec.getVals() ]
-                spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
-                                          interpolant=self._spec.interpolant)
-            elif self._const:
-                spec = self._spec(42.0) * other
-                wave_type = 'nm'
-                flux_type = '1'
-            else:
-                wave_type = 'nm'
-                flux_type = 'fphotons' if self.spectral else '1'
-                if self.fast:
-                    self._make_fast_spec()
-                    spec = lambda w: self._fast_spec(w) * other
-                else:
-                    spec = lambda w: self(w*(1.0+self.redshift)) * other
-            return SED(spec, wave_type, flux_type, redshift=self.redshift, fast=self.fast,
-                       _blue_limit=self.blue_limit, _red_limit=self.red_limit,
-                       _wave_list=self.wave_list,
-                       _spectral=self.spectral)
+        elif isinstance(other, (int, float)):
+            return self._mul_scalar(other)
+
+        else:
+            raise TypeError("Cannot multiply an SED by %s"%(other))
 
     def __rmul__(self, other):
         return self*other
 
     def __div__(self, other):
         # Enable division by scalars or dimensionless callables (including dimensionless SEDs.)
-        if isinstance(other, galsim.SED) and other.spectral:
+        if isinstance(other, SED) and other.spectral:
             raise TypeError("Cannot divide by spectral SED.")
         if hasattr(other, '__call__'):
             spec = lambda w: self(w * (1.0 + self.redshift)) / other(w * (1.0 + self.redshift))
-        elif isinstance(self._spec, galsim.LookupTable):
+        elif isinstance(self._spec, LookupTable):
             # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
             x = self._spec.getArgs()
             f = [ val / other for val in self._spec.getVals() ]
-            spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
-                                      interpolant=self._spec.interpolant)
+            spec = LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
+                               interpolant=self._spec.interpolant)
         else:
             spec = lambda w: self(w * (1.0 + self.redshift)) / other
 
@@ -515,7 +617,7 @@ class SED(object):
         else:
             raise TypeError("Cannot add SEDs with incompatible dimensions.")
 
-        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
 
         # If both SEDs are `fast`, and both `_fast_spec`s are LookupTables, then make a new
         # LookupTable instead and preserve picklability.
@@ -525,17 +627,17 @@ class SED(object):
         other(blue_limit)
         if (self.fast
                 and other.fast
-                and isinstance(self._fast_spec, galsim.LookupTable)
-                and isinstance(other._fast_spec, galsim.LookupTable)
-                and self._fast_spec.x_log == False
-                and other._fast_spec.x_log == False
-                and self._fast_spec.f_log == False
-                and other._fast_spec.f_log == False
+                and isinstance(self._fast_spec, LookupTable)
+                and isinstance(other._fast_spec, LookupTable)
+                and not self._fast_spec.x_log
+                and not other._fast_spec.x_log
+                and not self._fast_spec.f_log
+                and not other._fast_spec.f_log
                 and self._fast_spec.interpolant == 'linear'
                 and other._fast_spec.interpolant == 'linear'):
             x = wave_list / (1.0 + self.redshift)
             f = self._fast_spec(x) + other._fast_spec(x)
-            spec = galsim.LookupTable(x, f, interpolant='linear')
+            spec = LookupTable(x, f, interpolant='linear')
         else:
             spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
 
@@ -558,20 +660,17 @@ class SED(object):
 
         @returns the new normalized SED.
         """
-        from astropy import units
-        _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
-
         if self.dimensionless:
             raise TypeError("Cannot set flux density of dimensionless SED.")
         if isinstance(wavelength, units.Quantity):
             wavelength_nm = wavelength.to(units.nm, units.spectral())
-            current_flux_density = self(wavelength_nm.value)
+            current_flux_density = self._call(wavelength_nm.value)
         else:
             wavelength_nm = wavelength * units.nm
-            current_flux_density = self(wavelength)
+            current_flux_density = self._call(wavelength)
         if isinstance(target_flux_density, units.Quantity):
             target_flux_density = target_flux_density.to(
-                    _photons, units.spectral_density(wavelength_nm)).value
+                    SED._fphotons, units.spectral_density(wavelength_nm)).value
         factor = target_flux_density / current_flux_density
         return self * factor
 
@@ -616,10 +715,10 @@ class SED(object):
         """
         if redshift <= -1:
             raise ValueError("Invalid redshift {0}".format(redshift))
-        wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
-        wave_list = self.wave_list * wave_factor
-        blue_limit = self.blue_limit * wave_factor
-        red_limit = self.red_limit * wave_factor
+        zfactor = (1.0 + redshift) / (1.0 + self.redshift)
+        wave_list = self.wave_list * zfactor
+        blue_limit = self.blue_limit * zfactor
+        red_limit = self.red_limit * zfactor
 
         return SED(self._orig_spec, self.wave_type, self.flux_type, redshift, self.fast,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
@@ -634,27 +733,19 @@ class SED(object):
 
         @returns the flux through the bandpass.
         """
+        from . import integ
         if self.dimensionless:
             raise TypeError("Cannot calculate flux of dimensionless SED.")
-        if bandpass is None: # do bolometric flux
-            from galsim.deprecated import depr
-            depr('Using calculateFlux(bandpass=None) to compute a bolometric flux', 1.5, '',
-                 "If you need this functionality, you can use a pseudo-bolometric Bandpass created "
-                 "with:  bp = Bandpass('1', 'nm', blue_limit=sed.blue_limit, "
-                 "red_limit=sed.red_limit)")
-            bp = galsim.Bandpass('1', 'nm', self.blue_limit, self.red_limit)
-            return self.calculateFlux(bp)
-        else: # do flux through bandpass
-            if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
-                slop = 1e-6 # nm
-                if (self.blue_limit > bandpass.blue_limit + slop
-                        or self.red_limit < bandpass.red_limit - slop):
-                    raise ValueError("SED undefined within Bandpass")
-                x, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
-                return np.trapz(bandpass(x) * self(x), x)
-            else:
-                return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
-                                          bandpass.blue_limit, bandpass.red_limit)
+        if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
+            slop = 1e-6 # nm
+            if (self.blue_limit > bandpass.blue_limit + slop
+                    or self.red_limit < bandpass.red_limit - slop):
+                raise ValueError("SED undefined within Bandpass")
+            x, _, _ = combine_wave_list(self, bandpass)
+            return np.trapz(bandpass(x) * self(x), x)
+        else:
+            return integ.int1d(lambda w: bandpass(w)*self(w),
+                               bandpass.blue_limit, bandpass.red_limit)
 
     def calculateMagnitude(self, bandpass):
         """ Return the SED magnitude through a Bandpass `bandpass`.  Note that this requires
@@ -701,18 +792,16 @@ class SED(object):
 
         @returns the thinned SED.
         """
-        from astropy import units
         if len(self.wave_list) > 0:
-            rest_wave_nm = self.wave_list / (1.0 + self.redshift) * units.nm
-            rest_wave_native_units = rest_wave_nm.to(self.wave_type, units.spectral()).value
-            spec_native_units = self._spec(rest_wave_native_units)
+            rest_wave_native = self._get_rest_native_waves(self.wave_list)
+            spec_native = self._spec(rest_wave_native)
 
             # Note that this is thinning in native units, not nm and photons/nm.
-            newx, newf = galsim.utilities.thin_tabulated_values(
-                    rest_wave_native_units, spec_native_units,
+            newx, newf = utilities.thin_tabulated_values(
+                    rest_wave_native, spec_native, rel_err=rel_err,
                     trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
 
-            newspec = galsim.LookupTable(newx, newf, interpolant='linear')
+            newspec = LookupTable(newx, newf, interpolant='linear')
             return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift,
                        fast=self.fast)
         else:
@@ -740,51 +829,38 @@ class SED(object):
         @returns a tuple.  The first element is the vector of DCR first moment shifts, and the
                  second element is the 2x2 matrix of DCR second (central) moment shifts.
         """
+        from .dcr import parse_dcr_angles
         if self.dimensionless:
             raise TypeError("Cannot calculate DCR shifts of dimensionless SED.")
-        if 'zenith_angle' in kwargs:
-            zenith_angle = kwargs.pop('zenith_angle')
-            parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
-        elif 'obj_coord' in kwargs:
-            obj_coord = kwargs.pop('obj_coord')
-            if 'zenith_coord' in kwargs:
-                zenith_coord = kwargs.pop('zenith_coord')
-                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, zenith_coord=zenith_coord)
-            else:
-                if 'HA' not in kwargs or 'latitude' not in kwargs:
-                    raise TypeError("calculateDCRMomentShifts requires either zenith_coord or "+
-                                    "(HA, latitude) when obj_coord is specified!")
-                HA = kwargs.pop('HA')
-                latitude = kwargs.pop('latitude')
-                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, HA=HA, latitude=latitude)
-        else:
-            raise TypeError(
-                "Need to specify zenith_angle and parallactic_angle in calculateDCRMomentShifts!")
+
+        zenith_angle, parallactic_angle, kwargs = parse_dcr_angles(**kwargs)
+
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
         for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise (TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}"
                                  .format(kw)))
+
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
-            x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
-            R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs)
+            x, _, _ = combine_wave_list([self, bandpass])
+            R = dcr.get_refraction(x, zenith_angle, **kwargs)
             photons = self(x)
             throughput = bandpass(x)
             Rbar = np.trapz(throughput * photons * R, x) / flux
             V = np.trapz(throughput * photons * (R-Rbar)**2, x) / flux
         else:
             weight = lambda w: bandpass(w) * self(w)
-            Rbar_kernel = lambda w: galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
-            Rbar = galsim.integ.int1d(lambda w: weight(w) * Rbar_kernel(w),
-                                      bandpass.blue_limit, bandpass.red_limit)
-            V_kernel = lambda w: (galsim.dcr.get_refraction(w, zenith_angle, **kwargs) - Rbar)**2
-            V = galsim.integ.int1d(lambda w: weight(w) * V_kernel(w),
-                                   bandpass.blue_limit, bandpass.red_limit)
+            Rbar_kernel = lambda w: dcr.get_refraction(w, zenith_angle, **kwargs)
+            Rbar = integ.int1d(lambda w: weight(w) * Rbar_kernel(w),
+                               bandpass.blue_limit, bandpass.red_limit)
+            Rbar /= flux
+            V_kernel = lambda w: (dcr.get_refraction(w, zenith_angle, **kwargs) - Rbar)**2
+            V = integ.int1d(lambda w: weight(w) * V_kernel(w),
+                            bandpass.blue_limit, bandpass.red_limit)
+            V /= flux
         # Rbar and V are computed above assuming that the parallactic angle is 0.  Hence we
         # need to rotate our frame by the parallactic angle to get the desired output.
         sinp, cosp = parallactic_angle.sincos()
@@ -808,17 +884,21 @@ class SED(object):
             raise TypeError("Cannot calculate seeing moment ratio of dimensionless SED.")
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
-            x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
+            x, _, _ = combine_wave_list([self, bandpass])
             photons = self(x)
             throughput = bandpass(x)
             return np.trapz(photons * throughput * (x/base_wavelength)**(2*alpha), x) / flux
         else:
             weight = lambda w: bandpass(w) * self(w)
             kernel = lambda w: (w/base_wavelength)**(2*alpha)
-            return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
-                                      bandpass.blue_limit, bandpass.red_limit) / flux
+            return integ.int1d(lambda w: weight(w) * kernel(w),
+                               bandpass.blue_limit, bandpass.red_limit) / flux
 
-    def sampleWavelength(self, nphotons, bandpass, rng=None, npoints=256):
+    @lazy_property
+    def _cache_deviate(self):
+        return dict()
+
+    def sampleWavelength(self, nphotons, bandpass, rng=None, npoints=None):
         """ Sample a number of random wavelength values from the SED, possibly as observed through
         a bandpass.
 
@@ -826,42 +906,38 @@ class SED(object):
         @param bandpass  A Bandpass object representing a filter, or None to sample over the full
                          SED wavelength range.
         @param rng       If provided, a random number generator that is any kind of BaseDeviate
-                         object. If `rng` is None, one will be automatically created, using the
-                         time as a seed. [default: None]
+                         object. If `rng` is None, one will be automatically created from the
+                         system. [default: None]
         @param npoints   Number of points DistDeviate should use for its internal interpolation
-                         tables. [default: 256]
+                         tables. [default: None, which uses the DistDeviate default]
         """
-        if int(nphotons) != nphotons:
-            raise TypeError("'nphotons' must be integer type")
+        from .random import DistDeviate
         nphotons=int(nphotons)
 
-        if bandpass is None:
-            sed = self
-        else:
-            sed = self * bandpass
-
-        # Speed up the integration by skipping the overhead of __call__
-        sed._make_fast_spec()
-        a = 1/(1.0 + sed.redshift)
-        fn = lambda x: sed._fast_spec(a*x)
-
-        # Create a lookup dict for storing the deviate (save construction time)
-        if not hasattr(self,'deviate'):
-            self.deviate = dict()
-
         key = (bandpass,npoints)
-        try:
-            dev = self.deviate[key]
-        except KeyError:
-            dev = galsim.DistDeviate(function=fn,x_min=sed.blue_limit,x_max=sed.red_limit,
-                                     npoints=npoints)
-            self.deviate[key] = dev
+        if key in self._cache_deviate:
+            dev = self._cache_deviate[key]
+        else:
+            if bandpass is None:
+                sed = self
+            else:
+                sed = self._mul_bandpass(bandpass)
+
+            if isinstance(sed._fast_spec, LookupTable):
+                dev = DistDeviate(function=sed._fast_spec, npoints=npoints)
+            else:
+                xmin = sed.blue_limit / (1.+self.redshift)
+                xmax = sed.red_limit / (1.+self.redshift)
+                dev = DistDeviate(function=sed._fast_spec, x_min=xmin, x_max=xmax,
+                                  npoints=npoints)
+            self._cache_deviate[key] = dev
 
         # Reset the deviate explicitly
         if rng is not None: dev.reset(rng)
 
         ret = np.empty(nphotons)
         dev.generate(ret)
+        ret *= (1. + self.redshift)
         return ret
 
     def __eq__(self, other):
@@ -886,14 +962,11 @@ class SED(object):
         return self._hash
 
     def __repr__(self):
-        # For some reason, the dimensionless astropy unit, Unit(), doesn't eval/repr roundtrip, so
-        # we use a custom repr for this case.
-        flux_type = "Unit(1)" if self.dimensionless else repr(self.flux_type)
-        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%s, redshift=%r, fast=%r,' +
-                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
-                      self._orig_spec, self.wave_type, flux_type, self.redshift, self.fast,
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,' +
+                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
+                      self._orig_spec, self.wave_type, self._flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit,
-                      "float('inf')" if self.red_limit == float('inf') else self.red_limit)
+                      "float('inf')" if self.red_limit == np.inf else repr(self.red_limit))
         return outstr
 
     def __str__(self):
@@ -904,13 +977,17 @@ class SED(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        if not isinstance(d['_spec'], galsim.LookupTable):
+        if not isinstance(d['_spec'], LookupTable):
             del d['_spec']
-        if '_fast_spec' in d:
-            del d['_fast_spec']
+        d.pop('_fast_spec',None)
+        del d['_call']
+        del d['_get_native_waves']
+        del d['_get_rest_native_waves']
+        del d['_flux_to_photons']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
         if '_spec' not in d:
             self._initialize_spec()
+        self._setup_funcs()

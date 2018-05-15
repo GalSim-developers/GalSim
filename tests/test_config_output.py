@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,14 +28,8 @@ import json
 import re
 import glob
 
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 @timer
@@ -1050,7 +1044,7 @@ def test_eval_full_word():
                 'str' : "math.sqrt(pos.x**2 + pos.y**2)",
                 'ppos' : {
                     'type' : 'Eval',
-                    'str' : "world_center.project(world_pos)",
+                    'str' : "galsim.PositionD((uv/galsim.arcsec for uv in world_center.project(world_pos)))",
                     'cworld_pos' : "@image.world_pos"
                 }
             },

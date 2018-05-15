@@ -30,8 +30,8 @@ cpp_list = ReadFileList('files.txt')
 
 obj_list = env1.StaticObject(cpp_list)
 
-cpp_test_name = os.path.join('#bin','test_main')
-cpp_test = env1.Program( cpp_test_name , ['test_main.cpp' , obj_list] )
+cpp_test_name = os.path.join('#bin','TestAll')
+cpp_test = env1.Program(cpp_test_name, ['TestAll.cpp', obj_list])
 
 # Define an action for running pytest, storing the output in a log file
 def run_tests(target, source, env):
@@ -57,7 +57,7 @@ def run_tests(target, source, env):
             print('If you have trouble with the parallel test run, you may disable it by typing:')
             print('    scons tests -j1')
             print('Also, if you get an error about unrecognized arguments, you might need to run:')
-            print('    pip install pytest-xdist pytest-timeout --user')
+            print('    pip install pytest-xdist pytest-timeout')
         else:
             print('pytest is version %s'%env['PYTEST'])
         cmd += ' test*.py'
@@ -145,11 +145,13 @@ def run_tests(target, source, env):
 
         ret = cpp_proc.returncode
         if ret < 0:
-            print('test_main terminated by signal ',-ret)
+            print('C++ tests terminated by signal ',-ret)
+            print('See the file tests.log for more information.')
         elif ret > 0:
-            print('test_main returned error code ',ret)
+            print('C++ tests returned error code ',ret)
+            print('See the file tests.log for more information.')
         else:
-            print('test_main finished successfully.')
+            print('C++ tests finished successfully.')
         if ret != 0:
             env.Exit(ret)
     print()

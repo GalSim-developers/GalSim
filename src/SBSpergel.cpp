@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,10 +21,9 @@
 
 #include "SBSpergel.h"
 #include "SBSpergelImpl.h"
-#include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/Bessel.h"
+#include "math/Gamma.h"
 #include "fmath/fmath.hpp"
 
 namespace galsim {
@@ -35,9 +34,9 @@ namespace galsim {
     inline float fast_pow(float x, float y)
     { return fmath::exp(y * fmath::log(x)); }
 
-    SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
-                         const GSParamsPtr& gsparams) :
-        SBProfile(new SBSpergelImpl(nu, size, rType, flux, gsparams)) {}
+    SBSpergel::SBSpergel(double nu, double scale_radius, double flux,
+                         const GSParams& gsparams) :
+        SBProfile(new SBSpergelImpl(nu, scale_radius, flux, gsparams)) {}
 
     SBSpergel::SBSpergel(const SBSpergel& rhs) : SBProfile(rhs) {}
 
@@ -55,84 +54,61 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getScaleRadius();
     }
 
-    double SBSpergel::getHalfLightRadius() const
-    {
-        assert(dynamic_cast<const SBSpergelImpl*>(_pimpl.get()));
-        return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
-    }
-
     std::string SBSpergel::SBSpergelImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBSpergel("<<getNu()<<", "<<getScaleRadius();
         oss << ", None, "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
-    double SBSpergel::calculateIntegratedFlux(const double& r) const
+    double SBSpergel::calculateIntegratedFlux(double r) const
     {
         assert(dynamic_cast<const SBSpergelImpl*>(_pimpl.get()));
         return static_cast<const SBSpergelImpl&>(*_pimpl).calculateIntegratedFlux(r);
     }
 
-    double SBSpergel::calculateFluxRadius(const double& f) const
+    double SBSpergel::calculateFluxRadius(double f) const
     {
         assert(dynamic_cast<const SBSpergelImpl*>(_pimpl.get()));
         return static_cast<const SBSpergelImpl&>(*_pimpl).calculateFluxRadius(f);
     }
 
-    LRUCache<boost::tuple<double,GSParamsPtr>,SpergelInfo> SBSpergel::SBSpergelImpl::cache(
+    LRUCache<Tuple<double,GSParamsPtr>,SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
-    SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
-                                            double flux, const GSParamsPtr& gsparams) :
+    SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double scale_radius,
+                                            double flux, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _flux(flux), _info(cache.get(boost::make_tuple(_nu, this->gsparams.duplicate())))
+        _nu(nu), _flux(flux), _r0(scale_radius),
+        _info(cache.get(MakeTuple(_nu, GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
-        dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
+        dbg<<"scale_radius = "<<scale_radius<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
 
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-(nu+1) = kvalue_accuracy
-        _ksq_max = std::pow(this->gsparams->kvalue_accuracy,-1./(nu+1.))-1.;
+        _ksq_max = std::pow(this->gsparams.kvalue_accuracy,-1./(nu+1.))-1.;
         _k_max = std::sqrt(_ksq_max);
-
-        // Set size of this instance according to type of size given in constructor
-        switch(rType) {
-          case HALF_LIGHT_RADIUS:
-              {
-                  _re = size;
-                  _r0 = _re / _info->getHLR();
-              }
-              break;
-          case SCALE_RADIUS:
-              {
-                  _r0 = size;
-                  _re = _r0 * _info->getHLR();
-              }
-              break;
-        }
-
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
         _shootnorm = _flux * _info->getXNorm();
         _xnorm = _shootnorm / _r0_sq;
 
         dbg<<"scale radius = "<<_r0<<std::endl;
-        dbg<<"HLR = "<<_re<<std::endl;
     }
 
     double SBSpergel::SBSpergelImpl::maxK() const { return _info->maxK() * _inv_r0; }
     double SBSpergel::SBSpergelImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
-    double SBSpergel::SBSpergelImpl::calculateIntegratedFlux(const double& r) const
+    double SBSpergel::SBSpergelImpl::calculateIntegratedFlux(double r) const
     { return _info->calculateIntegratedFlux(r*_inv_r0);}
-    double SBSpergel::SBSpergelImpl::calculateFluxRadius(const double& f) const
+    double SBSpergel::SBSpergelImpl::calculateFluxRadius(double f) const
     { return _info->calculateFluxRadius(f) * _r0; }
 
     // Equations (3, 4) of Spergel (2010)
@@ -561,7 +537,7 @@ namespace galsim {
 
     SpergelInfo::SpergelInfo(double nu, const GSParamsPtr& gsparams) :
         _nu(nu), _gsparams(gsparams),
-        _gamma_nup1(boost::math::tgamma(_nu+1.0)),
+        _gamma_nup1(math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
         _xnorm0((_nu > 0.) ? _gamma_nup1 / (2. * _nu) * std::pow(2., _nu) : INFINITY),
         _maxk(0.), _stepk(0.), _re(0.)
@@ -580,29 +556,27 @@ namespace galsim {
 
         double operator()(double u) const
         {
-        // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
-        // (i.e., make a residual so this can be used to search for a target flux.
-        // This result is derived in Spergel (2010) eqn. 8 by going to Fourier space
-        // and integrating by parts.
-        // The key Bessel identities:
-        // int(r J0(k r), r=0..R) = R J1(k R) / k
-        // d[-J0(k R)]/dk = R J1(k R)
-        // The definition of the radial surface brightness profile and Fourier transform:
-        // Sigma_nu(r) = (r/2)^nu K_nu(r)/Gamma(nu+1)
-        //             = int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf)
-        // and the main result:
-        // F(R) = int(2 pi r Sigma(r), r=0..R)
-        //      = int(r int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf), r=0..R) // Do the r-integral
-        //      = int(R J1(k R)/(1+k^2)^(1+nu), k=0..inf)
-        // Now integrate by parts with
-        //      u = 1/(1+k^2)^(1+nu)                 dv = R J1(k R) dk
-        // =>  du = -2 k (1+nu)/(1+k^2)^(2+nu) dk     v = -J0(k R)
-        // => F(R) = u v | k=0,inf - int(v du, k=0..inf)
-        //         = (0 + 1) - 2 (1+nu) int(k J0(k R) / (1+k^2)^2+nu, k=0..inf)
-        //         = 1 - 2 (1+nu) (R/2)^(nu+1) K_{nu+1}(R) / Gamma(nu+2)
-            double fnup1 = std::pow(u / 2., _nu+1.)
-                * boost::math::cyl_bessel_k(_nu+1., u)
-                / _gamma_nup2;
+            // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
+            // (i.e., make a residual so this can be used to search for a target flux.
+            // This result is derived in Spergel (2010) eqn. 8 by going to Fourier space
+            // and integrating by parts.
+            // The key Bessel identities:
+            // int(r J0(k r), r=0..R) = R J1(k R) / k
+            // d[-J0(k R)]/dk = R J1(k R)
+            // The definition of the radial surface brightness profile and Fourier transform:
+            // Sigma_nu(r) = (r/2)^nu K_nu(r)/Gamma(nu+1)
+            //             = int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf)
+            // and the main result:
+            // F(R) = int(2 pi r Sigma(r), r=0..R)
+            //      = int(r int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf), r=0..R) // Do the r-integral
+            //      = int(R J1(k R)/(1+k^2)^(1+nu), k=0..inf)
+            // Now integrate by parts with
+            //      u = 1/(1+k^2)^(1+nu)                 dv = R J1(k R) dk
+            // =>  du = -2 k (1+nu)/(1+k^2)^(2+nu) dk     v = -J0(k R)
+            // => F(R) = u v | k=0,inf - int(v du, k=0..inf)
+            //         = (0 + 1) - 2 (1+nu) int(k J0(k R) / (1+k^2)^2+nu, k=0..inf)
+            //         = 1 - 2 (1+nu) (R/2)^(nu+1) K_{nu+1}(R) / Gamma(nu+2)
+            double fnup1 = std::pow(u/2., _nu+1.) * math::cyl_bessel_k(_nu+1., u) / _gamma_nup2;
             double f = 1.0 - 2.0 * (1.+_nu)*fnup1;
             return f - _target;
         }
@@ -612,14 +586,14 @@ namespace galsim {
         double _target;
     };
 
-    double SpergelInfo::calculateFluxRadius(const double& flux_frac) const
+    static double CalculateFluxRadius(double flux_frac, double nu, double gamma_nup2)
     {
         // Calcute r such that L(r/r0) / L_tot == flux_frac
 
         // These bracket the range of calculateFluxRadius(0.5) for -0.85 < nu < 4.0.
         double z1=0.1;
         double z2=3.5;
-        SpergelIntegratedFlux func(_nu, _gamma_nup2, flux_frac);
+        SpergelIntegratedFlux func(nu, gamma_nup2, flux_frac);
         Solve<SpergelIntegratedFlux> solver(func, z1, z2);
         solver.setXTolerance(1.e-25); // Spergels can be super peaky, so need a tight tolerance.
         solver.setMethod(Brent);
@@ -633,7 +607,17 @@ namespace galsim {
         return R;
     }
 
-    double SpergelInfo::calculateIntegratedFlux(const double& r) const
+    double SpergelInfo::calculateFluxRadius(double flux_frac) const
+    {
+        return CalculateFluxRadius(flux_frac, _nu, _gamma_nup2);
+    }
+
+    double SpergelCalculateHLR(double nu)
+    {
+        return CalculateFluxRadius(0.5, nu, math::tgamma(nu+2.));
+    }
+
+    double SpergelInfo::calculateIntegratedFlux(double r) const
     {
         SpergelIntegratedFlux func(_nu, _gamma_nup2);
         return func(r);
@@ -644,7 +628,7 @@ namespace galsim {
         if (_stepk == 0.) {
             double R = calculateFluxRadius(1.0 - _gsparams->folding_threshold);
             // Go to at least 5*re
-            R = std::max(R,_gsparams->stepk_minimum_hlr);
+            R = std::max(R,_gsparams->stepk_minimum_hlr * getHLR());
             dbg<<"R => "<<R<<std::endl;
             _stepk = M_PI / R;
             dbg<<"stepk = "<<_stepk<<std::endl;
@@ -673,7 +657,7 @@ namespace galsim {
     double SpergelInfo::xValue(double r) const
     {
         if (r == 0.) return _xnorm0;
-        else return boost::math::cyl_bessel_k(_nu, r) * fast_pow(r, _nu);
+        else return math::cyl_bessel_k(_nu, r) * fast_pow(r, _nu);
     }
 
     double SpergelInfo::kValue(double ksq) const
@@ -688,7 +672,7 @@ namespace galsim {
             _nu(nu), _xnorm0(xnorm0) {}
         double operator()(double r) const {
             if (r == 0.) return _xnorm0;
-            else return boost::math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
+            else return math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
         }
     private:
         double _nu;
@@ -701,9 +685,8 @@ namespace galsim {
         SpergelNuNegativeRadialFunction(double nu, double rmin, double a, double b):
             _nu(nu), _rmin(rmin), _a(a), _b(b) {}
         double operator()(double r) const {
-            if (r <= _rmin) {
-                return _a + _b*r;
-            } else return boost::math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
+            if (r <= _rmin) return _a + _b*r;
+            else return math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
         }
     private:
         double _nu;
@@ -712,11 +695,8 @@ namespace galsim {
         double _b;
     };
 
-    boost::shared_ptr<PhotonArray> SpergelInfo::shoot(int N, UniformDeviate ud) const
+    void SpergelInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"SpergelInfo shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.0\n";
-
         if (!_sampler) {
             // Set up the classes for photon shooting
             double shoot_rmax = calculateFluxRadius(1. - _gsparams->shoot_accuracy);
@@ -724,7 +704,7 @@ namespace galsim {
                 std::vector<double> range(2,0.);
                 range[1] = shoot_rmax;
                 _radial.reset(new SpergelNuPositiveRadialFunction(_nu, _xnorm0));
-                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
             } else {
                 // exact s.b. profile diverges at origin, so replace the inner most circle
                 // (defined such that enclosed flux is shoot_acccuracy) with a linear function
@@ -734,7 +714,7 @@ namespace galsim {
                 // a + b rmin = K_nu(rmin) * rmin^nu
                 double flux_target = _gsparams->shoot_accuracy;
                 double shoot_rmin = calculateFluxRadius(flux_target);
-                double knur = boost::math::cyl_bessel_k(_nu, shoot_rmin)*fast_pow(shoot_rmin, _nu);
+                double knur = math::cyl_bessel_k(_nu, shoot_rmin) * fast_pow(shoot_rmin, _nu);
                 double b = 3./shoot_rmin*(knur - flux_target/(M_PI*shoot_rmin*shoot_rmin));
                 double a = knur - shoot_rmin*b;
                 dbg<<"flux target: "<<flux_target<<std::endl;
@@ -748,24 +728,22 @@ namespace galsim {
                 range[1] = shoot_rmin;
                 range[2] = shoot_rmax;
                 _radial.reset(new SpergelNuNegativeRadialFunction(_nu, shoot_rmin, a, b));
-                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
             }
         }
 
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"SpergelInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"SpergelInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBSpergel::SBSpergelImpl::shoot(int N, UniformDeviate ud) const
+    void SBSpergel::SBSpergelImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Spergel shoot: N = "<<N<<std::endl;
+        dbg<<"Spergel shoot: N = "<<photons.size()<<std::endl;
         // Get photons from the SpergelInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_shootnorm);
-        result->scaleXY(_r0);
-        dbg<<"Spergel Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_shootnorm);
+        photons.scaleXY(_r0);
+        dbg<<"Spergel Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

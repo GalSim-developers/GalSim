@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,61 +17,30 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBAdd.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBAdd
+#ifdef USE_BOOST
+    static SBAdd* construct(const py::object& iterable, GSParams gsparams)
     {
-
-        // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-        static SBAdd* construct(const bp::object& iterable, boost::shared_ptr<GSParams> gsparams)
-        {
-            bp::stl_input_iterator<SBProfile> begin(iterable), end;
-            std::list<SBProfile> plist(begin, end);
-            return new SBAdd(plist, gsparams);
-        }
-
-        static bp::list getObjs(const SBAdd& sbp)
-        {
-            const std::list<SBProfile>& objs = sbp.getObjs();
-            std::list<SBProfile>::const_iterator it = objs.begin();
-            bp::list l;
-            for (; it != objs.end(); ++it) l.append(*it);
-            return l;
-        }
-
-        static void wrap()
-        {
-            static char const* doc = "Sum of SBProfiles.";
-
-            bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", doc, bp::no_init)
-                // bp tries the overloads in reverse order, so we wrap the most general one first
-                // to ensure we try it last
-                .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("slist"),
-                         bp::arg("gsparams")=bp::object())
-                ))
-                .def(bp::init<const SBAdd &>())
-                .def("getObjs", getObjs)
-                .enable_pickling()
-                ;
-        }
-
-    };
-
-    void pyExportSBAdd()
+        py::stl_input_iterator<SBProfile> iter(iterable), end;
+        std::list<SBProfile> plist;
+        for(; iter != end; ++iter) plist.push_back(*iter);
+        return new SBAdd(plist, gsparams);
+    }
+#else
+    static SBAdd* construct(const std::list<SBProfile>& plist, GSParams gsparams)
     {
-        PySBAdd::wrap();
+        return new SBAdd(plist, gsparams);
+    }
+#endif
+
+    void pyExportSBAdd(PY_MODULE& _galsim)
+    {
+        py::class_<SBAdd, BP_BASES(SBProfile)>(GALSIM_COMMA "SBAdd" BP_NOINIT)
+            .def(PY_INIT(&construct));
     }
 
 } // namespace galsim

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -34,14 +34,8 @@
 #include <algorithm>
 #include <complex>
 
-// Some versions of boost don't have the right guard to avoid C++-11 extensions.
-// This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
-
 #include "Std.h"
 #include "Random.h"
-#include "Angle.h"
 #include "GSParams.h"
 #include "Image.h"
 #include "PhotonArray.h"
@@ -137,7 +131,9 @@ namespace galsim {
         ~SBProfile();
 
         /// Get the GSParams object for this SBProfile
-        const boost::shared_ptr<GSParams> getGSParams() const;
+        /// Makes a copy, since this is used for python pickling, so the current SBProfile
+        /// may go out of scope before we need to use the returned GSParams.
+        GSParams getGSParams() const;
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in real space.
@@ -250,9 +246,9 @@ namespace galsim {
         SBTransform expand(double scale) const;
 
         /**
-         * @brief Apply a given rotation.
+         * @brief Apply a given rotation in radians
          */
-        SBTransform rotate(const Angle& theta) const;
+        SBTransform rotate(double theta) const;
 
         /**
          * @brief Apply a transformation given by an arbitrary Jacobian matrix
@@ -298,11 +294,10 @@ namespace galsim {
          * The photon flux may also vary slightly as a means of speeding up photon-shooting, as an
          * alternative to rejection sampling.  See `OneDimensionalDeviate` documentation.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /**
          * @brief Return expectation value of flux in positive photons when shoot() is called
@@ -350,12 +345,9 @@ namespace galsim {
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in]        dx, the pixel scale
-         * @param[in]        add to the existing image? (true) or just assign it? (false)
-         *
-         * @returns summed flux.
          */
         template <typename T>
-        double draw(ImageView<T> image, double dx, bool add) const;
+        void draw(ImageView<T> image, double dx) const;
 
         /**
          * @brief Draw an image of the SBProfile in k space.
@@ -365,10 +357,9 @@ namespace galsim {
          *
          * @param[in,out]    image in k space (must be an ImageViewC)
          * @param[in]        dk, the step size in k space
-         * @param[in]        add to the existing image? (true) or just assign it? (false)
          */
         template <typename T>
-        void drawK(ImageView<std::complex<T> > image, double dk, bool add) const;
+        void drawK(ImageView<std::complex<T> > image, double dk) const;
 
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;
@@ -385,7 +376,7 @@ namespace galsim {
         // Protected static class to access pimpl of one SBProfile object from another one.
         static SBProfileImpl* GetImpl(const SBProfile& rhs);
 
-        boost::shared_ptr<SBProfileImpl> _pimpl;
+        shared_ptr<SBProfileImpl> _pimpl;
     };
 
 }

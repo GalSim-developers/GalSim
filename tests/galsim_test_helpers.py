@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,7 @@ import numpy as np
 import os
 import sys
 import logging
+import coord
 
 path, filename = os.path.split(__file__)
 try:
@@ -51,7 +52,7 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 
-def printval(image1, image2):
+def printval(image1, image2, show=False):
     print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
     print("Sum of values: ", np.sum(image1.array, dtype=float), np.sum(image2.array, dtype=float))
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
@@ -68,7 +69,7 @@ def printval(image1, image2):
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
     print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
-    if False:
+    if show:
         import matplotlib.pylab as plt
         ax1 = plt.subplot(121)
         ax2 = plt.subplot(122)
@@ -102,6 +103,7 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
             err_msg="%s profile flux not close to sum of pixel values"%name)
+
     print('  maxsb: ',prof.max_sb, image.array.max())
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
     if approx_maxsb:
@@ -122,6 +124,25 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
                 err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
+        assert prof._xValue.__doc__ == galsim.GSObject._xValue.__doc__
+        assert prof.__class__._xValue.__doc__ == galsim.GSObject._xValue.__doc__
+
+    # Direct call to drawReal should also work and be equivalent to the above with scale = 1.
+    prof.drawImage(image, method='sb', scale=1., use_true_center=False)
+    image2 = image.copy()
+    prof.drawReal(image2)
+    np.testing.assert_equal(image2.array, image.array,
+                            err_msg="%s drawReal not equivalent to drawImage"%name)
+
+    # If supposed to be axisymmetric, make sure it is.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.xValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.xValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in xValues"%name)
+
 
 def check_basic_k(prof, name):
     """Check drawKImage
@@ -156,6 +177,17 @@ def check_basic_k(prof, name):
         np.testing.assert_allclose(
                 kimage(i,j), prof._kValue(galsim.PositionD(kx,ky)), rtol=1.e-5,
                 err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
+        assert prof._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+        assert prof.__class__._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+
+    # If supposed to be axisymmetric, make sure it is in the kValues.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.kValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.kValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in kValues"%name)
 
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
@@ -165,6 +197,22 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
         check_basic_x(prof, name, approx_maxsb, scale)
     if do_k and prof.is_analytic_k:
         check_basic_k(prof, name)
+
+    # A few things that should work regardless of what is analytic
+    np.testing.assert_almost_equal(
+            prof.positive_flux - prof.negative_flux, prof.flux,
+            err_msg="%s profile flux not equal to posflux + negflux"%name)
+    assert isinstance(prof.centroid, galsim.PositionD)
+    assert isinstance(prof.flux, float)
+    assert isinstance(prof.positive_flux, float)
+    assert isinstance(prof.negative_flux, float)
+    assert isinstance(prof.max_sb, float)
+    assert isinstance(prof.stepk, float)
+    assert isinstance(prof.maxk, float)
+    assert isinstance(prof.has_hard_edges, bool)
+    assert isinstance(prof.is_axisymmetric, bool)
+    assert isinstance(prof.is_analytic_x, bool)
+    assert isinstance(prof.is_analytic_k, bool)
 
     # Repeat for a rotated version of the profile.
     # The rotated version is mathematically the same for most profiles (all axisymmetric ones),
@@ -240,7 +288,7 @@ def do_shoot(prof, img, name):
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img2.sum => ',img2.array.sum(dtype=float))
-    #printval(img2,img)
+    printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -249,6 +297,7 @@ def do_shoot(prof, img, name):
     dx = img.scale
     # Test with a large image to make sure we capture enough of the flux
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
+    print('stepk, maxk = ',prof.stepk,prof.maxk)
     if 'Airy' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
     elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name or 'VonKarman' in name:
@@ -266,12 +315,13 @@ def do_shoot(prof, img, name):
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print('nphot -> ',nphot)
-    if 'InterpolatedImage' in name:
+    if 'InterpolatedImage' in name or 'PhaseScreen' in name:
         nphot *= 10
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, photon_decimal_test,
+    np.testing.assert_allclose(
+            img.array.sum(dtype=float), test_flux, rtol=10**(-photon_decimal_test),
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
     print('img.max = ',img.array.max(),'  cf. ',prof.max_sb*dx**2)
     print('ratio = ',img.array.max() / (prof.max_sb*dx**2))
@@ -303,7 +353,7 @@ def radial_integrate(prof, minr, maxr):
     assert prof.is_axisymmetric
     # In this tight loop, it is worth optimizing away the parse_pos_args step.
     # It makes a rather significant difference in the running time of this function.
-    # (I.e., use prof.SBProfile.xValue() instead of prof.xValue() )
+    # (I.e., use prof._xValue() instead of prof.xValue() )
     f = lambda r: 2 * np.pi * r * prof._xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 
@@ -387,9 +437,14 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object, and start
         # truncating the output for relatively small size arrays.  So we temporarily bump up the
         # precision and truncation threshold for testing.
+        #print(repr(obj1))
         with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
+        print('obj1 = ',repr(obj1))
+        print('obj5 = ',repr(obj5))
         f5 = func(obj5)
+        print('f1 = ',f1)
+        print('f5 = ',f5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
     else:
         # Even if we're not actually doing the test, still make the repr to check for syntax errors.
@@ -456,7 +511,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                     #print("SUCCESS\n")
 
 
-def all_obj_diff(objs):
+def all_obj_diff(objs, check_hash=True):
     """ Helper function that verifies that each element in `objs` is unique and, if hashable,
     produces a unique hash."""
 
@@ -474,6 +529,8 @@ def all_obj_diff(objs):
             assert obji != objj, ("Found equivalent objects {0} == {1} at indices {2} and {3}"
                                   .format(obji, objj, i, j))
 
+    if not check_hash:
+        return
     # Now check that all hashes are unique (if the items are hashable).
     if not isinstance(objs[0], Hashable):
         return
@@ -519,7 +576,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         desired = obj.SED(wave)
         # Since InterpolatedChromaticObject.evaluateAtWavelength involves actually drawing an
         # image, which implies flux can be lost off of the edges of the image, we don't expect
-        # it's accuracy to be nearly as good as for other objects.
+        # its accuracy to be nearly as good as for other objects.
         decimal = 2 if obj.interpolated else 7
         np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).flux, desired,
                                        decimal)
@@ -539,6 +596,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
             # Also try manipulating exptime and area.
             np.testing.assert_allclose(
                     calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(dtype=float), rtol=1e-2)
+
 
 def funcname():
     import inspect

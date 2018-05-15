@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,7 +28,7 @@ namespace galsim {
     class SBDeconvolve::SBDeconvolveImpl : public SBProfile::SBProfileImpl
     {
     public:
-        SBDeconvolveImpl(const SBProfile& adaptee, const GSParamsPtr& gsparams);
+        SBDeconvolveImpl(const SBProfile& adaptee, const GSParams& gsparams);
         ~SBDeconvolveImpl() {}
 
         SBProfile getObj() const { return _adaptee; }
@@ -55,7 +55,7 @@ namespace galsim {
         double maxSB() const;
 
         // shoot also not implemented.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>

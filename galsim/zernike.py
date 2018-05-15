@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,14 +21,14 @@ Module contains code for evaluating and fitting Zernike polynomials
 
 import numpy as np
 
-from .utilities import LRU_Cache, binomial, horner2d, nCr
+from .utilities import LRU_Cache, binomial, horner2d, nCr, lazy_property
 
 # Some utilities for working with Zernike polynomials
 
 # Start off with the Zernikes up to j=15
 _noll_n = [0,0,1,1,2,2,2,3,3,3,3,4,4,4,4,4]
 _noll_m = [0,0,1,-1,0,-2,2,-1,1,-3,3,0,2,-2,4,-4]
-def _noll_to_zern(j):
+def noll_to_zern(j):
     """
     Convert linear Noll index to tuple of Zernike indices.
     j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
@@ -73,7 +73,7 @@ def _zern_rho_coefs(n, m):
     A = [0]*(n+1)
     val = nCr(n,kmax) # The value for k = 0 in the equation below.
     for k in range(kmax):
-        # val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
+        # val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k)
         # The above formula is faster as a recurrence relation:
         A[n-2*k] = val
         # Don't use *= since the factor is not an integer, but the result is.
@@ -121,17 +121,205 @@ def __noll_coef_array(jmax, obscuration):
     @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
                 disk coordinates.
     """
-    maxn = _noll_to_zern(jmax)[0]
+    maxn = noll_to_zern(jmax)[0]
     shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2,  max power of rho, noll index-1)
-    shape1 = (maxn//2+1, maxn+1)
 
     out = np.zeros(shape, dtype=np.complex128)
     for j in range(1,jmax+1):
-        n,m = _noll_to_zern(j)
-        coef = _zern_coef_array(n,m,obscuration,shape1)
+        n,m = noll_to_zern(j)
+        coef = _zern_coef_array(n,m,obscuration,shape[0:2])
         out[:,:,j-1] = coef
     return out
 _noll_coef_array = LRU_Cache(__noll_coef_array)
+
+
+def _xy_contribution(rho2_power, rho_power, shape):
+    """Convert (rho, |rho|^2) bivariate polynomial coefficients to (x, y) bivariate polynomial
+    coefficients.
+    """
+    # rho = (x + iy), so multiplying an xy coefficient by rho, and again by rho is equivalent to:
+    #
+    # 1 0 0      0 i 0      0 0 -1
+    # 0 0 0  ->  1 0 0  ->  0 2i 0
+    # 0 0 0      0 0 0      1 0  0
+    #
+    # where the rows indicate powers of x and the columns indicate powers of y.
+    # So the last array above indicates (x + iy)^2 = (x^2 + 2ixy - y^2)
+    # Similarly, multiplying by |rho|^2 = x^2 + y^2 is equivalent to
+    #
+    # 1 0 0 0 0     0 0 1 0 0      0 0 0 0 1
+    # 0 0 0 0 0     0 0 0 0 0      0 0 0 0 0
+    # 0 0 0 0 0  -> 1 0 0 0 0  ->  0 0 2 0 0
+    # 0 0 0 0 0     0 0 0 0 0      0 0 0 0 0
+    # 0 0 0 0 0     0 0 0 0 0      1 0 0 0 0
+    #
+    # and so on.  We can apply these operations repeatedly to effect arbitrary powers of rho or
+    # |rho|^2.
+    out = np.zeros(shape, dtype=np.complex128)
+    out[0,0] = 1
+    while rho2_power >= 1:
+        new = np.zeros_like(out)
+        for (i, j) in zip(*np.nonzero(out)):
+            val = out[i, j]
+            new[i+2, j] += val
+            new[i, j+2] += val
+        rho2_power -= 1
+        out = new
+    while rho_power >= 1:
+        new = np.zeros_like(out)
+        for (i, j) in zip(*np.nonzero(out)):
+            val = out[i, j]
+            new[i+1, j] += val
+            new[i, j+1] += 1j*val
+        rho_power -= 1
+        out = new
+    return out
+
+
+def _rrsq_to_xy(coefs, shape):
+    """Convert coefficient array from rho, |rho|^2 to x, y.
+    """
+    new_coefs = np.zeros(shape, dtype=np.float64)
+
+    # Now we loop through the elements of coefs and compute their contribution to new_coefs
+    for (i, j) in zip(*np.nonzero(coefs)):
+        new_coefs += (coefs[i, j]*_xy_contribution(i, j, shape)).real
+    return new_coefs
+
+
+def _xycoef_gradx(coefs, shape):
+    """Calculate x/y coefficient array of x-derivative of given x/y coefficient array.
+    """
+    # d/dx (x+y) = 1 looks like
+    #
+    # 0 1      1 0
+    # 1 0  ->  0 0
+    #
+    # d/dx (x^2 + y^2) = 2 x looks like
+    #
+    # 0 0 1    0 0 0
+    # 0 0 0 -> 2 0 0
+    # 1 0 0    0 0 0
+    #
+    # d/dx (x^2 + xy + y^2) = 2x + y looks like
+    #
+    # 0 0 1    0 1 0
+    # 0 1 0 -> 2 0 0
+    # 1 0 0    0 0 0
+
+    gradx = np.zeros(shape, dtype=np.float64)
+    for (i, j) in zip(*np.nonzero(coefs)):
+        if i > 0:
+            gradx[i-1, j] = coefs[i, j]*i
+
+    return gradx
+
+
+def _xycoef_grady(coefs, shape):
+    """Calculate x/y coefficient array of y-derivative of given x/y coefficient array.
+    """
+    # see above
+    grady = np.zeros(shape, dtype=np.float64)
+    for (i, j) in zip(*np.nonzero(coefs)):
+        if j > 0:
+            grady[i, j-1] = coefs[i, j]*j
+
+    return grady
+
+
+def __noll_coef_array_xy(jmax, obscuration):
+    """Assemble coefficient array for evaluating Zernike (n, m) as a bivariate polynomial in
+    x and y.
+
+    @param jmax         Maximum Noll coefficient
+    @param obscuration  Linear obscuration fraction.
+
+    @returns    2D array of coefficients in x and y.
+    """
+    maxn, _ = noll_to_zern(jmax)
+    shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index)
+
+    nca = _noll_coef_array(jmax, obscuration)
+
+    out = np.zeros(shape, dtype=np.float64)
+    for j in range(1, jmax+1):
+        out[:,:,j-1] = _rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2])
+    return out
+_noll_coef_array_xy = LRU_Cache(__noll_coef_array_xy)
+
+
+def __noll_coef_array_xy_gradx(jmax, obscuration):
+    """Assemble coefficient array for evaluating the x-derivative of Zernike (n, m) as a bivariate
+    polynomial in x and y.
+
+    @param jmax         Maximum Noll coefficient
+    @param obscuration  Linear obscuration fraction.
+
+    @returns    2D array of coefficients in x and y.
+    """
+    maxn, _ = noll_to_zern(jmax)
+    shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index)
+
+    nca = _noll_coef_array(jmax, obscuration)
+
+    out = np.zeros(shape, dtype=np.float64)
+    for j in range(1, jmax+1):
+        out[:,:,j-1] = _xycoef_gradx(_rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2]), shape=shape[0:2])
+    return out[:-1, :-1, :]
+_noll_coef_array_xy_gradx = LRU_Cache(__noll_coef_array_xy_gradx)
+
+
+def __noll_coef_array_xy_grady(jmax, obscuration):
+    """Assemble coefficient array for evaluating the y-derivative of Zernike (n, m) as a bivariate
+    polynomial in x and y.
+
+    @param jmax         Maximum Noll coefficient
+    @param obscuration  Linear obscuration fraction.
+
+    @returns    2D array of coefficients in x and y.
+    """
+    maxn = noll_to_zern(jmax)[0]
+    shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index-1)
+
+    nca = _noll_coef_array(jmax, obscuration)
+
+    out = np.zeros(shape, dtype=np.float64)
+    for j in range(1, jmax+1):
+        out[:,:,j-1] = _xycoef_grady(_rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2]), shape=shape[0:2])
+    return out[:-1, :-1, :]
+_noll_coef_array_xy_grady = LRU_Cache(__noll_coef_array_xy_grady)
+
+
+def __noll_coef_array_gradx(j, obscuration):
+    if j == 1:
+        return np.zeros((1,1), dtype=np.float)
+    n, _ = noll_to_zern(j)
+    # Gradient of Zernike with radial coefficient n has radial coefficient n-1.
+    # Next line computes the largest j for which radial coefficient is n-1.
+    jgrad = n*(n+1)//2
+    # Solve for gradient coefficients in terms of non-gradient coefficients.
+    return np.linalg.lstsq(
+        _noll_coef_array_xy(jgrad, obscuration).reshape(-1, jgrad),
+        _noll_coef_array_xy_gradx(j, obscuration).reshape(-1, j),
+        rcond=-1.
+    )[0]
+_noll_coef_array_gradx = LRU_Cache(__noll_coef_array_gradx)
+
+
+def __noll_coef_array_grady(j, obscuration):
+    if j == 1:
+        return np.zeros((1,1), dtype=np.float)
+    n, _ = noll_to_zern(j)
+    # Gradient of Zernike with radial coefficient n has radial coefficient n-1.
+    # Next line computes the largest j for which radial coefficient is n-1.
+    jgrad = n*(n+1)//2
+    # Solve for gradient coefficients in terms of non-gradient coefficients.
+    return np.linalg.lstsq(
+        _noll_coef_array_xy(jgrad, obscuration).reshape(-1, jgrad),
+        _noll_coef_array_xy_grady(j, obscuration).reshape(-1, j),
+        rcond=-1.
+    )[0]
+_noll_coef_array_grady = LRU_Cache(__noll_coef_array_grady)
 
 
 # Following 3 functions from
@@ -239,17 +427,57 @@ class Zernike(object):
     @param R_inner  Inner radius.  [default: 0.0]
     """
     def __init__(self, coef, R_outer=1.0, R_inner=0.0):
-        self.coef = np.array(coef)
+        self.coef = np.asarray(coef)
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 
-        self._coef_array = np.dot(
-                _noll_coef_array(len(self.coef)-1, R_inner/R_outer),
-                self.coef[1:])
+    # _coef_array property only exists to support the deprecated OpticalPSF.coef_array attribute.
+    # It can be deleted in version 2.0.
+    @lazy_property
+    def _coef_array(self):
+        arr = _noll_coef_array(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
 
-        if R_outer != 1.0:
-            shape = self._coef_array.shape
-            self._coef_array /= R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+        if self.R_outer != 1.0:
+            shape = arr.shape
+            arr /= self.R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+        return arr
+
+    @lazy_property
+    def _coef_array_xy(self):
+        arr = _noll_coef_array_xy(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
+
+        if self.R_outer != 1.0:
+            shape = arr.shape
+            arr /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0))
+        return arr
+
+    @lazy_property
+    def gradX(self):
+        """The x-derivative of this Zernike as a new Zernike object.
+        """
+        j = len(self.coef)-1
+        newCoef = np.hstack([
+            [0],
+            _noll_coef_array_gradx(j, self.R_inner/self.R_outer).dot(self.coef[1:])
+        ])
+        # Handle R_outer with
+        # df/dx = df/d(x/R) * d(x/R)/dx = df/d(x/R) * 1/R
+        newCoef /= self.R_outer
+        return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
+
+    @lazy_property
+    def gradY(self):
+        """The y-derivative of this Zernike as a new Zernike object.
+        """
+        j = len(self.coef)-1
+        newCoef = np.hstack([
+            [0],
+            _noll_coef_array_grady(j, self.R_inner/self.R_outer).dot(self.coef[1:])
+        ])
+        # Handle R_outer with
+        # df/dy = df/d(y/R) * d(y/R)/dy = df/d(y/R) * 1/R
+        newCoef /= self.R_outer
+        return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
 
     def evalCartesian(self, x, y):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
@@ -258,23 +486,22 @@ class Zernike(object):
         @param y  y-coordinate of evaluation points.  Can be list-like.
         @returns  Series evaluations as numpy array.
         """
-        r = np.array(x) + 1j * np.array(y)
-        rsqr = np.abs(r)**2
-        return horner2d(rsqr, r, self._coef_array, dtype=complex).real
+        return horner2d(x, y, self._coef_array_xy)
 
     def evalPolar(self, rho, theta):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
 
         @param rho    radial coordinate of evaluation points.  Can be list-like.
-        @param theta  azimuthal coordinate in radians of evaluation points.  Can be list-like.
+        @param theta  azimuthal coordinate in radians (or as Angle object) of evaluation points.
+                      Can be list-like.
         @returns  Series evaluations as numpy array.
         """
+        x = rho * np.cos(theta)
+        y = rho * np.sin(theta)
+        return horner2d(x, y, self._coef_array_xy)
 
-        cth = np.cos(theta)
-        sth = np.sin(theta)
-        r = np.array(rho) * (cth + 1j * sth)
-        rsqr = np.abs(rho)**2
-        return horner2d(rsqr, r, self._coef_array, dtype=complex).real
+    def evalCartesianGrad(self, x, y):
+        return self.gradX.evalCartesian(x, y), self.gradY.evalCartesian(x, y)
 
     def rotate(self, theta):
         """Return new Zernike polynomial series rotated by angle theta.  For example:
@@ -288,7 +515,7 @@ class Zernike(object):
         """
 
         M = zernikeRotMatrix(len(self.coef)-1, theta)
-        return Zernike(np.dot(M, self.coef), self.R_outer, self.R_inner)
+        return Zernike(M.dot(self.coef), self.R_outer, self.R_inner)
 
     def __eq__(self, other):
         return (isinstance(other, Zernike) and
@@ -317,7 +544,7 @@ def zernikeRotMatrix(jmax, theta):
 
         >>> Z = Zernike(coefs)
         >>> R = zernikeRotMatrix(jmax, theta)
-        >>> rotCoefs = np.dot(R, coefs)
+        >>> rotCoefs = R.dot(coefs)
         >>> Zrot = Zernike(rotCoefs)
         >>> Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)
 
@@ -343,20 +570,20 @@ def zernikeRotMatrix(jmax, theta):
     # Specifically, if the final Zernike indicated by size includes only one part of the pair, then
     # the rotation would mix coefficients into the element (size+1).  We simply disallow this here.
 
-    n_jmax, m_jmax = _noll_to_zern(jmax)
+    n_jmax, m_jmax = noll_to_zern(jmax)
     # If m_jmax is zero, then we don't need to check the next element to ensure we have a complete
     # rotation matrix.
     if m_jmax != 0:
-        n_jmaxp1, m_jmaxp1 = _noll_to_zern(jmax+1)
+        n_jmaxp1, m_jmaxp1 = noll_to_zern(jmax+1)
         if n_jmax == n_jmaxp1 and abs(m_jmaxp1) == abs(m_jmax):
             raise ValueError("Cannot construct Zernike rotation matrix for jmax={}".format(jmax))
 
     R = np.zeros((jmax+1, jmax+1), dtype=np.float64)
     R[0, 0] = 1.0
     for i in range(jmax):
-        ni, mi = _noll_to_zern(i+1)
+        ni, mi = noll_to_zern(i+1)
         for j in range(max(0, i-1), min(i+2, jmax)):
-            nj, mj = _noll_to_zern(j+1)
+            nj, mj = noll_to_zern(j+1)
             if ni != nj:
                 continue
             if abs(mi) != abs(mj):
@@ -379,7 +606,7 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
 
         or equivalently
 
-        >>> resids = np.dot(basis.T, coefs).T - z
+        >>> resids = basis.T.dot(coefs).T - z
 
     Note that since we follow the Noll indexing scheme for Zernike polynomials, which begins at 1,
     but python sequences are indexed from 0, the length of the leading dimension in the result is
@@ -398,9 +625,8 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     R_outer = float(R_outer)
     R_inner = float(R_inner)
     eps = R_inner / R_outer
-    noll_coef = _noll_coef_array(jmax, eps)
-    r = (np.array(x) + 1j * np.array(y))/R_outer
-    rsqr = np.abs(r)**2
+
+    noll_coef = _noll_coef_array_xy(jmax, eps)
     out = np.zeros(tuple((jmax+1,)+x.shape), dtype=float)
-    out[1:] = np.array([horner2d(rsqr, r, nc).real for nc in noll_coef.transpose(2,0,1)])
+    out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc) for nc in noll_coef.transpose(2,0,1)])
     return out

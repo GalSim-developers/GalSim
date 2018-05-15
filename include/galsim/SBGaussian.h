@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -48,7 +48,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBGaussian(double sigma, double flux, const GSParamsPtr& gsparams);
+        SBGaussian(double sigma, double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBGaussian(const SBGaussian& rhs);

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,14 +21,9 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
@@ -38,32 +33,6 @@ sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 ### files that are saved here.  Modify with care!!!
 image_dir = './real_comparison_images'
 catalog_file = 'test_catalog.fits'
-
-ind_fake = 1 # index of mock galaxy (Gaussian) in catalog
-fake_gal_fwhm = 0.7 # arcsec
-fake_gal_shear1 = 0.29 # shear representing intrinsic shape component 1
-fake_gal_shear2 = -0.21 # shear representing intrinsic shape component 2; note non-round, to detect
-              # possible issues with x<->y or others that might not show up using circular galaxy
-fake_gal_flux = 1000.0
-fake_gal_orig_PSF_fwhm = 0.1 # arcsec
-fake_gal_orig_PSF_shear1 = 0.0
-fake_gal_orig_PSF_shear2 = -0.07
-
-targ_pixel_scale = [0.18, 0.25] # arcsec
-targ_PSF_fwhm = [0.7, 1.0] # arcsec
-targ_PSF_shear1 = [-0.03, 0.0]
-targ_PSF_shear2 = [0.05, -0.08]
-targ_applied_shear1 = 0.06
-targ_applied_shear2 = -0.04
-
-sigma_to_fwhm = 2.0*np.sqrt(2.0*np.log(2.0)) # multiply sigma by this to get FWHM for Gaussian
-fwhm_to_sigma = 1.0/sigma_to_fwhm
-
-ind_real = 0 # index of real galaxy in catalog
-shera_file = 'real_comparison_images/shera_result.fits'
-shera_target_PSF_file = 'real_comparison_images/shera_target_PSF.fits'
-shera_target_pixel_scale = 0.24
-shera_target_flux = 1000.0
 
 # some helper functions
 def ellip_to_moments(e1, e2, sigma):
@@ -80,10 +49,21 @@ def moments_to_ellip(mxx, myy, mxy):
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
 
-
 @timer
 def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
+    ind_fake = 1 # index of mock galaxy (Gaussian) in catalog
+    fake_gal_fwhm = 0.7 # arcsec
+    fake_gal_shear1 = 0.29 # shear representing intrinsic shape component 1
+    fake_gal_shear2 = -0.21 # shear representing intrinsic shape component 2
+    # note non-round, to detect possible issues with x<->y or others that might not show up using
+    # circular galaxy
+
+    fake_gal_flux = 1000.0
+    fake_gal_orig_PSF_fwhm = 0.1 # arcsec
+    fake_gal_orig_PSF_shear1 = 0.0
+    fake_gal_orig_PSF_shear2 = -0.07
+
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     assert len(rgc) == rgc.getNObjects() == rgc.nobjects == len(rgc.cat)
@@ -120,6 +100,15 @@ def test_real_galaxy_ideal():
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
     ## well:
+    targ_pixel_scale = [0.18, 0.25] # arcsec
+    targ_PSF_fwhm = [0.7, 1.0] # arcsec
+    targ_PSF_shear1 = [-0.03, 0.0]
+    targ_PSF_shear2 = [0.05, -0.08]
+    targ_applied_shear1 = 0.06
+    targ_applied_shear2 = -0.04
+
+    fwhm_to_sigma = 1.0/(2.0*np.sqrt(2.0*np.log(2.0)))
+
     (d1, d2) = galsim.utilities.g1g2_to_e1e2(fake_gal_shear1, fake_gal_shear2)
     (d1app, d2app) = galsim.utilities.g1g2_to_e1e2(targ_applied_shear1, targ_applied_shear2)
     denom = 1.0 + d1*d1app + d2*d2app
@@ -173,7 +162,7 @@ def test_real_galaxy_makeFromImage():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
-    rg = galsim.RealGalaxy(rgc, index=ind_fake)
+    rg = galsim.RealGalaxy(rgc, index=1)
 
     gal_image = rg.gal_image
     psf = rg.original_psf
@@ -199,6 +188,12 @@ def test_real_galaxy_makeFromImage():
 @timer
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
+    ind_real = 0 # index of real galaxy in catalog
+    shera_file = 'real_comparison_images/shera_result.fits'
+    shera_target_PSF_file = 'real_comparison_images/shera_target_PSF.fits'
+    shera_target_pixel_scale = 0.24
+    shera_target_flux = 1000.0
+
     # read in real RealGalaxy from file
     # rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     # This is an alternate way to give the directory -- as part of the catalog file name.
@@ -212,6 +207,8 @@ def test_real_galaxy_saved():
     shera_target_PSF_image.scale = shera_target_pixel_scale
 
     # simulate the same galaxy with GalSim
+    targ_applied_shear1 = 0.06
+    targ_applied_shear2 = -0.04
     tmp_gal = rg.withFlux(shera_target_flux).shear(g1=targ_applied_shear1,
                                                    g2=targ_applied_shear2)
     tmp_psf = galsim.InterpolatedImage(shera_target_PSF_image)

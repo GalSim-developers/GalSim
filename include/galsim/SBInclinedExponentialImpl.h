@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,8 +28,8 @@ namespace galsim {
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
     {
     public:
-        SBInclinedExponentialImpl(Angle inclination, double scale_radius, double scale_height,
-                                  double flux, const GSParamsPtr& gsparams);
+        SBInclinedExponentialImpl(double inclination, double scale_radius, double scale_height,
+                                  double flux, const GSParams& gsparams);
 
         ~SBInclinedExponentialImpl() {}
 
@@ -72,10 +72,10 @@ namespace galsim {
         double maxSB() const;
 
         /// @brief photon shooting is not implemented yet.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
-        /// @brief Returns the inclination angle as an Angle instance
-        Angle getInclination() const { return _inclination; }
+        /// @brief Returns the inclination angle in radians
+        double getInclination() const { return _inclination; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
         /// @brief Returns the scale height
@@ -94,7 +94,7 @@ namespace galsim {
         std::string serialize() const;
 
     private:
-        Angle _inclination; ///< Inclination angle
+        double _inclination; ///< Inclination angle
         double _r0;          ///< Scale radius specified at the constructor.
         double _h0;          ///< Scale height specified at the constructor.
         double _flux;        ///< Actual flux (may differ from that specified at the constructor).

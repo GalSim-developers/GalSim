@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,7 @@
 
 #include "SBExponential.h"
 #include "SBExponentialImpl.h"
+#include "math/Angle.h"
 #include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
@@ -44,8 +45,7 @@
 
 namespace galsim {
 
-    SBExponential::SBExponential(double r0, double flux,
-                                 const GSParamsPtr& gsparams) :
+    SBExponential::SBExponential(double r0, double flux, const GSParams& gsparams) :
         SBProfile(new SBExponentialImpl(r0, flux, gsparams)) {}
 
     SBExponential::SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
@@ -63,7 +63,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBExponential("<<getScaleRadius()<<", "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -71,21 +71,21 @@ namespace galsim {
         sbp::max_exponential_cache);
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(
-        double r0, double flux, const GSParamsPtr& gsparams) :
+        double r0, double flux, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0),
-        _info(cache.get(this->gsparams.duplicate()))
+        _info(cache.get(GSParamsPtr(gsparams)))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
-        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5)-1.);
+        _ksq_max = (std::pow(this->gsparams.kvalue_accuracy,-1./1.5)-1.);
         _k_max = std::sqrt(_ksq_max);
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
+        _ksq_min = std::pow(this->gsparams.kvalue_accuracy * 16./35., 1./3.);
 
         _flux_over_2pi = _flux / (2. * M_PI);
         _norm = _flux_over_2pi * _inv_r0_sq;
@@ -521,14 +521,14 @@ namespace galsim {
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
     ExponentialInfo::ExponentialInfo(const GSParamsPtr& gsparams)
     {
-        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams.get()<<std::endl;
+        dbg<<"Start ExponentialInfo with gsparams = "<<*gsparams<<std::endl;
 #ifndef USE_NEWTON_RAPHSON
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
         dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
         range[1] = -std::log(gsparams->shoot_accuracy);
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, gsparams));
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *gsparams));
         dbg<<"Made sampler"<<std::endl;
 #endif
 
@@ -562,19 +562,16 @@ namespace galsim {
     double ExponentialInfo::stepK() const
     { return _stepk; }
 
-    boost::shared_ptr<PhotonArray> ExponentialInfo::shoot(int N, UniformDeviate ud) const
+    void ExponentialInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.0\n";
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"ExponentialInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"ExponentialInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBExponential::SBExponentialImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBExponential::SBExponentialImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
 #ifdef USE_NEWTON_RAPHSON
@@ -584,16 +581,15 @@ namespace galsim {
         // the most efficient thing since there are logs in the iteration.
 
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=this->gsparams->shoot_accuracy;
+        const double Y_TOLERANCE=this->gsparams.shoot_accuracy;
 
         double fluxPerPhoton = _flux / N;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         for (int i=0; i<N; i++) {
-            double y = u();
+            double y = ud();
             if (y==0.) {
                 // In case of infinite radius - just set to origin:
-                result->setPhoton(i,0.,0.,fluxPerPhoton);
+                photons.setPhoton(i,0.,0.,fluxPerPhoton);
                 continue;
             }
             // Initial guess
@@ -606,31 +602,30 @@ namespace galsim {
             }
             // Draw another (or multiple) randoms for azimuthal angle
 #ifdef USE_COS_SIN
-            double theta = 2. * M_PI * u();
+            double theta = 2. * M_PI * ud();
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            math::sincos(theta, sint, cost);
             double rFactor = r * _r0;
-            result->setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
+            photons.setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
-                xu = 2. * u() - 1.;
-                yu = 2. * u() - 1.;
+                xu = 2. * ud() - 1.;
+                yu = 2. * ud() - 1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq >= 1. || rsq == 0.);
             double rFactor = r * _r0 / std::sqrt(rsq);
-            result->setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
+            photons.setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
 #endif
         }
 #else
         // Get photons from the ExponentialInfo structure, rescale flux and size for this instance
         dbg<<"flux scaling = "<<_flux_over_2pi<<std::endl;
         dbg<<"r0 = "<<_r0<<std::endl;
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,u);
-        result->scaleFlux(_flux_over_2pi);
-        result->scaleXY(_r0);
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_flux_over_2pi);
+        photons.scaleXY(_r0);
 #endif
-        dbg<<"Exponential Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Exponential Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

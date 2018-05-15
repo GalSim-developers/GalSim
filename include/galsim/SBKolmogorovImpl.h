@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -72,11 +72,10 @@ namespace galsim {
          * Kolmogorov profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
     private:
         KolmogorovInfo(const KolmogorovInfo& rhs); ///< Hides the copy constructor.
@@ -85,16 +84,16 @@ namespace galsim {
         double _stepk; ///< Sampling in k space necessary to avoid folding
         double _maxk; ///< Maximum k value to use
 
-        TableDD _radial;  ///< Lookup table for Fourier transform of MTF.
+        TableBuilder _radial;  ///< Lookup table for Fourier transform of MTF.
 
         ///< Class that can sample radial distribution
-        boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        shared_ptr<OneDimensionalDeviate> _sampler;
     };
 
     class SBKolmogorov::SBKolmogorovImpl : public SBProfileImpl
     {
     public:
-        SBKolmogorovImpl(double lam_over_r0, double flux, const GSParamsPtr& gsparams);
+        SBKolmogorovImpl(double lam_over_r0, double flux, const GSParams& gsparams);
 
         ~SBKolmogorovImpl() {}
 
@@ -119,11 +118,10 @@ namespace galsim {
         /**
          * @brief Kolmogorov photon-shooting is done numerically with `OneDimensionalDeviate` class.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>
@@ -156,7 +154,7 @@ namespace galsim {
         double _flux; ///< Flux.
         double _xnorm; ///< Calculated value for normalizing xValues returned from Info class.
 
-        const boost::shared_ptr<KolmogorovInfo> _info;
+        const shared_ptr<KolmogorovInfo> _info;
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,
@@ -195,7 +193,7 @@ namespace galsim {
         SBKolmogorovImpl(const SBKolmogorovImpl& rhs);
         void operator=(const SBKolmogorovImpl& rhs);
 
-        static LRUCache< GSParamsPtr, KolmogorovInfo > cache;
+        static LRUCache<GSParamsPtr, KolmogorovInfo> cache;
     };
 
 }

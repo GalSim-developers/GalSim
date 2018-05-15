@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -58,10 +58,25 @@
 #pragma GCC diagnostic ignored "-Wplacement-new"
 #endif
 
+// Something about mangled names changing in C++17.
+#if defined(__GNUC__) && __GNUC__ >= 7
+#pragma GCC diagnostic ignored "-Wnoexcept-type"
+#endif
+
+// This looks like a bug in the boost/python extract function.  Not sure which gcc version it
+// started showing up.  4.8 doesn't warn, but 7.1 does.
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 #ifdef __clang__
 // Only clang seems to have this
 #if __has_warning("-Wlogical-op-parentheses")
 #pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
+#endif
+
+#if __has_warning("-Wshift-count-overflow")
+#pragma GCC diagnostic ignored "-Wshift-count-overflow"
 #endif
 
 // And clang might need this even if it claims to be GNUC before 4.8.

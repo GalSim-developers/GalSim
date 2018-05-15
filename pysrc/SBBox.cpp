@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,57 +17,17 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBBox.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBBox
+    void pyExportSBBox(PY_MODULE& _galsim)
     {
-
-        static void wrap()
-        {
-            bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
-                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("width"), bp::arg("height"), bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object())
-                ))
-                .def(bp::init<const SBBox&>())
-                .def("getWidth", &SBBox::getWidth)
-                .def("getHeight", &SBBox::getHeight)
-                .enable_pickling()
-                ;
-        }
-    };
-
-    struct PySBTopHat
-    {
-
-        static void wrap()
-        {
-            bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
-                .def(bp::init<double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("radius"), bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object())
-                ))
-                .def(bp::init<const SBTopHat&>())
-                .def("getRadius", &SBTopHat::getRadius)
-                .enable_pickling()
-                ;
-        }
-    };
-
-    void pyExportSBBox()
-    {
-        PySBBox::wrap();
-        PySBTopHat::wrap();
+        py::class_<SBBox, BP_BASES(SBProfile)>(GALSIM_COMMA "SBBox" BP_NOINIT)
+            .def(py::init<double,double,double,GSParams>());
+        py::class_<SBTopHat, BP_BASES(SBProfile)>(GALSIM_COMMA "SBTopHat" BP_NOINIT)
+            .def(py::init<double,double,GSParams>());
     }
 
 } // namespace galsim

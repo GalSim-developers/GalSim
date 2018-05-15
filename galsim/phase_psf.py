@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -69,11 +69,17 @@ from past.builtins import basestring
 from itertools import chain
 from builtins import range
 from heapq import heappush, heappop
-
 import numpy as np
-import galsim
-from galsim import GSObject
 
+from . import _galsim
+from .gsobject import GSObject
+from .gsparams import GSParams
+from .angle import radians, degrees, arcsec, Angle, AngleUnit
+from .image import Image, _Image
+from .bounds import _BoundsI
+from .wcs import PixelScale
+from .interpolatedimage import InterpolatedImage
+from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -202,13 +208,15 @@ class Aperture(object):
                                details. [default: None]
     """
     def __init__(self, diam, lam=None, circular_pupil=True, obscuration=0.0,
-                 nstruts=0, strut_thick=0.05, strut_angle=0.0*galsim.degrees,
+                 nstruts=0, strut_thick=0.05, strut_angle=0.0*radians,
                  oversampling=1.0, pad_factor=1.0, screen_list=None,
-                 pupil_plane_im=None, pupil_angle=0.0*galsim.degrees,
+                 pupil_plane_im=None, pupil_angle=0.0*radians,
                  pupil_plane_scale=None, pupil_plane_size=None,
                  gsparams=None):
+        from .airy import Airy
 
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
+        self._obscuration = obscuration  # We store this, even though it's not always used.
         self._gsparams = gsparams
 
         if obscuration >= 1.:
@@ -223,7 +231,7 @@ class Aperture(object):
         is_default_geom = (circular_pupil and
                            nstruts == 0 and
                            strut_thick == 0.05 and
-                           strut_angle == 0.0*galsim.degrees)
+                           strut_angle == 0.0*radians)
         if not is_default_geom and pupil_plane_im is not None:
             raise ValueError("Can't specify both geometric parameters and pupil_plane_im.")
 
@@ -257,15 +265,14 @@ class Aperture(object):
             # lam_over_diam=1.0 and then alter the `good_pupil_scale = ...` line below
             # appropriately, but it's easier to just arbitrarily set `lam=500` if it wasn't set.
             lam = 500.0
-        airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration, gsparams=self._gsparams)
+        airy = Airy(diam=diam, lam=lam, obscuration=obscuration, gsparams=self._gsparams)
         stepk = airy.stepk
         if screen_list is not None:
-            screen_list = galsim.PhaseScreenList(screen_list)
+            screen_list = PhaseScreenList(screen_list)
             stepk = min(stepk,
-                        screen_list._stepK(lam=lam, diam=diam, obscuration=obscuration,
-                                          gsparams=self._gsparams))
-        good_pupil_scale = (stepk * lam * 1.e-9 * (galsim.radians / galsim.arcsec)
-                            / (2 * np.pi * pad_factor))
+                        screen_list._getStepK(lam=lam, diam=diam, obscuration=obscuration,
+                                              gsparams=self._gsparams))
+        good_pupil_scale = (stepk * lam * 1.e-9 * (radians / arcsec) / (2 * np.pi * pad_factor))
 
         # Now that we have good candidate sizes and scales, we load or generate the pupil plane
         # array.
@@ -295,7 +302,7 @@ class Aperture(object):
                                   "check PhaseScreenPSF outputs for signs of undersampling."%ratio)
             else:
                 pupil_plane_size = good_pupil_size
-            self._generate_pupil_plane(circular_pupil, obscuration,
+            self._generate_pupil_plane(circular_pupil,
                                        nstruts, strut_thick, strut_angle,
                                        pupil_plane_scale, pupil_plane_size)
 
@@ -303,26 +310,25 @@ class Aperture(object):
         if self._gsparams is not None:
             maximum_fft_size = self._gsparams.maximum_fft_size
         else:
-            maximum_fft_size = galsim.GSParams().maximum_fft_size
+            maximum_fft_size = GSParams().maximum_fft_size
         if self.npix > maximum_fft_size:
             raise RuntimeError("Created pupil plane array that is too large, {0} "
                                "If you can handle the large FFT, you may update "
                                "gsparams.maximum_fft_size".format(self.npix))
 
-    def _generate_pupil_plane(self, circular_pupil, obscuration, nstruts, strut_thick, strut_angle,
+    def _generate_pupil_plane(self, circular_pupil, nstruts, strut_thick, strut_angle,
                               pupil_plane_scale, pupil_plane_size):
         """ Create an array of illuminated pixels parameterically.
         """
         ratio = pupil_plane_size/pupil_plane_scale
         # Fudge a little to prevent good_fft_size() from turning 512.0001 into 768.
         ratio *= (1.0 - 1.0/2**14)
-        self.npix = galsim.Image.good_fft_size(int(np.ceil(ratio)))
+        self.npix = Image.good_fft_size(int(np.ceil(ratio)))
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
         self.pupil_plane_scale = pupil_plane_size / self.npix
         # Save params for str/repr
         self._circular_pupil = circular_pupil
-        self._obscuration = obscuration
         self._nstruts = nstruts
         self._strut_thick = strut_thick
         self._strut_angle = strut_angle
@@ -330,25 +336,25 @@ class Aperture(object):
         radius = 0.5*self.diam
         if circular_pupil:
             self._illuminated = (self.rsqr < radius**2)
-            if obscuration > 0.:
-                self._illuminated *= self.rsqr >= (radius*obscuration)**2
+            if self.obscuration > 0.:
+                self._illuminated *= self.rsqr >= (radius*self.obscuration)**2
         else:
             self._illuminated = (np.abs(self.u) < radius) & (np.abs(self.v) < radius)
-            if obscuration > 0.:
-                self._illuminated *= ((np.abs(self.u) >= radius*obscuration) *
-                                      (np.abs(self.v) >= radius*obscuration))
+            if self.obscuration > 0.:
+                self._illuminated *= ((np.abs(self.u) >= radius*self.obscuration) *
+                                      (np.abs(self.v) >= radius*self.obscuration))
 
         if nstruts > 0:
-            if not isinstance(strut_angle, galsim.Angle):
+            if not isinstance(strut_angle, Angle):
                 raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
             # Add the initial rotation if requested, converting to radians.
             rot_u, rot_v = self.u, self.v
             if strut_angle.rad != 0.:
-                rot_u, rot_v = galsim.utilities.rotate_xy(rot_u, rot_v, -strut_angle)
-            rotang = 360. * galsim.degrees / nstruts
+                rot_u, rot_v = rotate_xy(rot_u, rot_v, -strut_angle)
+            rotang = 360. * degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
             for istrut in range(nstruts):
-                rot_u, rot_v = galsim.utilities.rotate_xy(rot_u, rot_v, -rotang)
+                rot_u, rot_v = rotate_xy(rot_u, rot_v, -rotang)
                 self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle, pupil_plane_scale, good_pupil_scale,
@@ -362,17 +368,18 @@ class Aperture(object):
         4.  Check that the pupil plane sampling interval is at least as small as requested.
         5.  Optionally rotate pupil plane.
         """
+        from . import fits
         # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with
         # image.
         if isinstance(pupil_plane_im, np.ndarray):
             # Make it into an image.
-            pupil_plane_im = galsim.Image(pupil_plane_im)
-        elif isinstance(pupil_plane_im, galsim.Image):
+            pupil_plane_im = Image(pupil_plane_im)
+        elif isinstance(pupil_plane_im, Image):
             # Make sure not to overwrite input image.
             pupil_plane_im = pupil_plane_im.copy()
         else:
             # Read in image of pupil plane from file.
-            pupil_plane_im = galsim.fits.read(pupil_plane_im)
+            pupil_plane_im = fits.read(pupil_plane_im)
         # scale = pupil_plane_im.scale # Interpret as either the pixel scale in meters, or None.
         pp_arr = pupil_plane_im.array
         self.npix = pp_arr.shape[0]
@@ -404,7 +411,7 @@ class Aperture(object):
 
         # Check the pupil plane size here and bump it up if necessary.
         if self.pupil_plane_size < good_pupil_size:
-            new_npix = galsim.Image.good_fft_size(int(np.ceil(
+            new_npix = Image.good_fft_size(int(np.ceil(
                     good_pupil_size/self.pupil_plane_scale)))
             pad_width = (new_npix-self.npix)//2
             pp_arr = np.pad(pp_arr, [(pad_width, pad_width)]*2, mode='constant')
@@ -424,12 +431,12 @@ class Aperture(object):
         else:
             # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
             # ensure that the image is one of the allowed types.  We ignore the scale.
-            b = galsim._BoundsI(1,self.npix,1,self.npix)
-            im = galsim._Image(pp_arr, b, galsim.PixelScale(1.))
-            int_im = galsim.InterpolatedImage(im, x_interpolant='linear',
-                                              calculate_stepk=False, calculate_maxk=False)
+            b = _BoundsI(1,self.npix,1,self.npix)
+            im = _Image(pp_arr, b, PixelScale(1.))
+            int_im = InterpolatedImage(im, x_interpolant='linear',
+                                       calculate_stepk=False, calculate_maxk=False)
             int_im = int_im.rotate(pupil_angle)
-            new_im = galsim.Image(pp_arr.shape[1], pp_arr.shape[0])
+            new_im = Image(pp_arr.shape[1], pp_arr.shape[0])
             new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
             pp_arr = new_im.array
             # Restore hard edges that might have been lost during the interpolation.  To do this, we
@@ -445,13 +452,13 @@ class Aperture(object):
         s = ""
         if not self._circular_pupil:
             s += ", circular_pupil=False"
-        if self._obscuration != 0.0:
-            s += ", obscuration=%s"%self._obscuration
+        if self.obscuration != 0.0:
+            s += ", obscuration=%s"%self.obscuration
         if self._nstruts != 0:
             s += ", nstruts=%s"%self._nstruts
             if self._strut_thick != 0.05:
                 s += ", strut_thick=%s"%self._strut_thick
-            if self._strut_angle != 0*galsim.degrees:
+            if self._strut_angle != 0*radians:
                 s += ", strut_angle=%s"%self._strut_angle
         return s
 
@@ -467,13 +474,13 @@ class Aperture(object):
         s = ""
         if not self._circular_pupil:
             s += ", circular_pupil=False"
-        if self._obscuration != 0.0:
-            s += ", obscuration=%r"%self._obscuration
+        if self.obscuration != 0.0:
+            s += ", obscuration=%r"%self.obscuration
         if self._nstruts != 0:
             s += ", nstruts=%r"%self._nstruts
             if self._strut_thick != 0.05:
                 s += ", strut_thick=%r"%self._strut_thick
-            if self._strut_angle != 0*galsim.degrees:
+            if self._strut_angle != 0*radians:
                 s += ", strut_angle=%r"%self._strut_angle
         return s
 
@@ -495,7 +502,7 @@ class Aperture(object):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Aperture) and
+        return (isinstance(other, Aperture) and
                 self.diam == other.diam and
                 self.pupil_plane_scale == other.pupil_plane_scale and
                 np.array_equal(self.illuminated, other.illuminated))
@@ -550,10 +557,15 @@ class Aperture(object):
             self._rsqr = self.u**2 + self.v**2
         return self._rsqr
 
+    @property
+    def obscuration(self):
+        """Fraction linear obscuration of pupil."""
+        return self._obscuration
+
     def __getstate__(self):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
         # pickle.
-        d = self.__dict__
+        d = self.__dict__.copy()
         for k in ['_rho', '_u', '_v', '_rsqr']:
             d.pop(k, None)
         return d
@@ -571,39 +583,39 @@ class Aperture(object):
     # - Implies relation between aperture grid and real-space grid:
     #     dL = lambda/theta
     #     L = lambda/dtheta
-    def _stepK(self, lam, scale_unit=galsim.arcsec):
+    def _getStepK(self, lam, scale_unit=arcsec):
         """Return the Fourier grid spacing for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
         @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
         @returns           Fourier grid spacing.
         """
-        return 2*np.pi*self.pupil_plane_scale/(lam*1e-9) * scale_unit/galsim.radians
+        return 2*np.pi*self.pupil_plane_scale/(lam*1e-9) * scale_unit/radians
 
-    def _maxK(self, lam, scale_unit=galsim.arcsec):
+    def _getMaxK(self, lam, scale_unit=arcsec):
         """Return the Fourier grid half-size for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
         @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
         @returns           Fourier grid half-size.
         """
-        return np.pi*self.pupil_plane_size/(lam*1e-9) * scale_unit/galsim.radians
+        return np.pi*self.pupil_plane_size/(lam*1e-9) * scale_unit/radians
 
-    def _sky_scale(self, lam, scale_unit=galsim.arcsec):
+    def _sky_scale(self, lam, scale_unit=arcsec):
         """Return the image scale for this aperture at given wavelength.
         @param lam         Wavelength in nanometers.
         @param scale_unit  Units in which to return result [default: galsim.arcsec]
         @returns           Image scale.
         """
-        return (lam*1e-9) / self.pupil_plane_size * galsim.radians/scale_unit
+        return (lam*1e-9) / self.pupil_plane_size * radians/scale_unit
 
-    def _sky_size(self, lam, scale_unit=galsim.arcsec):
+    def _sky_size(self, lam, scale_unit=arcsec):
         """Return the image size for this aperture at given wavelength.
         @param lam         Wavelength in nanometers.
         @param scale_unit  Units in which to return result [default: galsim.arcsec]
         @returns           Image size.
         """
-        return (lam*1e-9) / self.pupil_plane_scale * galsim.radians/scale_unit
+        return (lam*1e-9) / self.pupil_plane_scale * radians/scale_unit
 
 
 class PhaseScreenList(object):
@@ -633,9 +645,10 @@ class PhaseScreenList(object):
     @param layers  Sequence of phase screens.
     """
     def __init__(self, *layers):
+        from .phase_screens import AtmosphericScreen, OpticalScreen
         if len(layers) == 1:
             # First check if layers[0] is a PhaseScreenList, so we avoid nesting.
-            if isinstance(layers[0], galsim.PhaseScreenList):
+            if isinstance(layers[0], PhaseScreenList):
                 layers = layers[0]._layers
             else:
                 # Next, see if layers[0] is iterable.  E.g., to catch generator expressions.
@@ -645,7 +658,7 @@ class PhaseScreenList(object):
                     # If that fails, check if layers[0] is a bare PhaseScreen.  Should probably
                     # make an ABC for this (use __subclasshook__?), but for now, just check
                     # AtmosphericScreen and OpticalScreen.
-                    if isinstance(layers[0], (galsim.AtmosphericScreen, galsim.OpticalScreen)):
+                    if isinstance(layers[0], (AtmosphericScreen, OpticalScreen)):
                         layers = [layers[0]]
         # else, layers is either empty or a tuple of PhaseScreens and so responds appropriately
         # to list() below.
@@ -727,9 +740,18 @@ class PhaseScreenList(object):
                 pass
         self._update_attrs()
 
+    def instantiate(self, _bar=None, **kwargs):
+        for layer in self:
+            try:
+                layer.instantiate(**kwargs)
+            except AttributeError:
+                pass
+            if _bar:  # pragma: no cover
+                _bar.update()
+
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
-        heappush(self._pending, (psf.t0, galsim.utilities.OrderedWeakRef(psf)))
+        heappush(self._pending, (psf.t0, OrderedWeakRef(psf)))
 
     def _prepareDraw(self):
         """Calculate previously delayed PSFs."""
@@ -763,12 +785,12 @@ class PhaseScreenList(object):
                 # push it back on the heap.
                 t += psf.time_step
                 if t < psf.t0 + psf.exptime:
-                    heappush(self._pending, (t, galsim.utilities.OrderedWeakRef(psf)))
+                    heappush(self._pending, (t, OrderedWeakRef(psf)))
                 else:
                     psf._finalize()
         self._pending = []
 
-    def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront(self, u, v, t, theta=(0.0*radians, 0.0*radians)):
         """ Compute cumulative wavefront due to all phase screens in PhaseScreenList.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
@@ -778,9 +800,11 @@ class PhaseScreenList(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or
+                        an iterable.  If None, then the internal time of the phase screens will be
+                        used for all u, v.  If scalar, then the size will be broadcast up to match
+                        that of u and v.  If iterable, then the shape must match the shapes of u and
+                        v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
@@ -791,16 +815,18 @@ class PhaseScreenList(object):
         else:
             return self._layers[0].wavefront(u, v, t, theta)
 
-    def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront_gradient(self, u, v, t, theta=(0.0*radians, 0.0*radians)):
         """ Compute cumulative wavefront gradient due to all phase screens in PhaseScreenList.
 
         @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
+                        scalar or an iterable.  If None, then the internal time of the phase screens
+                        will be used for all u, v.  If scalar, then the size will be broadcast up to
+                        match that of u and v.  If iterable, then the shape must match the shapes of
+                        u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
@@ -818,10 +844,12 @@ class PhaseScreenList(object):
             return self._layers[0]._wavefront(u, v, t, theta)
 
     def _wavefront_gradient(self, u, v, t, theta):
-        if len(self._layers) > 1:
-            return np.sum([layer._wavefront_gradient(u, v, t, theta) for layer in self], axis=0)
-        else:
-            return self._layers[0]._wavefront_gradient(u, v, t, theta)
+        gradx, grady = self._layers[0]._wavefront_gradient(u, v, t, theta)
+        for layer in self._layers[1:]:
+            gx, gy = layer._wavefront_gradient(u, v, t, theta)
+            gradx[...] += gx
+            grady[...] += gy
+        return gradx, grady
 
     def makePSF(self, lam, **kwargs):
         """Create a PSF from the current PhaseScreenList.
@@ -902,32 +930,18 @@ class PhaseScreenList(object):
                                    attempt to find a good value automatically.  See also
                                    `oversampling` for adjusting the pupil size.  [default: None]
         """
-        # Determine if theta is a single 2-tuple of Angles (okay) or an iterable of 2-tuples of
-        # Angles (deprecated).
-        theta = kwargs.pop('theta', (0.0*galsim.arcmin, 0.0*galsim.arcmin))
-
-        # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
-        # generator of pointings we need to look at the first item.  If the first item is
-        # iterable itself, then assume theta is an iterable of 2-tuple field angles.  We then
-        # replace the consumed tuple at the beginning of the generator and go on.  If the first
-        # item is scalar, then assume that it's the x-component of a single field angle.
-        theta = iter(theta)
-        th0 = next(theta)
-        if not hasattr(th0, '__iter__'):
-            theta = [th0, next(theta)]
-            return PhaseScreenPSF(self, lam, theta=theta, **kwargs)
-        else:
-            from .deprecated import depr
-            depr('list of `theta`s', 1.5, '[psl.makePSF(..., theta=th) for th in theta]')
-            theta = chain([th0], theta)
-            return [PhaseScreenPSF(self, lam, theta=th, **kwargs) for th in theta]
+        return PhaseScreenPSF(self, lam, **kwargs)
 
     @property
     def r0_500_effective(self):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
-        return np.sum([l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500')])**(-3./5)
+        r0_500s = np.array([l.r0_500 for l in self if hasattr(l, 'r0_500')])
+        if len(r0_500s) == 0:
+            return None
+        else:
+            return np.sum(r0_500s**(-5./3))**(-3./5)
 
-    def _stepK(self, **kwargs):
+    def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this list of phase screens.
 
         The required set of parameters depends on the types of the individual PhaseScreens in the
@@ -943,7 +957,7 @@ class PhaseScreenList(object):
         #   stepk = sum(s**(-5./3) for s in stepks)**(-3./5)
         # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
         # screens, we'll use that relation.
-        return np.sum([layer._stepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
+        return np.sum([layer._getStepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
 
 
 class PhaseScreenPSF(GSObject):
@@ -957,6 +971,48 @@ class PhaseScreenPSF(GSObject):
     Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done
     either directly via the `aper` keyword, or by setting a number of keywords that will be passed
     to the `Aperture` constructor.  The `aper` keyword always takes precedence.
+
+    There are effectively three ways to draw a PhaseScreenPSF (or GSObject that includes a
+    PhaseScreenPSF):
+
+    1) Fourier optics
+
+        This is the default, and is performed for all drawImage methods except method='phot'.  This
+        is generally the most accurate option.  For PhaseScreenLists that include an
+        AtmosphericScreen, however, this can be prohibitively slow.  For OpticalPSFs, though, this
+        can sometimes be a good option.
+
+    2) Photon-shooting from an image produced using Fourier optics.
+
+        This is done if geometric_shooting=False when creating the PhaseScreenPSF, and method='phot'
+        when calling drawImage.  This actually performs the same calculations as the Fourier optics
+        option above, but then proceeds by shooting photons from that result.  This can sometimes be
+        a good option for OpticalPSFs, especially if the same OpticalPSF can be reused for may
+        objects, since the Fourier part of the process would only be performed once in this case.
+
+    3) Photon-shooting using the "geometric approximation".
+
+        This is done if geometric_shooting=True when creating the PhaseScreenPSF, and method='phot'
+        when calling drawImage.  In this case, a completely different algorithm is used make an
+        image.  Photons are uniformly generated in the Aperture pupil, and then the phase gradient
+        at that location is used to deflect each photon in the image plane.  This method, which
+        corresponds to geometric optics, is broadly accurate for phase screens that vary slowly
+        across the aperture, and is usually several orders of magnitude or more faster than Fourier
+        optics (depending on the flux of the object, of course, but much faster even for rather
+        bright flux levels).
+
+        One short-coming of this method is that it neglects interference effects, i.e. diffraction.
+        For PhaseScreenLists that include at least one AtmosphericScreen, a correction, dubbed the
+        "second kick", will automatically be applied to handle both the quickly varying modes of the
+        screens and the diffraction pattern of the Aperture.  For PhaseScreenLists without an
+        AtmosphericScreen, the correction is simply an Airy function.  Note that this correction can
+        be overridden using the second_kick keyword argument, and also tuned to some extent using
+        the kcrit keyword argument.
+
+    Note also that calling drawImage on a PhaseScreenPSF that uses a PhaseScreenList with any
+    uninstantiated AtmosphericScreens will perform that instantiation, and that the details of the
+    instantiation depend on the drawing method used, and also the kcrit keyword argument to
+    PhaseScreenPSF.  See the AtmosphericScreen docstring for more details.
 
     @param screen_list         PhaseScreenList object from which to create PSF.
     @param lam                 Wavelength in nanometers at which to compute PSF.
@@ -995,6 +1051,18 @@ class PhaseScreenPSF(GSObject):
                                optics and then shoot from the derived InterpolatedImage.
                                [default: True]
     @param aper                Aperture to use to compute PSF(s).  [default: None]
+    @param second_kick         An optional second kick to also convolve by when using geometric
+                               photon-shooting.  (This can technically be any GSObject, though
+                               usually it should probably be a SecondKick object).  If None, then a
+                               good second kick will be chosen automatically based on `screen_list`.
+                               If False, then a second kick won't be applied.  [default: None]
+    @param kcrit               Critical Fourier scale (in units of 1/r0) at which to separate low-k
+                               and high-k turbulence.  The default value was chosen based on
+                               comparisons between Fourier optics and geometric optics with a second
+                               kick correction.  While most values of kcrit smaller than the default
+                               produce similar results, we caution the user to compare the affected
+                               geometric PSFs against Fourier optics PSFs carefully before changing
+                               this value.  [default: 0.2]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 
@@ -1035,11 +1103,16 @@ class PhaseScreenPSF(GSObject):
                                to find a good value automatically.  See also `oversampling` for
                                adjusting the pupil size.  [default: None]
     """
-    def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0, aper=None,
-                 theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
-                 scale_unit=galsim.arcsec, ii_pad_factor=4., suppress_warning=False,
-                 geometric_shooting=True, gsparams=None,
-                 _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
+    def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0,
+                 theta=(0.0*arcsec, 0.0*arcsec), interpolant=None,
+                 scale_unit=arcsec, ii_pad_factor=4., suppress_warning=False,
+                 geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
+                 gsparams=None, _bar=None, _force_stepk=0., _force_maxk=0., **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1054,25 +1127,19 @@ class PhaseScreenPSF(GSObject):
                 raise ValueError("Diameter required if aperture not specified directly.")
             aper = Aperture(lam=lam, screen_list=self._screen_list, gsparams=gsparams, **kwargs)
         self.aper = aper
-        if not isinstance(theta[0], galsim.Angle) or not isinstance(theta[1], galsim.Angle):
+
+        if not isinstance(theta[0], Angle) or not isinstance(theta[1], Angle):
             raise TypeError("theta must be 2-tuple of galsim.Angle's.")
         self.theta = theta
         self.interpolant = interpolant
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            scale_unit = AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
         self._gsparams = gsparams
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
-        self._serialize_stepk = _force_stepk
-        self._serialize_maxk = _force_maxk
-
-        # Difference between serialize_maxk and force_maxk in InterpolatedImage is a factor of
-        # scale.
-        if self._serialize_stepk is not None:
-            self._serialize_stepk *= self.scale
-        if self._serialize_maxk is not None:
-            self._serialize_maxk *= self.scale
+        self._force_stepk = _force_stepk
+        self._force_maxk = _force_maxk
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
@@ -1082,24 +1149,67 @@ class PhaseScreenPSF(GSObject):
         self._ii_pad_factor = ii_pad_factor
 
         self._bar = _bar
-        self._flux = flux
+        self._flux = float(flux)
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
+        self._kcrit = kcrit
+        # We'll set these more intelligently as needed below
+        self._second_kick = second_kick
 
-        # Need to put in a placeholder SBProfile so that calls to, for example,
-        # self.stepk, still work.
-        array = np.array([[self._flux]], dtype=np.float)
-        bounds = galsim._BoundsI(1, 1, 1, 1)
-        wcs = galsim.PixelScale(self.scale)
-        image = galsim._Image(array, bounds, wcs)
-        dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
-        self._dummy_obj = galsim.InterpolatedImage(
-                image, pad_factor=1.0, x_interpolant=dummy_interpolant,
-                _serialize_stepk=self._serialize_stepk,
-                _serialize_maxk=self._serialize_maxk)
-        self._sbp = self._dummy_obj._sbp
-
+        # Need to put in a placeholder SBProfile so that calls to stepk and maxk work
+        # without having to do _prepareDraw.
+        # All we really need is for the stepk and maxk to be correct, so use the
+        # force_ options to set them how we want.
+        if _force_stepk > 0.:
+            dummy_stepk = _force_stepk
+        else:
+            dummy_stepk = self._screen_list._getStepK(lam=self.lam, diam=self.aper.diam,
+                                                      obscuration=self.aper.obscuration,
+                                                      gsparams=self._gsparams)
+        if _force_maxk > 0.:
+            dummy_maxk = _force_maxk
+        else:
+            dummy_maxk = self.aper._getMaxK(self.lam, self.scale_unit)
+        dummy_image = _Image(np.array([[self._flux]], dtype=np.float),
+                             _BoundsI(1, 1, 1, 1), PixelScale(1.))
+        dummy_interpolant = 'delta'  # Use delta so it doesn't contribute to stepk
+        self._ii = InterpolatedImage(
+                dummy_image, pad_factor=1.0, x_interpolant=dummy_interpolant,
+                _force_stepk=dummy_stepk, _force_maxk=dummy_maxk)
         self._screen_list._delayCalculation(self)
+
+    @property
+    def kcrit(self):
+        return self._kcrit
+
+    @lazy_property
+    def screen_kmax(self):
+        r0_500 = self._screen_list.r0_500_effective
+        if r0_500 is None:
+            return np.inf
+        else:
+            r0 = r0_500 * (self.lam/500)**(6./5)
+            return self.kcrit / r0
+
+    @lazy_property
+    def second_kick(self):
+        """Make a SecondKick object based on contents of _screen_list and aper.
+        """
+        from .airy import Airy
+        from .second_kick import SecondKick
+        if self._second_kick is None:
+            r0_500 = self._screen_list.r0_500_effective
+            if r0_500 is None:  # No AtmosphericScreens in list
+                return Airy(lam=self.lam, diam=self.aper.diam,
+                            obscuration=self.aper.obscuration)
+            else:
+                r0 = r0_500 * (self.lam/500.)**(6./5)
+                return SecondKick(
+                        self.lam, r0, self.aper.diam, self.aper.obscuration,
+                        kcrit=self.kcrit, scale_unit=self.scale_unit,
+                        gsparams=self._gsparams)
+        else:
+            return self._second_kick
 
     @property
     def flux(self):
@@ -1127,99 +1237,51 @@ class PhaseScreenPSF(GSObject):
                 self.time_step == other.time_step and
                 self._flux == other._flux and
                 self.interpolant == other.interpolant and
-                self._serialize_stepk == other._serialize_stepk and
-                self._serialize_maxk == other._serialize_maxk and
+                self._force_stepk == other._force_stepk and
+                self._force_maxk == other._force_maxk and
                 self._ii_pad_factor == other._ii_pad_factor and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
         return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
                      self.t0, self.exptime, self.time_step, self._flux, self.interpolant,
-                     self._serialize_stepk, self._serialize_maxk, self._ii_pad_factor,
-                     self.gsparams))
+                     self._force_stepk, self._force_maxk, self._ii_pad_factor, self.gsparams))
 
     def _prepareDraw(self):
         # Trigger delayed computation of all pending PSFs.
         self._screen_list._prepareDraw()
 
-    # A few items which need the InterpolatedImage to have been prepared before accessing.
-    @property
-    def maxk(self):
-        """The value of k beyond which aliasing can be neglected.
-        """
-        self._prepareDraw()
-        return self.ii.maxk
-
-    @property
-    def nyquist_scale(self):
-        """The Image pixel spacing that does not alias maxk.
-        """
-        # Use this instead of self.ii.nyquistScale() so we don't need to _prepareDraw when
-        # photon-shooting into an automatically-sized image.
-        return np.pi/self.aper._maxK(self.lam, self.scale_unit)
-
-    @property
-    def stepk(self):
-        """The sampling in k space necessary to avoid folding of image in x space.
-        """
-        self._prepareDraw()
-        return self.ii.stepk
-
-    @property
-    def centroid(self):
-        """The (x, y) centroid of an object as a Position.
-        """
-        self._prepareDraw()
-        return self.ii.centroid
-
-    @property
-    def max_sb(self):
-        """An estimate of the maximum surface brightness of the object.
-
-        Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
-        calculate this value without just drawing the image and checking what the maximum value is.
-        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
-        which will generally be conservative on the high side.
-
-        This routine is mainly used by the photon shooting process, where an overestimate of
-        the maximum surface brightness is acceptable.
-
-        Note, for negative-flux profiles, this will return the absolute value of the most negative
-        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
-        rather than the maximum value.  For most profiles, these are the same thing.
-        """
-        self._prepareDraw()
-        return self.ii.max_sb
-
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
+        from . import fft
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
+        # This is where I need to make sure the screens are instantiated for FFT.
+        self._screen_list.instantiate(check='FFT')
         wf = self._screen_list._wavefront(u, v, None, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
-        ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
+        ftexpwf = fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
+        if self._bar:  # pragma: no cover
+            self._bar.update()
 
     def _finalize(self):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
         self.img *= self._flux / self.img.sum(dtype=float)
-        b = galsim._BoundsI(1,self.aper.npix,1,self.aper.npix)
-        self.img = galsim._Image(self.img, b, galsim.PixelScale(self.scale))
+        b = _BoundsI(1,self.aper.npix,1,self.aper.npix)
+        self.img = _Image(self.img, b, PixelScale(self.scale))
 
-        self.ii = galsim.InterpolatedImage(
+        self._ii = InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,
-                _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
+                _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
 
-        self._sbp = self.ii._sbp
-
         if not self._suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
-            observed_stepk = self.ii.stepk
+            observed_stepk = self._ii.stepk
 
             if observed_stepk < specified_stepk:
                 import warnings
@@ -1229,43 +1291,76 @@ class PhaseScreenPSF(GSObject):
                     "This could lead to aliasing problems. " +
                     "Increasing pad_factor is recommended.")
 
+    @property
+    def _sbp(self):
+        return self._ii._sbp
+
     def __getstate__(self):
         # Finish calculating before pickling.
         self._prepareDraw()
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
-        del d['_sbp']
-        del d['ii']
-        d.pop('_dummy_obj',None)
+        del d['_ii']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.ii = galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
-                                           use_true_center=False,
-                                           pad_factor=self._ii_pad_factor,
-                                           _serialize_stepk=self._serialize_stepk,
-                                           _serialize_maxk=self._serialize_maxk,
-                                           gsparams=self._gsparams)
-        self._sbp = self.ii._sbp
+        self._ii = InterpolatedImage(self.img, x_interpolant=self.interpolant,
+                                     use_true_center=False,
+                                     pad_factor=self._ii_pad_factor,
+                                     _force_stepk=self._force_stepk,
+                                     _force_maxk=self._force_maxk,
+                                     gsparams=self._gsparams)
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
+    @property
+    def _maxk(self):
+        return self._ii.maxk
 
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
+    @property
+    def _stepk(self):
+        return self._ii.stepk
+
+    @property
+    def _centroid(self):
+        self._prepareDraw()
+        return self._ii.centroid
+
+    @property
+    def _positive_flux(self):
+        return self._ii.positive_flux
+
+    @property
+    def _negative_flux(self):
+        return self._ii.negative_flux
+
+    @property
+    def _max_sb(self):
+        return self._ii.max_sb
+
+    @doc_inherit
+    def _xValue(self, pos):
+        self._prepareDraw()
+        return self._ii._xValue(pos)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        self._prepareDraw()
+        return self._ii._kValue(kpos)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._ii._drawReal(image)
+
+    @doc_inherit
+    def _shoot(self, photons, ud):
+        from .photon_array import PhotonArray
+
         if not self._geometric_shooting:
             self._prepareDraw()
-            return self.ii.shoot(n_photons, rng)
+            return self._ii._shoot(photons, ud)
 
-        ud = galsim.UniformDeviate(rng)
-
+        n_photons = len(photons)
         t = np.empty((n_photons,), dtype=float)
         ud.generate(t)
         t *= self.exptime
@@ -1279,15 +1374,23 @@ class PhaseScreenPSF(GSObject):
         u = u[pick]
         v = v[pick]
 
-        x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
-        x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
-        y *= 1e-9 * 206265
+        # This is where the screens need to be instantiated for drawing with geometric photon
+        # shooting.
+        self._screen_list.instantiate(kmax=self.screen_kmax, check='phot')
+        nm_to_arcsec = 1.e-9 * radians / arcsec
+        photons.x, photons.y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
+        photons.x *= nm_to_arcsec
+        photons.y *= nm_to_arcsec
+        photons.flux = self._flux / n_photons
 
-        photon_array = galsim._galsim.PhotonArray(n_photons)
-        photon_array.x = x
-        photon_array.y = y
-        photon_array.flux = self._flux/n_photons
-        return photon_array
+        if self.second_kick:
+            p2 = PhotonArray(len(photons))
+            self.second_kick._shoot(p2, ud)
+            photons.convolve(p2, ud)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._ii._drawKImage(image)
 
 
 class OpticalPSF(GSObject):
@@ -1492,38 +1595,37 @@ class OpticalPSF(GSObject):
         "oversampling": float,
         "pad_factor": float,
         "suppress_warning": bool,
-        "max_size": float,
         "interpolant": str,
         "flux": float,
         "nstruts": int,
         "strut_thick": float,
-        "strut_angle": galsim.Angle,
+        "strut_angle": Angle,
         "pupil_plane_im": str,
-        "pupil_angle": galsim.Angle,
+        "pupil_angle": Angle,
         "pupil_plane_scale": float,
         "pupil_plane_size": float,
         "scale_unit": str}
     _single_params = [{"lam_over_diam": float, "lam": float}]
     _takes_rng = False
 
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                  aberrations=None, annular_zernike=False,
                  aper=None, circular_pupil=True, obscuration=0., interpolant=None,
                  oversampling=1.5, pad_factor=1.5, ii_pad_factor=4., flux=1.,
-                 nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
+                 nstruts=0, strut_thick=0.05, strut_angle=0.*radians,
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
-                 pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
-                 _force_maxk=None, _force_stepk=None,
-                 suppress_warning=False, geometric_shooting=False, max_size=None):
-        if max_size is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('max_size', 1.4, '',
-                 "The max_size keyword has been removed.  In its place, the pad_factor keyword can"
-                 "be used to adjust the size of the internal InterpolatedImage.")
-
+                 pupil_angle=0.*radians, scale_unit=arcsec, gsparams=None,
+                 _force_stepk=0., _force_maxk=0.,
+                 suppress_warning=False, geometric_shooting=False):
+        from .phase_screens import OpticalScreen
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            scale_unit = AngleUnit.from_name(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
         # OpticalScreen.
         if lam_over_diam is not None:
@@ -1538,7 +1640,7 @@ class OpticalPSF(GSObject):
                     # Filename, therefore specific scale exists.
                     raise TypeError("If specifying lam_over_diam, then do not "
                                     "specify pupil_plane_im as a filename.")
-                elif (isinstance(pupil_plane_im, galsim.Image)
+                elif (isinstance(pupil_plane_im, Image)
                       and pupil_plane_im.scale is not None):
                     raise TypeError("If specifying lam_over_diam, then do not specify "
                                     "pupil_plane_im with definite scale attribute.")
@@ -1546,21 +1648,21 @@ class OpticalPSF(GSObject):
                     raise TypeError("If specifying lam_over_diam, then do not specify "
                                     "pupil_plane_scale.")
             lam = 500.  # Arbitrary
-            diam = lam*1.e-9 / lam_over_diam * galsim.radians / scale_unit
+            diam = lam*1.e-9 / lam_over_diam * radians / scale_unit
         else:
             if lam is None or diam is None:
                 raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
 
         # Make the optical screen.
-        optics_screen = galsim.OpticalScreen(
+        optics_screen = OpticalScreen(
                 diam=diam, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                 trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
                 obscuration=obscuration, annular_zernike=annular_zernike, lam_0=lam)
-        self._screens = galsim.PhaseScreenList(optics_screen)
+        self._screens = PhaseScreenList(optics_screen)
 
         # Make the aperture.
         if aper is None:
-            aper = galsim.Aperture(
+            aper = Aperture(
                     diam, lam=lam, circular_pupil=circular_pupil, obscuration=obscuration,
                     nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
                     oversampling=oversampling, pad_factor=pad_factor,
@@ -1575,33 +1677,28 @@ class OpticalPSF(GSObject):
                 self.obscuration = 0.0
 
         # Save for pickling
-        self._lam = lam
-        self._flux = flux
+        self._lam = float(lam)
+        self._flux = float(flux)
         self._interpolant = interpolant
         self._scale_unit = scale_unit
         self._gsparams = gsparams
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
         self._aper = aper
-        self._force_maxk = _force_maxk
         self._force_stepk = _force_stepk
+        self._force_maxk = _force_maxk
         self._ii_pad_factor = ii_pad_factor
 
         # Finally, put together to make the PSF.
-        self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                          aper=aper, interpolant=self._interpolant,
-                                          scale_unit=self._scale_unit, gsparams=self._gsparams,
-                                          suppress_warning=self._suppress_warning,
-                                          geometric_shooting=self._geometric_shooting,
-                                          _force_maxk=_force_maxk, _force_stepk=_force_stepk,
-                                          ii_pad_factor=ii_pad_factor)
+        self._psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+                                   aper=aper, interpolant=self._interpolant,
+                                   scale_unit=self._scale_unit, gsparams=self._gsparams,
+                                   suppress_warning=self._suppress_warning,
+                                   geometric_shooting=self._geometric_shooting,
+                                   _force_stepk=_force_stepk, _force_maxk=_force_maxk,
+                                   ii_pad_factor=ii_pad_factor)
 
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
-        self._sbp = self._psf._sbp
-
-    @property
-    def flux(self):
-        return self._flux
 
     def __str__(self):
         screen = self._psf._screen_list[0]
@@ -1629,17 +1726,17 @@ class OpticalPSF(GSObject):
             s += ", obscuration=%r"%self.obscuration
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
-        if self._force_maxk is not None:
-            s += ", _force_maxk=%r" % self._force_maxk
-        if self._force_stepk is not None:
+        if self._force_stepk != 0.:
             s += ", _force_stepk=%r" % self._force_stepk
-        if self._ii_pad_factor is not None:
+        if self._force_maxk != 0.:
+            s += ", _force_maxk=%r" % self._force_maxk
+        if self._ii_pad_factor != 4.:
             s += ", ii_pad_factor=%r" % self._ii_pad_factor
         s += ")"
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.OpticalPSF) and
+        return (isinstance(other, OpticalPSF) and
                 self._lam == other._lam and
                 self._aper == other._aper and
                 self._psf._screen_list == other._psf._screen_list and
@@ -1656,36 +1753,70 @@ class OpticalPSF(GSObject):
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
                      self._force_maxk, self._ii_pad_factor, self._gsparams))
 
+    @property
+    def _sbp(self):
+        return self._psf._sbp
+
     def __getstate__(self):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()
         d['aper'] = d['_psf'].aper
-        del d['_sbp']
         del d['_psf']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
         aper = self.__dict__.pop('aper')
-        self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                          aper=aper, interpolant=self._interpolant,
-                                          scale_unit=self._scale_unit, gsparams=self._gsparams,
-                                          suppress_warning=self._suppress_warning,
-                                          _force_maxk=self._force_maxk,
-                                          _force_stepk=self._force_stepk,
-                                          ii_pad_factor=self._ii_pad_factor)
+        self._psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+                                   aper=aper, interpolant=self._interpolant,
+                                   scale_unit=self._scale_unit, gsparams=self._gsparams,
+                                   suppress_warning=self._suppress_warning,
+                                   _force_stepk=self._force_stepk,
+                                   _force_maxk=self._force_maxk,
+                                   ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
-        self._sbp = self._psf._sbp
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
+    @property
+    def _maxk(self):
+        return self._psf.maxk
 
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        return self._psf.shoot(n_photons, rng)
+    @property
+    def _stepk(self):
+        return self._psf.stepk
+
+    @property
+    def _centroid(self):
+        return self._psf.centroid
+
+    @property
+    def _positive_flux(self):
+        return self._psf.positive_flux
+
+    @property
+    def _negative_flux(self):
+        return self._psf.negative_flux
+
+    @property
+    def _max_sb(self):
+        return self._psf.max_sb
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._psf._xValue(pos)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._psf._kValue(kpos)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._psf._drawReal(image)
+
+    @doc_inherit
+    def _shoot(self, photons, ud):
+        self._psf._shoot(photons, ud)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._psf._drawKImage(image)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,7 +21,6 @@ Routines for controlling catalog input/output with GalSim.
 
 from future.utils import iteritems, iterkeys, itervalues
 from builtins import zip
-import galsim
 import os
 import numpy as np
 
@@ -134,7 +133,7 @@ class Catalog(object):
     def readFits(self, hdu, _nobjects_only=False):
         """Read in an input catalog from a FITS file.
         """
-        from galsim._pyfits import pyfits, pyfits_version
+        from ._pyfits import pyfits, pyfits_version
         with pyfits.open(self.file_name) as fits:
             raw_data = fits[hdu].data
         if pyfits_version > '3.0':
@@ -467,6 +466,10 @@ class OutputCatalog(object):
     def makeData(self):
         """Returns a numpy array of the data as it should be written to an output file.
         """
+        from .angle import Angle
+        from .position import PositionD, PositionI
+        from .shear import Shear
+
         cols = zip(*self.rows)
 
         dtypes = []
@@ -480,20 +483,20 @@ class OutputCatalog(object):
             elif dt.kind in np.typecodes['AllFloat']:
                 dtypes.append( (name, float) )
                 new_cols.append(col)
-            elif t == galsim.Angle:
+            elif t == Angle:
                 dtypes.append( (name + ".rad", float) )
                 new_cols.append( [ val.rad for val in col ] )
-            elif t == galsim.PositionI:
+            elif t == PositionI:
                 dtypes.append( (name + ".x", int) )
                 dtypes.append( (name + ".y", int) )
                 new_cols.append( [ val.x for val in col ] )
                 new_cols.append( [ val.y for val in col ] )
-            elif t == galsim.PositionD:
+            elif t == PositionD:
                 dtypes.append( (name + ".x", float) )
                 dtypes.append( (name + ".y", float) )
                 new_cols.append( [ val.x for val in col ] )
                 new_cols.append( [ val.y for val in col ] )
-            elif t == galsim.Shear:
+            elif t == Shear:
                 dtypes.append( (name + ".g1", float) )
                 dtypes.append( (name + ".g2", float) )
                 new_cols.append( [ val.g1 for val in col ] )
@@ -548,8 +551,9 @@ class OutputCatalog(object):
 
         @param file_name    The name of the file to write to.
         """
+        from .fits import writeFile
         tbhdu = self.writeFitsHdu()
-        galsim.fits.writeFile(file_name, tbhdu)
+        writeFile(file_name, tbhdu)
 
     def writeFitsHdu(self):
         """Write catalog to a FITS hdu.
@@ -559,7 +563,7 @@ class OutputCatalog(object):
         # Note to developers: Because of problems with pickling in older pyfits versions, this
         # code is duplicated in galsim/config/extra_truth.py, BuildTruthHDU.  If you change
         # this function, you should update BuildTruthHDU as well.
-        from galsim._pyfits import pyfits
+        from ._pyfits import pyfits
 
         data = self.makeData()
 

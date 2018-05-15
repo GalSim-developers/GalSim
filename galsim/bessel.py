@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,4 +20,11 @@ A Python layer version of the C++ Bessel functions, so we don't need
 scipy just to get bessel functions.
 """
 
-from ._galsim import j0, j1, jn, jv, kn, kv, j0_root
+from ._galsim import j0, j1, jv, kv, yv, iv, j0_root
+
+# Alias the "n" names, which don't get any advantage from being implemented differently,
+# so we only have the generic nu implementation.  But to match scipy.special, we also
+# allow the user to write jn, kn, or yn.  No in, since that's a reserved word, of course.
+jn = jv
+kn = kv
+yn = yv

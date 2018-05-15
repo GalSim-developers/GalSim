@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,8 +24,7 @@
 
 namespace galsim {
 
-    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee,
-                               const GSParamsPtr& gsparams) :
+    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee, const GSParams& gsparams) :
         SBProfile(new SBDeconvolveImpl(adaptee,gsparams)) {}
 
     SBDeconvolve::SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
@@ -42,19 +41,18 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBDeconvolve(" << _adaptee.serialize();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee,
-                                                     const GSParamsPtr& _gsparams) :
-        SBProfileImpl(_gsparams ? _gsparams : GetImpl(adaptee)->gsparams),
-        _adaptee(adaptee)
+                                                     const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(adaptee)
     {
         double maxk = maxK();
         _maxksq = maxk*maxk;
         double flux = GetImpl(_adaptee)->getFlux();
-        _min_acc_kval = flux * gsparams->kvalue_accuracy;
+        _min_acc_kval = flux * gsparams.kvalue_accuracy;
         dbg<<"SBDeconvolve constructor: _maxksq = "<<_maxksq;
         dbg<<", _min_acc_kval = "<<_min_acc_kval<<std::endl;
     }
@@ -173,11 +171,9 @@ namespace galsim {
         return -_adaptee.maxSB() / std::abs(_adaptee.getFlux() * _adaptee.getFlux());
     }
  
-    boost::shared_ptr<PhotonArray> SBDeconvolve::SBDeconvolveImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBDeconvolve::SBDeconvolveImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         throw SBError("SBDeconvolve::shoot() not implemented");
-        return boost::shared_ptr<PhotonArray>();
     }
 
 }

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -49,7 +49,7 @@ INTERPOLANT_DICT = {
 DELTA_FILENAME = 'interpolant_test_parametric_output_delta.dat'
 ORIGINAL_FILENAME = 'interpolant_test_parametric_output_original.dat'
 
-NITEMS = 30 # For now, look at a few only
+NITEMS = 300 # more expensive but we beat down the errors this way
 
 LAM_OVER_DIAM_COSMOS = 814.e-9 / 2.4 # All the original images in Melanie's tests were from COSMOS
                                      # F814W, so this is a crude approximation to the PSF scale in
@@ -85,7 +85,7 @@ class InterpolationDataNoConfig:
         if angle is None:
             self.angle = 0.
         else:
-            self.angle = angle.rad() * 180. / np.pi
+            self.angle = angle.rad * 180. / np.pi
         if shift is None:
             self.shiftx = 0.
             self.shifty = 0.
@@ -139,21 +139,21 @@ def calculate_interpolated_image_g1g2sigma(images, psf=None, dx_input=None, dx_t
 
         # Build the raw InterpolatedImage
         test_gal = galsim.InterpolatedImage(
-            image, dx=dx_input, x_interpolant=x_interpolant_obj, k_interpolant=k_interpolant_obj,
+            image, scale=dx_input, x_interpolant=x_interpolant_obj, k_interpolant=k_interpolant_obj,
             pad_factor=pad_factor)
         # Apply shears, magnification, rotation and shifts if requested
         if shear is not None:
-            test_gal.applyShear(g1=shear[0], g2=shear[1])
+            test_gal = test_gal.shear(g1=shear[0], g2=shear[1])
         if magnification is not None:
-            test_gal.applyMagnification(magnification)
+            test_gal = test_gal.magnify(magnification)
         if angle is not None:
             if not isinstance(angle, galsim.Angle):
                 raise ValueError("Input kwarg angle must be a galsim.Angle instance.")
-            test_gal.applyRotation(angle)
+            test_gal = test_gal.rotate(angle)
         if shift is not None:
             if not isinstance(shift, galsim.PositionD):
                 raise ValueError("Input kwarg shift must be a galsim.PositionD instance.")
-            test_gal.applyShift( # Shifts are in pixel units so convert to arcsec
+            test_gal = test_gal.shift( # Shifts are in pixel units so convert to arcsec
                 dx=shift.x*dx_test, dy=shift.y*dx_test) 
         # Apply a PSF if requested
         if psf is not None:
@@ -162,8 +162,8 @@ def calculate_interpolated_image_g1g2sigma(images, psf=None, dx_input=None, dx_t
             test_final = test_gal
         # Draw into the test image and calculate adaptive moments
         test_image = galsim.ImageD(TEST_IMAGE_SIZE, TEST_IMAGE_SIZE)
-        test_image.setScale(dx_test)
-        test_final.draw(test_image, dx=dx_test)
+        test_image.scale = dx_test
+        test_final.drawImage(test_image, method='no_pixel', scale=dx_test)
         trial_result = test_interpolants.CatchAdaptiveMomErrors(test_image)
         if isinstance(trial_result, float):
             g1obs_list.append(-10)
@@ -205,19 +205,20 @@ def draw_sersic_images(narr, hlrarr, gobsarr, random_seed=None, nmin=0.3, nmax=4
 
         # Otherwise set up the image to draw our COSMOS sersic profiles into
         sersic_image = galsim.ImageD(image_size, image_size)
-        sersic_image.setScale(pixel_scale)
+        sersic_image.scale = pixel_scale
         # Build the galaxy
-        galaxy = galsim.Sersic(n=n, half_light_radius=hlr)
+        galaxy = galsim.Sersic(n=n, half_light_radius=hlr,
+                               gsparams=galsim.GSParams(maximum_fft_size=8192))
         # Apply the ellipticity of the correct magnitude with a random rotation
         theta_rot = 2. * np.pi * u() # Random orientation
-        galaxy.applyShear(g1=gobs*np.cos(2.*theta_rot), g2=gobs*np.sin(2.*theta_rot))
+        galaxy = galaxy.shear(g1=gobs*np.cos(2.*theta_rot), g2=gobs*np.sin(2.*theta_rot))
         if psf is None:
             final = galaxy
         elif isinstance(psf, galsim.GSObject):
             final = galsim.Convolve([galaxy, psf])
         else:
             raise TypeError("Input psf kwarg must be a GSObject or NoneType.") 
-        final.draw(sersic_image, dx=pixel_scale)
+        final.drawImage(sersic_image, method='no_pixel', scale=pixel_scale)
         sersic_images.append(sersic_image)
 
     # Return this list of drawn images
