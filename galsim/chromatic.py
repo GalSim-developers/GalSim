@@ -1153,7 +1153,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         if _flux_ratio is None:
             _flux_ratio = lambda w: 1.0
-        # Constant flux_ratio is alread an SED at this point, so can treat as function.
+        # Constant flux_ratio is already an SED at this point, so can treat as function.
         assert hasattr(_flux_ratio, '__call__')
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).

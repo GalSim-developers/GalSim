@@ -98,7 +98,7 @@ from contextlib import contextmanager
 # GalSimBoundsError:    Use this when a position is outside its allowed bounds. It's basically
 #                       the same as GalSimRangeError, but in two dimensions.
 #
-# GalSimUndefinedBoundsError:   Use this when the user tries to performa an operation on an
+# GalSimUndefinedBoundsError:   Use this when the user tries to perform an operation on an
 #                               Image with undefined bounds (and which requires the bounds to be
 #                               defined).
 #
@@ -129,9 +129,9 @@ from contextlib import contextmanager
 #                           whenever you would normally use GalSimValueError when processing
 #                           a config dict, you should use this instead.
 #
-# GalSimNotImplementedError Use this for features that we have not yet implemented, but which may
-#                           be implemented someday. So it's not a necessarily invalid usage, just
-#                           something that doesn't work currently.
+# GalSimNotImplementedError:  Use this for features that we have not yet implemented, but which may
+#                             be implemented someday. So it's not a necessarily invalid usage, just
+#                             something that doesn't work currently.
 
 class GalSimError(RuntimeError):
     """The base class for GalSim-specific run-time errors.
@@ -187,7 +187,7 @@ class GalSimKeyError(GalSimError, KeyError):
 
 
 class GalSimIndexError(GalSimError, IndexError):
-    """A GalSim-specific execption class indicating an attempt to access a list-like object
+    """A GalSim-specific exception class indicating an attempt to access a list-like object
     with an invalid index.
 
     Attributes:
