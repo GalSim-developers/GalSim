@@ -1468,7 +1468,7 @@ class WeakMethod(object):
             raise TypeError('Method called on dead object')
         return self.f(self.c(), *args)
 
-def EnsureDir(target):
+def ensure_dir(target):
     """
     Make sure the directory for the target location exists, watching for a race condition
 

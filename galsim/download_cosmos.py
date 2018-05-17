@@ -27,7 +27,7 @@ try:
 except:
     from urllib.request import urlopen
 
-from .utilities import EnsureDir
+from .utilities import ensure_dir
 
 script_name = 'galsim_download_cosmos'
 
@@ -168,7 +168,7 @@ def download(url, target, unpack_dir, args, logger):
     logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
 
     # Make sure the directory we want to put this file exists.
-    EnsureDir(target)
+    ensure_dir(target)
 
     # Check if the file already exists and if it is the right size
     do_download = True

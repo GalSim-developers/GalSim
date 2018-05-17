@@ -20,7 +20,7 @@ import os
 import galsim
 import logging
 
-from ..utilities import EnsureDir
+from ..utilities import ensure_dir
 
 # This file handles building the output files according to the specifications in config['output'].
 # This file includes the basic functionality, but it calls out to helper functions for the
@@ -433,7 +433,7 @@ class OutputBuilder(object):
             dir = galsim.config.ParseValue(config, 'dir', base, str)[0]
             file_name = os.path.join(dir,file_name)
 
-        EnsureDir(file_name)
+        ensure_dir(file_name)
 
         return file_name
 
