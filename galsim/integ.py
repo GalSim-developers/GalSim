@@ -147,7 +147,7 @@ class ImageIntegrator(object):
     # subclasses must define
     # 1) a method `.calculateWaves(bandpass)` which will return the wavelengths at which to
     #    evaluate the integrand
-    # 2) an function attribute `.rule` which takes a integrand function as its first
+    # 2) an function attribute `.rule` which takes an integrand function as its first
     #    argument, and a list of evaluation wavelengths as its second argument, and returns
     #    an approximation to the integral.  (E.g., the function midptRule above)
 

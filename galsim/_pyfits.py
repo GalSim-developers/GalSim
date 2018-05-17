@@ -17,7 +17,7 @@
 #
 
 # We used to support legacy pyfits in addition to astropy.io.fits.  We still call
-# astropy.io.fits in the code, but we have removed the legacy compatibility hacks.
+# astropy.io.fits pyfits in the code, but we have removed the legacy compatibility hacks.
 
 import astropy.io.fits as pyfits
 
