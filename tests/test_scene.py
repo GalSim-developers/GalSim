@@ -278,6 +278,7 @@ def test_cosmos_random():
 
     n_random = 3
     with assert_warns(galsim.GalSimWarning):
+        # Warns because we aren't using weights
         objs = cat_param.makeGalaxy(rng=galsim.BaseDeviate(use_seed), n_random=n_random)
     with assert_warns(galsim.GalSimWarning):
         inds = cat_param.selectRandomIndex(n_random, rng=galsim.BaseDeviate(use_seed))
@@ -325,6 +326,10 @@ def test_cosmos_random():
     ud2 = galsim.UniformDeviate(test_seed)
     ud2.discard(n_rng_calls)
     assert ud()==ud2(), '_n_rng_calls kwarg did not give proper tracking of RNG calls'
+
+    # Invalid to both privide index and ask for random selection
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        cat_param.makeGalaxy(index=(11,13,17), n_random=3)
 
 @timer
 def test_cosmos_deep():
