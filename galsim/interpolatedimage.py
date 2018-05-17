@@ -674,11 +674,8 @@ class InterpolatedImage(GSObject):
 
     @doc_inherit
     def _shoot(self, photons, ud):
-        try:
+        with convert_cpp_errors():
             self._sbp.shoot(photons._pa, ud._rng)
-        except RuntimeError:
-            xi = self.x_interpolant.__class__.__name__
-            raise GalSimError("Photon shooting is not practical with x_interpolant of type %s"%xi)
 
     @doc_inherit
     def _drawReal(self, image):
