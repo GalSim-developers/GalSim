@@ -199,37 +199,30 @@ class DES_PSFEx(object):
         psf_samp = hdu.header['PSF_SAMP']
 
         # The basis object is a data cube (assuming PSFNAXIS==3)
-        # Note: older pyfits versions don't get the shape right.
-        # For newer pyfits versions the reshape command should be a no op.
-        basis = hdu.data.field('PSF_MASK')[0].reshape(psf_axis3,psf_axis2,psf_axis1)
+        basis = hdu.data.field('PSF_MASK')[0]
 
         # Make sure to close the hdu before we might raise exceptions.
         if hdu_list:
             hdu_list.close()
 
         # Check for valid values of all these things.
-        if pol_naxis != 2:  # pragma: no cover
-            raise OSError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
-        if not (pol_name1.startswith('X') and pol_name1.endswith('IMAGE')):  # pragma: no cover
-            raise OSError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
-        if not (pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')):  # pragma: no cover
-            raise OSError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
-        if pol_ngrp != 1:  # pragma: no cover
-            raise OSError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
-        if pol_group1 != 1:  # pragma: no cover
-            raise OSError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
-        if pol_group2 != 1:  # pragma: no cover
-            raise OSError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
-        if psf_naxis != 3:  # pragma: no cover
-            raise OSError("PSFEx: Expected PSFNAXIS == 3, got %d"%psf_naxis)
-        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))//2:  # pragma: no cover
-            raise OSError("PSFEx: POLDEG and PSFAXIS3 disagree")
-        if basis.shape[0] != psf_axis3:  # pragma: no cover
-            raise OSError("PSFEx: PSFAXIS3 disagrees with actual basis size")
-        if basis.shape[1] != psf_axis2:  # pragma: no cover
-            raise OSError("PSFEx: PSFAXIS2 disagrees with actual basis size")
-        if basis.shape[2] != psf_axis1:  # pragma: no cover
-            raise OSError("PSFEx: PSFAXIS1 disagrees with actual basis size")
+        # Not sure which of these are actually required in PSFEx files, but this implementation
+        # assumes these things are true, so if this fails, we probably need to rework some aspect
+        # of this code.
+        try:
+            assert pol_naxis == 2
+            assert pol_name1.startswith('X') and pol_name1.endswith('IMAGE')
+            assert pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')
+            assert pol_ngrp == 1
+            assert pol_group1 == 1
+            assert pol_group2 == 1
+            assert psf_naxis == 3
+            assert psf_axis3 == ((pol_deg+1)*(pol_deg+2))//2
+            assert basis.shape[0] == psf_axis3
+            assert basis.shape[1] == psf_axis2
+            assert basis.shape[2] == psf_axis1
+        except AssertionError as e:
+            raise OSError("PSFEx file %s is not as expected.\n%r"%(self.file_name, e))
 
         # Save some of these values for use in building the interpolated images
         self.basis = basis
