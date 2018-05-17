@@ -57,7 +57,7 @@ from contextlib import contextmanager
 #
 # IndexError:           Don't use this. Use GalSimIndexError instead.
 #
-# std::runtime_error:   Use this for errors in the C++ layer, and use the catch_cpp_errors()
+# std::runtime_error:   Use this for errors in the C++ layer, and use the convert_cpp_errors()
 #                       context to convert these errors into GalSimErrors. E.g. GSFitsWCS._invert_pv
 #                       uses this for non-convergence, which gets converted into GalSimError in
 #                       the Python layer.
