@@ -538,8 +538,6 @@ class Aperture(object):
         """ Unit-disk normalized pupil plane coordinate as a complex number:
         (x, y) => x + 1j * y.
         """
-        f1 = np.fft.fftfreq(self.npix, 1./self.pupil_plane_size)
-        f2 = np.fft.fftfreq(self.npix, self.diam/self.pupil_plane_size/2.0)
         u = np.fft.fftshift(np.fft.fftfreq(self.npix, self.diam/self.pupil_plane_size/2.0))
         u, v = np.meshgrid(u, u)
         return u + 1j * v
