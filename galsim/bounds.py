@@ -429,7 +429,7 @@ class BoundsI(Bounds):
             if x == int(x): return
         except (TypeError, ValueError):
             pass
-        raise TypeError("%s must be a integer value"%name)
+        raise TypeError("%s must be an integer value"%name)
 
     def numpyShape(self):
         "A simple utility function to get the numpy shape that corresponds to this Bounds object."

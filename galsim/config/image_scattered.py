@@ -58,7 +58,7 @@ class ScatteredImageBuilder(ImageBuilder):
 
         if (full_xsize <= 0) or (full_ysize <= 0):
             raise galsim.GalSimConfigError(
-                "Both image.stamp_xsize and image.stamp_ysize need to be defined and > 0.")
+                "Both image.xsize and image.ysize need to be defined and > 0.")
 
         # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
         if ( ('image_force_xsize' in base and full_xsize != base['image_force_xsize']) or
