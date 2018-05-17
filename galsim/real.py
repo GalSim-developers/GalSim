@@ -205,6 +205,7 @@ class RealGalaxy(GSObject):
         from .correlatednoise import UncorrelatedNoise, _BaseCorrelatedNoise
         from .interpolatedimage import InterpolatedImage
         from .convolve import Convolve, Deconvolve
+        from .config import LoggerWrapper
 
         if rng is None:
             rng = BaseDeviate()
@@ -217,13 +218,14 @@ class RealGalaxy(GSObject):
                 "Cannot supply a flux and a flux rescaling factor.",
                 flux=flux, flux_rescale=flux_rescale)
 
+        logger = LoggerWrapper(logger)  # So don't need to check `if logger:` all the time.
+
         if isinstance(real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a RealGalaxy without needing the rgc directly
             # by providing the things we need from it.  Used by COSMOSGalaxy.
             self.gal_image, self.psf_image, noise_image, pixel_scale, var = real_galaxy_catalog
             use_index = 0  # For the logger statements below.
-            if logger:
-                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+            logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
             self.catalog_file = None
             self.catalog = ''
         else:
@@ -253,25 +255,21 @@ class RealGalaxy(GSObject):
                 raise GalSimIncompatibleValuesError(
                     "No method specified for selecting a galaxy.",
                     index=index, id=id, random=random)
-            if logger:
-                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+            logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
 
             # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
             self.gal_image = real_galaxy_catalog.getGalImage(use_index)
-            if logger:
-                logger.debug('RealGalaxy %d: Got gal_image',use_index)
+            logger.debug('RealGalaxy %d: Got gal_image',use_index)
 
             self.psf_image = real_galaxy_catalog.getPSFImage(use_index)
-            if logger:
-                logger.debug('RealGalaxy %d: Got psf_image',use_index)
+            logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
             #self._noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
             # We need to duplication some of the RealGalaxyCatalog.getNoise() function, since we
             # want it to be possible to have the RealGalaxyCatalog in another process, and the
             # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
             noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
-            if logger:
-                logger.debug('RealGalaxy %d: Got noise_image',use_index)
+            logger.debug('RealGalaxy %d: Got noise_image',use_index)
             self.catalog_file = real_galaxy_catalog.getFileName()
             self.catalog = real_galaxy_catalog
 
@@ -284,8 +282,7 @@ class RealGalaxy(GSObject):
                                    x_interpolant='linear', gsparams=gsparams)
             self._noise = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
             self._noise = self._noise.withVariance(var)
-        if logger:
-            logger.debug('RealGalaxy %d: Finished building noise',use_index)
+        logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
         # Save any other relevant information as instance attributes
         self.index = use_index
@@ -309,8 +306,7 @@ class RealGalaxy(GSObject):
         self.original_psf = InterpolatedImage(
             self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
             flux=1.0, gsparams=gsparams)
-        if logger:
-            logger.debug('RealGalaxy %d: Made original_psf',use_index)
+        logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
         # Build the InterpolatedImage of the galaxy.
         # Use the stepk value of the PSF as a maximum value for stepk of the galaxy.
@@ -322,8 +318,7 @@ class RealGalaxy(GSObject):
                 calculate_stepk=self.original_psf.stepk,
                 calculate_maxk=self.original_psf.maxk,
                 noise_pad=noise_pad, rng=self.rng, gsparams=gsparams)
-        if logger:
-            logger.debug('RealGalaxy %d: Made original_gal',use_index)
+        logger.debug('RealGalaxy %d: Made original_gal',use_index)
 
         # Only alter normalization if a change is requested
         if flux is not None or flux_rescale is not None or area_norm != 1:
@@ -341,13 +336,11 @@ class RealGalaxy(GSObject):
         # Initialize the _sbp attribute
         self._conv = Convolve([self.original_gal, psf_inv], gsparams=gsparams)
         self._sbp = self._conv._sbp
-        if logger:
-            logger.debug('RealGalaxy %d: Made gsobject',use_index)
+        logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
         # Save the noise in the image as an accessible attribute
         self._noise = self._noise.convolvedWith(psf_inv, gsparams)
-        if logger:
-            logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
+        logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
 
     @classmethod
     def makeFromImage(cls, image, PSF, xi, **kwargs):
@@ -543,12 +536,14 @@ class RealGalaxyCatalog(object):
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name=None, sample=None, dir=None, preload=False,
                  logger=None, _nobjects_only=False):
+        from ._pyfits import pyfits
+        from .config import LoggerWrapper
+
         if sample is not None and file_name is not None:
             raise GalSimIncompatibleValuesError(
                 "Cannot specify both the sample and file_name.",
                 sample=sample, file_name=file_name)
 
-        from ._pyfits import pyfits
         self.file_name, self.image_dir, self.sample = _parse_files_dirs(file_name, dir, sample)
 
         with pyfits.open(self.file_name) as fits:
@@ -601,7 +596,7 @@ class RealGalaxyCatalog(object):
 
         self.saved_noise_im = {}
         self.loaded_files = {}
-        self.logger = logger
+        self.logger = LoggerWrapper(logger)
 
         # The pyfits commands aren't thread safe.  So we need to make sure the methods that
         # use pyfits are not run concurrently from multiple threads.
@@ -655,15 +650,13 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.
         """
         from ._pyfits import pyfits
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog: start preload')
+        self.logger.debug('RealGalaxyCatalog: start preload')
         for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
             if file_name not in self.loaded_files:
-                if self.logger:
-                    self.logger.debug('RealGalaxyCatalog: preloading %s',file_name)
+                self.logger.debug('RealGalaxyCatalog: preloading %s',file_name)
                 # I use memmap=False, because I was getting problems with running out of
                 # file handles in the great3 real_gal run, which uses a lot of rgc files.
                 # I think there must be a bug in pyfits that leaves file handles open somewhere
@@ -679,19 +672,16 @@ class RealGalaxyCatalog(object):
     def _getFile(self, file_name):
         from ._pyfits import pyfits
         if file_name in self.loaded_files:
-            if self.logger:
-                self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
+            self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
             f = self.loaded_files[file_name]
         else:
             self.loaded_lock.acquire()
             # Check again in case two processes both hit the else at the same time.
             if file_name in self.loaded_files: # pragma: no cover
-                if self.logger:
-                    self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
+                self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
                 f = self.loaded_files[file_name]
             else:
-                if self.logger:
-                    self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
+                self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
                 f = pyfits.open(file_name,memmap=False)
                 self.loaded_files[file_name] = f
             self.loaded_lock.release()
@@ -713,8 +703,7 @@ class RealGalaxyCatalog(object):
         """Returns the galaxy at index `i` as an Image object.
         """
         from .image import Image
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
+        self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
         if i >= len(self.gal_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.gal_file_name)-1),i)
         f = self._getFile(self.gal_file_name[i])
@@ -730,8 +719,7 @@ class RealGalaxyCatalog(object):
         """Returns the PSF at index `i` as an Image object.
         """
         from .image import Image
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
+        self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
         if i >= len(self.psf_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.psf_file_name)-1),i)
         f = self._getFile(self.psf_file_name[i])
@@ -755,8 +743,7 @@ class RealGalaxyCatalog(object):
            as a tuple (im, scale, var).
         """
         from .image import Image
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Start getNoise',i)
+        self.logger.debug('RealGalaxyCatalog %d: Start getNoise',i)
         if self.noise_file_name is None:
             im = None
         else:
@@ -764,15 +751,13 @@ class RealGalaxyCatalog(object):
                 raise GalSimIndexError('index out of range (0..%d)'%(len(self.noise_file_name)-1),i)
             if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
-                if self.logger:
-                    self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
+                self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
             else:
                 self.noise_lock.acquire()
                 # Again, a second check in case two processes get here at the same time.
                 if self.noise_file_name[i] in self.saved_noise_im:  # pragma: no cover
                     im = self.saved_noise_im[self.noise_file_name[i]]
-                    if self.logger:
-                        self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
+                    self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
                     from ._pyfits import pyfits
                     with pyfits.open(self.noise_file_name[i]) as fits:
@@ -780,8 +765,7 @@ class RealGalaxyCatalog(object):
                     im = Image(np.ascontiguousarray(array.astype(np.float64)),
                                       scale=self.pixel_scale[i])
                     self.saved_noise_im[self.noise_file_name[i]] = im
-                    if self.logger:
-                        self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
+                    self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
                 self.noise_lock.release()
 
         return im, self.pixel_scale[i], self.variance[i]
@@ -1017,11 +1001,15 @@ class ChromaticRealGalaxy(ChromaticSum):
         from .bounds import BoundsI
         from .interpolatedimage import InterpolatedImage
         from .correlatednoise import _BaseCorrelatedNoise
+        from .config import LoggerWrapper
+
         if rng is None:
             rng = BaseDeviate()
         elif not isinstance(rng, BaseDeviate):
             raise TypeError("The rng provided to ChromaticRealGalaxy is not a BaseDeviate")
         self.rng = rng
+
+        logger = LoggerWrapper(logger)  # So don't need to check `if logger:` all the time.
 
         # Get the index to use in the catalog
         if index is not None:
@@ -1040,19 +1028,15 @@ class ChromaticRealGalaxy(ChromaticSum):
         else:
             raise GalSimIncompatibleValuesError(
                 "No method specified for selecting a galaxy.", index=index, id=id, random=random)
-        if logger:
-            logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
-                         use_index)
+        logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.', use_index)
         self.index = use_index
 
         # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
         imgs = [rgc.getGalImage(use_index) for rgc in real_galaxy_catalogs]
-        if logger:
-            logger.debug('ChromaticRealGalaxy %d: Got gal_image', use_index)
+        logger.debug('ChromaticRealGalaxy %d: Got gal_image', use_index)
 
         PSFs = [rgc.getPSF(use_index) for rgc in real_galaxy_catalogs]
-        if logger:
-            logger.debug('ChromaticRealGalaxy %d: Got psf', use_index)
+        logger.debug('ChromaticRealGalaxy %d: Got psf', use_index)
 
         bands = [rgc.getBandpass() for rgc in real_galaxy_catalogs]
 
@@ -1070,8 +1054,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             xi = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
             xi = xi.withVariance(var)
             xis.append(xi)
-        if logger:
-            logger.debug('ChromaticRealGalaxy %d: Got noise_image',use_index)
+        logger.debug('ChromaticRealGalaxy %d: Got noise_image',use_index)
         self.catalog_files = [rgc.getFileName() for rgc in real_galaxy_catalogs]
 
         self._initialize(imgs, bands, xis, PSFs, gsparams=gsparams, **kwargs)
