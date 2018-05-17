@@ -153,7 +153,9 @@ def GetSky(config, base, logger=None):
     logger = galsim.config.LoggerWrapper(logger)
     if 'sky_level' in config:
         if 'sky_level_pixel' in config:
-            raise galsim.GalSimConfigError("Cannot specify both sky_level and sky_level_pixel")
+            raise galsim.GalSimConfigValueError(
+                "Cannot specify both sky_level and sky_level_pixel",
+                (config['sky_level'], config['sky_level_pixel']))
         sky_level = galsim.config.ParseValue(config,'sky_level',base,float)[0]
         logger.debug('image %d, obj %d: sky_level = %f',
                      base.get('image_num',0),base.get('obj_num',0), sky_level)
