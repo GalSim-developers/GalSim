@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -98,6 +98,7 @@ class ScatteredImageBuilder(ImageBuilder):
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
+        base['current_image'] = full_image
 
         if 'image_pos' in config and 'world_pos' in config:
             raise AttributeError("Both image_pos and world_pos specified for Scattered image.")
@@ -128,9 +129,9 @@ class ScatteredImageBuilder(ImageBuilder):
             if bounds.isDefined():
                 full_image[bounds] += stamps[k][bounds]
             else:
-                logger.warning(
+                logger.info(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
-                        stamps[k].bounds.center().x, stamps[k].bounds.center().y) +
+                        stamps[k].center.x, stamps[k].center.y) +
                     "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
@@ -181,6 +182,7 @@ class ScatteredImageBuilder(ImageBuilder):
 
         @returns the number of objects
         """
+        orig_index_key = base.get('index_key',None)
         base['index_key'] = 'image_num'
         base['image_num'] = image_num
 
@@ -189,10 +191,10 @@ class ScatteredImageBuilder(ImageBuilder):
             nobj = galsim.config.ProcessInputNObjects(base)
             if nobj is None:
                 raise AttributeError("Attribute nobjects is required for image.type = Scattered")
-            return nobj
         else:
             nobj = galsim.config.ParseValue(config,'nobjects',base,int)[0]
-            return nobj
+        base['index_key'] = orig_index_key
+        return nobj
 
 # Register this as a valid image type
 from .image import RegisterImageType

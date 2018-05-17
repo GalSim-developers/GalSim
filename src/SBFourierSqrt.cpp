@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,8 +24,7 @@
 
 namespace galsim {
 
-    SBFourierSqrt::SBFourierSqrt(const SBProfile& adaptee,
-                                 const GSParamsPtr& gsparams) :
+    SBFourierSqrt::SBFourierSqrt(const SBProfile& adaptee, const GSParams& gsparams) :
         SBProfile(new SBFourierSqrtImpl(adaptee,gsparams)) {}
 
     SBFourierSqrt::SBFourierSqrt(const SBFourierSqrt& rhs) : SBProfile(rhs) {}
@@ -42,14 +41,13 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBFourierSqrt(" << _adaptee.serialize();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBFourierSqrt::SBFourierSqrtImpl::SBFourierSqrtImpl(const SBProfile& adaptee,
-                                                        const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
-        _adaptee(adaptee)
+                                                        const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(adaptee)
     {
         double maxk = maxK();
         _maxksq = maxk*maxk;
@@ -65,7 +63,8 @@ namespace galsim {
         return (k.x*k.x + k.y*k.y <= _maxksq) ? std::sqrt(_adaptee.kValue(k)) : 0.;
     }
 
-    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<T> > im,
                                                       double kx0, double dkx, int izero,
                                                       double ky0, double dky, int jzero) const
     {
@@ -77,19 +76,22 @@ namespace galsim {
         // Now sqrt the values
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double kysq = ky0*ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
-                *ptr = (kx*kx+kysq <= _maxksq) ? std::sqrt(*ptr) : 0.;
+            for (int i=0; i<m; ++i,kx+=dkx) {
+                std::complex<T> val = *ptr;
+                *ptr++ = (kx*kx+kysq <= _maxksq) ? std::sqrt(val) : 0.;
+            }
         }
     }
 
-    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<T> > im,
                                                       double kx0, double dkx, double dkxy,
                                                       double ky0, double dky, double dkyx) const
     {
@@ -101,15 +103,17 @@ namespace galsim {
         // Now sqrt the values
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
-                *ptr = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(*ptr) : 0.;
+            for (int i=0; i<m; ++i,kx+=dkx) {
+                std::complex<T> val = *ptr;
+                *ptr++ = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(val) : 0.;
+            }
         }
     }
 
@@ -132,11 +136,9 @@ namespace galsim {
         return 2. * _adaptee.maxSB() / std::abs(getFlux());
     }
 
-    boost::shared_ptr<PhotonArray> SBFourierSqrt::SBFourierSqrtImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBFourierSqrt::SBFourierSqrtImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         throw SBError("SBFourierSqrt::shoot() not implemented");
-        return boost::shared_ptr<PhotonArray>();
     }
 
 }

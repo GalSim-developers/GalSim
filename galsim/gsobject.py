@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,14 +23,28 @@ objects (galaxies, PSFs, pixel response), which defines the top-level interface 
 of these classes.  The following other files include the implementations of various subclasses
 which define specific surface brightness profiles:
 
-    base.py defines simple objects like Gaussian, Moffat, Exponential, Sersic, etc.
-    compound.py defines combinations of multiple GSObjects like Sum, Convolution, etc.
-    inclinedexponential.py defines a 3D exponential disk at a specified inclination angle.
-    interpolatedimage.py defines a surface brightness profile from an arbitrary image.
-    phase_psf.py defines PSF profiles from the wavefront at the pupil plane.
-    real.py defines RealGalaxy, which uses HST images of real observed galaxies.
-    shapelet.py defines a profile from its shapelet (aka Gauss-Laguerre) decomposition.
-    transform.py defines how other profiles can be sheared, rotated, shifted, etc.
+    gaussian.py: a simple Gaussian profile.
+    moffat.py: a Moffat PSF profile.
+    airy.py: a (possibly obscurated) Airy profile.
+    kolmogorov.py: a Kolmogorov atmospheric PSF profile.
+    exponential.py: an Exponential disc.
+    sersic.py: a Sersic profile, along with DeVaucouleurs as a special case.
+    box.py: Box and Pixel, which are 2D box profiles and TopHat a radial top-hat profile.
+    sum.py: Add, Sum, which allow adding two profiles together.
+    convolve.py: Convolve, Convolution which convolve two profiles together, along with special
+                 cases AutoConvolution and AutoCorrelation, and Deconvolve, Deconvolution.
+    transform.py: Transform, Transformation, which allows profiles to be sheared, rotated,
+                  dilated, shifted, or scaled in flux.
+    fourierprofile.py: FourierProfile, which implements a square root in fourier-space.
+    inclinedexponential.py: InclinedExponential, an inclined 3D exponential disk.
+    inclinedsersic.py: InclinedSersic, an inclined 3D sersic profile.
+    interpolatedimage.py: InterpolatedImage, a surface brightness profile from an arbitrary image.
+    phase_psf.py: PhasePSF, OpticalPSF, PSF profiles from the wavefront at the pupil plane.
+    real.py: RealGalaxy, which uses HST images of real observed galaxies.
+    shapelet.py: a Shapelet profile, aka Gauss-Laguerre decomposition.
+    spergel.py: a Spergel profile, which is qualitatively similar to a Sersic profile, but is
+                analytic in k-space.
+    randwalk.py: RandomWalk, which models knots of star formation.
 
 All these classes have associated methods to (a) retrieve information (like the flux, half-light
 radius, or intensity at a particular point); (b) carry out common operations, like shearing,
@@ -39,9 +53,12 @@ brightness profiles.
 """
 
 import numpy as np
+import math
 
-import galsim
 from . import _galsim
+from .position import PositionD, PositionI
+from .utilities import lazy_property, parse_pos_args
+
 
 class GSObject(object):
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
@@ -93,19 +110,20 @@ class GSObject(object):
     Access Methods
     --------------
 
-    There are some access methods that are available for all GSObjects.  Again, see the docstrings
-    for each method for more details.
+    There are some access methods and properties that are available for all GSObjects.
+    Again, see the docstrings for each method for more details.
 
-        >>> flux = obj.getFlux()
-        >>> centroid = obj.centroid()
-        >>> f_xy = obj.xValue(x,y)
-        >>> fk_xy = obj.kValue(kx,ky)
-        >>> nyq = obj.nyquistScale()
-        >>> stepk = obj.stepK()
-        >>> maxk = obj.maxK()
-        >>> hard = obj.hasHardEdges()
-        >>> axisym = obj.isAxisymmetric()
-        >>> analytic = obj.isAnalyticX()
+        >>> obj.flux
+        >>> obj.centroid
+        >>> obj.nyquist_scale
+        >>> obj.stepk
+        >>> obj.maxk
+        >>> obj.has_hard_edges
+        >>> obj.is_axisymmetric
+        >>> obj.is_analytic_x
+        >>> obj.is_analytic_k
+        >>> obj.xValue(x,y) or obj.xValue(pos)
+        >>> obj.kValue(kx,ky) os obj.kValue(kpos)
 
     Most subclasses have additional methods that are available for values that are particular to
     that specific surface brightness profile.  e.g. `sigma = gauss.getSigma()`.  However, note
@@ -174,48 +192,244 @@ class GSObject(object):
         >>> im = conv.drawImage(image=im)                   # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "galsim/base.py", line 1236, in drawImage
-            image.added_flux = prof.SBProfile.draw(imview.image)
-        RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
+          File "galsim/gsobject.py", line 1615, in drawImage
+            added_photons = prof.drawFFT(draw_image, add)
+          File "galsim/gsobject.py", line 1827, in drawFFT
+            kimage, wrap_size = self.drawFFT_makeKImage(image)
+          File "galsim/gsobject.py", line 1753, in drawFFT_makeKImage
+            "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
+        RuntimeError: drawFFT requires an FFT that is too large: 6144.
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
         >>> conv = galsim.Convolve([gal,psf],gsparams=big_fft_params)
         >>> im = conv.drawImage(image=im)                   # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
 
-    Note that for compound objects in compound.py, like Convolution or Sum, not all GSParams can be
+    Note that for compound objects such as Convolution or Sum, not all GSParams can be
     changed when the compound object is created.  In the example given here, it is possible to
     change parameters related to the drawing, but not the Fourier space parameters for the
     components that go into the Convolution.  To get better sampling in Fourier space, for example,
     the `gal` and/or `psf` should be created with `gsparams` that have a non-default value of
     `folding_threshold`.  This statement applies to the threshold and accuracy parameters.
     """
-    _gsparams = { 'minimum_fft_size' : int,
-                  'maximum_fft_size' : int,
-                  'folding_threshold' : float,
-                  'stepk_minimum_hlr' : float,
-                  'maxk_threshold' : float,
-                  'kvalue_accuracy' : float,
-                  'xvalue_accuracy' : float,
-                  'realspace_relerr' : float,
-                  'realspace_abserr' : float,
-                  'integration_relerr' : float,
-                  'integration_abserr' : float,
-                  'shoot_accuracy' : float,
-                  'allowed_flux_variation' : float,
-                  'range_division_for_extrema' : int,
-                  'small_fraction_of_flux' : float
-                }
-    def __init__(self, obj):
-        # This guarantees that all GSObjects have an SBProfile
-        if isinstance(obj, GSObject):
-            self.SBProfile = obj.SBProfile
-            if hasattr(obj,'noise'):
-                self.noise = obj.noise
-        elif isinstance(obj, _galsim.SBProfile):
-            self.SBProfile = obj
-        else:
-            raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
+    _gsparams_opt = { 'minimum_fft_size' : int,
+                      'maximum_fft_size' : int,
+                      'folding_threshold' : float,
+                      'stepk_minimum_hlr' : float,
+                      'maxk_threshold' : float,
+                      'kvalue_accuracy' : float,
+                      'xvalue_accuracy' : float,
+                      'realspace_relerr' : float,
+                      'realspace_abserr' : float,
+                      'integration_relerr' : float,
+                      'integration_abserr' : float,
+                      'shoot_accuracy' : float,
+                      'allowed_flux_variation' : float,
+                      'range_division_for_extrema' : int,
+                      'small_fraction_of_flux' : float
+                    }
+    def __init__(self):
+        raise NotImplementedError("The GSObject base class should not be instantiated directly.")
+
+    # Note: subclasses are expected to define the following attributes or properties:
+    #
+    # Required for all profiles:
+    #
+    #     _flux (the object's flux, natch)
+    #     _gsparams (use GSParams.check(None) if you just want the default)
+    #     _stepk (the sampling in k space necessary to avoid folding of image in x space)
+    #     _maxk (the value of k beyond which aliasing can be neglected)
+    #     _has_hard_edges (true if should use real-space convolution with another hard edge profile)
+    #     _is_axisymmetric (true if f(x,y) = f(r)
+    #     _is_analytic_x (true if _xValue and _drawReal are implemented)
+    #     _is_analytic_k (true if _kValue and _drawKImage are implemented)
+    #
+    # Required for use with config processing (typically class attributes):
+    #
+    #     _req_params (dict of required config parameters: name : type)
+    #     _opt_params (dict of optional config parameters)
+    #     _single_params (list of dicts for parameters where exactly one of several is required)
+    #     _takes_rng (bool specifying whether rng is an input parameter)
+    #
+    # Optional
+    #
+    #     _centroid (default = PositionD(0,0), which is often the right value)
+    #     _positive_flux (default = _flux + _negative_flux)
+    #     _negative_flux (default = 0; note: this should be absolute value of the negative flux)
+    #     _max_sb (default 1.e500, which in this context is equivalent to "unknown")
+    #     _noise (default None)
+    #
+    # In addition, subclasses should typically define most of the following methods.
+    # The default in each case is to raise a NotImplementedError, so if you cannot implement one,
+    # you may simply not define it.
+    #
+    #     _xValue(self, pos)
+    #     _kValue(self, kpos)
+    #     _drawReal(self, image)
+    #     _shoot(self, photons, ud):
+    #     _drawKImage(self, image)
+    #
+    # Required for real-space convolution
+    #
+    #     _sbp which must be an attribute or property providing a C++-layer SBProfile instance.
+    #
+    # Note that most objects don't need to implement real-space convolution, so use of a C++-layer
+    # SBProfile sub-class is usually only an implementation detail to improve efficiency.
+    #
+    # TODO: For now, _sbp is also required for transformations, but this is expected to be
+    #       addressed in a future PR.
+
+    @property
+    def flux(self):
+        "The flux of the profile"
+        return self._flux
+    @property
+    def gsparams(self):
+        "A GSParams object that sets various parameters relevant for speed/accuracy trade-offs"
+        return self._gsparams
+
+    @property
+    def maxk(self):
+        "The value of k beyond which aliasing can be neglected."
+        return self._maxk
+
+    @property
+    def stepk(self):
+        "The sampling in k space necessary to avoid folding of image in x space."
+        return self._stepk
+
+    @property
+    def nyquist_scale(self):
+        "The Image pixel spacing that does not alias maxk."
+        return math.pi / self.maxk
+
+    @property
+    def has_hard_edges(self):
+        """Whether there are any hard edges in the profile, which would require very small k
+        spacing when working in the Fourier domain.
+        """
+        return self._has_hard_edges
+
+    @property
+    def is_axisymmetric(self):
+        "Wthether the profile is axially symmetric; affects efficiency of evaluation."
+        return self._is_axisymmetric
+
+    @property
+    def is_analytic_x(self):
+        """Whether the real-space values can be determined immediately at any position without
+        requiring a Discrete Fourier Transform.
+        """
+        return self._is_analytic_x
+
+    @property
+    def is_analytic_k(self):
+        """Whether the k-space values can be determined immediately at any position without
+        requiring a Discrete Fourier Transform.
+        """
+        return self._is_analytic_k
+
+    @property
+    def centroid(self):
+        "The (x, y) centroid of an object as a Position."
+        return self._centroid
+
+    @lazy_property
+    def _centroid(self):
+        # Most profiles are centered at 0,0, so make this the default.
+        return PositionD(0,0)
+
+    @property
+    def positive_flux(self):
+        """The expectation value of flux in positive photons.
+
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total flux
+        of the positive-valued photons.
+
+        For profiles that don't have this complication, this is equivalent to getFlux().
+
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
+        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
+        cases involving lookup tables, etc.
+        """
+        return self._positive_flux
+
+    @property
+    def negative_flux(self):
+        """Returns the expectation value of flux in negative photons.
+
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total absolute flux
+        of the negative-valued photons (i.e. as a positive value).
+
+        For profiles that don't have this complication, this returns 0.
+
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
+        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
+        cases involving lookup tables, etc.
+        """
+        return self._negative_flux
+
+    @lazy_property
+    def _positive_flux(self):
+        # The usual case.
+        return self.flux + self._negative_flux
+
+    @lazy_property
+    def _negative_flux(self):
+        # The usual case.
+        return 0.
+
+    @property
+    def max_sb(self):
+        """An estimate of the maximum surface brightness of the object.
+
+        Some profiles will return the exact peak SB, typically equal to the value of
+        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
+        calculate this value without just drawing the image and checking what the maximum value is.
+        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
+        which will generally be conservative on the high side.
+
+        This routine is mainly used by the photon shooting process, where an overestimate of
+        the maximum surface brightness is acceptable.
+
+        Note, for negative-flux profiles, this will return the absolute value of the most negative
+        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
+        rather than the maximum value.  For most profiles, these are the same thing.
+        """
+        return self._max_sb
+
+    @lazy_property
+    def _max_sb(self):
+        # The way this is used, overestimates are conservative.
+        # So the default value of 1.e500 will skip the optimization involving the maximum sb.
+        return 1.e500
+
+    @property
+    def noise(self):
+        """An estimate of the noise already in the profile.
+
+        Some profiles have some noise already in their definition.  E.g. those that come from
+        observations of galaxies in real data.  In GalSim, RealGalaxy objects are an example of
+        this.  In these cases, the noise attribute gives an estimate of the Noise object that
+        would generate noise consistent with that already in the profile.
+
+        It is permissible to attach a noise estimate to an existing object with
+
+            >>> obj.noise = noise    # Some BaseNoise instance
+        """
+        return self._noise
+
+    @noise.setter
+    def noise(self, n):
+        # We allow the user to set the noise with obj.noise = n
+        self._noise = n
+
+    @lazy_property
+    def _noise(self):
+        # Most profiles don't have any noise.
+        return None
 
     # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
     @property
@@ -225,7 +439,9 @@ class GSObject(object):
     @property
     def deinterpolated(self): return self
     @property
-    def SED(self): return galsim.SED(self.flux, 'nm', '1')
+    def SED(self):
+        from .sed import SED
+        return SED(self.flux, 'nm', '1')
     @property
     def spectral(self): return False
     @property
@@ -243,11 +459,13 @@ class GSObject(object):
     # Note: we don't define __iadd__ and similar.  Let python handle this automatically
     # to make obj += obj2 be equivalent to obj = obj + obj2.
     def __add__(self, other):
-        return galsim.Add([self, other])
+        from .sum import Add
+        return Add([self, other])
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
-        return galsim.Add([self, (-1. * other)])
+        from .sum import Add
+        return Add([self, (-1. * other)])
 
     # Make op* work to adjust the flux of an object
     def __mul__(self, other):
@@ -277,79 +495,7 @@ class GSObject(object):
     def __neg__(self):
         return -1. * self
 
-    # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
-    #
-    def maxK(self):
-        """Returns value of k beyond which aliasing can be neglected.
-        """
-        return self.SBProfile.maxK()
-
-    def nyquistScale(self):
-        """Returns Image pixel spacing that does not alias maxK.
-        """
-        return self.SBProfile.nyquistDx()
-
-    def stepK(self):
-        """Returns sampling in k space necessary to avoid folding of image in x space.
-        """
-        return self.SBProfile.stepK()
-
-    def hasHardEdges(self):
-        """Returns True if there are any hard edges in the profile, which would require very small k
-        spacing when working in the Fourier domain.
-        """
-        return self.SBProfile.hasHardEdges()
-
-    def isAxisymmetric(self):
-        """Returns True if axially symmetric: affects efficiency of evaluation.
-        """
-        return self.SBProfile.isAxisymmetric()
-
-    def isAnalyticX(self):
-        """Returns True if real-space values can be determined immediately at any position without
-        requiring a Discrete Fourier Transform.
-        """
-        return self.SBProfile.isAnalyticX()
-
-    def isAnalyticK(self):
-        """Returns True if k-space values can be determined immediately at any position without
-        requiring a Discrete Fourier Transform.
-        """
-        return self.SBProfile.isAnalyticK()
-
-    def centroid(self):
-        """Returns the (x, y) centroid of an object as a Position.
-        """
-        return self.SBProfile.centroid()
-
-    def getFlux(self):
-        """Returns the flux of the object.
-        """
-        return self.SBProfile.getFlux()
-
-    def maxSB(self):
-        """Returns an estimate of the maximum surface brightness of the object.
-
-        Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid()).  However, not all profiles (e.g. Convolution) know how to
-        calculate this value without just drawing the image and checking what the maximum value is.
-        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
-        which will generally be conservative on the high side.
-
-        This routine is mainly used by the photon shooting process, where an overestimate of
-        the maximum surface brightness is acceptable.
-
-        Note, for negative-flux profiles, this will return the absolute value of the most negative
-        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
-        rather than the maximum value.  For most profiles, these are the same thing.
-        """
-        return self.SBProfile.maxSB()
-
-    def getGSParams(self):
-        """Returns the GSParams for the object.
-        """
-        return self.SBProfile.getGSParams()
-
+    # Some calculations that can be done for all GSObjects.
     def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
         """Returns the half-light radius of the object.
 
@@ -381,8 +527,8 @@ class GSObject(object):
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
-                            0.5 * self.nyquistScale()]
-        @param centroid     The position to use for the centroid. [default: self.centroid()]
+                            0.5 * self.nyquist_scale]
+        @param centroid     The position to use for the centroid. [default: self.centroid]
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
                             [default: 0.5]
 
@@ -392,19 +538,18 @@ class GSObject(object):
             return self.half_light_radius
 
         if scale is None:
-            scale = self.nyquistScale() * 0.5
+            scale = self.nyquist_scale * 0.5
 
         if centroid is None:
-            centroid = self.centroid()
+            centroid = self.centroid
 
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         # The offset is to make all the rsq values different to help the precision a bit.
-        offset = galsim.PositionD(0.2, 0.33)
+        offset = PositionD(0.2, 0.33)
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, dtype=float)
 
-        center = im.trueCenter() + offset + centroid/scale
+        center = im.true_center + offset + centroid/scale
         return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
-
 
     def calculateMomentRadius(self, size=None, scale=None, centroid=None, rtype='det'):
         """Returns an estimate of the radius based on unweighted second moments.
@@ -447,8 +592,8 @@ class GSObject(object):
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
-                            self.nyquistScale()]
-        @param centroid     The position to use for the centroid. [default: self.centroid()]
+                            self.nyquist_scale]
+        @param centroid     The position to use for the centroid. [default: self.centroid]
         @param rtype        There are three options for this parameter:
                             - 'trace' means return sqrt(T/2)
                             - 'det' means return det(Q)^1/4
@@ -467,17 +612,16 @@ class GSObject(object):
                 return self.sigma
 
         if scale is None:
-            scale = self.nyquistScale()
+            scale = self.nyquist_scale
 
         if centroid is None:
-            centroid = self.centroid()
+            centroid = self.centroid
 
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         im = self.drawImage(nx=size, ny=size, scale=scale, dtype=float)
 
-        center = im.trueCenter() + centroid/scale
+        center = im.true_center + centroid/scale
         return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
-
 
     def calculateFWHM(self, size=None, scale=None, centroid=None):
         """Returns the full-width half-maximum (FWHM) of the object.
@@ -496,8 +640,8 @@ class GSObject(object):
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
-                            self.nyquistScale()]
-        @param centroid     The position to use for the centroid. [default: self.centroid()]
+                            self.nyquist_scale]
+        @param centroid     The position to use for the centroid. [default: self.centroid]
 
         @returns an estimate of the full-width half-maximum in physical units
         """
@@ -505,33 +649,27 @@ class GSObject(object):
             return self.fwhm
 
         if scale is None:
-            scale = self.nyquistScale()
+            scale = self.nyquist_scale
 
         if centroid is None:
-            centroid = self.centroid()
+            centroid = self.centroid
 
         # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the
         # raw surface brightness profile, not integrated over pixels.
         # The offset is to make all the rsq values different to help the precision a bit.
-        offset = galsim.PositionD(0.2, 0.33)
+        offset = PositionD(0.2, 0.33)
 
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb', dtype=float)
 
         # Get the maximum value, assuming the maximum is at the centroid.
-        if self.isAnalyticX():
+        if self.is_analytic_x:
             Imax = self.xValue(centroid)
         else:
             im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb', offset=-centroid/scale)
             Imax = im1(1,1)
 
-        center = im.trueCenter() + offset + centroid/scale
+        center = im.true_center + offset + centroid/scale
         return im.calculateFWHM(center=center, Imax=Imax)
-
-
-    @property
-    def flux(self): return self.getFlux()
-    @property
-    def gsparams(self): return self.getGSParams()
 
     def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
@@ -546,7 +684,7 @@ class GSObject(object):
         Not all GSObject classes can use this method.  Classes like Convolution that require a
         Discrete Fourier Transform to determine the real space values will not do so for a single
         position.  Instead a RuntimeError will be raised.  The xValue() method is available if and
-        only if `obj.isAnalyticX() == True`.
+        only if `obj.is_analytic_x == True`.
 
         Users who wish to use the xValue() method for an object that is the convolution of other
         profiles can do so by drawing the convolved profile into an image, using the image to
@@ -556,8 +694,17 @@ class GSObject(object):
 
         @returns the surface brightness at that position.
         """
-        pos = galsim.utilities.parse_pos_args(args,kwargs,'x','y')
-        return self.SBProfile.xValue(pos)
+        pos = parse_pos_args(args,kwargs,'x','y')
+        return self._xValue(pos)
+
+    def _xValue(self, pos):
+        """Equivalent to xValue(pos), but pos must be a galsim.PositionD instance
+
+        @param pos      The position at which you want the surface brightness of the object.
+
+        @returns the surface brightness at that position.
+        """
+        raise NotImplementedError("%s does not implement xValue"%self.__class__.__name__)
 
     def kValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in k space.
@@ -567,7 +714,7 @@ class GSObject(object):
         PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
         arguments).
 
-        Techinically, kValue() is available if and only if the given obj has `obj.isAnalyticK()
+        Technically, kValue() is available if and only if the given obj has `obj.is_analytic_k
         == True`, but this is the case for all GSObjects currently, so that should never be an
         issue (unlike for xValue()).
 
@@ -575,13 +722,18 @@ class GSObject(object):
 
         @returns the amplitude of the fourier transform at that position.
         """
-        kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
-        return self.SBProfile.kValue(kpos)
+        kpos = parse_pos_args(args,kwargs,'kx','ky')
+        return self._kValue(kpos)
+
+    def _kValue(self, kpos):
+        """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
+        """
+        raise NotImplementedError("%s does not implement kValue"%self.__class__.__name__)
 
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
 
-        This function is equivalent to `obj.withScaledFlux(flux / obj.getFlux())`.
+        This function is equivalent to `obj.withScaledFlux(flux / obj.flux)`.
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location rescaled such that the total flux will be
@@ -592,18 +744,17 @@ class GSObject(object):
 
         @returns the object with the new flux
         """
-        return self.withScaledFlux(flux / self.getFlux())
+        return self.withScaledFlux(flux / self.flux)
 
     def withScaledFlux(self, flux_ratio):
         """Create a version of the current object with the flux scaled by the given `flux_ratio`.
 
-        This function is equivalent to `obj.withFlux(flux_ratio * obj.getFlux())`.  However, this
-        function is the more efficient one, since it doesn't actually require the call to
-        getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
+        This function is equivalent to `obj.withFlux(flux_ratio * obj.flux)`.  Indeed, withFlux()
+        is implemented in terms of this one.
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.  If `flux_ratio` is an SED,
-        then the returned object is a `ChromaticObject` with an SED multiplied by obj.getFlux().
+        then the returned object is a `ChromaticObject` with an SED multiplied by obj.flux.
         Note that in this case the `.flux` attribute of the GSObject being scaled gets interpreted
         as being dimensionless, instead of having its normal units of [photons/s/cm^2].  The
         photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely
@@ -623,15 +774,16 @@ class GSObject(object):
 
         @returns the object with the new flux.
         """
+        from .sed import SED
+        from .transform import Transform
         # Prohibit non-SED callable flux_ratio here as most likely an error.
-        if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, galsim.SED):
+        if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, SED):
             raise TypeError('callable flux_ratio must be an SED.')
 
-        new_obj = galsim.Transform(self, flux_ratio=flux_ratio)
-
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
-            new_obj.noise = self.noise * flux_ratio**2
-        return new_obj
+        if flux_ratio == 1:
+            return self
+        else:
+            return Transform(self, flux_ratio=flux_ratio)
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given `scale` factor, while preserving
@@ -653,11 +805,8 @@ class GSObject(object):
 
         @returns the expanded object.
         """
-        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.expand(scale)
-        return new_obj
+        from .transform import Transform
+        return Transform(self, jac=[scale, 0., 0., scale])
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given `scale` factor, while preserving
@@ -672,12 +821,9 @@ class GSObject(object):
 
         @returns the dilated object.
         """
+        from .transform import Transform
         # equivalent to self.expand(scale) * (1./scale**2)
-        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.expand(scale) * scale**-4
-        return new_obj
+        return Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -696,7 +842,6 @@ class GSObject(object):
 
         @returns the magnified object.
         """
-        import math
         return self.expand(math.sqrt(mu))
 
     def shear(self, *args, **kwargs):
@@ -716,20 +861,33 @@ class GSObject(object):
 
         @returns the sheared object.
         """
+        from .transform import Transform
+        from .shear import Shear
         if len(args) == 1:
             if kwargs:
                 raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
-            if not isinstance(args[0], galsim.Shear):
+            if not isinstance(args[0], Shear):
                 raise TypeError("Error, unnamed argument to GSObject.shear is not a Shear!")
             shear = args[0]
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
         else:
-            shear = galsim.Shear(**kwargs)
-        new_obj = galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
+            shear = Shear(**kwargs)
+        return Transform(self, jac=shear.getMatrix().ravel().tolist())
 
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.shear(shear)
+    def _shear(self, shear):
+        """Equivalent to self.shear(shear), but without the overhead of sanity checks or other
+        ways to input the shear value.
+
+        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shear.
+        Also, it won't propagate any noise attribute.
+
+        @param shear    The Shear to be applied. Must be a galsim.Shear instance.
+
+        @returns the sheared object.
+        """
+        from .transform import _Transform
+        new_obj = _Transform(self, shear.getMatrix())
         return new_obj
 
     def lens(self, g1, g2, mu):
@@ -760,14 +918,12 @@ class GSObject(object):
 
         @returns the rotated object.
         """
-        if not isinstance(theta, galsim.Angle):
+        from .angle import Angle
+        from .transform import Transform
+        if not isinstance(theta, Angle):
             raise TypeError("Input theta should be an Angle")
         s, c = theta.sincos()
-        new_obj = galsim.Transform(self, jac=[c, -s, s, c])
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.rotate(theta)
-        return new_obj
+        return Transform(self, jac=[c, -s, s, c])
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Create a version of the current object with an arbitrary Jacobian matrix transformation
@@ -795,10 +951,8 @@ class GSObject(object):
 
         @returns the transformed object
         """
-        new_obj = galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
-        return new_obj
+        from .transform import Transform
+        return Transform(self, jac=[dudx, dudy, dvdx, dvdy])
 
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
@@ -828,19 +982,34 @@ class GSObject(object):
 
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
+         -- or --
+        @param offset   The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)
 
         @returns the shifted object.
         """
-        offset = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
-        new_obj = galsim.Transform(self, offset=offset)
+        from .transform import Transform
+        offset = parse_pos_args(args, kwargs, 'dx', 'dy')
+        return Transform(self, offset=offset)
 
-        if hasattr(self,'noise'):
-            new_obj.noise = self.noise
+    def _shift(self, offset):
+        """Equivalent to self.shift(shift), but without the overhead of sanity checks or option
+        to give the shift as (dx,dy).
+
+        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shift.
+        Also, it won't propagate any noise attribute.
+
+        @param offset   The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)
+
+        @returns the shifted object.
+        """
+        from .transform import _Transform
+        new_obj = _Transform(self, offset=offset)
         return new_obj
 
-
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, wmult=1.):
+    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False):
+        from .image import Image
+        from .bounds import _BoundsI
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -859,32 +1028,27 @@ class GSObject(object):
             if bounds is not None:
                 if nx is not None or ny is not None:
                     raise ValueError("Cannot set both bounds and (nx, ny)")
-                image = galsim.Image(bounds=bounds, dtype=dtype)
+                image = Image(bounds=bounds, dtype=dtype)
             elif nx is not None or ny is not None:
                 if nx is None or ny is None:
                     raise ValueError("Must set either both or neither of nx, ny")
-                image = galsim.Image(nx, ny, dtype=dtype)
+                image = Image(nx, ny, dtype=dtype)
             else:
-                N = self.getGoodImageSize(1.0/wmult)
+                N = self.getGoodImageSize(1.0)
                 if odd: N += 1
-                image = galsim.Image(N, N, dtype=dtype)
+                image = Image(N, N, dtype=dtype)
 
         # Resize the given image if necessary
         elif not image.bounds.isDefined():
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            N = self.getGoodImageSize(1.0/wmult)
+            N = self.getGoodImageSize(1.0)
             if odd: N += 1
-            bounds = galsim._BoundsI(1,N,1,N)
+            bounds = _BoundsI(1,N,1,N)
             image.resize(bounds)
-            image.setZero()
 
         # Else use the given image as is
-        else:
-            # Clear the image if we are not adding to it.
-            if not add_to_image:
-                image.setZero()
 
         return image
 
@@ -900,36 +1064,37 @@ class GSObject(object):
         if not bounds.isDefined():
             raise ValueError("Cannot provide non-local wcs with automatically sized image")
         elif use_true_center:
-            obj_cen = bounds.trueCenter()
+            obj_cen = bounds.true_center
         else:
-            obj_cen = bounds.center()
+            obj_cen = bounds.center
             # Convert from PositionI to PositionD
-            obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
+            obj_cen = PositionD(obj_cen.x, obj_cen.y)
         # _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.
         obj_cen += offset
         return wcs.local(image_pos=obj_cen)
 
     def _parse_offset(self, offset):
         if offset is None:
-            return galsim.PositionD(0,0)
+            return PositionD(0,0)
         else:
-            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
-                return galsim.PositionD(offset.x, offset.y)
+            if isinstance(offset, PositionD) or isinstance(offset, PositionI):
+                return PositionD(offset.x, offset.y)
             else:
                 # Let python raise the appropriate exception if this isn't valid.
-                return galsim.PositionD(offset[0], offset[1])
+                return PositionD(offset[0], offset[1])
 
     def _get_new_bounds(self, image, nx, ny, bounds):
+        from .bounds import BoundsI
         if image is not None and image.bounds.isDefined():
             return image.bounds
         elif nx is not None and ny is not None:
-            return galsim.BoundsI(1,nx,1,ny)
+            return BoundsI(1,nx,1,ny)
         elif bounds is not None and bounds.isDefined():
             return bounds
         else:
-            return galsim.BoundsI()
+            return BoundsI()
 
-    def _fix_center(self, new_bounds, offset, use_true_center, reverse):
+    def _adjust_offset(self, new_bounds, offset, use_true_center):
         # Note: this assumes self is in terms of image coordinates.
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
@@ -941,27 +1106,20 @@ class GSObject(object):
             shape = new_bounds.numpyShape()
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
-            offset = galsim.PositionD(dx,dy)
-
-        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse:
-            offset = -offset
-
-        if offset == galsim.PositionD(0,0):
-            return self
-        else:
-            return self.shift(offset)
+            offset = PositionD(dx,dy)
+        return offset
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
+        from .wcs import BaseWCS, PixelScale
         # Determine the correct wcs given the input scale, wcs and image.
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
-            if not isinstance(wcs, galsim.BaseWCS):
+            if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             if image is not None: image.wcs = None
         elif scale is not None:
-            wcs = galsim.PixelScale(scale)
+            wcs = PixelScale(scale)
             if image is not None: image.wcs = None
         elif image is not None and image.wcs is not None:
             wcs = image.wcs
@@ -969,7 +1127,7 @@ class GSObject(object):
         # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
         if wcs is None or (wcs.isPixelScale() and wcs.scale <= 0):
             if default_wcs is None:
-                wcs = galsim.PixelScale(self.nyquistScale())
+                wcs = PixelScale(self.nyquist_scale)
             else:
                 wcs = default_wcs
 
@@ -982,7 +1140,8 @@ class GSObject(object):
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, surface_ops=(), setup_only=False, dx=None, wmult=1.):
+                  poisson_flux=None, sensor=None, surface_ops=(), n_subsample=3, maxN=None,
+                  save_photons=False, setup_only=False):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -990,6 +1149,9 @@ class GSObject(object):
         existing one if provided by the `image` parameter.  If the `image` is given, you can also
         optionally add to the given Image if `add_to_image = True`, but the default is to replace
         the current contents with new values.
+
+        Providing an input image
+        ------------------------
 
         Note that if you provide an `image` parameter, it is the image onto which the profile
         will be drawn.  The provided image *will be modified*.  A reference to the same image
@@ -1010,6 +1172,9 @@ class GSObject(object):
                 >>> stamp = obj.drawImage(image = full_image[b])
                 >>> assert (stamp.array == full_image[b].array).all()
 
+        Letting drawImage create the image for you
+        ------------------------------------------
+
         If drawImage() will be creating the image from scratch for you, then there are several ways
         to control the size of the new image.  If the `nx` and `ny` keywords are present, then an
         image with these numbers of pixels on a side will be created.  Similarly, if the `bounds`
@@ -1024,6 +1189,9 @@ class GSObject(object):
         not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
         scale for the current object.  You can also set the data type used in the new Image with the
         `dtype` parameter that has the same options as for the Image constructor.
+
+        The drawing "method"
+        --------------------
 
         There are several different possible methods drawImage() can use for rendering the image.
         This is set by the `method` parameter.  The options are:
@@ -1079,21 +1247,6 @@ class GSObject(object):
                         it could be useful if you want to view the surface brightness profile of an
                         object directly, without including the pixel integration.
 
-        Normally, the flux of the object should be equal to the sum of all the pixel values in the
-        image, less some small amount of flux that may fall off the edge of the image (assuming you
-        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
-        between photons and ADU (so-called analog-to-digital units), the units of the pixel values
-        in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold the
-        quantum efficiency into the gain as well, so the units are photons/ADU.
-
-        Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
-        So if you want, you can keep track of this properly and provide an `area` and `exposure`
-        time here. This detail is more important with chromatic objects where the SED is typically
-        given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
-        objects however, it is often more convenient to ignore these details and just consider the
-        flux to be the total number of photons for this exposure, in which case, you would leave the
-        area and exptime parameters at their default value of 1.
-
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
         number of photons to shoot is normally calculated from the object's flux.  This flux is
         taken to be given in photons/cm^2/s, so for most simple profiles, this times area * exptime
@@ -1109,6 +1262,15 @@ class GSObject(object):
         `poisson_flux=False`.  It also defaults to False if you set an explicit value for
         `n_photons`.
 
+        Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
+        to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
+        the nature of the radial profile). See `help(galsim.GSParams)` for parameters that you can
+        use to reduce the level of these artifacts, in particular `folding_threshold` may be
+        helpful if you see such artifacts in your images.
+
+        Setting the offset
+        ------------------
+
         The object will by default be drawn with its nominal center at the center location of the
         image.  There is thus a qualitative difference in the appearance of the rendered profile
         when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this
@@ -1116,16 +1278,34 @@ class GSObject(object):
         central pixels of an even-sized image.  There are two parameters that can affect this
         behavior.  If you want the nominal center to always fall at the center of a pixel, you can
         use `use_true_center=False`.  This will put the object's center at the position
-        `image.center()` which is an integer pixel value, and is not the true center of an
+        `image.center` which is an integer pixel value, and is not the true center of an
         even-sized image.  You can also arbitrarily offset the profile from the image center with
         the `offset` parameter to handle any sub-pixel dithering you want.
+
+        Setting the overall normalization
+        ---------------------------------
+
+        Normally, the flux of the object should be equal to the sum of all the pixel values in the
+        image, less some small amount of flux that may fall off the edge of the image (assuming you
+        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
+        between photons and ADU (so-called analog-to-digital units), the units of the pixel values
+        in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold the
+        quantum efficiency into the gain as well, so the units are photons/ADU.
+
+        Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
+        So if you want, you can keep track of this properly and provide an `area` and `exposure`
+        time here. This detail is more important with chromatic objects where the SED is typically
+        given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
+        objects however, it is often more convenient to ignore these details and just consider the
+        flux to be the total number of photons for this exposure, in which case, you would leave the
+        area and exptime parameters at their default value of 1.
 
         On return, the image will have an attribute `added_flux`, which will be set to the total
         flux added to the image.  This may be useful as a sanity check that you have provided a
         large enough image to catch most of the flux.  For example:
 
             >>> obj.drawImage(image)
-            >>> assert image.added_flux > 0.99 * obj.getFlux()
+            >>> assert image.added_flux > 0.99 * obj.flux
 
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object,
@@ -1159,11 +1339,49 @@ class GSObject(object):
             >>> im.array.sum()
             49.998158
 
-        Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
-        to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
-        the nature of the radial profile). See `help(galsim.GSParams)` for parameters that you can
-        use to reduce the level of these artifacts, in particular `folding_threshold` may be
-        helpful if you see such artifacts in your images.
+        Using a non-trivial sensor
+        --------------------------
+
+        Normally the sensor is modeled as an array of pixels where any photon that hits a given
+        pixel is accumulated into that pixel.  The final pixel value then just reflects the total
+        number of pixels that hit each sensor.  However, real sensors do not (quite) work this way.
+
+        In real CCDs, the photons travel some distance into the silicon before converting to
+        electrons.  Then the electrons diffuse laterally some amount as they are pulled by the
+        electric field toward the substrate.  Finally, previous electrons that have already been
+        deposited will repel subsequent electrons, both slowing down their descent, leading to
+        more diffusion, and pushing them laterally toward neighboring pixels, which is called
+        the brighter-fatter effect.
+
+        Users interested in modeling this kind of effect can supply a `sensor` object to use
+        for the accumulation step.  See `SiliconSensor` in sensor.py for a class that models
+        silicon-based CCD sensors.
+
+        Some related effects may need to be done to the photons at the surface layer before being
+        passed into the sensor object.  For instance, the photons may need to be given appropriate
+        incidence angles according to the optics of the telescope (since this matters for where the
+        photons are converted to electrons).  You may also need to give the photons wavelengths
+        according to the SED of the object.  Such steps are specified in a `surface_ops` parameter,
+        which should be a list of any such operations you wish to perform on the photon array
+        before passing them to the sensor.  See `FRatioAngles` and `WavelengthSampler` in
+        photon_array.py for two examples of such surface operators.
+
+        Since the sensor deals with photons, it is most natural to use this feature in conjunction
+        with photon shooting (`method='phot'`).  However, it is allowed with FFT methods too.
+        But there is a caveat one should be aware of in this case.  The FFT drawing is used to
+        produce an intermediate image, which is then converted to a PhotonArray using the
+        factory function `PhotonArray.makeFromImage`.  This assigns photon positions randomly
+        within each pixel where they were drawn, which isn't always a particularly good
+        approximation.
+
+        To improve this behavior, the intermediate image is drawn with smaller pixels than the
+        target image, so the photons are given positions closer to their true locations.  The
+        amount of subsampling is controlled by the `n_subsample` parameter, which defaults to 3.
+        Larger values will be more accurate at the expense of larger FFTs (i.e. slower and using
+        more memory).
+
+        Initialization parameters
+        -------------------------
 
         @param image        If provided, this will be the image on which to draw the profile.
                             If `image` is None, then an automatically-sized Image will be created.
@@ -1200,9 +1418,9 @@ class GSObject(object):
                             Note: This requires that `image` be provided and that it have defined
                             bounds. [default: False]
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
-                            of the image (using the function image.bounds.trueCenter()).
-                            If you would rather use the integer center (given by
-                            image.bounds.center()), set this to `False`.  [default: True]
+                            of the image (using the property image.true_center).
+                            If you would rather use the integer center (given by image.center),
+                            set this to `False`.  [default: True]
         @param offset       The location in pixel coordinates at which to center the profile being
                             drawn relative to the center of the image (either the true center if
                             `use_true_center=True` or nominal center if `use_true_center=False`).
@@ -1235,9 +1453,22 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param sensor       An optional Sensor instance, which will be used to accumulate the
+                            photons onto the image. [default: None]
         @param surface_ops  A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
+        @param n_subsample  The number of sub-pixels per final pixel to use for fft drawing when
+                            using a sensor.  The sensor step needs to know the sub-pixel positions
+                            of the photons, which is lost in the fft method.  So using smaller
+                            pixels for the fft step keeps some of that information, making the
+                            assumption of uniform flux per pixel less bad of an approximation.
+                            [default: 3]
+        @param maxN         Sets the maximum number of photons that will be added to the image
+                            at a time.  (Memory requirements are proportional to this number.)
+                            [default: None, which means no limit]
+        @param save_photons If True, save the PhotonArray as `image.photons`. Only valid if method
+                            is 'phot' or sensor is not None.  [default: False]
         @param setup_only   Don't actually draw anything on the image.  Just make sure the image
                             is set up correctly.  This is used internally by GalSim, but there
                             may be cases where the user will want the same functionality.
@@ -1245,20 +1476,15 @@ class GSObject(object):
 
         @returns the drawn Image.
         """
-        # Check for obsolete parameters
-        if dx is not None and scale is None: # pragma: no cover
-            from .deprecated import depr
-            depr('dx', 1.1, 'scale')
-            scale = dx
-        if wmult != 1.: # pragma: no cover
-            from .deprecated import depr
-            depr('wmult', 1.5, 'GSParams(folding_threshold)',
-                 'The old wmult parameter should not generally be required to get accurate FFT-'
-                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
-                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
+        from .image import Image, ImageD
+        from .convolve import Convolve, Convolution, Deconvolve
+        from .box import Pixel
+        from .wcs import PixelScale
+        from .random import UniformDeviate
+        from .photon_array import PhotonArray
 
         # Check that image is sane
-        if image is not None and not isinstance(image, galsim.Image):
+        if image is not None and not isinstance(image, Image):
             raise ValueError("image is not an Image instance")
 
         # Make sure (gain, area, exptime) have valid values:
@@ -1273,8 +1499,8 @@ class GSObject(object):
             raise ValueError("Invalid method name = %s"%method)
 
         # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
-        if method == 'auto' and isinstance(self, galsim.Convolution):
-            if any([ isinstance(obj, galsim.Pixel) for obj in self.obj_list ]):
+        if method == 'auto' and isinstance(self, Convolution):
+            if any([ isinstance(obj, Pixel) for obj in self.obj_list ]):
                 import warnings
                 warnings.warn(
                     "You called drawImage with `method='auto'` "
@@ -1286,7 +1512,7 @@ class GSObject(object):
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
         # Some parameters are only relevant for method == 'phot'
-        if method != 'phot':
+        if method != 'phot' and sensor is None:
             if n_photons != 0.:
                 raise ValueError("n_photons is only relevant for method='phot'")
             if rng is not None:
@@ -1297,6 +1523,12 @@ class GSObject(object):
                 raise ValueError("poisson_flux is only relevant for method='phot'")
             if surface_ops != ():
                 raise ValueError("surface_ops are only relevant for method='phot'")
+            if save_photons:
+                raise ValueError("save_photons is only valid for method='phot'")
+        else:
+            # If we want to save photons, it doesn't make sense to limit the number per shoot call.
+            if save_photons and maxN is not None:
+                raise ValueError("Setting maxN is incompatible with save_photons=True")
 
         # Do any delayed computation needed by fft or real_space drawing.
         if method != 'phot':
@@ -1317,6 +1549,12 @@ class GSObject(object):
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = local_wcs.toImage(self)
 
+        # Apply the offset, and possibly fix the centering for even-sized images
+        offset = self._adjust_offset(new_bounds, offset, use_true_center)
+        if offset != PositionD(0,0):
+            prof = prof._shift(offset)
+            local_wcs = local_wcs.withOrigin(offset)
+
         # Account for area and exptime.
         flux_scale = area * exptime
         # For surface brightness normalization, also scale by the pixel area.
@@ -1324,7 +1562,7 @@ class GSObject(object):
             flux_scale /= local_wcs.pixelArea()
         # Only do the gain here if not photon shooting, since need the number of photons to
         # reflect that actual photons, not ADU.
-        if gain != 1 and method != 'phot':
+        if gain != 1 and method != 'phot' and sensor is None:
             flux_scale /= gain
 
         prof *= flux_scale
@@ -1337,13 +1575,12 @@ class GSObject(object):
                 real_space = False
             else:
                 real_space = True
-            prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0), real_space=real_space)
-
-        # Apply the offset, and possibly fix the centering for even-sized images
-        prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
+            prof_no_pixel = prof
+            prof = Convolve(prof, Pixel(scale=1.0, gsparams=self.gsparams),
+                            real_space=real_space, gsparams=self.gsparams)
 
         # Make sure image is setup correctly
-        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, wmult=wmult)
+        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype)
         image.wcs = wcs
 
         if setup_only:
@@ -1353,48 +1590,116 @@ class GSObject(object):
         # Making a view of the image lets us change the center without messing up the original.
         imview = image._view()
         imview.setCenter(0,0)
-        imview.wcs = galsim.PixelScale(1.0)
-
+        imview.wcs = PixelScale(1.0)
+        orig_center = image.center  # Save the original center to pass to sensor.accumulate
         if method == 'phot':
-            added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
-                                          surface_ops, gain)
-        elif prof.isAnalyticX():
-            added_photons = prof.drawReal(imview)
+            added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
+                                                   n_photons, rng, max_extra_noise, poisson_flux,
+                                                   sensor, surface_ops, maxN,
+                                                   orig_center, local_wcs)
         else:
-            added_photons = prof.drawFFT(imview, wmult)
+            # If not using phot, but doing sensor, then make a copy.
+            if sensor is not None:
+                if imview.dtype in [np.float32, np.float64]:
+                    dtype = None
+                else:
+                    dtype = np.float64
+                draw_image = imview.real.subsample(n_subsample, n_subsample, dtype=dtype)
+                draw_image.setCenter(0,0)
+                if method in ['auto', 'fft', 'real_space']:
+                    # Need to reconvolve by the new smaller pixel instead
+                    prof = Convolve(
+                            prof_no_pixel,
+                            Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
+                            real_space=real_space, gsparams=self.gsparams)
+                elif n_subsample != 1:
+                    # We can't just pull off the pixel-free version, so we need to deconvolve
+                    # by the original pixel and reconvolve by the smaller one.
+                    prof = Convolve(
+                            prof,
+                            Deconvolve(Pixel(scale=1.0, gsparams=self.gsparams)),
+                            Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
+                            gsparams=self.gsparams)
+                add = False
+                if not add_to_image: imview.setZero()
+            else:
+                draw_image = imview
+                add = add_to_image
+
+            if prof.is_analytic_x:
+                added_photons = prof.drawReal(draw_image, add)
+            else:
+                added_photons = prof.drawFFT(draw_image, add)
+
+            if sensor is not None:
+                ud = UniformDeviate(rng)
+                photons = PhotonArray.makeFromImage(draw_image, rng=ud)
+                for op in surface_ops:
+                    op.applyTo(photons, local_wcs)
+                if imview.dtype in [np.float32, np.float64]:
+                    added_photons = sensor.accumulate(photons, imview, orig_center)
+                else:
+                    # Need a temporary
+                    im1 = ImageD(bounds=imview.bounds)
+                    added_photons = sensor.accumulate(photons, im1, orig_center)
+                    imview.array[:,:] += im1.array.astype(imview.dtype, copy=False)
 
         image.added_flux = added_photons / flux_scale
+        if save_photons:
+            image.photons = photons
 
         return image
 
-    def drawReal(self, image):
+    def drawReal(self, image, add_to_image=False):
         """
         Draw this profile into an Image by direct evaluation at the location of each pixel.
 
         This is usually called from the `drawImage` function, rather than called directly by the
-        user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a pixel scale wcs.  The profile being
-        drawn should have already been converted to image coordinates via
+        user.  In particular, the input image must be already set up with defined bounds.  The
+        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
+        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+        wcs.  The profile being drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
-        The image is not cleared out before drawing.  So this profile will be added to anything
-        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
-        options.  If you don't want to add to the existing image, just call `image.setZero()`
-        before calling `drawReal`.
-
         Note that the image produced by `drawReal` represents the profile sampled at the center
         of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
-        integrated over the area of the pixel.  If you want to render a profile integrated over
-        the pixel, you can convolve with a Pixel first and draw that.
+        integrated over the area of the pixel.  This is equivalent to method='no_pixel' in
+        drawImage.  If you want to render a profile integrated over the pixel, you can convolve
+        with a Pixel first and draw that.
 
         @param image        The Image onto which to place the flux. [required]
-                            Note: The flux will be added to any flux already on the image,
-                            so this corresponds to the add_to_image=True option in drawImage.
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing. [default: False]
 
         @returns The total flux drawn inside the image bounds.
         """
-        return self.SBProfile.draw(image.image, image.scale)
+        from .image import ImageD, ImageF
+        if image.wcs is None or not image.wcs.isPixelScale():
+            raise ValueError("drawReal requires an image with a PixelScale wcs")
+
+        if image.dtype in [ np.float64, np.float32 ] and not add_to_image and image.iscontiguous:
+            self._drawReal(image)
+            return image.array.sum(dtype=float)
+        else:
+            # Need a temporary
+            if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
+                im1 = ImageD(bounds=image.bounds, scale=image.scale)
+            else:
+                im1 = ImageF(bounds=image.bounds, scale=image.scale)
+            self._drawReal(im1)
+            if add_to_image:
+                image.array[:,:] += im1.array.astype(image.dtype, copy=False)
+            else:
+                image.array[:,:] = im1.array
+            return im1.array.sum(dtype=float)
+
+    def _drawReal(self, image):
+        """Equivalent to the regular drawReal(image, add_to_image=False), but without the usual
+        sanity checks, and the image's dtype must be either float32 or float64, and it must
+        have a c_contiguous array (image.iscontiguous must be True).
+        """
+        raise NotImplementedError("%s does not implement drawReal"%self.__class__.__name__)
 
     def getGoodImageSize(self, pixel_scale):
         """Return a good size to use for drawing this profile.
@@ -1410,49 +1715,38 @@ class GSObject(object):
 
         @returns N, a good (linear) size of an image on which to draw this object.
         """
-        return self.SBProfile.getGoodImageSize(pixel_scale)
+        # Start with a good size from stepk and the pixel scale
+        Nd = 2. * math.pi / (pixel_scale * self.stepk)
 
-    def drawFFT(self, image, wmult=1.):
+        # Make it an integer
+        # (Some slop to keep from getting extra pixels due to roundoff errors in calculations.)
+        N = int(math.ceil(Nd*(1.-1.e-12)))
+
+        # Round up to an even value
+        N = 2 * ((N+1) // 2)
+        return N
+
+    def drawFFT_makeKImage(self, image):
         """
-        Draw this profile into an Image by direct evaluation at the location of each pixel.
+        This is a helper routine for drawFFT that just makes the (blank) k-space image
+        onto which the profile will be drawn.  This can be useful if you want to break
+        up the calculation into parts for extra efficiency.  E.g. save the k-space image of
+        the PSF so drawing many models of the galaxy with the given PSF profile can avoid
+        drawing the PSF each time.
 
-        This is usually called from the `drawImage` function, rather than called directly by the
-        user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a pixel scale of 1.0.  The profile being
-        drawn should have already been converted to image coordinates via
+        @param image        The Image onto which to place the flux.
 
-            >>> image_profile = original_wcs.toImage(original_profile)
-
-        The image is not cleared out before drawing.  So this profile will be added to anything
-        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
-        options.  If you don't want to add to the existing image, just call `image.setZero()`
-        before calling `drawFFT`.
-
-        Note that the image produced by `drawFFT` represents the profile sampled at the center
-        of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
-        integrated over the area of the pixel.  If you want to render a profile integrated over
-        the pixel, you can convolve with a Pixel first and draw that.
-
-        @param image        The Image onto which to place the flux. [required]
-                            Note: The flux will be added to any flux already on the image,
-                            so this corresponds to the add_to_image=True option in drawImage.
-
-        @returns The total flux drawn inside the image bounds.
+        @returns (kimage, wrap_size), where wrap_size is either the size of kimage or smaller if
+                                      the result should be wrapped before doing the inverse fft.
         """
-        if wmult != 1.: # pragma: no cover
-            from .deprecated import depr
-            depr('wmult', 1.5, 'GSParams(folding_threshold)',
-                 'The old wmult parameter should not generally be required to get accurate FFT-'
-                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
-                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
-            if type(wmult) != float:
-                wmult = float(wmult)
-
+        from .bounds import _BoundsI
+        from .image import ImageCD, ImageCF
         # Start with what this profile thinks a good size would be given the image's pixel scale.
-        N = self.getGoodImageSize(image.scale/wmult)
+        N = self.getGoodImageSize(image.scale)
 
         # We must make something big enough to cover the target image size:
-        image_N = max(image.bounds.numpyShape())
+        image_N = max(np.max(np.abs((image.bounds._getinitargs()))) * 2,
+                      np.max(image.bounds.numpyShape()))
         N = max(N, image_N)
 
         # Round up to a good size for making FFTs:
@@ -1461,38 +1755,95 @@ class GSObject(object):
         # Make sure we hit the minimum size specified in the gsparams.
         N = max(N, self.gsparams.minimum_fft_size)
 
-        dk = 2.*np.pi / N
+        dk = 2.*np.pi / (N * image.scale)
 
-        if N*dk/2 > self.maxK():
+        maxk = self.maxk
+        if N*dk/2 > maxk:
             Nk = N
         else:
             # There will be aliasing.  Make a larger image and then wrap it.
-            Nk = int(np.ceil(self.maxK()/dk)) * 2
+            Nk = int(np.ceil(maxk/dk)) * 2
 
         if Nk > self.gsparams.maximum_fft_size:
             raise RuntimeError(
-                "drawFFT requires an FFT that is too large: %s."%Nk +
+                "drawFFT requires an FFT that is too large: %s. "%Nk +
                 "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
 
-        # Draw the image in k space.
-        bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
-        kimage = galsim.ImageC(bounds=bounds, scale=dk)
-        self.SBProfile.drawK(kimage.image.view(), dk)
+        bounds = _BoundsI(0,Nk//2,-Nk//2,Nk//2)
+        if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:
+            kimage = ImageCD(bounds=bounds, scale=dk)
+        else:
+            kimage = ImageCF(bounds=bounds, scale=dk)
+        return kimage, N
 
+    def drawFFT_finish(self, image, kimage, wrap_size, add_to_image):
+        """
+        This is a helper routine for drawFFT that finishes the calculation, based on the
+        drawn k-space image.
+
+        It applies the Fourier transform to `kimage` and adds the result to `image`.
+
+        @param image        The Image onto which to place the flux.
+        @param kimage       The k-space Image where the object was drawn.
+        @param wrap_size    The size of the region to wrap kimage, which must be either the same
+                            size as kimage or smaller.
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
+
+        @returns The total flux drawn inside the image bounds.
+        """
+        from .bounds import _BoundsI
+        from .image import Image
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
-        bwrap = galsim._BoundsI(0, N//2, -N//2, N//2-1)
-        kimage_wrap = kimage.image.wrap(bwrap, True, False)
+        bwrap = _BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
+        kimage_wrap = kimage._wrap(bwrap, True, False)
 
         # Perform the fourier transform.
-        real_image = kimage_wrap.irfft()
+        breal = _BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
+        real_image = Image(breal, dtype=float)
+        _galsim.irfft(kimage_wrap._image, real_image._image, True, True)
 
         # Add (a portion of) this to the original image.
-        image.image += real_image.subImage(image.bounds)
-        added_photons = real_image.subImage(image.bounds).array.sum(dtype=float)
-
+        temp = real_image.subImage(image.bounds)
+        if add_to_image:
+            image += temp
+        else:
+            image.copyFrom(temp)
+        added_photons = temp.array.sum(dtype=float)
         return added_photons
+
+    def drawFFT(self, image, add_to_image=False):
+        """
+        Draw this profile into an Image by computing the k-space image and performing an FFT.
+
+        This is usually called from the `drawImage` function, rather than called directly by the
+        user.  In particular, the input image must be already set up with defined bounds.  The
+        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
+        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+        wcs.  The profile being drawn should have already been converted to image coordinates via
+
+            >>> image_profile = original_wcs.toImage(original_profile)
+
+        Note that the image produced by `drawFFT` represents the profile sampled at the center
+        of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
+        integrated over the area of the pixel.  This is equivalent to method='no_pixel' in
+        drawImage.  If you want to render a profile integrated over the pixel, you can convolve
+        with a Pixel first and draw that.
+
+        @param image        The Image onto which to place the flux. [required]
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing. [default: False]
+
+        @returns The total flux drawn inside the image bounds.
+        """
+        if image.wcs is None or not image.wcs.isPixelScale():
+            raise ValueError("drawPhot requires an image with a PixelScale wcs")
+
+        kimage, wrap_size = self.drawFFT_makeKImage(image)
+        self._drawKImage(kimage)
+        return self.drawFFT_finish(image, kimage, wrap_size, add_to_image)
 
     def _calculate_nphotons(self, n_photons, poisson_flux, max_extra_noise, rng):
         """Calculate how many photons to shoot and what flux_ratio (called g) each one should
@@ -1502,6 +1853,7 @@ class GSObject(object):
 
         @returns n_photons, g
         """
+        from .random import PoissonDeviate
         # For profiles that are positive definite, then N = flux. Easy.
         #
         # However, some profiles shoot some of their photons with negative flux. This means that
@@ -1553,9 +1905,11 @@ class GSObject(object):
         # Returns the total flux placed inside the image bounds by photon shooting.
         #
 
-        flux = self.SBProfile.getFlux()
-        posflux = self.SBProfile.getPositiveFlux()
-        negflux = self.SBProfile.getNegativeFlux()
+        flux = self.flux
+        if flux == 0.0:
+            return 0, 1.0
+        posflux = self.positive_flux
+        negflux = self.negative_flux
         eta = negflux / (posflux + negflux)
         eta_factor = 1.-2.*eta  # This is also the amount to scale each photon.
         mod_flux = flux/(eta_factor*eta_factor)
@@ -1582,7 +1936,7 @@ class GSObject(object):
             # delta Var = (1 - 4*eta + 4*eta^2) * flux
             #           = (1-2eta)^2 * flux
             mean = eta_factor*eta_factor * flux
-            pd = galsim.PoissonDeviate(rng, mean)
+            pd = PoissonDeviate(rng, mean)
             pd_val = pd() - mean + flux
             ratio = pd_val / flux
             g *= ratio
@@ -1591,7 +1945,7 @@ class GSObject(object):
         if n_photons == 0.:
             n_photons = mod_flux
             if max_extra_noise > 0.:
-                gfactor = 1. + max_extra_noise / self.SBProfile.maxSB()
+                gfactor = 1. + max_extra_noise / self.max_sb
                 n_photons /= gfactor
                 g *= gfactor
 
@@ -1612,30 +1966,32 @@ class GSObject(object):
         return iN, g
 
 
-    def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=False,
-                 surface_ops=(), gain=1.0):
+    def drawPhot(self, image, gain=1., add_to_image=False,
+                 n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
+                 sensor=None, surface_ops=(), maxN=None, orig_center=PositionI(0,0),
+                 local_wcs=None):
         """
         Draw this profile into an Image by shooting photons.
 
         This is usually called from the `drawImage` function, rather than called directly by the
-        user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a pixel scale of 1.0.  The profile being
-        drawn should have already been converted to image coordinates via
+        user.  In particular, the input image must be already set up with defined bounds.  The
+        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
+        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+        wcs.  The profile being drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
-        The image is not cleared out before drawing.  So this profile will be added to anything
-        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
-        options.  If you don't want to add to the existing image, just call `image.setZero()`
-        before calling `drawPhot`.
-
         Note that the image produced by `drawPhot` represents the profile integrated over the
         area of each pixel.  This is equivalent to convolving the profile by a square `Pixel`
-        profile and sampling the value at the center of each pixel.
+        profile and sampling the value at the center of each pixel, although this happens
+        automatically by the shooting algorithm, so you do not need to manually convolve by
+        a Pixel as you would for `drawReal` or `drawFFT`.
 
         @param image        The Image onto which to place the flux. [required]
-                            Note: The shot photons will be added to any flux already on the image,
-                            so this corresponds to the add_to_image=True option in drawImage.
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD). [default: 1.]
+        @param add_to_image Whether to add to the existing images rather than clear out
+                            anything in the image before drawing.  [default: False]
         @param n_photons    If provided, the number of photons to use for photon shooting.
                             If not provided (i.e. `n_photons = 0`), use as many photons as
                             necessary to result in an image with the correct Poisson shot
@@ -1663,14 +2019,25 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param sensor       An optional Sensor instance, which will be used to accumulate the
+                            photons onto the image. [default: None]
         @param surface_ops  A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
-        @param gain         The number of photons per ADU ("analog to digital units", the units of
-                            the numbers output from a CCD).  [default: 1.]
+        @param maxN         Sets the maximum number of photons that will be added to the image
+                            at a time.  (Memory requirements are proportional to this number.)
+                            [default: None, which means no limit]
+        @param orig_center  The position of the image center in the original image coordinates.
+                            [default: (0,0)]
+        @param local_wcs    The local wcs in the original image. [default: None]
 
-        @returns The total flux of photons that landed inside the image bounds.
+        @returns (nphotons, photons) where
+            nphotons is the total flux of photons that landed inside the image bounds, and
+            photons is the PhotonArray that was applied to the image.
         """
+        from .random import UniformDeviate
+        from .sensor import Sensor
+        from .image import ImageD
         # Make sure the type of n_photons is correct and has a valid value:
         if n_photons < 0.:
             raise ValueError("Invalid n_photons < 0.")
@@ -1680,19 +2047,22 @@ class GSObject(object):
             else: poisson_flux = False
 
         # Check that either n_photons is set to something or flux is set to something
-        if n_photons == 0. and self.getFlux() == 1.:
+        if n_photons == 0. and self.flux == 1.:
             import warnings
             warnings.warn(
                     "Warning: drawImage for object with flux == 1, area == 1, and "
                     "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
 
-        ud = galsim.UniformDeviate(rng)
+        ud = UniformDeviate(rng)
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
-        if image.wcs != galsim.PixelScale(1.0):
-            raise ValueError("drawPhot requires an image with scale=1.0")
-        if image.center() != galsim.PositionI(0,0):
-            raise ValueError("drawPhot requires an image centered at 0,0")
+        if image.wcs is None or not image.wcs.isPixelScale():
+            raise ValueError("drawPhot requires an image with a PixelScale wcs")
+
+        if sensor is None:
+            sensor = Sensor()
+        elif not isinstance(sensor, Sensor):
+            raise TypeError("The sensor provided is not a Sensor instance")
 
         Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, ud)
 
@@ -1702,17 +2072,21 @@ class GSObject(object):
         # total flux falling inside image bounds, this will be returned on exit.
         added_flux = 0.
 
-        # Don't do more than this at a time to keep the  memory usage reasonable.
-        maxN = 100000
+        if maxN is None:
+            maxN = Ntot
+
+        if not add_to_image: image.setZero()
 
         # Nleft is the number of photons remaining to shoot.
         Nleft = Ntot
+        photons = None  # Just in case Nleft is already 0.
+        resume = False
         while Nleft > 0:
             # Shoot at most maxN at a time
             thisN = min(maxN, Nleft)
 
             try:
-                phot_array = self.shoot(thisN, ud)
+                photons = self.shoot(thisN, ud)
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
@@ -1722,15 +2096,27 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
 
-            phot_array.scaleFlux(g * thisN / Ntot)
+            if g != 1. or thisN != Ntot:
+                photons.scaleFlux(g * thisN / Ntot)
+
+            if image.scale != 1.:
+                photons.scaleXY(1./image.scale)  # Convert x,y to image coords if necessary
 
             for op in surface_ops:
-                op.applyTo(phot_array)
+                op.applyTo(photons, local_wcs)
 
-            added_flux += phot_array.addTo(image.image)
+            if image.dtype in [np.float32, np.float64]:
+                added_flux += sensor.accumulate(photons, image, orig_center, resume=resume)
+                resume = True  # Resume from this point if there are any further iterations.
+            else:
+                # Need a temporary
+                im1 = ImageD(bounds=image.bounds)
+                added_flux += sensor.accumulate(photons, im1, orig_center)
+                image.array[:,:] += im1.array.astype(image.dtype, copy=False)
+
             Nleft -= thisN
 
-        return added_flux
+        return added_flux, photons
 
 
     def shoot(self, n_photons, rng=None):
@@ -1741,14 +2127,31 @@ class GSObject(object):
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
+
         @returns PhotonArray.
         """
-        ud = galsim.UniformDeviate(rng)
-        return self.SBProfile.shoot(n_photons, ud)
+        from .random import UniformDeviate
+        from .photon_array import PhotonArray
 
+        photons = PhotonArray(n_photons)
+        if n_photons == 0:
+            # It's ok to shoot 0, but downstream can have problems with it, so just stop now.
+            return photons
+
+        ud = UniformDeviate(rng)
+        self._shoot(photons, ud)
+        return photons
+
+    def _shoot(self, photons, ud):
+        """Shoot photons into the given PhotonArray
+
+        @param photons      A PhotonArray instance into which the photons should be placed.
+        @param ud           A UniformDeviate instance to use for the photon shooting,
+        """
+        raise NotImplementedError("%s does not implement shoot"%self.__class__.__name__)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
-                   add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
+                   add_to_image=False, recenter=True, setup_only=False):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
 
@@ -1763,7 +2166,7 @@ class GSObject(object):
         Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
         transform of the surface brightness profile.
 
-        @param image        If provided, this will be the ImageC onto which to draw the k-space
+        @param image        If provided, this will be the Image onto which to draw the k-space
                             image.  If `image` is None, then an automatically-sized image will be
                             created.  If `image` is given, but its bounds are undefined, then it
                             will be resized appropriately based on the profile's size.
@@ -1783,49 +2186,16 @@ class GSObject(object):
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it has defined
                             bounds. [default: False]
+        @param recenter     Whether to recenter the image to put k = 0 at the center (True) or to
+                            trust the provided bounds (False).  [default: True]
 
-        @returns an ImageC instance (created if necessary)
+        @returns an Image instance (created if necessary)
         """
-        if isinstance(image,galsim.Image) and isinstance(nx,galsim.Image):
-            # If the user calls drawK(re,im), then give the proper deprecation below.
-            re = image
-            im = nx
-            image = None
-            nx = None
-
-        # Check for obsolete parameters
-        if dk is not None and scale is None: # pragma: no cover
-            from .deprecated import depr
-            depr('dk', 1.1, 'scale')
-            scale = dk
-        if wmult != 1.: # pragma: no cover
-            from .deprecated import depr
-            depr('wmult', 1.5, 'GSParams(folding_threshold)',
-                 'The old wmult parameter should not generally be required to get accurate FFT-'
-                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
-                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
-        if re is not None or im is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('re,im', 1.5, 'image as a single complex ImageC',
-                 'Warning: the input re, im images are being changed to have their arrays be '
-                 'the real and imag parts of the output ImageC object.')
-            if re is None or im is None:
-                raise ValueError("Only one of re or im was provided.")
-            if image is not None:
-                raise ValueError("re and im were provided along with image")
-            image = re + 1j * im
-        if dtype is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('dtype', 1.5, '', 'dtype of returned image will always be numpy.complex128')
-        if gain is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('gain', 1.5, ''
-                 "The gain parameter doesn't really make sense for drawKImage.  If you had been "
-                 "using it, you should now just divide the final image by gain instead.")
-
-        # Make sure provided image is an ImageC
-        if image is not None and image.array.dtype != np.complex128:
-            raise ValueError("Provided image must be an ImageC (aka Image(..., dtype=complex))")
+        from .wcs import PixelScale
+        from .image import Image
+        # Make sure provided image is complex
+        if image is not None and not image.iscomplex:
+            raise ValueError("Provided image must be complex")
 
         # Possibly get the scale from image.
         if image is not None and scale is None:
@@ -1836,83 +2206,60 @@ class GSObject(object):
         # The input scale (via scale or image.scale) is really a dk value, so call it that for
         # clarity here, since we also need the real-space pixel scale, which we will call dx.
         if scale is None or scale <= 0:
-            dk = self.stepK()
+            dk = self.stepk
         else:
             dk = float(scale)
         if image is not None and image.bounds.isDefined():
             dx = np.pi/( max(image.array.shape) // 2 * dk )
         elif scale is None or scale <= 0:
-            dx = self.nyquistScale()
+            dx = self.nyquist_scale
         else:
-            # Then dk = scale, which implies that we need to have dx smaller than nyquistScale
+            # Then dk = scale, which implies that we need to have dx smaller than nyquist_scale
             # by a factor of (dk/stepk)
-            dx = self.nyquistScale() * dk / self.stepK()
+            dx = self.nyquist_scale * dk / self.stepk
 
         # If the profile needs to be constructed from scratch, the _setup_image function will
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
-        real_prof = galsim.PixelScale(dx).toImage(self)
-        if image is None: dtype = np.complex128
-        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128,
-                                       odd=True, wmult=wmult)
+        if image is None or not image.bounds.isDefined():
+            real_prof = PixelScale(dx).toImage(self)
+            dtype = np.complex128 if image is None else image.dtype
+            image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, odd=True)
+
+        # Can't both recenter a provided image and add to it.
+        if recenter and image.center != PositionI(0,0) and add_to_image:
+            raise ValueError("Cannot recenter a non-centered image when add_to_image=True")
+
+        # Set the center to 0,0 if appropriate
+        if recenter and image.center != PositionI(0,0):
+            image._shift(-image.center)
 
         # Set the wcs of the images to use the dk scale size
         image.scale = dk
 
-        if re is not None or im is not None: # pragma: no cover
-            # Make sure the input re and im images get all the right attributes to match
-            # the output image.
-            # This is a hack that won't get all use cases right, but probably most of them.
-            re._array = image._array.real
-            im._array = image._array.imag
-            b = image.bounds
-            re.image = _galsim.ImageView[np.float64](re._array, b.xmin, b.ymin)
-            im.image = _galsim.ImageView[np.float64](im._array, b.xmin, b.ymin)
-            re.scale = image.scale
-            im.scale = image.scale
-            re.setOrigin(image.origin())
-            im.setOrigin(image.origin())
+        if setup_only:
+            return image
 
-        # Making views of the images lets us change the centers without messing up the originals.
-        image.setCenter(0,0)
-
-        self.SBProfile.drawK(image.image.view(), dk)
-
-        if gain is not None:  # pragma: no cover
-            image /= gain
-
+        if not add_to_image and image.iscontiguous:
+            self._drawKImage(image)
+        else:
+            im2 = Image(bounds=image.bounds, dtype=image.dtype, scale=image.scale)
+            self._drawKImage(im2)
+            image += im2
         return image
 
-    def __eq__(self, other):
-        return (type(self) == type(other) and
-                self.SBProfile == other.SBProfile)
+    def _drawKImage(self, image):
+        """Equivalent to drawKImage(image, add_to_image, recenter=False, add_to_image=False), but
+        without the normal sanity checks or the option to create the image automatically.
 
+        The input image must be provided as a complex Image instance (dtype=complex64 or
+        complex128), and the bounds should be set up appropriately (e.g. with 0,0 in the center if
+        so desired).  This corresponds to recenter=False for the normal drawKImage.  And, it must
+        have a c_contiguous array (image.iscontiguous must be True).
+
+        @param image        The Image onto which to draw the k-space image. [required]
+        """
+        raise NotImplementedError("%s does not implement drawKImage"%self.__class__.__name__)
+
+    # Derived classes should define the __eq__ function
     def __ne__(self, other): return not self.__eq__(other)
-    def __hash__(self): return hash(("galsim.GSObject", self.SBProfile))
-
-# Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
-# Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
-# appropriate for that.  But if we get a SBProfile back from say the getObj() method of
-# SBTransform, then we won't know what class it should be.  So, in this case, we use the
-# repr to do the pickling.  This isn't usually a great idea in general, but it provides a
-# convenient way to get the SBProfile to be the correct type in this case.
-# So, getstate just returns the repr string.  And setstate builds the right kind of object
-# by essentially doing `self = eval(repr)`.
-_galsim.SBProfile.__getstate__ = lambda self: self.serialize()
-def SBProfile_setstate(self, state):
-    import galsim
-    # In case the serialization uses these:
-    from numpy import array, int16, int32, float32, float64
-    # The serialization of an SBProfile object should eval to the right thing.
-    # We essentially want to do `self = eval(state)`.  But that doesn't work in python of course.
-    # Se we break up the serialization into the class and the args, then call init with that.
-    cls, args = state.split('(',1)
-    args = args[:-1]  # Remove final paren
-    args = eval(args)
-    self.__class__ = eval(cls)
-    self.__init__(*args)
-_galsim.SBProfile.__setstate__ = SBProfile_setstate
-# Quick and dirty.  Just check serializations are equal.
-_galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
-_galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())

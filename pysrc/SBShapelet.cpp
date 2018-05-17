@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,132 +17,40 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
-#include "NumpyHelper.h"
+#include "PyBind11Helper.h"
 #include "SBShapelet.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PyLVector {
-
-        static bp::object GetArrayImpl(bp::object self, bool isConst)
-        {
-            const LVector& lvector = bp::extract<const LVector&>(self);
-            bp::object numpy_array = MakeNumpyArray(
-                lvector.rVector().cptr(), lvector.size(), lvector.rVector().step(), isConst,
-                lvector.getOwner());
-            return numpy_array;
-        }
-
-        static bp::object GetArray(bp::object lvector) { return GetArrayImpl(lvector, false); }
-        static bp::object GetConstArray(bp::object lvector) { return GetArrayImpl(lvector, true); }
-
-        static LVector* MakeFromArray(int order, const bp::object& array)
-        {
-            double* data = 0;
-            boost::shared_ptr<double> owner;
-            int step = 0;
-            int stride = 0;
-            CheckNumpyArray(array,1,true,data,owner,step,stride);
-            int size = GetNumpyArrayDim(array.ptr(), 0);
-            if (size != PQIndex::size(order)) {
-                PyErr_SetString(PyExc_ValueError, "Array for LVector is the wrong size");
-                bp::throw_error_already_set();
-            }
-            return new LVector(order,tmv::ConstVectorView<double>(data,size,stride,tmv::NonConj));
-            // Note: after building the LVector for return, it is now safe for the owner
-            // to go out of scope and possibly delete the memory for data.
-        }
-
-        static bp::tuple GetPQ(const LVector& lvector, int p, int q)
-        {
-            std::complex<double> val = lvector(p,q);
-            return bp::make_tuple(real(val),imag(val));
-        }
-        static void SetPQ(LVector& lvector, int p, int q, double re, double im)
-        { lvector(p,q) = std::complex<double>(re,im); }
-
-        static void wrap()
-        {
-            bp::class_< LVector > pyLVector("LVector", "", bp::no_init);
-            pyLVector
-                .def(bp::init<int>(bp::arg("order")=0))
-                .def(
-                    "__init__",
-                    bp::make_constructor(
-                        &MakeFromArray, bp::default_call_policies(),
-                        (bp::arg("order"), bp::arg("array"))
-                    )
-                )
-                .def(bp::init<const LVector&>(bp::args("other")))
-                .def("copy", &LVector::copy)
-                .def("resize", &LVector::resize, bp::args("order"))
-                .add_property("array", &GetConstArray)
-                .add_property("order", &LVector::getOrder)
-                .def("size", &LVector::size)
-                .def("getPQ", &GetPQ, bp::args("p","q"))
-                .def("setPQ", &SetPQ, bp::args("p","q","re","im"))
-                .def(bp::self * bp::other<double>())
-                .def("__div__", &LVector::operator/)
-                .def("__truediv__", &LVector::operator/)
-                .def(bp::self + bp::other<LVector>())
-                .def(bp::self - bp::other<LVector>())
-                .def("dot", &LVector::dot, bp::args("other"))
-                .def("rotate", &LVector::rotate, bp::args("theta"))
-                .enable_pickling()
-                ;
-
-            bp::def("ShapeletSize", &PQIndex::size, bp::arg("order"),
-                    "Calculate the size of a shapelet vector for a given order");
-
-        }
-    };
-
-    struct PySBShapelet
+    static void fit(double sigma, int order, size_t idata,
+                    const BaseImage<double>& image, double scale,
+                    const Position<double>& center)
     {
-        template <typename U>
-        static void wrapImageTemplates() {
-            typedef void (*ShapeletFitImage_type)(
-                double sigma, LVector& bvec, const BaseImage<U>& image, double scale,
-                const Position<double>& center);
+        LVector bvec(order);
+        ShapeletFitImage(sigma, bvec, image, scale, center);
 
-            bp::def("ShapeletFitImage", ShapeletFitImage_type(&ShapeletFitImage),
-                    bp::args("sigma","bvec","image","image_scale","center"),
-                    "Fit a Shapelet decomposition to the provided image");
-        }
+        double* data = reinterpret_cast<double*>(idata);
+        int size = PQIndex::size(order);
+        for (int i=0; i<size; ++i) data[i] = bvec.rVector()[i];
+    }
 
-        static void wrap() {
-            bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
-                .def(bp::init<double,LVector,boost::shared_ptr<GSParams> >(
-                        (bp::arg("sigma"), bp::arg("bvec"),
-                         bp::arg("gsparams")=bp::object()))
-                )
-                .def(bp::init<const SBShapelet &>())
-                .def("getSigma", &SBShapelet::getSigma)
-                .def("getBVec", &SBShapelet::getBVec,
-                     bp::return_value_policy<bp::copy_const_reference>())
-                .enable_pickling()
-                ;
-            wrapImageTemplates<float>();
-            wrapImageTemplates<double>();
-            wrapImageTemplates<int16_t>();
-            wrapImageTemplates<int32_t>();
-            wrapImageTemplates<uint16_t>();
-            wrapImageTemplates<uint32_t>();
-        }
-    };
-
-    void pyExportSBShapelet()
+    static SBShapelet* construct(
+        double sigma, int order, size_t idata, GSParams gsparams)
     {
-        PyLVector::wrap();
-        PySBShapelet::wrap();
+        double* data = reinterpret_cast<double*>(idata);
+        int size = PQIndex::size(order);
+        VectorXd v(size);
+        for (int i=0; i<size; ++i) v[i] = data[i];
+        LVector bvec(order, v);
+        return new SBShapelet(sigma, bvec, gsparams);
+    }
+
+    void pyExportSBShapelet(PY_MODULE& _galsim)
+    {
+        py::class_<SBShapelet, BP_BASES(SBProfile)>(GALSIM_COMMA "SBShapelet" BP_NOINIT)
+            .def(PY_INIT(&construct));
+
+        GALSIM_DOT def("ShapeletFitImage", &fit);
     }
 
 } // namespace galsim

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -122,7 +122,7 @@ namespace galsim {
             xdbg<<"leftAbs = "<<leftAbsFlux<<", tot = "<<_totalAbsFlux<<std::endl;
             xdbg<<"abs(diff) = "<<std::abs(leftAbsFlux - _totalAbsFlux)<<std::endl;
             xdbg<<"cf. "<<1.e-8 * _totalAbsFlux<<std::endl;
-            xassert(std::abs(leftAbsFlux - _totalAbsFlux) < 1.e-8 * _totalAbsFlux);
+            xassert(std::abs(leftAbsFlux - _totalAbsFlux) <= 1.e-8 * _totalAbsFlux);
             dbg<<"Done buildTree\n";
 
             // shortcut is a quick way to get to the right Element, or at least a better
@@ -147,12 +147,11 @@ namespace galsim {
                 _leftAbsFlux(leftAbsFlux), _absFlux(absFlux), _invAbsFlux(1./absFlux)
             {
                 xassert(start != end);
-                xassert(absFlux > 0.);
                 if (start + 1 == end) {
                     // Only one element.
                     _dataPtr = &(*start);
                     // absFlux on input should equal the absolute flux in this dataPtr.
-                    xassert(std::abs(std::abs(_dataPtr->getFlux()) - absFlux) <
+                    xassert(std::abs(std::abs(_dataPtr->getFlux()) - absFlux) <=
                             1.e-8 * (leftAbsFlux+absFlux));
                     // Update the running total of leftAbsFlux.
                     leftAbsFlux += std::abs(_dataPtr->getFlux());
@@ -163,6 +162,7 @@ namespace galsim {
                     _right = new Element(mid, end, leftAbsFlux, std::abs(mid->getFlux()));
                 } else {
                     xassert(end > start+2);
+                    xassert(absFlux > 0.);
                     VecIter mid = start;
                     // Divide the range by probability, not by number.
                     // The tree is intentionally unbalanced, so most of the time, the search

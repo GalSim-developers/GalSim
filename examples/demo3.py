@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -238,23 +238,21 @@ def main(argv):
     image_opticalpsf = optics.drawImage(method='sb')
     logger.debug('Made image of the profile')
 
-    # Add a constant sky level to the image.
-    image += sky_level * pixel_scale**2
-
     # This time, we use CCDNoise to model the real noise in a CCD image.  It takes a sky level,
     # gain, and read noise, so it can be a bit more realistic than the simpler GaussianNoise
     # or PoissonNoise that we used in demos 1 and 2.
-    #
+
+    # The sky level for CCDNoise is the level per pixel that contributed to the noise.
+    sky_level_pixel = sky_level * pixel_scale**2
+
     # The gain is in units of e-/ADU.  Technically, one should also account for quantum efficiency
     # (QE) of the detector. An ideal CCD has one electron per incident photon, but real CCDs have
     # QE less than 1, so not every photon triggers an electron.  We are essentially folding
     # the quantum efficiency (and filter transmission and anything else like that) into the gain.
     # The read_noise value is given as e-/pixel.  This is modeled as a pure Gaussian noise
     # added to the image after applying the pure Poisson noise.
-    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-
-    # Subtract off the sky.
-    image -= sky_level * pixel_scale**2
+    noise = galsim.CCDNoise(rng, gain=gain, read_noise=read_noise, sky_level=sky_level_pixel)
+    image.addNoise(noise)
     logger.debug('Added Gaussian and Poisson noise')
 
     # Write the images to files.

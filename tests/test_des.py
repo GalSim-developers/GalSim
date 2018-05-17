@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,17 +20,10 @@ from __future__ import print_function
 import numpy
 import os
 import sys
+
 import galsim
 import galsim.des
-
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-
 from galsim._pyfits import pyfits
 
 @timer
@@ -258,7 +251,7 @@ def test_meds_config():
         nobj = 5
         n_per_obj = 8
     else:
-        nobj = 5
+        nobj = 2
         n_per_obj = 3
     file_name = 'output/test_meds.fits'
     stamp_size = 64
@@ -266,6 +259,13 @@ def test_meds_config():
     seed = 5757231
     g1 = -0.17
     g2 = 0.23
+
+    # generate offsets that depend on the object num so can be easily reproduced
+    # for testing below
+    offset_x = '$ np.sin(999.*(@obj_num+1))'
+    offset_y = '$ np.sin(998.*(@obj_num+1))'
+    def get_offset(obj_num):
+        return galsim.PositionD(np.sin(999.*(obj_num+1)),np.sin(998.*(obj_num+1)))
 
     # The config dict to write some images to a MEDS file
     config = {
@@ -277,8 +277,7 @@ def test_meds_config():
                 },
         'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
         'image' : { 'pixel_scale' : pixel_scale,
-                    'offset' : { 'type' : 'XY' , 'x' : -0.17, 'y' : 0.23 },
-                    'size' : stamp_size },
+                    'size' : stamp_size, 'random_seed' : seed },
         'output' : { 'type' : 'MEDS',
                      'nobjects' : nobj,
                      'nstamps_per_object' : n_per_obj,
@@ -289,6 +288,11 @@ def test_meds_config():
     import logging
     logging.basicConfig(format="%(message)s", level=logging.WARN, stream=sys.stdout)
     logger = logging.getLogger('test_meds_config')
+    galsim.config.Process(config, logger=logger)
+
+    # Add in badpix and offset so we run both with and without options.
+    config['image']['offset'] = { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y }
+    config['output']['badpix'] = {}
     galsim.config.Process(config, logger=logger)
 
     # Now repeat, making a separate file for each
@@ -307,7 +311,8 @@ def test_meds_config():
                         'ny_tiles' : n_per_obj,
                         'pixel_scale' : pixel_scale,
                         'offset' : config['image']['offset'],
-                        'stamp_size' : stamp_size
+                        'stamp_size' : stamp_size,
+                        'random_seed' : seed
                       }
     galsim.config.Process(config, logger=logger)
 
@@ -369,18 +374,27 @@ def test_meds_config():
             box_size = cat['box_size'][iobj]
             numpy.testing.assert_almost_equal(box_size, stamp_size)
 
-            # These should be (box_size-1)/2
-            center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
+            # cutout_row and cutout_col are the "zero-offset"
+            # position of the object in the stamp. In this convention, the center
+            # of the first pixel is at (0,0), call this meds_center.
+            # This means cutout_row/col should be the same as meds_center + offset
+            offset = get_offset(iobj*n_cut+icut)
+            meds_center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
             cutout_row = cat['cutout_row'][iobj][icut]
             cutout_col = cat['cutout_col'][iobj][icut]
-            print('nominal position = ',cutout_col, cutout_row)
-            numpy.testing.assert_almost_equal(cutout_col, center.x)
-            numpy.testing.assert_almost_equal(cutout_row, center.y)
+            print('cutout_row, cutout_col = ',cutout_col, cutout_row)
+            numpy.testing.assert_almost_equal(cutout_col,
+                                              (meds_center+offset).x)
+            numpy.testing.assert_almost_equal(cutout_row,
+                                              (meds_center+offset).y)
 
             # The col0 and row0 here should be the same.
             wcs_meds = m.get_jacobian(iobj, icut)
-            numpy.testing.assert_almost_equal(wcs_meds['col0'], (box_size-1)/2.)
-            numpy.testing.assert_almost_equal(wcs_meds['row0'], (box_size-1)/2.)
+            numpy.testing.assert_almost_equal(wcs_meds['col0'],
+                                              (meds_center+offset).x)
+            numpy.testing.assert_almost_equal(wcs_meds['row0'],
+                                              (meds_center+offset).y)
+
 
             # The centroid should be (roughly) at the nominal center + offset
             img = m.get_cutout(iobj, icut, type='image')
@@ -390,10 +404,11 @@ def test_meds_config():
             iy = numpy.sum(y*img)
             print('centroid = ',ix/itot, iy/itot)
 
-            offset = galsim.PositionD(-0.17, 0.23)
-            print('center + offset = ',center + offset)
-            numpy.testing.assert_almost_equal(ix/itot, (center+offset).x, decimal=2)
-            numpy.testing.assert_almost_equal(iy/itot, (center+offset).y, decimal=2)
+            print('center + offset = ',meds_center + offset)
+            numpy.testing.assert_almost_equal(ix/itot,
+                                              (meds_center+offset).x, decimal=2)
+            numpy.testing.assert_almost_equal(iy/itot,
+                                              (meds_center+offset).y, decimal=2)
 
             # The orig positions are irrelevant and should be 0.
             orig_row = cat['orig_row'][iobj][icut]

@@ -15,15 +15,20 @@
 #ifndef BOOST_RANDOM_POISSON_DISTRIBUTION_HPP
 #define BOOST_RANDOM_POISSON_DISTRIBUTION_HPP
 
-#include "galsim/boost1_48_0/config/no_tr1/cmath.hpp"
 #include <cstdlib>
 #include <iosfwd>
+#ifdef USE_BOOST
+#include <boost/config/no_tr1/cmath.hpp>
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
+#endif
 #include "galsim/boost1_48_0/random/uniform_01.hpp"
-#include "galsim/boost1_48_0/random/detail/config.hpp"
-
-#include "galsim/boost1_48_0/random/detail/disable_warnings.hpp"
+#ifdef USE_BOOST
+#include <boost/random/detail/config.hpp>
+#include <boost/random/detail/disable_warnings.hpp>
+#endif
 
 namespace boost {
 namespace random {
@@ -81,7 +86,9 @@ public:
         explicit param_type(RealType mean_arg = RealType(1))
           : _mean(mean_arg)
         {
+#ifdef USE_BOOST
             BOOST_ASSERT(_mean > 0);
+#endif
         }
         /* Returns the "mean" parameter of the distribution. */
         RealType mean() const { return _mean; }
@@ -355,6 +362,8 @@ using random::poisson_distribution;
 
 } // namespace boost
 
-#include "galsim/boost1_48_0/random/detail/enable_warnings.hpp"
+#ifdef USE_BOOST
+#include <boost/random/detail/enable_warnings.hpp>
+#endif
 
 #endif // BOOST_RANDOM_POISSON_DISTRIBUTION_HPP

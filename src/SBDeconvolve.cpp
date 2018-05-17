@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,8 +24,7 @@
 
 namespace galsim {
 
-    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee,
-                               const GSParamsPtr& gsparams) :
+    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee, const GSParams& gsparams) :
         SBProfile(new SBDeconvolveImpl(adaptee,gsparams)) {}
 
     SBDeconvolve::SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
@@ -42,19 +41,18 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBDeconvolve(" << _adaptee.serialize();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee,
-                                                     const GSParamsPtr& _gsparams) :
-        SBProfileImpl(_gsparams ? _gsparams : GetImpl(adaptee)->gsparams),
-        _adaptee(adaptee)
+                                                     const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(adaptee)
     {
         double maxk = maxK();
         _maxksq = maxk*maxk;
         double flux = GetImpl(_adaptee)->getFlux();
-        _min_acc_kval = flux * gsparams->kvalue_accuracy;
+        _min_acc_kval = flux * gsparams.kvalue_accuracy;
         dbg<<"SBDeconvolve constructor: _maxksq = "<<_maxksq;
         dbg<<", _min_acc_kval = "<<_min_acc_kval<<std::endl;
     }
@@ -78,7 +76,8 @@ namespace galsim {
         }
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                     double kx0, double dkx, int izero,
                                                     double ky0, double dky, int jzero) const
     {
@@ -90,28 +89,31 @@ namespace galsim {
         // Now invert the values, but be careful about not amplifying noise too much.
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double kysq = ky0*ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr) {
+            for (int i=0; i<m; ++i,kx+=dkx) {
                 double ksq = kx*kx + kysq;
-                if (ksq > _maxksq) *ptr = 0.;
+                if (ksq > _maxksq) *ptr++ = T(0);
                 else {
                     double abs_kval = std::abs(*ptr);
                     if (abs_kval < _min_acc_kval)
-                        *ptr = 1./_min_acc_kval;
-                    else
-                        *ptr = 1./(*ptr);
+                        *ptr++ = 1./_min_acc_kval;
+                    else {
+                        std::complex<T> val = *ptr;
+                        *ptr++ = 1./(val);
+                    }
                 }
             }
         }
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                     double kx0, double dkx, double dkxy,
                                                     double ky0, double dky, double dkyx) const
     {
@@ -123,22 +125,24 @@ namespace galsim {
         // Now invert the values, but be careful about not amplifying noise too much.
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx,++ptr) {
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
                 double ksq = kx*kx + ky*ky;
-                if (ksq > _maxksq) *ptr = 0.;
+                if (ksq > _maxksq) *ptr++ = 0.;
                 else {
                     double abs_kval = std::abs(*ptr);
                     if (abs_kval < _min_acc_kval)
-                        *ptr = 1./_min_acc_kval;
-                    else
-                        *ptr = 1./(*ptr);
+                        *ptr++ = 1./_min_acc_kval;
+                    else {
+                        std::complex<T> val = *ptr;
+                        *ptr++ = 1./(val);
+                    }
                 }
             }
         }
@@ -167,11 +171,9 @@ namespace galsim {
         return -_adaptee.maxSB() / std::abs(_adaptee.getFlux() * _adaptee.getFlux());
     }
  
-    boost::shared_ptr<PhotonArray> SBDeconvolve::SBDeconvolveImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBDeconvolve::SBDeconvolveImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         throw SBError("SBDeconvolve::shoot() not implemented");
-        return boost::shared_ptr<PhotonArray>();
     }
 
 }

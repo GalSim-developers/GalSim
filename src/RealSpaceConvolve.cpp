@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -81,7 +81,8 @@ namespace galsim {
             xxdbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
             if (ymax < ymin) ymax = ymin;
 #ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+            std::ostream* integ_dbgout = Debugger::instance().do_level(3) ?
+                &Debugger::instance().get_dbgout() : 0;
             integ::IntRegion<double> reg(ymin,ymax,integ_dbgout);
 #else
             integ::IntRegion<double> reg(ymin,ymax);
@@ -253,7 +254,7 @@ namespace galsim {
 
     double RealSpaceConvolve(
         const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
-        const GSParamsPtr& gsparams)
+        const GSParams& gsparams)
     {
         // Coming in, if only one of them is axisymmetric, it should be p1.
         // This cuts down on some of the logic below.
@@ -263,17 +264,17 @@ namespace galsim {
         // So p2 is always taken to be a rectangle rather than possibly a circle.
         assert(p1.isAxisymmetric() || !p2.isAxisymmetric());
 
-        xdbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
+        dbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
         double xmin1, xmax1, xmin2, xmax2;
         std::vector<double> xsplits1, xsplits2;
         p1.getXRange(xmin1,xmax1,xsplits1);
         p2.getXRange(xmin2,xmax2,xsplits2);
-        xdbg<<"p1 X range = "<<xmin1<<"  "<<xmax1<<std::endl;
-        xdbg<<"p2 X range = "<<xmin2<<"  "<<xmax2<<std::endl;
+        dbg<<"p1 X range = "<<xmin1<<"  "<<xmax1<<std::endl;
+        dbg<<"p2 X range = "<<xmin2<<"  "<<xmax2<<std::endl;
 
         // Check for early exit
         if (pos.x < xmin1 + xmin2 || pos.x > xmax1 + xmax2) {
-            xdbg<<"x is outside range, so trivially 0\n";
+            dbg<<"x is outside range, so trivially 0\n";
             return 0;
         }
 
@@ -281,11 +282,11 @@ namespace galsim {
         std::vector<double> ysplits1, ysplits2;
         p1.getYRange(ymin1,ymax1,ysplits1);
         p2.getYRange(ymin2,ymax2,ysplits2);
-        xdbg<<"p1 Y range = "<<ymin1<<"  "<<ymax1<<std::endl;
-        xdbg<<"p2 Y range = "<<ymin2<<"  "<<ymax2<<std::endl;
+        dbg<<"p1 Y range = "<<ymin1<<"  "<<ymax1<<std::endl;
+        dbg<<"p2 Y range = "<<ymin2<<"  "<<ymax2<<std::endl;
         // Second check for early exit
         if (pos.y < ymin1 + ymin2 || pos.y > ymax1 + ymax2) {
-            xdbg<<"y is outside range, so trivially 0\n";
+            dbg<<"y is outside range, so trivially 0\n";
             return 0;
         }
 
@@ -339,10 +340,11 @@ namespace galsim {
         ConvolveFunc conv(p1,p2,pos);
 
 #ifdef DEBUGLOGGING
-        std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+        std::ostream* integ_dbgout = Debugger::instance().do_level(3) ?
+            &Debugger::instance().get_dbgout() : 0;
         integ::IntRegion<double> xreg(xmin,xmax,integ_dbgout);
-        if (dbgout && verbose_level >= 3) xreg.useFXMap();
-        xdbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
+        if (integ_dbgout) xreg.useFXMap();
+        dbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
 #else
         integ::IntRegion<double> xreg(xmin,xmax);
 #endif
@@ -363,16 +365,16 @@ namespace galsim {
 #endif
 
         double result = integ::int2d(conv, xreg, yreg,
-                                     gsparams->realspace_relerr,
-                                     gsparams->realspace_abserr * flux);
+                                     gsparams.realspace_relerr,
+                                     gsparams.realspace_abserr * flux);
 
 #ifdef TIMING
         gettimeofday(&tp,0);
         double t2 = tp.tv_sec + tp.tv_usec/1.e6;
-        xdbg<<"Time for ("<<pos.x<<','<<pos.y<<") = "<<t2-t1<<std::endl;
+        dbg<<"Time for ("<<pos.x<<','<<pos.y<<") = "<<t2-t1<<std::endl;
 #endif
 
-        xdbg<<"Found result = "<<result<<std::endl;
+        dbg<<"Found result = "<<result<<std::endl;
         return result;
     }
 

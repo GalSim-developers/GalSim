@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,17 +19,17 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/special_functions/gamma.hpp>
+#include <cmath>
 
 #include "SBMoffat.h"
 #include "SBMoffatImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/BesselRoots.h"
+#include "math/Bessel.h"
+#include "math/Gamma.h"
+#include "math/Angle.h"
+#include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
@@ -43,9 +43,12 @@
 
 namespace galsim {
 
-    SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
-                       const GSParamsPtr& gsparams) :
-        SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux, gsparams)) {}
+    inline double fast_pow(double x, double y)
+    { return fmath::expd(y * std::log(x)); }
+
+    SBMoffat::SBMoffat(double beta, double scale_radius, double trunc, double flux,
+                       const GSParams& gsparams) :
+        SBProfile(new SBMoffatImpl(beta, scale_radius, trunc, flux, gsparams)) {}
 
     SBMoffat::SBMoffat(const SBMoffat& rhs) : SBProfile(rhs) {}
 
@@ -87,7 +90,7 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBMoffat("<<getBeta()<<", "<<getScaleRadius();
         oss << ", None, None, "<<getTrunc()<<", "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -99,8 +102,8 @@ namespace galsim {
             _re(re), _rm(rm), _beta(beta) {}
         double operator()(double rd) const
         {
-            double fre = 1.-std::pow(1.+(_re*_re)/(rd*rd), 1.-_beta);
-            double frm = 1.-std::pow(1.+(_rm*_rm)/(rd*rd), 1.-_beta);
+            double fre = 1.-fast_pow(1.+(_re*_re)/(rd*rd), 1.-_beta);
+            double frm = 1.-fast_pow(1.+(_rm*_rm)/(rd*rd), 1.-_beta);
             xdbg<<"func("<<rd<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
             return 2.*fre-frm;
         }
@@ -168,13 +171,14 @@ namespace galsim {
         }
     }
 
-    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
+    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double scale_radius,
                                          double trunc, double flux,
-                                         const GSParamsPtr& gsparams) :
+                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
-        _beta(beta), _flux(flux), _trunc(trunc),
-        _ft(Table<double,double>::spline),
-        _re(0.), // initially set to zero, may be updated by size or getHalfLightRadius().
+        _beta(beta), _flux(flux), _rD(scale_radius),
+        _rD_sq(_rD * _rD), _inv_rD(1./_rD), _inv_rD_sq(_inv_rD*_inv_rD),
+        _trunc(trunc),
+        _ft(Table::spline),
         _stepk(0.), // calculated by stepK() and stored.
         _maxk(0.) // calculated by maxK() and stored.
     {
@@ -189,33 +193,6 @@ namespace galsim {
         if (_trunc < 0.)
             throw SBError("Invalid negative truncation radius provided to SBMoffat.");
 
-        // First, relation between FWHM and rD:
-        double FWHMrD = 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
-        xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
-
-        // Set size of this instance according to type of size given in constructor:
-        switch (rType) {
-          case FWHM:
-               _rD = size / FWHMrD;
-               break;
-          case HALF_LIGHT_RADIUS:
-               {
-                   _re = size;
-                   // This is a bit complicated, so break it out into its own function.
-                   _rD = MoffatCalculateScaleRadiusFromHLR(_re,_trunc,_beta);
-               }
-               break;
-          case SCALE_RADIUS:
-               _rD = size;
-               break;
-          default:
-               throw SBError("Unknown SBMoffat::RadiusType");
-        }
-
-        _rD_sq = _rD * _rD;
-        _inv_rD = 1./_rD;
-        _inv_rD_sq = _inv_rD*_inv_rD;
-
         if (_trunc > 0.) {
             _maxRrD = _trunc * _inv_rD;
             xdbg<<"maxRrD = "<<_maxRrD<<"\n";
@@ -227,11 +204,10 @@ namespace galsim {
 
             // Set maxRrD to the radius where missing fractional flux is xvalue_accuracy
             // (1+R^2)^(1-beta) = xvalue_accuracy
-            _maxRrD = std::sqrt(std::pow(this->gsparams->xvalue_accuracy, 1. / (1. - _beta))- 1.);
+            _maxRrD = std::sqrt(std::pow(this->gsparams.xvalue_accuracy, 1. / (1. - _beta))- 1.);
             xdbg<<"Not truncated.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
-        _FWHM = FWHMrD * _rD;
         _maxR = _maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
         _maxRrD_sq = _maxRrD * _maxRrD;
@@ -241,50 +217,49 @@ namespace galsim {
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
             << " norm " << _norm << " maxR " << _maxR << std::endl;
 
-        if (std::abs(_beta-1) < this->gsparams->xvalue_accuracy)
+        if (std::abs(_beta-1) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_1;
-        else if (std::abs(_beta-1.5) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-1.5) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_15;
-        else if (std::abs(_beta-2) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-2) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_2;
-        else if (std::abs(_beta-2.5) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-2.5) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_25;
-        else if (std::abs(_beta-3) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-3) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_3;
-        else if (std::abs(_beta-3.5) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-3.5) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_35;
-        else if (std::abs(_beta-4) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-4) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_4;
         else _pow_beta = &SBMoffatImpl::pow_gen;
 
         if (_trunc > 0.) _kV = &SBMoffatImpl::kV_trunc;
-        else if (std::abs(_beta-1.5) < this->gsparams->kvalue_accuracy)
+        else if (std::abs(_beta-1.5) < this->gsparams.kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_15;
-        else if (std::abs(_beta-2) < this->gsparams->kvalue_accuracy)
+        else if (std::abs(_beta-2) < this->gsparams.kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_2;
-        else if (std::abs(_beta-2.5) < this->gsparams->kvalue_accuracy)
+        else if (std::abs(_beta-2.5) < this->gsparams.kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_25;
-        else if (std::abs(_beta-3) < this->gsparams->kvalue_accuracy) {
+        else if (std::abs(_beta-3) < this->gsparams.kvalue_accuracy) {
             _kV = &SBMoffatImpl::kV_3; _knorm /= 2.;
-        } else if (std::abs(_beta-3.5) < this->gsparams->kvalue_accuracy) {
+        } else if (std::abs(_beta-3.5) < this->gsparams.kvalue_accuracy) {
             _kV = &SBMoffatImpl::kV_35; _knorm /= 3.;
-        } else if (std::abs(_beta-4) < this->gsparams->kvalue_accuracy) {
+        } else if (std::abs(_beta-4) < this->gsparams.kvalue_accuracy) {
             _kV = &SBMoffatImpl::kV_4; _knorm /= 8.;
         } else {
             _kV = &SBMoffatImpl::kV_gen;
-            _knorm *= 4. / (boost::math::tgamma(beta-1.) * std::pow(2.,beta));
+            _knorm *= 4. / (math::tgamma(beta-1.) * std::pow(2.,beta));
         }
     }
 
     double SBMoffat::SBMoffatImpl::getHalfLightRadius() const
     {
-        // Done here since _re depends on _fluxFactor and thus requires _rD in advance, so this
-        // needs to happen largely post setup. Doesn't seem efficient to ALWAYS calculate it above,
-        // so we'll just calculate it once if requested and store it.
-        if (_re == 0.) {
-            _re = _rD * std::sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
-        }
-        return _re;
+        return _rD * std::sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+    }
+
+    double SBMoffat::SBMoffatImpl::getFWHM() const
+    {
+        return _rD * 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
     }
 
     double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const
@@ -293,6 +268,15 @@ namespace galsim {
         if (rsq > _maxRrD_sq) return 0.;
         else return _norm / _pow_beta(1.+rsq, _beta);
     }
+
+    double SBMoffat::SBMoffatImpl::pow_1(double x, double ) { return x; }
+    double SBMoffat::SBMoffatImpl::pow_15(double x, double ) { return x * std::sqrt(x); }
+    double SBMoffat::SBMoffatImpl::pow_2(double x, double ) { return x*x; }
+    double SBMoffat::SBMoffatImpl::pow_25(double x, double ) { return x*x * std::sqrt(x); }
+    double SBMoffat::SBMoffatImpl::pow_3(double x, double ) { return x*x*x; }
+    double SBMoffat::SBMoffatImpl::pow_35(double x, double ) { return x*x*x * std::sqrt(x); }
+    double SBMoffat::SBMoffatImpl::pow_4(double x, double ) { double xsq=x*x; return xsq*xsq; }
+    double SBMoffat::SBMoffatImpl::pow_gen(double x, double beta) { return fast_pow(x,beta); }
 
     std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const
     {
@@ -303,7 +287,7 @@ namespace galsim {
     double SBMoffat::SBMoffatImpl::kV_15(double ksq) const
     {
         double k = sqrt(ksq);
-        return exp(-k);
+        return fmath::expd(-k);
     }
 
     double SBMoffat::SBMoffatImpl::kV_2(double ksq) const
@@ -311,14 +295,14 @@ namespace galsim {
         if (ksq == 0.) return 1.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(1,k) * k;
+            return math::cyl_bessel_k(1,k) * k;
         }
     }
 
     double SBMoffat::SBMoffatImpl::kV_25(double ksq) const
     {
         double k = sqrt(ksq);
-        return exp(-k)*(1.+k);
+        return fmath::expd(-k)*(1.+k);
     }
 
     double SBMoffat::SBMoffatImpl::kV_3(double ksq) const
@@ -326,14 +310,14 @@ namespace galsim {
         if (ksq == 0.) return 2.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(2,k) * ksq;
+            return math::cyl_bessel_k(2,k) * ksq;
         }
     }
 
     double SBMoffat::SBMoffatImpl::kV_35(double ksq) const
     {
         double k = sqrt(ksq);
-        return exp(-k)*(3.+(3.+k)*k);
+        return fmath::expd(-k)*(3.+(3.+k)*k);
     }
 
     double SBMoffat::SBMoffatImpl::kV_4(double ksq) const
@@ -341,7 +325,7 @@ namespace galsim {
         if (ksq == 0.) return 8.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(3,k) * k*ksq;
+            return math::cyl_bessel_k(3,k) * k*ksq;
         }
     }
 
@@ -350,7 +334,7 @@ namespace galsim {
         if (ksq == 0.) return _flux/_knorm;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(_beta-1,k) * std::pow(k,_beta-1);
+            return math::cyl_bessel_k(_beta-1,k) * fast_pow(k,_beta-1);
         }
     }
 
@@ -361,7 +345,8 @@ namespace galsim {
         else return _ft(ksq);
     }
 
-    void SBMoffat::SBMoffatImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBMoffat::SBMoffatImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, int izero,
                                             double y0, double dy, int jzero) const
     {
@@ -375,7 +360,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            double* ptr = im.getData();
+            T* ptr = im.getData();
             const int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -387,16 +372,19 @@ namespace galsim {
             for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
                 double x = x0;
                 double ysq = y0*y0;
-                for (int i=0; i<m; ++i,x+=dx,++ptr) {
+                for (int i=0; i<m; ++i,x+=dx) {
                     double rsq = x*x + ysq;
                     if (rsq <= _maxRrD_sq)
-                        *ptr = _norm / _pow_beta(1.+rsq, _beta);
+                        *ptr++ = _norm / _pow_beta(1.+rsq, _beta);
+                    else
+                        *ptr++ = T(0);
                 }
             }
         }
     }
 
-    void SBMoffat::SBMoffatImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBMoffat::SBMoffatImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, double dxy,
                                             double y0, double dy, double dyx) const
     {
@@ -405,7 +393,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -419,15 +407,18 @@ namespace galsim {
         for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
-            for (int i=0; i<m; ++i,x+=dx,y+=dyx,++ptr) {
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx) {
                 double rsq = x*x + y*y;
                 if (rsq <= _maxRrD_sq)
-                    *ptr = _norm / _pow_beta(1.+rsq, _beta);
+                    *ptr++ = _norm / _pow_beta(1.+rsq, _beta);
+                else
+                    *ptr++ = T(0);
             }
         }
     }
 
-    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -441,7 +432,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -459,7 +450,8 @@ namespace galsim {
         }
     }
 
-    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<T> > im,
                                             double kx0, double dkx, double dkxy,
                                             double ky0, double dky, double dkyx) const
     {
@@ -468,7 +460,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -503,8 +495,8 @@ namespace galsim {
                 //
                 // Solve for f(k) = maxk_threshold
                 //
-                double temp = (this->gsparams->maxk_threshold
-                               * boost::math::tgamma(_beta-1.)
+                double temp = (this->gsparams.maxk_threshold
+                               * math::tgamma(_beta-1.)
                                * std::pow(2.,_beta-0.5)
                                / (2. * sqrt(M_PI)));
                 // Solve k^(beta-1/2) exp(-k) = temp
@@ -542,7 +534,7 @@ namespace galsim {
                 _stepk = M_PI / _maxR;
             } else {
                 // Ignore the 1 in (1+R^2), so approximately:
-                double R = std::pow(this->gsparams->folding_threshold, 0.5/(1.-_beta)) * _rD;
+                double R = std::pow(this->gsparams.folding_threshold, 0.5/(1.-_beta)) * _rD;
                 dbg<<"R = "<<R<<std::endl;
                 // If it is truncated at less than this, drop to that value.
                 if (R > _maxR) R = _maxR;
@@ -550,7 +542,7 @@ namespace galsim {
                 dbg<<"R => "<<R<<std::endl;
                 dbg<<"stepk = "<<(M_PI/R)<<std::endl;
                 // Make sure it is at least 5 hlr
-                R = std::max(R,gsparams->stepk_minimum_hlr*getHalfLightRadius());
+                R = std::max(R,gsparams.stepk_minimum_hlr*getHalfLightRadius());
                 _stepk = M_PI / R;
             }
         }
@@ -564,7 +556,7 @@ namespace galsim {
         MoffatIntegrand(double beta, double k, double (*pb)(double, double)) :
             _beta(beta), _k(k), _pow_beta(pb) {}
         double operator()(double r) const
-        { return r/_pow_beta(1.+r*r, _beta)*j0(_k*r); }
+        { return r/_pow_beta(1.+r*r, _beta) * math::j0(_k*r); }
 
     private:
         double _beta;
@@ -575,14 +567,14 @@ namespace galsim {
     void SBMoffat::SBMoffatImpl::setupFT() const
     {
         assert(_trunc > 0.);
-        if (_ft.size() > 0) return;
+        if (_ft.finalized()) return;
 
         // Do a Hankel transform and store the results in a lookup table.
 
         double prefactor = 2. * (_beta-1.) / (_fluxFactor);
 
         // Along the way, find the last k that has a kValue > 1.e-3
-        double maxk_val = this->gsparams->maxk_threshold;
+        double maxk_val = this->gsparams.maxk_threshold;
         dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
@@ -593,7 +585,7 @@ namespace galsim {
         // conservative for Sersic, but I haven't investigated here.)
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
-        double dk = gsparams->table_spacing * sqrt(sqrt(gsparams->kvalue_accuracy / 10.));
+        double dk = gsparams.table_spacing * sqrt(sqrt(gsparams.kvalue_accuracy / 10.));
         dbg<<"dk = "<<dk<<std::endl;
         int n_below_thresh = 0;
         // Don't go past k = 50
@@ -611,15 +603,15 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = bessel::getBesselRoot0(s);
+                double root = math::getBesselRoot0(s);
                 if (root > k * _maxRrD) break;
                 reg.addSplit(root/k);
             }
 
             double val = integ::int1d(
                 I, reg,
-                this->gsparams->integration_relerr,
-                this->gsparams->integration_abserr);
+                this->gsparams.integration_relerr,
+                this->gsparams.integration_abserr);
             val *= prefactor;
 
             xdbg<<"ft("<<k<<") = "<<val<<std::endl;
@@ -627,47 +619,47 @@ namespace galsim {
 
             if (std::abs(val) > maxk_val) _maxk = k;
 
-            if (std::abs(val) > this->gsparams->kvalue_accuracy) n_below_thresh = 0;
+            if (std::abs(val) > this->gsparams.kvalue_accuracy) n_below_thresh = 0;
             else ++n_below_thresh;
             if (n_below_thresh == 5) break;
         }
+        _ft.finalize();
         dbg<<"maxk = "<<_maxk<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
+    void SBMoffat::SBMoffatImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Moffat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Moffat has analytic inverse-cumulative-flux function.
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
 #ifdef USE_COS_SIN
             // First get a point uniformly distributed on unit circle
-            double theta = 2.*M_PI*u();
-            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double theta = 2.*M_PI*ud();
+            double rsq = ud(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            math::sincos(theta, sint, cost);
             // Then map radius to the Moffat flux distribution
-            double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
+            double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
-            result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
             // First get a point uniformly distributed on unit circle
             double xu, yu, rsq;
             do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
+                xu = 2.*ud()-1.;
+                yu = 2.*ud()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the Moffat flux distribution
-            double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
+            double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq / rsq);
-            result->setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
 #endif
         }
-        dbg<<"Moffat Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Moffat Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 }

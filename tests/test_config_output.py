@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,15 +26,10 @@ import math
 import yaml
 import json
 import re
+import glob
 
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 @timer
@@ -65,6 +60,7 @@ def test_fits():
     logger = logging.getLogger('test_fits')
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
+    config1 = galsim.config.CopyConfig(config)
 
     im1_list = []
     nfiles = 6
@@ -81,7 +77,7 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1.array)
 
     # Build all files at once
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.BuildFiles(nfiles, config)
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
@@ -89,7 +85,7 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
     # Can also use Process to do this
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.Process(config)
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
@@ -98,21 +94,21 @@ def test_fits():
 
     # For the first file, you don't need the file_num.
     os.remove('output_fits/test_fits_0.fits')
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
 
     # nproc < 0 should automatically determine nproc from ncpu
+    config = galsim.config.CopyConfig(config1)
     config['output']['nproc'] = -1
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     assert 'ncpu = ' in cl.output
 
     # nproc > njobs should drop back to nproc = njobs
+    config = galsim.config.CopyConfig(config1)
     config['output']['nproc'] = 10
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
@@ -120,9 +116,9 @@ def test_fits():
     # Check that profile outputs something appropriate for multithreading.
     # (The single-thread profiling is handled by the galsim executable, which we don't
     # bother testing here.)
+    config = galsim.config.CopyConfig(config1)
     config['profile'] = True
     config['output']['nproc'] = -1
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
@@ -134,9 +130,9 @@ def test_fits():
 
     # If there is no output field, the default behavior is to write to root.fits.
     os.remove('output_fits/test_fits_0.fits')
+    config = galsim.config.CopyConfig(config1)
     del config['output']
     config['root'] = 'output_fits/test_fits_0'
-    galsim.config.RemoveCurrent(config)
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
@@ -185,15 +181,15 @@ def test_multifits():
     assert len(im3_list) == 1
     np.testing.assert_array_equal(im3_list[0].array, im1_list[0].array)
 
-    try:
-        # Check error message for missing nimages
-        del config['output']['nimages']
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-        # Also if there is an input field that doesn't have nobj capability
-        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-    except ImportError:
-        pass
+    # Check error message for missing nimages
+    del config['output']['nimages']
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+    # Also if there is an input field that doesn't have nobj capability
+    config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
     del config['input_objs']
@@ -253,15 +249,15 @@ def test_datacube():
     assert len(im3_list) == 1
     np.testing.assert_array_equal(im3_list[0].array, im1_list[0].array)
 
-    try:
-        # Check error message for missing nimages
-        del config['output']['nimages']
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-        # Also if there is an input field that doesn't have nobj capability
-        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-    except ImportError:
-        pass
+    # Check error message for missing nimages
+    del config['output']['nimages']
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+    # Also if there is an input field that doesn't have nobj capability
+    config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
     del config['input_objs']
@@ -271,6 +267,29 @@ def test_datacube():
     assert len(im4_list) == 3
     for k in range(3):
         np.testing.assert_array_equal(im4_list[k].array, im1_list[k].array)
+
+    # DataCubes cannot include weight (or any other) extra outputs as additional hdus.
+    # It should raise an exception if you try.
+    config['output']['weight'] = { 'hdu' : 1 }
+    config['output']['badpix'] = { 'file_name' : 'output/test_datacube_bp.fits' }
+    config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 0.1 }
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+
+    # But if both weight and badpix are files, then it should work.
+    config['output']['weight'] = { 'file_name' : 'output/test_datacube_wt.fits' }
+    galsim.config.BuildFile(config)
+    im5_list = galsim.fits.readCube('output/test_datacube.fits')
+    assert len(im5_list) == 3
+    for k in range(3):
+        rng = galsim.UniformDeviate(1234 + k + 1)
+        rng.discard(1)
+        im1_list[k].addNoise(galsim.GaussianNoise(sigma=0.1**0.5, rng=rng))
+        np.testing.assert_array_equal(im5_list[k].array, im1_list[k].array)
+    im5_wt = galsim.fits.read('output/test_datacube_wt.fits')
+    im5_bp = galsim.fits.read('output/test_datacube_bp.fits')
+    np.testing.assert_array_equal(im5_wt.array, 10)
+    np.testing.assert_array_equal(im5_bp.array, 0)
 
 
 @timer
@@ -518,6 +537,8 @@ def test_extra_psf():
         },
     }
 
+    for f in glob.glob('output/test_psf_*.fits'): os.remove(f)
+    for f in glob.glob('output/test_gal_*.fits'): os.remove(f)
     galsim.config.Process(config)
 
     gal_center = []
@@ -560,9 +581,7 @@ def test_extra_psf():
         stamp = final.drawImage(scale=0.4, nx=25, ny=25, offset=(offset_x+dx,offset_y+dy))
         stamp.setCenter(ix,iy)
         b = im.bounds & stamp.bounds
-        if not b.isDefined():
-            print('bounds for psf %d are off the main image'%k)
-        else:
+        if b.isDefined():
             im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_gal_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
@@ -571,7 +590,8 @@ def test_extra_psf():
         im.setZero()
         stamp = psf.drawImage(scale=0.4, nx=25, ny=25, offset=(dx,dy))
         stamp.setCenter(ix,iy)
-        if b.isDefined(): im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -591,7 +611,8 @@ def test_extra_psf():
         stamp.setCenter(ix,iy)
         im = galsim.ImageF(64,64)
         b = im.bounds & stamp.bounds
-        if b.isDefined(): im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -632,7 +653,8 @@ def test_extra_psf():
         stamp.setCenter(ix,iy)
         im = galsim.ImageF(64,64)
         b = im.bounds & stamp.bounds
-        if b.isDefined(): im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output_psf/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -743,24 +765,25 @@ def test_retry_io():
     """
     # Make a class that mimics writeMulti, except that it fails about 1/3 of the time.
     class FlakyWriter(object):
-        def __init__(self, rng): self.ud = galsim.UniformDeviate(rng)
+        def __init__(self, rng):
+            self.ud = galsim.UniformDeviate(rng)
         def writeFile(self, *args, **kwargs):
             p = self.ud()
             if p < 0.33:
                 raise IOError("p = %f"%p)
             else:
                 galsim.fits.writeMulti(*args, **kwargs)
-    flaky_rng = galsim.BaseDeviate(1234)
-    flaky_writer = FlakyWriter(flaky_rng)
 
     # Now make a copy of Fits and ExtraWeight using this writer.
     class FlakyFits(galsim.config.OutputBuilder):
-        def writeFile(self, data, file_name):
+        def writeFile(self, data, file_name, config, base, logger):
+            flaky_writer = FlakyWriter(galsim.config.GetRNG(config,base))
             flaky_writer.writeFile(data, file_name)
     galsim.config.RegisterOutputType('FlakyFits', FlakyFits())
 
     class FlakyWeight(galsim.config.extra_weight.WeightBuilder):
         def writeFile(self, file_name, config, base, logger):
+            flaky_writer = FlakyWriter(galsim.config.GetRNG(config,base))
             flaky_writer.writeFile(self.final_data, file_name)
     galsim.config.RegisterExtraOutput('flaky_weight', FlakyWeight())
 
@@ -815,31 +838,37 @@ def test_retry_io():
         np.testing.assert_array_equal(wt1.array, wt2.array)
 
     # Without retry_io, it will fail, but keep going
-    flaky_rng.seed(1234)
     del config['output']['retry_io']
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
+    assert "Exception caught for file 0 = output/test_flaky_fits_0.fits" in cl.output
     assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
-    assert "File output/test_flaky_fits_1.fits not written! Continuing on..." in cl.output
-    assert "File output/test_flaky_fits_2.fits not written! Continuing on..." in cl.output
-    assert "file 3: Wrote FlakyFits to file 'output/test_flaky_fits_3.fits'" in cl.output
-    assert "file 3: Wrote flaky_weight to 'output/test_flaky_wt_3.fits'" in cl.output
+    assert "file 1: Wrote FlakyFits to file 'output/test_flaky_fits_1.fits'" in cl.output
+    assert "File 1 = output/test_flaky_fits_1.fits" in cl.output
+    assert "File 2 = output/test_flaky_fits_2.fits" in cl.output
     assert "File 3 = output/test_flaky_fits_3.fits" in cl.output
+    assert "File 4 = output/test_flaky_fits_4.fits" in cl.output
+    assert "Exception caught for file 5 = output/test_flaky_fits_5.fits" in cl.output
+    assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
 
     # Also works in nproc > 1 mode
-    # However, because the flaky_writer's rng gets pickled, it's not the same result as
-    # what we get in the single processing case.  Different files fail.
     config['output']['nproc'] = 2
+    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
-    assert re.search("Process-.: File 0 = output/test_flaky_fits_0.fits", cl.output)
-    assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
-    assert re.search("Process-.: Exception caught for file 2 = output/test_flaky_fits_2.fits",
+    assert re.search("Process-.: Exception caught for file 0 = output/test_flaky_fits_0.fits",
                      cl.output)
-    assert "File output/test_flaky_fits_2.fits not written! Continuing on..." in cl.output
+    assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
+    assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
+    assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
+    assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
+    assert re.search("Process-.: File 4 = output/test_flaky_fits_4.fits", cl.output)
+    assert re.search("Process-.: Exception caught for file 5 = output/test_flaky_fits_5.fits",
+                     cl.output)
+    assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
 
     # But with except_abort = True, it will stop after the first failure
     del config['output']['nproc']  # Otherwise which file fails in non-deterministic.
@@ -847,10 +876,9 @@ def test_retry_io():
         try:
             galsim.config.Process(config, logger=cl.logger, except_abort=True)
         except IOError as e:
-            assert str(e) == "p = 0.093326"
+            assert str(e) == "p = 0.126989"
     #print(cl.output)
-    assert "File 0 = output/test_flaky_fits_0.fits" in cl.output
-    assert "File output/test_flaky_fits_1.fits not written." in cl.output
+    assert "File output/test_flaky_fits_0.fits not written." in cl.output
 
 
 
@@ -944,15 +972,12 @@ def test_config():
     galsim.config.SetInConfig(config,'psf.items.1.diam', 8)
     assert galsim.config.GetFromConfig(config,'psf.items.1.diam') == 8
 
-    try:
-        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.items.lam')
-        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.items.4')
-        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.itms.1.lam')
-        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.items.lam',700)
-        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.items.4',700)
-        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.itms.1.lam',700)
-    except ImportError:
-        pass
+    assert_raises(ValueError, galsim.config.GetFromConfig, config, 'psf.items.lam')
+    assert_raises(ValueError, galsim.config.GetFromConfig, config, 'psf.items.4')
+    assert_raises(ValueError, galsim.config.GetFromConfig, config, 'psf.itms.1.lam')
+    assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.items.lam', 700)
+    assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.items.4', 700)
+    assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.itms.1.lam', 700)
 
 @timer
 def test_no_output():
@@ -978,6 +1003,240 @@ def test_no_output():
     im2 = galsim.Gaussian(sigma=1.7,flux=100).drawImage(scale=1)
     np.testing.assert_equal(im1.array,im2.array)
 
+@timer
+def test_eval_full_word():
+    """This test duplicates a bug that was found when using the galsim_extra FocalPlane type.
+    It's a bit subtle.  The FocalPlane builder sets up some eval_variables with extra things
+    that can be used in Eval items like the center of the exposure, the min/max RA and Dec,
+    the distance of an object from the center of the exposure, etc.
+
+    Two of these are focal_r and focal_rmax.  The former is calculated for any given object
+    and gives the radial distance from the center of the focal plane.  The latter gives the
+    maximum possible radial distance of any possible object (based on the outermost chip
+    corners).
+
+    The bug that turned up was that focal_rmax was accessed when loading an input power_spectrum,
+    which would also trigger the evaluation of focal_r, since that string was also located in
+    the eval string.  But this led to problems, since focal_r was based on world_pos, but that
+    was intended to be used with obj_num rngs, which wasn't set up set at the time time input
+    stuff is processed.
+
+    So there are two fixes to this, which this test checks.  First, the setup of the file-level
+    RNG also sets up the object-level RNG properly, so it doesn't matter if focal_r is accessed
+    at this point.  And second, the eval code now matches to the full word, not just any portion
+    of a word, so shorter eval_variables (focal_r in this case) won't get evaluated gratuitously.
+
+    In additon to testing that issue, we also include another feature where we originally ran into
+    trouble.  Namely having the number of objects be random in each exposure, but have the random
+    number seed for most things repeat for all images in each exposure, which needs to know the
+    number of objects in the exposure.  The salient aspects of this are duplicated here by
+    using MultiFits with the objects being identical for each image in the file.
+    """
+
+    # Much of this is copied from the FocalPlane implementation or the focal_quick.yaml file
+    # in the galsim_extra repo.
+    config = {
+        'eval_variables': {
+            # focal_r is a useful calculation that galaxy/PSF properties might want to depend on.
+            # It is intended to be accessed as an object property.
+            'ffocal_r' : {
+                'type' : 'Eval',
+                'str' : "math.sqrt(pos.x**2 + pos.y**2)",
+                'ppos' : {
+                    'type' : 'Eval',
+                    'str' : "galsim.PositionD((uv/galsim.arcsec for uv in world_center.project(world_pos)))",
+                    'cworld_pos' : "@image.world_pos"
+                }
+            },
+            # FocalPlane calculates the below values, including particularly focal_rmax, based on
+            # the WCS's and sets the value in the config dict for each exposure.
+            # They may be used by objects in conjunction with focal_r, but in this case it is also
+            # used by the input PSF power spectrum (below) to set the overall scale of the fft
+            # grid. This is where the bug related to full words in the Eval code came into play.
+            'ffocal_rmax' : 25.,
+            'afov_minra' : '-15 arcsec',
+            'afov_maxra' : '15 arcsec',
+            'afov_mindec' : '-15 arcsec',
+            'afov_maxdec' : '15 arcsec',
+
+            'fseeing' : {
+                'type' : 'RandomGaussian',
+                'mean' : 0.7,
+                'sigma' : 0.1,
+                'index_key' : 'image_num'  # Seeing changes each exposure
+            }
+        },
+
+        'input' :  {
+            'power_spectrum' : {
+                'e_power_function': '(k**2 + (1./180)**2)**(-11./6.)',
+                'b_power_function': '@input.power_spectrum.e_power_function',
+                'units': 'arcsec',
+                'grid_spacing': 10,
+                'ngrid': '$math.ceil(2*focal_rmax / @input.power_spectrum.grid_spacing)',
+                'center': "0,0",
+            },
+        },
+
+        'image' : {
+            'type' : 'Scattered',
+            'xsize' : 100,
+            'ysize' : 100,
+            # This is similar to the tricky random number generation issue that we ran into in
+            # FocalPlane.  That repeated for each exp_num, rather than file_num, but the issue
+            # is basically the same.
+            'random_seed' : [
+                # Used for noise and nobjects.
+                { 'type' : 'Sequence', 'index_key' : 'obj_num', 'first' : 1234 },
+                # Used for objects.  Repeats sequence for each image in file
+                {
+                    'type' : 'Eval',
+                    'index_key' : 'obj_num',
+                    'str' : '314159 + start_obj_num + (obj_num - start_obj_num) % nobjects',
+                    'inobjects' : { 'type' : 'Current', 'key' : 'image.nobjects' }
+                },
+            ],
+
+            # We also used to have problems with this being a random value, so keep that feature
+            # here as well.
+            'nobjects' : {
+                'type' : 'RandomPoisson',
+                'index_key' : 'file_num',
+                'mean' : 10  # Normally much more of course.
+            },
+
+            'noise' : { 'type' : 'Gaussian', 'sigma' : 10 },
+
+            # FocalPlane sets this for each exposure. We'll use the same thing for all files here.
+            'world_center' : galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees),
+
+            # focal_r depends on world_pos, so let's copy that as is from the galsim_extra
+            # config file, focal_quick.yaml, where we used to have problems.
+            'world_pos': {
+                'rng_num' : 1,
+                'type': 'RADec',
+                'ra': {
+                    'type': 'Radians',
+                    'theta': { 'type': 'Random', 'min': "$fov_minra.rad", 'max': "$fov_maxra.rad" }
+                },
+                'dec': {
+                    'type': 'Radians',
+                    'theta': {
+                        'type': 'RandomDistribution',
+                        'function': "math.cos(x)",
+                        'x_min': "$fov_mindec.rad",
+                        'x_max': "$fov_maxdec.rad",
+                    }
+                }
+            },
+
+            # We have to have a CelestialWCS to use CelestialCoords for world_pos.
+            # This one is about as simple as it gets.
+            'wcs': {
+                'type': 'Tan',
+                'dudx': 0.26, 'dudy': 0., 'dvdx': 0., 'dvdy': 0.26,
+                'origin' : galsim.PositionD(50,50),
+                'ra' : '0 deg', 'dec' : '0 deg',
+            }
+
+        },
+
+        'output' : {
+            # Not using the FocalPlane type, since that's a galsim_extra thing.  But we can
+            # get the same complications in terms of the random number of objects by using
+            # MultiFits output, and have the random_seed repeat for each image in a file.
+            'type' : 'MultiFits',
+            'nimages' : 2,
+            'nfiles' : 2,
+            'file_name' : "$'output/test_eval_full_word_{0}.fits'.format(file_num)",
+            'truth' : {
+                'file_name' : "$'output/test_eval_full_word_{0}.dat'.format(file_num)",
+                'columns' : {
+                    'num' : 'obj_num',
+                    'exposure' : 'image_num',
+                    'pos' : 'image_pos',
+                    'ra' : 'image.world_pos.ra',
+                    'dec' : 'image.world_pos.dec',
+                    'flux' : 'gal.flux',
+                    'size' : 'gal.sigma',
+                    'psf_fwhm' : 'psf.fwhm',
+                }
+            }
+        },
+
+        'psf' : {
+            'type' : 'Moffat',
+            'beta' : 3.0,
+            # Size of PSF ranges from 0.7 to 0.9 over the focal plane
+            'fwhm' : '$seeing + 0.2 * (focal_r / focal_rmax)**2',
+        },
+
+        'gal' : {
+            'rng_num' : 1,
+            # Keep the galaxy simple, but with random components.
+            'type' : 'Gaussian',
+            'sigma' : { 'type' : 'Random', 'min': 0.5, 'max': 1.5 },
+            'flux' : { 'type' : 'Random', 'min': 5000, 'max': 25000 },
+        }
+    }
+
+    logger = logging.getLogger('test_eval_full_word')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+    galsim.config.Process(config, logger=logger)
+
+    # First check the truth catalogs
+    data0 = np.genfromtxt('output/test_eval_full_word_0.dat', names=True, deletechars='')
+    data1 = np.genfromtxt('output/test_eval_full_word_1.dat', names=True, deletechars='')
+
+    assert len(data0) == 18 # 9 obj each for first two exposures
+    assert len(data1) == 24 # 12 obj each for next two exposures
+    data00 = data0[:9]
+    data01 = data0[9:]
+    data10 = data1[:12]
+    data11 = data1[12:]
+
+    # Check exposure = image_num
+    np.testing.assert_array_equal(data00['exposure'], 0)
+    np.testing.assert_array_equal(data01['exposure'], 1)
+    np.testing.assert_array_equal(data10['exposure'], 2)
+    np.testing.assert_array_equal(data11['exposure'], 3)
+
+    # Check obj_num
+    np.testing.assert_array_equal(data00['num'], range(0,9))
+    np.testing.assert_array_equal(data01['num'], range(9,18))
+    np.testing.assert_array_equal(data10['num'], range(18,30))
+    np.testing.assert_array_equal(data11['num'], range(30,42))
+
+    # Check that galaxy properties are identical within exposures, but different across exposures
+    for key in ['pos.x', 'pos.y', 'ra.rad', 'dec.rad', 'flux', 'size']:
+        np.testing.assert_array_equal(data00[key], data01[key])
+        np.testing.assert_array_equal(data10[key], data11[key])
+        assert np.all(np.not_equal(data00[key], data10[key][:9]))
+
+    # PSFs should all be different, but only in the mean
+    assert np.all(np.not_equal(data00['psf_fwhm'], data01['psf_fwhm']))
+    assert np.all(np.not_equal(data10['psf_fwhm'], data11['psf_fwhm']))
+    assert np.all(np.not_equal(data00['psf_fwhm'], data10['psf_fwhm'][:9]))
+    np.testing.assert_array_almost_equal(data00['psf_fwhm'] - np.mean(data00['psf_fwhm']),
+                                         data01['psf_fwhm'] - np.mean(data01['psf_fwhm']))
+    np.testing.assert_array_almost_equal(data10['psf_fwhm'] - np.mean(data10['psf_fwhm']),
+                                         data11['psf_fwhm'] - np.mean(data11['psf_fwhm']))
+
+    # Finally the images should be different, but almost equal, since the different should only
+    # be in the Gaussian noise.
+    im00, im01 = galsim.fits.readMulti('output/test_eval_full_word_0.fits')
+    assert np.all(np.not_equal(im00.array, im01.array))
+    assert abs(np.mean(im00.array - im01.array)) < 0.1
+    assert 13.5 < np.std(im00.array - im01.array) < 15  # should be ~10 * sqrt(2)
+    assert np.max(np.abs(im00.array)) > 200  # Just verify that many values are quite large
+
+    im10, im11 = galsim.fits.readMulti('output/test_eval_full_word_1.fits')
+    assert np.all(np.not_equal(im10.array, im11.array))
+    assert abs(np.mean(im10.array - im11.array)) < 0.1
+    assert 13.5 < np.std(im10.array - im11.array) < 15
+    assert np.max(np.abs(im10.array)) > 200
+
 
 if __name__ == "__main__":
     test_fits()
@@ -990,3 +1249,4 @@ if __name__ == "__main__":
     test_retry_io()
     test_config()
     test_no_output()
+    test_eval_full_word()

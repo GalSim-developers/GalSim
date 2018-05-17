@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,6 +24,7 @@ import galsim
 import galsim.wfirst
 import numpy as np
 import os
+import coord
 
 # Basic WFIRST reference info, with lengths in mm.
 pixel_size_mm = 0.01
@@ -39,21 +40,29 @@ prog_version = "0.4"
 
 # Information about center points of the SCAs in the WFI focal plane coordinate system (f1, f2)
 # coordinates.  These are rotated by an angle theta_fpa with respect to the payload axes, as
-# projected onto the sky. Note that the origin is at the center of the payload axes, on the
-# telescope boresight, not centered on the FPA.  Since the SCAs are 1-indexed, these arrays have a
-# non-used entry with index 0.  i.e., the maximum SCA is 18, and its value is in sca_xc_mm[18].
-# Units are mm.
-sca_xc_mm = np.array([0., -21.690, -21.690, -21.690, -65.070, -65.070, -65.070, -108.450, -108.450,
-                      -108.450,  21.690,  21.690,  21.690,  65.070,  65.070,  65.070, 108.450,
-                      108.450, 108.450])
-sca_yc_mm = np.array([0., 199.250, 149.824, 242.630, 188.250, 138.824, 231.630, 164.923, 115.498,
-                      208.304, 199.250, 149.824, 242.630, 188.250, 138.824, 231.630, 164.923,
-                      115.498, 208.304])
-# Nominal center of FPA in this coordinate frame, in mm and as an angle.
+# projected onto the sky. Note that the origin is centered on the FPA, but to get coordinates at the
+# center of the payload axes on the telescope boresight, we can simply add fpa_xc_mm and fpa_yc_mm.
+# Since the SCAs are 1-indexed, these arrays have a non-used entry with index 0.  i.e., the maximum
+# SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped
+# between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
+# were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
+sca_xc_mm = np.array([0., 21.44, 21.44, 21.44, 67.32, 67.32, 67.32, 113.20, 113.20,
+                      113.20, -21.44, -21.44, -21.44,  -67.32, -67.32, -67.32, -113.20,
+                      -113.20, -113.20])
+sca_yc_mm = np.array([0., -12.88,  30.00,  72.88, -24.88,  18.00,  60.88,  -42.88,     0.0,
+                      42.88,  -12.88, 30.00, 72.88, -24.88, 18.00, 60.88, -42.88,
+                      0.00,    42.88])
+# Nominal center of FPA from the payload axis in this coordinate system, in mm and as an angle.
 fpa_xc_mm = 0.0
-fpa_yc_mm = 199.250
+# This calculation is using the WIM page on the WFIRST_MCS_WFC_Zernike_and_Field_Data_160610.xlsm
+# spreadsheet on the https://wfirst.gsfc.nasa.gov/science/Inst_Ref_Info_Cycle6.html page.
+fpa_yc_mm = focal_length*(np.tan(0.46107*galsim.degrees/galsim.radians) - \
+                                   np.tan(-0.038903*galsim.degrees/galsim.radians))
 xc_fpa = np.arctan(fpa_xc_mm/focal_length)*galsim.radians
 yc_fpa = np.arctan(fpa_yc_mm/focal_length)*galsim.radians
+# Now move the sca coordinates to be with respect to the payload axis location.
+sca_xc_mm += fpa_xc_mm
+sca_yc_mm += fpa_yc_mm
 
 # The next array contains rotation offsets of individual SCA Y axis relative to FPA f2 axis. Same
 # sign convention as theta_fpa. These represent mechanical installation deviations from perfect
@@ -61,9 +70,10 @@ yc_fpa = np.arctan(fpa_yc_mm/focal_length)*galsim.radians
 # testing.
 sca_rot = np.zeros_like(sca_xc_mm)
 
-# Rotation of focal plane axes relative to payload axes: positive CCW rotation of the f2 axis
-# relative to -Y_pl, and of f1 relative to +X_pl.
-theta_fpa = 32.5*galsim.degrees
+# Rotation of focal plane axes relative to payload axes: this is expressed as a CCW rotation of the
+# f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In cycle 5, this was around +30 degrees,
+# but in cycle 6 there is a ~90 degree CCW rotation with respect to that.
+theta_fpa = -60.0*galsim.degrees
 
 # File with SIP coefficients.
 sip_filename = os.path.join(galsim.meta_data.share_dir, 'sip_422.txt')
@@ -73,7 +83,9 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     This routine returns a dict containing a WCS for each of the WFIRST SCAs (Sensor Chip Array, the
     equivalent of a chip in an optical CCD).  The WFIRST SCAs are labeled 1-18, so these numbers are
     used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the
-    `SCAs` option.
+    `SCAs` option.  The basic instrument parameters used to create the WCS correspond to those in
+    Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of
+    the focal plane axes relative to the payload axes, and two rows of SCAs are swapped.
 
     The user must specify a position for observation, at which the center of the focal plane array
     will point.  This must be supplied as a CelestialCoord `world_pos`.  In general, only certain
@@ -166,8 +178,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     else:
         pa_obsy = PA
         pa_fpa = PA + 90.*galsim.degrees + theta_fpa
-    cos_pa = np.cos(pa_fpa.rad())
-    sin_pa = np.sin(pa_fpa.rad())
+    cos_pa = np.cos(pa_fpa)
+    sin_pa = np.sin(pa_fpa)
 
     # Figure out tangent-plane positions for FPA center:
     xc_fpa_tp, yc_fpa_tp = _det_to_tangplane_positions(xc_fpa, yc_fpa)
@@ -225,8 +237,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         # coordinate for the SCA center is `crval`, which goes into the WCS as CRVAL1, CRVAL2.
         u = -sca_xc_tp_f * cos_pa - sca_yc_tp_f * sin_pa
         v = -sca_xc_tp_f * sin_pa + sca_yc_tp_f * cos_pa
-        crval = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec),
-                                    projection='gnomonic')
+        crval = world_pos.deproject(u, v, projection='gnomonic')
         crval1 = crval.ra
         crval2 = crval.dec
         header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
@@ -238,8 +249,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         sca_tp_rot = pa_fpa + sca_rot[i_sca]*galsim.degrees
 
         # Go some reasonable distance from crval in the +y direction.  Say, 1 degree.
-        plus_y = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec + 3600),
-                                    projection='gnomonic')
+        plus_y = world_pos.deproject(u, v + 1*galsim.degrees, projection='gnomonic')
         # Find the angle between this point, crval and due north.
         north = galsim.CelestialCoord(0.*galsim.degrees, 90.*galsim.degrees)
         pa_sca = sca_tp_rot - crval.angleBetween(plus_y, north)
@@ -257,8 +267,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         b11 = b_sip[i_sca,0,1]
 
         # Rotate by pa_fpa.
-        cos_pa_sca = np.cos(pa_sca.rad())
-        sin_pa_sca = np.sin(pa_sca.rad())
+        cos_pa_sca = np.cos(pa_sca)
+        sin_pa_sca = np.sin(pa_sca)
         header['CD1_1'] = (cos_pa_sca * a10 + sin_pa_sca * b10,
                            "partial of first axis coordinate w.r.t. x")
         header['CD1_2'] = (cos_pa_sca * a11 + sin_pa_sca * b11,
@@ -477,13 +487,14 @@ def _det_to_tangplane_positions(x_in, y_in):
     Note that the coefficients given in this routine go in the order {a0, a1, a2}.
 
     """
-    img_dist_coeff = np.array([-1.4976e-02, 3.7053e-03, 3.0186e-02])
+    img_dist_coeff = np.array([-1.0873e-2, 3.5597e-03, 3.6515e-02, -1.8691e-4])
     if not isinstance(x_in, galsim.Angle) or not isinstance(y_in, galsim.Angle):
         raise ValueError("Input x_in and y_in are not galsim.Angles.")
     # The optical distortion model is defined in terms of separations in *degrees*.
     r_sq = (x_in/galsim.degrees)**2 + (y_in/galsim.degrees)**2
     r = np.sqrt(r_sq)
-    dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq
+    dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq \
+        + img_dist_coeff[3]*r*r_sq
     return x_in/dist_fac, y_in/dist_fac
 
 def allowedPos(world_pos, date):
@@ -507,8 +518,8 @@ def allowedPos(world_pos, date):
              date.
     """
     # Find the Sun's location on the sky on this date.
-    from galsim.celestial import _ecliptic_to_equatorial, _sun_position_ecliptic
-    sun = _ecliptic_to_equatorial(_sun_position_ecliptic(date), date.year)
+    lam = coord.util.sun_position_ecliptic(date)
+    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
 
     # Find the angle between that and the supplied position
     angle_deg = abs(world_pos.distanceTo(sun)/galsim.degrees)
@@ -540,14 +551,15 @@ def bestPA(world_pos, date):
 
     # Find the location of the sun on this date.  +X_observatory points out into the sky, towards
     # world_pos, while +Z is in the plane of the sky pointing towards the sun as much as possible.
-    from galsim.celestial import _ecliptic_to_equatorial, _sun_position_ecliptic
-    sun = _ecliptic_to_equatorial(_sun_position_ecliptic(date), date.year)
+    lam = coord.util.sun_position_ecliptic(date)
+    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
     # Now we do a projection onto the sky centered at world_pos to find the (u, v) for the Sun.
-    sun_tp = world_pos.project(sun, 'gnomonic')
+    sun_tp_x, sun_tp_y = world_pos.project(sun, 'gnomonic')
+
     # We want to rotate around by 90 degrees to find the +Y obs direction.  Specifically, we want
     # (+X, +Y, +Z)_obs to form a right-handed coordinate system.
-    y_obs_tp = galsim.PositionD(-sun_tp.y, sun_tp.x)
-    y_obs = world_pos.deproject(y_obs_tp, 'gnomonic')
+    y_obs_tp_x, y_obs_tp_y = -sun_tp_y, sun_tp_x
+    y_obs = world_pos.deproject(y_obs_tp_x, y_obs_tp_y, 'gnomonic')
 
     # Finally the observatory position angle is defined by the angle between +Y_observatory and the
     # celestial north pole.  It is defined as position angle east of north.

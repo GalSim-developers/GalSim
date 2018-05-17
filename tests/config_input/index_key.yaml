@@ -1,0 +1,76 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+
+
+psf:
+    index_key: file_num
+    type: Convolve
+    items:
+        -
+            type: Kolmogorov
+            fwhm: { type: Random, min: 0.9, max: 1.1 }
+            ellip:
+                type: EBeta
+                e: { type: Sequence, first: 0.2, step: 0.05 }
+                beta: { type: Random }
+        -
+            type: Airy
+            lam: 700
+            diam: 4
+
+gal:
+    type: Exponential
+    half_light_radius:
+        index_key: image_num
+        type: List
+        items: [0.5, 1, 1.5]
+    ellip:
+        index_key: image_num
+        type: E1E2
+        e1: { index_key: file_num, type: Random, min: -0.2, max: 0.2 }
+        e2: { type: Random, min: -0.2, max: 0.2 }
+    flux:
+        type: Sequence
+        first: 100
+        step: 100
+        nitems: 9
+    shear:
+        type: G1G2
+        g1: { type: Random, min: -0.02, max: 0.02 }
+        g2: { index_key: image_num, type: Random, min: -0.02, max: 0.02 }
+
+stamp:
+    reject: { type: RandomBinomial, p: 0.2 }
+
+image:
+    type: Tiled
+    stamp_size: 32
+    nx_tiles: 3
+    ny_tiles: 3
+    random_seed: 12345
+    pixel_scale: 0.3
+
+output:
+    type: MultiFits
+    nfiles: 3
+    nimages: 3
+    dir: output
+    file_name:
+        type: NumberedFile
+        root: index_key   # index_keyXX.fits
+        digits: 2

@@ -1,0 +1,91 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+
+
+psf:
+    type: Moffat
+    beta: 2
+    fwhm: 0.9
+    ellip:
+        type: PowerSpectrumShear
+        num: 0
+
+gal:
+    type: Exponential
+    half_light_radius: 1.3
+    flux: 100
+    shear:
+        type: PowerSpectrumShear
+        num: 1
+
+input:
+    power_spectrum:
+        -
+            # A typical PSF power spectrum
+            # 180 is L0, which according to Heymans et al is around 3 arcmin.
+            e_power_function: '(k**2 + (1./180)**2)**(-11./6.)'
+            b_power_function: '@input.power_spectrum.0.e_power_function'
+            units: arcsec
+            grid_spacing: 1  # arcsec
+            ngrid: 30  # A bit larger than the image
+            variance: 1.e-1  # e_rms = 0.3 (Way more than a normal PSF.  Makes the shapes clearer.)
+        -
+            # A power law approximation to a cosmological power spectrum.
+            e_power_function: '3.5e-8 * (k/10)**-1.4'
+            units: radians
+            grid_spacing: 1  # arcsec
+            ngrid: 50
+            center: 0,0
+            index:
+                # Rebuild every 3 images
+                index_key: image_num
+                type: Sequence
+                repeat: 3
+
+image:
+    type: Scattered
+    size: 256  # pixels = 25.6 arcsec
+    nobjects: 5
+    random_seed:
+        - 12345  # Implicitly a sequence that increases from here by 1 each obj_num.
+        - '$123456789 + (image_num//3) * @image.nobjects + obj_num % @image.nobjects'
+    world_pos:
+        rng_num: 1
+        type: XY
+        x: { type: Random, min: -25, max: 25 }
+        y: { type: Random, min: -25, max: 25 }
+    wcs:
+        type: PixelScale
+        scale: 0.1
+        origin: center
+        world_origin:
+            type: XY
+            x: { type: Random, min: -5, max: 5 }
+            y: { type: Random, min: -5, max: 5 }
+    noise:
+        type: Gaussian
+        sigma: 0.001
+
+output:  # This bit isn't used by test_multirng, but it lets you run `galsim multirng.yaml`
+    type: Fits
+    nfiles: 6
+    dir: output
+    file_name:
+        type: NumberedFile
+        root: multirng   # multirngXX.fits
+        digits: 2

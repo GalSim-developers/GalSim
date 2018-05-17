@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,14 +21,8 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 @timer
@@ -88,7 +82,7 @@ def test_basic_dict():
     try:
         import yaml
     except ImportError as e:
-        # Raise a warning so this message shows up when doing nosetests (or scons tests).
+        # Raise a warning so this message shows up when doing pytest (or scons tests).
         import warnings
         warnings.warn("Unable to import yaml.  Skipping yaml tests")
         print("Caught ",e)

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -40,7 +40,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor.
-        SBDeconvolve(const SBProfile& adaptee, const GSParamsPtr& gsparams);
+        SBDeconvolve(const SBProfile& adaptee, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBDeconvolve(const SBDeconvolve& rhs);

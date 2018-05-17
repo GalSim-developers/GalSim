@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,8 +19,9 @@
 Redefinition of the Shear class at the Python layer.
 """
 
-import galsim
 import numpy as np
+
+from .angle import Angle, _Angle, radians
 
 class Shear(object):
     """A class to represent shears in a variety of ways.
@@ -63,6 +64,12 @@ class Shear(object):
     `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible
     to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e.
     galsim.Shear().
+
+    In addition, for use cases where extreme efficiency is required, you can skip all the
+    normal sanity checks and branches in the regular Shear constructor by using a leading
+    underscore with the complex shear (g1 + 1j * g2).
+
+        >>> s = galsim._Shear(0.05 + 0.03j)  # Equivalent to galsim.Shear(g1=0.05, g2=0.03)
 
     Since we have defined a Shear as a transformation that preserves area, this means that it is not
     a precise description of what happens during the process of weak lensing.  The coordinate
@@ -132,13 +139,13 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when g is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             g = kwargs.pop('g')
             if g > 1 or g < 0:
                 raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
-            self._g = g * np.exp(2j * beta.rad())
+            self._g = g * np.exp(2j * beta.rad)
 
         # e,beta
         elif 'e' in kwargs:
@@ -146,13 +153,13 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when e is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             e = kwargs.pop('e')
             if e > 1 or e < 0:
                 raise ValueError("Requested distortion is outside [0,1]: %f"%e)
-            self._g = self._e2g(e**2) * e * np.exp(2j * beta.rad())
+            self._g = self._e2g(e**2) * e * np.exp(2j * beta.rad)
 
         # eta,beta
         elif 'eta' in kwargs:
@@ -160,13 +167,13 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when eta is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             eta = kwargs.pop('eta')
             if eta < 0:
                 raise ValueError("Requested eta is below 0: %f"%eta)
-            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad)
 
         # q,beta
         elif 'q' in kwargs:
@@ -174,14 +181,14 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when q is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             q = kwargs.pop('q')
             if q <= 0 or q > 1:
                 raise ValueError("Cannot use requested axis ratio of %f!"%q)
             eta = -np.log(q)
-            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad)
 
         elif 'beta' in kwargs:
             raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
@@ -192,80 +199,34 @@ class Shear(object):
             raise TypeError(
                 "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
 
-    # define all the methods to get shear values
-    def getG1(self):
-        """Return the g1 component of the reduced shear.
-        Note: s.getG1() is equivalent to s.g1
-        """
-        return self._g.real
+    @property
+    def g1(self): return self._g.real
 
-    def getG2(self):
-        """Return the g2 component of the reduced shear.
-        Note: s.getG2() is equivalent to s.g2
-        """
-        return self._g.imag
+    @property
+    def g2(self): return self._g.imag
+    @property
+    def g(self): return abs(self._g)
+    @property
+    def beta(self): return _Angle(0.5 * np.angle(self._g))
 
-    def getG(self):
-        """Return the magnitude of the reduced shear |g1 + i g2| = sqrt(g1**2 + g2**2)
-        Note: s.getG() is equivalent to s.g
-        """
-        return abs(self._g)
+    @property
+    def shear(self): return self._g
 
-    def getBeta(self):
-        """Return the position angle of the reduced shear g exp(2i beta) == g1 + i g2
-        Note: s.getBeta() is equivalent to s.beta
-        """
-        return 0.5 * np.angle(self._g) * galsim.radians
+    @property
+    def e1(self): return self._g.real * self._g2e(self.g**2)
+    @property
+    def e2(self): return self._g.imag * self._g2e(self.g**2)
+    @property
+    def e(self): return self.g * self._g2e(self.g**2)
+    @property
+    def esq(self): return self.e**2
 
-    def getShear(self):
-        """Return the reduced shear as a complex number g1 + 1j * g2
-        Note: s.getShear() is equivalent to s.shear
-        """
-        return self._g
-
-    def getE1(self):
-        """Return the e1 component of the distortion.
-        Note: s.getE1() is equivalent to s.e1
-        """
-        return self._g.real * self._g2e(abs(self._g)**2)
-
-    def getE2(self):
-        """Return the e2 component of the distortion.
-        Note: s.getE2() is equivalent to s.e2
-        """
-        return self._g.imag * self._g2e(abs(self._g)**2)
-
-    def getE(self):
-        """Return the magnitude of the distortion |e1 + i e2| = sqrt(e1**2 + e2**2)
-        Note: s.getE() is equivalent to s.e
-        """
-        return abs(self._g) * self._g2e(abs(self._g)**2)
-
-    def getESq(self):
-        """Return the magnitude squared of the distortion |e1 + i e2|**2 = e1**2 + e2**2
-        Note: s.getESq() is equivalent to s.esq
-        """
-        return self.e**2
-
-    def getEta(self):
-        """Return the magnitude of the conformal shear eta = atanh(e) = 2 atanh(g)
-        Note: s.getEta() is equivalent to s.eta
-        """
-        return abs(self._g) * self._g2eta(abs(self._g))
-
-    # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
-    g1 = property(getG1)
-    g2 = property(getG2)
-    g = property(getG)
-    beta = property(getBeta)
-
-    shear = property(getShear)
-
-    e1 = property(getE1)
-    e2 = property(getE2)
-    e = property(getE)
-    esq = property(getESq)
-    eta = property(getEta)
+    @property
+    def eta1(self): return self._g.real * self._g2eta(self.g)
+    @property
+    def eta2(self): return self._g.imag * self._g2eta(self.g)
+    @property
+    def eta(self): return self.g * self._g2eta(self.g)
 
     # Helpers to convert between different conventions
     # Note: These return the scale factor by which to multiply.  Not the final value.
@@ -297,16 +258,16 @@ class Shear(object):
             return 0.5 + absetasq*((-1./24.) + absetasq*(1./240.))
 
     # define all the various operators on Shear objects
-    def __neg__(self): return Shear(-self._g)
+    def __neg__(self): return _Shear(-self._g)
 
     # order of operations: shear by other._shear, then by self._shear
     def __add__(self, other):
-        return Shear((self._g + other._g) / (1. + self._g.conjugate() * other._g))
+        return _Shear((self._g + other._g) / (1. + self._g.conjugate() * other._g))
 
     # order of operations: shear by -other._shear, then by self._shear
     def __sub__(self, other): return self + (-other)
 
-    def __eq__(self, other): return self._g == other._g
+    def __eq__(self, other): return isinstance(other, Shear) and self._g == other._g
     def __ne__(self, other): return not self.__eq__(other)
 
     def getMatrix(self):
@@ -344,7 +305,7 @@ class Shear(object):
         S3 = self.getMatrix().dot(other.getMatrix()[:,:1])
         R = (-(self + other)).getMatrix().dot(S3)
         theta = np.arctan2(R[1,0], R[0,0])
-        return theta * galsim.radians
+        return theta * radians
 
     def __repr__(self):
         return 'galsim.Shear(%r)'%(self.shear)
@@ -353,3 +314,15 @@ class Shear(object):
         return 'galsim.Shear(g1=%s,g2=%s)'%(self.g1,self.g2)
 
     def __hash__(self): return hash(self._g)
+
+def _Shear(g):
+    """Equivalent to Shear(shear), but without the overhead of the normal sanity checks and other
+    options for how to specify the shear.
+
+    @param g        The complex shear g1 + 1j * g2.
+
+    @returns a galsim.Shear instance
+    """
+    ret = Shear.__new__(Shear)
+    ret._g = g
+    return ret

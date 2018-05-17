@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,8 +21,10 @@
 
 #include <sstream>
 #include <numeric>
+#include <cstring>
 
 #include "fftw3.h"
+#include "fmath/fmath.hpp"  // Use their compiler checks for the right SSE include.
 
 #include "Image.h"
 #include "ImageArith.h"
@@ -145,16 +147,24 @@ template <typename T>
 struct Sum
 {
     Sum(): sum(0) {}
-    void operator()(T x) { sum += x; }
-    T sum;
+    void operator()(T x) { sum += double(x); }
+    double sum;
+};
+
+template <typename T>
+struct Sum<std::complex<T> >
+{
+    Sum(): sum(0) {}
+    void operator()(std::complex<T> x) { sum += std::complex<double>(x); }
+    std::complex<double> sum;
 };
 
 template <typename T>
 T BaseImage<T>::sumElements() const
 {
     Sum<T> sum;
-    sum = for_each_pixel(*this, sum);
-    return sum.sum;
+    for_each_pixel_ref(*this, sum);
+    return T(sum.sum);
 }
 
 template <typename T>
@@ -169,13 +179,11 @@ template <typename T>
 Bounds<int> BaseImage<T>::nonZeroBounds() const
 {
     NonZeroBounds<T> nz;
-    nz = for_each_pixel_ij(*this, nz);
+    for_each_pixel_ij_ref(*this, nz);
     return nz.bounds;
 }
 
-template <typename T>
-ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
-    BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
+void CheckSize(int ncol, int nrow)
 {
     if (ncol <= 0 || nrow <= 0) {
         std::ostringstream oss(" ");
@@ -193,7 +201,33 @@ ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
         }
         throw ImageError(oss.str());
     }
+}
+
+template <typename T>
+ImageAlloc<T>::ImageAlloc(int ncol, int nrow) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
+{
+    CheckSize(ncol, nrow);
+#ifdef DEBUGLOGGING
+    fill(T(99999));
+#endif
+}
+
+template <typename T>
+ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
+{
+    CheckSize(ncol, nrow);
     fill(init_value);
+}
+
+template <typename T>
+ImageAlloc<T>::ImageAlloc(const Bounds<int>& bounds) :
+    BaseImage<T>(bounds)
+{
+#ifdef DEBUGLOGGING
+    fill(T(99999));
+#endif
 }
 
 template <typename T>
@@ -481,29 +515,25 @@ void wrap_hermx_cols(T*& ptr, int m, int mwrap, int step)
 }
 
 template <typename T>
-ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
+void wrapImage(ImageView<T> im, const Bounds<int>& b, bool hermx, bool hermy)
 {
-    // Get this at the start to check for invalid bounds and raise the exception before
-    // possibly writing data past the edge of the image.
-    ImageView<T> ret = subImage(b);
-
     dbg<<"Start ImageView::wrap: b = "<<b<<std::endl;
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"self bounds = "<<im.getBounds()<<std::endl;
     //set_verbose(2);
 
-    const int i1 = b.getXMin()-this->_bounds.getXMin();
-    const int i2 = b.getXMax()-this->_bounds.getXMin()+1;  // +1 for "1 past the end"
-    const int j1 = b.getYMin()-this->_bounds.getYMin();
-    const int j2 = b.getYMax()-this->_bounds.getYMin()+1;
+    const int i1 = b.getXMin()-im.getBounds().getXMin();
+    const int i2 = b.getXMax()-im.getBounds().getXMin()+1;  // +1 for "1 past the end"
+    const int j1 = b.getYMin()-im.getBounds().getYMin();
+    const int j2 = b.getYMax()-im.getBounds().getYMin()+1;
     xdbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
     const int mwrap = i2-i1;
     const int nwrap = j2-j1;
-    const int skip = this->getNSkip();
-    const int step = this->getStep();
-    const int stride = this->getStride();
-    const int m = this->getNCol();
-    const int n = this->getNRow();
-    T* ptr = this->getData();
+    const int skip = im.getNSkip();
+    const int step = im.getStep();
+    const int stride = im.getStride();
+    const int m = im.getNCol();
+    const int n = im.getNRow();
+    T* ptr = im.getData();
 
     if (hermx) {
         // In the hermitian x case, we need to wrap the columns first, otherwise the bookkeeping
@@ -518,8 +548,8 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
         int mid = (n-1)/2;  // The value of j that corresponds to the j==0 in the normal notation.
 
-        T* ptr1 = getData() + (i2-1)*step;
-        T* ptr2 = getData() + (n-1)*stride + (i2-1)*step;
+        T* ptr1 = im.getData() + (i2-1)*step;
+        T* ptr2 = im.getData() + (n-1)*stride + (i2-1)*step;
 
         // These skips will take us from the end of one row to the i2-1 element in the next row.
         int skip1 = skip + (i2-1)*step;
@@ -527,13 +557,13 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
         for (int j=0; j<mid; ++j, ptr1+=skip1, ptr2+=skip2) {
             xdbg<<"Wrap rows "<<j<<","<<n-j-1<<" into columns ["<<i1<<','<<i2<<")\n";
-            xdbg<<"ptrs = "<<ptr1-this->getData()<<"  "<<ptr2-this->getData()<<std::endl;
+            xdbg<<"ptrs = "<<ptr1-im.getData()<<"  "<<ptr2-im.getData()<<std::endl;
             wrap_hermx_cols_pair(ptr1, ptr2, m, mwrap, step);
         }
         // Finally, the row that is really j=0 (but here is j=(n-1)/2) also needs to be wrapped
         // singly.
         xdbg<<"Wrap row "<<mid<<" into columns ["<<i1<<','<<i2<<")\n";
-        xdbg<<"ptrs = "<<ptr1-this->getData()<<"  "<<ptr2-this->getData()<<std::endl;
+        xdbg<<"ptrs = "<<ptr1-im.getData()<<"  "<<ptr2-im.getData()<<std::endl;
         wrap_hermx_cols(ptr1, m, mwrap, step);
     }
 
@@ -562,7 +592,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
         // we are overwriting the input data as we go, so we would double add it if we did
         // it the normal way.
         xdbg<<"Wrap first row "<<jj<<" onto row = "<<jj<<" using conjugation.\n";
-        xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+        xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
         wrap_row_selfconj(ptr, ptrwrap, m, step);
 
         ptr += skip;
@@ -573,7 +603,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
             int k = std::min(n-j,jj);  // How many conjugate rows to do?
             for (; k; --k, ++j, --jj, ptr+=skip, ptrwrap-=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<" using conjugation.\n";
-                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
                 wrap_row_conj(ptr, ptrwrap, m, step);
             }
             assert(j==n || jj == j1);
@@ -587,7 +617,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
             k = std::min(n-j,nwrap-1);  // How many non-conjugate rows to do?
             for (; k; --k, ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
-                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
                 wrap_row(ptr, ptrwrap, m, step);
             }
             assert(j==n || jj == j2-1);
@@ -616,7 +646,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
             int k = std::min(n-j,j2-jj);  // How many to do before looping back.
             for (; k; --k, ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
-                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
                 wrap_row(ptr, ptrwrap, m, step);
             }
             jj = j1;
@@ -626,76 +656,79 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
     // In the normal (not hermx) case, we now wrap rows [j1,j2) into the columns [i1,i2).
     if (!hermx) {
-        ptr = getData() + j1*stride;
+        ptr = im.getData() + j1*stride;
         for (int j=j1; j<j2; ++j, ptr+=skip) {
             xdbg<<"Wrap row "<<j<<" into columns ["<<i1<<','<<i2<<")\n";
-            xdbg<<"ptr = "<<ptr-this->getData()<<std::endl;
+            xdbg<<"ptr = "<<ptr-im.getData()<<std::endl;
             wrap_cols(ptr, m, mwrap, i1, i2, step);
         }
     }
-
-    return ret;
 }
 
 
 template <typename T>
-ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out) const
+void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+          bool shift_in, bool shift_out)
 {
-    dbg<<"Start BaseImage::fft\n";
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"Start rfft\n";
+    dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!_data or !this->_bounds.isDefined())
+    if (!in.getData() or !in.getBounds().isDefined())
         throw ImageError("Attempting to perform fft on undefined image.");
 
-    const int Nxo2 = this->_bounds.getXMax()+1;
-    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nxo2 = in.getBounds().getXMax()+1;
+    const int Nyo2 = in.getBounds().getYMax()+1;
     const int Nx = Nxo2 << 1;
     const int Ny = Nyo2 << 1;
     dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -Nyo2 || this->_bounds.getXMin() != -Nxo2)
+    if (in.getBounds().getYMin() != -Nyo2 || in.getBounds().getXMin() != -Nxo2)
         throw ImageError("fft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
-    // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
-    // use it for the fftw array.
-    // We will use the same array for input and output.  It's simplest if we create the
-    // output image and just cast to double for the input.
+    if (out.getBounds().getXMin() != 0 || out.getBounds().getXMax() != Nxo2 ||
+        out.getBounds().getYMin() != -Nyo2 || out.getBounds().getYMax() != Nyo2-1)
+        throw ImageError("fft requires out.bounds to be (0, Nx/2, -Ny/2, Ny/2-1)");
+
+    if ((uintptr_t) out.getData() % 16 != 0)
+        throw ImageError("fft requires out.data to be 16 byte aligned");
+
+    // We will use the same array for input and output.
+    // For the input, we just cast the memory to double to use for the input data.
     // However, note that the complex array has two extra elements in the primary direction
     // (x in our case) to allow for the extra column.
     // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
-    ImageAlloc<std::complex<double> > kim(Bounds<int>(0, Nxo2, -Nyo2, Nyo2-1));
-    double* xptr = reinterpret_cast<double*>(kim.getData());
-    const T* ptr = _data;
-    const int skip = this->getNSkip();
+    double* xptr = reinterpret_cast<double*>(out.getData());
+    const T* ptr = in.getData();
+    const int skip = in.getNSkip();
 
     // The FT image that FFTW will return will have FT(0,0) placed at the origin.  We
     // want it placed in the middle instead.  We can make that happen by inverting every other
     // row in the input image.
     if (shift_out) {
         double fac = (shift_in && Nyo2 % 2 == 1) ? -1 : 1.;
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
                 for (int i=Nx; i; --i)
                     *xptr++ = fac * REAL(*ptr++);
         } else {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *xptr++ = fac * REAL(*ptr);
         }
     } else {
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
                 for (int i=Nx; i; --i)
                     *xptr++ = REAL(*ptr++);
         } else {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *xptr++ = REAL(*ptr);
         }
     }
 
-    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
-    double* xdata = reinterpret_cast<double*>(kim.getData());
+    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
+    double* xdata = reinterpret_cast<double*>(out.getData());
 
     fftw_plan plan = fftw_plan_dft_r2c_2d(Ny, Nx, xdata, kdata, FFTW_ESTIMATE);
     if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
@@ -705,50 +738,51 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     // The resulting image will still have a checkerboard pattern of +-1 on it, which
     // we want to remove.
     if (shift_in) {
-        std::complex<double>* kptr = kim.getData();
+        std::complex<double>* kptr = out.getData();
         double fac = 1.;
         const bool extra_flip = (Nxo2 % 2 == 1);
         for (int j=Ny; j; --j, fac=(extra_flip?-fac:fac))
             for (int i=Nxo2+1; i; --i, fac=-fac)
                 *kptr++ *= fac;
     }
-
-    // Now simply return a view of this image.
-    return kim.view();
 }
 
 template <typename T>
-ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
+void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool shift_out)
 {
-    dbg<<"Start BaseImage::inverse_fft\n";
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"Start irfft\n";
+    dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!_data or !this->_bounds.isDefined())
+    if (!in.getData() or !in.getBounds().isDefined())
         throw ImageError("Attempting to perform inverse fft on undefined image.");
 
-    if (this->_bounds.getXMin() != 0)
+    if (in.getBounds().getXMin() != 0)
         throw ImageError("inverse_fft requires bounds to be (0, Nx/2, -Ny/2, Ny/2-1)");
 
-    const int Nxo2 = this->_bounds.getXMax();
-    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nxo2 = in.getBounds().getXMax();
+    const int Nyo2 = in.getBounds().getYMax()+1;
     const int Nx = Nxo2 << 1;
     const int Ny = Nyo2 << 1;
     dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -Nyo2)
+    if (in.getBounds().getYMin() != -Nyo2)
         throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2, N/2-1)");
 
-    // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
-    // use it for the fftw array.
-    // We will use the same array for input and output.  It's simplest if we create the
-    // output image and just cast to complex for the input.
+    if (out.getBounds().getXMin() != -Nxo2 || out.getBounds().getXMax() != Nxo2+1 ||
+        out.getBounds().getYMin() != -Nyo2 || out.getBounds().getYMax() != Nyo2-1)
+        throw ImageError("inverse_fft requires out.bounds to be (-Nx/2, Nx/2+1, -Ny/2, Ny/2-1)");
+
+    if ((uintptr_t) out.getData() % 16 != 0)
+        throw ImageError("inverse_fft requires out.data to be 16 byte aligned");
+
+    // We will use the same array for input and output.
+    // For the input, we just cast the memory to complex<double> to use for the input data.
     // However, note that the real array needs two extra elements in the primary direction
     // (x in our case) to allow for the extra column in the k array.
     // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
     // The bounds we care about are (-Nxo2, Nxo2-1, -Nyo2, Nyo2-1).
-    ImageAlloc<double> xim(Bounds<int>(-Nxo2, Nxo2+1, -Nyo2, Nyo2-1));
 
-    std::complex<double>* kptr = reinterpret_cast<std::complex<double>*>(xim.getData());
+    std::complex<double>* kptr = reinterpret_cast<std::complex<double>*>(out.getData());
 
     // FFTW wants the locations of the + and - ky values swapped relative to how
     // we store it in an image.
@@ -756,122 +790,126 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
     // and need to scale by (1/N)^2.
     double fac = 1./(Nx*Ny);
 
-    const int start_offset = shift_in ? Nyo2 * _stride : 0;
-    const int mid_offset = shift_in ? 0 : Nyo2 * _stride;
+    const int start_offset = shift_in ? Nyo2 * in.getStride() : 0;
+    const int mid_offset = shift_in ? 0 : Nyo2 * in.getStride();
 
-    const int skip = this->getNSkip();
+    const int skip = in.getNSkip();
     if (shift_out) {
-        const T* ptr = _data + start_offset;
+        const T* ptr = in.getData() + start_offset;
         const bool extra_flip = (Nxo2 % 2 == 1);
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
                 for (int i=Nxo2+1; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
                 for (int i=Nxo2+1; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=Nxo2+1; i; --i, ptr+=_step, fac=-fac)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep(), fac=-fac)
                     *kptr++ = fac * *ptr;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=Nxo2+1; i; --i, ptr+=_step, fac=-fac)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep(), fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else {
-        const T* ptr = _data + start_offset;
-        if (_step == 1) {
+        const T* ptr = in.getData() + start_offset;
+        if (in.getStep() == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip)
                 for (int i=Nxo2+1; i; --i)
                     *kptr++ = fac * *ptr++;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip)
                 for (int i=Nxo2+1; i; --i)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Nyo2; j; --j, ptr+=skip)
-                for (int i=Nxo2+1; i; --i, ptr+=_step)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep())
                     *kptr++ = fac * *ptr;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip)
-                for (int i=Nxo2+1; i; --i, ptr+=_step)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep())
                     *kptr++ = fac * *ptr;
         }
     }
 
-    double* xdata = xim.getData();
+    double* xdata = out.getData();
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(xdata);
 
     fftw_plan plan = fftw_plan_dft_c2r_2d(Ny, Nx, kdata, xdata, FFTW_ESTIMATE);
     if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
     fftw_execute(plan);
     fftw_destroy_plan(plan);
-
-    // Now simply return a view of this image.
-    return xim.subImage(Bounds<int>(-Nxo2, Nxo2-1, -Nyo2, Nyo2-1));
 }
 
 template <typename T>
-ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in, bool shift_out) const
+void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+          bool inverse, bool shift_in, bool shift_out)
 {
-    dbg<<"Start BaseImage::cfft\n";
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"Start cfft\n";
+    dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!_data or !this->_bounds.isDefined())
+    if (!in.getData() or !in.getBounds().isDefined())
         throw ImageError("Attempting to perform cfft on undefined image.");
 
-    const int Nxo2 = this->_bounds.getXMax()+1;
-    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nxo2 = in.getBounds().getXMax()+1;
+    const int Nyo2 = in.getBounds().getYMax()+1;
     const int Nx = Nxo2 << 1;
     const int Ny = Nyo2 << 1;
     dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -Nyo2 && (this->_bounds.getXMin() != -Nxo2))
+    if (in.getBounds().getYMin() != -Nyo2 && (in.getBounds().getXMin() != -Nxo2))
         throw ImageError("cfft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
-    ImageAlloc<std::complex<double> > kim(Bounds<int>(-Nxo2, Nxo2-1, -Nyo2, Nyo2-1));
-    const T* ptr = _data;
-    const int skip = this->getNSkip();
-    std::complex<double>* kptr = kim.getData();
+    if (out.getBounds().getXMin() != -Nxo2 || out.getBounds().getXMax() != Nxo2-1 ||
+        out.getBounds().getYMin() != -Nyo2 || out.getBounds().getYMax() != Nyo2-1)
+        throw ImageError("cfft requires out.bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
+
+    if ((uintptr_t) out.getData() % 16 != 0)
+        throw ImageError("cfft requires out.data to be 16 byte aligned");
+
+    const T* ptr = in.getData();
+    const int skip = in.getNSkip();
+    std::complex<double>* kptr = out.getData();
 
     if (shift_out) {
         double fac = inverse ? 1./(Nx*Ny) : 1.;
         if (shift_in && (Nxo2 + Nyo2) % 2 == 1) fac = -fac;
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
                 for (int i=Nx; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
-                for (int i=Nx; i; --i, ptr+=_step, fac=-fac)
+                for (int i=Nx; i; --i, ptr+=in.getStep(), fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else if (inverse) {
         double fac = 1./(Nx*Ny);
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip)
                 for (int i=Nx; i; --i)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *kptr++ = fac * *ptr;
         }
     } else {
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip)
                 for (int i=Nx; i; --i)
                     *kptr++ = *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *kptr++ = *ptr;
         }
     }
 
-    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
+    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
 
     fftw_plan plan = fftw_plan_dft_2d(Ny, Nx, kdata, kdata, inverse ? FFTW_BACKWARD : FFTW_FORWARD,
                                       FFTW_ESTIMATE);
@@ -880,23 +918,27 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
     fftw_destroy_plan(plan);
 
     if (shift_in) {
-        kptr = kim.getData();
+        kptr = out.getData();
         double fac = 1.;
         for (int j=Ny; j; --j, fac=-fac)
             for (int i=Nx; i; --i, fac=-fac)
                 *kptr++ *= fac;
     }
-
-    return kim.view();
 }
 
+template <typename T>
+void invertImage(ImageView<T> im)
+{ im.invertSelf(); }
 
 // The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
 
 template <typename T>
 void ImageView<T>::fill(T x)
 {
-    transform_pixel(*this, ConstReturn<T>(x));
+    if (x == T(0) && this->getNSkip()==0 && this->getStep()==1)
+        memset(this->getData(), 0, this->getNElements() * sizeof(T));
+    else
+        transform_pixel(*this, ConstReturn<T>(x));
 }
 
 template <typename T>
@@ -910,7 +952,7 @@ void ImageView<T>::copyFrom(const BaseImage<T>& rhs)
 {
     if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
         throw ImageError("Attempt im1 = im2, but bounds not the same shape");
-    transform_pixel(*this, rhs, ReturnSecond<T,T>());
+    transform_pixel(*this, rhs, ReturnSecond<T>());
 }
 
 // A helper function that will return the smallest 2^n or 3x2^n value that is
@@ -928,36 +970,369 @@ int goodFFTSize(int input)
     return Nk;
 }
 
+// Some Image arithmetic that can be sped up with SSE
+
+// First the default implementation that we get if SSE isn't available.
+template <typename T>
+struct InnerLoopHelper
+{
+    template <typename T1, typename T2>
+    static inline void mult_const(T1*& ptr, T2 x, int n)
+    { for (; n; --n) *ptr++ *= x; }
+
+    template <typename T1, typename T2>
+    static inline void mult_im(T1*& p1, const T2*& p2, int n)
+    { for (; n; --n) *p1++ *= *p2++; }
+};
+
+#ifdef __SSE__
+template <>
+struct InnerLoopHelper<float>
+{
+    static inline void mult_const(float*& ptr, float x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        int n4 = n>>2;
+        int na = n4<<2;
+        n -= na;
+
+        if (n4) {
+            __m128 xx = _mm_set1_ps(x);
+            do {
+                _mm_store_ps(ptr, _mm_mul_ps(_mm_load_ps(ptr), xx));
+                ptr += 4;
+            } while (--n4);
+        }
+
+        for (; n; --n) *ptr++ *= x;
+    }
+    static inline void mult_const(std::complex<float>*& ptr, float x, int n)
+    {
+        float* fptr = reinterpret_cast<float*>(ptr);
+        mult_const(fptr, x, 2*n);
+        ptr += n;
+    }
+    static inline void mult_const(std::complex<float>*& ptr, std::complex<float> x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        if (n2) {
+            const float xr = x.real();
+            const float xi = x.imag();
+            __m128 xxr = _mm_set1_ps(xr);
+            __m128 xxi = _mm_set_ps(xi, -xi, xi, -xi);
+            do {
+                __m128 p = _mm_load_ps(reinterpret_cast<float*>(ptr));
+                __m128 pir = _mm_shuffle_ps(p, p, _MM_SHUFFLE(2,3,0,1));  // (pi, pr)
+                __m128 z1 = _mm_mul_ps(xxr, p);    // (xr * pr, xr * pi)
+                __m128 z2 = _mm_mul_ps(xxi, pir);  // (-xi * pi, xi * pr)
+                __m128 z = _mm_add_ps(z1, z2);     // (xr pr - xi pi, xr pi + xi pr)
+                _mm_store_ps(reinterpret_cast<float*>(ptr), z);
+                ptr += 2;
+            } while (--n2);
+        }
+
+        for (; n; --n) *ptr++ *= x;
+    }
+
+    static inline void mult_im(float*& p1, const float*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n4 = n>>2;
+        int na = n4<<2;
+        n -= na;
+
+        for (; n4; --n4) {
+            _mm_store_ps(p1, _mm_mul_ps(_mm_load_ps(p1), _mm_loadu_ps(p2)));
+            p1 += 4;
+            p2 += 4;
+        }
+
+        for (; n; --n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<float>*& p1, const float*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n4 = n>>2;
+        int na = n4<<2;
+        n -= na;
+
+        for (; n4; --n4) {
+            __m128 xp2 = _mm_loadu_ps(p2);                           // This holds 4 real from p2
+            p2 += 4;
+            __m128 xp1 = _mm_load_ps(reinterpret_cast<float*>(p1));  // This holds 2 complex from p1
+            __m128 prod = _mm_mul_ps(xp1, _mm_unpacklo_ps(xp2,xp2)); // First 2 products
+            _mm_store_ps(reinterpret_cast<float*>(p1), prod);
+            p1 += 2;
+            xp1 = _mm_load_ps(reinterpret_cast<float*>(p1));         // This is now the next 2.
+            prod = _mm_mul_ps(xp1, _mm_unpackhi_ps(xp2,xp2));        // Next 2 products
+            _mm_store_ps(reinterpret_cast<float*>(p1), prod);
+            p1 += 2;
+        }
+
+        for (; n; --n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<float>*& p1, const std::complex<float>*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        if (n2) {
+            const __m128 mneg = _mm_set_ps(1, -1, 1, -1);
+            do {
+                __m128 xp2 = _mm_loadu_ps(reinterpret_cast<const float*>(p2));
+                p2 += 2;
+                __m128 xp1 = _mm_load_ps(reinterpret_cast<float*>(p1));
+                __m128 p1ir = _mm_shuffle_ps(xp1, xp1, _MM_SHUFFLE(2,3,0,1));
+                __m128 p2rr = _mm_shuffle_ps(xp2, xp2, _MM_SHUFFLE(2,2,0,0));
+                __m128 p2ii = _mm_shuffle_ps(xp2, xp2, _MM_SHUFFLE(3,3,1,1));
+                p2ii = _mm_mul_ps(mneg, p2ii);
+                __m128 z1 = _mm_mul_ps(p2rr, xp1);
+                __m128 z2 = _mm_mul_ps(p2ii, p1ir);
+                __m128 z = _mm_add_ps(z1, z2);
+                _mm_store_ps(reinterpret_cast<float*>(p1), z);
+                p1 += 2;
+            } while (--n2);
+        }
+
+        if (n) *p1++ *= *p2++;
+    }
+};
+#endif
+
+#ifdef __SSE2__
+template <>
+struct InnerLoopHelper<double>
+{
+    static inline void mult_const(double*& ptr, double x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        if (n2) {
+            __m128d xx = _mm_set1_pd(x);
+            do {
+                _mm_store_pd(ptr, _mm_mul_pd(_mm_load_pd(ptr), xx));
+                ptr += 2;
+            } while (--n2);
+        }
+
+        if (n) *ptr++ *= x;
+    }
+    static inline void mult_const(std::complex<double>*& ptr, double x, int n)
+    {
+        double* fptr = reinterpret_cast<double*>(ptr);
+        mult_const(fptr, x, 2*n);
+        ptr += n;
+    }
+    static inline void mult_const(std::complex<double>*& ptr, std::complex<double> x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        if (n) {
+            const double xr = x.real();
+            const double xi = x.imag();
+            __m128d xxr = _mm_set1_pd(xr);
+            __m128d xxi = _mm_set_pd(xi, -xi);
+            do {
+                __m128d p = _mm_load_pd(reinterpret_cast<double*>(ptr));
+                __m128d pir = _mm_shuffle_pd(p, p, _MM_SHUFFLE2(0,1));  // (pi, pr)
+                __m128d z1 = _mm_mul_pd(xxr, p);    // (xr * pr, xr * pi)
+                __m128d z2 = _mm_mul_pd(xxi, pir);  // (-xi * pi, xi * pr)
+                __m128d z = _mm_add_pd(z1, z2);     // (xr pr - xi pi, xr pi + xi pr)
+                _mm_store_pd(reinterpret_cast<double*>(ptr++), z);
+            } while (--n);
+        }
+    }
+
+    static inline void mult_im(double*& p1, const double*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        for (; n2; --n2) {
+            _mm_store_pd(p1, _mm_mul_pd(_mm_load_pd(p1), _mm_loadu_pd(p2)));
+            p1 += 2;
+            p2 += 2;
+        }
+
+        if (n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<double>*& p1, const double*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        for (; n2; --n2) {
+            __m128d xp2 = _mm_loadu_pd(p2);
+            p2 += 2;
+            __m128d xp1 = _mm_load_pd(reinterpret_cast<double*>(p1));
+            __m128d prod = _mm_mul_pd(xp1, _mm_unpacklo_pd(xp2,xp2));
+            _mm_store_pd(reinterpret_cast<double*>(p1++), prod);
+            xp1 = _mm_load_pd(reinterpret_cast<double*>(p1));
+            prod = _mm_mul_pd(xp1, _mm_unpackhi_pd(xp2,xp2));
+            _mm_store_pd(reinterpret_cast<double*>(p1++), prod);
+        }
+
+        if (n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<double>*& p1, const std::complex<double>*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        if (n) {
+            const __m128d mneg = _mm_set_pd(1, -1);
+            do {
+                __m128d xp2 = _mm_loadu_pd(reinterpret_cast<const double*>(p2++));
+                __m128d xp1 = _mm_load_pd(reinterpret_cast<double*>(p1));
+                __m128d p1ir = _mm_shuffle_pd(xp1, xp1, _MM_SHUFFLE2(0,1));
+                __m128d p2rr = _mm_shuffle_pd(xp2, xp2, _MM_SHUFFLE2(0,0));
+                __m128d p2ii = _mm_shuffle_pd(xp2, xp2, _MM_SHUFFLE2(1,1));
+                p2ii = _mm_mul_pd(mneg, p2ii);
+                __m128d z1 = _mm_mul_pd(p2rr, xp1);
+                __m128d z2 = _mm_mul_pd(p2ii, p1ir);
+                __m128d z = _mm_add_pd(z1, z2);
+                _mm_store_pd(reinterpret_cast<double*>(p1++), z);
+            } while (--n);
+        }
+    }
+};
+#endif
+
+template <typename T1, typename T2>
+inline ImageView<T1>& MultConst(ImageView<T1>& im, T2 x)
+{
+    typedef typename ComplexHelper<T1>::real_type RT;
+    T1* ptr = im.getData();
+    if (ptr) {
+        const int skip = im.getNSkip();
+        const int step = im.getStep();
+        const int nrow = im.getNRow();
+        const int ncol = im.getNCol();
+        if (step == 1) {
+            for (int j=0; j<nrow; j++, ptr+=skip)
+                InnerLoopHelper<RT>::mult_const(ptr, x, ncol);
+        } else {
+            for (int j=0; j<nrow; j++, ptr+=skip)
+                for (int i=0; i<ncol; i++, ptr+=step) *ptr *= x;
+        }
+    }
+    return im;
+}
+
+ImageView<float> operator*=(ImageView<float> im, float x)
+{ return MultConst(im,x); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im, float x)
+{ return MultConst(im,x); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im,
+                                           std::complex<float> x)
+{ return MultConst(im,x); }
+
+ImageView<double> operator*=(ImageView<double> im, double x)
+{ return MultConst(im,x); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im, double x)
+{ return MultConst(im,x); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im,
+                                            std::complex<double> x)
+{ return MultConst(im,x); }
+
+template <typename T1, typename T2>
+inline ImageView<T1>& MultIm(ImageView<T1>& im1, const BaseImage<T2>& im2)
+{
+    typedef typename ComplexHelper<T1>::real_type RT;
+    T1* ptr1 = im1.getData();
+    if (ptr1) {
+        const int skip1 = im1.getNSkip();
+        const int step1 = im1.getStep();
+        const int nrow = im1.getNRow();
+        const int ncol = im1.getNCol();
+        const T2* ptr2 = im2.getData();
+        const int skip2 = im2.getNSkip();
+        const int step2 = im2.getStep();
+        if (step1 == 1 && step2 == 1) {
+            for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
+                InnerLoopHelper<RT>::mult_im(ptr1, ptr2, ncol);
+        } else {
+            for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
+                for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 *= *ptr2;
+        }
+    }
+    return im1;
+}
+
+ImageView<float> operator*=(ImageView<float> im1, const BaseImage<float>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im1,
+                                           const BaseImage<float>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im1,
+                                           const BaseImage<std::complex<float> >& im2)
+{ return MultIm(im1,im2); }
+
+ImageView<double> operator*=(ImageView<double> im1, const BaseImage<double>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im1,
+                                            const BaseImage<double>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im1,
+                                            const BaseImage<std::complex<double> >& im2)
+{ return MultIm(im1,im2); }
+
+
 
 // instantiate for expected types
 
-template class BaseImage<double>;
-template class BaseImage<float>;
-template class BaseImage<int32_t>;
-template class BaseImage<int16_t>;
-template class BaseImage<uint32_t>;
-template class BaseImage<uint16_t>;
-template class BaseImage<std::complex<double> >;
-template class ImageAlloc<double>;
-template class ImageAlloc<float>;
-template class ImageAlloc<int32_t>;
-template class ImageAlloc<int16_t>;
-template class ImageAlloc<uint32_t>;
-template class ImageAlloc<uint16_t>;
-template class ImageAlloc<std::complex<double> >;
-template class ImageView<double>;
-template class ImageView<float>;
-template class ImageView<int32_t>;
-template class ImageView<int16_t>;
-template class ImageView<uint32_t>;
-template class ImageView<uint16_t>;
-template class ImageView<std::complex<double> >;
-template class ConstImageView<double>;
-template class ConstImageView<float>;
-template class ConstImageView<int32_t>;
-template class ConstImageView<int16_t>;
-template class ConstImageView<uint32_t>;
-template class ConstImageView<uint16_t>;
-template class ConstImageView<std::complex<double> >;
+#define T double
+#include "Image.inst"
+#undef T
+
+#define T float
+#include "Image.inst"
+#undef T
+
+#define T int32_t
+#include "Image.inst"
+#undef T
+
+#define T int16_t
+#include "Image.inst"
+#undef T
+
+#define T uint32_t
+#include "Image.inst"
+#undef T
+
+#define T uint16_t
+#include "Image.inst"
+#undef T
+
+#define T std::complex<double>
+#include "Image.inst"
+#undef T
+
+#define T std::complex<float>
+#include "Image.inst"
+#undef T
+
+
 } // namespace galsim
 

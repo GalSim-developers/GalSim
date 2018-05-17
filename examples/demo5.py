@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -38,7 +38,7 @@ New features introduced in this demo:
 - ccdnoise = galsim.CCDNoise(ud)
 - image *= scalar
 - bounds = galsim.BoundsI(xmin, xmax, ymin, ymax)
-- pos = bounds.center()
+- pos = bounds.center
 - pos.x, pos.y
 - sub_image = image[bounds]
 
@@ -136,7 +136,7 @@ def main(argv):
     # you can get any size out even if it wasn't the way the object was constructed.
     # In this case, we extract the half-light radius, even though we built it with fwhm.
     # We'll use this later to set the galaxy's half-light radius in terms of a resolution.
-    psf_re = psf.getHalfLightRadius()
+    psf_re = psf.half_light_radius
 
     psf = psf.shear(e1=psf_e1,e2=psf_e2)
     logger.debug('Made PSF profile')
@@ -205,18 +205,19 @@ def main(argv):
                     val = gd()
                     ellip = math.fabs(val)
 
+                # Make a new copy of the galaxy with an applied e1/e2-type distortion
+                # by specifying the ellipticity and a real-space position angle
+                ellip_gal = gal.shear(e=ellip, beta=beta)
+
                 first_in_pair = False
             else:
-                # Use the previous ellip and beta + 90 degrees
-                beta += 90 * galsim.degrees
+                # Use the previous ellip_gal profile and rotate it by 90 degrees
+                ellip_gal = ellip_gal.rotate(90 * galsim.degrees)
+
                 first_in_pair = True
 
-            # Make a new copy of the galaxy with an applied e1/e2-type distortion
-            # by specifying the ellipticity and a real-space position angle
-            this_gal = gal.shear(e=ellip, beta=beta)
-
             # Apply the gravitational reduced shear by specifying g1/g2
-            this_gal = this_gal.shear(g1=gal_g1, g2=gal_g2)
+            this_gal = ellip_gal.shear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random shift_radius:
             rsq = 2 * shift_radius_sq
@@ -272,8 +273,8 @@ def main(argv):
                             g_to_e*psf_shape.observed_shape.e1,
                             g_to_e*psf_shape.observed_shape.e2, psf_shape.moments_sigma)
 
-            x = b.center().x
-            y = b.center().y
+            x = b.center.x
+            y = b.center.y
             logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)  (e,beta) = (%.4f,%.3f)',
                         ix,iy,x,y,ellip,beta/galsim.radians)
             k = k+1

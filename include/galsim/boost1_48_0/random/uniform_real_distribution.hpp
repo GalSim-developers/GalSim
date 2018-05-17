@@ -18,17 +18,22 @@
 #include <iosfwd>
 #include <ios>
 #include <istream>
+#ifdef USE_BOOST
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
-#include "galsim/boost1_48_0/random/detail/config.hpp"
-#include "galsim/boost1_48_0/random/detail/operators.hpp"
-#include "galsim/boost1_48_0/random/detail/signed_unsigned_tools.hpp"
 #include <boost/type_traits/is_integral.hpp>
+#include <boost/random/detail/config.hpp>
+#include <boost/random/detail/operators.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
+#endif
+#include "galsim/boost1_48_0/random/detail/signed_unsigned_tools.hpp"
 
 namespace boost {
 namespace random {
 namespace detail {
 
+#ifdef USE_BOOST
 template<class Engine, class T>
 T generate_uniform_real(
     Engine& eng, T min_value, T max_value,
@@ -70,6 +75,22 @@ inline T generate_uniform_real(Engine& eng, T min_value, T max_value)
     return generate_uniform_real(eng, min_value, max_value,
         boost::is_integral<base_result>());
 }
+#else
+// MJ: We don't care about the non-integral version of this.  So rather than include the files
+// needed to get the SFINAE stuff to work right, just make the true_ one the only version.
+template<class Engine, class T>
+T generate_uniform_real(Engine& eng, T min_value, T max_value)
+{
+    for(;;) {
+        typedef T result_type;
+        typedef typename Engine::result_type base_result;
+        result_type numerator = static_cast<T>(subtract<base_result>()(eng(), (eng.min)()));
+        result_type divisor = static_cast<T>(subtract<base_result>()((eng.max)(), (eng.min)())) + 1;
+        T result = numerator / divisor * (max_value - min_value) + min_value;
+        if(result < max_value) return result;
+    }
+}
+#endif
 
 }
 
@@ -100,7 +121,9 @@ public:
                             RealType max_arg = RealType(1.0))
           : _min(min_arg), _max(max_arg)
         {
+#ifdef USE_BOOST
             BOOST_ASSERT(_min <= _max);
+#endif
         }
 
         /** Returns the minimum value of the distribution. */
@@ -108,6 +131,7 @@ public:
         /** Returns the maximum value of the distribution. */
         RealType b() const { return _max; }
 
+#ifdef USE_BOOST
         /** Writes the parameters to a @c std::ostream. */
         BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, param_type, parm)
         {
@@ -136,6 +160,7 @@ public:
 
         /** Returns true if the two sets of parameters are different. */
         BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(param_type)
+#endif
 
     private:
 
@@ -154,7 +179,9 @@ public:
         RealType max_arg = RealType(1.0))
       : _min(min_arg), _max(max_arg)
     {
+#ifdef USE_BOOST
         BOOST_ASSERT(min_arg <= max_arg);
+#endif
     }
     /** Constructs a uniform_real_distribution from its parameters. */
     explicit uniform_real_distribution(const param_type& parm)
@@ -198,6 +225,7 @@ public:
     result_type operator()(Engine& eng, const param_type& parm) const
     { return detail::generate_uniform_real(eng, parm.a(), parm.b()); }
 
+#ifdef USE_BOOST
     /** Writes the distribution to a @c std::ostream. */
     BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, uniform_real_distribution, ud)
     {
@@ -227,6 +255,7 @@ public:
      * of values given equal generators.
      */
     BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(uniform_real_distribution)
+#endif
 
 private:
     RealType _min;

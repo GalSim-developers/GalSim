@@ -1,0 +1,355 @@
+% Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+% https://github.com/GalSim-developers
+%
+% This file is part of GalSim: The modular galaxy image simulation toolkit.
+% https://github.com/GalSim-developers/GalSim
+%
+% GalSim is free software: redistribution and use in source and binary forms,
+% with or without modification, are permitted provided that the following
+% conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice, this
+%    list of conditions, and the disclaimer given in the accompanying LICENSE
+%    file.
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+%    this list of conditions, and the disclaimer given in the documentation
+%    and/or other materials provided with the distribution.
+%
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+%\usepackage{color}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathabx}
+\usepackage{commath}
+
+\geometry{textwidth=6.5in, textheight=9.0in,
+    marginparsep=7pt, marginparwidth=.6in}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{0.08in}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand*{\annot}[1]{\tag*{\footnotesize{\textcolor{gray}{#1}}}}
+
+\let\Re\undefined
+\DeclareMathOperator{\Re}{Re}
+\let\Im\undefined
+\DeclareMathOperator{\Im}{Im}
+
+\title{Color Gradients Notes}
+\author{Josh Meyers}
+\date{October 2015}
+
+\begin{document}
+
+\section{Introduction}
+
+The goal is to create a \textsc{GalSim} ChromaticObject with realistic color gradients using high
+resolution multiband images (most likely from HST) as input.  This is done by modeling the
+preconvolution chromatic surface brightness profile $f(\vec{x}, \lambda)$ as a sum of two or more
+separable chromatic surface brightness profiles, each with a particular asserted SED.  I.e.,
+
+\begin{equation}
+    \label{eqn:sbprof}
+    f(\vec{x}, \lambda) = \sum_j S_j(\lambda) a_j(\vec{x}),
+\end{equation}
+
+where $S_j(\lambda)$ is the $j$th SED asserted as part of the decomposition, and $a_j(\vec{x})$ is
+the spatial component of the $j$th separable chromatic profile.
+
+The required set of inputs is:
+
+\begin{itemize}
+
+\item Two or more HST images of the same galaxy in different filters, $I_i(\vec{x})$, where $i$
+labels the different filters.
+
+\item The 2D noise covariance function for each image, $\xi_i(\Delta\vec{x})$.  If the noise is
+uncorrelated, then this could be simply the noise variance ($\xi_i(\Delta\vec{x}=0) = \sigma^2_i$, $\xi_i(\Delta\vec{x}\ne0)=0$).
+
+\item The chromatic HST PSF, $\Pi(\vec{x}, \lambda)$.
+
+\item The HST throughput for each image filter, $T_i(\lambda)$.
+
+\item Two or more SEDs, $S_j(\lambda)$, to use in the decomposition in Equation \ref{eqn:sbprof}.
+
+\end{itemize}
+
+The model for the observed images is:
+
+\begin{align}
+    I_i(\vec{x})
+    &= \int T_i(\lambda) \left[\Pi(\vec{x}, \lambda) \Asterisk f(\vec{x}, \lambda)\right] \dif{\lambda} + \eta_i(\vec{x}) \\
+    &= \int T_i(\lambda) \sum_j S_j(\lambda) \left[\Pi(\vec{x}, \lambda) \Asterisk a_j(\vec{x})\right] \dif{\lambda} + \eta_i(\vec{x})
+\end{align}
+
+where $\eta_i(\vec{x})$ indicates (potentially spatially correlated) Gaussian noise in image $i$ and
+the $\Asterisk$ symbol indicates (spatial) convolution.  The noise $\eta_i(\vec{x})$ is related to
+the noise covariance function via $\langle\eta_i(\vec{x}_l) \eta_i(\vec{x}_m)\rangle =
+\xi_i(\vec{x}_l - \vec{x}_m)$, where angle brackets indicate averaging over realizations of the
+noise.  Note that we also assume that $\xi_i$ is even: $\xi_i(\Delta\vec{x}) =
+\xi_i(-\Delta\vec{x})$.
+
+The convolution is easier to work with in Fourier space where it becomes a mode-by-mode product.
+Indicating the Fourier transform of the real-space quantity $g(\vec{x})$ with $\tilde{g}(\vec{k})$,
+the model in Fourier space is
+
+\begin{align}
+    \tilde{I}_i(\vec{k})
+    &= \int T_i(\lambda) \sum_j S_j(\lambda) \tilde{\Pi}(\vec{k}, \lambda) \tilde{a}_j(\vec{k}) \dif{\lambda} + \tilde{\eta}(\vec{k}) \\
+    &= \sum_j \left[\int T_i(\lambda) S_j(\lambda) \tilde{\Pi}(\vec{k}, \lambda) \dif{\lambda}\right] \tilde{a}_j(\vec{k}) + \tilde{\eta}(\vec{k}) \\
+    \label{eqn:solveme}
+    &=  \sum_j \tilde{\Pi}^\mathrm{eff}_{ij}(\vec{k}) \tilde{a}_j(\vec{k}) + \tilde{\eta}(\vec{k}),
+\end{align}
+
+where the effective PSF for the $i$th filter and $j$th SED is
+
+\begin{equation}
+  \tilde{\Pi}^\mathrm{eff}_{ij}(\vec{k}) = \int T_i(\lambda) S_j(\lambda) \tilde{\Pi}(\vec{k}, \lambda) \dif{\lambda}.
+\end{equation}
+
+The crux of the problem is to solve for the (complex-valued) $\tilde{a}_j(\vec{k})$ and to propagate
+the statistics of the noise.
+
+\section{Solving for $\tilde{a}_j(\vec{k})$}
+
+There are several possible ways to estimate the required $\tilde{a}_j(\vec{k})$.
+
+\subsection{No noise}
+
+We'll look first at the case where one ignores noise entirely ($\eta(\vec{x}) =
+\tilde{\eta}(\vec{k})= 0$).
+
+If the number of asserted SEDs $N_j$ is larger than the number of input images $N_i$, then the
+system of equations represented by Equation \ref{eqn:solveme} is underdetermined.  While in
+principle this could still be solvable using some prior constraints, for now, we'll just ignore this
+possibility.
+
+If $N_j = N_i$, then we can exactly solve Equation \ref{eqn:solveme} using matrix inversion for each
+Fourier mode $\vec{k}$:
+
+\begin{equation}
+  \tilde{a}_j(\vec{k}) = \sum_i [(\tilde{\Pi}^\mathrm{eff}(\vec{k}))^{-1}]_{ij} \tilde{I}_i(\vec{k}).
+\end{equation}
+
+If there are more images than spectra ($N_i > N_j$), then the system of equations is overdetermined
+and no longer has an exact solution.  Instead, there is a (usually) unique ``least-squares''
+solution for each $\vec{k}$ obtained by minimizing
+
+\begin{equation}
+  \label{eqn:lstsq}
+  \sum_i\left|\tilde{I}_i(\vec{k}) - \sum_j \tilde{\Pi}^\mathrm{eff}_{ij}(\vec{k}) \tilde{a}_j(\vec{k})\right|^2.
+\end{equation}
+
+\subsection{Uncorrelated noise}
+
+Stationary, uncorrelated Gaussian pixel noise in the $i$th image is completely described by its
+variance $\sigma^2_i$.  In Fourier space, the variance of each mode is independent of $\vec{k}$ and
+proportional to $\sigma^2_i$, where the constant of proportionality depends on the particular
+Fourier conventions employed.  We can therefore write down a likelihood for $\tilde{a}_j(\vec{k})$
+as
+
+\begin{equation}
+    \label{eqn:like}
+    \chi^2(\vec{k}) = -2 \log \mathcal{L}(\vec{k}) = \sum_i\frac{1}{\sigma_i^2}\left|\tilde{I}_i(\vec{k}) - \sum_j \tilde{\Pi}^\mathrm{eff}_{ij}(\vec{k}) \tilde{a}_j(\vec{k})\right|^2.
+\end{equation}
+
+This is a \textit{weighted} least-squares problem.  Note that the weights only matter for
+determining the Fourier coefficients $\tilde{a}_j(\vec{k})$ if the number of input images is greater
+than the number of asserted spectra.  When these quantities are equal, it is always possible to find
+$\tilde{a}_j(\vec{k})$ such that $\tilde{I}_i(\vec{k}) = \sum_j
+\tilde{\Pi}^\mathrm{eff}_{ij}(\vec{k}) \tilde{a}_j(\vec{k})$.  The weights do still matter in this
+case if we're interested in propagating the noise, however.
+
+
+\subsection{Correlated noise}
+
+If the noise covariance function for a particular image $\xi_i(\vec{\Delta x})$ is non-zero away
+from the origin, then the variance of different Fourier modes is not constant, but proportional to
+the noise power spectrum, which is the Fourier transform of the noise covariance function:
+
+\begin{equation}
+  P_i(\vec{k}) = \int \xi_i(\Delta \vec{x}) e^{-2 \pi i \vec{k}\cdot\Delta\vec{x}}.
+\end{equation}
+
+Due to assumed translation invariance of the noise (though note that we do not assume isotropy), the
+covariance of different Fourier modes vanishes.  More explicitly, if the noise in image $i$ and mode
+$\vec{k_l}$ is $\tilde\eta_i(\vec{k_l})$, then
+
+\begin{equation}
+  \langle\tilde\eta_i^*(\vec{k_l})\tilde\eta_i(\vec{k_m})\rangle = \delta(\vec{k_l} - \vec{k_m})P_i(\vec{k_l}).
+\end{equation}
+
+Once the noise power spectrum has been computed, therefore, the only change to the likelihood in
+Equation \ref{eqn:like} is that the mode variance now depends on the particular Fourier mode in
+question:
+
+\begin{equation}
+    \label{eqn:likecorr}
+    -2 \log \mathcal{L}(\vec{k}) = \sum_i\frac{1}{P_i(\vec{k})}\left|\tilde{I}_i(\vec{k}) - \sum_j \tilde{\Pi}^\mathrm{eff}_{ij}(\vec{k}) \tilde{a}_j(\vec{k})\right|^2.
+\end{equation}
+
+This is essentially the same weighted least squares problem as in the uncorrelated noise case -- the
+only difference being that the weights now depend on $\vec{k}$.  Written in matrix notation, the
+solution for a particular $\vec{k}$ mode is:
+
+\begin{equation}
+    \tilde{a} = \left(\tilde{\Pi}^{\mathrm{eff}, \dagger} W \tilde{\Pi}^\mathrm{eff} \right)^{-1} \tilde{\Pi}^{\mathrm{eff}, \dagger} W \tilde{I}
+\end{equation}
+
+where
+\begin{equation}
+    W_{ij} = \delta_{ij}/P_i.
+\end{equation}
+
+The covariance matrix for the elements of $\tilde{a}$ is given by
+\begin{equation}
+    \Sigma = \left(\tilde{\Pi}^{\mathrm{eff}, \dagger} W \tilde{\Pi}^\mathrm{eff} \right)^{-1}.
+\end{equation}
+
+\section{Propagating the noise covariance}
+
+At this point, we have the $\tilde{a}_j(\vec{k})$ necessary to represent a chromatic surface
+brightness profile in Fourier space as
+
+\begin{equation}
+  \tilde{f}(\vec{k}, \lambda) = \sum_j S_j(\lambda) \tilde{a}_j(\vec{k}).
+\end{equation}
+
+The uncertainty in each $\tilde{a}_j(\vec{k})$ is uncorrelated from one $\vec{k}$ to the next (since
+we defined independent likelihoods for each $\vec{k}$), but does, in general, possess correlations
+between the different SED components $j$ and $j^\prime$ for a given $\vec{k}$.  Using
+$\Sigma_{jj^\prime}(\vec{k})$ to represent these covariances, we have
+
+\begin{equation}
+    \langle\delta\tilde{a}^*_j(\vec{k}_l)\delta\tilde{a}_{j^\prime}(\vec{k}_m)\rangle = \delta(\vec{k}_l - \vec{k}_m)\Sigma_{jj^\prime}(\vec{k_l}).
+\end{equation}
+
+Fortunately, $\Sigma_{jj^\prime}(\vec{k})$ is analytically computable for weighted least squares
+problems.
+
+This $\Sigma_{jj^\prime}(\vec{k})$ can then be transformed alongside the $\tilde{a}_j(\vec{k})$ to
+effect shears, rotations, dilations, etc., the same way that noise is transformed in existing
+\textsc{GalSim} routines.
+
+Finally, the model for creating a (Fourier-domain) output image $\tilde{I}^\mathrm{out}(\vec{k})$,
+convolving by an output chromatic PSF $\tilde{\Pi}^\mathrm{out}(\vec{k}, \lambda)$ and drawing
+through an output filter with transmission $T^\mathrm{out}(\lambda)$, is
+
+\begin{align}
+    \tilde{I}^\mathrm{out}(\vec{k})
+    &= \int T^\mathrm{out}(\lambda) \tilde{\Pi}^\mathrm{out}(\vec{k}, \lambda) \tilde{f}(\vec{k}, \lambda) \dif{\lambda} \\
+    &= \int T^\mathrm{out}(\lambda) \tilde{\Pi}^\mathrm{out}(\vec{k}, \lambda) \sum_j S_j(\lambda) \tilde{a}_j(\vec{k}) \dif{\lambda} \\
+    &= \sum_j \tilde{\Pi}_j^\mathrm{out, eff}(\vec{k}) \tilde{a}_j(\vec{k})
+\end{align}
+
+where the effective PSF for the $j$th component of the output image is
+
+\begin{equation}
+  \tilde{\Pi}_j^\mathrm{out, eff}(\vec{k}) = \int \tilde{\Pi}^\mathrm{out}(\vec{k}, \lambda) T^\mathrm{out}(\lambda) S_j(\lambda)\dif{\lambda}.
+\end{equation}
+
+Propagating the (potentially transformed) covariance spectrum $\Sigma_{jj^\prime}(\vec{k})$ into the
+final output noise power spectrum $P^\mathrm{out}(\vec{k})$ then follows the normal propagation of
+errors formula:
+
+\begin{equation}
+  P^\mathrm{out}(\vec{k}) = \sum_{jj^\prime} \tilde{\Pi}_j^\mathrm{out, eff, *}(\vec{k}) \Sigma_{jj^\prime}(\vec{k}) \tilde{\Pi}_{j^\prime}^\mathrm{out, eff}(\vec{k}).
+\end{equation}
+
+This power spectrum can then be used in the existing correlated noise whitening and symmetrizing
+GalSim routines.
+
+\section{Implementation notes}
+
+\textsc{GalSim} uses the methodology developed by Bernstein \& Gruen (2013) to interpolate
+discretely sampled surface brightness profiles in real and Fourier space.  Here we investigate the
+impact of this interpolation on the Wiener-Khinchin theorem, which relates the real-space
+autocorrelation function to the Fourier-space power spectrum.
+
+The discrete version of the Wiener-Khinchin theorem is derived as follows.  We are interested in
+the (co)-variance of the Discrete Fourier Transform amplitudes of some discrete real space samples
+with discrete auto-covariance function $\xi\left[r\right]$ (we follow the convention of
+Rowe++14 in using square brackets to indicate the arguments of a discretly sampled function, and
+reserve parentheses to indicate arguments of continuous objects).  Note that since we're using DFTs,
+$\xi$ is implicitly periodic: $\xi\left[r\right] = \xi\left[r+N\right]$.
+
+The 1D DFT of an N-point sampled function is:
+
+\begin{equation}
+    \tilde{b}_k = \sum_{j=-N/2}^{N/2-1} b_j e^{-2 \pi i j k / N}.
+\end{equation}
+
+% with inverse transform
+%
+% \begin{equation}
+%     b_j = \frac{1}{N}\sum_{k=-N/2}^{N/2-1} \tilde{b}_k e^{2 \pi i j k / N}.
+% \end{equation}
+
+We are interested in the quantity $\left\langle\tilde{b}^*_k \tilde{b}_{k^\prime}\right\rangle$
+where the angle brackets indicate averaging over noise realizations.
+
+\begin{align}
+    \left\langle\tilde{b}^*_k \tilde{b}_{k^\prime}\right\rangle
+    \annot{Sub in FT definition}
+    &= \left\langle\sum_{j=-N/2}^{N/2-1} b_j e^{+2 \pi i j k / N} \sum_{j^\prime=-N/2}^{N/2-1} b_{j^\prime} e^{-2 \pi i j^\prime k^\prime / N}\right\rangle \\
+    \annot{Interchange expectation and summation}
+    &= \sum_{j=-N/2}^{N/2-1} \sum_{j^\prime=-N/2}^{N/2-1} \left\langle b_j b_{j^\prime} \right\rangle e^{2 \pi i (jk - j^\prime k^\prime)/N} \\
+    \annot{$\xi\left[r\right]$ definition}
+    &= \sum_{j=-N/2}^{N/2-1} \sum_{j^\prime=-N/2}^{N/2-1} \xi\left[j-j^\prime\right] e^{2 \pi i (jk - j^\prime k^\prime)/N} \\
+    \annot{change variables $r=j^\prime-j$}
+    &= \sum_{j=-N/2}^{N/2-1} \sum_{r=-N/2-j}^{N/2-1-j} \xi\left[r\right] e^{2 \pi i (jk - (r+j) k^\prime)/N} \\
+    \annot{simplify using periodicty of $\xi$ and $\exp$}
+    &= \sum_{j=-N/2}^{N/2-1} \sum_{r=-N/2}^{N/2-1} \xi\left[r\right] e^{-2 \pi i r k^\prime/N} e^{2 \pi i j (k-k^\prime)/N} \\
+    \annot{definition of $P\left[k\right]$}
+    &= P[k^\prime] \sum_{j=-N/2}^{N/2-1} e^{2 \pi i j (k-k^\prime)/N} \\
+    \annot{$e^{2 \pi i j (k-k^\prime)/N}$ evenly samples unit circle unless $k-k^\prime \in N\mathbb{Z}$...}
+    &= N P[k^\prime] \sum_{N=0}^\infty\delta^{k+N}_{k^\prime} \\
+    \annot{...but we really only care about $k \in \left[-N/2, N/2-1 \right]$ }
+    &= N P[k^\prime] \delta^{k}_{k^\prime}.
+\end{align}
+
+Now we try the same thing using the Bernstein \& Gruen continuously interpolated Fourier transform.
+Recall their result:
+
+\begin{align}
+    \tilde{F}(u)
+    &= \int{F(x) e^{-2 \pi i u x} \dif{x}} \\
+    &\approx \tilde{K}_x(u) \sum_{k=-N/2}^{N/2-1}\tilde{b}_k K_u(u-k/N)
+\end{align}
+
+where $K_x$ is an asserted real-space interpolant, $\tilde{K}_x$ is its Fourier transform,
+and $K_u$ is an asserted Fourier-space interpolant.  Note that the final equality is exact if and
+only if
+
+\begin{equation}
+    K_u(v) = e^{i \pi v} \frac{\mathrm{sinc}\, N v}{\mathrm{sinc}\, v}.
+\end{equation}
+
+We are interested in the (co)-variance of Fourier amplitudes:
+
+\begin{align}
+    \left\langle \tilde{F}^*(u) \tilde{F}(u^\prime)\right\rangle
+    \annot{Sub in GalSim approximate FT definition}
+    &= \left\langle \tilde{K}_x^*(u) \sum_{k=-N/2}^{N/2-1}\tilde{b}_k^* K_u^*(u-k/N) \tilde{K}_x(u^\prime) \sum_{k^\prime=-N/2}^{N/2-1}\tilde{b}_{k^\prime} K_u(u^\prime-k^\prime/N)  \right\rangle \\
+    \annot{Rearrange}
+    &= \tilde{K}_x^*(u) \tilde{K}_x(u^\prime) \sum_{k=-N/2}^{N/2-1} \sum_{k^\prime=-N/2}^{N/2-1} K_u^*(u-k/N) K_u(u^\prime-k^\prime/N) \left\langle \tilde{b}_k^* \tilde{b}_{k^\prime} \right\rangle \\
+    \annot{definition of $P\left[k\right]$}
+    &= \tilde{K}_x^*(u) \tilde{K}_x(u^\prime) \sum_{k=-N/2}^{N/2-1} \sum_{k^\prime=-N/2}^{N/2-1} K_u^*(u-k/N) K_u(u^\prime-k^\prime/N) N P[k^\prime]\delta_{k^\prime}^k \\
+    \annot{sum over Kronecker $\delta$}
+    &= N \tilde{K}_x^*(u) \tilde{K}_x(u^\prime) \sum_{k=-N/2}^{N/2-1} K_u^*(u-k/N) K_u(u^\prime-k/N) P[k]
+\end{align}
+
+This is as far as I've been able to push (ran out of $\delta$ functions!).  Assuming there are no
+further simplifications, one implication is that Fourier amplitudes of an interpolated noise image
+are not uncorrelated.  Equivalently, the continuous auto-covariance function of interpolated
+discretely stationary noise is not itself stationary.  This makes some intuitive sense, I think.
+For example, the variance of interpolated points seems like it should always be less than the
+variance of the input samples, implying that the continuously regarded noise is not stationary.
+
+\end{document}

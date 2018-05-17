@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,7 +21,9 @@
 
 #include "SBBox.h"
 #include "SBBoxImpl.h"
-#include "Interpolant.h"  // For sinc(x)
+#include "math/Sinc.h"
+#include "math/Angle.h"
+#include "math/Bessel.h"
 
 // cf. comments about USE_COS_SIN in SBGaussian.cpp
 #ifdef _INTEL_COMPILER
@@ -31,7 +33,7 @@
 namespace galsim {
 
 
-    SBBox::SBBox(double width, double height, double flux, const GSParamsPtr& gsparams) :
+    SBBox::SBBox(double width, double height, double flux, const GSParams& gsparams) :
         SBProfile(new SBBoxImpl(width,height,flux,gsparams)) {}
 
     SBBox::SBBox(const SBBox& rhs) : SBProfile(rhs) {}
@@ -55,12 +57,12 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBBox("<<getWidth()<<", "<<getHeight()<<", "<<
-            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBBox::SBBoxImpl::SBBoxImpl(double width, double height, double flux,
-                                const GSParamsPtr& gsparams) :
+                                const GSParams& gsparams) :
         SBProfileImpl(gsparams), _width(width), _height(height), _flux(flux)
     {
         if (_height==0.) _height=_width;
@@ -80,10 +82,11 @@ namespace galsim {
 
     std::complex<double> SBBox::SBBoxImpl::kValue(const Position<double>& k) const
     {
-        return _flux * sinc(k.x*_wo2pi)*sinc(k.y*_ho2pi);
+        return _flux * math::sinc(k.x*_wo2pi)*math::sinc(k.y*_ho2pi);
     }
 
-    void SBBox::SBBoxImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBBox::SBBoxImpl::fillXImage(ImageView<T> im,
                                       double x0, double dx, int izero,
                                       double y0, double dy, int jzero) const
     {
@@ -93,7 +96,7 @@ namespace galsim {
 
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -117,13 +120,15 @@ namespace galsim {
         ptr += im.getStride() * j1 + i1;
         skip += m - (i2-i1);
 
+        im.setZero();
         for (int j=j1; j<j2; ++j,ptr+=skip) {
             for (int i=i1;i<i2;++i)
                 *ptr++ = _norm;
         }
     }
 
-    void SBBox::SBBoxImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBBox::SBBoxImpl::fillXImage(ImageView<T> im,
                                       double x0, double dx, double dxy,
                                       double y0, double dy, double dyx) const
     {
@@ -133,7 +138,7 @@ namespace galsim {
 
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -144,15 +149,16 @@ namespace galsim {
             // Use the fact that any slice through the box has only one segment that is non-zero.
             // So start with zeroes until in the box (already there), then _norm, then more zeroes.
             for (;i<m && (std::abs(x)>_wo2 || std::abs(y)>_ho2); ++i,x+=dx,y+=dyx)
-                ++ptr;
+                *ptr++ = T(0);
             for (;i<m && std::abs(x)<_wo2 && std::abs(y)<_ho2; ++i,x+=dx,y+=dyx)
                 *ptr++ = _norm;
             for (;i<m; ++i,x+=dx,y+=dyx)
-                ++ptr;
+                *ptr++ = T(0);
         }
     }
 
-    void SBBox::SBBoxImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBBox::SBBoxImpl::fillKImage(ImageView<std::complex<T> > im,
                                       double kx0, double dkx, int izero,
                                       double ky0, double dky, int jzero) const
     {
@@ -166,7 +172,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -181,13 +187,13 @@ namespace galsim {
             std::vector<double> sinc_ky(n);
             typedef std::vector<double>::iterator It;
             It kxit = sinc_kx.begin();
-            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = sinc(kx0);
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = math::sinc(kx0);
 
             if ((kx0 == ky0) && (dkx == dky) && (m==n)) {
                 sinc_ky = sinc_kx;
             } else {
                 It kyit = sinc_ky.begin();
-                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = sinc(ky0);
+                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = math::sinc(ky0);
             }
 
             for (int j=0; j<n; ++j,ptr+=skip) {
@@ -197,7 +203,8 @@ namespace galsim {
         }
     }
 
-    void SBBox::SBBoxImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBBox::SBBoxImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -206,7 +213,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -221,7 +228,7 @@ namespace galsim {
             double kx = kx0;
             double ky = ky0;
             for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
-                *ptr++ = _flux * sinc(kx) * sinc(ky);
+                *ptr++ = _flux * math::sinc(kx) * math::sinc(ky);
             }
         }
     }
@@ -229,7 +236,7 @@ namespace galsim {
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBBox::SBBoxImpl::maxK() const
     {
-        return 2. / (this->gsparams->maxk_threshold * std::min(_width,_height));
+        return 2. / (this->gsparams.maxk_threshold * std::min(_width,_height));
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at
@@ -240,21 +247,20 @@ namespace galsim {
         return M_PI / std::max(_width,_height);
     }
 
-    boost::shared_ptr<PhotonArray> SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
+    void SBBox::SBBoxImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Box shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++)
-            result->setPhoton(i, _width*(u()-0.5), _height*(u()-0.5), fluxPerPhoton);
-        dbg<<"Box Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+            photons.setPhoton(i, _width*(ud()-0.5), _height*(ud()-0.5), fluxPerPhoton);
+        dbg<<"Box Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 
 
-    SBTopHat::SBTopHat(double radius, double flux, const GSParamsPtr& gsparams) :
+    SBTopHat::SBTopHat(double radius, double flux, const GSParams& gsparams) :
         SBProfile(new SBTopHatImpl(radius,flux,gsparams)) {}
 
     SBTopHat::SBTopHat(const SBTopHat& rhs) : SBProfile(rhs) {}
@@ -272,12 +278,12 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBTopHat("<<getRadius()<<", "<<
-            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBTopHat::SBTopHatImpl::SBTopHatImpl(double radius, double flux,
-                                         const GSParamsPtr& gsparams) :
+                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _r0(radius), _r0sq(_r0*_r0), _flux(flux),
         _norm(_flux / (M_PI * _r0sq))
@@ -306,11 +312,12 @@ namespace galsim {
             return _flux * (1. - kr0sq * ( (1./8.) + (1./192.) * kr0sq ));
         } else {
             double kr0 = sqrt(kr0sq);
-            return 2.*_flux * j1(kr0)/kr0;
+            return 2.*_flux * math::j1(kr0)/kr0;
         }
     }
 
-    void SBTopHat::SBTopHatImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBTopHat::SBTopHatImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, int izero,
                                             double y0, double dy, int jzero) const
     {
@@ -319,7 +326,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -332,6 +339,7 @@ namespace galsim {
         y0 += j1 * dy;
         ptr += j1*im.getStride();
 
+        im.setZero();
         for (int j=j1; j<j2; ++j,y0+=dy,ptr+=skip) {
             double ysq = y0*y0;
             double xmax = std::sqrt(_r0sq - ysq);
@@ -346,7 +354,8 @@ namespace galsim {
         }
     }
 
-    void SBTopHat::SBTopHatImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBTopHat::SBTopHatImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, double dxy,
                                             double y0, double dy, double dyx) const
     {
@@ -355,7 +364,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -369,13 +378,14 @@ namespace galsim {
             // for the non-sheared fillXImage (the one with izero, jzero), but I didn't
             // bother.  This is probably plenty fast enough for as often as the function is
             // called (i.e. almost never!)
-            for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) ++ptr;
+            for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) *ptr++ = T(0);
             for (;i<m && (x*x+y*y < _r0sq); ++i,x+=dx,y+=dyx) *ptr++ = _norm;
-            for (;i<m; ++i,x+=dx,y+=dyx) ++ptr;
+            for (;i<m; ++i,x+=dx,y+=dyx) *ptr++ = T(0);
         }
     }
 
-    void SBTopHat::SBTopHatImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBTopHat::SBTopHatImpl::fillKImage(ImageView<std::complex<T> > im,
                                             double kx0, double dkx, int izero,
                                             double ky0, double dky, int jzero) const
     {
@@ -389,7 +399,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -407,7 +417,8 @@ namespace galsim {
         }
     }
 
-    void SBTopHat::SBTopHatImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBTopHat::SBTopHatImpl::fillKImage(ImageView<std::complex<T> > im,
                                             double kx0, double dkx, double dkxy,
                                             double ky0, double dky, double dkyx) const
     {
@@ -416,8 +427,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
-        int skip = im.getNSkip();
+        std::complex<T>* ptr = im.getData();
         assert(im.getStep() == 1);
 
         kx0 *= _r0;
@@ -440,7 +450,7 @@ namespace galsim {
     {
         // |j1(x)| ~ sqrt(2/(Pi x)) for large x, so using this, we get
         // maxk_thresh = 2 * sqrt(2/(Pi k r0)) / (k r0) = 2 sqrt(2/Pi) (k r0)^-3/2
-        return std::pow(2. * sqrt(2./M_PI) / this->gsparams->maxk_threshold, 2./3.) / _r0;
+        return std::pow(2. * sqrt(2./M_PI) / this->gsparams.maxk_threshold, 2./3.) / _r0;
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at
@@ -451,34 +461,33 @@ namespace galsim {
         return M_PI / _r0;
     }
 
-    boost::shared_ptr<PhotonArray> SBTopHat::SBTopHatImpl::shoot(int N, UniformDeviate u) const
+    void SBTopHat::SBTopHatImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"TopHat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         // cf. SBGaussian's shoot function
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
 #ifdef USE_COS_SIN
-            double theta = 2.*M_PI*u();
-            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double theta = 2.*M_PI*ud();
+            double rsq = ud(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            math::sincos(theta, sint, cost);
             // Then map radius to the desired Gaussian with analytic transformation
             double r = sqrt(rsq) * _r0;;
-            result->setPhoton(i, r*cost, r*sint, fluxPerPhoton);
+            photons.setPhoton(i, r*cost, r*sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
+                xu = 2.*ud()-1.;
+                yu = 2.*ud()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1.);
-            result->setPhoton(i, xu * _r0, yu * _r0, fluxPerPhoton);
+            photons.setPhoton(i, xu * _r0, yu * _r0, fluxPerPhoton);
 #endif
         }
-        dbg<<"TopHat Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"TopHat Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

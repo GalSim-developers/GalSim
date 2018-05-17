@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,21 +20,16 @@ A few adjustments to the Position classes at the Python layer.
 """
 
 from . import _galsim
-from ._galsim import PositionD, PositionI
 
-for Class in (_galsim.PositionD, _galsim.PositionI):
-    Class.__repr__ = lambda self: "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
-    Class.__str__ = lambda self: "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
-    Class.__getinitargs__ = lambda self: (self.x, self.y)
-    Class.__eq__ = lambda self, other: (
-            isinstance(other, self.__class__) and self.x == other.x and self.y == other.y)
-    Class.__ne__ = lambda self, other: not self.__eq__(other)
-    Class.__hash__ = lambda self: hash(repr(self))
+class Position(object):
+    """A class for representing 2D positions on the plane.
 
-    Class.__doc__ = """A class for representing 2D positions on the plane.
-
+    Position is a base class for two slightly different kinds of positions:
     PositionD describes positions with floating point values in `x` and `y`.
     PositionI described positions with integer values in `x` and `y`.
+
+    In the C++ layer, these are templates, but of course no such thing exists in Python,
+    so the trailing D or I indicate the type.
 
     Initialization
     --------------
@@ -43,19 +38,23 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
 
         >>> pos = galsim.PositionD(x=0.5, y=-0.5)
         >>> pos = galsim.PositionD(0.5, -0.5)
+        >>> pos = galsim.PositionD( (0.5, -0.5) )
 
     And for the integer-valued position class, example initializations include:
 
         >>> pos = galsim.PositionI(x=45, y=13)
         >>> pos = galsim.PositionI(45, 13)
+        >>> pos = galsim.PositionD( (45, 15) )
 
     Attributes
     ----------
-    For an instance `pos` as instantiated above, `pos.x` and `pos.y` store the x and y values of the
-    position.
+
+    For an instance `pos` as instantiated above, `pos.x` and `pos.y` store the x and y values of
+    the position.
 
     Arithmetic
     ----------
+
     Most arithmetic that makes sense for a position is allowed:
 
         >>> pos1 + pos2
@@ -71,22 +70,139 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
     Note though that the types generally need to match.  For example, you cannot multiply
     a PositionI by a float or add a PositionI to a PositionD.
     """
+    def __init__(self):
+        raise NotImplementedError("Cannot instantiate the base class.  " +
+                                  "Use either PositionD or PositionI.")
 
-del Class    # cleanup public namespace
+    def _parse_args(self, *args, **kwargs):
+        if len(kwargs) == 0:
+            if len(args) == 2:
+                self.x, self.y = args
+            elif len(args) == 0:
+                self.x = self.y = 0
+            elif len(args) == 1:
+                if isinstance(args[0], (Position, _galsim.PositionD, _galsim.PositionI)):
+                    self.x = args[0].x
+                    self.y = args[0].y
+                else:
+                    try:
+                        self.x, self.y = args[0]
+                    except (TypeError, ValueError):
+                        raise TypeError(("Single argument to %s must be either a Position "+
+                                         "or a tuple.")%self.__class__)
+            else:
+                raise TypeError("%s takes at most 2 arguments (%d given)"%(
+                        self.__class__, len(args)))
+        elif len(args) != 0:
+            raise TypeError("%s takes x and y as either named or unnamed arguments (given %s, %s)"%(
+                    self.__class__, args, kwargs))
+        else:
+            try:
+                self.x = kwargs.pop('x')
+                self.y = kwargs.pop('y')
+            except KeyError:
+                raise TypeError("Keyword arguments x,y are required for %s"%self.__class__)
+            if kwargs:
+                raise TypeError("Got unexpected keyword arguments %s"%kwargs.keys())
 
-# Force the input args to PositionI to be `int` (correctly handles elements of int arrays)
-_orig_PositionI_init = PositionI.__init__
-def _new_PositionI_init(self, *args, **kwargs):
-    if len(args) == 0 and len(kwargs) == 0:
-        _orig_PositionI_init(self)
-    elif len(args) == 2 and len(kwargs) == 0:
-        if any([a != int(a) for a in args]):
+    def __mul__(self, other):
+        self._check_scalar(other, 'multiply')
+        return self.__class__(self.x * other, self.y * other)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __div__(self, other):
+        self._check_scalar(other, 'divide')
+        return self.__class__(self.x / other, self.y / other)
+
+    def __truediv__(self, other):
+        return self.__div__(other)
+
+    def __neg__(self):
+        return self.__class__(-self.x, -self.y)
+
+    def __add__(self, other):
+        from .bounds import Bounds
+        if isinstance(other,Bounds):
+            return other + self
+        elif not isinstance(other,Position):
+            raise ValueError("Can only add a Position to a %s"%self.__class__.__name__)
+        elif isinstance(other, self.__class__):
+            return self.__class__(self.x + other.x, self.y + other.y)
+        else:
+            return PositionD(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        if not isinstance(other,Position):
+            raise ValueError("Can only subtract a Position from a %s"%self.__class__.__name__)
+        elif isinstance(other, self.__class__):
+            return self.__class__(self.x - other.x, self.y - other.y)
+        else:
+            return PositionD(self.x - other.x, self.y - other.y)
+
+    def __repr__(self):
+        return "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
+
+    def __str__(self):
+        return "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.x == other.x and self.y == other.y
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.x, self.y))
+
+class PositionD(Position):
+    """A Position that takes floating point values.
+
+    See the Position doc string for more details.
+    """
+    def __init__(self, *args, **kwargs):
+        self._parse_args(*args, **kwargs)
+        if self.x != float(self.x) or self.y != float(self.y):
+            raise ValueError("PositionD must be initialized with float values")
+        self.x = float(self.x)
+        self.y = float(self.y)
+
+    @property
+    def _p(self):
+        return _galsim.PositionD(self.x, self.y)
+
+    def _check_scalar(self, other, op):
+        try:
+            if other == float(other): return
+        except (TypeError, ValueError):
+            pass
+        raise ValueError("Can only %s a PositionD by float values"%op)
+
+
+class PositionI(Position):
+    """A Position that takes only integer values.
+
+    Typically used for coordinate positions on an image.
+
+    See the Position doc string for more details.
+    """
+    def __init__(self, *args, **kwargs):
+        self._parse_args(*args, **kwargs)
+        if self.x != int(self.x) or self.y != int(self.y):
             raise ValueError("PositionI must be initialized with integer values")
-        _orig_PositionI_init(self, *[int(a) for a in args])
-    else:
-        x = kwargs.pop('x')
-        y = kwargs.pop('y')
-        if any([a != int(a) for a in [x,y]]):
-            raise ValueError("PositionI must be initialized with integer values")
-        _orig_PositionI_init(self, int(x), int(y), **kwargs)
-PositionI.__init__ = _new_PositionI_init
+        self.x = int(self.x)
+        self.y = int(self.y)
+
+    # Note: We don't ever use this.  None of our C++ calls actually take a PositionI currently,
+    # but this is available if we ever do need it.
+    @property
+    def _p(self): # pragma: no cover
+        return _galsim.PositionI(self.x, self.y)
+
+    def _check_scalar(self, other, op):
+        try:
+            if other == int(other): return
+        except (TypeError, ValueError):
+            pass
+        raise ValueError("Can only %s a PositionI by integer values"%op)

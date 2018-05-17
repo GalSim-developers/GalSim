@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,17 +21,12 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # Below are a set of tests to make sure that we have achieved consistency in defining shears and
-# ellipses using different conventions.  The underlying idea is that in test_SBProfile.py we already
+# ellipses using different conventions.  The underlying idea is that in test_base.py we already
 # have plenty of tests to ensure that a given Shear can be properly applied and gives the
 # expected result.  So here, we just work at the level of Shears that we've defined,
 # and make sure that they have the properties we expect given the values that were used to
@@ -64,11 +59,11 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
     print('test_shear = ',repr(test_shear))
     # this function tests that all values of some Shear object are consistent with the tabulated
     # values, given the appropriate index against which to test, and properly accounting for the
-    # fact that SBProfile sometimes has the angle in the range [pi, 2*pi)
+    # fact that sometimes the angle is in the range [pi, 2*pi)
     ### note: can only use mult_val = 1, 0, -1
     if mult_val != -1.0 and mult_val != 0.0 and mult_val != 1.0:
         raise ValueError("Cannot put multiplier that is not -1, 0, or 1!")
-    beta_rad = test_shear.beta.rad()
+    beta_rad = test_shear.beta.rad
     while beta_rad < 0.0:
         beta_rad += np.pi
 
@@ -82,10 +77,11 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
         test_beta = beta_rad = 0.
 
     vec = [test_shear.g, test_shear.g1, test_shear.g2, test_shear.e, test_shear.e1, test_shear.e2,
-           test_shear.eta, test_shear.esq, beta_rad % np.pi]
+           test_shear.eta, test_shear.eta1, test_shear.eta2, test_shear.esq, beta_rad % np.pi]
     test_vec = [np.abs(mult_val)*g[index], mult_val*g1[index], mult_val*g2[index],
                 np.abs(mult_val)*e[index], mult_val*e1[index], mult_val*e2[index],
-                np.abs(mult_val)*eta[index], mult_val*mult_val*e[index]*e[index], test_beta % np.pi]
+                np.abs(mult_val)*eta[index], mult_val*eta1[index], mult_val*eta2[index],
+                mult_val*mult_val*e[index]*e[index], test_beta % np.pi]
     np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                          err_msg = "Incorrectly initialized Shear")
     if index == n_shear-1:
@@ -118,7 +114,7 @@ def test_shear_initialization():
     """Test that Shears can be initialized in a variety of ways and get the expected results."""
     # first make an empty Shear and make sure that it has zeros in the right places
     s = galsim.Shear()
-    vec = [s.g, s.g1, s.g2, s.e, s.e1, s.e2, s.eta, s.esq]
+    vec = [s.g, s.g1, s.g2, s.e, s.e1, s.e2, s.eta, s.eta1, s.eta2, s.esq]
     vec_ideal = np.zeros(len(vec))
     np.testing.assert_array_almost_equal(vec, vec_ideal, decimal = decimal,
                                          err_msg = "Incorrectly initialized empty shear")
@@ -166,6 +162,8 @@ def test_shear_initialization():
         # initialize with a complex number g1 + 1j * g2
         s = galsim.Shear(g1[ind] + 1j * g2[ind])
         all_shear_vals(s, ind)
+        s = galsim._Shear(g1[ind] + 1j * g2[ind])
+        all_shear_vals(s, ind)
         # which should also be the value of s.shear
         s2 = galsim.Shear(s.shear)
         all_shear_vals(s2, ind)
@@ -174,36 +172,33 @@ def test_shear_initialization():
         do_pickle(s)
 
     # finally check some examples of invalid initializations for Shear
-    try:
-        np.testing.assert_raises(TypeError,galsim.Shear,0.3)
-        np.testing.assert_raises(TypeError,galsim.Shear,0.3,0.3)
-        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.3,e2=0.2)
-        np.testing.assert_raises(TypeError,galsim.Shear,eta1=0.3,beta=0.*galsim.degrees)
-        np.testing.assert_raises(TypeError,galsim.Shear,q=0.3)
-        np.testing.assert_raises(ValueError,galsim.Shear,q=1.3,beta=0.*galsim.degrees)
-        np.testing.assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
-        np.testing.assert_raises(ValueError,galsim.Shear,e=-1.3,beta=0.*galsim.radians)
-        np.testing.assert_raises(ValueError,galsim.Shear,e=1.3,beta=0.*galsim.radians)
-        np.testing.assert_raises(ValueError,galsim.Shear,e1=0.7,e2=0.9)
-        np.testing.assert_raises(TypeError,galsim.Shear,g=0.5)
-        np.testing.assert_raises(TypeError,galsim.Shear,e=0.5)
-        np.testing.assert_raises(TypeError,galsim.Shear,eta=0.5)
-        np.testing.assert_raises(ValueError,galsim.Shear,eta=-0.5,beta=0.*galsim.radians)
-        np.testing.assert_raises(ValueError,galsim.Shear,g=1.3,beta=0.*galsim.radians)
-        np.testing.assert_raises(ValueError,galsim.Shear,g=-0.3,beta=0.*galsim.radians)
-        np.testing.assert_raises(TypeError,galsim.Shear,e=0.3,beta=0.)
-        np.testing.assert_raises(TypeError,galsim.Shear,eta=0.3,beta=0.)
-        np.testing.assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
-        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,randomkwarg=0.1)
-        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e1=0.1)
-        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e=0.1)
-        np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,g=0.1)
-        np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees)
-        np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees,g=0.3,eta=0.1)
-        np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
-        np.testing.assert_raises(TypeError,galsim.Shear,q=0.1,beta=0.)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError,galsim.Shear,0.3)
+    assert_raises(TypeError,galsim.Shear,0.3,0.3)
+    assert_raises(TypeError,galsim.Shear,g1=0.3,e2=0.2)
+    assert_raises(TypeError,galsim.Shear,eta1=0.3,beta=0.*galsim.degrees)
+    assert_raises(TypeError,galsim.Shear,q=0.3)
+    assert_raises(ValueError,galsim.Shear,q=1.3,beta=0.*galsim.degrees)
+    assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
+    assert_raises(ValueError,galsim.Shear,e=-1.3,beta=0.*galsim.radians)
+    assert_raises(ValueError,galsim.Shear,e=1.3,beta=0.*galsim.radians)
+    assert_raises(ValueError,galsim.Shear,e1=0.7,e2=0.9)
+    assert_raises(TypeError,galsim.Shear,g=0.5)
+    assert_raises(TypeError,galsim.Shear,e=0.5)
+    assert_raises(TypeError,galsim.Shear,eta=0.5)
+    assert_raises(ValueError,galsim.Shear,eta=-0.5,beta=0.*galsim.radians)
+    assert_raises(ValueError,galsim.Shear,g=1.3,beta=0.*galsim.radians)
+    assert_raises(ValueError,galsim.Shear,g=-0.3,beta=0.*galsim.radians)
+    assert_raises(TypeError,galsim.Shear,e=0.3,beta=0.)
+    assert_raises(TypeError,galsim.Shear,eta=0.3,beta=0.)
+    assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
+    assert_raises(TypeError,galsim.Shear,g1=0.1,randomkwarg=0.1)
+    assert_raises(TypeError,galsim.Shear,g1=0.1,e1=0.1)
+    assert_raises(TypeError,galsim.Shear,g1=0.1,e=0.1)
+    assert_raises(TypeError,galsim.Shear,g1=0.1,g=0.1)
+    assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees)
+    assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees,g=0.3,eta=0.1)
+    assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
+    assert_raises(TypeError,galsim.Shear,q=0.1,beta=0.)
 
 
 @timer
@@ -246,9 +241,6 @@ def test_shear_methods():
         # check !=
         np.testing.assert_equal(s != s2, False, err_msg = "Failed to check for equality")
 
-    # note: we don't have to check all the getWhatever methods because they were implicitly checked
-    # in test_shear_initialization, where we checked the values directly
-
 
 @timer
 def test_shear_matrix():
@@ -272,8 +264,8 @@ def test_shear_matrix():
             m3 = s3.getMatrix()
 
             theta = s1.rotationWith(s2)
-            r = np.array([[  np.cos(theta.rad()), -np.sin(theta.rad()) ],
-                          [  np.sin(theta.rad()),  np.cos(theta.rad()) ]])
+            r = np.array([[  np.cos(theta), -np.sin(theta) ],
+                          [  np.sin(theta),  np.cos(theta) ]])
             np.testing.assert_array_almost_equal(m3.dot(r), m1.dot(m2), decimal=12,
                                                  err_msg="rotationWith returned wrong angle")
 

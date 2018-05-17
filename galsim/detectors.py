@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,9 +20,9 @@ Module with routines to simulate CCD and NIR detector effects like nonlinearity,
 failure, interpixel capacitance, etc.
 """
 
-import galsim
 import numpy as np
 import sys
+from .image import Image
 
 def applyNonlinearity(self, NLfunc, *args):
     """
@@ -201,7 +201,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     """
 
     # IPC kernel has to be a 3x3 Image instance
-    if not isinstance(IPC_kernel,galsim.Image):
+    if not isinstance(IPC_kernel, Image):
         raise ValueError("IPC_kernel must be an Image instance .")
     ipc_kernel = IPC_kernel.array
     if not ipc_kernel.shape==(3,3):
@@ -318,7 +318,7 @@ def applyPersistence(self,imgs,coeffs):
         # exhausted.
 
     for img,coeff in zip(imgs,coeffs):
-        if not isinstance(img,galsim.Image):
+        if not isinstance(img, Image):
             raise ValueError("In 'applyPersistence', the objects in 'imgs' must be "
                              "galsim.Image instances")
 
@@ -351,8 +351,8 @@ def quantize(self):
     self.applyNonlinearity(np.round)
 
 
-galsim.Image.applyNonlinearity = applyNonlinearity
-galsim.Image.addReciprocityFailure = addReciprocityFailure
-galsim.Image.applyIPC = applyIPC
-galsim.Image.applyPersistence = applyPersistence
-galsim.Image.quantize = quantize
+Image.applyNonlinearity = applyNonlinearity
+Image.addReciprocityFailure = addReciprocityFailure
+Image.applyIPC = applyIPC
+Image.applyPersistence = applyPersistence
+Image.quantize = quantize

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,11 +28,6 @@ import inspect
 # The keys will be the (string) names of the object types, and the values are the function
 # to call to build an object of that type.
 valid_gsobject_types = {}
-
-# A list of gsobject types that define a block of inter-related stamps.  This is only necessary
-# to support the deprecated Ring gsobject type.  Once that feature is fully removed, we can
-# remove this structure.
-block_gsobject_types = []
 
 class SkipThisObject(Exception):
     """
@@ -74,14 +69,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     except KeyError:
         return None, True
 
-    # Save these, so we can edit them based on parameters at this level in the tree to take
-    # effect on all lower branches, and then we can reset it back to this at the end.
-    orig_index_key = base.get('index_key',None)
-    orig_rng = base.get('rng',None)
-
     # Check what index key we want to use for this object.
     # Note: this call will also set base['index_key'] and base['rng'] to the right values
-    index, index_key = galsim.config.value._get_index(param, base)
+    index, index_key = galsim.config.GetIndex(param, base)
 
     # Get the type to be parsed.
     if not 'type' in param:
@@ -102,34 +92,28 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             raise SkipThisObject()
 
     # Check if we can use the current cached object
-    if ('current_val' in param and
-            (param['current_safe'] or param['current_index']//repeat == index//repeat)):
-        # If logging, explain why we are using the current object.
-        if logger:
-            if param['current_safe']:
-                logger.debug('obj %d: current is safe',base.get('obj_num',0))
-            elif repeat > 1:
-                logger.debug('obj %d: repeat = %d, index = %d, use current object',
-                             base.get('obj_num',0),repeat,index)
-            else:
-                logger.debug('obj %d: This object is already current', base.get('obj_num',0))
+    if 'current' in param:
+        # NB. "current" tuple is (obj, safe, None, index, index_type)
+        cobj, csafe, cvalue_type, cindex, cindex_type = param['current']
+        if csafe or cindex//repeat == index//repeat:
+            # If logging, explain why we are using the current object.
+            if logger:
+                if csafe:
+                    logger.debug('obj %d: current is safe',base.get('obj_num',0))
+                elif repeat > 1:
+                    logger.debug('obj %d: repeat = %d, index = %d, use current object',
+                                base.get('obj_num',0),repeat,index)
+                else:
+                    logger.debug('obj %d: This object is already current', base.get('obj_num',0))
 
-        # Make sure to reset these values in case they were changed.
-        # Note: it is impossible to get here if orig_index_key is None
-        assert orig_index_key is not None
-        base['index_key'] = orig_index_key
-        if orig_rng is not None:
-            base['rng'] = orig_rng
-
-        return param['current_val'], param['current_safe']
+            return cobj, csafe
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
         'magnify', 'magnification', 'shear', 'shift',
         'gsparams', 'skip',
-        'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
-        'index_key', 'repeat'
+        'current', 'index_key', 'repeat'
     ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
@@ -189,25 +173,15 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
         try:
-            param['saved_re'] = gsobject.getHalfLightRadius()
-        except:
+            param['saved_re'] = gsobject.half_light_radius
+        except AttributeError:
             pass
 
     # Apply any dilation, ellip, shear, etc. modifications.
     gsobject, safe1 = TransformObject(gsobject, param, base, logger)
     safe = safe and safe1
 
-    param['current_val'] = gsobject
-    param['current_safe'] = safe
-    param['current_value_type'] = None
-    param['current_index'] = index
-    param['current_index_key'] = index_key
-
-    # Reset these values in case they were changed.
-    if orig_index_key is not None:
-        base['index_key'] = orig_index_key
-    if orig_rng is not None:
-        base['rng'] = orig_rng
+    param['current'] = gsobject, safe, None, index, index_key
 
     return gsobject, safe
 
@@ -215,7 +189,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 def UpdateGSParams(gsparams, config, base):
     """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
-    opt = galsim.GSObject._gsparams
+    opt = galsim.GSObject._gsparams_opt
     kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
     # When we update gsparams, we don't want to corrupt the original, so we need to
     # make a copy first, then update with kwargs.
@@ -247,7 +221,7 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if build_func._takes_rng:
-        kwargs['rng'] = galsim.config.check_for_rng(base, logger, type_name)
+        kwargs['rng'] = galsim.config.GetRNG(config, base, logger, type_name)
         safe = False
 
     logger.debug('obj %d: kwargs = %s',base.get('obj_num',0),kwargs)
@@ -444,7 +418,7 @@ def _Shear(gsobject, config, key, base, logger):
 
 def _Rotate(gsobject, config, key, base, logger):
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
-    logger.debug('obj %d: theta = %f rad',base.get('obj_num',0),theta.rad())
+    logger.debug('obj %d: theta = %f rad',base.get('obj_num',0),theta.rad)
     gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
@@ -472,24 +446,7 @@ def _Shift(gsobject, config, key, base, logger):
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 
-def _GetMinimumBlock(config, base):
-    """Get the minimum number of objects that should be done on the same process for a
-    particular object configuration.
-
-    This function is only needed for backwards-compatibility support of gsobject type=Ring.
-
-    @param config       A dict with the configuration information.
-    @param base         The base dict of the configuration. [default: config]
-    """
-    type_name = config.get('type',None)
-    if type_name in block_gsobject_types: # pragma: no cover
-        num = galsim.config.ParseValue(config, 'num', base, int)[0]
-        return num
-    else:
-        return 1
-
-
-def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
+def RegisterObjectType(type_name, build_func, input_type=None):
     """Register an object type for use by the config apparatus.
 
     A few notes about the signature of the build functions:
@@ -517,19 +474,10 @@ def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
                             type here.  (If it uses more than one, this may be a list.)
                             [default: None]
     """
-    # Note: the _is_block parameter is an undocumented feature only needed to support the
-    # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
-    # parameter here.
     valid_gsobject_types[type_name] = build_func
-    if _is_block: # pragma: no cover
-        block_gsobject_types.append(type_name)
     if input_type is not None:
         from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):  # pragma: no cover
-            for key in input_type:
-                RegisterInputConnectedType(key, type_name)
-        else:
-            RegisterInputConnectedType(input_type, type_name)
+        RegisterInputConnectedType(input_type, type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

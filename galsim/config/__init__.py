@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,6 +28,7 @@ from .noise import *
 from .wcs import *
 from .gsobject import *
 from .value import *
+from .value_eval import eval_base_variables
 
 # These implement specific types and features that get registered into the main config
 # apparatus.  The functions themselves are not available at galsim.config scope.

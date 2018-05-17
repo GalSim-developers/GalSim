@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,11 +22,66 @@
 
 #include <list>
 #include <map>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>  // Need this for t1 < t2
 
 namespace galsim {
 
+    // A very simple tuple class that just does what we need for the LRUCache.
+    // It can hold up to a maximum of 4 parameters.
+    template <typename T1, typename T2=int, typename T3=int, typename T4=int>
+    class Tuple
+    {
+    public:
+        T1 first;
+        T2 second;
+        T3 third;
+        T4 fourth;
+
+        Tuple(const T1& a) : first(a), second(0), third(0), fourth(0) {}
+        Tuple(const T1& a, const T2& b) : first(a), second(b), third(0), fourth(0) {}
+        Tuple(const T1& a, const T2& b, const T3& c) : first(a), second(b), third(c), fourth(0) {}
+        Tuple(const T1& a, const T2& b, const T3& c, const T4& d) :
+            first(a), second(b), third(c), fourth(d) {}
+
+        Tuple(const Tuple& rhs) :
+            first(rhs.first), second(rhs.second), third(rhs.third), fourth(rhs.fourth) {}
+
+        Tuple& operator=(const Tuple& rhs)
+        {
+            if (&rhs != this) {
+                first = rhs.first;
+                second = rhs.second;
+                third = rhs.third;
+                fourth = rhs.fourth;
+            }
+            return *this;
+        }
+
+        bool operator<(const Tuple& rhs) const
+        {
+            return (
+                first < rhs.first ? true :
+                rhs.first < first ? false :
+                second < rhs.second ? true :
+                rhs.second < second ? false :
+                third < rhs.third ? true :
+                rhs.third < third ? false :
+                fourth < rhs.fourth ? true :
+                false);
+        }
+    };
+
+    template <typename T1>
+    Tuple<T1> MakeTuple(const T1& a)
+    { return Tuple<T1>(a); }
+    template <typename T1, typename T2>
+    Tuple<T1,T2> MakeTuple(const T1& a, const T2& b)
+    { return Tuple<T1,T2>(a,b); }
+    template <typename T1, typename T2, typename T3>
+    Tuple<T1,T2,T3> MakeTuple(const T1& a, const T2& b, const T3& c)
+    { return Tuple<T1,T2,T3>(a,b,c); }
+    template <typename T1, typename T2, typename T3, typename T4>
+    Tuple<T1,T2,T3,T4> MakeTuple(const T1& a, const T2& b, const T3& c, const T4& d)
+    { return Tuple<T1,T2,T3,T4>(a,b,c,d); }
 
     // Helper to build a Value from a Key
     // Normal case is that the Value take Key as a single parameter
@@ -37,43 +92,34 @@ namespace galsim {
         { return new Value(key); }
     };
 
-    // Special case of a pair, in which case the Value takes 2 parameters
-    template <typename Value, typename Key1, typename Key2>
-    struct LRUCacheHelper<Value,std::pair<Key1,Key2> >
+    // Special first few tuple cases
+    template <typename Value, typename Key1>
+    struct LRUCacheHelper<Value,Tuple<Key1> >
     {
-        static Value* NewValue(const std::pair<Key1,Key2>& key)
+        static Value* NewValue(const Tuple<Key1>& key)
+        { return new Value(key.first); }
+    };
+
+    template <typename Value, typename Key1, typename Key2>
+    struct LRUCacheHelper<Value,Tuple<Key1,Key2> >
+    {
+        static Value* NewValue(const Tuple<Key1,Key2>& key)
         { return new Value(key.first, key.second); }
     };
 
-    // Special first few tuple cases
-    template <typename Value, typename Key1>
-    struct LRUCacheHelper<Value,boost::tuple<Key1> >
-    {
-        static Value* NewValue(const boost::tuple<Key1>& key)
-        { return new Value(boost::get<0>(key)); }
-    };
-
-    template <typename Value, typename Key1, typename Key2>
-    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2> >
-    {
-        static Value* NewValue(const boost::tuple<Key1,Key2>& key)
-        { return new Value(boost::get<0>(key), boost::get<1>(key)); }
-    };
-
     template <typename Value, typename Key1, typename Key2, typename Key3>
-    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3> >
+    struct LRUCacheHelper<Value,Tuple<Key1,Key2,Key3> >
     {
-        static Value* NewValue(const boost::tuple<Key1,Key2,Key3>& key)
-        { return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key)); }
+        static Value* NewValue(const Tuple<Key1,Key2,Key3>& key)
+        { return new Value(key.first, key.second, key.third); }
     };
 
     template <typename Value, typename Key1, typename Key2, typename Key3, typename Key4>
-    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3,Key4> >
+    struct LRUCacheHelper<Value,Tuple<Key1,Key2,Key3,Key4> >
     {
-        static Value* NewValue(const boost::tuple<Key1,Key2,Key3,Key4>& key)
+        static Value* NewValue(const Tuple<Key1,Key2,Key3,Key4>& key)
         {
-            return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key),
-                             boost::get<3>(key));
+            return new Value(key.first, key.second, key.third, key.fourth);
         }
     };
 
@@ -89,9 +135,9 @@ namespace galsim {
      *    Key key;
      *    Value* value = new Value(key);
      *
-     * Special: if Key is a std::pair<Key1, Key2>, then value takes 2 args:
+     * Special: if Key is a Tuple<Key1, Key2, ...> (up to 4), then value takes that many args:
      *
-     *    std::pair<Key1,Key2> key = std::make_pair(key1,key2);
+     *    Tuple<Key1,Key2> key(key1,key2);
      *    Value* value = new Value(key1,key2);
      *
      * This structure will first look to see if we have already build such a Value given a
@@ -119,7 +165,7 @@ namespace galsim {
          */
         ~LRUCache() {}
 
-        boost::shared_ptr<Value> get(const Key& key)
+        shared_ptr<Value> get(const Key& key)
         {
             assert(_entries.size() == _cache.size());
             MapIter iter = _cache.find(key);
@@ -134,11 +180,10 @@ namespace galsim {
             } else {
                 // Item is not cached.
                 // Make a new one.
-                boost::shared_ptr<Value> value(LRUCacheHelper<Value,Key>::NewValue(key));
+                shared_ptr<Value> value(LRUCacheHelper<Value,Key>::NewValue(key));
                 // Remove items from the cache as necessary.
                 while (_entries.size() >= _nmax) {
-                    bool erased = _cache.erase(_entries.back().first);
-                    assert(erased);
+                    _cache.erase(_entries.back().first);
                     _entries.pop_back();
                 }
                 // Add the new value to the front.
@@ -155,7 +200,7 @@ namespace galsim {
 
         size_t _nmax;
 
-        typedef std::pair<Key, boost::shared_ptr<Value> > Entry;
+        typedef std::pair<Key, shared_ptr<Value> > Entry;
         std::list<Entry> _entries;
 
         typedef typename std::list<Entry>::iterator ListIter;
@@ -167,4 +212,3 @@ namespace galsim {
 }
 
 #endif
-

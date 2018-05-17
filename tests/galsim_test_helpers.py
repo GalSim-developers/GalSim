@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,7 @@ import numpy as np
 import os
 import sys
 import logging
+import coord
 
 path, filename = os.path.split(__file__)
 try:
@@ -51,7 +52,7 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 
-def printval(image1, image2):
+def printval(image1, image2, show=False):
     print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
     print("Sum of values: ", np.sum(image1.array, dtype=float), np.sum(image2.array, dtype=float))
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
@@ -68,7 +69,7 @@ def printval(image1, image2):
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
     print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
-    if False:
+    if show:
         import matplotlib.pylab as plt
         ax1 = plt.subplot(121)
         ax2 = plt.subplot(122)
@@ -88,13 +89,13 @@ def convertToShear(e1,e2):
 def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     """Test drawImage using sb method.
     """
-    #print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
+    #print('  nyquist_scale, stepk, maxk = ', prof.nyquist_scale, prof.stepk, prof.maxk)
     image = prof.drawImage(method='sb', scale=scale, use_true_center=False)
     image.setCenter(0,0)
     dx = image.scale
     #print('  image scale,bounds = ',dx,image.bounds)
     if scale is None:
-        assert image.scale == prof.nyquistScale()
+        assert image.scale == prof.nyquist_scale
     print('  flux: ',prof.flux, image.array.sum(dtype=float)*dx**2, image.added_flux)
     np.testing.assert_allclose(
             image.array.sum(dtype=float) * dx**2, image.added_flux, 1.e-5,
@@ -102,16 +103,17 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
             err_msg="%s profile flux not close to sum of pixel values"%name)
-    print('  maxsb: ',prof.maxSB(), image.array.max())
+
+    print('  maxsb: ',prof.max_sb, image.array.max())
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
     if approx_maxsb:
         np.testing.assert_array_less(
-                image.array.max(), prof.maxSB() * 1.4,
-                err_msg="%s profile maxSB smaller than maximum pixel value"%name)
+                image.array.max(), prof.max_sb * 1.4,
+                err_msg="%s profile max_sb smaller than maximum pixel value"%name)
     else:
         np.testing.assert_allclose(
-                image.array.max(), prof.maxSB(), rtol=1.e-5,
-                err_msg="%s profile maxSB did not match maximum pixel value"%name)
+                image.array.max(), prof.max_sb, rtol=1.e-5,
+                err_msg="%s profile max_sb did not match maximum pixel value"%name)
     for i,j in ( (2,3), (-4,1), (0,-5), (-3,-3) ):
         x = i*dx
         y = j*dx
@@ -119,20 +121,45 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof.xValue(x,y), rtol=1.e-5,
                 err_msg="%s profile sb image does not match xValue at %d,%d"%(name,i,j))
+        np.testing.assert_allclose(
+                image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
+                err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
+        assert prof._xValue.__doc__ == galsim.GSObject._xValue.__doc__
+        assert prof.__class__._xValue.__doc__ == galsim.GSObject._xValue.__doc__
+
+    # Direct call to drawReal should also work and be equivalent to the above with scale = 1.
+    prof.drawImage(image, method='sb', scale=1., use_true_center=False)
+    image2 = image.copy()
+    prof.drawReal(image2)
+    np.testing.assert_equal(image2.array, image.array,
+                            err_msg="%s drawReal not equivalent to drawImage"%name)
+
+    # If supposed to be axisymmetric, make sure it is.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.xValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.xValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in xValues"%name)
+
 
 def check_basic_k(prof, name):
     """Check drawKImage
     """
-    print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
-    if prof.maxK()/prof.stepK() > 2000.:
+    print('  nyquist_scale, stepk, maxk = ', prof.nyquist_scale, prof.stepk, prof.maxk)
+    if prof.maxk/prof.stepk > 2000.:
         # Don't try to draw huge images!
         kimage = prof.drawKImage(nx=2000,ny=2000)
+    elif prof.maxk/prof.stepk < 12.:
+        # or extremely small ones.
+        kimage = prof.drawKImage(nx=12,ny=12)
     else:
         kimage = prof.drawKImage()
     kimage.setCenter(0,0)
     dk = kimage.scale
     print('  kimage scale,bounds = ',dk,kimage.bounds)
-    assert kimage.scale == prof.stepK()
+    assert kimage.scale == prof.stepk
     print('  k flux: ',prof.flux, prof.kValue(0,0), kimage(0,0))
     np.testing.assert_allclose(
             prof.kValue(0,0), prof.flux, rtol=1.e-10,
@@ -147,15 +174,45 @@ def check_basic_k(prof, name):
         np.testing.assert_allclose(
                 kimage(i,j), prof.kValue(kx,ky), rtol=1.e-5,
                 err_msg="%s profile kimage does not match kValue at %d,%d"%(name,i,j))
+        np.testing.assert_allclose(
+                kimage(i,j), prof._kValue(galsim.PositionD(kx,ky)), rtol=1.e-5,
+                err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
+        assert prof._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+        assert prof.__class__._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+
+    # If supposed to be axisymmetric, make sure it is in the kValues.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.kValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.kValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in kValues"%name)
 
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
     """
     print('Testing',name)
-    if do_x and prof.isAnalyticX():
+    if do_x and prof.is_analytic_x:
         check_basic_x(prof, name, approx_maxsb, scale)
-    if do_k and prof.isAnalyticK():
+    if do_k and prof.is_analytic_k:
         check_basic_k(prof, name)
+
+    # A few things that should work regardless of what is analytic
+    np.testing.assert_almost_equal(
+            prof.positive_flux - prof.negative_flux, prof.flux,
+            err_msg="%s profile flux not equal to posflux + negflux"%name)
+    assert isinstance(prof.centroid, galsim.PositionD)
+    assert isinstance(prof.flux, float)
+    assert isinstance(prof.positive_flux, float)
+    assert isinstance(prof.negative_flux, float)
+    assert isinstance(prof.max_sb, float)
+    assert isinstance(prof.stepk, float)
+    assert isinstance(prof.maxk, float)
+    assert isinstance(prof.has_hard_edges, bool)
+    assert isinstance(prof.is_axisymmetric, bool)
+    assert isinstance(prof.is_analytic_x, bool)
+    assert isinstance(prof.is_analytic_k, bool)
 
     # Repeat for a rotated version of the profile.
     # The rotated version is mathematically the same for most profiles (all axisymmetric ones),
@@ -165,9 +222,9 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
     prof = prof.rotate(17*galsim.degrees)
     name = "Rotated " + name
     print('Testing',name)
-    if do_x and prof.isAnalyticX():
+    if do_x and prof.is_analytic_x:
         check_basic_x(prof, name, approx_maxsb, scale)
-    if do_k and prof.isAnalyticK():
+    if do_k and prof.is_analytic_k:
         check_basic_k(prof, name)
 
 
@@ -196,7 +253,7 @@ def do_shoot(prof, img, name):
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
-    print('prof.getFlux = ',prof.getFlux())
+    print('prof.flux = ',prof.flux)
     print('flux_max = ',flux_max)
     flux_tot = img.array.sum(dtype=float)
     print('flux_tot = ',flux_tot)
@@ -219,7 +276,7 @@ def do_shoot(prof, img, name):
         nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-    print('prof.getFlux => ',prof.getFlux())
+    print('prof.flux => ',prof.flux)
     print('img.sum => ',img.array.sum(dtype=float))
     print('img.max => ',img.array.max())
     print('nphot = ',nphot)
@@ -231,7 +288,7 @@ def do_shoot(prof, img, name):
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img2.sum => ',img2.array.sum(dtype=float))
-    #printval(img2,img)
+    printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -240,9 +297,10 @@ def do_shoot(prof, img, name):
     dx = img.scale
     # Test with a large image to make sure we capture enough of the flux
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
+    print('stepk, maxk = ',prof.stepk,prof.maxk)
     if 'Airy' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
-    elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name:
+    elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name or 'VonKarman' in name:
         img = galsim.ImageD(512,512, scale=dx)
     else:
         img = galsim.ImageD(128,128, scale=dx)
@@ -251,22 +309,23 @@ def do_shoot(prof, img, name):
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
     np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
-    # maxSB is not always very accurate, but it should be an overestimate if wrong.
-    assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, "maxSB for %s is too small."%name
+    # max_sb is not always very accurate, but it should be an overestimate if wrong.
+    assert img.array.max() <= prof.max_sb*dx**2 * 1.4, "max_sb for %s is too small."%name
 
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print('nphot -> ',nphot)
-    if 'InterpolatedImage' in name:
+    if 'InterpolatedImage' in name or 'PhaseScreen' in name:
         nphot *= 10
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, photon_decimal_test,
+    np.testing.assert_allclose(
+            img.array.sum(dtype=float), test_flux, rtol=10**(-photon_decimal_test),
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
-    print('img.max = ',img.array.max(),'  cf. ',prof.maxSB()*dx**2)
-    print('ratio = ',img.array.max() / (prof.maxSB()*dx**2))
-    assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, \
+    print('img.max = ',img.array.max(),'  cf. ',prof.max_sb*dx**2)
+    print('ratio = ',img.array.max() / (prof.max_sb*dx**2))
+    assert img.array.max() <= prof.max_sb*dx**2 * 1.4, \
             "Photon shooting for %s produced too high max pixel."%name
 
 
@@ -291,11 +350,11 @@ def radial_integrate(prof, minr, maxr):
     """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
        for an axially symmetric profile.
     """
-    assert prof.isAxisymmetric()
+    assert prof.is_axisymmetric
     # In this tight loop, it is worth optimizing away the parse_pos_args step.
     # It makes a rather significant difference in the running time of this function.
-    # (I.e., use prof.SBProfile.xValue() instead of prof.xValue() )
-    f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
+    # (I.e., use prof._xValue() instead of prof.xValue() )
+    f = lambda r: 2 * np.pi * r * prof._xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 
 # A short helper function to test pickling of noise objects
@@ -315,7 +374,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         import pickle
     import copy
     # In case the repr uses these:
-    from numpy import array, uint16, uint32, int16, int32, float32, float64, ndarray
+    from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray
     from astropy.units import Unit
 
     try:
@@ -337,6 +396,10 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     #print('func(obj1) = ',repr(f1))
     #print('func(obj2) = ',repr(f2))
     assert f1 == f2
+
+    # Check that == works properly if the other thing isn't the same type.
+    assert f1 != object()
+    assert object() != f1
 
     # Test the hash values are equal for two equivalent objects.
     from collections import Hashable
@@ -374,9 +437,14 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object, and start
         # truncating the output for relatively small size arrays.  So we temporarily bump up the
         # precision and truncation threshold for testing.
+        #print(repr(obj1))
         with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
+        print('obj1 = ',repr(obj1))
+        print('obj5 = ',repr(obj5))
         f5 = func(obj5)
+        print('f1 = ',f1)
+        print('f5 = ',f5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
     else:
         # Even if we're not actually doing the test, still make the repr to check for syntax errors.
@@ -424,7 +492,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             if classname == 'SBSersic' and i == 5 and args[4] == 0.:
                 continue
             # Special case: can't change size of LVector or PhotonArray without changing array
-            if classname in ['LVector', 'PhotonArray'] and i == 0:
+            if classname in ['LVector', 'PhotonArray'] and i == 0 or i == 2:
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
@@ -443,7 +511,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                     #print("SUCCESS\n")
 
 
-def all_obj_diff(objs):
+def all_obj_diff(objs, check_hash=True):
     """ Helper function that verifies that each element in `objs` is unique and, if hashable,
     produces a unique hash."""
 
@@ -461,6 +529,8 @@ def all_obj_diff(objs):
             assert obji != objj, ("Found equivalent objects {0} == {1} at indices {2} and {3}"
                                   .format(obji, objj, i, j))
 
+    if not check_hash:
+        return
     # Now check that all hashes are unique (if the items are hashable).
     if not isinstance(objs[0], Hashable):
         return
@@ -488,7 +558,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
     """
     if bps is None:
         # load a filter
-        bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+        bppath = os.path.join(galsim.meta_data.share_dir, 'bandpasses')
         bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
                     .truncate(relative_throughput=1e-3)
                     .thin(rel_err=1e-3))
@@ -506,9 +576,9 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         desired = obj.SED(wave)
         # Since InterpolatedChromaticObject.evaluateAtWavelength involves actually drawing an
         # image, which implies flux can be lost off of the edges of the image, we don't expect
-        # it's accuracy to be nearly as good as for other objects.
+        # its accuracy to be nearly as good as for other objects.
         decimal = 2 if obj.interpolated else 7
-        np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).getFlux(), desired,
+        np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).flux, desired,
                                        decimal)
         # Don't bother trying to draw a deconvolution.
         if isinstance(obj, galsim.ChromaticDeconvolution):
@@ -526,6 +596,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
             # Also try manipulating exptime and area.
             np.testing.assert_allclose(
                     calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(dtype=float), rtol=1e-2)
+
 
 def funcname():
     import inspect
@@ -582,3 +653,42 @@ class CaptureLog(object):
         self.handler.flush()
         self.output = self.stream.getvalue().strip()
         self.handler.close()
+
+
+# Replicate a small part of the nose package to get the `assert_raises` function/context-manager
+# without relying on nose as a dependency.
+import unittest
+class Dummy(unittest.TestCase):
+    def nop():
+        pass
+_t = Dummy('nop')
+assert_raises = getattr(_t, 'assertRaises')
+if sys.version_info > (3,2):
+    assert_warns = getattr(_t, 'assertWarns')
+else:
+    from contextlib import contextmanager
+    import warnings
+    @contextmanager
+    def assert_warns_context(wtype):
+        # When used as a context manager
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            yield w
+        assert len(w) >= 1, "Expected warning %s was not raised."%(wtype)
+        assert issubclass(w[0].category, wtype), \
+                "Warning raised was the wrong type (got %s, expected %s)"%(
+                w[0].category, wtype)
+
+    def assert_warns(wtype, *args, **kwargs):
+        if len(args) == 0:
+            return assert_warns_context(wtype)
+        else:
+            # When used as a regular function
+            func = args[0]
+            args = args[1:]
+            with assert_warns(wtype):
+                res = func(*args, **kwargs)
+            return res
+
+del Dummy
+del _t

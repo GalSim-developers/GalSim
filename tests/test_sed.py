@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,48 +19,37 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import timer, do_pickle, all_obj_diff
 import sys
-from astropy import units
+from astropy import units, constants
+import warnings
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
+import galsim
+from galsim_test_helpers import *
 
-path, filename = os.path.split(__file__)
-bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-sedpath = os.path.abspath(os.path.join(path, "../share/"))
+
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
 
 @timer
 def test_SED_basic():
     """Basic tests of SED functionality
     """
-    c = 2.99792458e17  # speed of light in nm/s
-    h = 6.62606957e-27 # Planck's constant in erg seconds
+    c = constants.c.to('nm / s').value # speed of light
+    h = constants.h.to('erg s').value # Planck's constant
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
 
-    try:
-        # Eval-str must return a Real
-        np.testing.assert_raises(ValueError, galsim.SED,
-                                 spec="'eggs'", wave_type='A', flux_type='flambda')
-    except ImportError:
-        print('The assert_raises tests require nose')
-
-
-    # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/nm
+    # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/s/cm^2/nm
+    warnings.simplefilter('ignore', units.UnitsWarning)
     s_list = [
         galsim.SED(spec=lambda x: 200., flux_type='flambda', wave_type='nm'),
         galsim.SED(spec='200', flux_type='flambda', wave_type='nanometers'),
         galsim.SED('200', wave_type='nanometers', flux_type='flambda'),
-        galsim.SED('200', 'nm', 'flambda'),
-        galsim.SED('np.sqrt(4.e4)', 'nm', 'flambda'),
-        galsim.SED('numpy.sqrt(4.e4)', 'nm', 'flambda'),
-        galsim.SED('math.sqrt(4.e4)', 'nm', 'flambda'),
+        galsim.SED('200', 'nm', 'flambda', fast=False),
+        galsim.SED('np.sqrt(4.e4)', units.nm, units.erg/(units.s * units.cm**2 * units.nm)),
+        galsim.SED('numpy.sqrt(4.e4)', units.Unit('nm'), 'flambda'),
+        galsim.SED('math.sqrt(4.e4) * 1.e9', units.Unit('m'), units.Unit('erg/s/cm^2/m')),
         # 200 erg/nm / 10 A/nm = 20 erg/A
         galsim.SED(spec='20', flux_type='flambda', wave_type='Angstroms'),
         # 200 erg/nm / (hc/w erg/photon) = 200 w/hc photons/nm
@@ -86,15 +75,21 @@ def test_SED_basic():
                    flux_type='fnu', wave_type='A'),
         galsim.SED(galsim.LookupTable(nm_w, 200.*np.ones(100)), wave_type='nanometers',
                    flux_type='flambda'),
-        galsim.SED(galsim.LookupTable(A_w, 20.*np.ones(100)), flux_type='flambda', wave_type='A'),
+        galsim.SED(galsim.LookupTable(A_w, 20.*np.ones(100)), wave_type=units.Unit('Angstrom'),
+                flux_type=units.Unit('erg/s/cm^2/Angstrom')),
         galsim.SED(galsim.LookupTable(nm_w, 200.*nm_w/(h*c)), flux_type='fphotons', wave_type='nm'),
-        galsim.SED(galsim.LookupTable(A_w, 2.*A_w/(h*c)), flux_type='fphotons', wave_type='A'),
+        galsim.SED(galsim.LookupTable(A_w, 2.*A_w/(h*c)), wave_type=units.Unit('Angstrom'),
+                flux_type=units.Unit('photon/s/cm^2/Angstrom')),
         galsim.SED(galsim.LookupTable(nm_w, 200.*nm_w**2/c), flux_type='fnu',
                    wave_type='nanometers'),
-        galsim.SED(galsim.LookupTable(A_w, 2.*A_w**2/c), flux_type='fnu', wave_type='A'),
+        galsim.SED(galsim.LookupTable(A_w, 2.*A_w**2/c), wave_type=units.Unit('Angstrom'),
+                flux_type=units.Unit('erg/s/cm^2/Hz')),
+        galsim.SED('200*wave**3/%r'%(h*c**2), 'nm', units.Unit('ph/s/cm^2/Hz')),
+        galsim.SED('0.2*wave**3/%r'%(h*c**2), 'A', units.Unit('ph/s/cm^2/Hz')),
+        galsim.SED('2.e33*wave**3/%r'%(h*c**2), units.Unit('m'), units.Unit('ph/s/m^2/Hz')),
         galsim.SED(galsim.LookupTable([1, 100-1.e-10, 100, 1000, 1000+1.e-10, 2000],
                                       [0., 0., 200., 200., 0., 0.], interpolant='linear'),
-                   wave_type='nm', flux_type='flambda')
+                   wave_type='nm', flux_type='flambda'),
     ]
     s_list += [
         s_list[9].thin(),
@@ -115,6 +110,8 @@ def test_SED_basic():
 
     for k,s in enumerate(s_list):
         print(k,' s = ', s)
+        assert s.spectral
+        assert not s.dimensionless
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
         np.testing.assert_almost_equal(s(900)*h*c/900, 200, decimal=10)
         waves = np.arange(700,800,10)
@@ -124,6 +121,36 @@ def test_SED_basic():
             np.testing.assert_equal(s.redshift, 0.)
         else:
             np.testing.assert_almost_equal(s.redshift, 4.)
+
+        # Only the first one is not picklable
+        if k > 0:
+            do_pickle(s, lambda x: (x(470), x(490), x(910)) )
+            do_pickle(s)
+
+    # Check some dimensionless spectra
+    d_list = [
+        galsim.SED(spec=lambda x: 200., flux_type='1', wave_type='nm'),
+        galsim.SED(spec='200', flux_type=units.dimensionless_unscaled, wave_type='nanometers'),
+        galsim.SED(spec='200', flux_type='1', wave_type='Angstroms'),
+        galsim.SED(spec='200', flux_type='1', wave_type=units.Unit('m')),
+        galsim.SED(spec='200', flux_type='1', wave_type=units.Unit('km'), fast=False),
+        galsim.SED(galsim.LookupTable([1,1e3],[200,200], interpolant='linear'),
+                   wave_type='nanometers', flux_type='1'),
+        galsim.SED(galsim.LookupTable(A_w, 200.*np.ones(100)), flux_type='1', wave_type='A'),
+        galsim.SED(galsim.LookupTable([1, 100-1.e-10, 100, 1000, 1000+1.e-10, 2000],
+                                      [0., 0., 200., 200., 0., 0.], interpolant='linear'),
+                   wave_type='nm', flux_type='1'),
+    ]
+    for k,s in enumerate(d_list):
+        print(k,' s = ', s)
+        assert not s.spectral
+        assert s.dimensionless
+        np.testing.assert_almost_equal(s(400), 200, decimal=10)
+        np.testing.assert_almost_equal(s(900), 200, decimal=10)
+        waves = np.arange(700,800,10)
+        np.testing.assert_array_almost_equal(s(waves), 200, decimal=10)
+
+        np.testing.assert_equal(s.redshift, 0.)
 
         # Only the first one is not picklable
         if k > 0:
@@ -157,12 +184,10 @@ def test_SED_add():
                                        err_msg="Wrong sum in SED.__add__")
         np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
                                        err_msg="Wrong redshift in SED sum")
-    try:
-        # Adding together two SEDs with different redshifts should fail.
-        d = b.atRedshift(0.1)
-        np.testing.assert_raises(ValueError, b.__add__, d)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Adding together two SEDs with different redshifts should fail.
+    d = b.atRedshift(0.1)
+    with assert_raises(ValueError):
+        b.__add__(d)
 
 
 @timer
@@ -192,12 +217,10 @@ def test_SED_sub():
         np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
                                        err_msg="Wrong redshift in SED difference")
 
-    try:
-        # Subracting two SEDs with different redshifts should fail.
-        d = b.atRedshift(0.1)
-        np.testing.assert_raises(ValueError, b.__sub__, d)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Subracting two SEDs with different redshifts should fail.
+    d = b.atRedshift(0.1)
+    with assert_raises(ValueError):
+        b.__sub__(d)
 
 
 @timer
@@ -205,7 +228,7 @@ def test_SED_mul():
     """Check that SEDs multiply like I think they should...
     """
     sed0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   wave_type='nm', flux_type='fphotons')
+                      wave_type='nm', flux_type='fphotons')
     sed1 = galsim.SED(lambda nu: nu**2, wave_type=units.Hz, flux_type='fnu', fast=False)
     sed2 = galsim.SED(17.0, wave_type='ang', flux_type='1')
 
@@ -254,15 +277,15 @@ def test_SED_mul():
         np.testing.assert_almost_equal(h2(x), g(x) * a(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
 
+        assert_raises(TypeError, a.__mul__, 'invalid')
+
 
     sed1 = galsim.SED('1', 'nm', 'fphotons', redshift=1)
     sed2 = galsim.SED('2', 'nm', 'fphotons', redshift=2)
     sed3 = galsim.SED('3', 'nm', '1')
     sed4 = galsim.SED('4', 'nm', '1')
-    try:
-        np.testing.assert_raises(TypeError, sed1.__mul__,  sed2)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(TypeError):
+        sed1.__mul__(sed2)
     np.testing.assert_almost_equal((sed1*sed3)(100), 3.0, 10, "Found wrong value in SED.__mul__")
     np.testing.assert_almost_equal((sed2*sed4)(10), 8.0, 10, "Found wrong value in SED.__mul__")
     np.testing.assert_almost_equal((sed3*sed4)(30), 12.0, 10, "Found wrong value in SED.__mul__")
@@ -271,35 +294,37 @@ def test_SED_mul():
 def test_SED_div():
     """Check that SEDs divide like I think they should...
     """
-    a0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                    wave_type='nm', flux_type='fphotons')
+    a0_lt = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                       wave_type='nm', flux_type='fphotons')
+    a0_fn = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
     for z in [0, 0.2, 0.4]:
-        a = a0.atRedshift(z)
+        for a0 in [a0_lt, a0_fn]:
+            a = a0.atRedshift(z)
 
-        # SED divided by function
-        b = lambda w: w**2
-        c = a/b
-        x = 3.0
-        np.testing.assert_almost_equal(c(x), a(x)/b(x), 10,
-                                       err_msg="Found wrong value in SED.__div__")
+            # SED divided by function
+            b = lambda w: w**2
+            c = a/b
+            x = 3.0
+            np.testing.assert_almost_equal(c(x), a(x)/b(x), 10,
+                                           err_msg="Found wrong value in SED.__div__")
 
-        # SED divided by scalar
-        d = a/4.2
-        np.testing.assert_almost_equal(d(x), a(x)/4.2, 10,
-                                       err_msg="Found wrong value in SED.__div__")
-        do_pickle(d)
+            # SED divided by scalar
+            d = a/4.2
+            np.testing.assert_almost_equal(d(x), a(x)/4.2, 10,
+                                           err_msg="Found wrong value in SED.__div__")
 
-        # assignment division
-        d /= 2
-        np.testing.assert_almost_equal(d(x), a(x)/4.2/2, 10,
-                                       err_msg="Found wrong value in SED.__div__")
-        do_pickle(d)
+            # assignment division
+            d /= 2
+            np.testing.assert_almost_equal(d(x), a(x)/4.2/2, 10,
+                                           err_msg="Found wrong value in SED.__div__")
+            if a0 is a0_lt:
+                do_pickle(d)
 
-        # SED divided by dimensionless SED
-        e = galsim.SED('wave', 'nm', '1')
-        d /= e
-        np.testing.assert_almost_equal(d(x), a(x)/4.2/2/e(x), 10,
-                                       err_msg="Found wrong value in SED.__div__")
+            # SED divided by dimensionless SED
+            e = galsim.SED('wave', 'nm', '1')
+            d /= e
+            np.testing.assert_almost_equal(d(x), a(x)/4.2/2/e(x), 10,
+                                           err_msg="Found wrong value in SED.__div__")
 
 
 @timer
@@ -307,30 +332,61 @@ def test_SED_atRedshift():
     """Check that SEDs redshift correctly.
     """
     a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
-    bolo_flux = a.calculateFlux(bandpass=None)
-    for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
+    bolo_bp = galsim.Bandpass('1', blue_limit=a.blue_limit, red_limit=a.red_limit, wave_type='nm')
+    bolo_flux = a.calculateFlux(bolo_bp)
+    print('bolo_flux = ',bolo_flux)
+    for z1, z2 in zip([-0.01, -0.02, 0.5, 1.0, 1.4], [-0.2, 0.2, 1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
         c = b.atRedshift(z1) # same redshift, so should be no change
         d = c.atRedshift(z2) # do a relative redshifting from z1 to z2
         e = b.thin(rel_err=1.e-5)  # effectively tests that wave_list is handled correctly.
                                    # (Issue #520)
         for w in [350, 500, 650]:
-            np.testing.assert_almost_equal(a(w), b(w*(1.0+z1)), 10,
+            print('a(w) = ',a(w))
+            print('b(w(1+z)) = ',b(w*(1.+z1)))
+            print('c(w(1+z)) = ',c(w*(1.+z1)))
+            print('d(w(1+z)) = ',d(w*(1.+z2)))
+            print('e(w(1+z)) = ',e(w*(1.+z1)))
+            np.testing.assert_almost_equal(a(w)/bolo_flux, b(w*(1.0+z1))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal(a(w), c(w*(1.0+z1)), 10,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, c(w*(1.0+z1))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal(a(w), d(w*(1.0+z2)), 10,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, d(w*(1.0+z2))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal((a(w)-e(w*(1.0+z1)))/bolo_flux, 0., 5,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, e(w*(1.0+z1))/bolo_flux, 5,
                                            err_msg="error redshifting and thinning SED")
+    with assert_raises(ValueError):
+        a.atRedshift(-1.1)
+
+
+@timer
+def test_combine_wave_list():
+    class A(object):
+        def __init__(self, wave_list):
+            self.wave_list = wave_list
+            if self.wave_list:
+                self.blue_limit = np.min(self.wave_list)
+                self.red_limit = np.max(self.wave_list)
+    a = A([1, 3, 5])
+    b = A([2, 4, 6])
+    c = A([2, 3, 4, 5])
+    d = A([7, 8, 9])
+
+    for a1, a2 in zip([a, a, b], [b, c, c]):
+        wave_list, blue_limit, red_limit = (
+            galsim.utilities.combine_wave_list(a1, a2))
+        np.testing.assert_equal(wave_list, c.wave_list)
+        np.testing.assert_equal(blue_limit, c.blue_limit)
+        np.testing.assert_equal(red_limit, c.red_limit)
+    with assert_raises(RuntimeError):
+        galsim.utilities.combine_wave_list(a, d)
 
 
 @timer
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
     """
-    a = galsim.SED(os.path.join(sedpath, 'CWW_Scd_ext.sed'), wave_type='nanometers',
-                   flux_type='flambda')
+    a = galsim.SED('CWW_Scd_ext.sed', wave_type='nanometers', flux_type='flambda')
     for z in np.arange(0.0, 0.5, 0.001):
         b = a.atRedshift(z)
         w1 = b.wave_list[0]
@@ -345,28 +401,20 @@ def test_SED_roundoff_guard():
 def test_SED_init():
     """Check that certain invalid SED initializations are trapped.
     """
-    try:
-        # These fail.
-        np.testing.assert_raises(ValueError, galsim.SED, spec='blah',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec='wave+',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0,
-                                 wave_type='bar', flux_type='flambda')
-        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0,
-                                 wave_type='nm')
-        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0,
-                                 flux_type='bar')
-        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
-        np.testing.assert_raises(ValueError, galsim.SED, spec='wave',
-                                 wave_type=units.Hz, flux_type='2')
-        np.testing.assert_raises(ValueError, galsim.SED, 1.0, 'nm', 'fphotons')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # These fail.
+    assert_raises(ValueError, galsim.SED, spec="'eggs'", wave_type='A', flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec='blah', wave_type='nm', flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec='wave+',wave_type='nm', flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec='somewhere/a/file', wave_type='nm',
+                  flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file', wave_type='nm',
+                  flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec=lambda w:1.0, wave_type='bar', flux_type='flambda')
+    assert_raises(TypeError, galsim.SED, spec=lambda w:1.0, wave_type='nm')
+    assert_raises(TypeError, galsim.SED, spec=lambda w:1.0, flux_type='bar')
+    assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
+    assert_raises(ValueError, galsim.SED, spec='wave', wave_type=units.Hz, flux_type='2')
+    assert_raises(ValueError, galsim.SED, 1.0, 'nm', 'fphotons')
     # These should succeed.
     galsim.SED(spec='wave', wave_type='nm', flux_type='flambda')
     galsim.SED(spec='wave/wave', wave_type='nm', flux_type='flambda')
@@ -374,6 +422,7 @@ def test_SED_init():
     galsim.SED(spec='1./(wave-700)', wave_type='nm', flux_type='flambda')
     galsim.SED(spec='wave', wave_type=units.nm, flux_type='flambda')
     galsim.SED(spec='wave', wave_type=units.Hz, flux_type='flambda')
+    galsim.SED(spec='wave', wave_type=units.Hz, flux_type='fphotons')
     galsim.SED(spec='wave', wave_type=units.Hz, flux_type=units.erg/(units.s*units.nm*units.m**2))
     galsim.SED(spec='wave', wave_type=units.Hz, flux_type=units.erg/(units.s*units.Hz*units.m**2))
     galsim.SED(spec='wave', wave_type=units.Hz,
@@ -383,30 +432,26 @@ def test_SED_init():
 
     # Also check for invalid calls
     foo = np.arange(10.)+1.
-    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda')
-    try:
-        np.testing.assert_raises(ValueError, sed, 0.5)
-        np.testing.assert_raises(ValueError, sed, 12.0)
-        np.testing.assert_raises(TypeError, galsim.SED, '1', 'nm', units.erg/units.s)
-        np.testing.assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type=units.Hz, flux_type='flambda')
+    assert_raises(ValueError, sed, 0.5)
+    assert_raises(ValueError, sed, 12.0)
+    assert_raises(TypeError, galsim.SED, '1', 'nm', units.erg/units.s)
+    assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
 
     # Check a few valid calls for when fast=False
-    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda',
-                     fast=False)
-    sed(1.5)
-    sed(1.5*units.nm)
+    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type=units.GHz,
+                     flux_type=units.erg/(units.s*units.Hz*units.m**2), fast=False)
+    sed(1.5*units.GHz)
+    sed(3e8/1.5)  # lambda = c/nu = 3e8 m/s / 1.5e9 Hz * 1.e9 nm/m
+    sed(3e8/1.5*units.nm)
 
     # And check the redshift kwarg.
     foo = np.arange(10.)+1.
     sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda', redshift=1.0,
                      fast=False)
-    try: # outside good range of 2->20 should raise ValueError
-        np.testing.assert_raises(ValueError, sed, 1.5)
-        np.testing.assert_raises(ValueError, sed, 24.0)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # outside good range of 2->20 should raise ValueError
+    assert_raises(ValueError, sed, 1.5)
+    assert_raises(ValueError, sed, 24.0)
 
     sed(3.5)
     sed(3.5*units.nm)
@@ -430,7 +475,14 @@ def test_SED_withFlux():
             # Should be equivalent to multiplying an SED * Bandpass and computing the
             # "bolometric" flux.
             ab = a * rband
-            np.testing.assert_array_almost_equal(ab.calculateFlux(None), 1.0, 5,
+            bolo_bp = galsim.Bandpass('1', blue_limit=ab.blue_limit, red_limit=ab.red_limit,
+                                      wave_type='nm')
+            np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 5,
+                                                 "Calculating SED flux from sed * bp failed.")
+
+            # Multiplying in the other order also works.
+            ba = rband * a
+            np.testing.assert_array_almost_equal(ba.calculateFlux(bolo_bp), 1.0, 5,
                                                  "Calculating SED flux from sed * bp failed.")
 
 
@@ -497,8 +549,9 @@ def test_SED_calculateMagnitude():
     # http://www.astronomy.ohio-state.edu/~martini/usefuldata.html
     # Almost certainly, the LSST filters and the filters used on this website are not perfect
     # matches, but should give some idea of the expected conversion between Vega magnitudes and AB
-    # magnitudes.  The results are consistent to 0.1 magnitudes, which is encouraging, but the true
-    # accuracy of the get/set magnitude algorithms is probably much better than this.
+    # magnitudes.  Except for u-band, the results are consistent to 0.1 magnitudes, which is
+    # encouraging, but the true accuracy of the get/set magnitude algorithms is probably much better
+    # than this.
     ugrizy_vega_ab_conversions = [0.91, -0.08, 0.16, 0.37, 0.54, 0.634]
     filter_names = 'ugrizy'
     sed = sed.atRedshift(0.0)
@@ -510,7 +563,24 @@ def test_SED_calculateMagnitude():
                          .withZeropoint('vega'))
         AB_mag = sed.calculateMagnitude(AB_bandpass)
         vega_mag = sed.calculateMagnitude(vega_bandpass)
-        assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
+        thresh = 0.3 if filter_name == 'u' else 0.1
+        assert (abs((AB_mag - vega_mag) - conversion) < thresh)
+
+
+@timer
+def test_redshift_calculateFlux():
+    sed = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+                     wave_type='nm', flux_type='fphotons')
+    bp = galsim.Bandpass(galsim.LookupTable([4,6], [1,1], interpolant='linear'),
+                         wave_type='nm')
+
+    for z in [0, 0.19, 0.2, 0.21, 2.5, 2.99, 3, 3.01, 4]:
+        sedz = sed.atRedshift(z)
+        if sedz.blue_limit > bp.blue_limit or sedz.red_limit < bp.red_limit:
+            with assert_raises(ValueError):
+                sedz.calculateFlux(bp)
+        else:
+            print('z = {} flux = {}'.format(z, sedz.calculateFlux(bp)))
 
 
 @timer
@@ -545,6 +615,37 @@ def test_SED_calculateDCRMomentShifts():
     Vnum = np.trapz(sed(waves) * bandpass(waves) * (R - Rnum/den)**2, waves)
     np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
+    # Repeat with a function bandpass, since different path in code.
+    bp2 = galsim.Bandpass('1', 'nm', blue_limit=bandpass.blue_limit, red_limit=bandpass.red_limit)
+    Rbar, V = sed.calculateDCRMomentShifts(bp2, zenith_angle=45*galsim.degrees)
+    Rbar2, V2 = sed.calculateDCRMomentShifts(bp2, zenith_angle=45*galsim.degrees,
+                                             parallactic_angle=180*galsim.degrees)
+    np.testing.assert_array_almost_equal(Rbar, -Rbar2, 15)
+    np.testing.assert_array_almost_equal(V, V2, 25)
+    Rbar3, V3 = sed.calculateDCRMomentShifts(bp2, zenith_angle=45*galsim.degrees,
+                                             parallactic_angle=90*galsim.degrees)
+    np.testing.assert_almost_equal(Rbar[0], Rbar3[1], 15)
+    np.testing.assert_almost_equal(V[1,1], V3[0,0], 25)
+    waves = (sed*bp2).wave_list
+    R = galsim.dcr.get_refraction(waves, 45.*galsim.degrees)
+    Rnum = np.trapz(sed(waves) * R, waves)
+    den = np.trapz(sed(waves), waves)
+    np.testing.assert_almost_equal(Rnum/den, Rbar[1], 4)
+    Vnum = np.trapz(sed(waves) * (R - Rnum/den)**2, waves)
+    np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
+
+    dim = galsim.SED('200', 'nm', '1')
+    assert_raises(TypeError, dim.calculateDCRMomentShifts, bandpass,
+                  zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees)
+    assert_raises(TypeError, sed.calculateDCRMomentShifts, bandpass,
+                  zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees,
+                  temperature=280, pressure=70, H2O_pressure=1.1,
+                  invalid=True)
+    # Works with temperature, pressure, and H2O_pressure
+    sed.calculateDCRMomentShifts(bandpass,
+                                 zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees,
+                                 temperature=280, pressure=70, H2O_pressure=1.1)
+
 
 @timer
 def test_SED_calculateSeeingMomentRatio():
@@ -559,8 +660,16 @@ def test_SED_calculateSeeingMomentRatio():
     waves = np.union1d(sed.wave_list, bandpass.wave_list)
     num = np.trapz(sed(waves) * bandpass(waves) * (waves/500.0)**(-0.4), waves)
     den = np.trapz(sed(waves) * bandpass(waves), waves)
-
     np.testing.assert_almost_equal(relative_size, num/den, 5)
+
+    # Repeat with a function bandpass, since different path in code
+    bp2 = galsim.Bandpass('1', 'nm', blue_limit=bandpass.blue_limit, red_limit=bandpass.red_limit)
+    relative_size = sed.calculateSeeingMomentRatio(bp2)
+    waves = (sed*bp2).wave_list
+    num = np.trapz(sed(waves) * (waves/500.0)**(-0.4), waves)
+    den = np.trapz(sed(waves), waves)
+    np.testing.assert_almost_equal(relative_size, num/den, 4)
+
 
 @timer
 def test_SED_sampleWavelength():
@@ -573,27 +682,31 @@ def test_SED_sampleWavelength():
                                'nm')
     sedbp = sed*bandpass
 
-    out = sed.sampleWavelength(3,None)
-    np.testing.assert_equal(hasattr(sed,'deviate'),True,"Creating SED deviate cache failed.")
-    np.testing.assert_equal(len(sed.deviate),1,"Creating SED deviate failed.")
+    # Need to use 256 here to get the regression test to work, since that used to be the default.
+    out = sed.sampleWavelength(3,None,npoints=256)
+    print('out = ',out)
+    np.testing.assert_equal(hasattr(sed,'_cache_deviate'),True,"Creating SED deviate cache failed.")
+    np.testing.assert_equal(len(sed._cache_deviate),1,"Creating SED deviate failed.")
 
-    out = sed.sampleWavelength(3,None,rng=seed)
-    np.testing.assert_equal(len(sed.deviate),1,"Accessing existing SED deviate failed.")
+    out = sed.sampleWavelength(3,None,rng=seed, npoints=256)
+    print('out = ',out)
+    np.testing.assert_equal(len(sed._cache_deviate),1,"Accessing existing SED deviate failed.")
 
     test0 = np.array([ 4.15562438,  4.737775  ,  1.93594078])
+    print('test0 = ',test0)
     np.testing.assert_array_almost_equal(out,test0,8,"Unexpected SED sample values.")
 
-    out = sed.sampleWavelength(3,None,rng=rng)
+    out = sed.sampleWavelength(3,None,rng=rng, npoints=256)
     np.testing.assert_array_almost_equal(out,test0,8,"Failed to pass 'UniformDeviate'.")
 
-    out = sed.sampleWavelength(3,bandpass,rng=seed)
-    np.testing.assert_equal(len(sed.deviate),2,"Creating new SED deviate failed.")
+    out = sed.sampleWavelength(3,bandpass,rng=seed, npoints=256)
+    np.testing.assert_equal(len(sed._cache_deviate),2,"Creating new SED deviate failed.")
 
     test1 = np.array([ 4.16227593,  4.6166918 ,  2.95075946])
     np.testing.assert_array_almost_equal(out,test1,8,"Unexpected SED sample values.")
 
     out = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=256)
-    np.testing.assert_equal(len(sed.deviate),2,"Unexpected number of SED deviates.")
+    np.testing.assert_equal(len(sed._cache_deviate),2,"Unexpected number of SED deviates.")
     np.testing.assert_equal(len(out),1e3,"Unexpected number of SED samples.")
 
     np.testing.assert_equal(np.sum(out > sedbp.red_limit),0,
@@ -602,7 +715,12 @@ def test_SED_sampleWavelength():
                             "SED sample outside of function bounds.")
 
     out2 = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=512)
-    np.testing.assert_equal(len(sed.deviate),3,"Unexpected number of SED deviates.")
+    np.testing.assert_equal(len(sed._cache_deviate),3,"Unexpected number of SED deviates.")
+    np.testing.assert_almost_equal(out,out2,0,"SED samples using different npoints don't match "
+                                   "to the nearest integer.")
+
+    out2 = sed.sampleWavelength(1e3,bandpass,rng=seed)
+    np.testing.assert_equal(len(sed._cache_deviate),4,"Unexpected number of SED deviates.")
     np.testing.assert_almost_equal(out,out2,0,"SED samples using different npoints don't match "
                                    "to the nearest integer.")
 
@@ -628,7 +746,7 @@ def test_SED_sampleWavelength():
         return centers,(cts1, cts2)
 
     # Test the output distribution
-    out = sed.sampleWavelength(1e5,None,rng=seed)
+    out = sed.sampleWavelength(1e5,None,rng=seed,npoints=256)
 
     _,(cts1,cts2) = create_counts(sed,out)
     chisq = np.sum( (cts1 - cts2)**2 / cts1 )/len(cts1)
@@ -640,7 +758,7 @@ def test_SED_sampleWavelength():
     # Test redshift dependence
     z = 2.0
     sedz = sed.atRedshift(z)
-    outz = sedz.sampleWavelength(1e5,None,rng=seed)
+    outz = sedz.sampleWavelength(1e5,None,rng=seed,npoints=256)
     np.testing.assert_almost_equal(out, outz/(1 + z), 8,
                                    "Redshifted wavelengths are not shifted by 1/(1+z).")
 
@@ -731,7 +849,7 @@ def test_thin():
         print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, preserving range."
         thin_s = s.thin(rel_err=err, preserve_range=False)
-        thin_flux = thin_s.calculateFlux(bp)
+        thin_flux = thin_s.calculateFlux(bp.truncate(thin_s.blue_limit, thin_s.red_limit))
         thin_err = (flux-thin_flux)/flux
         print("num samples with preserve_range = False: ",len(thin_s.wave_list))
         print("realized error = ",(flux-thin_flux)/flux)
@@ -745,11 +863,13 @@ if __name__ == "__main__":
     test_SED_mul()
     test_SED_div()
     test_SED_atRedshift()
+    test_combine_wave_list()
     test_SED_roundoff_guard()
     test_SED_init()
     test_SED_withFlux()
     test_SED_withFluxDensity()
     test_SED_calculateMagnitude()
+    test_redshift_calculateFlux()
     test_SED_calculateDCRMomentShifts()
     test_SED_calculateSeeingMomentRatio()
     test_SED_sampleWavelength()

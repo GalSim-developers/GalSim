@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,6 +25,7 @@
 #include <typeinfo>
 #include <stdexcept>
 #include <string>
+#include <complex>
 
 // Need this for instantiated types, since we will use int16_t and int32_t
 // rather than short and int to explicitly match the python levels numpy.int16 and numpy.int32.
@@ -32,20 +33,51 @@
 // Hopefully all our compilers will conform to the C99 standard which includes stdint.h.
 #include <stdint.h>
 
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
-
 #include "Std.h"
 #include "Bounds.h"
-#include "ImageArith.h"
 
 namespace galsim {
+
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
+    /**
+     *  @brief Exception class usually thrown by images.
+     */
+    class ImageError : public std::runtime_error {
+    public:
+        ImageError(const std::string& m) : std::runtime_error("Image Error: " + m) {}
+
+    };
+
+    /**
+     *  @brief Exception class thrown when out-of-bounds pixels are accessed on an image.
+     */
+    class ImageBoundsError : public ImageError {
+    public:
+        ImageBoundsError(const std::string& m) :
+            ImageError("Access to out-of-bounds pixel " + m) {}
+
+        ImageBoundsError(const std::string& m, int min, int max, int tried);
+
+        ImageBoundsError(int x, int y, const Bounds<int> b);
+    };
+
+    //! @endcond
+
 
     template <typename T> class AssignableToImage;
     template <typename T> class BaseImage;
     template <typename T> class ImageAlloc;
     template <typename T> class ImageView;
     template <typename T> class ConstImageView;
+
+    template <typename T1>
+    class ReturnSecond
+    {
+    public:
+        T1 operator()(T1, T1 v) const { return v; }
+    };
 
     /**
      *  @brief AssignableToImage is a base class for anything that can be assigned to
@@ -133,7 +165,7 @@ namespace galsim {
          *  The actual pointer will point to a parent image rather than the image itself
          *  if this is a subimage.
          */
-        boost::shared_ptr<T> getOwner() const { return _owner; }
+        shared_ptr<T> getOwner() const { return _owner; }
 
         /**
          *  @brief Return a pointer to the first pixel in the image.
@@ -275,26 +307,9 @@ namespace galsim {
          */
         T sumElements() const;
 
-        /**
-         *  @brief Perform a 2D FFT from real space to k-space.
-         */
-        ImageView<std::complex<double> > fft(bool shift_in=true, bool shift_out=true) const;
-
-        /**
-         *  @brief Perform a 2D inverse FFT from k-space to real space.
-         */
-        ImageView<double> inverse_fft(bool shift_in=true, bool shift_out=true) const;
-
-        /**
-         *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
-         */
-        ImageView<std::complex<double> > cfft(bool inverse, bool shift_in=true,
-                                              bool shift_out=true) const;
-
-
     protected:
 
-        boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
+        shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
         T* _data;                     // pointer to be used for this image
         ptrdiff_t _nElements;         // number of elements allocated in memory
         int _step;                    // number of elements between cols (normally 1)
@@ -311,13 +326,13 @@ namespace galsim {
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
-        BaseImage(T* data, ptrdiff_t nElements, boost::shared_ptr<T> owner,
+        BaseImage(T* data, ptrdiff_t nElements, shared_ptr<T> owner,
                   int step, int stride, const Bounds<int>& b) :
             AssignableToImage<T>(b),
             _owner(owner), _data(data), _nElements(nElements),
             _step(step), _stride(stride),
             _ncol(b.getXMax()-b.getXMin()+1), _nrow(b.getYMax()-b.getYMin()+1)
-        {}
+        { if (_nElements == 0) _nElements = _ncol * _nrow; }
 
         /**
          *  @brief Copy constructor also protected
@@ -373,7 +388,7 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ConstImageView(T* data, const boost::shared_ptr<T>& owner, int step, int stride,
+        ConstImageView(T* data, const shared_ptr<T>& owner, int step, int stride,
                        const Bounds<int>& b) :
             BaseImage<T>(data,0,owner,step,stride,b) {}
 
@@ -430,9 +445,9 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const boost::shared_ptr<T>& owner, int step, int stride,
-                  const Bounds<int>& b) :
-            BaseImage<T>(data, 0, owner, step, stride, b) {}
+        ImageView(T* data, const shared_ptr<T>& owner, int step, int stride,
+                  const Bounds<int>& b, int nElements=0) :
+            BaseImage<T>(data, nElements, owner, step, stride, b) {}
 
         /**
          *  @brief Shallow copy constructor.
@@ -512,13 +527,6 @@ namespace galsim {
         ImageView<T> operator[](const Bounds<int>& bounds)
         { return subImage(bounds); }
 
-        /**
-         *  @brief Wrap the full image onto a subset of the image and return that subset.
-         *
-         *  This is used to alias the data of a k-space image before doing the FFT to real space.
-         */
-        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy);
-
         //@{
         /**
          *  @brief Unchecked access
@@ -567,7 +575,7 @@ namespace galsim {
         {
             if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
                 throw ImageError("Attempt im1 = im2, but bounds not the same shape");
-            transform_pixel(*this, rhs, ReturnSecond<T,U>());
+            transform_pixel(*this, rhs, ReturnSecond<T>());
         }
     };
 
@@ -604,12 +612,24 @@ namespace galsim {
          *
          *  An exception is thrown if ncol or nrow <= 0
          */
-        ImageAlloc(int ncol, int nrow, T init_value = T(0));
+        ImageAlloc(int ncol, int nrow);
+
+        /**
+         *  @brief Create a new image with origin at (1,1), intialized with some init_value
+         *
+         *  An exception is thrown if ncol or nrow <= 0
+         */
+        ImageAlloc(int ncol, int nrow, T init_value);
+
+        /**
+         *  @brief Create a new image with the given bounding box
+         */
+        ImageAlloc(const Bounds<int>& bounds);
 
         /**
          *  @brief Create a new image with the given bounding box and initial value.
          */
-        ImageAlloc(const Bounds<int>& bounds, T init_value = T(0));
+        ImageAlloc(const Bounds<int>& bounds, T init_value);
 
         /**
          *  @brief Deep copy constructor.
@@ -695,7 +715,7 @@ namespace galsim {
         ImageView<T> view()
         {
             return ImageView<T>(this->_data, this->_owner, this->_step, this->_stride,
-                                this->_bounds);
+                                this->_bounds, this->_nElements);
         }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}
@@ -709,14 +729,6 @@ namespace galsim {
         ConstImageView<T> subImage(const Bounds<int>& bounds) const
         { return view().subImage(bounds); }
         //@}
-
-        /**
-         *  @brief Wrap the full image onto a subset of the image and return that subset.
-         *
-         *  This is used to alias the data of a k-space image before doing the FFT to real space.
-         */
-        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy)
-        { return view().wrap(bounds, hermx, hermy); }
 
         //@{
         /**
@@ -779,6 +791,49 @@ namespace galsim {
      */
     int goodFFTSize(int input);
 
+
+    /**
+     *  @brief Perform a 2D FFT from real space to k-space.
+     */
+    template <typename T>
+    void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+             bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Perform a 2D inverse FFT from k-space to real space.
+     */
+    template <typename T>
+    void irfft(const BaseImage<T>& in, ImageView<double> out,
+               bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
+     */
+    template <typename T>
+    void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+              bool inverse, bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Wrap the full image onto a subset of the image and return that subset.
+     *
+     *  This is used to alias the data of a k-space image before doing the FFT to real space.
+     */
+    template <typename T>
+    void wrapImage(ImageView<T> im, const Bounds<int>& bounds, bool hermx, bool hermy);
+
+    /**
+     *  @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
+     *
+     *  Note that if an element is zero, then this function quietly returns its inverse as zero.
+     */
+    template <typename T>
+    void invertImage(ImageView<T> im);
+
+
+
+
 } // namespace galsim
+
+#include "ImageArith.h"
 
 #endif

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,6 +25,14 @@
 #include "BinomFact.h"
 #include "Laguerre.h"
 #include "Solve.h"
+#include "math/Angle.h"
+
+#ifdef USE_TMV
+#define MatrixXT tmv::Matrix<T>
+#else
+using Eigen::Dynamic;
+#define MatrixXT Eigen::Matrix<T,Dynamic,Dynamic>
+#endif
 
 namespace galsim {
 
@@ -55,11 +63,11 @@ namespace galsim {
         return oss.str();
     }
 
-    void LVector::rotate(const Angle& theta)
+    void LVector::rotate(double theta)
     {
         take_ownership();
         double s, c;
-        theta.sincos(s,c);
+        math::sincos(theta, s, c);
         std::complex<double> z(c, -s);
         std::complex<double> imz(1., 0.);
         for (int m=1; m<=_order; m++) {
@@ -72,131 +80,6 @@ namespace galsim {
             }
         }
     }
-
-#if 0
-    // routines to retrieve and save complex elements of LTransform:
-    // ???? Check these ???
-    std::complex<double> LTransform::operator()(PQIndex pq1, PQIndex pq2) const
-    {
-        assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
-        int r1index=pq1.rIndex();
-        int r2index=pq2.rIndex();
-        int i1index=(pq1.isReal()? r1index: r1index+1);
-        int i2index=(pq2.isReal()? r2index: r2index+1);
-
-        double x = (*_m)(r1index,r2index) + pq1.iSign()*pq2.iSign()*(*_m)(i1index,i2index);
-        double y = pq1.iSign()*(*_m)(i1index,r2index) - pq2.iSign()*(*_m)(r1index,i2index);
-
-        std::complex<double> z(x,y);
-        if (pq2.isReal()) z *= 0.5;
-
-        return z;
-    }
-
-    void LTransform::set(
-        PQIndex pq1, PQIndex pq2, std::complex<double> Cpq1pq2, std::complex<double> Cqp1pq2)
-    {
-        assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
-
-        take_ownership();
-        const double RoundoffTolerance=1.e-15;
-        std::complex<double> Cpq1qp2;
-
-        if (pq2.needsConjugation()) {
-            pq2 = pq2.swapPQ();
-            std::complex<double> tmp=conj(Cqp1pq2);
-            Cqp1pq2 = conj(Cpq1pq2);
-            Cpq1pq2 = tmp;
-        }
-        if (pq1.needsConjugation()) {
-            pq1 = pq1.swapPQ();
-            std::complex<double> tmp=Cqp1pq2;
-            Cqp1pq2 = Cpq1pq2;
-            Cpq1pq2 = tmp;
-        }
-
-        int rIndex1 = pq1.rIndex();
-        int rIndex2 = pq2.rIndex();
-        int iIndex1 = rIndex1+1;
-        int iIndex2 = rIndex2+1;
-
-        if (pq1.isReal()) {
-            if (Cpq1pq2!=Cqp1pq2) {
-                FormatAndThrow<>()
-                    << "Invalid LTransform elements for p1=q1, " << Cpq1pq2
-                    << " != " << Cqp1pq2;
-            }
-            (*_m)(rIndex1,rIndex2) = Cpq1pq2.real() * (pq2.isReal()? 1. : 2.);
-            if (pq2.isReal()) {
-                if (std::abs(Cpq1pq2.imag()) > RoundoffTolerance) {
-                    FormatAndThrow<>()
-                        << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: "
-                        << Cpq1pq2;
-                }
-            } else {
-                (*_m)(rIndex1,iIndex2) = -2.*Cpq1pq2.imag();
-            }
-            return;
-        } else if (pq2.isReal()) {
-            // Here we know p1!=q1:
-            if (norm(Cpq1pq2-conj(Cqp1pq2))>RoundoffTolerance) {
-                FormatAndThrow<>()
-                    << "Inputs to LTransform.set are not conjugate for p2=q2: "
-                    << Cpq1pq2 << " vs " << Cqp1pq2 ;
-            }
-            (*_m)(rIndex1, rIndex2) = Cpq1pq2.real();
-            (*_m)(iIndex1, rIndex2) = Cpq1pq2.imag();
-        } else {
-            // Neither pq is real:
-            std::complex<double> z=Cpq1pq2 + Cqp1pq2;
-            (*_m)(rIndex1, rIndex2) = z.real();
-            (*_m)(rIndex1, iIndex2) = -z.imag();
-            z=Cpq1pq2 - Cqp1pq2;
-            (*_m)(iIndex1, rIndex2) = z.imag();
-            (*_m)(iIndex1, iIndex2) = z.real();
-        }
-    }
-
-    LVector LTransform::operator*(const LVector rhs) const
-    {
-        if (_orderIn != rhs.getOrder())
-            FormatAndThrow<>()
-                << "Order mismatch between LTransform [" << _orderIn
-                << "] and LVector [" << rhs.getOrder()
-                << "]";
-        boost::shared_ptr<tmv::Vector<double> > out(new tmv::Vector<double>(sizeOut()));
-        *out = (*_m) * rhs.rVector();
-        return LVector(_orderOut, out);
-    }
-
-    LTransform LTransform::operator*(const LTransform rhs) const
-    {
-        if (_orderIn != rhs.getOrderOut())
-            FormatAndThrow<>()
-                << "Order mismatch between LTransform [" << _orderIn
-                << "] and LTransform [" << rhs.getOrderOut()
-                << "]";
-        boost::shared_ptr<tmv::Matrix<double> > out(
-            new tmv::Matrix<double>(sizeOut(),rhs.sizeIn()));
-        *out = (*_m) * (*rhs._m);
-        return LTransform(_orderOut, rhs._orderIn, out);
-    }
-
-    LTransform& LTransform::operator*=(const LTransform rhs)
-    {
-        take_ownership();
-        if (_orderIn != rhs.getOrderOut())
-            FormatAndThrow<>()
-                << "Order mismatch between LTransform [" << _orderIn
-                << "] and LTransform [" << rhs.getOrderOut()
-                << "]";
-        (*_m) *= (*rhs._m);
-        _orderIn = rhs._orderOut;
-        return *this;
-    }
-#endif
 
     //----------------------------------------------------------------
     //----------------------------------------------------------------
@@ -257,72 +140,89 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<tmv::Matrix<double> > LVector::basis(
-        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+    shared_ptr<MatrixXd > LVector::basis(
+        const VectorXd& x, const VectorXd& y,
         int order, double sigma)
     {
         assert(x.size()==y.size());
-        boost::shared_ptr<tmv::Matrix<double> > psi(
-            new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
-        basis(x, y, psi->view(), order, sigma);
+        shared_ptr<MatrixXd > psi(new MatrixXd(x.size(), PQIndex::size(order)));
+        basis(x, y, *psi, order, sigma);
         return psi;
     }
 
+    // Forward declaration.  Implemented below.
+    template <typename T>
+    void CalculateBasis(
+        const VectorXd& x, const VectorXd& y, const VectorXd* invsig,
+        MatrixXT& psi,
+        int order, double sigma);
+
     void LVector::basis(
-        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-        tmv::MatrixView<double> psi, int order, double sigma)
+        const VectorXd& x, const VectorXd& y,
+        MatrixXd& psi, int order, double sigma)
     {
+#ifdef USE_TMV
         assert(y.size() == x.size() && psi.nrows() == x.size());
         assert(psi.ncols()==PQIndex::size(order));
-        mBasis(x, y, 0, psi, order, sigma);
+#else
+        assert(y.size() == x.size() && psi.rows() == x.size());
+        assert(psi.cols()==PQIndex::size(order));
+#endif
+        CalculateBasis(x, y, 0, psi, order, sigma);
     }
 
-    boost::shared_ptr<tmv::Matrix<double> > LVector::design(
-        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-        const tmv::ConstVectorView<double>& invsig, int order, double sigma)
+    shared_ptr<MatrixXd > LVector::design(
+        const VectorXd& x, const VectorXd& y,
+        const VectorXd& invsig, int order, double sigma)
     {
-        boost::shared_ptr<tmv::Matrix<double> > psi(
-            new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
-        design(x, y, invsig, psi->view(), order, sigma);
+        shared_ptr<MatrixXd > psi(new MatrixXd(x.size(), PQIndex::size(order)));
+        design(x, y, invsig, *psi, order, sigma);
         return psi;
     }
 
     void LVector::design(
-        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-        const tmv::ConstVectorView<double>& invsig,
-        tmv::MatrixView<double> psi, int order, double sigma)
+        const VectorXd& x, const VectorXd& y,
+        const VectorXd& invsig,
+        MatrixXd& psi, int order, double sigma)
     {
+#ifdef USE_TMV
         assert(y.size() == x.size() && psi.nrows() == x.size() && invsig.size() == x.size());
         assert(psi.ncols()==PQIndex::size(order));
-        mBasis(x, y, &invsig, psi, order, sigma);
+#else
+        assert(y.size() == x.size() && psi.rows() == x.size() && invsig.size() == x.size());
+        assert(psi.cols()==PQIndex::size(order));
+#endif
+        CalculateBasis(x, y, &invsig, psi, order, sigma);
     }
 
-    boost::shared_ptr<tmv::Matrix<std::complex<double> > > LVector::kBasis(
-        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
+    shared_ptr<MatrixXcd > LVector::kBasis(
+        const VectorXd& kx, const VectorXd& ky,
         int order, double sigma)
     {
         assert (ky.size() == kx.size());
-        const int ndof=PQIndex::size(order);
-        const int npts = kx.size();
-        boost::shared_ptr<tmv::Matrix<std::complex<double> > > psi_k(
-            new tmv::Matrix<std::complex<double> >(npts, ndof, 0.));
-        kBasis(kx,ky,psi_k->view(),order,sigma);
+        shared_ptr<MatrixXcd > psi_k(new MatrixXcd(kx.size(), PQIndex::size(order)));
+        kBasis(kx,ky,*psi_k,order,sigma);
         return psi_k;
     }
 
     void LVector::kBasis(
-        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
-        tmv::MatrixView<std::complex<double> > psi_k, int order, double sigma)
+        const VectorXd& kx, const VectorXd& ky,
+        MatrixXcd& psi_k, int order, double sigma)
     {
+#ifdef USE_TMV
         assert(ky.size() == kx.size() && psi_k.nrows() == kx.size());
         assert(psi_k.ncols()==PQIndex::size(order));
-        mBasis(kx, ky, 0, psi_k, order, sigma);
+#else
+        assert(ky.size() == kx.size() && psi_k.rows() == kx.size());
+        assert(psi_k.cols()==PQIndex::size(order));
+#endif
+        CalculateBasis(kx, ky, 0, psi_k, order, sigma);
     }
 
     // This helper class deals with the differences between the real and fourier calculations
-    // in mBasis.  First the real-space values:
+    // in CalculateBasis.  First the real-space values:
     template <typename T>
-    struct mBasisHelper
+    struct BasisHelper
     {
         static double Asign(int ) { return 1.; }
 
@@ -334,7 +234,7 @@ namespace galsim {
 
     // Now the fourier space version, marked by T being complex.
     template <typename T>
-    struct mBasisHelper<std::complex<T> >
+    struct BasisHelper<std::complex<T> >
     {
         // The "sign" of the eigenvectors are 1, -I, -1, I, and then repeat.
         // The input m4 should be m%4.
@@ -356,13 +256,16 @@ namespace galsim {
     };
 
     template <typename T>
-    void LVector::mBasis(
-        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-        const tmv::ConstVectorView<double>* invsig,
-        tmv::MatrixView<T> psi, int order, double sigma)
+    void CalculateBasis(
+        const VectorXd& x, const VectorXd& y, const VectorXd* invsig,
+        MatrixXT& psi, int order, double sigma)
     {
         assert (y.size()==x.size());
+#ifdef USE_TMV
         assert (psi.nrows()==x.size() && psi.ncols()==PQIndex::size(order));
+#else
+        assert (psi.rows()==x.size() && psi.cols()==PQIndex::size(order));
+#endif
 
         const int N=order;
         const int npts_full = x.size();
@@ -374,12 +277,14 @@ namespace galsim {
         const int BLOCKING_FACTOR=4096;
 
         const int max_npts = std::max(BLOCKING_FACTOR,npts_full);
-        tmv::DiagMatrix<double> Rsq_full(max_npts);
-        tmv::Matrix<double> A_full(max_npts,2);
-        tmv::Matrix<double> tmp_full(max_npts,2);
-        tmv::DiagMatrix<double> Lmq_full(max_npts);
-        tmv::DiagMatrix<double> Lmqm1_full(max_npts);
-        tmv::DiagMatrix<double> Lmqm2_full(max_npts);
+        VectorXd Rsq_full(max_npts);
+        MatrixXd A_full(max_npts,2);
+        MatrixXd tmp_full(max_npts,2);
+        VectorXd Lmq_full(max_npts);
+        VectorXd Lmqm1_full(max_npts);
+        VectorXd Lmqm2_full(max_npts);
+
+        psi.setZero();
 
         for (int ilo=0; ilo<npts_full; ilo+=BLOCKING_FACTOR) {
             const int ihi = std::min(npts_full, ilo + BLOCKING_FACTOR);
@@ -387,52 +292,98 @@ namespace galsim {
 
             // Cast arguments as diagonal matrices so we can access
             // vectorized element-by-element multiplication
-            tmv::ConstDiagMatrixView<double> X = DiagMatrixViewOf(x.subVector(ilo,ihi));
-            tmv::ConstDiagMatrixView<double> Y = DiagMatrixViewOf(y.subVector(ilo,ihi));
+#ifdef USE_TMV
+            tmv::ConstVectorView<double> X = x.subVector(ilo,ihi);
+            tmv::ConstVectorView<double> Y = y.subVector(ilo,ihi);
+#else
+            Eigen::VectorBlock<const VectorXd> X = x.segment(ilo,ihi-ilo);
+            Eigen::VectorBlock<const VectorXd> Y = y.segment(ilo,ihi-ilo);
+#endif
 
             // Get the appropriate portion of our temporary matrices.
-            tmv::DiagMatrixView<double> Rsq = Rsq_full.subDiagMatrix(0,npts);
+#ifdef USE_TMV
+            tmv::VectorView<double> Rsq = Rsq_full.subVector(0,npts);
             tmv::MatrixView<double> A = A_full.rowRange(0,npts);
             tmv::MatrixView<double> tmp = tmp_full.rowRange(0,npts);
+#else
+            Eigen::VectorBlock<VectorXd> Rsq = Rsq_full.segment(0,npts);
+            Eigen::Block<MatrixXd> A = A_full.topRows(npts);
+            Eigen::Block<MatrixXd> tmp = tmp_full.topRows(npts);
+#endif
 
             // We need rsq values twice, so store them here.
-            Rsq = X*X;
-            Rsq += Y*Y;
+#ifdef USE_TMV
+            Rsq = ElemProd(X,X);
+            Rsq += ElemProd(Y,Y);
+#else
+            Rsq.array() = X.array() * X.array();
+            Rsq.array() += Y.array() * Y.array();
+#endif
 
             // This matrix will keep track of real & imag parts
             // of prefactor * exp(-r^2/2) (x+iy)^m / sqrt(m!)
 
             // Build the Gaussian factor
+#ifdef USE_TMV
             for (int i=0; i<npts; i++) A.ref(i,0) = std::exp(-0.5*Rsq(i));
-            mBasisHelper<T>::applyPrefactor(A.col(0),sigma);
+#else
+            for (int i=0; i<npts; i++) A.coeffRef(i,0) = std::exp(-0.5*Rsq(i));
+#endif
+            BasisHelper<T>::applyPrefactor(A.col(0),sigma);
             A.col(1).setZero();
 
             // Put 1/sigma factor into every point if doing a design matrix:
+#ifdef USE_TMV
             if (invsig) A.col(0) *= tmv::DiagMatrixViewOf(invsig->subVector(ilo,ihi));
+#else
+            if (invsig) A.col(0).array() *= invsig->segment(ilo,ihi-ilo).array();
+#endif
 
             // Assign the m=0 column first:
-            psi.col( PQIndex(0,0).rIndex(), ilo,ihi ) = A.col(0);
+#ifdef USE_TMV
+            psi.col(PQIndex(0,0).rIndex(), ilo,ihi) = A.col(0);
+#else
+            psi.col(PQIndex(0,0).rIndex()).segment(ilo,ihi-ilo) = A.col(0).cast<T>();
+#endif
 
             // Then ascend m's at q=0:
             for (int m=1; m<=N; m++) {
                 int rIndex = PQIndex(m,0).rIndex();
                 // Multiply by (X+iY)/sqrt(m), including a factor 2 first time through
-                tmp = Y * A;
-                A = X * A;
+#ifdef USE_TMV
+                tmp = DiagMatrixViewOf(Y) * A;
+                A = DiagMatrixViewOf(X) * A;
+#else
+                tmp = Y.asDiagonal() * A;
+                A = X.asDiagonal() * A;
+#endif
                 A.col(0) += tmp.col(1);
                 A.col(1) -= tmp.col(0);
                 A *= m==1 ? 2. : 1./sqrtn(m);
 
-                psi.subMatrix(ilo,ihi,rIndex,rIndex+2) = mBasisHelper<T>::Asign(m%4) * A;
+#ifdef USE_TMV
+                psi.subMatrix(ilo,ihi,rIndex,rIndex+2) = BasisHelper<T>::Asign(m%4) * A;
+#else
+                psi.block(ilo,rIndex,ihi-ilo,2) = BasisHelper<T>::Asign(m%4) * A;
+#endif
             }
 
-            // Make three DiagMatrix to hold Lmq's during recurrence calculations
-            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmq(
-                new tmv::DiagMatrixView<double>(Lmq_full.subDiagMatrix(0,npts)));
-            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm1(
-                new tmv::DiagMatrixView<double>(Lmqm1_full.subDiagMatrix(0,npts)));
-            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm2(
-                new tmv::DiagMatrixView<double>(Lmqm2_full.subDiagMatrix(0,npts)));
+            // Make three Vectors to hold Lmq's during recurrence calculations
+#ifdef USE_TMV
+            shared_ptr<tmv::VectorView<double> > Lmq(
+                new tmv::VectorView<double>(Lmq_full.subVector(0,npts)));
+            shared_ptr<tmv::VectorView<double> > Lmqm1(
+                new tmv::VectorView<double>(Lmqm1_full.subVector(0,npts)));
+            shared_ptr<tmv::VectorView<double> > Lmqm2(
+                new tmv::VectorView<double>(Lmqm2_full.subVector(0,npts)));
+#else
+            shared_ptr<Eigen::VectorBlock<VectorXd> > Lmq(
+                new Eigen::VectorBlock<VectorXd>(Lmq_full.segment(0,npts)));
+            shared_ptr<Eigen::VectorBlock<VectorXd> > Lmqm1(
+                new Eigen::VectorBlock<VectorXd>(Lmqm1_full.segment(0,npts)));
+            shared_ptr<Eigen::VectorBlock<VectorXd> > Lmqm2(
+                new Eigen::VectorBlock<VectorXd>(Lmqm2_full.segment(0,npts)));
+#endif
 
             for (int m=0; m<=N; m++) {
                 PQIndex pq(m,0);
@@ -446,14 +397,31 @@ namespace galsim {
                     const int q = pq.getQ();
                     const int iQ = pq.rIndex();
 
+#ifdef USE_TMV
                     Lmqm1->setAllTo(1.); // This is Lm0.
-                    *Lmq = Rsq - (p+q-1.);
-                    *Lmq *= mBasisHelper<T>::Lsign(1.) / (sqrtn(p)*sqrtn(q));
+                    *Lmq = Rsq;
+                    Lmq->addToAll(-(p+q-1.));
+#else
+                    Lmqm1->setConstant(1.);
+                    Lmq->array()  = Rsq.array() - (p+q-1.);
+#endif
+                    *Lmq *= BasisHelper<T>::Lsign(1.) / (sqrtn(p)*sqrtn(q));
 
                     if (m==0) {
-                        psi.col(iQ,ilo,ihi) = (*Lmq) * psi.col(iQ0,ilo,ihi);
+#ifdef USE_TMV
+                        psi.col(iQ,ilo,ihi) = DiagMatrixViewOf(*Lmq) * psi.col(iQ0,ilo,ihi);
+#else
+                        psi.col(iQ).segment(ilo,ihi-ilo) = Lmq->asDiagonal() *
+                            psi.col(iQ0).segment(ilo,ihi-ilo);
+#endif
                     } else {
-                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
+#ifdef USE_TMV
+                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = DiagMatrixViewOf(*Lmq) *
+                            psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
+#else
+                        psi.block(ilo,iQ,ihi-ilo,2) = Lmq->asDiagonal() *
+                            psi.block(ilo,iQ0,ihi-ilo,2);
+#endif
                     }
                 }
 
@@ -471,20 +439,36 @@ namespace galsim {
                     Lmqm1.swap(Lmq);
 
                     double invsqrtpq = 1./sqrtn(p)/sqrtn(q);
-                    *Lmq = Rsq - (p+q-1.);
-                    *Lmq *= mBasisHelper<T>::Lsign(invsqrtpq) * *Lmqm1;
+#ifdef USE_TMV
+                    *Lmq = Rsq;
+                    Lmq->addToAll(-(p+q-1.));
+                    *Lmq = BasisHelper<T>::Lsign(invsqrtpq) * ElemProd(*Lmq, *Lmqm1);
+#else
+                    Lmq->array() = Rsq.array() - (p+q-1.);
+                    Lmq->array() *= BasisHelper<T>::Lsign(invsqrtpq) * Lmqm1->array();
+#endif
                     *Lmq -= (sqrtn(p-1)*sqrtn(q-1)*invsqrtpq) * (*Lmqm2);
 
                     if (m==0) {
-                        psi.col(iQ,ilo,ihi) = (*Lmq) * psi.col(iQ0,ilo,ihi);
+#ifdef USE_TMV
+                        psi.col(iQ,ilo,ihi) = DiagMatrixViewOf(*Lmq) * psi.col(iQ0,ilo,ihi);
+#else
+                        psi.col(iQ).segment(ilo,ihi-ilo) = Lmq->asDiagonal() *
+                            psi.col(iQ0).segment(ilo,ihi-ilo);
+#endif
                     } else {
-                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
+#ifdef USE_TMV
+                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = DiagMatrixViewOf(*Lmq) *
+                            psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
+#else
+                        psi.block(ilo,iQ,ihi-ilo,2) = Lmq->asDiagonal() *
+                            psi.block(ilo,iQ0,ihi-ilo,2);
+#endif
                     }
                 }
             }
         }
     }
-
 
     //---------------------------------------------------------------------------
     //---------------------------------------------------------------------------
@@ -501,7 +485,7 @@ namespace galsim {
 
     double LVector::apertureFlux(double R_, int maxP) const
     {
-        static boost::shared_ptr<tmv::Vector<double> > fp;
+        static shared_ptr<VectorXd > fp;
         static double R=-1.;
         static double psize=-1;
 
@@ -511,11 +495,11 @@ namespace galsim {
         if (maxP > getOrder()/2) maxP=getOrder()/2;
 
         if (!fp.get() || R_ != R || maxP>psize) {
-            fp.reset(new tmv::Vector<double>(maxP));
+            fp.reset(new VectorXd(maxP));
             psize = maxP;
             R = R_;
-            tmv::Vector<double> Lp(maxP+1);
-            tmv::Vector<double> Qp(maxP+1);
+            VectorXd Lp(maxP+1);
+            VectorXd Qp(maxP+1);
             double x = R*R;
             double efact = std::exp(-0.5*x);
             Lp[0] = Qp[0]=1.;
@@ -598,254 +582,6 @@ namespace galsim {
         os << std::setw(2) << getP()
             << "," << std::setw(2) << getQ() ;
     }
-
-#if 0
-    // Transformation generators - these return a view into static quantities:
-    const tmv::ConstMatrixView<double> LVector::Generator(
-        GType iparam, int orderOut, int orderIn)
-    {
-        static boost::shared_ptr<tmv::Matrix<double> > gmu;
-        static boost::shared_ptr<tmv::Matrix<double> > gx;
-        static boost::shared_ptr<tmv::Matrix<double> > gy;
-        static boost::shared_ptr<tmv::Matrix<double> > ge1;
-        static boost::shared_ptr<tmv::Matrix<double> > ge2;
-        static boost::shared_ptr<tmv::Matrix<double> > grot;
-
-        const int sizeIn = PQIndex::size(orderIn);
-        const int sizeOut = PQIndex::size(orderOut);
-
-        const int order = std::max(orderOut, orderIn);
-        if (iparam==iMu) {
-            if (!gmu.get() || gmu->nrows()<PQIndex::size(order)) {
-                LTransform lt(order, order);
-
-                for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
-                    int p=pq.getP();
-                    int q=pq.getQ();
-                    std::complex<double> zz(-1.,0.);
-                    if (pq.isReal()) lt.set(pq,pq,zz, zz);
-                    else lt.set(pq,pq,zz, 0.);
-                    PQIndex pqprime(p+1, q+1);
-                    if (!pqprime.pastOrder(order)) {
-                        zz = std::complex<double>(-sqrtn(p+1)*sqrtn(q+1), 0.);
-                        if (pq.isReal()) lt.set(pq,pqprime,zz, zz);
-                        else lt.set(pq,pqprime,zz, 0.);
-                    }
-                    if (q>0) {
-                        pqprime.setPQ(p-1,q-1);
-                        zz = std::complex<double>(sqrtn(p)*sqrtn(q), 0.);
-                        if (pq.isReal()) lt.set(pq,pqprime,zz, zz);
-                        else lt.set(pq,pqprime,zz, 0.);
-                    }
-                }
-                gmu.reset(new tmv::Matrix<double>(lt.rMatrix()));
-            }
-            return gmu->subMatrix(0, sizeOut, 0, sizeIn);
-        }
-        if (iparam==iX) {
-            if (!gx.get() || gx->nrows()<PQIndex::size(order)) {
-                LTransform lt(order, order);
-
-                for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
-                    int p=pq.getP();
-                    int q=pq.getQ();
-                    PQIndex pqprime(p+1, q);
-                    std::complex<double> zz(-0.5*sqrtn(p+1),0.);
-                    if (pq.isReal()) {
-                        if (!pqprime.pastOrder(order)) lt.set(pq,pqprime,zz, zz);
-                        if (p>0) {
-                            zz = std::complex<double>(0.5*sqrtn(p), 0.);
-                            pqprime.setPQ(p-1,q);
-                            lt.set(pq,pqprime,zz, zz);
-                        }
-                    } else {
-                        if (!pqprime.pastOrder(order)) {
-                            lt.set(pq,pqprime,zz, 0.);
-                            pqprime.setPQ(p, q+1);
-                            zz = std::complex<double>(-0.5*sqrtn(q+1),0.);
-                            if (pq.m()==1) {
-                                lt.set(pq,pqprime, zz, zz);
-                            } else {
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                        }
-                        pqprime.setPQ(p-1,q);
-                        zz = std::complex<double>(0.5*sqrtn(p), 0.);
-                        if (pq.m()==1) {
-                            lt.set(pq,pqprime, zz, zz);
-                        } else {
-                            lt.set(pq,pqprime, zz, 0.);
-                        }
-                        if (q>0) {
-                            pqprime.setPQ(p,q-1);
-                            zz = std::complex<double>(0.5*sqrtn(q), 0.);
-                            lt.set(pq,pqprime, zz, 0.);
-                        }
-                    }
-                }
-                gx.reset(new tmv::Matrix<double>(lt.rMatrix()));
-            }
-            return gx->subMatrix(0, sizeOut, 0, sizeIn);
-        }
-
-        if (iparam==iY) {
-            if (!gy.get() || gy->nrows()<PQIndex::size(order)) {
-                LTransform lt(order, order);
-
-                for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
-                    int p=pq.getP();
-                    int q=pq.getQ();
-                    PQIndex pqprime(p+1, q);
-                    std::complex<double> zz(0.,-0.5*sqrtn(p+1));
-                    if (pq.isReal()) {
-                        if (!pqprime.pastOrder(order)) lt.set(pq,pqprime,zz, zz);
-                        if (p>0) {
-                            zz = std::complex<double>(0.,0.5*sqrtn(q));
-                            pqprime.setPQ(p,q-1);
-                            lt.set(pq,pqprime,zz, zz);
-                        }
-                    } else {
-                        if (!pqprime.pastOrder(order)) {
-                            lt.set(pq,pqprime,zz, 0.);
-                            pqprime.setPQ(p, q+1);
-                            zz = std::complex<double>(0.,0.5*sqrtn(q+1));
-                            if (pq.m()==1) {
-                                lt.set(pq,pqprime, zz, conj(zz));
-                            } else {
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                        }
-                        pqprime.setPQ(p-1,q);
-                        zz = std::complex<double>(0.,-0.5*sqrtn(p));
-                        if (pq.m()==1) {
-                            lt.set(pq,pqprime, zz, conj(zz));
-                        } else {
-                            lt.set(pq,pqprime, zz, 0.);
-                        }
-                        if (q>0) {
-                            pqprime.setPQ(p,q-1);
-                            zz = std::complex<double>(0.,0.5*sqrtn(q));
-                            lt.set(pq,pqprime, zz, 0.);
-                        }
-                    }
-                }
-                gy.reset(new tmv::Matrix<double>(lt.rMatrix()));
-            }
-            return gy->subMatrix(0, sizeOut, 0, sizeIn);
-        }
-
-        if (iparam==iE1) {
-            if (!ge1.get() || ge1->nrows()<PQIndex::size(order)) {
-                LTransform lt(order, order);
-
-                for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
-                    int p=pq.getP();
-                    int q=pq.getQ();
-                    PQIndex pqprime(p+2, q);
-                    std::complex<double> zz(-0.25*sqrtn(p+1)*sqrtn(p+2),0.);
-                    if (pq.isReal()) {
-                        if (!pqprime.pastOrder(order)) lt.set(pq,pqprime,zz, zz);
-                        if (p>1) {
-                            zz = std::complex<double>(0.25*sqrtn(p)*sqrtn(p-1),0.);
-                            pqprime.setPQ(p-2,q);
-                            lt.set(pq,pqprime,zz, zz);
-                        }
-                    } else {
-                        if (!pqprime.pastOrder(order)) {
-                            lt.set(pq,pqprime,zz, 0.);
-                            pqprime.setPQ(p, q+2);
-                            zz = std::complex<double>(-0.25*sqrtn(q+1)*sqrtn(q+2),0.);
-                            if (pq.m()==2) {
-                                lt.set(pq,pqprime, zz, zz);
-                            } else {
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                        }
-                        if (p>1) {
-                            pqprime.setPQ(p-2,q);
-                            zz = std::complex<double>(0.25*sqrtn(p)*sqrtn(p-1),0.);
-                            if (pq.m()==2) {
-                                lt.set(pq,pqprime, zz, zz);
-                            } else {
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                            if (q>1) {
-                                pqprime.setPQ(p,q-2);
-                                zz = std::complex<double>(0.25*sqrtn(q)*sqrtn(q-1),0.);
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                        }
-                    }
-                }
-                ge1.reset(new tmv::Matrix<double>(lt.rMatrix()));
-            }
-            return ge1->subMatrix(0, sizeOut, 0, sizeIn);
-        }
-
-        if (iparam==iE2) {
-            if (!ge2.get() || ge2->nrows()<PQIndex::size(order)) {
-                LTransform lt(order, order);
-
-                for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
-                    int p=pq.getP();
-                    int q=pq.getQ();
-                    PQIndex pqprime(p+2, q);
-                    std::complex<double> zz(0., -0.25*sqrtn(p+1)*sqrtn(p+2));
-                    if (pq.isReal()) {
-                        if (!pqprime.pastOrder(order)) lt.set(pq,pqprime,zz, zz);
-                        if (p>1) {
-                            zz = std::complex<double>(0.,-0.25*sqrtn(p)*sqrtn(p-1));
-                            pqprime.setPQ(p-2,q);
-                            lt.set(pq,pqprime,zz, zz);
-                        }
-                    } else {
-                        if (!pqprime.pastOrder(order)) {
-                            lt.set(pq,pqprime,zz, 0.);
-                            pqprime.setPQ(p, q+2);
-                            zz = std::complex<double>(0.,0.25*sqrtn(q+1)*sqrtn(q+2));
-                            if (pq.m()==2) {
-                                lt.set(pq,pqprime, zz, conj(zz));
-                            } else {
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                        }
-                        if (p>1) {
-                            pqprime.setPQ(p-2,q);
-                            zz = std::complex<double>(0.,-0.25*sqrtn(p)*sqrtn(p-1));
-                            if (pq.m()==2) {
-                                lt.set(pq,pqprime, zz, conj(zz));
-                            } else {
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                            if (q>1) {
-                                pqprime.setPQ(p,q-2);
-                                zz = std::complex<double>(0.,0.25*sqrtn(q)*sqrtn(q-1));
-                                lt.set(pq,pqprime, zz, 0.);
-                            }
-                        }
-                    }
-                }
-                ge2.reset(new tmv::Matrix<double>(lt.rMatrix()));
-            }
-            return ge2->subMatrix(0, sizeOut, 0, sizeIn);
-        }
-
-        if (iparam==iRot) {
-            // Rotation is diagonal - could use a DiagMatrix perhaps
-            if (!grot.get() || grot->nrows()<PQIndex::size(order)) {
-                LTransform lt(order, order);
-                for (PQIndex pq(0,0); !pq.pastOrder(order); pq.nextDistinct()) {
-                    int m = pq.m();
-                    if (m>0) lt.set(pq,pq, std::complex<double>(0.,-m), 0.);
-                }
-                grot.reset(new tmv::Matrix<double>(lt.rMatrix()));
-            }
-            return grot->subMatrix(0, sizeOut, 0, sizeIn);
-        } else {
-            throw std::runtime_error("Unknown parameter for LVector::Generator()");
-        }
-    }
-#endif
 
     // Function to solve for radius enclosing a specified flux.
     // Return negative radius if no root is apparent.

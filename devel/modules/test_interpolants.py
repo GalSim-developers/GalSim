@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -242,8 +242,8 @@ def print_results(f, g1_list, g2_list, sigma_list, test_answer, first_index=0):
         expected_shears = [test_shear+galsim.Shear(g1=tg[0], g2=tg[1])
                                 if (tg[0]!=-10 and tg[1]!=-10) else -10 
                                 for tg in zip(g1_list,g2_list)]
-        expected_g1 = [e.getG1() if isinstance(e,galsim.Shear) else -10 for e in expected_shears]
-        expected_g2 = [e.getG2() if isinstance(e,galsim.Shear) else -10 for e in expected_shears]
+        expected_g1 = [e.g1 if isinstance(e,galsim.Shear) else -10 for e in expected_shears]
+        expected_g2 = [e.g2 if isinstance(e,galsim.Shear) else -10 for e in expected_shears]
         expected_size = numpy.sqrt(test_answer.magnification)*numpy.array(sigma_list)
     elif test_answer.angle!=0:
         # If there's an applied rotation, rotate the truth shears as well

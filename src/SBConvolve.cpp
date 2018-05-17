@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,7 +26,7 @@
 namespace galsim {
 
     SBConvolve::SBConvolve(const std::list<SBProfile>& plist, bool real_space,
-                           const GSParamsPtr& gsparams) :
+                           const GSParams& gsparams) :
         SBProfile(new SBConvolveImpl(plist,real_space,gsparams)) {}
 
     SBConvolve::SBConvolve(const SBConvolve& rhs) : SBProfile(rhs) {}
@@ -78,14 +78,13 @@ namespace galsim {
         oss << "], ";
         if (_real_space) oss << "True, ";
         else oss << "False, ";
-        oss << "galsim.GSParams("<<*gsparams<<"))";
+        oss << "galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& plist, bool real_space,
-                                               const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(plist.front())->gsparams),
-        _real_space(real_space),
+                                               const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _real_space(real_space),
         _x0(0.), _y0(0.), _isStillAxisymmetric(true), _fluxProduct(1.),
         _maxk(0.), _stepk(0.)
     {
@@ -119,7 +118,7 @@ namespace galsim {
             // If sbp is an SBAutoCorrelate, put its item and 180 degree rotated verion here:
             const SBProfile& obj = sbc3->getAdaptee();
             add(obj);
-            SBProfile temp = obj.rotate(180. * degrees);
+            SBProfile temp = obj.transform(-1., 0., 0., -1.);
             add(temp);
         } else {
             if (!sbp.isAnalyticK() && !_real_space)
@@ -127,11 +126,11 @@ namespace galsim {
             if (!sbp.isAnalyticX() && _real_space)
                 throw SBError("Real-space SBConvolve requires members to be analytic in x");
             _plist.push_back(sbp);
+            _x0 += sbp.centroid().x;
+            _y0 += sbp.centroid().y;
+            _isStillAxisymmetric = _isStillAxisymmetric && sbp.isAxisymmetric();
+            _fluxProduct *= sbp.getFlux();
         }
-        _x0 += sbp.centroid().x;
-        _y0 += sbp.centroid().y;
-        _isStillAxisymmetric = _isStillAxisymmetric && sbp.isAxisymmetric();
-        _fluxProduct *= sbp.getFlux();
     }
 
     double SBConvolve::SBConvolveImpl::maxK() const
@@ -193,7 +192,8 @@ namespace galsim {
         return kv;
     }
 
-    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -204,7 +204,7 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
         if (++pptr != _plist.end()) {
-            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,izero,ky0,dky,jzero);
                 im *= im2;
@@ -212,7 +212,8 @@ namespace galsim {
         }
     }
 
-    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -223,7 +224,7 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
         if (++pptr != _plist.end()) {
-            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
                 im *= im2;
@@ -264,23 +265,26 @@ namespace galsim {
         return nResult;
     }
 
-    boost::shared_ptr<PhotonArray> SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate u) const
+    void SBConvolve::SBConvolveImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Convolve shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         std::list<SBProfile>::const_iterator pptr = _plist.begin();
         if (pptr==_plist.end())
             throw SBError("Cannot shoot() for empty SBConvolve");
-        boost::shared_ptr<PhotonArray> result = pptr->shoot(N, u);
+        pptr->shoot(photons, ud);
         // It may be necessary to shuffle when convolving because we do
         // do not have a gaurantee that the convolvee's photons are
         // uncorrelated, e.g. they might both have their negative ones
         // at the end.
         // However, this decision is now made by the convolve method.
-        for (++pptr; pptr != _plist.end(); ++pptr)
-            result->convolve(*pptr->shoot(N, u), u);
-        dbg<<"Convolve Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            PhotonArray temp(N);
+            pptr->shoot(temp, ud);
+            photons.convolve(temp, ud);
+        }
+        dbg<<"Convolve Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     //
@@ -288,7 +292,7 @@ namespace galsim {
     //
 
     SBAutoConvolve::SBAutoConvolve(const SBProfile& s, bool real_space,
-                                   const GSParamsPtr& gsparams) :
+                                   const GSParams& gsparams) :
         SBProfile(new SBAutoConvolveImpl(s, real_space, gsparams)) {}
     SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
     SBAutoConvolve::~SBAutoConvolve() {}
@@ -318,14 +322,13 @@ namespace galsim {
         oss << "galsim._galsim.SBAutoConvolve(" << _adaptee.serialize() << ", ";
         if (_real_space) oss << "True";
         else oss << "False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s, bool real_space,
-                                                           const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
-        _adaptee(s), _real_space(real_space) {}
+                                                           const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(s), _real_space(real_space) {}
 
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
     { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
@@ -334,7 +337,8 @@ namespace galsim {
     struct Square
     { T operator()(T x) { return x*x; } };
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                         double kx0, double dkx, int izero,
                                                         double ky0, double dky, int jzero) const
     {
@@ -342,10 +346,11 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
-        transform_pixel(im, Square<std::complex<double> >());
+        transform_pixel(im, Square<std::complex<T> >());
     }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                         double kx0, double dkx, double dkxy,
                                                         double ky0, double dky, double dkyx) const
     {
@@ -353,7 +358,7 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
-        transform_pixel(im, Square<std::complex<double> >());
+        transform_pixel(im, Square<std::complex<T> >());
     }
 
     double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const
@@ -370,15 +375,16 @@ namespace galsim {
         return 2.*p*n;
     }
 
-    boost::shared_ptr<PhotonArray> SBAutoConvolve::SBAutoConvolveImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBAutoConvolve::SBAutoConvolveImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"AutoConvolve shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
-        result->convolve(*_adaptee.shoot(N, u), u);
-        dbg<<"AutoConvolve Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _adaptee.shoot(photons, ud);
+        PhotonArray temp(N);
+        _adaptee.shoot(temp, ud);
+        photons.convolve(temp, ud);
+        dbg<<"AutoConvolve Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 
@@ -387,7 +393,7 @@ namespace galsim {
     //
 
     SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s, bool real_space,
-                                     const GSParamsPtr& gsparams) :
+                                     const GSParams& gsparams) :
         SBProfile(new SBAutoCorrelateImpl(s, real_space, gsparams)) {}
     SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
     SBAutoCorrelate::~SBAutoCorrelate() {}
@@ -416,19 +422,17 @@ namespace galsim {
         oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.serialize() << ", ";
         if (_real_space) oss << "True";
         else oss << "False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(
-        const SBProfile& s, bool real_space,
-        const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
-        _adaptee(s), _real_space(real_space) {}
+        const SBProfile& s, bool real_space, const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(s), _real_space(real_space) {}
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     {
-        SBProfile temp = _adaptee.rotate(180. * degrees);
+        SBProfile temp = _adaptee.transform(-1., 0., 0., -1.);
         return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
     }
 
@@ -436,7 +440,8 @@ namespace galsim {
     struct AbsSquare
     { T operator()(T x) { return std::norm(x); } };
 
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<T> > im,
                                                           double kx0, double dkx, int izero,
                                                           double ky0, double dky, int jzero) const
     {
@@ -444,10 +449,11 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
-        transform_pixel(im, AbsSquare<std::complex<double> >());
+        transform_pixel(im, AbsSquare<std::complex<T> >());
     }
 
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<T> > im,
                                                           double kx0, double dkx, double dkxy,
                                                           double ky0, double dky, double dkyx) const
     {
@@ -455,7 +461,7 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
-        transform_pixel(im, AbsSquare<std::complex<double> >());
+        transform_pixel(im, AbsSquare<std::complex<T> >());
     }
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const
@@ -472,21 +478,18 @@ namespace galsim {
         return 2.*p*n;
     }
 
-    boost::shared_ptr<PhotonArray> SBAutoCorrelate::SBAutoCorrelateImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBAutoCorrelate::SBAutoCorrelateImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"AutoCorrelate shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
-        boost::shared_ptr<PhotonArray> result2 = _adaptee.shoot(N, u);
+        _adaptee.shoot(photons, ud);
+        PhotonArray temp(N);
+        _adaptee.shoot(temp, ud);
         // Flip sign of (x,y) in one of the results
-        for (size_t i=0; i<result2->size(); i++) {
-            Position<double> negxy = -Position<double>(result2->getX(i), result2->getY(i));
-            result2->setPhoton(i, negxy.x, negxy.y, result2->getFlux(i));
-        }
-        result->convolve(*result2, u);
-        dbg<<"AutoCorrelate Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        temp.scaleXY(-1.);
+        photons.convolve(temp, ud);
+        dbg<<"AutoCorrelate Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 }

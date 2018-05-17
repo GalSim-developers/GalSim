@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -43,6 +43,8 @@ namespace galsim {
 
     }
 
+    double SpergelCalculateHLR(double nu);
+
     /**
      * @brief Spergel Surface Brightness Profile.
      *
@@ -59,25 +61,17 @@ namespace galsim {
     class SBSpergel : public SBProfile
     {
     public:
-        enum  RadiusType
-        {
-            HALF_LIGHT_RADIUS,
-            SCALE_RADIUS
-        };
         /**
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in
          * SBSersic.
          *
          * @param[in] nu       index parameter setting the logarithmic slope of the profile.
-         * @param[in] size     Size specification.
-         * @param[in] rType    Kind of size being specified (HALF_LIGHT_RADIUS or
-         *                     SCALE_RADIUS).
+         * @param[in] scale_radius  scale radius
          * @param[in] flux     flux.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBSpergel(double nu, double size, RadiusType rType, double flux,
-                  const GSParamsPtr& gsparams);
+        SBSpergel(double nu, double scale_radius, double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBSpergel(const SBSpergel& rhs);
@@ -91,14 +85,11 @@ namespace galsim {
         /// @brief Returns the scale radius of the Spergel profile.
         double getScaleRadius() const;
 
-        /// @brief Returns the half light radius of the Spergel profile.
-        double getHalfLightRadius() const;
-
         /// @brief Return integrated flux of circular profile.
-        double calculateIntegratedFlux(const double& r) const;
+        double calculateIntegratedFlux(double r) const;
 
         /// @brief Return radius enclosing flux f
-        double calculateFluxRadius(const double& f) const;
+        double calculateFluxRadius(double f) const;
 
     protected:
 

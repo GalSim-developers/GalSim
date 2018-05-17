@@ -17,12 +17,16 @@
 #ifndef BOOST_RANDOM_EXPONENTIAL_DISTRIBUTION_HPP
 #define BOOST_RANDOM_EXPONENTIAL_DISTRIBUTION_HPP
 
-#include "galsim/boost1_48_0/config/no_tr1/cmath.hpp"
 #include <iosfwd>
+#ifdef USE_BOOST
+#include <boost/config/no_tr1/cmath.hpp>
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
-#include "galsim/boost1_48_0/random/detail/config.hpp"
-#include "galsim/boost1_48_0/random/detail/operators.hpp"
+#include <boost/random/detail/config.hpp>
+#include <boost/random/detail/operators.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
+#endif
 #include "galsim/boost1_48_0/random/uniform_01.hpp"
 
 namespace boost {
@@ -53,11 +57,16 @@ public:
          * Requires: lambda > 0
          */
         param_type(RealType lambda_arg = RealType(1.0))
-          : _lambda(lambda_arg) { BOOST_ASSERT(_lambda > RealType(0)); }
+          : _lambda(lambda_arg) { 
+#ifdef USE_BOOST
+              BOOST_ASSERT(_lambda > RealType(0));
+#endif
+          }
 
         /** Returns the lambda parameter of the distribution. */
         RealType lambda() const { return _lambda; }
 
+#ifdef USE_BOOST
         /** Writes the parameters to a @c std::ostream. */
         BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, param_type, parm)
         {
@@ -78,6 +87,7 @@ public:
 
         /** Returns true if the two sets of parameters are different. */
         BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(param_type)
+#endif
 
     private:
         RealType _lambda;
@@ -89,7 +99,11 @@ public:
      * Requires: lambda > 0
      */
     explicit exponential_distribution(RealType lambda_arg = RealType(1.0))
-      : _lambda(lambda_arg) { BOOST_ASSERT(_lambda > RealType(0)); }
+      : _lambda(lambda_arg) { 
+#ifdef USE_BOOST
+          BOOST_ASSERT(_lambda > RealType(0));
+#endif
+      }
 
     /**
      * Constructs an exponential_distribution from its parameters
@@ -142,6 +156,7 @@ public:
         return exponential_distribution(parm)(eng);
     }
 
+#ifdef USE_BOOST
     /** Writes the distribution to a std::ostream. */
     BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, exponential_distribution, ed)
     {
@@ -168,6 +183,7 @@ public:
      * sequences of values given equal generators.
      */
     BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(exponential_distribution)
+#endif
 
 private:
     result_type _lambda;

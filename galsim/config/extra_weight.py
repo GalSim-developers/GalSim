@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -56,7 +56,7 @@ class WeightBuilder(ExtraOutputBuilder):
             # If we have been accumulating the variance on the stamps, build the total from them.
             for obj_num in obj_nums:
                 stamp = self.scratch[obj_num]
-                b = stamp.bounds & image.getBounds()
+                b = stamp.bounds & image.bounds
                 if b.isDefined(): # pragma: no branch
                     # This next line is equivalent to:
                     #    image[b] += stamp[b]

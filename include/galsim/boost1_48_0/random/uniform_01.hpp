@@ -17,13 +17,19 @@
 #define BOOST_RANDOM_UNIFORM_01_HPP
 
 #include <iostream>
+#ifdef USE_BOOST
 #include <boost/config.hpp>
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
-#include "galsim/boost1_48_0/random/detail/config.hpp"
+#include <boost/random/detail/config.hpp>
+#else
+#include "galsim/boost1_48_0/config/suffix.hpp"
+#endif
 #include "galsim/boost1_48_0/random/detail/ptr_helper.hpp"
 
-#include "galsim/boost1_48_0/random/detail/disable_warnings.hpp"
+#ifdef USE_BOOST
+#include <boost/random/detail/disable_warnings.hpp>
+#endif
 
 namespace boost {
 namespace random {
@@ -128,8 +134,10 @@ public:
 
   BOOST_STATIC_CONSTANT(bool, has_fixed_range = false);
 
+#ifdef USE_BOOST
 #if !defined(BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS) && !(defined(BOOST_MSVC) && BOOST_MSVC <= 1300)
   BOOST_STATIC_ASSERT(!std::numeric_limits<RealType>::is_integer);
+#endif
 #endif
 
   explicit backward_compatible_uniform_01(typename traits::rvalue_type rng)
@@ -272,6 +280,8 @@ using random::uniform_01;
 
 } // namespace boost
 
-#include "galsim/boost1_48_0/random/detail/enable_warnings.hpp"
+#ifdef USE_BOOST
+#include <boost/random/detail/enable_warnings.hpp>
+#endif
 
 #endif // BOOST_RANDOM_UNIFORM_01_HPP

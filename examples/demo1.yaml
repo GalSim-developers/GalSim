@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,15 +28,27 @@
 # writing the corresponding python code.
 #
 # The executable that reads these YAML files is called galsim, which should be installed
-# in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either
-# /usr/local or whatever other PREFIX you set when running scons).  So to run this config
-# file, you should be able to type simply:
+# by either `pip install galsim` or `python setup.py install`.  If you used the latter,
+# the output should end with a line something along the lines of:
+#
+#     scripts installed into  /usr/local/bin
+#
+# telling you which directory they were installed in.  If that directory is not in your
+# path, then there should also be a message telling you to add it to your $PATH
+# environment variable.  If you used `pip install galsim --user`, then it was probably
+# installed into a directory called .local/bin in your home directory.  You can have
+# pip tell you where it is installing things by adding the `-v` option.
+#
+# In any case, you can confirm that `galsim` is in your path by typing
+#
+#     which galsim
+#
+# which should show you which executable will be used.  (If nothing shows up, then `galsim`
+# is not in your path.)
+#
+# Then to run this config file, you should be able to type simply:
 #
 #     galsim demo1.yaml
-#
-# If you haven't run `scons install` for whatever reason, you can instead write:
-#
-#     ../bin/galsim demo1.yaml
 #
 # If you don't have PyYAML installed, you can use JSON files instead.  The directory json has
 # JSON configuration files that are exactly equivalent to these YAML files.  The YAML format

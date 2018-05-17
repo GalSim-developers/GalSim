@@ -1,0 +1,15 @@
+# The requirements packages that can be installed with
+#    conda install -y -c conda-forge --file conda_requirements.txt
+setuptools>=38
+numpy>=1.13
+future>=0.15
+astropy>=2.0
+pybind11>=2.2
+pip>=9.0
+gcc>=4.8
+fftw>=3.3
+eigen>=3.3
+
+# Not technically required, but useful.
+pyyaml>=3.12
+pandas>=0.20

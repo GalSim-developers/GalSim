@@ -1,0 +1,17 @@
+Craig Lage 18-Apr-18
+
+If you want to run these flat correlations, you need to do the following:
+
+(1) Run ../treering_flat_csl_18apr18.py.  this will generate 10 flats each with 5 different intensities.
+(2) Then run Flat_Correlations_18Apr18.py 5 times for each intensity:
+
+Flat_Correlations_18Apr18.py 1
+Flat_Correlations_18Apr18.py 2
+Flat_Correlations_18Apr18.py 3
+etc.
+
+(3) Then run Plot_Correlations_Varying_Flux_Errors_18Apr18.py
+
+This will generate the plots.  It isn't really necessary to split it up like this for small amounts of data, but I did this because calculating the correlations if you have thousands of flats takes hours, so I wrote one script to calculate the correlations and save the results to a file and second script to plot things.
+
+As always, comments would be appreciated.

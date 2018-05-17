@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -37,7 +37,7 @@ New features introduced in this demo:
 - cat = galsim.Catalog(file_name, dir)
 - obj = galsim.Moffat(beta, fwhm, trunc)
 - obj = galsim.DeVaucouleurs(flux, half_light_radius)
-- obj = galsim.RandomWalk(npoints, half_light_radius, flux=)
+- obj = galsim.RandomWalk(npoints, half_light_radius, flux)
 - obj = galsim.Add([list of objects])
 - obj = obj.shift(dx,dy)
 - galsim.fits.writeMulti([list of images], file_name)

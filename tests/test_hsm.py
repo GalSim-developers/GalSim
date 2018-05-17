@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,14 +30,9 @@ import sys
 import numpy as np
 import math
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # define a range of input parameters for the Gaussians that we are testing
 gaussian_sig_values = [0.5, 1.0, 2.0]
@@ -139,8 +134,30 @@ def test_moments_basic():
                 np.testing.assert_almost_equal(result.observed_shape.e2,
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
+
+                # test for moments with a circular weight function
+                result_round = gal_image.FindAdaptiveMom(round_moments=True)
+
+                # The ellipticities calculated here are we expect when integrating an
+                # elliptical Gaussian light profile with a round Gaussian weight function
+                # with the same sigma.
+                q = np.exp(-2.*math.atanh(total_shear))
+                theta = 0.5*math.atan2(g2, g1)
+                e_round = (1 - q**2)/(1 + q**2 + 2*q)
+                e1_round = e_round*math.cos(2*theta)
+                e2_round = e_round*math.sin(2*theta)
+
+                np.testing.assert_almost_equal(np.fabs(result_round.moments_sigma-sig/pixel_scale), 0.0,
+                                               err_msg = "- incorrect round sigma", decimal = decimal)
+                np.testing.assert_almost_equal(result_round.observed_shape.e1,
+                                               e1_round, err_msg = "- incorrect round e1",
+                                               decimal = decimal_shape)
+                np.testing.assert_almost_equal(result_round.observed_shape.e2,
+                                               e2_round, err_msg = "- incorrect round e2",
+                                               decimal = decimal_shape)
+
                 # if this is the first time through this loop, just make sure it runs and gives the
-                # same result for ImageView and ConstImageViews:
+                # same result whether const or not.
                 if first_test:
                     result = gal_image.view().FindAdaptiveMom()
                     first_test=False
@@ -158,14 +175,14 @@ def test_moments_basic():
                     result = gal_image.view(make_const=True).FindAdaptiveMom()
                     np.testing.assert_almost_equal(
                         np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
-                        err_msg = "- incorrect dsigma (ConstImageView)", decimal = decimal)
+                        err_msg = "- incorrect dsigma (make_const=True)", decimal = decimal)
                     np.testing.assert_almost_equal(
                         result.observed_shape.e1,
-                        distortion_1, err_msg = "- incorrect e1 (ConstImageView)",
+                        distortion_1, err_msg = "- incorrect e1 (make_const=True)",
                         decimal = decimal_shape)
                     np.testing.assert_almost_equal(
                         result.observed_shape.e2,
-                        distortion_2, err_msg = "- incorrect e2 (ConstImageView)",
+                        distortion_2, err_msg = "- incorrect e2 (make_const=True)",
                         decimal = decimal_shape)
 
 
@@ -284,33 +301,24 @@ def test_masks():
     # make some screwy weight and badpix images that should cause issues, and check that the
     # exception is thrown
     good_weight_im = galsim.ImageI(imsize, imsize, init_value=1)
-    try:
-        ## different size from image
-        weight_im = galsim.ImageI(imsize, 2*imsize)
-        np.testing.assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
-        np.testing.assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
-        badpix_im = galsim.ImageI(imsize, 2*imsize)
-        np.testing.assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, badpix_im)
-        np.testing.assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, good_weight_im,
-                                 badpix_im)
-        ## weird values
-        weight_im = galsim.ImageI(imsize, imsize, init_value = -3)
-        np.testing.assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
-        np.testing.assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
-        ## excludes all pixels
-        weight_im = galsim.ImageI(imsize, imsize)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, weight_im)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, weight_im)
-        badpix_im = galsim.ImageI(imsize, imsize, init_value = -1)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, good_weight_im,
-                                 badpix_im)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, good_weight_im,
-                                 badpix_im)
-
-    except ImportError:
-        # assert_raises requires nose, which we don't want to force people to install.
-        # So if they are running this without nose, we just skip these tests.
-        pass
+    ## different size from image
+    weight_im = galsim.ImageI(imsize, 2*imsize)
+    assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
+    assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
+    badpix_im = galsim.ImageI(imsize, 2*imsize)
+    assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, badpix_im)
+    assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, good_weight_im, badpix_im)
+    ## weird values
+    weight_im = galsim.ImageI(imsize, imsize, init_value = -3)
+    assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
+    assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
+    ## excludes all pixels
+    weight_im = galsim.ImageI(imsize, imsize)
+    assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, weight_im)
+    assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, weight_im)
+    badpix_im = galsim.ImageI(imsize, imsize, init_value = -1)
+    assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, good_weight_im, badpix_im)
+    assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, good_weight_im, badpix_im)
 
     # check moments, shear without mask
     resm = im.FindAdaptiveMom()
@@ -553,18 +561,14 @@ def test_hsmparams():
                                    failed_moments=99.))
     do_pickle(res)
     do_pickle(res2)
-    do_pickle(galsim._galsim.CppShapeData())
 
-    try:
-        # Then check failure modes: force it to fail by changing HSMParams.
-        new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)
-        new_params_size = galsim.hsm.HSMParams(max_amoment = 0.3*res.moments_sigma**2)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, tot_gal_image,
-                                 hsmparams=new_params_niter)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
-                                 tot_psf_image, hsmparams=new_params_size)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Then check failure modes: force it to fail by changing HSMParams.
+    new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)
+    new_params_size = galsim.hsm.HSMParams(max_amoment = 0.3*res.moments_sigma**2)
+    assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, tot_gal_image,
+                  hsmparams=new_params_niter)
+    assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+                  hsmparams=new_params_size)
 
 
 @timer
@@ -596,8 +600,10 @@ def test_hsmparams_nodefault():
     g = galsim.Gaussian(fwhm=20.)
     g = g.shear(g1=0.5)
     obj = galsim.Convolve(g, p)
-    im = obj.drawImage(scale=1., method='no_pixel')
-    psf_im = p.drawImage(scale=1., method='no_pixel')
+    # HSM allows a slop of 1.e-8 on nsig_rg, which means that default float32 images don't
+    # actually end up with different result when using nsig_rg=0. rather than 3.
+    im = obj.drawImage(scale=1., method='no_pixel', dtype=float)
+    psf_im = p.drawImage(scale=1., method='no_pixel', dtype=float)
     test_t1 = time.time()
     g_res = galsim.hsm.EstimateShear(im, psf_im)
     test_t2 = time.time()
@@ -622,27 +628,22 @@ def test_hsmparams_nodefault():
     assert(res.moments_amp > res2.moments_amp),'Amplitudes do not change as expected'
 
     # Check that max_amoment, max_ashift work as expected
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
-                                 tot_psf_image, hsmparams=galsim.hsm.HSMParams(max_amoment = 10.))
-        np.testing.assert_raises(
-            RuntimeError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
-            guess_centroid=galsim.PositionD(47., tot_gal_image.trueCenter().y),
-            hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError,
+        galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+        hsmparams=galsim.hsm.HSMParams(max_amoment = 10.))
+    assert_raises(RuntimeError,
+        galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+        guess_centroid=galsim.PositionD(47., tot_gal_image.true_center.y),
+        hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
 
 
 @timer
 def test_shapedata():
     """Check for basic issues with initialization of ShapeData objects."""
     x = 1.
-    try:
-        # Cannot initialize with messed up arguments.
-        np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
-        np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Cannot initialize with messed up arguments.
+    assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
+    assert_raises(TypeError, galsim.hsm.ShapeData, x)
 
     # Check that if initialized when empty, the resulting object has certain properties.
     foo = galsim.hsm.ShapeData()
@@ -667,10 +668,8 @@ def test_strict():
 
     # Check that measuring moments with strict = True results in the expected exception, and that
     # it is the same one as is stored when running with strict = False.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.hsm.FindAdaptiveMom(im)
     try:
         res2 = im.FindAdaptiveMom()
     except RuntimeError as err:
@@ -681,10 +680,8 @@ def test_strict():
     res = galsim.hsm.EstimateShear(im, im, strict = False)
     if res.error_message == '':
         raise AssertionError("Should have error message stored in case of EstimateShear failure!")
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, im)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.hsm.EstimateShear(im, im)
     try:
         res2 = galsim.hsm.EstimateShear(im, im)
     except RuntimeError as err:
@@ -706,10 +703,10 @@ def test_bounds_centroid():
     obj.drawImage(image=im, scale=test_scale, method='no_pixel')
     mom = im.FindAdaptiveMom()
     np.testing.assert_almost_equal(
-        mom.moments_centroid.x, im.trueCenter().x, decimal=7,
+        mom.moments_centroid.x, im.true_center.x, decimal=7,
         err_msg='Moments x centroid differs from true center of even-sized image')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of even-sized image')
 
     # Draw the same object into odd-sized image with non-trivial bounds.
@@ -719,39 +716,37 @@ def test_bounds_centroid():
     obj.drawImage(image=im, scale=test_scale, method='no_pixel')
     mom = im.FindAdaptiveMom()
     np.testing.assert_almost_equal(
-        mom.moments_centroid.x, im.trueCenter().x, decimal=7,
+        mom.moments_centroid.x, im.true_center.x, decimal=7,
         err_msg='Moments x centroid differs from true center of odd-sized image')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of odd-sized image')
 
     # Check that it still works with a symmetric sub-image.
     sub_im = im[galsim.BoundsI(b2.xmin+2, b2.xmax-2, b2.ymin+2, b2.ymax-2)]
     mom = sub_im.FindAdaptiveMom()
     np.testing.assert_almost_equal(
-        mom.moments_centroid.x, sub_im.trueCenter().x, decimal=7,
+        mom.moments_centroid.x, sub_im.true_center.x, decimal=7,
         err_msg='Moments x centroid differs from true center of odd-sized subimage')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, sub_im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, sub_im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of odd-sized subimage')
 
     # Check that we can take a weird/asymmetric sub-image, and it fails because of centroid shift.
     sub_im = im[galsim.BoundsI(b2.xmin, b2.xmax-100, b2.ymin+27, b2.ymax)]
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, sub_im)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.hsm.FindAdaptiveMom(sub_im)
 
     # ... and that it passes if we hand in a good centroid guess.  Note that this test is a bit less
     # stringent than some of the previous ones, because our subimage cut off a decent part of the
     # light profile in the x direction, affecting the x centroid estimate.  But the y centroid test
     # is the same precision as before.
-    mom = sub_im.FindAdaptiveMom(guess_centroid=im.trueCenter())
+    mom = sub_im.FindAdaptiveMom(guess_centroid=im.true_center)
     np.testing.assert_approx_equal(
-        mom.moments_centroid.x, im.trueCenter().x, significant=4,
+        mom.moments_centroid.x, im.true_center.x, significant=4,
         err_msg='Moments x centroid differs from true center of asymmetric subimage')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of asymmetric subimage')
 
 

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -156,9 +156,8 @@
 #include <ostream>
 #include <complex>
 #include <stdexcept>
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
 
+#include "galsim/Std.h"
 #include "MoreFunctional.h"
 // MJ: I think GKPData10 is more accurate...
 //     But worth doing a more thorough comparison to see.  I just based this assessment on the 
@@ -393,7 +392,7 @@ namespace integ {
         std::map<T,T>* fxmap;
 
     private:
-        boost::shared_ptr<std::map<T,T> > _fxmap_source;
+        shared_ptr<std::map<T,T> > _fxmap_source;
     };
 
     namespace {

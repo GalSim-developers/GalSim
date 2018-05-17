@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,51 +17,24 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "bessel/Roots.h"
-#include <boost/math/special_functions/bessel.hpp>
-
-namespace bp = boost::python;
+#include "PyBind11Helper.h"
+#include "math/BesselRoots.h"
+#include "math/Bessel.h"
 
 namespace galsim {
-namespace bessel {
+namespace math {
 
-    // The boost versions are templated.  Make them concrete here so they are
-    // easier to wrap.
-    inline double BesselJv(double v, double x)
-    { return boost::math::cyl_bessel_j(v,x); }
-
-    inline double BesselJn(int n, double x)
-    { return boost::math::cyl_bessel_j(n,x); }
-
-    inline double BesselKv(double v, double x)
-    { return boost::math::cyl_bessel_k(v,x); }
-
-    inline double BesselKn(int n, double x)
-    { return boost::math::cyl_bessel_k(n,x); }
-
-    void pyExportBessel() {
-
-        bp::def("j0_root", &getBesselRoot0, bp::args("s"),
-                "Get the sth root of the n=0 Bessel function, J_0(x)");
-        bp::def("j0", &j0, bp::args("x"),
-                "Calculate the n=0 cylindrical Bessel function, J_0(x)");
-        bp::def("j1", &j1, bp::args("x"),
-                "Calculate the n=1 cylindrical Bessel function, J_1(x)");
-        bp::def("jn", &BesselJn, bp::args("n","x"),
-                "Calculate the arbitrary n cylindrical Bessel function, J_n(x)");
-        bp::def("jv", &BesselJv, bp::args("v","x"),
-                "Calculate the arbitrary v cylindrical Bessel function, J_v(x)");
-        bp::def("kn", &BesselKn, bp::args("n","x"),
-                "Calculate the modified cylindrical Bessel function, K_n(x)");
-        bp::def("kv", &BesselKv, bp::args("v","x"),
-                "Calculate the arbitrary v modified cylindrical Bessel function, K_v(x)");
-
+    void pyExportBessel(PY_MODULE& _galsim)
+    {
+        GALSIM_DOT def("j0_root", &getBesselRoot0);
+        GALSIM_DOT def("j0", &j0);
+        GALSIM_DOT def("j1", &j1);
+        GALSIM_DOT def("jv", &cyl_bessel_j);
+        GALSIM_DOT def("yv", &cyl_bessel_y);
+        GALSIM_DOT def("iv", &cyl_bessel_i);
+        GALSIM_DOT def("kv", &cyl_bessel_k);
     }
 
-} // namespace bessel
+} // namespace math
 } // namespace galsim
 

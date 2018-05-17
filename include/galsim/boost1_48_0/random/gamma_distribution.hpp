@@ -15,13 +15,18 @@
 #ifndef BOOST_RANDOM_GAMMA_DISTRIBUTION_HPP
 #define BOOST_RANDOM_GAMMA_DISTRIBUTION_HPP
 
-#include "galsim/boost1_48_0/config/no_tr1/cmath.hpp"
 #include <istream>
 #include <iosfwd>
+#ifdef USE_BOOST
+#include <boost/config/no_tr1/cmath.hpp>
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
-#include "galsim/boost1_48_0/random/detail/config.hpp"
+#include <boost/random/detail/config.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
+#include "galsim/boost1_48_0/config/suffix.hpp"
+#endif
 #include "galsim/boost1_48_0/random/exponential_distribution.hpp"
 
 namespace boost {
@@ -101,8 +106,10 @@ public:
         RealType _beta;
     };
 
+#ifdef USE_BOOST
 #ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
     BOOST_STATIC_ASSERT(!std::numeric_limits<RealType>::is_integer);
+#endif
 #endif
 
     /**
@@ -114,8 +121,10 @@ public:
                                 const result_type& beta_arg = result_type(1.0))
       : _exp(result_type(1)), _alpha(alpha_arg), _beta(beta_arg)
     {
+#ifdef USE_BOOST
         BOOST_ASSERT(_alpha > result_type(0));
         BOOST_ASSERT(_beta > result_type(0));
+#endif
         init();
     }
 

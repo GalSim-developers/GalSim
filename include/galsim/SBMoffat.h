@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -27,6 +27,8 @@
 
 namespace galsim {
 
+    double MoffatCalculateScaleRadiusFromHLR(double re, double rm, double beta);
+
     /**
      * @brief Surface Brightness for the Moffat Profile (an approximate description of ground-based
      * PSFs).
@@ -38,27 +40,19 @@ namespace galsim {
     class SBMoffat : public SBProfile
     {
     public:
-        enum  RadiusType
-        {
-            FWHM,
-            HALF_LIGHT_RADIUS,
-            SCALE_RADIUS
-        };
 
         /** @brief Constructor.
          *
          * @param[in] beta           Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
-         * @param[in] size           Size specification.
-         * @param[in] rType          Kind of size being specified (one of FWHM, HALF_LIGHT_RADIUS,
-         *                           SCALE_RADIUS).
+         * @param[in] scale_radius   Scale radius, rD.
          * @param[in] trunc          Outer truncation radius in same physical units as size,
          *                           trunc = 0. for no truncation.
          * @param[in] flux           Flux.
          * @param[in] gsparams       GSParams object storing constants that control the accuracy of
          *                           image operations and rendering, if different from the default.
          */
-        SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
-                 const GSParamsPtr& gsparams);
+        SBMoffat(double beta, double scale_radius, double trunc, double flux,
+                 const GSParams& gsparams);
 
 
         /// @brief Copy constructor.

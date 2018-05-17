@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,38 +17,15 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBAiry.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBAiry
+    void pyExportSBAiry(PY_MODULE& _galsim)
     {
-        static void wrap()
-        {
-            bp::class_<SBAiry,bp::bases<SBProfile> >("SBAiry", bp::no_init)
-                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("lam_over_diam"), bp::arg("obscuration")=0., bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object())
-                ))
-                .def(bp::init<const SBAiry &>())
-                .def("getLamOverD", &SBAiry::getLamOverD)
-                .def("getObscuration", &SBAiry::getObscuration)
-                .enable_pickling()
-                ;
-        }
-    };
-
-    void pyExportSBAiry()
-    {
-        PySBAiry::wrap();
+        py::class_<SBAiry, BP_BASES(SBProfile)>(GALSIM_COMMA "SBAiry" BP_NOINIT)
+            .def(py::init<double,double,double,GSParams>());
     }
 
 } // namespace galsim

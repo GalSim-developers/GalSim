@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,14 +21,8 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 
 @timer
@@ -52,7 +46,8 @@ def test_gaussian():
                    'magnify' : 0.93,
                    'shear' : galsim.Shear(g1=-0.15, g2=0.2)
                  },
-    }
+        'gal6' : { 'type' : 'DeltaFunction' , 'flux' : 72.5 },
+     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.Gaussian(sigma = 2)
@@ -77,6 +72,13 @@ def test_gaussian():
     gal5b = galsim.Gaussian(sigma = 1.5, flux = 72.5)
     gal5b = gal5b.rotate(-34 * galsim.degrees).lens(-0.15, 0.2, 0.93)
     gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.DeltaFunction(flux = 72.5)
+    gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=0.01))
+    # DeltaFunction is functionally equivalent to an extremely narrow Gaussian.
+    gal6c = galsim.Gaussian(sigma = 1.e-10, flux = 72.5)
+    gsobject_compare(gal6a, gal6c, conv=galsim.Gaussian(sigma=0.01))
 
 
 @timer
@@ -129,14 +131,11 @@ def test_moffat():
     # convolve to test the k-space gsparams (with an even smaller profile)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=0.01))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7)
-        gal5c = gal5c.shear(g1=-0.15, g2=0.2)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=0.01))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7)
+    gal5c = gal5c.shear(g1=-0.15, g2=0.2)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=0.01))
 
 
 @timer
@@ -192,12 +191,10 @@ def test_airy():
     gal6b = galsim.Airy(lam=400., diam=4., scale_unit=galsim.arcmin)
     gsobject_compare(gal6a, gal6b)
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Airy(lam_over_diam=45)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.Airy(lam_over_diam=45)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c)
 
 
 @timer
@@ -245,12 +242,10 @@ def test_kolmogorov():
     gal5b = galsim.Kolmogorov(lam_over_r0=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b)
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Kolmogorov(lam_over_r0=1, flux=50)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.Kolmogorov(lam_over_r0=1, flux=50)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c)
 
 
 @timer
@@ -371,13 +366,10 @@ def test_exponential():
     gal5b = galsim.Exponential(scale_radius=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Exponential(scale_radius=1, flux=50)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.Exponential(scale_radius=1, flux=50)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=1))
 
 
 @timer
@@ -432,25 +424,21 @@ def test_sersic():
     gal5b = galsim.Sersic(n=0.7, half_light_radius=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=1))
 
-        # For the maximum_fft_size test, we need to do things a little differently
-        # We lower maximum_fft_size below the size that SBProfile wants this to be,
-        # and we check to make sure an exception is thrown.  Of course, this isn't how you
-        # would normally use maximum_fft_size.  Normally, you would raise it when the default
-        # is too small.  But to construct the test that way would require a lot of memory
-        # and would be rather slow.
-        gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-        gal6b = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
-        np.testing.assert_raises(RuntimeError,gsobject_compare, gal6a, gal6b,
-                                 conv=galsim.Gaussian(sigma=1))
-
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # For the maximum_fft_size test, we need to do things a little differently
+    # We lower maximum_fft_size below the size that it normally wants this to be,
+    # and we check to make sure an exception is thrown.  Of course, this isn't how you
+    # would normally use maximum_fft_size.  Normally, you would raise it when the default
+    # is too small.  But to construct the test that way would require a lot of memory
+    # and would be rather slow.
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
+    with assert_raises(RuntimeError):
+        gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=1))
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
@@ -459,12 +447,10 @@ def test_sersic():
     conv = galsim.Moffat(beta=2.8, fwhm=1.3, trunc=3.7)
     gsobject_compare(gal7a, gal7b, conv=conv)
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal7c = galsim.Sersic(n=3.2, half_light_radius=1.7, flux=50, trunc=4.3)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal7a, gal7c, conv=conv)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal7c = galsim.Sersic(n=3.2, half_light_radius=1.7, flux=50, trunc=4.3)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal7a, gal7c, conv=conv)
 
 
 @timer
@@ -512,13 +498,10 @@ def test_devaucouleurs():
     gal5b = galsim.DeVaucouleurs(half_light_radius=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.DeVaucouleurs(half_light_radius=1, flux=50)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.DeVaucouleurs(half_light_radius=1, flux=50)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=1))
 
 @timer
 def test_inclined_exponential():
@@ -572,14 +555,11 @@ def test_inclined_exponential():
     gal5b = galsim.InclinedExponential(inclination=0.7 * galsim.radians, half_light_radius=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.InclinedExponential(inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
-        np.testing.assert_raises(AssertionError, gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.InclinedExponential(inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=1))
 
-    except ImportError:
-        print('The assert_raises tests require nose')
 
 @timer
 def test_inclined_sersic():
@@ -633,14 +613,11 @@ def test_inclined_sersic():
     gal5b = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
-        np.testing.assert_raises(AssertionError, gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=1))
 
-    except ImportError:
-        print('The assert_raises tests require nose')
 
 @timer
 def test_pixel():
@@ -777,8 +754,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.RealGalaxy(real_cat, index=0).original_gal
-    # The convolution here
+    gal6b = galsim.RealGalaxy(real_cat, index=5).original_gal
     gsobject_compare(gal6a, gal6b, conv=conv)
 
     config['obj_num'] = 6
@@ -790,7 +766,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 7
     gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
-    gal8b = galsim.RealGalaxy(real_cat, index=0)
+    gal8b = galsim.RealGalaxy(real_cat, index=7)
     gsobject_compare(gal8a, gal8b, conv=conv)
 
 @timer
@@ -861,10 +837,8 @@ def test_cosmosgalaxy():
     gsobject_compare(gal3a, gal3b, conv=conv)
 
     config['obj_num'] = 3
-    try:
-        np.testing.assert_raises(IndexError, galsim.config.BuildGSObject, config, 'gal4')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(IndexError):
+        galsim.config.BuildGSObject(config, 'gal4')
 
     # One more test: make sure that if we specified from the start not to use real galaxies, that
     # failure to specify gal_type is treated properly (should default to parametric).
@@ -881,7 +855,7 @@ def test_cosmosgalaxy():
         # Use defaults for gal_type (parametric, since we used the actual catalog and not the
         # parametric one) and select a random galaxy using internal routines.
         'gal1' : { 'type' : 'COSMOSGalaxy' },
-        }
+    }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
@@ -1063,7 +1037,7 @@ def test_add():
             ],
             'flux' : 170.
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -1102,15 +1076,12 @@ def test_add():
     gal5b = galsim.Add([gal5b_1, gal5b_2])
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c_1 = galsim.Exponential(scale_radius=3.4, flux=100)
-        gal5c_2 = galsim.Gaussian(sigma=1, flux=50)
-        gal5c = galsim.Add([gal5c_1, gal5c_2])
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c_1 = galsim.Exponential(scale_radius=3.4, flux=100)
+    gal5c_2 = galsim.Gaussian(sigma=1, flux=50)
+    gal5c = galsim.Add([gal5c_1, gal5c_2])
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=1))
 
     # "Adding" 1 item is equivalent to just that item alone
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
@@ -1202,7 +1173,7 @@ def test_convolve():
                 { 'type' : 'Gaussian' , 'sigma' : 2 },
             ]
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -1241,14 +1212,12 @@ def test_convolve():
     gal5b = galsim.Convolve([gal5b_1, gal5b_2])
     gsobject_compare(gal5a, gal5b)
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c_1 = galsim.Exponential(scale_radius=1.7, flux=100)
-        gal5c_2 = galsim.Gaussian(sigma=1)
-        gal5c = galsim.Convolve([gal5c_1, gal5c_2])
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c_1 = galsim.Exponential(scale_radius=1.7, flux=100)
+    gal5c_2 = galsim.Gaussian(sigma=1)
+    gal5c = galsim.Convolve([gal5c_1, gal5c_2])
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c)
 
     # "Convolving" 1 item is equivalent to just that item alone
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
@@ -1322,13 +1291,10 @@ def test_list():
     gal5b = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Exponential(scale_radius=3.4, flux=100)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    gal5c = galsim.Exponential(scale_radius=3.4, flux=100)
+    with assert_raises(AssertionError):
+        gsobject_compare(gal5a, gal5c, conv=galsim.Gaussian(sigma=1))
 
 
 @timer
@@ -1377,14 +1343,13 @@ def test_usertype():
     """Test a user-defined type
     """
     # A custom GSObject class that will use BuildSimple
-    class PseudoDelta(galsim.GSObject):
+    class PseudoDelta(galsim.Gaussian):
         _req_params = {}
         _opt_params = { "flux" : float }
         _single_params = []
         _takes_rng = False
         def __init__(self, flux=1., gsparams=None):
-            obj = galsim.Gaussian(sigma=1.e-8, flux=flux, gsparams=gsparams)
-            galsim.GSObject.__init__(self, obj)
+            super(PseudoDelta, self).__init__(sigma=1.e-8, flux=flux, gsparams=gsparams)
 
     galsim.config.RegisterObjectType('PseudoDelta', PseudoDelta)
 
