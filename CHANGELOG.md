@@ -83,10 +83,12 @@ New Features
 ------------
 
 - Added a new class hierarchy for exceptions raised by GalSim with the base
-  class `GalSimError`, a subclass of `RuntimeError`.  This provides a hook for
-  adding sub-classes, which may provide more specific information about the
-  nature of an error.  So far, sub-classes include GalSimHSMError for errors
-  during HSM measurements and GalSimRangeError for attempted use of input
-  parameters outside of allowed ranges. (#755)
+  class `GalSimError`, a subclass of `RuntimeError`. For complete details
+  about the various sub-classes within this hierarchy, see the file errors.py.
+  In most cases, if you were catching a specific exception such as ValueError
+  or RuntimeError, the new error will still be caught properly.  However, some
+  cases have changed to an incompatible error type, so users who have written
+  `except` statements with specific error types should be careful to make
+  sure that the errors you wanted to catch are still being caught. (#755)
 - Changed the type of warnings raised by GalSim to GalSimWarning, which is
   a subclass of UserWarning. (#755)
