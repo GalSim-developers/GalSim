@@ -19,6 +19,7 @@
 # Define the class hierarchy for errors and warnings emitted by GalSim that aren't
 # obviously one of the standard python errors.
 
+import warnings
 from builtins import super
 from contextlib import contextmanager
 
@@ -393,6 +394,7 @@ class GalSimNotImplementedError(GalSimError, NotImplementedError):
         return 'galsim.GalSimNotImplementedError(%r)'%(str(self))
 
 
+# Note: Can use galsim_warn to raise warnings with this warning class.
 class GalSimWarning(UserWarning):
     """The base class for GalSim-emitted warnings.
     """
@@ -415,3 +417,8 @@ def convert_cpp_errors(error_type=GalSimError):
         yield
     except RuntimeError as err:
         raise error_type(str(err))
+
+def galsim_warn(message):
+    """A helper function for emitting a GalSimWarning with the given message
+    """
+    warnings.warn(message, GalSimWarning)

@@ -59,8 +59,7 @@ from . import _galsim
 from .position import PositionD, PositionI
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimFFTSizeError, GalSimNotImplementedError
-from .errors import GalSimWarning, convert_cpp_errors
+from .errors import GalSimFFTSizeError, GalSimNotImplementedError, convert_cpp_errors, galsim_warn
 
 
 class GSObject(object):
@@ -1522,16 +1521,14 @@ class GSObject(object):
         # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
         if method == 'auto' and isinstance(self, Convolution):
             if any([ isinstance(obj, Pixel) for obj in self.obj_list ]):
-                import warnings
-                warnings.warn(
+                galsim_warn(
                     "You called drawImage with `method='auto'` "
                     "for an object that includes convolution by a Pixel.  "
                     "This is probably an error.  Normally, you should let GalSim "
                     "handle the Pixel convolution for you.  If you want to handle the Pixel "
                     "convolution yourself, you can use method=no_pixel.  Or if you really meant "
                     "for your profile to include the Pixel and also have GalSim convolve by "
-                    "an _additional_ Pixel, you can suppress this warning by using method=fft.",
-                    GalSimWarning)
+                    "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
         # Some parameters are only relevant for method == 'phot'
         if method != 'phot' and sensor is None:
@@ -1987,13 +1984,11 @@ class GSObject(object):
         iN = int(n_photons + 0.5)
 
         if iN <= 0:
-            import warnings
-            warnings.warn("Automatic n_photons calculation did not end up with positive N. "
-                          "(n_photons = {0})  No photons will be shot. "
-                          "  prof = {1}\n  flux = {2}\n  poisson_flux = {3}\n"
-                          "  max_extra_noise = {4}\n  g = {5}".format(
-                                n_photons, self, self.flux, poisson_flux, max_extra_noise, g),
-                          GalSimWarning)
+            galsim_warn("Automatic n_photons calculation did not end up with positive N. "
+                        "(n_photons = {0})  No photons will be shot.\n"
+                        "  prof = {1}\n  flux = {2}\n  poisson_flux = {3}\n"
+                        "  max_extra_noise = {4}\n  g = {5}".format(
+                                n_photons, self, self.flux, poisson_flux, max_extra_noise, g))
             return 0, 1.
 
         return iN, g
@@ -2081,11 +2076,9 @@ class GSObject(object):
 
         # Check that either n_photons is set to something or flux is set to something
         if n_photons == 0. and self.flux == 1.:
-            import warnings
-            warnings.warn(
+            galsim_warn(
                     "Warning: drawImage for object with flux == 1, area == 1, and "
-                    "exptime == 1, but n_photons == 0.  This will only shoot a single photon.",
-                    GalSimWarning)
+                    "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
 
         ud = UniformDeviate(rng)
 

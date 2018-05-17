@@ -26,7 +26,7 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
-from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
 
 
 class AtmosphericScreen(object):
@@ -215,18 +215,12 @@ class AtmosphericScreen(object):
         if check is not None and not self._suppress_warning:
             if check == 'FFT':
                 if self.kmax != np.inf:
-                    import warnings
-                    warnings.warn(
-                        "Instantiating AtmosphericScreen with kmax != inf "
-                        "may yield surprising results when drawing using Fourier optics.",
-                        GalSimWarning)
+                    galsim_warn("Instantiating AtmosphericScreen with kmax != inf may yield "
+                                "surprising results when drawing using Fourier optics.")
             if check == 'phot':
                 if self.kmax == np.inf:
-                    import warnings
-                    warnings.warn(
-                        "Instantiating AtmosphericScreen with kmax == inf "
-                        "may yield surprising results when drawing using geometric optics.",
-                        GalSimWarning)
+                    galsim_warn("Instantiating AtmosphericScreen with kmax == inf may yield "
+                                "surprising results when drawing using geometric optics.")
 
 
     # Note the magic number 0.00058 is actually ... wait for it ...
@@ -666,10 +660,7 @@ class OpticalScreen(object):
                 raise GalSimValueError("Aberrations keyword must have length > 2", aberrations)
             # Check for non-zero value in first two places.  Probably a mistake.
             if aberrations[0] != 0.0:
-                import warnings
-                warnings.warn(
-                    "Detected non-zero value in aberrations[0] -- this value is ignored!",
-                    GalSimWarning)
+                galsim_warn("Detected non-zero value in aberrations[0] -- this value is ignored!")
             aberrations = np.array(aberrations)
         self.aberrations = aberrations
 

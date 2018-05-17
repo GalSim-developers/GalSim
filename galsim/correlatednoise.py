@@ -28,7 +28,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from . import utilities
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimUndefinedBoundsError
-from .errors import GalSimIncompatibleValuesError, GalSimWarning
+from .errors import GalSimIncompatibleValuesError, galsim_warn
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -113,17 +113,15 @@ class _BaseCorrelatedNoise(object):
     def __add__(self, other):
         from . import wcs
         if not wcs.compatible(self.wcs, other.wcs):
-            import warnings
-            warnings.warn("Adding two CorrelatedNoise objects with incompatible WCS. "
-                          "The result will have the WCS of the first object.", GalSimWarning)
+            galsim_warn("Adding two CorrelatedNoise objects with incompatible WCS. "
+                        "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
         from . import wcs
         if not wcs.compatible(self.wcs, other.wcs):
-            import warnings
-            warnings.warn("Subtracting two CorrelatedNoise objects with incompatible WCS. "
-                          "The result will have the WCS of the first object.", GalSimWarning)
+            galsim_warn("Subtracting two CorrelatedNoise objects with incompatible WCS. "
+                        "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
 
     def __mul__(self, variance_ratio):

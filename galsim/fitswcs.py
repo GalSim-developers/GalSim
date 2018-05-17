@@ -30,7 +30,7 @@ from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimNotImplementedError, GalSimWarning, convert_cpp_errors
+from .errors import GalSimNotImplementedError, convert_cpp_errors, galsim_warn
 
 #########################################################################################
 #
@@ -712,8 +712,8 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         if len(vals) < 6:
             raise GalSimError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
         if len(vals) > 6:
-            warnings.warn('wcstools sky2xy indicates that %f,%f is off the image. '
-                          'output is %r'%(ra,dec,results), GalSimWarning)
+            galsim_warn("wcstools sky2xy indicates that %f,%f is off the image. "
+                        "output is %r"%(ra,dec,results))
         x = float(vals[4])
         y = float(vals[5])
 
@@ -1650,9 +1650,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
         # Finally, this one is really the last resort, since it only reads in the linear part of the
         # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
         if not suppress_warning:
-            warnings.warn("All the fits WCS types failed to read %r. Using AffineTransform "
-                          "instead, which will not really be correct."%(file_name),
-                          GalSimWarning)
+            galsim_warn("All the fits WCS types failed to read %r. Using AffineTransform "
+                        "instead, which will not really be correct."%(file_name))
         return AffineTransform._readHeader(header)
 
 # Let this function work like a class in config.

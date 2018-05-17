@@ -1822,6 +1822,7 @@ def test_multirng():
             v = rngb() * 50. - 25.
             world_pos = galsim.PositionD(u,v)
             with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
                 psf_g1, psf_g2 = psf_ps.getShear(world_pos)
             if len(w) > 0:
                 assert not psf_ps.bounds.includes(world_pos)

@@ -1110,8 +1110,6 @@ def test_stepk_maxk():
 def test_kroundtrip():
     """ Test that GSObjects `a` and `b` are the same when b = InterpolatedKImage(a.drawKImage)
     """
-    import warnings
-
     a = final
     kim_a = a.drawKImage()
     b = galsim.InterpolatedKImage(kim_a)

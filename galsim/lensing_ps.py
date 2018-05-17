@@ -32,7 +32,7 @@ from .table import LookupTable
 from . import utilities
 from . import integ
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimNotImplementedError, GalSimWarning
+from .errors import GalSimNotImplementedError, galsim_warn
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -972,11 +972,9 @@ class PowerSpectrum(object):
             if not periodic:
                 # We're not treating this as a periodic box, so issue a warning and set the
                 # shear to zero for positions that are outside the original grid.
-                import warnings
-                warnings.warn(
+                galsim_warn(
                     "Warning: position (%f,%f) not within the bounds (%s) of the gridded shear "
-                    "values.  Returning a shear of (0,0) for this point."%(x,y,self.bounds),
-                    GalSimWarning)
+                    "values.  Returning a shear of (0,0) for this point."%(x,y,self.bounds))
                 return 0., 0.
             else:
                 # Treat this as a periodic box.
@@ -1070,11 +1068,10 @@ class PowerSpectrum(object):
         # Check that the position is in the bounds of the interpolated image
         if not self.bounds.includes(pos):
             if not periodic:
-                import warnings
-                warnings.warn(
+                galsim_warn(
                     "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
                     "convergence values. Returning a convergence of 0 for this point."%(
-                    x,y,self.bounds), GalSimWarning)
+                    x,y,self.bounds))
                 return 0.
             else:
                 # Treat this as a periodic box.
@@ -1169,11 +1166,10 @@ class PowerSpectrum(object):
         # Check that the position is in the bounds of the interpolated image
         if not self.bounds.includes(pos):
             if not periodic:
-                import warnings
-                warnings.warn(
+                galsim_warn(
                     "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
                     "convergence values. Returning a magnification of 1 for this point."%(
-                    x,y,self.bounds), GalSimWarning)
+                    x,y,self.bounds))
                 return 1.
             else:
                 # Treat this as a periodic box.
@@ -1277,11 +1273,9 @@ class PowerSpectrum(object):
         # Check that the position is in the bounds of the interpolated image
         if not self.bounds.includes(pos):
             if not periodic:
-                import warnings
-                warnings.warn(
+                galsim_warn(
                     "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
-                    "values. Returning 0 for lensing observables at this point."%(x,y,self.bounds),
-                    GalSimWarning)
+                    "values. Returning 0 for lensing observables at this point."%(x,y,self.bounds))
                 return 0., 0., 1.
             else:
                 # Treat this as a periodic box.
