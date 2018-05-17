@@ -1542,9 +1542,13 @@ def test_repeat():
     config['obj_num'] = 4
     gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
     gsobject_compare(gal2a, gal2b)
+
+    # Also check that the logger reports why it is using the current object
     config['obj_num'] = 5
-    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+    with CaptureLog() as cl:
+        gal2a = galsim.config.BuildGSObject(config, 'gal', logger=cl.logger)[0]
     gsobject_compare(gal2a, gal2b)
+    assert "repeat = 3, index = 5, use current object" in cl.output
 
 
 @timer

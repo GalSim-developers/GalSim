@@ -568,6 +568,13 @@ def test_deInterleaveImage():
     assert_raises(ValueError, deInterleaveImage, image=img0, N=(2,7))
     assert_raises(ValueError, deInterleaveImage, image=img0, N=(7,2))
 
+    # It is legal to have the input image with wcs=None, but it emits a warning
+    img0.wcs = None
+    with assert_warns(galsim.GalSimWarning):
+        deInterleaveImage(img0, N=2)
+    # Unless suppress_warnings is True
+    deInterleaveImage(img0, N=2, suppress_warnings=True)
+
 
 @timer
 def test_interleaveImages():
@@ -778,6 +785,13 @@ def test_interleaveImages():
     assert_raises(TypeError, interleaveImages, im_list, N=n, offsets=offset_list[0])
     assert_raises(TypeError, interleaveImages, im_list, N=n, offsets=range(n*n))
 
+    # It is legal to have the input images with wcs=None, but it emits a warning
+    for im in im_list:
+        im.wcs = None
+    with assert_warns(galsim.GalSimWarning):
+        interleaveImages(im_list, N=n, offsets=offset_list)
+    # Unless suppress_warnings is True
+    interleaveImages(im_list, N=n, offsets=offset_list, suppress_warnings=True)
 
 
 @timer
