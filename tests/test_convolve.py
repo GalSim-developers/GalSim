@@ -806,7 +806,7 @@ def test_convolve_noise():
     deconv = galsim.Deconvolution(obj2)
     autoconv = galsim.AutoConvolution(obj2)
     autocorr = galsim.AutoCorrelation(obj2)
-    four = galsim.AutoCorrelation(obj2)
+    four = galsim.FourierSqrt(obj2)
     assert deconv.noise is None
     assert autoconv.noise is None
     assert autocorr.noise is None
