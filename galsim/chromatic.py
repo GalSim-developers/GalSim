@@ -865,7 +865,7 @@ class ChromaticObject(object):
         @returns the lensed object.
         """
         from .shear import Shear
-        if any(hasattr(g, '__call__') for g in [g1,g2]):
+        if any(hasattr(g, '__call__') for g in (g1,g2)):
             _g1 = g1
             _g2 = g2
             if not hasattr(g1, '__call__'): _g1 = lambda w: g1
@@ -918,7 +918,7 @@ class ChromaticObject(object):
         @returns the transformed object.
         """
         from .transform import Transform
-        if any(hasattr(dd, '__call__') for dd in [dudx, dudy, dvdx, dvdy]):
+        if any(hasattr(dd, '__call__') for dd in (dudx, dudy, dvdx, dvdy)):
             _dudx = dudx
             _dudy = dudy
             _dvdx = dvdx
@@ -1518,7 +1518,7 @@ class ChromaticTransformation(ChromaticObject):
             return False
         # There's really no good way to check that two callables are equal, except if they literally
         # point to the same object.  So we'll just check for that for _jac, _offset, _flux_ratio.
-        for attr in ['_jac', '_offset', '_flux_ratio']:
+        for attr in ('_jac', '_offset', '_flux_ratio'):
             selfattr = getattr(self, attr)
             otherattr = getattr(other, attr)
             # For this attr, either both need to be chromatic or neither.
@@ -1537,10 +1537,9 @@ class ChromaticTransformation(ChromaticObject):
     def __hash__(self):
         # This one's a bit complicated, so we'll go ahead and cache the hash.
         if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.ChromaticTransformation", self.original, self._flux_ratio,
-                               self.gsparams))
+            self._hash = hash(("galsim.ChromaticTransformation", self.original, self.gsparams))
             # achromatic _jac and _offset are ndarrays, so need to be handled separately.
-            for attr in ['_jac', '_offset']:
+            for attr in ('_jac', '_offset', '_flux_ratio'):
                 selfattr = getattr(self, attr)
                 if hasattr(selfattr, '__call__'):
                     self._hash ^= hash(selfattr)

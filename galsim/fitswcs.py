@@ -477,7 +477,7 @@ class PyAstWCS(CelestialWCS):
             warnings.simplefilter("ignore")
             fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu) , "Encoding=FITS-WCS")
             # Let Ast know how big the image is that we'll be writing.
-            for key in ['NAXIS', 'NAXIS1', 'NAXIS2']:
+            for key in ('NAXIS', 'NAXIS1', 'NAXIS2'):
                 if key in header:  # pragma: no branch
                     fc[key] = header[key]
             success = fc.write(self.wcsinfo)
@@ -836,7 +836,7 @@ class GSFitsWCS(CelestialWCS):
             self.pv = _data[4]
             self.ab = _data[5]
             self.abp = _data[6]
-            if self.wcs_type in [ 'TAN', 'TPV' ]:
+            if self.wcs_type in ('TAN', 'TPV'):
                 self.projection = 'gnomonic'
             elif self.wcs_type == 'STG':
                 self.projection = 'stereographic'

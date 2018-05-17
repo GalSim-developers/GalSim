@@ -64,7 +64,7 @@ def BuildWCS(config, key, base, logger=None):
         wcs_type = 'PixelScale'
 
     # For these two, just do the usual ParseValue function.
-    if wcs_type in ['Eval', 'Current']:
+    if wcs_type in ('Eval', 'Current'):
         return galsim.config.ParseValue(config, key, base, None)[0]
 
     # Check if we can use the current cached object

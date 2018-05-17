@@ -465,7 +465,7 @@ class Image(object):
     @property
     def iscomplex(self): return self._array.dtype.kind == 'c'
     @property
-    def isinteger(self): return self._array.dtype.kind in ['i','u']
+    def isinteger(self): return self._array.dtype.kind in ('i','u')
 
     @property
     def iscontiguous(self):
@@ -1415,7 +1415,7 @@ class Image(object):
         @returns an estimate of the radius in physical units defined by the pixel scale
                  (or both estimates if rtype == 'both').
         """
-        if rtype not in ['trace', 'det', 'both']:
+        if rtype not in ('trace', 'det', 'both'):
             raise GalSimValueError("Invalid rtype.", rtype, ('trace', 'det', 'both'))
 
         if center is None:
@@ -1429,7 +1429,7 @@ class Image(object):
         x = x - center.x + self.bounds.xmin
         y = y - center.y + self.bounds.ymin
 
-        if rtype in ['trace', 'both']:
+        if rtype in ('trace', 'both'):
             # Calculate trace measure:
             rsq = x*x + y*y
             Irr = np.sum(rsq * self.array, dtype=float) / flux
@@ -1437,7 +1437,7 @@ class Image(object):
             # This has all been done in pixels.  So normalize according to the pixel scale.
             sigma_trace = (Irr/2.)**0.5 * self.scale
 
-        if rtype in ['det', 'both']:
+        if rtype in ('det', 'both'):
             # Calculate det measure:
             Ixx = np.sum(x*x * self.array, dtype=float) / flux
             Iyy = np.sum(y*y * self.array, dtype=float) / flux

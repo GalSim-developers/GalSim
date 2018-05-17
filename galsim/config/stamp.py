@@ -951,7 +951,7 @@ class StampBuilder(object):
         """
         # Clear current values out of psf, gal, and stamp if they are not safe to reuse.
         # This means they are either marked as safe or indexed by something other than obj_num.
-        for field in ['psf', 'gal', 'stamp']:
+        for field in ('psf', 'gal', 'stamp'):
             if field in base:
                 galsim.config.RemoveCurrent(base[field], keep_safe=True, index_key='obj_num')
 

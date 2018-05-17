@@ -524,7 +524,7 @@ class InterpolatedImage(GSObject):
         # need to rescale flux by the pixel area to get proper normalization.
         if flux is None:
             flux = self._image_flux
-            if normalization.lower() in ['surface brightness','sb']:
+            if normalization.lower() in ('surface brightness','sb'):
                 flux *= self._wcs.pixelArea()
         return flux
 

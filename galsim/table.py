@@ -106,7 +106,7 @@ class LookupTable(object):
             raise GalSimIncompatibleValuesError("Input array lengths don't match", x=x, f=f)
         if interpolant == 'spline' and len(x) < 3:
             raise GalSimValueError("Input arrays too small to spline interpolate", x)
-        if interpolant in ['linear', 'ceil', 'floor', 'nearest'] and len(x) < 2:
+        if interpolant in ('linear', 'ceil', 'floor', 'nearest') and len(x) < 2:
             raise GalSimValueError("Input arrays too small to interpolate", x)
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for

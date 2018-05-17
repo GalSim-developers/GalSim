@@ -848,7 +848,7 @@ class SED(object):
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
         for kw in kwargs:
-            if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+            if kw not in ('temperature', 'pressure', 'H2O_pressure'):
                 raise (TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}"
                                  .format(kw)))
 

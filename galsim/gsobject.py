@@ -1603,7 +1603,7 @@ class GSObject(object):
         prof *= flux_scale
 
         # If necessary, convolve by the pixel
-        if method in ['auto', 'fft', 'real_space']:
+        if method in ('auto', 'fft', 'real_space'):
             if method == 'auto':
                 real_space = None
             elif method == 'fft':
@@ -1635,13 +1635,13 @@ class GSObject(object):
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
-                if imview.dtype in [np.float32, np.float64]:
+                if imview.dtype in (np.float32, np.float64):
                     dtype = None
                 else:
                     dtype = np.float64
                 draw_image = imview.real.subsample(n_subsample, n_subsample, dtype=dtype)
                 draw_image.setCenter(0,0)
-                if method in ['auto', 'fft', 'real_space']:
+                if method in ('auto', 'fft', 'real_space'):
                     # Need to reconvolve by the new smaller pixel instead
                     prof = Convolve(
                             prof_no_pixel,
@@ -1671,7 +1671,7 @@ class GSObject(object):
                 photons = PhotonArray.makeFromImage(draw_image, rng=ud)
                 for op in surface_ops:
                     op.applyTo(photons, local_wcs)
-                if imview.dtype in [np.float32, np.float64]:
+                if imview.dtype in (np.float32, np.float64):
                     added_photons = sensor.accumulate(photons, imview, orig_center)
                 else:
                     # Need a temporary
@@ -1713,12 +1713,12 @@ class GSObject(object):
         if image.wcs is None or not image.wcs.isPixelScale():
             raise GalSimValueError("drawReal requires an image with a PixelScale wcs", image)
 
-        if image.dtype in [ np.float64, np.float32 ] and not add_to_image and image.iscontiguous:
+        if image.dtype in (np.float64, np.float32) and not add_to_image and image.iscontiguous:
             self._drawReal(image)
             return image.array.sum(dtype=float)
         else:
             # Need a temporary
-            if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
+            if image.dtype in (np.complex128, np.int32, np.uint32):
                 im1 = ImageD(bounds=image.bounds, scale=image.scale)
             else:
                 im1 = ImageF(bounds=image.bounds, scale=image.scale)
@@ -1803,7 +1803,7 @@ class GSObject(object):
             raise GalSimFFTSizeError("drawFFT requires an FFT that is too large.", Nk)
 
         bounds = _BoundsI(0,Nk//2,-Nk//2,Nk//2)
-        if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:
+        if image.dtype in (np.complex128, np.float64, np.int32, np.uint32):
             kimage = ImageCD(bounds=bounds, scale=dk)
         else:
             kimage = ImageCF(bounds=bounds, scale=dk)
@@ -2136,7 +2136,7 @@ class GSObject(object):
             for op in surface_ops:
                 op.applyTo(photons, local_wcs)
 
-            if image.dtype in [np.float32, np.float64]:
+            if image.dtype in (np.float32, np.float64):
                 added_flux += sensor.accumulate(photons, image, orig_center, resume=resume)
                 resume = True  # Resume from this point if there are any further iterations.
             else:

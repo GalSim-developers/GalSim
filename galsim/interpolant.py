@@ -72,7 +72,7 @@ class Interpolant(object):
             return Quintic(tol, gsparams)
         if name.lower().startswith('lanczos'):
             conserve_dc = True
-            if name[-1].upper() in ['T', 'F']:
+            if name[-1].upper() in ('T', 'F'):
                 conserve_dc = (name[-1].upper() == 'T')
                 name = name[:-1]
             try:
