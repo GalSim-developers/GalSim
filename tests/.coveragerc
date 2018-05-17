@@ -4,9 +4,6 @@ branch = True
 include = *galsim/*
 
 omit =
-    # Tests here require the DM stack, so don't include them in travis coverage tests.
-    *lsst/*
-
     # These are mostly still tested, but we don't really care if the tests are complete.
     *deprecated/*
 
@@ -28,14 +25,6 @@ exclude_lines =
     # If you put this in a comment, you can manually exclude code from being covered.
     pragma: no cover
 
-    # Don't complain about missing debug-only code:
-    logger.debug
-
-    # Don't complain about not hitting warning code
-    if suppress_warnings is False:
-    import warnings
-    warnings.warn
-
     # Don't complain if non-runnable code isn't run:
     if False:
     if 0:
@@ -45,6 +34,5 @@ exclude_lines =
     except .*KeyboardInterrupt
     except .*OSError
 
-    # Or code for special cases of older versions of things.
+    # Or checks for alternate versions when some package is not available
     except ImportError
-    if .*pyfits_version

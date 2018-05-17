@@ -710,6 +710,36 @@ def test_copy():
     do_pickle(cn, drawNoise)
     do_pickle(cn)
 
+@timer
+def test_add():
+    """Adding two correlated noise objects, just adds their profiles.
+    """
+    rng = galsim.BaseDeviate(1234)
+    cosmos_scale = 0.03
+    ccn = galsim.getCOSMOSNoise(rng=rng)
+    print('ccn.variance = ',ccn.getVariance())
+    ucn1 = galsim.UncorrelatedNoise(variance=5.e-6, scale=cosmos_scale)
+    print('ucn1.variance = ',ucn1.getVariance())
+    ucn2 = galsim.UncorrelatedNoise(variance=5.e-6, scale=1.)
+    print('ucn2.variance = ',ucn2.getVariance())
+
+    sum = ccn + ucn1
+    print('sum.variance = ',sum.getVariance())
+    np.testing.assert_allclose(sum.getVariance(), ccn.getVariance() + ucn1.getVariance())
+
+    with assert_warns(galsim.GalSimWarning):
+        sum = ccn + ucn2
+    print('sum.variance = ',sum.getVariance())
+    np.testing.assert_allclose(sum.getVariance(), ccn.getVariance() + ucn2.getVariance())
+
+    diff = ccn - ucn1
+    print('diff.variance = ',diff.getVariance())
+    np.testing.assert_allclose(diff.getVariance(), ccn.getVariance() - ucn1.getVariance())
+
+    with assert_warns(galsim.GalSimWarning):
+        diff = ccn - ucn2
+    print('diff.variance = ',diff.getVariance())
+    np.testing.assert_allclose(diff.getVariance(), ccn.getVariance() - ucn2.getVariance())
 
 @timer
 def test_cosmos_and_whitening():
@@ -1281,6 +1311,7 @@ if __name__ == "__main__":
     test_output_generation_rotated()
     test_output_generation_magnified()
     test_copy()
+    test_add()
     test_cosmos_and_whitening()
     test_symmetrizing()
     test_convolve_cosmos()

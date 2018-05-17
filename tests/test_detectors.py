@@ -256,6 +256,11 @@ def test_recipfail_basic():
         im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),6,
         err_msg='Difference between power law and log behavior')
 
+    # If input image has negative values, then raise a warning.
+    im_new.setValue(30, 30, -100)
+    with assert_warns(galsim.GalSimWarning):
+        im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time, base_flux=base_flux)
+
 
 @timer
 def test_quantize():
