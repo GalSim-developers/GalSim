@@ -92,8 +92,9 @@ class ScatteredImageBuilder(ImageBuilder):
         base['current_image'] = full_image
 
         if 'image_pos' in config and 'world_pos' in config:
-            raise galsim.GalSimConfigError(
-                "Both image_pos and world_pos specified for Scattered image.")
+            raise galsim.GalSimConfigValueError(
+                "Both image_pos and world_pos specified for Scattered image.",
+                (config['image_pos'], config['world_pos']))
 
         if 'image_pos' not in config and 'world_pos' not in config:
             xmin = base['image_origin'].x
