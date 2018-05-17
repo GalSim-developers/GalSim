@@ -37,7 +37,7 @@ from .gsparams import GSParams
 from . import utilities
 from . import integ
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
-from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, GalSimWarning
+from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, galsim_warn
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -1467,10 +1467,9 @@ class ChromaticTransformation(ChromaticObject):
         self.SED *= detjac
 
         if obj.interpolated and self.chromatic:
-            import warnings
-            warnings.warn("Cannot render image with chromatic transformation applied to it "
-                          "using interpolation between stored images.  Reverting to "
-                          "non-interpolated version.", GalSimWarning)
+            galsim_warn("Cannot render image with chromatic transformation applied to it "
+                        "using interpolation between stored images.  Reverting to "
+                        "non-interpolated version.")
             obj = obj.deinterpolated
         self.interpolated = obj.interpolated
 
@@ -1944,11 +1943,9 @@ class ChromaticConvolution(ChromaticObject):
             if not obj.separable and not isinstance(obj, ChromaticSum): n_nonsep += 1
             if obj.interpolated: n_interp += 1
         if n_nonsep>1 and n_interp>0:
-            import warnings
-            warnings.warn(
+            galsim_warn(
                 "Image rendering for this convolution cannot take advantage of "
-                "interpolation-related optimization.  Will use full profile evaluation.",
-                GalSimWarning)
+                "interpolation-related optimization.  Will use full profile evaluation.")
 
         # Assemble wave_lists
         self.wave_list, _, _ = utilities.combine_wave_list(self.obj_list)

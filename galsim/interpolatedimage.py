@@ -35,7 +35,7 @@ from .random import BaseDeviate
 from . import _galsim
 from . import fits
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
-from .errors import GalSimIncompatibleValuesError, GalSimWarning, convert_cpp_errors
+from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -909,10 +909,8 @@ class InterpolatedKImage(GSObject):
                 self._kimage.scale = 1.
             self._stepk = self._kimage.scale
         elif stepk < kimage.scale:
-            import warnings
-            warnings.warn(
-                "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.",
-                GalSimWarning)
+            galsim_warn(
+                "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
             self._stepk = kimage.scale
         else:
             self._stepk = stepk

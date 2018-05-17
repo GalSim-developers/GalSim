@@ -19,7 +19,6 @@
 from __future__ import print_function
 
 import galsim
-import warnings
 
 # This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
 

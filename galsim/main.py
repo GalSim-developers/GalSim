@@ -26,7 +26,7 @@ import os
 import logging
 import pprint
 
-from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimWarning
+from .errors import GalSimError, GalSimValueError, GalSimRangeError
 
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.

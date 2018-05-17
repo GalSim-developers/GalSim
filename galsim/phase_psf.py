@@ -80,7 +80,7 @@ from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
-from .errors import GalSimFFTSizeError, GalSimWarning
+from .errors import GalSimFFTSizeError, galsim_warn
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -290,24 +290,21 @@ class Aperture(object):
             if pupil_plane_scale is not None:
                 # Check input scale and warn if looks suspicious.
                 if pupil_plane_scale > good_pupil_scale:
-                    import warnings
                     ratio = good_pupil_scale / pupil_plane_scale
-                    warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
-                                  "Consider decreasing pupil_plane_scale by a factor %f, and/or "
-                                  "check PhaseScreenPSF outputs for signs of folding in real "
-                                  "space."%(1./ratio), GalSimWarning)
+                    galsim_warn("Input pupil_plane_scale may be too large for good sampling.\n"
+                                "Consider decreasing pupil_plane_scale by a factor %f, and/or "
+                                "check PhaseScreenPSF outputs for signs of folding in real "
+                                "space."%(1./ratio))
             else:
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
                 # Check input size and warn if looks suspicious
                 if pupil_plane_size < good_pupil_size:
-                    import warnings
                     ratio = good_pupil_size / pupil_plane_size
-                    warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
-                                  "sampling.\n"
-                                  "Consider increasing pupil_plane_size by a factor %f, and/or "
-                                  "check PhaseScreenPSF outputs for signs of undersampling."%ratio,
-                                  GalSimWarning)
+                    galsim_warn("Input pupil_plane_size may be too small for good focal-plane"
+                                "sampling.\n"
+                                "Consider increasing pupil_plane_size by a factor %f, and/or "
+                                "check PhaseScreenPSF outputs for signs of undersampling."%ratio)
             else:
                 pupil_plane_size = good_pupil_size
             self._generate_pupil_plane(circular_pupil,
@@ -429,12 +426,10 @@ class Aperture(object):
 
         # Check sampling interval and warn if it's not good enough.
         if self.pupil_plane_scale > good_pupil_scale:
-            import warnings
             ratio = self.pupil_plane_scale / good_pupil_scale
-            warnings.warn("Input pupil plane image may not be sampled well enough!\n"
-                          "Consider increasing sampling by a factor %f, and/or check "
-                          "PhaseScreenPSF outputs for signs of folding in real space."%ratio,
-                          GalSimWarning)
+            galsim_warn("Input pupil plane image may not be sampled well enough!\n"
+                        "Consider increasing sampling by a factor %f, and/or check "
+                        "PhaseScreenPSF outputs for signs of folding in real space."%ratio)
 
         if pupil_angle.rad == 0.:
             self._illuminated = pp_arr.astype(bool)
@@ -1289,12 +1284,10 @@ class PhaseScreenPSF(GSObject):
             observed_stepk = self._ii.stepk
 
             if observed_stepk < specified_stepk:
-                import warnings
-                warnings.warn(
+                galsim_warn(
                     "The calculated stepk (%g) for PhaseScreenPSF is smaller than what was used "
                     "to build the wavefront (%g). This could lead to aliasing problems. "
-                    "Increasing pad_factor is recommended."%(observed_stepk, specified_stepk),
-                    GalSimWarning)
+                    "Increasing pad_factor is recommended."%(observed_stepk, specified_stepk))
 
     @property
     def _sbp(self):

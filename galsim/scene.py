@@ -27,7 +27,7 @@ import os
 
 from .real import RealGalaxy, RealGalaxyCatalog
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimNotImplementedError, GalSimWarning
+from .errors import GalSimNotImplementedError, galsim_warn
 
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
@@ -459,9 +459,7 @@ class COSMOSCatalog(object):
             index = self.selectRandomIndex(n_random, rng=rng)
         else:
             if n_random is not None:
-                import warnings
-                warnings.warn("Ignoring input n_random, since indices were specified!",
-                              GalSimWarning)
+                galsim_warn("Ignoring input n_random, since indices were specified!")
 
         if hasattr(index, '__iter__'):
             indices = index
@@ -505,15 +503,11 @@ class COSMOSCatalog(object):
                 size_factor = 0.6
                 gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
             elif self.getUseSample() == '25.2':
-                import warnings
-                warnings.warn(
-                    'Ignoring `deep` argument, because the sample being used already '
-                    'corresponds to a flux limit of F814W<25.2', GalSimWarning)
+                galsim_warn("Ignoring `deep` argument, because the sample being used already "
+                            "corresponds to a flux limit of F814W<25.2")
             else:
-                import warnings
-                warnings.warn(
-                    'Ignoring `deep` argument, because the sample being used does not '
-                    'corresponds to a flux limit of F814W<23.5', GalSimWarning)
+                galsim_warn("Ignoring `deep` argument, because the sample being used does not "
+                            "corresponds to a flux limit of F814W<23.5")
 
         # Store the orig_index as gal.index regardless of whether we have a RealGalaxy or not.
         # It gets set as part of making a real galaxy, but not by _buildParametric.
@@ -550,11 +544,9 @@ class COSMOSCatalog(object):
         if hasattr(self.real_cat, 'weight'):
             use_weights = self.real_cat.weight[self.orig_index]
         else:
-            import warnings
-            warnings.warn('Selecting random object without correcting for catalog-level '
-                          'selection effects.  This correction requires the existence of '
-                          'real catalog with valid weights in addition to parametric one.',
-                          GalSimWarning)
+            galsim_warn("Selecting random object without correcting for catalog-level "
+                        "selection effects.  This correction requires the existence of "
+                        "real catalog with valid weights in addition to parametric one.")
             use_weights = None
 
         # By default, get the number of RNG calls.  We then decide whether or not to return them

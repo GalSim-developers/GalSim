@@ -27,7 +27,7 @@ import os
 import numpy as np
 
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
-from .errors import GalSimWarning
+from .errors import galsim_warn
 
 
 def roll2d(image, shape):
@@ -719,8 +719,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             img.setOrigin(image.origin)
 
     elif suppress_warnings is False:
-        import warnings
-        warnings.warn("Individual images could not be assigned a WCS automatically.", GalSimWarning)
+        galsim_warn("Individual images could not be assigned a WCS automatically.")
 
     return im_list, offsets
 
@@ -895,18 +894,15 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             img.wcs = img_wcs
 
     elif suppress_warnings is False:
-        import warnings
-        warnings.warn("Interleaved image could not be assigned a WCS automatically.", GalSimWarning)
+        galsim_warn("Interleaved image could not be assigned a WCS automatically.")
 
     # Assign a possibly non-trivial origin and warn if individual image have different origins.
     orig = im_list[0].origin
     img.setOrigin(orig)
     for im in im_list[1:]:
         if not im.origin==orig:  # pragma: no cover
-            import warnings
-            warnings.warn("Images in `im_list' have multiple values for origin. Assigning the "
-                          "origin of the first Image instance in 'im_list' to the interleaved "
-                          "image.", GalSimWarning)
+            galsim_warn("Images in `im_list' have multiple values for origin. Assigning the "
+                        "origin of the first Image instance in 'im_list' to the interleaved image.")
             break
 
     return img

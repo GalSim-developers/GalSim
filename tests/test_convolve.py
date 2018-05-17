@@ -92,8 +92,6 @@ def test_convolve():
     # Test photon shooting.
     with assert_warns(galsim.GalSimWarning):
         do_shoot(conv,myImg,"Moffat * Pixel")
-    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
-    galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
 
     # Convolution of just one argument should be equivalent to that argument.
     single = galsim.Convolve(psf)
@@ -251,8 +249,6 @@ def test_shearconvolve():
     # Test photon shooting.
     with assert_warns(galsim.GalSimWarning):
         do_shoot(conv,myImg,"sheared Gaussian * Pixel")
-    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
-    galsim.GSObject.drawImage.__globals__['__warningregistry__'].clear()
 
 
 @timer

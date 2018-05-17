@@ -3250,8 +3250,6 @@ def test_FITS_bad_type():
     """Test that reading FITS files with an invalid data type succeeds by converting the
     type to float64.
     """
-    import warnings
-
     # We check this by monkey patching the Image.valid_types list to not include int16
     # and see if it reads properly and raises the appropriate warning.
     orig_dtypes = galsim.Image.valid_dtypes

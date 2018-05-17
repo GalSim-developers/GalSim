@@ -23,7 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject
 from .utilities import lazy_property, doc_inherit
-from .errors import GalSimWarning, convert_cpp_errors
+from .errors import convert_cpp_errors, galsim_warn
 
 
 def FourierSqrt(obj, gsparams=None):
@@ -107,8 +107,7 @@ class FourierSqrtProfile(GSObject):
     @property
     def _noise(self):
         if self.orig_obj.noise is not None:
-            import warnings
-            warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile", GalSimWarning)
+            galsim_warn("Unable to propagate noise in galsim.FourierSqrtProfile")
         return None
 
     def __eq__(self, other):

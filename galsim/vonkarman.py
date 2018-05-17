@@ -27,7 +27,7 @@ from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .position import PositionD
 from .angle import arcsec, AngleUnit
-from .errors import GalSimError, GalSimWarning, convert_cpp_errors
+from .errors import GalSimError, convert_cpp_errors, galsim_warn
 
 
 class VonKarman(GSObject):
@@ -124,10 +124,9 @@ class VonKarman(GSObject):
         self._delta = sbvk.getDelta()
         if not self._suppress:
             if self._delta > self._gsparams.maxk_threshold:
-                import warnings
-                warnings.warn("VonKarman delta-function component is larger than maxk_threshold.  "
-                              "Please see docstring for information about this component and how "
-                              "to toggle it.", GalSimWarning)
+                galsim_warn("VonKarman delta-function component is larger than maxk_threshold.  "
+                            "Please see docstring for information about this component and how "
+                            "to toggle it.")
         if self._do_delta:
             with convert_cpp_errors():
                 sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0,

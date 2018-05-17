@@ -28,7 +28,7 @@ import os
 import numpy as np
 
 from .image import Image
-from .errors import GalSimError, GalSimValueError, GalSimWarning, GalSimIncompatibleValuesError
+from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
 
 
 ##############################################################################################
@@ -733,9 +733,8 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
         if dt in Image.valid_dtypes:
             data = hdu.data
         else:
-            import warnings
-            warnings.warn("No C++ Image template instantiation for data type %s. "
-                          "Using numpy.float64 instead."%(dt), GalSimWarning)
+            galsim_warn("No C++ Image template instantiation for data type %s. "
+                        "Using numpy.float64 instead."%(dt))
             data = hdu.data.astype(np.float64)
 
         image = Image(array=data)
@@ -888,9 +887,8 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
         if dt in Image.valid_dtypes:
             data = hdu.data
         else:
-            import warnings
-            warnings.warn("No C++ Image template instantiation for data type %s. "
-                          "Using numpy.float64 instead."%(dt), GalSimWarning)
+            galsim_warn("No C++ Image template instantiation for data type %s. "
+                        "Using numpy.float64 instead."%(dt))
             data = hdu.data.astype(np.float64)
 
         nimages = data.shape[0]
