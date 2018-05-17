@@ -459,7 +459,8 @@ class COSMOSCatalog(object):
             index = self.selectRandomIndex(n_random, rng=rng)
         else:
             if n_random is not None:
-                galsim_warn("Ignoring input n_random, since indices were specified!")
+                raise GalSimIncompatibleValuesError(
+                    "Cannot specify both index and n_random", n_random=n_random, index=index)
 
         if hasattr(index, '__iter__'):
             indices = index
