@@ -215,12 +215,12 @@ class AtmosphericScreen(object):
         if check is not None and not self._suppress_warning:
             if check == 'FFT':
                 if self.kmax != np.inf:
-                    galsim_warn("Instantiating AtmosphericScreen with kmax != inf may yield "
-                                "surprising results when drawing using Fourier optics.")
+                    galsim_warn("AtmosphericScreen was instantiated for photon shooting. "
+                                "Drawing now with FFT may yield surprising results.")
             if check == 'phot':
                 if self.kmax == np.inf:
-                    galsim_warn("Instantiating AtmosphericScreen with kmax == inf may yield "
-                                "surprising results when drawing using geometric optics.")
+                    galsim_warn("AtmosphericScreen was instantiated for FFT drawing. "
+                                "Drawing now with photon shooting may yield surprising results.")
 
 
     # Note the magic number 0.00058 is actually ... wait for it ...

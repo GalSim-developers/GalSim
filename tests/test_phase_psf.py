@@ -524,6 +524,19 @@ def test_stepk_maxk():
     psf3.centroid
     psf3.max_sb
 
+    # If we force stepk very low, it will trigger a warning when we try to draw it.
+    psf4 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
+                                 _force_stepk=stepk2/3.5)
+    with assert_warns(galsim.GalSimWarning):
+        psf4._prepareDraw()
+
+    # Can suppress this warning if desired.
+    psf5 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
+                                 _force_stepk=stepk2/3.5, suppress_warning=True)
+    with assert_raises(AssertionError):
+        with assert_warns(galsim.GalSimWarning):
+            psf5._prepareDraw()
+
 
 @timer
 def test_ne():
@@ -880,6 +893,23 @@ def test_speedup():
     assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
 
 @timer
+def test_instantiation_check():
+    """Check that after instantiating, drawing with the other method will emit a warning.
+    """
+    atm1 = galsim.Atmosphere(screen_size=10.0, altitude=10, r0_500=0.2)
+    psf1 = atm1.makePSF(lam=500.0, diam=1.0)
+    psf1.drawImage()
+    with assert_warns(galsim.GalSimWarning):
+        psf1.drawImage(method='phot', n_photons=10)
+
+    atm2 = galsim.Atmosphere(screen_size=10.0, altitude=10, r0_500=0.2)
+    psf2 = atm2.makePSF(lam=500.0, diam=1.0)  # exptime = 0, so reasonable to draw w/ FFT
+    psf2.drawImage(method='phot', n_photons=10)
+    with assert_warns(galsim.GalSimWarning):
+        psf2.drawImage()
+
+
+@timer
 def test_gc():
     """Make sure that pending psfs don't leak memory.
     """
@@ -944,4 +974,5 @@ if __name__ == "__main__":
     test_input()
     test_r0_weights()
     test_speedup()
+    test_instantiation_check()
     test_gc()
