@@ -230,7 +230,7 @@ class COSMOSCatalog(object):
     def _apply_exclusion(self, exclusion_level, min_hlr=0, max_hlr=0, min_flux=0, max_flux=0):
         from ._pyfits import pyfits
         mask = np.ones(len(self.orig_index), dtype=bool)
-        if exclusion_level in ['marginal', 'bad_stamp']:
+        if exclusion_level in ('marginal', 'bad_stamp'):
             # First, read in what we need to impose selection criteria, if the appropriate
             # exclusion_level was chosen.
 
@@ -286,7 +286,7 @@ class COSMOSCatalog(object):
                                   "`galsim_download_cosmos -s %s` to upgrade."%(self.use_sample))
                 mask &= self.real_cat.stamp_flux > 0
 
-        if exclusion_level in ['bad_fits', 'marginal']:
+        if exclusion_level in ('bad_fits', 'marginal'):
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
             # flags).  In this case we only get rid of those with failed bulge+disk AND failed
             # Sersic fits, so there is no viable parametric model for the galaxy.

@@ -207,7 +207,7 @@ def EvaluateCurrentValue(key, config, base, value_type=None):
                         that the value is the right type.]
     """
     if not isinstance(config[key], dict):
-        if value_type is not None or (isinstance(config[key],str) and config[key][0] in ['@','$']):
+        if value_type is not None or (isinstance(config[key],str) and config[key][0] in ('@','$')):
             # This will work fine to evaluate the current value, but will also
             # compute it if necessary
             #print('Not dict. Parse value normally')
@@ -383,9 +383,9 @@ def _GetBoolValue(param):
     """ @brief Convert a string to a bool
     """
     if isinstance(param,str):
-        if param.strip().upper() in [ 'TRUE', 'YES' ]:
+        if param.strip().upper() in ('TRUE', 'YES'):
             return True
-        elif param.strip().upper() in [ 'FALSE', 'NO' ]:
+        elif param.strip().upper() in ('FALSE', 'NO'):
             return False
         else:
             try:

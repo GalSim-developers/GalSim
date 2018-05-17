@@ -93,8 +93,8 @@ class MultiExposureObject(object):
                 raise galsim.GalSimValueError('Images must all be the same shape', images)
 
         # The others are optional, but if given, make sure they are ok.
-        for lst, name, isim in [ (weight, 'weight', True), (badpix, 'badpix', True),
-                                 (seg, 'seg', True), (psf, 'psf', False), (wcs, 'wcs', False) ]:
+        for lst, name, isim in ( (weight, 'weight', True), (badpix, 'badpix', True),
+                                 (seg, 'seg', True), (psf, 'psf', False), (wcs, 'wcs', False) ):
             if lst is not None:
                 if not isinstance(lst,list):
                     raise TypeError('%s should be a list'%name)

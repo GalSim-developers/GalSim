@@ -117,7 +117,7 @@ def SetupExtraOutputsForImage(config, logger=None):
     if 'output' in config:
         if 'extra_builder' not in config:
             SetupExtraOutput(config, logger)
-        for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
+        for key in (k for k in valid_extra_outputs.keys() if k in config['output']):
             builder = config['extra_builder'][key]
             field = config['output'][key]
             builder.setupImage(field, config, logger)
@@ -135,7 +135,7 @@ def ProcessExtraOutputsForStamp(config, skip, logger=None):
     """
     if 'output' in config:
         obj_num = config['obj_num']
-        for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
+        for key in (k for k in valid_extra_outputs.keys() if k in config['output']):
             builder = config['extra_builder'][key]
             field = config['output'][key]
             if skip:
@@ -154,7 +154,7 @@ def ProcessExtraOutputsForImage(config, logger=None):
     """
     if 'output' in config:
         obj_nums = None
-        for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
+        for key in (k for k in valid_extra_outputs.keys() if k in config['output']):
             image_num = config.get('image_num',0)
             start_image_num = config.get('start_image_num',0)
             if obj_nums is None:
@@ -206,7 +206,7 @@ def WriteExtraOutputs(config, main_data, logger=None):
     if 'extra_last_file' not in config:
         config['extra_last_file'] = {}
 
-    for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+    for key in (k for k in valid_extra_outputs.keys() if k in output):
         field = output[key]
         if 'file_name' in field:
             galsim.config.SetDefaultExt(field, '.fits')
@@ -267,7 +267,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     """
     output = config['output']
     hdus = {}
-    for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+    for key in (k for k in valid_extra_outputs.keys() if k in output):
         field = output[key]
         if 'hdu' in field:
             hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
@@ -300,7 +300,7 @@ def CheckNoExtraOutputHDUs(config, output_type, logger=None):
     """
     logger = galsim.config.LoggerWrapper(logger)
     output = config['output']
-    for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+    for key in (k for k in valid_extra_outputs.keys() if k in output):
         field = output[key]
         if 'hdu' in field:
             hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
