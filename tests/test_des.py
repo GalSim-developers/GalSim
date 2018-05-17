@@ -642,9 +642,17 @@ def test_psf():
                                       err_msg="no-wcs PSFEx shape.g2 doesn't match")
 
     with assert_raises(TypeError):
+        # file_name must be a string.
         galsim.des.DES_PSFEx(psf, wcs=wcs_file, dir=data_dir)
     with assert_raises(galsim.GalSimError):
+        # Cannot provide both image_file_name and wcs
         galsim.des.DES_PSFEx(psfex_file, image_file_name=wcs_file, wcs=wcs_file, dir=data_dir)
+    with assert_raises((IOError, OSError)):
+        # This one doesn't exist.
+        galsim.des.DES_PSFEx('nonexistant.psf', wcs=wcs_file, dir=data_dir)
+    with assert_raises(OSError):
+        # This one exists, but has invalid header parameters.
+        galsim.des.DES_PSFEx('invalid_psfcat.psf', wcs=wcs_file, dir=data_dir)
 
     # Now the shapelet PSF model.  This model is already in sky coordinates, so no wcs_file needed.
     fitpsf = galsim.des.DES_Shapelet(os.path.join(data_dir,fitpsf_file))
