@@ -1143,15 +1143,6 @@ class FitsHeader(object):
         return self.header.__iter__()
 
     def __setitem__(self, key, value):
-        # pyfits doesn't like getting bytes in python 3, so decode if appropriate
-        try:
-            key = str(key.decode())
-        except AttributeError:
-            pass
-        try:
-            value = str(value.decode())
-        except AttributeError:
-            pass
         self._tag = None
         self.header[key] = value
 
