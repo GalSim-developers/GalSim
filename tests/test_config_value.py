@@ -59,12 +59,16 @@ def test_float_value():
         'ran1' : { 'type' : 'Random', 'min' : 0.5, 'max' : 3 },
         'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 0 },
         'gauss1' : { 'type' : 'RandomGaussian', 'sigma' : 1 },
+        'gauss1b' : { 'type' : 'RandomGaussian', 'sigma' : 1 },
         'gauss2' : { 'type' : 'RandomGaussian', 'sigma' : 3, 'mean' : 4 },
         'gauss3' : { 'type' : 'RandomGaussian', 'sigma' : 1.5, 'min' : -2, 'max' : 2 },
         'gauss4' : { 'type' : 'RandomGaussian', 'sigma' : 0.5, 'min' : 0, 'max' : 0.8 },
         'gauss5' : { 'type' : 'RandomGaussian',
                      'sigma' : 0.3, 'mean' : 0.5, 'min' : 0, 'max' : 0.5 },
-        'gauss6' : { 'type' : 'RandomGaussian', 'sigma' : 1 },
+        'gauss6' : { 'type' : 'RandomGaussian',
+                     'sigma' : 0.8, 'mean' : 0.3, 'min' : 2. },
+        'gauss7' : { 'type' : 'RandomGaussian',
+                     'sigma' : 1.3, 'mean' : 0.3, 'min' : -2., 'max' : 0. },
         'dist1' : { 'type' : 'RandomDistribution', 'function' : 'config_input/distribution.txt',
                     'interpolant' : 'linear' },
         'dist2' : { 'type' : 'RandomDistribution',
@@ -211,6 +215,22 @@ def test_float_value():
             if gd_val > 0.5:
                 gd_val = 1-gd_val
         np.testing.assert_almost_equal(gauss5, gd_val)
+
+        gauss6 = galsim.config.ParseValue(config,'gauss6',config, float)[0]
+        gd = galsim.GaussianDeviate(rng,mean=0.,sigma=0.8)
+        gd_val = abs(gd())
+        while gd_val < 1.7:
+            gd_val = abs(gd())
+        gd_val += 0.3
+        np.testing.assert_almost_equal(gauss6, gd_val)
+
+        gauss7 = galsim.config.ParseValue(config,'gauss7',config, float)[0]
+        gd = galsim.GaussianDeviate(rng,mean=0.,sigma=1.3)
+        gd_val = abs(gd())
+        while gd_val < 0.3 or gd_val > 2.3:
+            gd_val = abs(gd())
+        gd_val = -gd_val + 0.3
+        np.testing.assert_almost_equal(gauss7, gd_val)
 
     # Test values generated from a distribution in a file
     dd=galsim.DistDeviate(rng,function='config_input/distribution.txt',interpolant='linear')
@@ -372,7 +392,8 @@ def test_float_value():
     # Test PowerSpectrumMagnification
     ps = galsim.PowerSpectrum(e_power_function='np.exp(-k**0.2)')
     galsim.config.RemoveCurrent(config)
-    config['rng'] = rng.duplicate()  # reset them back to be in sync
+    rng = galsim.BaseDeviate(31415)  # reset this so changes to tests above don't mess this up.
+    config['rng'] = rng.duplicate()
     ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
     print("ps mag = ",ps.getMagnification((0.1,0.2)))
     galsim.config.SetupInputsForImage(config, None)
@@ -380,24 +401,26 @@ def test_float_value():
     np.testing.assert_almost_equal(ps1, ps.getMagnification((0.1,0.2)))
 
     # Beef up the amplitude to get strong lensing.
-    ps = galsim.PowerSpectrum(e_power_function='500 * np.exp(-k**0.2)')
+    ps = galsim.PowerSpectrum(e_power_function='100 * np.exp(-k**0.2)')
     ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
     print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
     config = galsim.config.CleanConfig(config)
-    config['input']['power_spectrum']['e_power_function'] = '500 * np.exp(-k**0.2)'
+    config['input']['power_spectrum']['e_power_function'] = '100 * np.exp(-k**0.2)'
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, logger=cl.logger)
         ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
-    assert 'PowerSpectrum mu = -3.643856 means strong lensing. Using mu=25.000000' in cl.output
+    print(cl.output)
+    assert 'PowerSpectrum mu = -2.778083 means strong lensing. Using mu=25.000000' in cl.output
     np.testing.assert_almost_equal(ps2a, 25.)
 
-    galsim.config.RemoveCurrent(config)
     # Need a different point that happens to have strong lensing, since the PS realization changed.
-    config['world_pos'] = galsim.PositionD(3.1,24.2)
+    config['world_pos'] = galsim.PositionD(5,75)
+    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, cl.logger)
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
         ps2b = galsim.config.ParseValue(config, 'ps', config, float)[0]
-    assert "Warning: PowerSpectrum mu = 29.287659 means strong lensing." in cl.output
+    print(cl.output)
+    assert "PowerSpectrum mu = 26.949446 means strong lensing. Using mu=25.000000" in cl.output
     np.testing.assert_almost_equal(ps2b, 25.)
 
     # Or set a different maximum
@@ -405,7 +428,7 @@ def test_float_value():
     config['ps']['max_mu'] = 30.
     del config['ps']['_get']
     ps3 = galsim.config.ParseValue(config,'ps',config, float)[0]
-    np.testing.assert_almost_equal(ps3, 29.28765853271335)
+    np.testing.assert_almost_equal(ps3, 26.949445807939387)
 
     # Negative max_mu is invalid.
     galsim.config.RemoveCurrent(config)
@@ -457,7 +480,7 @@ def test_float_value():
 
     # Error if given the wrong type.  Should be float, not np.float16.
     with assert_raises(galsim.GalSimConfigError):
-        galsim.config.ParseValue(config,'gauss6',config, np.float16)
+        galsim.config.ParseValue(config,'gauss1b',config, np.float16)
     # Different path to (different) error if already processed into a _gen_fn.
     galsim.config.ParseValue(config,'gauss1',config, float)
     with assert_raises(galsim.GalSimConfigError):
