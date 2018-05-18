@@ -128,8 +128,7 @@ class _BaseCorrelatedNoise(object):
         return self.withScaledVariance(variance_ratio)
     def __div__(self, variance_ratio):
         return self.withScaledVariance(1./variance_ratio)
-    def __truediv__(self, variance_ratio):
-        return self.withScaledVariance(1./variance_ratio)
+    __truediv__ = __div__
 
     def copy(self, rng=None):
         """Returns a copy of the correlated noise model.

@@ -598,8 +598,7 @@ class SED(object):
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
-    def __truediv__(self, other):
-        return self.__div__(other)
+    __truediv__ = __div__
 
     def __add__(self, other):
         # Add together two SEDs, with the following caveats:

@@ -316,8 +316,7 @@ class Bandpass(object):
 
         return Bandpass(tp, wave_type, self.blue_limit, self.red_limit, _wave_list=self.wave_list)
 
-    def __truediv__(self, other):
-        return self.__div__(other)
+    __truediv__ = __div__
 
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
