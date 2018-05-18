@@ -96,25 +96,25 @@ def _GenerateFromRandomGaussian(config, base, value_type):
 
         do_abs = False
         do_neg = False
-        if min == mean:
+        if (min >= mean) and (max > mean):
             do_abs = True
-            max -= mean
-            min = -max
-        elif max == mean:
+            lo = min - mean
+            hi = max - mean
+        elif (min < mean) and (max <= mean):
             do_abs = True
             do_neg = True
-            min -= mean
-            max = -min
+            hi = mean - min
+            lo = mean - max
         else:
-            min -= mean
-            max -= mean
+            lo = min - mean
+            hi = max - mean
 
         # Emulate a do-while loop
         import math
         while True:
             val = gd()
             if do_abs: val = math.fabs(val)
-            if val >= min and val <= max: break
+            if val >= lo and val <= hi: break
         if do_neg: val = -val
         val += mean
     else:
