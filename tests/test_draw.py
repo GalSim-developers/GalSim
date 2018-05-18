@@ -1068,6 +1068,11 @@ def test_shoot():
         psf = galsim.Gaussian(sigma=3)
         psf.drawImage(method='phot')
 
+    # Also if flux << 1, n_photons will end up 0.
+    with assert_warns(galsim.GalSimWarning):
+        psf = galsim.Gaussian(sigma=3, flux=1.e-5)
+        psf.drawImage(method='phot')
+
 
 @timer
 def test_drawImage_area_exptime():
