@@ -116,8 +116,7 @@ class Position(object):
         self._check_scalar(other, 'divide')
         return self.__class__(self.x / other, self.y / other)
 
-    def __truediv__(self, other):
-        return self.__div__(other)
+    __truediv__ = __div__
 
     def __neg__(self):
         return self.__class__(-self.x, -self.y)

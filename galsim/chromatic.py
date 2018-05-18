@@ -533,6 +533,7 @@ class ChromaticObject(object):
                     "Subclasses of ChromaticObject must override evaluateAtWavelength()")
         return self._obj.evaluateAtWavelength(wave)
 
+    # Make op* and op*= work to adjust the flux of the object
     def __mul__(self, flux_ratio):
         """Scale the flux of the object by the given flux ratio, which may be an SED, a float, or
         a univariate callable function (of wavelength in nanometers) that returns a float.
@@ -555,6 +556,14 @@ class ChromaticObject(object):
         @returns a new object with scaled flux.
         """
         return self.withScaledFlux(flux_ratio)
+
+    __rmul__ = __mul__
+
+    # Likewise for op/ and op/=
+    def __div__(self, other):
+        return self.__mul__(1./other)
+
+    __truediv__ = __div__
 
     def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by `flux_ratio`
@@ -703,17 +712,6 @@ class ChromaticObject(object):
     # Subtract `ChromaticObject`s and/or `GSObject`s
     def __sub__(self, other):
         return ChromaticSum(self, -other)
-
-    # Make op* and op*= work to adjust the flux of the object
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    # Likewise for op/ and op/=
-    def __div__(self, other):
-        return self.__mul__(1./other)
-
-    def __truediv__(self, other):
-        return self.__div__(other)
 
     def __neg__(self):
         return -1. * self
