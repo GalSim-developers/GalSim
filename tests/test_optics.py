@@ -453,10 +453,15 @@ def test_OpticalPSF_pupil_plane():
                   pupil_plane_scale=pp_scale)
     assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam,
                   pupil_plane_im=im.view(scale=pp_scale))
-    assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam,
-                  pupil_plane_im=galsim.Image(im.array[:-2,:]))
-    assert_raises(ValueError, galsim.OpticalPSF, lam_over_diam,
-                  pupil_plane_im=galsim.Image(im.array[:-1,:-1]))
+    # These aren't raised until the image is actually used
+    with assert_raises(ValueError):
+        # not square
+        op = galsim.OpticalPSF(lam_over_diam, pupil_plane_im=galsim.Image(im.array[:-2,:]))
+        op.drawImage()
+    with assert_raises(ValueError):
+        # not even sides
+        op = galsim.OpticalPSF(lam_over_diam, pupil_plane_im=galsim.Image(im.array[:-1,:-1]))
+        op.drawImage()
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
     # make sure that it still works even if we don't tell it that value.
