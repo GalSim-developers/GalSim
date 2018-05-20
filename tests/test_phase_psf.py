@@ -59,6 +59,8 @@ def test_aperture():
     assert_raises(ValueError, galsim.Aperture, 1.7, pupil_plane_im=im, strut_angle=5*galsim.degrees)
     assert_raises(ValueError, galsim.Aperture, 1.7, pupil_plane_im=im, strut_angle=5*galsim.degrees)
     assert_raises(ValueError, galsim.Aperture, 1.7, screen_list=[galsim.OpticalScreen(diam=1)])
+    assert_raises(TypeError, galsim.Aperture, 1.7, nstruts=4, strut_angle=5)
+    assert_raises(TypeError, galsim.Aperture, 1.7, pupil_plane_im=im, pupil_angle=5)
 
     # rho is a convenience property that can be useful when debugging, but isn't used in the
     # main code base.
@@ -74,20 +76,25 @@ def test_aperture():
         np.testing.assert_almost_equal(maxk, np.pi/scale)
 
     # If the constructed pupil plane would be too large, raise an error
-    assert_raises(galsim.GalSimFFTSizeError, galsim.Aperture, 1.7, pupil_plane_scale=1.e-4)
+    with assert_raises(galsim.GalSimFFTSizeError):
+        ap = galsim.Aperture(1.7, pupil_plane_scale=1.e-4)
+        ap._illuminated  # Only triggers once we force it to build the illuminated array
 
     # Similar if the given image is too large.
     # Here, we change gsparams.maximum_fft_size, rather than build a really large image to load.
     with assert_raises(galsim.GalSimFFTSizeError):
-        galsim.Aperture(1.7, pupil_plane_im=im, gsparams=galsim.GSParams(maximum_fft_size=64))
+        ap = galsim.Aperture(1.7, pupil_plane_im=im, gsparams=galsim.GSParams(maximum_fft_size=64))
+        ap._illuminated
 
-    # Other choices just give warnings
+    # Other choices just give warnings about pupil scale or size being inappropriate
     with assert_warns(galsim.GalSimWarning):
-        galsim.Aperture(diam=1.7, pupil_plane_size=3, pupil_plane_scale=0.03)
+        ap = galsim.Aperture(diam=1.7, pupil_plane_size=3, pupil_plane_scale=0.03)
+        ap._illuminated
 
     im.wcs = None  # Otherwise get an error.
     with assert_warns(galsim.GalSimWarning):
-        galsim.Aperture(diam=1.7, pupil_plane_im=im, pupil_plane_scale=0.03)
+        ap = galsim.Aperture(diam=1.7, pupil_plane_im=im, pupil_plane_scale=0.03)
+        ap._illuminated
 
 
 @timer
@@ -323,9 +330,10 @@ def test_frozen_flow():
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
     screen = galsim.AtmosphericScreen(1.0, dx, alt, vx=vx, rng=rng)
+    aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
     with assert_warns(galsim.GalSimWarning):
-        aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
-    wf0 = screen.wavefront(aper.u, aper.v, None, theta0)
+        # Warns about scale being too large, which we do on purpose to make the test faster.
+        wf0 = screen.wavefront(aper.u, aper.v, None, theta0)
     dwdu0, dwdv0 = screen.wavefront_gradient(aper.u, aper.v, t=screen._time)
     screen._seek(t)
     assert screen._time == t, "Wrong time for AtmosphericScreen"
