@@ -227,8 +227,8 @@ class Aperture(object):
         self._screen_list = screen_list
         self._pupil_plane_im = pupil_plane_im
         self._pupil_angle = pupil_angle
-        self._pupil_plane_scale = pupil_plane_scale
-        self._pupil_plane_size = pupil_plane_size
+        self._input_pupil_plane_scale = pupil_plane_scale
+        self._input_pupil_plane_size = pupil_plane_size
         self._gsparams = GSParams.check(gsparams)
 
         if diam <= 0.:
@@ -313,13 +313,13 @@ class Aperture(object):
             lam = 500.0
         else:
             lam = self._lam
-        airy = Airy(diam=self.diam, lam=lam, obscuration=self.obscuration, gsparams=self._gsparams)
+        airy = Airy(diam=self.diam, lam=lam, obscuration=self.obscuration, gsparams=self.gsparams)
         stepk = airy.stepk
         if self._screen_list is not None:
             screen_list = PhaseScreenList(self._screen_list)
             stepk = min(stepk,
                         screen_list._getStepK(lam=lam, diam=self.diam, obscuration=self.obscuration,
-                                              gsparams=self._gsparams))
+                                              gsparams=self.gsparams))
         return stepk * lam * 1.e-9 * (radians / arcsec) / (2 * np.pi * self._pad_factor)
 
     @lazy_property
@@ -329,7 +329,8 @@ class Aperture(object):
         if self._pupil_plane_im is not None:  # Use image of pupil plane
             return self._load_pupil_plane()
         else:  # Use geometric parameters.
-            if self._pupil_plane_scale is not None:
+            if self._input_pupil_plane_scale is not None:
+                self._pupil_plane_scale = self._input_pupil_plane_scale
                 # Check input scale and warn if looks suspicious.
                 if self._pupil_plane_scale > self.good_pupil_scale:
                     ratio = self.good_pupil_scale / self._pupil_plane_scale
@@ -339,7 +340,8 @@ class Aperture(object):
                                 "space."%(1./ratio))
             else:
                 self._pupil_plane_scale = self.good_pupil_scale
-            if self._pupil_plane_size is not None:
+            if self._input_pupil_plane_size is not None:
+                self._pupil_plane_size = self._input_pupil_plane_size
                 # Check input size and warn if looks suspicious
                 if self._pupil_plane_size < self.good_pupil_size:
                     ratio = self.good_pupil_size / self._pupil_plane_size
@@ -360,7 +362,7 @@ class Aperture(object):
         self._npix = Image.good_fft_size(int(np.ceil(ratio)))
 
         # Check FFT size
-        if self._npix > self._gsparams.maximum_fft_size:
+        if self._npix > self.gsparams.maximum_fft_size:
             raise GalSimFFTSizeError("Created pupil plane array that is too large.",self._npix)
 
         # Shrink scale such that size = scale * npix exactly.
@@ -416,7 +418,7 @@ class Aperture(object):
         self._npix = pp_arr.shape[0]
 
         # Check FFT size
-        if self._npix > self._gsparams.maximum_fft_size:
+        if self._npix > self.gsparams.maximum_fft_size:
             raise GalSimFFTSizeError("Loaded pupil plane array that is too large.", self._npix)
 
         # Sanity checks
@@ -431,8 +433,8 @@ class Aperture(object):
         # 1.  pupil_plane_scale kwarg
         # 2.  image.scale if not None
         # 3.  Use diameter and farthest illuminated pixel.
-        if self._pupil_plane_scale is not None:
-            pass
+        if self._input_pupil_plane_scale is not None:
+            self._pupil_plane_scale = self._input_pupil_plane_scale
         elif self._pupil_plane_im.scale is not None:
             self._pupil_plane_scale = self._pupil_plane_im.scale
         else:
@@ -483,6 +485,19 @@ class Aperture(object):
             pp_arr[pp_arr < 0.5*max_pp_val] = 0.
             return pp_arr.astype(bool)
 
+    @property
+    def gsparams(self):
+        return self._gsparams
+
+    def withGSParams(self, gsparams):
+        """Create a version of the current aperture with the given gsparams
+        """
+        if gsparams is self.gsparams: return self
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        return ret
+
     # Used in Aperture.__str__ and OpticalPSF.__str__
     def _geometry_str(self):
         s = ""
@@ -532,18 +547,33 @@ class Aperture(object):
         else:
             # Pupil was created geometrically, so use that here.
             s += self._geometry_repr()
-            s += ", pupil_plane_scale=%r"%self._pupil_plane_scale
-            s += ", pupil_plane_size=%r"%self._pupil_plane_size
-        if self._gsparams != GSParams():
-            s += ", gsparams=%r"%self._gsparams
+            s += ", pupil_plane_scale=%r"%self._input_pupil_plane_scale
+            s += ", pupil_plane_size=%r"%self._input_pupil_plane_size
+            s += ", oversampling=%r"%self._oversampling
+            s += ", pad_factor=%r"%self._pad_factor
+        if self.gsparams != GSParams():
+            s += ", gsparams=%r"%self.gsparams
         s += ")"
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, Aperture) and
+        if not (isinstance(other, Aperture) and
                 self.diam == other.diam and
-                self.pupil_plane_scale == other.pupil_plane_scale and
-                np.array_equal(self.illuminated, other.illuminated))
+                self._gsparams == other._gsparams):
+            return False
+        if self._pupil_plane_im is not None:
+            return (self.pupil_plane_scale == other.pupil_plane_scale and
+                    np.array_equal(self.illuminated, other.illuminated))
+        else:
+            return (self._circular_pupil == other._circular_pupil and
+                    self._obscuration == other._obscuration and
+                    self._nstruts == other._nstruts and
+                    self._strut_thick == other._strut_thick and
+                    self._strut_angle == other._strut_angle and
+                    self._input_pupil_plane_scale == other._input_pupil_plane_scale and
+                    self._input_pupil_plane_size == other._input_pupil_plane_size and
+                    self._oversampling == other._oversampling and
+                    self._pad_factor == other._pad_factor)
 
     def __hash__(self):
         # Cache since self.illuminated may be large.
@@ -609,8 +639,12 @@ class Aperture(object):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
         # pickle.
         d = self.__dict__.copy()
-        for k in ('_rho', '_u', '_v', '_rsqr'):
+        for k in ('rho', '_uv', 'rsqr'):
             d.pop(k, None)
+        # Only reconstruct _illuminated if we made it from geometry.  If loaded, it's probably
+        # faster to serialize the array.
+        if self._pupil_plane_im is None:
+            d.pop('_illuminated', None)
         return d
 
     # Some quick notes for Josh:
@@ -1168,6 +1202,10 @@ class PhaseScreenPSF(GSObject):
                 raise GalSimIncompatibleValuesError(
                     "Diameter required if aperture not specified directly.", diam=None, aper=aper)
             aper = Aperture(lam=lam, screen_list=self._screen_list, gsparams=gsparams, **kwargs)
+        elif gsparams is None:
+            gsparams = aper.gsparams
+        else:
+            aper = aper.withGSParams(gsparams)
         self.aper = aper
 
         if not isinstance(theta[0], Angle) or not isinstance(theta[1], Angle):
@@ -1271,7 +1309,7 @@ class PhaseScreenPSF(GSObject):
             r0_500 = self._screen_list.r0_500_effective
             if r0_500 is None:  # No AtmosphericScreens in list
                 return Airy(lam=self.lam, diam=self.aper.diam,
-                            obscuration=self.aper.obscuration)
+                            obscuration=self.aper.obscuration, gsparams=self._gsparams)
             else:
                 r0 = r0_500 * (self.lam/500.)**(6./5)
                 return SecondKick(
@@ -1284,6 +1322,15 @@ class PhaseScreenPSF(GSObject):
     @property
     def flux(self):
         return self._flux
+
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret.aper = self.aper.withGSParams(gsparams)
+        return ret
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
@@ -1357,6 +1404,7 @@ class PhaseScreenPSF(GSObject):
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d.pop('_dummy_ii',None)
         d.pop('_real_ii',None)
+        d.pop('second_kick',None)
         return d
 
     def __setstate__(self, d):
