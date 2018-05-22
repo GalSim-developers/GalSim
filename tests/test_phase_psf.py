@@ -507,9 +507,8 @@ def test_stepk_maxk():
 
     # Check that stepk changes when gsparams.folding_threshold become more extreme.
     # (Note: maxk is independent of maxk_threshold because of the hard edge of the aperture.)
-    psf1 = galsim.PhaseScreenPSF(atm, 500.0, diam=1.0, scale_unit=galsim.arcsec,
-                                 gsparams=galsim.GSParams(folding_threshold=1.e-3,
-                                                          maxk_threshold=1.e-4))
+    gsp = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=1.e-4)
+    psf1 = galsim.PhaseScreenPSF(atm, 500.0, diam=1.0, scale_unit=galsim.arcsec, gsparams=gsp)
     stepk3 = psf1.stepk
     maxk3 = psf1.maxk
     print('stepk3 = ',stepk3)
@@ -517,6 +516,19 @@ def test_stepk_maxk():
     print('goodImageSize = ',psf1.getGoodImageSize(0.2))
     assert stepk3 < stepk1
     assert maxk3 == maxk1
+
+    psf2 = psf.withGSParams(gsp)
+    assert psf2.gsparams == gsp
+    assert psf2 != psf
+    assert psf2 == psf1
+    assert psf2.aper.gsparams == gsp
+    assert psf.aper.gsparams != gsp
+
+    aper3 = galsim.Aperture(diam=1.0, gsparams=gsp)
+    psf3 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper3, scale_unit=galsim.arcsec)
+    assert psf3.gsparams == gsp
+    assert psf3 != psf
+    assert psf3 == psf1
 
     # Check that it respects the force_stepk and force_maxk parameters
     psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,

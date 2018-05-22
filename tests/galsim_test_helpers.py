@@ -232,7 +232,7 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
 
     # When made with the same gsparams, it returns itself
     assert prof.withGSParams(prof.gsparams) is prof
-    alt_gsp = galsim.GSParams(xvalue_accuracy=0.2, folding_threshold=1.e-10)
+    alt_gsp = galsim.GSParams(xvalue_accuracy=0.2, folding_threshold=0.03)
     prof_alt = prof.withGSParams(alt_gsp)
     assert isinstance(prof_alt, prof.__class__)
     assert prof_alt.gsparams == alt_gsp
