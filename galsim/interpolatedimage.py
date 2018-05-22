@@ -297,22 +297,22 @@ class InterpolatedImage(GSObject):
             raise GalSimValueError("Invalid normalization requested.", normalization,
                                    ('flux', 'f', 'surface brightness', 'sb'))
 
-        # set up the interpolants if none was provided by user, or check that the user-provided ones
-        # are of a valid type
-        if x_interpolant is None:
-            self._x_interpolant = Quintic(tol=1e-4)
-        else:
-            self._x_interpolant = convert_interpolant(x_interpolant)
-        if k_interpolant is None:
-            self._k_interpolant = Quintic(tol=1e-4)
-        else:
-            self._k_interpolant = convert_interpolant(k_interpolant)
-
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)
         self._image = image._view()
         self._image.setCenter(0,0)
         self._gsparams = GSParams.check(gsparams)
+
+        # Set up the interpolants if none was provided by user, or check that the user-provided ones
+        # are of a valid type
+        if x_interpolant is None:
+            self._x_interpolant = Quintic(tol=1e-4, gsparams=self._gsparams)
+        else:
+            self._x_interpolant = convert_interpolant(x_interpolant).withGSParams(self._gsparams)
+        if k_interpolant is None:
+            self._k_interpolant = Quintic(tol=1e-4, gsparams=self._gsparams)
+        else:
+            self._k_interpolant = convert_interpolant(k_interpolant).withGSParams(self._gsparams)
 
         # Set the wcs if necessary
         if scale is not None:
