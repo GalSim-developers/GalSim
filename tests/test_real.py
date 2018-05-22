@@ -184,6 +184,11 @@ def test_real_galaxy_ideal():
     rg_4 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(67890))
     assert rg_3.index != rg_4.index, 'Different seeds did not give different random objects!'
 
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    rg_5 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(67890), gsparams=gsp)
+    assert rg_5 != rg_4
+    assert rg_5 == rg_4.withGSParams(gsp)
+
     check_basic(rg, "RealGalaxy", approx_maxsb=True)
     check_basic(rg_1, "RealGalaxy", approx_maxsb=True)
     check_basic(rg_2, "RealGalaxy", approx_maxsb=True)

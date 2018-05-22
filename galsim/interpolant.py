@@ -96,6 +96,10 @@ class Interpolant(object):
                                    ('linear', 'cubic', 'quintic', 'lanczosN', 'nearest', 'delta',
                                     'sinc'))
 
+    @property
+    def gsparams(self):
+        return self._gsparams
+
     def withGSParams(self, gsparams):
         """Create a version of the current interpolant with the given gsparams
         """

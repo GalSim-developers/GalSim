@@ -98,6 +98,10 @@ def test_roundtrip():
         interp2 = galsim.InterpolatedImage(image_in, scale=test_scale, gsparams=gsp)
         assert interp2 != interp
         assert interp2 == interp.withGSParams(gsp)
+        assert interp2.x_interpolant.gsparams == gsp
+        assert interp2.k_interpolant.gsparams == gsp
+        assert interp.x_interpolant.gsparams != gsp
+        assert interp.k_interpolant.gsparams != gsp
 
         # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
         # Gary says that's expected -- Lanczos isn't technically flux conserving.
@@ -1122,6 +1126,13 @@ def test_kroundtrip():
     # Check picklability
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
+
+    gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    b2 = galsim.InterpolatedKImage(kim_a, gsparams=gsp)
+    assert b2 != b
+    assert b2 == b.withGSParams(gsp)
+    assert b2.k_interpolant.gsparams == gsp
+    assert b.k_interpolant.gsparams != gsp
 
     check_basic(b, "InterpolatedKImage", approx_maxsb=True)
 
