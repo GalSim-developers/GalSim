@@ -96,6 +96,15 @@ class Interpolant(object):
                                    ('linear', 'cubic', 'quintic', 'lanczosN', 'nearest', 'delta',
                                     'sinc'))
 
+    def withGSParams(self, gsparams):
+        """Create a version of the current interpolant with the given gsparams
+        """
+        if gsparams is self.gsparams: return self
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        return ret
+
     def __getstate__(self):
         d = self.__dict__.copy()
         d.pop('_i', None)

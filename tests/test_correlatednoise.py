@@ -1295,6 +1295,28 @@ def test_covariance_spectrum():
     do_pickle(covspec)
     do_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
 
+@timer
+def test_gsparams():
+    """Test withGSParams
+    """
+    rng = galsim.BaseDeviate(1234)
+    ucn = galsim.UncorrelatedNoise(rng=rng, variance=1.e3)
+    gsp = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
+
+    ucn1 = ucn.withGSParams(gsp)
+    ucn2 = galsim.UncorrelatedNoise(rng=rng, variance=1.e3, gsparams=gsp)
+    print('ucn1 = ',repr(ucn1))
+    print('ucn2 = ',repr(ucn2))
+    assert ucn != ucn1
+    assert ucn1 == ucn2
+
+    ccn = galsim.getCOSMOSNoise(rng=rng)
+
+    ccn1 = ccn.withGSParams(gsp)
+    ccn2 = galsim.getCOSMOSNoise(rng=rng, gsparams=gsp)
+    assert ccn != ccn1
+    assert ccn1 == ccn2
+
 
 if __name__ == "__main__":
     test_uncorrelated_noise_zero_lag()
@@ -1319,3 +1341,4 @@ if __name__ == "__main__":
     test_variance_changes()
     test_cosmos_wcs()
     test_covariance_spectrum()
+    test_gsparams()

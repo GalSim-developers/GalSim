@@ -106,7 +106,16 @@ class _BaseCorrelatedNoise(object):
         self._variance_cached = None
 
     @property
-    def rng(self): return self._rng
+    def rng(self):
+        return self._rng
+
+    @property
+    def gsparams(self):
+        return self._profile.gsparams
+
+    def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
+        return _BaseCorrelatedNoise(self.rng, self._profile.withGSParams(gsparams), self.wcs)
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
@@ -604,7 +613,8 @@ class _BaseCorrelatedNoise(object):
         @returns the new CorrelatedNoise of the convolved profile.
         """
         from .convolve import Convolve, AutoCorrelate
-        conv = Convolve([self._profile, AutoCorrelate(gsobject)], gsparams=gsparams)
+        conv = Convolve([self._profile, AutoCorrelate(gsobject,gsparams=gsparams)],
+                        gsparams=gsparams)
         return _BaseCorrelatedNoise(self.rng, conv, self.wcs)
 
     def drawImage(self, image=None, scale=None, wcs=None, dtype=None, add_to_image=False):
@@ -1463,11 +1473,15 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         import math
         sigma = math.sqrt(variance)
         pix = Pixel(scale=1.0, flux=sigma, gsparams=gsparams)
-        cf = AutoConvolve(pix, real_space=True)
+        cf = AutoConvolve(pix, real_space=True, gsparams=gsparams)
         world_cf = wcs.toWorld(cf)
         # This gets the shape right, but not the amplitude.  Need to rescale by the pixel area
         world_cf *= wcs.pixelArea()
         _BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
+
+    def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
+        return UncorrelatedNoise(self.variance, self.rng, wcs=self.wcs, gsparams=gsparams)
 
     def __repr__(self):
         return "galsim.UncorrelatedNoise(%r, %r, wcs=%r, gsparams=%r)"%(
