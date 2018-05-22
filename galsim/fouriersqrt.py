@@ -93,8 +93,8 @@ class FourierSqrtProfile(GSObject):
             raise TypeError("Argument to FourierSqrtProfile must be a GSObject.")
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
-        self._orig_obj = obj
-        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._gsparams = GSParams.check(gsparams, obj.gsparams)
+        self._orig_obj = obj.withGSParams(self._gsparams)
 
     @property
     def orig_obj(self): return self._orig_obj
@@ -109,6 +109,15 @@ class FourierSqrtProfile(GSObject):
         if self.orig_obj.noise is not None:
             galsim_warn("Unable to propagate noise in galsim.FourierSqrtProfile")
         return None
+
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        return ret
 
     def __eq__(self, other):
         return (isinstance(other, FourierSqrtProfile) and

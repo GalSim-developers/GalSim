@@ -191,6 +191,7 @@ class Sum(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
