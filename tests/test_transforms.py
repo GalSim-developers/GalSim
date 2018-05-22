@@ -960,6 +960,27 @@ def test_compound():
     np.testing.assert_array_almost_equal(im3_cf.array, im3_cd.array, decimal=3)
     np.testing.assert_array_almost_equal(im5_cf.array, im5_cd.array, decimal=3)
 
+@timer
+def test_gsparams():
+    """Test withGSParams with some non-default gsparams
+    """
+    obj = galsim.Exponential(half_light_radius=1.7)
+    gsp = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
+
+    tr = obj.shear(g1=0.2, g2=0.3)
+    jac = galsim.Shear(g1=0.2, g2=0.3).getMatrix()
+    tr1 = tr.withGSParams(gsp)
+    tr2 = galsim.Transformation(obj.withGSParams(gsp), jac=jac)
+    tr3 = galsim.Transformation(obj, jac=jac, gsparams=gsp)
+    assert tr != tr1
+    assert tr1 == tr2
+    assert tr1 == tr3
+    print('stepk = ',tr.stepk, tr1.stepk)
+    assert tr1.stepk < tr.stepk
+    print('maxk = ',tr.maxk, tr1.maxk)
+    assert tr1.maxk > tr.maxk
+
+
 if __name__ == "__main__":
     test_smallshear()
     test_largeshear()
@@ -973,3 +994,4 @@ if __name__ == "__main__":
     test_flip()
     test_ne()
     test_compound()
+    test_gsparams()

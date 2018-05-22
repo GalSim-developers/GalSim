@@ -237,6 +237,7 @@ class Convolution(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -475,8 +476,8 @@ class Deconvolution(GSObject):
             raise TypeError("Argument to Deconvolution must be a GSObject.")
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
-        self._orig_obj = obj
-        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._gsparams = GSParams.check(gsparams, obj.gsparams)
+        self._orig_obj = obj.withGSParams(self._gsparams)
         self._min_acc_kvalue = obj.flux * self.gsparams.kvalue_accuracy
         self._inv_min_acc_kvalue = 1./self._min_acc_kvalue
 
@@ -496,6 +497,7 @@ class Deconvolution(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -672,11 +674,11 @@ class AutoConvolution(Convolution):
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
         self._real_space = bool(real_space)
-        self._orig_obj = obj
-        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._gsparams = GSParams.check(gsparams, obj.gsparams)
+        self._orig_obj = obj.withGSParams(self._gsparams)
 
         # So we can use Convolve methods when there is no advantage to overloading.
-        self._obj_list = [obj, obj]
+        self._obj_list = [self._orig_obj, self._orig_obj]
 
     @lazy_property
     def _sbp(self):
@@ -696,10 +698,12 @@ class AutoConvolution(Convolution):
 
     @doc_inherit
     def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
         ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        ret._obj_list = [ret._orig_obj, ret._orig_obj]
         return ret
 
     def __eq__(self, other):
@@ -816,11 +820,11 @@ class AutoCorrelation(Convolution):
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
         self._real_space = bool(real_space)
-        self._orig_obj = obj
-        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._gsparams = GSParams.check(gsparams, obj.gsparams)
+        self._orig_obj = obj.withGSParams(self._gsparams)
 
         # So we can use Convolve methods when there is no advantage to overloading.
-        self._obj_list = [obj, obj.transform(-1,0,0,-1)]
+        self._obj_list = [self._orig_obj, self._orig_obj.transform(-1,0,0,-1)]
 
     @lazy_property
     def _sbp(self):
@@ -840,10 +844,12 @@ class AutoCorrelation(Convolution):
 
     @doc_inherit
     def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
         ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        ret._obj_list = [ret._orig_obj, ret._orig_obj.transform(-1,0,0,-1)]
         return ret
 
     def __eq__(self, other):

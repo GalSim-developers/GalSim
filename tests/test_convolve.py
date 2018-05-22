@@ -812,6 +812,72 @@ def test_convolve_noise():
     assert autocorr.noise is None
     assert four.noise is None
 
+@timer
+def test_gsparams():
+    """Test withGSParams with some non-default gsparams
+    """
+    obj1 = galsim.Exponential(half_light_radius=1.7)
+    obj2 = galsim.Pixel(scale=0.2)
+    gsp = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
+
+    conv = galsim.Convolve(obj1, obj2)
+    conv1 = conv.withGSParams(gsp)
+    conv2 = galsim.Convolve(obj1.withGSParams(gsp), obj2.withGSParams(gsp))
+    conv3 = galsim.Convolve(galsim.Exponential(half_light_radius=1.7, gsparams=gsp),
+                            galsim.Pixel(scale=0.2))
+    assert conv != conv1
+    assert conv1 == conv2
+    assert conv1 == conv3
+    print('stepk = ',conv.stepk, conv1.stepk)
+    assert conv1.stepk < conv.stepk
+    print('maxk = ',conv.maxk, conv1.maxk)
+    assert conv1.maxk > conv.maxk
+
+    conv = galsim.AutoConvolve(obj1)
+    conv1 = conv.withGSParams(gsp)
+    conv2 = galsim.AutoConvolve(obj1.withGSParams(gsp))
+    assert conv != conv1
+    assert conv1 == conv2
+    print('stepk = ',conv.stepk, conv1.stepk)
+    assert conv1.stepk < conv.stepk
+    print('maxk = ',conv.maxk, conv1.maxk)
+    assert conv1.maxk > conv.maxk
+
+    conv = galsim.AutoCorrelate(obj1)
+    conv1 = conv.withGSParams(gsp)
+    conv2 = galsim.AutoCorrelate(obj1.withGSParams(gsp))
+    assert conv != conv1
+    assert conv1 == conv2
+    print('stepk = ',conv.stepk, conv1.stepk)
+    assert conv1.stepk < conv.stepk
+    print('maxk = ',conv.maxk, conv1.maxk)
+    assert conv1.maxk > conv.maxk
+
+    conv = galsim.Convolve(obj1, galsim.Deconvolve(obj2))
+    conv1 = conv.withGSParams(gsp)
+    conv2 = galsim.Convolve(obj1, galsim.Deconvolve(obj2.withGSParams(gsp)))
+    conv3 = galsim.Convolve(obj1.withGSParams(gsp), galsim.Deconvolve(obj2))
+    assert conv != conv1
+    assert conv1 == conv2
+    assert conv1 == conv3
+    print('stepk = ',conv.stepk, conv1.stepk)
+    assert conv1.stepk < conv.stepk
+    print('maxk = ',conv.maxk, conv1.maxk)
+    assert conv1.maxk > conv.maxk
+
+    conv = galsim.Convolve(obj1, galsim.FourierSqrt(obj2))
+    conv1 = conv.withGSParams(gsp)
+    conv2 = galsim.Convolve(obj1, galsim.FourierSqrt(obj2.withGSParams(gsp)))
+    conv3 = galsim.Convolve(obj1.withGSParams(gsp), galsim.FourierSqrt(obj2))
+    assert conv != conv1
+    assert conv1 == conv2
+    assert conv1 == conv3
+    print('stepk = ',conv.stepk, conv1.stepk)
+    assert conv1.stepk < conv.stepk
+    print('maxk = ',conv.maxk, conv1.maxk)
+    assert conv1.maxk > conv.maxk
+
+
 if __name__ == "__main__":
     test_convolve()
     test_convolve_flux_scaling()
@@ -824,3 +890,4 @@ if __name__ == "__main__":
     test_autocorrelate()
     test_ne()
     test_convolve_noise()
+    test_gsparams()

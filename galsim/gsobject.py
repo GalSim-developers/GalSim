@@ -743,6 +743,10 @@ class GSObject(object):
         """
         # Note to developers: objects that wrap other objects should override this in order
         # to apply the new gsparams to the components.
+        # This implementation relies on getstate/setstate clearing out any `_sbp` or similar
+        # attribute that depends on the details of gsparams.  If there are stored calculations
+        # aside from these, you should also clear them as well, or update them.
+        if gsparams is self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)

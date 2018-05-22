@@ -132,11 +132,11 @@ class Transformation(GSObject):
     """
     def __init__(self, obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1.,
                  gsparams=None):
-        self._original = obj
         self._jac = np.asarray(jac, dtype=float).reshape(2,2)
         self._offset = PositionD(offset)
         self._flux_ratio = float(flux_ratio)
-        self._gsparams = GSParams.check(gsparams, self._original.gsparams)
+        self._gsparams = GSParams.check(gsparams, obj.gsparams)
+        obj = obj.withGSParams(self._gsparams)
 
         if isinstance(obj, Transformation):
             # Combine the two affine transformations into one.
@@ -146,6 +146,8 @@ class Transformation(GSObject):
             self._jac = self._jac.dot(obj.jac)
             self._flux_ratio *= obj._flux_ratio
             self._original = obj.original
+        else:
+            self._original = obj
 
     @property
     def original(self): return self._original
@@ -183,6 +185,7 @@ class Transformation(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
