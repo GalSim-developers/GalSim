@@ -39,9 +39,10 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .chromatic import ChromaticSum
 from .position import PositionD
-from .utilities import doc_inherit, convert_interpolant
+from .utilities import lazy_property, doc_inherit, convert_interpolant
 from .interpolant import Quintic
 from .interpolatedimage import InterpolatedImage, _InterpolatedKImage
+from .convolve import Convolve, Deconvolve
 from .image import ImageCD
 from .correlatednoise import CovarianceSpectrum
 from . import _galsim
@@ -264,7 +265,7 @@ class RealGalaxy(GSObject):
             self.psf_image = real_galaxy_catalog.getPSFImage(use_index)
             logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
-            #self._noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
+            #self._gal_noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
             # We need to duplication some of the RealGalaxyCatalog.getNoise() function, since we
             # want it to be possible to have the RealGalaxyCatalog in another process, and the
             # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
@@ -273,15 +274,17 @@ class RealGalaxy(GSObject):
             self.catalog_file = real_galaxy_catalog.getFileName()
             self.catalog = real_galaxy_catalog
 
+        self._gsparams = GSParams.check(gsparams)
+
         if noise_image is None:
-            self._noise = UncorrelatedNoise(var, rng=self.rng, scale=pixel_scale,
-                                                  gsparams=gsparams)
+            self._gal_noise = UncorrelatedNoise(var, rng=self.rng, scale=pixel_scale,
+                                            gsparams=self._gsparams)
         else:
             ii = InterpolatedImage(noise_image, normalization="sb",
                                    calculate_stepk=False, calculate_maxk=False,
-                                   x_interpolant='linear', gsparams=gsparams)
-            self._noise = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
-            self._noise = self._noise.withVariance(var)
+                                   x_interpolant='linear', gsparams=self._gsparams)
+            self._gal_noise = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
+            self._gal_noise = self._gal_noise.withVariance(var)
         logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
         # Save any other relevant information as instance attributes
@@ -294,18 +297,17 @@ class RealGalaxy(GSObject):
         self._input_flux = flux
         self._flux_rescale = flux_rescale
         self._area_norm = area_norm
-        self._gsparams = GSParams.check(gsparams)
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad_size:
-            noise_pad = self._noise
+            noise_pad = self._gal_noise
         else:
             noise_pad = 0.
 
         # Build the InterpolatedImage of the PSF.
         self.original_psf = InterpolatedImage(
             self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-            flux=1.0, gsparams=gsparams)
+            flux=1.0, gsparams=self._gsparams)
         logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
         # Build the InterpolatedImage of the galaxy.
@@ -317,7 +319,7 @@ class RealGalaxy(GSObject):
                 pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_psf.stepk,
                 calculate_maxk=self.original_psf.maxk,
-                noise_pad=noise_pad, rng=self.rng, gsparams=gsparams)
+                noise_pad=noise_pad, rng=self.rng, gsparams=self._gsparams)
         logger.debug('RealGalaxy %d: Made original_gal',use_index)
 
         # Only alter normalization if a change is requested
@@ -328,19 +330,20 @@ class RealGalaxy(GSObject):
             if flux is not None:
                 flux_rescale *= flux/self.original_gal.flux
             self.original_gal *= flux_rescale
-            self._noise *= flux_rescale**2
+            self._gal_noise *= flux_rescale**2
 
-        # Calculate the PSF "deconvolution" kernel
-        psf_inv = Deconvolve(self.original_psf, gsparams=gsparams)
-
-        # Initialize the _sbp attribute
-        self._conv = Convolve([self.original_gal, psf_inv], gsparams=gsparams)
-        self._sbp = self._conv._sbp
-        logger.debug('RealGalaxy %d: Made gsobject',use_index)
-
-        # Save the noise in the image as an accessible attribute
-        self._noise = self._noise.convolvedWith(psf_inv, gsparams)
         logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
+
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret.original_gal = self.original_gal.withGSParams(ret._gsparams)
+        ret.original_psf = self.original_psf.withGSParams(ret._gsparams)
+        ret._gal_noise = self._gal_noise.withGSParams(ret._gsparams)
+        return ret
 
     @classmethod
     def makeFromImage(cls, image, PSF, xi, **kwargs):
@@ -404,16 +407,30 @@ class RealGalaxy(GSObject):
         # The _sbp is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d = self.__dict__.copy()
-        del d['_sbp']
-        del d['_conv']
+        d.pop('_conv',None)
+        d.pop('_psf_inv',None)
         return d
 
     def __setstate__(self, d):
-        from .convolve import Convolve, Deconvolve
         self.__dict__ = d
-        psf_inv = Deconvolve(self.original_psf, gsparams=self._gsparams)
-        self._conv = Convolve([self.original_gal, psf_inv], gsparams=self._gsparams)
-        self._sbp = self._conv._sbp
+
+    @lazy_property
+    def _psf_inv(self):
+        return Deconvolve(self.original_psf, gsparams=self._gsparams)
+
+    @lazy_property
+    def _conv(self):
+        return Convolve([self.original_gal, self._psf_inv], gsparams=self._gsparams)
+
+    @property
+    def _sbp(self):
+        return self._conv._sbp
+
+    @property
+    def _noise(self):
+        # We just store the original noise, not convolved with psf_inv until we need it,
+        # mostly so we don't have to invalidate this if gsparams changes.
+        return self._gal_noise.convolvedWith(self._psf_inv, self._gsparams)
 
     @property
     def _maxk(self):

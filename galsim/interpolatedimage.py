@@ -352,6 +352,15 @@ class InterpolatedImage(GSObject):
         self._stepk = self._getStepK(calculate_stepk, _force_stepk)
         self._maxk = self._getMaxK(calculate_maxk, _force_maxk)
 
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._x_interpolant = self._x_interpolant.withGSParams(ret._gsparams)
+        ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams)
+        return ret
 
     @lazy_property
     def _sbp(self):
@@ -716,10 +725,10 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     ret = InterpolatedImage.__new__(InterpolatedImage)
 
     # We need to set all the various attributes that are expected to be in an InterpolatedImage:
-    ret._x_interpolant = x_interpolant
-    ret._k_interpolant = k_interpolant
     ret._image = image._view()
     ret._gsparams = GSParams.check(gsparams)
+    ret._x_interpolant = x_interpolant.withGSParams(ret._gsparams)
+    ret._k_interpolant = k_interpolant.withGSParams(ret._gsparams)
 
     offset = ret._parse_offset(offset)
     ret._offset = ret._adjust_offset(ret._image.bounds, offset, use_true_center)
@@ -918,9 +927,9 @@ class InterpolatedKImage(GSObject):
         # set up k_interpolant if none was provided by user, or check that the user-provided one
         # is of a valid type
         if k_interpolant is None:
-            self._k_interpolant = Quintic(tol=1e-4)
+            self._k_interpolant = Quintic(tol=1e-4, gsparams=self._gsparams)
         else:
-            self._k_interpolant = convert_interpolant(k_interpolant)
+            self._k_interpolant = convert_interpolant(k_interpolant).withGSParams(self._gsparams)
 
     @property
     def kimage(self):
@@ -929,6 +938,15 @@ class InterpolatedKImage(GSObject):
     @property
     def k_interpolant(self):
         return self._k_interpolant
+
+    @doc_inherit
+    def withGSParams(self, gsparams):
+        if gsparams is self.gsparams: return self
+        from copy import copy
+        ret = copy(self)
+        ret._gsparams = GSParams.check(gsparams)
+        ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams)
+        return ret
 
     @lazy_property
     def _sbp(self):
@@ -1020,5 +1038,5 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret._kimage = kimage.copy()
     ret._stepk = kimage.scale
     ret._gsparams = GSParams.check(gsparams)
-    ret._k_interpolant = k_interpolant
+    ret._k_interpolant = k_interpolant.withGSParams(gsparams)
     return ret
