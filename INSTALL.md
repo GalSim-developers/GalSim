@@ -52,6 +52,13 @@ it is trying to install into, you can use the --user flag to install into a
 local directory instead.  (Normally something like $HOME/Library/Python/2.7
 or $HOME/.local, depending on your system.)
 
+This might fail if certain libraries are installed in non-standard locations.
+In this case, add the paths for these libraries to both the LIBRARY_PATH and
+LD_LIBRARY_PATH environmental variables before running pip:
+
+	export LIBRARY_PATH=$LIBARY_PATH:/path/to/lib:/other/path/to/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/lib:/other/path/to/lib
+
 If you would rather install from source (e.g. to work on a development branch),
 you can do
 
