@@ -1309,6 +1309,9 @@ def test_gsparams():
     print('ucn2 = ',repr(ucn2))
     assert ucn != ucn1
     assert ucn1 == ucn2
+    assert ucn.withGSParams(ucn.gsparams) is ucn
+    assert ucn1.withGSParams(ucn.gsparams) is not ucn
+    assert ucn1.withGSParams(ucn.gsparams) == ucn
 
     ccn = galsim.getCOSMOSNoise(rng=rng)
 
@@ -1316,6 +1319,9 @@ def test_gsparams():
     ccn2 = galsim.getCOSMOSNoise(rng=rng, gsparams=gsp)
     assert ccn != ccn1
     assert ccn1 == ccn2
+    assert ccn.withGSParams(ccn.gsparams) is ccn
+    assert ccn1.withGSParams(ccn.gsparams) is not ccn
+    assert ccn1.withGSParams(ccn.gsparams) == ccn
 
 
 if __name__ == "__main__":

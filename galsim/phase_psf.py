@@ -263,10 +263,6 @@ class Aperture(object):
     # For each of these, the actual value is defined during the construction of the _illuminated
     # array, so access that (lazy) property first.
     @property
-    def pupil_plane_im(self):
-        self._illuminated
-        return self._pupil_plane_im
-    @property
     def pupil_plane_scale(self):
         self._illuminated
         return self._pupil_plane_scale
@@ -515,12 +511,12 @@ class Aperture(object):
 
     def __str__(self):
         s = "galsim.Aperture(diam=%r"%self.diam
-        if hasattr(self, '_circular_pupil'):  # Pupil was created geometrically, so use that here.
+        if self._pupil_plane_im is None:
+            # Pupil was created geometrically, so use that here.
             s += self._geometry_str()
         s += ")"
         return s
 
-    # Used in Aperture.__repr__ and OpticalPSF.__repr__
     def _geometry_repr(self):
         s = ""
         if not self._circular_pupil:
@@ -537,20 +533,20 @@ class Aperture(object):
 
     def __repr__(self):
         s = "galsim.Aperture(diam=%r"%self.diam
-        if self._pupil_plane_im is not None:
-            # Pupil was created from image, so use that instead.
-            # It's slightly less annoying to see an enormous stream of zeros fly by than an enormous
-            # stream of Falses, so convert to int16.
-            tmp = self.illuminated.astype(np.int16).tolist()
-            s += ", pupil_plane_im=array(%r"%tmp+", dtype='int16')"
-            s += ", pupil_plane_scale=%r"%self._pupil_plane_scale
-        else:
+        if self._pupil_plane_im is None:
             # Pupil was created geometrically, so use that here.
             s += self._geometry_repr()
             s += ", pupil_plane_scale=%r"%self._input_pupil_plane_scale
             s += ", pupil_plane_size=%r"%self._input_pupil_plane_size
             s += ", oversampling=%r"%self._oversampling
             s += ", pad_factor=%r"%self._pad_factor
+        else:
+            # Pupil was created from image, so use that instead.
+            # It's slightly less annoying to see an enormous stream of zeros fly by than an enormous
+            # stream of Falses, so convert to int16.
+            tmp = self.illuminated.astype(np.int16).tolist()
+            s += ", pupil_plane_im=array(%r"%tmp+", dtype='int16')"
+            s += ", pupil_plane_scale=%r"%self._pupil_plane_scale
         if self.gsparams != GSParams():
             s += ", gsparams=%r"%self.gsparams
         s += ")"
@@ -1809,7 +1805,7 @@ class OpticalPSF(GSObject):
         s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        if hasattr(self._psf.aper, '_circular_pupil'):
+        if self._psf.aper._pupil_plane_im is None:
             s += self._psf.aper._geometry_str()
         if screen.annular_zernike:
             s += ", annular_zernike=True"
