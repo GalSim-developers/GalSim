@@ -565,7 +565,8 @@ class Aperture(object):
             return (self.pupil_plane_scale == other.pupil_plane_scale and
                     np.array_equal(self.illuminated, other.illuminated))
         else:
-            return (self._circular_pupil == other._circular_pupil and
+            return (other._pupil_plane_im is None and
+                    self._circular_pupil == other._circular_pupil and
                     self._obscuration == other._obscuration and
                     self._nstruts == other._nstruts and
                     self._strut_thick == other._strut_thick and
