@@ -593,8 +593,7 @@ class Aperture(object):
         """ Unit-disk normalized pupil plane coordinate as a complex number:
         (x, y) => x + 1j * y.
         """
-        if not hasattr(self, '_npix'):
-            self._illuminated
+        self._illuminated
         u = np.fft.fftshift(np.fft.fftfreq(self._npix, self.diam/self._pupil_plane_size/2.0))
         u, v = np.meshgrid(u, u)
         return u + 1j * v
@@ -602,6 +601,8 @@ class Aperture(object):
     @lazy_property
     def _uv(self):
         if not hasattr(self, '_npix'):
+            # Need this check, since `_uv` is used by `_illuminated`, so need to make sure we
+            # don't have an infinite loop.
             self._illuminated
         u = np.fft.fftshift(np.fft.fftfreq(self._npix, 1./self._pupil_plane_size))
         u, v =  np.meshgrid(u, u)
