@@ -186,7 +186,8 @@ class SimpleGenerator:
     Then generator() will return that object.
     """
     def __init__(self, obj): self._obj = obj
-    def __call__(self): return self._obj
+    def __call__(self):  # pragma: no cover  (It is covered, but coveralls doesn't get it right.)
+        return self._obj
 
 class AttributeDict(object): # pragma: no cover
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
