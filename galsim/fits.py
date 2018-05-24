@@ -84,7 +84,7 @@ class _ReadFile:
             # Convert to a NotImplementedError, so we can try a different method.
             raise NotImplementedError()
         ret = p.communicate()
-        if ret == '':  # pragma: no cover
+        if ret[0] == b'':  # pragma: no cover
             raise OSError("Error running gunzip. stderr output = %s"%ret[1])
         if p.returncode != 0:  # pragma: no cover
             raise OSError("Error running gunzip. Return code = %s"%p.returncode)
@@ -121,7 +121,7 @@ class _ReadFile:
             # Convert to a NotImplementedError, so we can try a different method.
             raise NotImplementedError()
         ret = p.communicate()
-        if ret == '':  # pragma: no cover
+        if ret[0] == b'':  # pragma: no cover
             raise OSError("Error running bunzip2. stderr output = %s"%ret[1])
         if p.returncode != 0:  # pragma: no cover
             raise OSError("Error running bunzip2. Return code = %s"%p.returncode)
@@ -173,7 +173,7 @@ class _ReadFile:
                 try:
                     return self.gz(file)
                 except (ImportError, NotImplementedError): # pragma: no cover
-                    if self.gz_index == len(self.gz_methods-1):
+                    if self.gz_index == len(self.gz_methods)-1:
                         raise
                     else:
                         self.gz_index += 1
@@ -186,7 +186,7 @@ class _ReadFile:
                 try:
                     return self.bz2(file)
                 except (ImportError, NotImplementedError): # pragma: no cover
-                    if self.bz2_index == len(self.bz2_methods-1):
+                    if self.bz2_index == len(self.bz2_methods)-1:
                         raise
                     else:
                         self.bz2_index += 1

@@ -592,7 +592,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         # If xy2sky is not installed, this will raise an OSError
         p = subprocess.Popen(['xy2sky', '-d', '-n', '10', file_name, '0', '0'],
                              stdout=subprocess.PIPE)
-        results = p.communicate()[0]
+        results = p.communicate()[0].decode()
         p.stdout.close()
         if len(results) == 0 or 'cannot' in results:
             raise OSError('wcstools (specifically xy2sky) was unable to read '+file_name)
@@ -656,7 +656,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
                 # If xy2sky is not installed, this will raise an OSError
                 p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy1,
                                     stdout=subprocess.PIPE)
-                results = p.communicate()[0]
+                results = p.communicate()[0].decode()
                 p.stdout.close()
                 if len(results) == 0:
                     raise OSError('wcstools command xy2sky was unable to read '+ self._file_name)
@@ -697,7 +697,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
             rd_strs = [ str(z) for z in rd ]
             p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name] + rd_strs,
                                  stdout=subprocess.PIPE)
-            results = p.communicate()[0]
+            results = p.communicate()[0].decode()
             p.stdout.close()
             if len(results) == 0:
                 raise OSError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
@@ -735,7 +735,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         # that lists _all_ the keys that define the WCS.  This just gets the approximate WCS.
         import subprocess
         p = subprocess.Popen(['wcshead', self._file_name], stdout=subprocess.PIPE)
-        results = p.communicate()[0]
+        results = p.communicate()[0].decode()
         p.stdout.close()
         v = results.split()
         header["CTYPE1"] = v[3]
