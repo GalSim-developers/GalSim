@@ -132,12 +132,15 @@ class RandomWalk(GSObject):
         if profile is None:
             self._flux = float(flux)
             if half_light_radius is None:
-                raise GalSimValueError("send a half_light_radius "
-                                       "when not sending a profile")
+                # use runtime error, because this is a fatal error
+                raise RuntimeError("send a half_light_radius "
+                                   "when not sending a profile")
             profile=Gaussian(
                 half_light_radius=half_light_radius,
                 flux=flux,
             )
+        elif not isinstance(profile, GSObject):
+            raise TypeError("profile must be a GSObject")
 
         self._half_light_radius=profile.half_light_radius
         self._flux=profile.flux
