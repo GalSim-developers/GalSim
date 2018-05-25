@@ -22,6 +22,7 @@ import os
 import sys
 
 import galsim
+from galsim.errors import GalSimValueError
 from galsim_test_helpers import *
 
 
@@ -136,12 +137,17 @@ def test_randwalk_invalid_inputs():
         galsim.RandomWalk(*args, **kwargs)
 
     # try sending wrong type for profile
-    args=(npoints)
+    args=(npoints,)
     bad_profile=3.5
     kwargs={'rng':rng, 'profile':bad_profile}
     with assert_raises(TypeError):
         galsim.RandomWalk(*args, **kwargs)
 
+    # try not sending either profile or hlr
+    args=(npoints,)
+    kwargs={'rng':rng}
+    with assert_raises(RuntimeError):
+        galsim.RandomWalk(*args, **kwargs)
 
     # try sending wrong type for npoints
     npoints=[35]
