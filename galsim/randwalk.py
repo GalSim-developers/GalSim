@@ -241,8 +241,8 @@ class RandomWalk(GSObject):
         rep='galsim.RandomWalk(%(npoints)d, profile=%(profile)s, gsparams=%(gsparams)s)'
         rep = rep % dict(
             npoints=self._npoints,
-            profile=self._profile,
-            gsparams=str(self.gsparams),
+            profile=repr(self._profile),
+            gsparams=repr(self.gsparams),
         )
 
         return rep
@@ -251,7 +251,7 @@ class RandomWalk(GSObject):
         rep='galsim.RandomWalk(%(npoints)d, profile=%(profile)s, gsparams=%(gsparams)s)'
         rep = rep % dict(
             npoints=self._npoints,
-            profile=self._profile,
+            profile=repr(self._profile),
             gsparams=repr(self.gsparams),
         )
 
