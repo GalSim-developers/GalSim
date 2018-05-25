@@ -23,19 +23,23 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .position import PositionD
 from .utilities import lazy_property, doc_inherit
-from .errors import GalSimRangeError, convert_cpp_errors
+from .errors import GalSimRangeError, GalSimValueError, convert_cpp_errors
+from .random import UniformDeviate
+from .gaussian import Gaussian
 
 class RandomWalk(GSObject):
     """
     A class for generating a set of point sources distributed using a random
-    walk.  Uses of this profile include representing an "irregular" galaxy, or
+    walk of points drawn from a specified distribution.
+
+    Uses of this profile include representing an "irregular" galaxy, or
     adding this profile to an Exponential to represent knots of star formation.
 
     Random walk profiles have "shape noise" that depends on the number of point
-    sources used.  For example, with 100 points the shape noise is g~0.05, and
-    this will decrease as more points are added.  The profile can be sheared to
-    give additional ellipticity, for example to follow that of an associated
-    disk.
+    sources used.  For example, using the default Gaussian distribution, with
+    100 points, the shape noise is g~0.05, and this will decrease as more
+    points are added.  The profile can be sheared to give additional
+    ellipticity, for example to follow that of an associated disk.
 
     We use the analytic approximation of an infinite number of steps, which is
     a good approximation even if the desired number of steps were less than 10.
@@ -47,12 +51,21 @@ class RandomWalk(GSObject):
     Initialization
     --------------
     @param  npoints                 Number of point sources to generate.
-    @param  half_light_radius       Half light radius of the distribution of
-                                    points.  This is the mean half light
-                                    radius produced by an infinite number of
-                                    points.  A single instance will be noisy.
+    @param  half_light_radius       Optional half light radius of the
+                                    distribution of points.  This value is used
+                                    for a Gaussian distribution if an explicit
+                                    profile is not sent. This is the mean half
+                                    light radius produced by an infinite number
+                                    of points.  A single instance will be noisy.
+                                    [default None]
     @param  flux                    Optional total flux in all point sources.
+                                    This value is used for a Gaussian distribution
+                                    if an explicit profile is not sent. 
                                     [default: 1]
+    @param  profile                 Optional profile to use for drawing points.
+                                    If a profile is sent, the half_light_radius
+                                    and flux keywords are ignored.
+                                    [default: Gaussian]
     @param  rng                     Optional random number generator. Can be
                                     any galsim.BaseDeviate.  If None, the rng
                                     is created internally.
@@ -90,8 +103,12 @@ class RandomWalk(GSObject):
     """
     # these allow use in a galsim configuration context
 
-    _req_params = { "npoints" : int, "half_light_radius" : float }
-    _opt_params = { "flux" : float }
+    _req_params = { "npoints" : int }
+    _opt_params = {
+        "flux" : float ,
+        "half_light_radius": float,
+        "profile": GSObject,
+    }
     _single_params = []
     _takes_rng = True
 
@@ -100,12 +117,33 @@ class RandomWalk(GSObject):
     _is_analytic_x = False
     _is_analytic_k = True
 
-    def __init__(self, npoints, half_light_radius, flux=1.0, rng=None, gsparams=None):
+    def __init__(self,
+                 npoints,
+                 half_light_radius=None,
+                 flux=1.0,
+                 profile=None,
+                 rng=None,
+                 gsparams=None):
+
         from .random import BaseDeviate
 
         self._npoints = int(npoints)
-        self._half_light_radius = float(half_light_radius)
-        self._flux = float(flux)
+
+        if profile is None:
+            self._flux = float(flux)
+            if half_light_radius is None:
+                raise GalSimValueError("send a half_light_radius "
+                                       "when not sending a profile")
+            profile=Gaussian(
+                half_light_radius=half_light_radius,
+                flux=flux,
+            )
+
+        self._half_light_radius=profile.half_light_radius
+        self._flux=profile.flux
+
+        self._profile=profile
+
         self._gsparams = GSParams.check(gsparams)
 
         # we will verify this in the _verify() method
@@ -177,8 +215,10 @@ class RandomWalk(GSObject):
 
         The most efficient way is to write into an image
         """
-        ar = np.empty((self._npoints,2))
-        self._gauss_rng.generate(ar)
+        ud = UniformDeviate(self._rng)
+        photons = self._profile.shoot(self._npoints, ud)
+        ar = np.column_stack([ photons.x, photons.y ])
+
         return ar
 
     def _verify(self):
@@ -198,23 +238,23 @@ class RandomWalk(GSObject):
             raise GalSimRangeError("flux must be >= 0", self._flux, 0.)
 
     def __str__(self):
-        rep='galsim.RandomWalk(%(npoints)d, %(hlr)g, flux=%(flux)g, gsparams=%(gsparams)s)'
+        rep='galsim.RandomWalk(%(npoints)d, profile=%(profile)s, gsparams=%(gsparams)s)'
         rep = rep % dict(
             npoints=self._npoints,
-            hlr=self._half_light_radius,
-            flux=self._flux,
+            profile=self._profile,
             gsparams=str(self.gsparams),
         )
+
         return rep
 
     def __repr__(self):
-        rep='galsim.RandomWalk(%(npoints)d, %(hlr).16g, flux=%(flux).16g, gsparams=%(gsparams)s)'
+        rep='galsim.RandomWalk(%(npoints)d, profile=%(profile)s, gsparams=%(gsparams)s)'
         rep = rep % dict(
             npoints=self._npoints,
-            hlr=self._half_light_radius,
-            flux=self._flux,
+            profile=self._profile,
             gsparams=repr(self.gsparams),
         )
+
         return rep
 
     def __eq__(self, other):
