@@ -1285,7 +1285,6 @@ def test_gsparams():
     gsparams = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
     final = galsim.Convolve([gal, psf], gsparams=gsparams)
     assert galsim.Convolve([gal, psf]) != final
-    final2 = galsim.Convolve([gal, psf]).withGSParams(gsparams)
     assert galsim.Convolve([gal, psf]).withGSParams(gsparams) == final
     assert galsim.Convolve([gal.withGSParams(gsparams), psf]) == final
     assert galsim.Convolve([gal, psf.withGSParams(gsparams)]) == final
