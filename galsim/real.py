@@ -278,7 +278,7 @@ class RealGalaxy(GSObject):
 
         if noise_image is None:
             self._gal_noise = UncorrelatedNoise(var, rng=self.rng, scale=pixel_scale,
-                                            gsparams=self._gsparams)
+                                                gsparams=self._gsparams)
         else:
             ii = InterpolatedImage(noise_image, normalization="sb",
                                    calculate_stepk=False, calculate_maxk=False,
