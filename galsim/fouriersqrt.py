@@ -26,7 +26,7 @@ from .utilities import lazy_property, doc_inherit
 from .errors import convert_cpp_errors, galsim_warn
 
 
-def FourierSqrt(obj, gsparams=None):
+def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
     """A function for computing the Fourier-space square root of either a GSObject or
     ChromaticObject.
 
@@ -42,14 +42,18 @@ def FourierSqrt(obj, gsparams=None):
     @param obj              The object to compute the Fourier-space square root of.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
     """
     from .chromatic import ChromaticFourierSqrtProfile
     if isinstance(obj, ChromaticObject):
-        return ChromaticFourierSqrtProfile(obj, gsparams=gsparams)
+        return ChromaticFourierSqrtProfile(obj, gsparams=gsparams,
+                                           propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
-        return FourierSqrtProfile(obj, gsparams=gsparams)
+        return FourierSqrtProfile(obj, gsparams=gsparams, propagate_gsparams=propagate_gsparams)
     else:
         raise TypeError("Argument to FourierSqrt must be either a GSObject or a ChromaticObject.")
 
@@ -77,6 +81,9 @@ class FourierSqrtProfile(GSObject):
     @param obj              The object to compute Fourier-space square root of.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     Methods
     -------
@@ -88,13 +95,17 @@ class FourierSqrtProfile(GSObject):
     _has_hard_edges = False
     _is_analytic_x = False
 
-    def __init__(self, obj, gsparams=None):
+    def __init__(self, obj, gsparams=None, propagate_gsparams=True):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to FourierSqrtProfile must be a GSObject.")
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
-        self._orig_obj = obj.withGSParams(self._gsparams)
+        self._propagate_gsparams = propagate_gsparams
+        if self._propagate_gsparams:
+            self._orig_obj = obj.withGSParams(self._gsparams)
+        else:
+            self._orig_obj = obj
 
     @property
     def orig_obj(self): return self._orig_obj
@@ -116,19 +127,23 @@ class FourierSqrtProfile(GSObject):
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
-        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        if self._propagate_gsparams:
+            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
         return ret
 
     def __eq__(self, other):
         return (isinstance(other, FourierSqrtProfile) and
                 self.orig_obj == other.orig_obj and
-                self.gsparams == other.gsparams)
+                self.gsparams == other.gsparams and
+                self._propagate_gsparams == other._propagate_gsparams)
 
     def __hash__(self):
-        return hash(("galsim.FourierSqrtProfile", self.orig_obj, self.gsparams))
+        return hash(("galsim.FourierSqrtProfile", self.orig_obj, self.gsparams,
+                     self._propagate_gsparams))
 
     def __repr__(self):
-        return 'galsim.FourierSqrtProfile(%r, gsparams=%r)'%(self.orig_obj, self.gsparams)
+        return 'galsim.FourierSqrtProfile(%r, gsparams=%r, propagate_gsparams=%r)'%(
+                self.orig_obj, self.gsparams, self._propagate_gsparams)
 
     def __str__(self):
         return 'galsim.FourierSqrt(%s)'%self.orig_obj

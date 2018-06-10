@@ -880,7 +880,8 @@ def test_ne():
             galsim.Transform(gal1, offset=offset),
             galsim.Transform(gal1, flux_ratio=1.1),
             galsim.Transform(gal1, flux_ratio=flux_ratio),
-            galsim.Transform(gal1, gsparams=gsp)]
+            galsim.Transform(gal1, gsparams=gsp),
+            galsim.Transform(gal1, gsparams=gsp, propagate_gsparams=False)]
     all_obj_diff(objs)
 
     # The degenerate jacobian will build fine, but will raise an exception when used.
@@ -966,19 +967,36 @@ def test_gsparams():
     """
     obj = galsim.Exponential(half_light_radius=1.7)
     gsp = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
+    gsp2 = galsim.GSParams(folding_threshold=1.e-2, maxk_threshold=1.e-2)
 
     tr = obj.shear(g1=0.2, g2=0.3)
     jac = galsim.Shear(g1=0.2, g2=0.3).getMatrix()
     tr1 = tr.withGSParams(gsp)
+    assert tr.gsparams == galsim.GSParams()
+    assert tr1.gsparams == gsp
+    assert tr1.original.gsparams == gsp
+
     tr2 = galsim.Transformation(obj.withGSParams(gsp), jac=jac)
-    tr3 = galsim.Transformation(obj, jac=jac, gsparams=gsp)
+    tr3 = galsim.Transformation(galsim.Exponential(half_light_radius=1.7, gsparams=gsp), jac=jac)
+    tr4 = galsim.Transform(obj, jac=jac, gsparams=gsp)
     assert tr != tr1
     assert tr1 == tr2
     assert tr1 == tr3
+    assert tr1 == tr4
     print('stepk = ',tr.stepk, tr1.stepk)
     assert tr1.stepk < tr.stepk
     print('maxk = ',tr.maxk, tr1.maxk)
     assert tr1.maxk > tr.maxk
+
+    tr5 = galsim.Transform(obj, jac=jac, gsparams=gsp, propagate_gsparams=False)
+    assert tr5 != tr4
+    assert tr5.gsparams == gsp
+    assert tr5.original.gsparams == galsim.GSParams()
+
+    tr6 = tr5.withGSParams(gsp2)
+    assert tr6 != tr5
+    assert tr6.gsparams == gsp2
+    assert tr6.original.gsparams == galsim.GSParams()
 
 
 if __name__ == "__main__":

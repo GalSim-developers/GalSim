@@ -38,6 +38,9 @@ def Convolve(*args, **kwargs):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     @returns a Convolution or ChromaticConvolution instance as appropriate.
     """
@@ -101,6 +104,9 @@ class Convolution(GSObject):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     Note: if `gsparams` is unspecified (or None), then the Convolution instance will use the most
     restrictive combination of parameters from each of the component objects. Normally, this means
@@ -108,9 +114,11 @@ class Convolution(GSObject):
     parameters, the largest numerical value is used.  See GSParams.combine for details.
 
     Furthermore, the gsparams used for the Convolution (either given explicitly or derived from the
-    components) will be applied to each of the components.  It doesn't make much sense to apply
-    stricter-than-normal accuracy or threshold values to one component but not another in a
-    Convolution, so this ensures that they all have consistent rendering behavior.
+    components) will normally be applied to each of the components.  It doesn't usually make much
+    sense to apply stricter-than-normal accuracy or threshold values to one component but not
+    another in a Convolution, so this ensures that they all have consistent rendering behavior.
+    However, if you want to keep the existing gsparams of the component objects, then you may
+    set `propagate_gsparams=False`.
 
     Methods
     -------
@@ -138,6 +146,7 @@ class Convolution(GSObject):
         # them have hard edges, then we use real-space convolution.
         real_space = kwargs.pop("real_space", None)
         gsparams = kwargs.pop("gsparams", None)
+        self._propagate_gsparams = kwargs.pop('propagate_gsparams', True)
 
         # Make sure there is nothing left in the dict.
         if kwargs:
@@ -201,7 +210,10 @@ class Convolution(GSObject):
             self._gsparams = GSParams.check(gsparams)
 
         # Apply gsparams to all in obj_list.
-        self._obj_list = [obj.withGSParams(self._gsparams) for obj in args]
+        if self._propagate_gsparams:
+            self._obj_list = [obj.withGSParams(self._gsparams) for obj in args]
+        else:
+            self._obj_list = args
 
     @property
     def obj_list(self): return self._obj_list
@@ -241,21 +253,24 @@ class Convolution(GSObject):
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
-        ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+        if self._propagate_gsparams:
+            ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
         return ret
 
     def __eq__(self, other):
         return (isinstance(other, Convolution) and
                 self.obj_list == other.obj_list and
                 self.real_space == other.real_space and
-                self.gsparams == other.gsparams)
+                self.gsparams == other.gsparams and
+                self._propagate_gsparams == other._propagate_gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Convolution", tuple(self.obj_list), self.real_space, self.gsparams))
+        return hash(("galsim.Convolution", tuple(self.obj_list), self.real_space, self.gsparams,
+                     self._propagate_gsparams))
 
     def __repr__(self):
-        return 'galsim.Convolution(%r, real_space=%r, gsparams=%r)'%(
-                self.obj_list, self.real_space, self.gsparams)
+        return 'galsim.Convolution(%r, real_space=%r, gsparams=%r, propagate_gsparams=%r)'%(
+                self.obj_list, self.real_space, self.gsparams, self._propagate_gsparams)
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
@@ -417,7 +432,7 @@ class Convolution(GSObject):
 
 
 
-def Deconvolve(obj, gsparams=None):
+def Deconvolve(obj, gsparams=None, propagate_gsparams=True):
     """A function for deconvolving by either a GSObject or ChromaticObject.
 
     This function will inspect its input argument to decide if a Deconvolution object or a
@@ -427,14 +442,17 @@ def Deconvolve(obj, gsparams=None):
     @param obj              The object to deconvolve.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the deconvolved object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     @returns a Deconvolution or ChromaticDeconvolution instance as appropriate.
     """
     from .chromatic import ChromaticDeconvolution
     if isinstance(obj, ChromaticObject):
-        return ChromaticDeconvolution(obj, gsparams=gsparams)
+        return ChromaticDeconvolution(obj, gsparams=gsparams, propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
-        return Deconvolution(obj, gsparams=gsparams)
+        return Deconvolution(obj, gsparams=gsparams, propagate_gsparams=propagate_gsparams)
     else:
         raise TypeError("Argument to Deconvolve must be either a GSObject or a ChromaticObject.")
 
@@ -462,6 +480,9 @@ class Deconvolution(GSObject):
     @param obj              The object to deconvolve.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the deconvolved object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     Methods
     -------
@@ -471,15 +492,19 @@ class Deconvolution(GSObject):
     _has_hard_edges = False
     _is_analytic_x = False
 
-    def __init__(self, obj, gsparams=None):
+    def __init__(self, obj, gsparams=None, propagate_gsparams=True):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to Deconvolution must be a GSObject.")
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
-        self._orig_obj = obj.withGSParams(self._gsparams)
         self._min_acc_kvalue = obj.flux * self.gsparams.kvalue_accuracy
         self._inv_min_acc_kvalue = 1./self._min_acc_kvalue
+        self._propagate_gsparams = propagate_gsparams
+        if self._propagate_gsparams:
+            self._orig_obj = obj.withGSParams(self._gsparams)
+        else:
+            self._orig_obj = obj
 
     @lazy_property
     def _sbp(self):
@@ -501,19 +526,23 @@ class Deconvolution(GSObject):
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
-        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        if self._propagate_gsparams:
+            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
         return ret
 
     def __eq__(self, other):
         return (isinstance(other, Deconvolution) and
                 self.orig_obj == other.orig_obj and
-                self.gsparams == other.gsparams)
+                self.gsparams == other.gsparams and
+                self._propagate_gsparams == other._propagate_gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Deconvolution", self.orig_obj, self.gsparams))
+        return hash(("galsim.Deconvolution", self.orig_obj, self.gsparams,
+                     self._propagate_gsparams))
 
     def __repr__(self):
-        return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self.gsparams)
+        return 'galsim.Deconvolution(%r, gsparams=%r, propagate_gsparams=%r)'%(
+                self.orig_obj, self.gsparams, self._propagate_gsparams)
 
     def __str__(self):
         return 'galsim.Deconvolve(%s)'%self.orig_obj
@@ -596,7 +625,7 @@ class Deconvolution(GSObject):
         self.__dict__ = d
 
 
-def AutoConvolve(obj, real_space=None, gsparams=None):
+def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
     """A function for autoconvolving either a GSObject or ChromaticObject.
 
     This function will inspect its input argument to decide if a AutoConvolution object or a
@@ -609,14 +638,19 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the auto-convolved object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     @returns a AutoConvolution or ChromaticAutoConvolution instance as appropriate.
     """
     from .chromatic import ChromaticAutoConvolution
     if isinstance(obj, ChromaticObject):
-        return ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams)
+        return ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams,
+                                        propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
-        return AutoConvolution(obj, real_space=real_space, gsparams=gsparams)
+        return AutoConvolution(obj, real_space=real_space, gsparams=gsparams,
+                               propagate_gsparams=propagate_gsparams)
     else:
         raise TypeError("Argument to AutoConvolve must be either a GSObject or a ChromaticObject.")
 
@@ -640,13 +674,16 @@ class AutoConvolution(Convolution):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the auto-convolved object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     Methods
     -------
 
     There are no additional methods for AutoConvolution beyond the usual GSObject methods.
     """
-    def __init__(self, obj, real_space=None, gsparams=None):
+    def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoConvolution must be a GSObject.")
 
@@ -675,7 +712,11 @@ class AutoConvolution(Convolution):
         # can be inspected later if necessary.
         self._real_space = bool(real_space)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
-        self._orig_obj = obj.withGSParams(self._gsparams)
+        self._propagate_gsparams = propagate_gsparams
+        if self._propagate_gsparams:
+            self._orig_obj = obj.withGSParams(self._gsparams)
+        else:
+            self._orig_obj = obj
 
         # So we can use Convolve methods when there is no advantage to overloading.
         self._obj_list = [self._orig_obj, self._orig_obj]
@@ -702,7 +743,8 @@ class AutoConvolution(Convolution):
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
-        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        if self._propagate_gsparams:
+            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
         ret._obj_list = [ret._orig_obj, ret._orig_obj]
         return ret
 
@@ -710,14 +752,16 @@ class AutoConvolution(Convolution):
         return (isinstance(other, AutoConvolution) and
                 self.orig_obj == other.orig_obj and
                 self.real_space == other.real_space and
-                self.gsparams == other.gsparams)
+                self.gsparams == other.gsparams and
+                self._propagate_gsparams == other._propagate_gsparams)
 
     def __hash__(self):
-        return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self.gsparams))
+        return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self.gsparams,
+                     self._propagate_gsparams))
 
     def __repr__(self):
-        return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)'%(
-                self.orig_obj, self.real_space, self.gsparams)
+        return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r, propagate_gsparams=%r)'%(
+                self.orig_obj, self.real_space, self.gsparams, self._propagate_gsparams)
 
     def __str__(self):
         s = 'galsim.AutoConvolve(%s'%self.orig_obj
@@ -738,7 +782,7 @@ class AutoConvolution(Convolution):
         photons.convolve(photons2, ud)
 
 
-def AutoCorrelate(obj, real_space=None, gsparams=None):
+def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
     """A function for autocorrelating either a GSObject or ChromaticObject.
 
     This function will inspect its input argument to decide if a AutoCorrelation object or a
@@ -751,14 +795,19 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the auto-convorrelated object.
+                                This is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     @returns an AutoCorrelation or ChromaticAutoCorrelation instance as appropriate.
     """
     from .chromatic import ChromaticAutoCorrelation
     if isinstance(obj, ChromaticObject):
-        return ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
+        return ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams,
+                                        propagate_gsparams=propagate_gsparams)
     elif isinstance(obj, GSObject):
-        return AutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
+        return AutoCorrelation(obj, real_space=real_space, gsparams=gsparams,
+                               propagate_gsparams=propagate_gsparams)
     else:
         raise TypeError("Argument to AutoCorrelate must be either a GSObject or a ChromaticObject.")
 
@@ -786,13 +835,16 @@ class AutoCorrelation(Convolution):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the auto-convorrelated object.
+                                This is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     Methods
     -------
 
     There are no additional methods for AutoCorrelation beyond the usual GSObject methods.
     """
-    def __init__(self, obj, real_space=None, gsparams=None):
+    def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoCorrelation must be a GSObject.")
 
@@ -821,7 +873,11 @@ class AutoCorrelation(Convolution):
         # can be inspected later if necessary.
         self._real_space = bool(real_space)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
-        self._orig_obj = obj.withGSParams(self._gsparams)
+        self._propagate_gsparams = propagate_gsparams
+        if self._propagate_gsparams:
+            self._orig_obj = obj.withGSParams(self._gsparams)
+        else:
+            self._orig_obj = obj
 
         # So we can use Convolve methods when there is no advantage to overloading.
         self._obj_list = [self._orig_obj, self._orig_obj.transform(-1,0,0,-1)]
@@ -848,7 +904,8 @@ class AutoCorrelation(Convolution):
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
-        ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+        if self._propagate_gsparams:
+            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
         ret._obj_list = [ret._orig_obj, ret._orig_obj.transform(-1,0,0,-1)]
         return ret
 
@@ -856,14 +913,16 @@ class AutoCorrelation(Convolution):
         return (isinstance(other, AutoCorrelation) and
                 self.orig_obj == other.orig_obj and
                 self.real_space == other.real_space and
-                self.gsparams == other.gsparams)
+                self.gsparams == other.gsparams and
+                self._propagate_gsparams == other._propagate_gsparams)
 
     def __hash__(self):
-        return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self.gsparams))
+        return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self.gsparams,
+                     self._propagate_gsparams))
 
     def __repr__(self):
-        return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r)'%(
-                self.orig_obj, self.real_space, self.gsparams)
+        return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r, propagate_gsparams=%r)'%(
+                self.orig_obj, self.real_space, self.gsparams, self._propagate_gsparams)
 
     def __str__(self):
         s = 'galsim.AutoCorrelate(%s'%self.orig_obj

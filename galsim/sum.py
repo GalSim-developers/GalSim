@@ -47,6 +47,9 @@ def Add(*args, **kwargs):
     @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     @returns a Sum or ChromaticSum instance as appropriate.
     """
@@ -95,6 +98,9 @@ class Sum(GSObject):
     @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     Note: if `gsparams` is unspecified (or None), then the Sum instance will use the most
     restrictive combination of parameters from each of the component objects. Normally, this means
@@ -102,9 +108,12 @@ class Sum(GSObject):
     parameters, the largest numerical value is used.  See GSParams.combine for details.
 
     Furthermore, the gsparams used for the Sum (either given explicitly or derived from the
-    components) will be applied to each of the components.  It doesn't make much sense to apply
-    stricter-than-normal accuracy or threshold values to one component but not another in a Sum,
-    so this ensures that they all have consistent rendering behavior.
+    components) will normally be applied to each of the components.  It doesn't usually make much
+    sense to apply stricter-than-normal accuracy or threshold values to one component but not
+    another in a Sum, so this ensures that they all have consistent rendering behavior.
+    However, if you want to keep the existing gsparams of the component objects (e.g. because
+    one object is much fainter and can thus use looser accuracy tolerances), then you may
+    set `propagate_gsparams=False`.
 
     Methods
     -------
@@ -115,6 +124,7 @@ class Sum(GSObject):
 
         # Check kwargs first:
         gsparams = kwargs.pop("gsparams", None)
+        self._propagate_gsparams = kwargs.pop('propagate_gsparams', True)
 
         # Make sure there is nothing left in the dict.
         if kwargs:
@@ -158,7 +168,10 @@ class Sum(GSObject):
             self._gsparams = GSParams.check(gsparams)
 
         # Apply gsparams to all in obj_list.
-        self._obj_list = [obj.withGSParams(self._gsparams) for obj in args]
+        if self._propagate_gsparams:
+            self._obj_list = [obj.withGSParams(self._gsparams) for obj in args]
+        else:
+            self._obj_list = args
 
 
     @property
@@ -195,19 +208,22 @@ class Sum(GSObject):
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
-        ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+        if self._propagate_gsparams:
+            ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
         return ret
 
     def __eq__(self, other):
         return (isinstance(other, Sum) and
                 self.obj_list == other.obj_list and
-                self.gsparams == other.gsparams)
+                self.gsparams == other.gsparams and
+                self._propagate_gsparams == other._propagate_gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Sum", tuple(self.obj_list), self.gsparams))
+        return hash(("galsim.Sum", tuple(self.obj_list), self.gsparams, self._propagate_gsparams))
 
     def __repr__(self):
-        return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self.gsparams)
+        return 'galsim.Sum(%r, gsparams=%r, propagate_gsparams=%r)'%(self.obj_list, self.gsparams,
+                self._propagate_gsparams)
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]

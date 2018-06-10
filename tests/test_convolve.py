@@ -722,25 +722,29 @@ def test_ne():
             galsim.Convolution(gal1, gal2, real_space=True),
             galsim.Convolution(galsim.Convolution(gal1, gal2), gal2),
             galsim.Convolution(gal1, galsim.Convolution(gal2, gal2)),  # Not! associative.
-            galsim.Convolution(gal1, gsparams=gsp)]
+            galsim.Convolution(gal1, gsparams=gsp),
+            galsim.Convolution(gal1, gsparams=gsp, propagate_gsparams=False)]
     all_obj_diff(gals)
 
     # Deconvolution.  Only params here are obj to deconvolve and gsparams.
     gals = [galsim.Deconvolution(gal1),
             galsim.Deconvolution(gal2),
-            galsim.Deconvolution(gal1, gsparams=gsp)]
+            galsim.Deconvolution(gal1, gsparams=gsp),
+            galsim.Deconvolution(gal1, gsparams=gsp, propagate_gsparams=False)]
     all_obj_diff(gals)
 
     # AutoConvolution.  Only params here are obj to deconvolve and gsparams.
     gals = [galsim.AutoConvolution(gal1),
             galsim.AutoConvolution(gal2),
-            galsim.AutoConvolution(gal1, gsparams=gsp)]
+            galsim.AutoConvolution(gal1, gsparams=gsp),
+            galsim.AutoConvolution(gal1, gsparams=gsp, propagate_gsparams=False)]
     all_obj_diff(gals)
 
     # AutoCorrelation.  Only params here are obj to deconvolve and gsparams.
     gals = [galsim.AutoCorrelation(gal1),
             galsim.AutoCorrelation(gal2),
-            galsim.AutoCorrelation(gal1, gsparams=gsp)]
+            galsim.AutoCorrelation(gal1, gsparams=gsp),
+            galsim.AutoCorrelation(gal1, gsparams=gsp, propagate_gsparams=False)]
     all_obj_diff(gals)
 
 
@@ -819,63 +823,164 @@ def test_gsparams():
     obj1 = galsim.Exponential(half_light_radius=1.7)
     obj2 = galsim.Pixel(scale=0.2)
     gsp = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
+    gsp2 = galsim.GSParams(folding_threshold=1.e-2, maxk_threshold=1.e-2)
 
+    # Convolve
     conv = galsim.Convolve(obj1, obj2)
     conv1 = conv.withGSParams(gsp)
+    assert conv.gsparams == galsim.GSParams()
+    assert conv1.gsparams == gsp
+    assert conv1.obj_list[0].gsparams == gsp
+    assert conv1.obj_list[1].gsparams == gsp
+
     conv2 = galsim.Convolve(obj1.withGSParams(gsp), obj2.withGSParams(gsp))
     conv3 = galsim.Convolve(galsim.Exponential(half_light_radius=1.7, gsparams=gsp),
                             galsim.Pixel(scale=0.2))
+    conv4 = galsim.Convolve(obj1, obj2, gsparams=gsp)
     assert conv != conv1
     assert conv1 == conv2
     assert conv1 == conv3
+    assert conv1 == conv4
     print('stepk = ',conv.stepk, conv1.stepk)
     assert conv1.stepk < conv.stepk
     print('maxk = ',conv.maxk, conv1.maxk)
     assert conv1.maxk > conv.maxk
 
+    conv5 = galsim.Convolve(obj1, obj2, gsparams=gsp, propagate_gsparams=False)
+    assert conv5 != conv4
+    assert conv5.gsparams == gsp
+    assert conv5.obj_list[0].gsparams == galsim.GSParams()
+    assert conv5.obj_list[1].gsparams == galsim.GSParams()
+
+    conv6 = conv5.withGSParams(gsp2)
+    assert conv6 != conv5
+    assert conv6.gsparams == gsp2
+    assert conv6.obj_list[0].gsparams == galsim.GSParams()
+    assert conv6.obj_list[1].gsparams == galsim.GSParams()
+
+    # AutoConvolve
     conv = galsim.AutoConvolve(obj1)
     conv1 = conv.withGSParams(gsp)
+    assert conv.gsparams == galsim.GSParams()
+    assert conv1.gsparams == gsp
+    assert conv1.orig_obj.gsparams == gsp
+
     conv2 = galsim.AutoConvolve(obj1.withGSParams(gsp))
+    conv3 = galsim.AutoConvolve(obj1, gsparams=gsp)
     assert conv != conv1
     assert conv1 == conv2
+    assert conv1 == conv3
     print('stepk = ',conv.stepk, conv1.stepk)
     assert conv1.stepk < conv.stepk
     print('maxk = ',conv.maxk, conv1.maxk)
     assert conv1.maxk > conv.maxk
 
+    conv4 = galsim.AutoConvolve(obj1, gsparams=gsp, propagate_gsparams=False)
+    assert conv4 != conv3
+    assert conv4.gsparams == gsp
+    assert conv4.orig_obj.gsparams == galsim.GSParams()
+
+    conv5 = conv4.withGSParams(gsp2)
+    assert conv5 != conv4
+    assert conv5.gsparams == gsp2
+    assert conv5.orig_obj.gsparams == galsim.GSParams()
+
+    # AutoCorrelate
     conv = galsim.AutoCorrelate(obj1)
     conv1 = conv.withGSParams(gsp)
+    assert conv.gsparams == galsim.GSParams()
+    assert conv1.gsparams == gsp
+    assert conv1.orig_obj.gsparams == gsp
+
     conv2 = galsim.AutoCorrelate(obj1.withGSParams(gsp))
+    conv3 = galsim.AutoCorrelate(obj1, gsparams=gsp)
     assert conv != conv1
     assert conv1 == conv2
+    assert conv1 == conv3
     print('stepk = ',conv.stepk, conv1.stepk)
     assert conv1.stepk < conv.stepk
     print('maxk = ',conv.maxk, conv1.maxk)
     assert conv1.maxk > conv.maxk
 
+    conv4 = galsim.AutoCorrelate(obj1, gsparams=gsp, propagate_gsparams=False)
+    assert conv4 != conv3
+    assert conv4.gsparams == gsp
+    assert conv4.orig_obj.gsparams == galsim.GSParams()
+
+    conv5 = conv4.withGSParams(gsp2)
+    assert conv5 != conv4
+    assert conv5.gsparams == gsp2
+    assert conv5.orig_obj.gsparams == galsim.GSParams()
+
+    # Deconvolve
     conv = galsim.Convolve(obj1, galsim.Deconvolve(obj2))
     conv1 = conv.withGSParams(gsp)
+    assert conv.gsparams == galsim.GSParams()
+    assert conv1.gsparams == gsp
+    assert conv1.obj_list[0].gsparams == gsp
+    assert conv1.obj_list[1].gsparams == gsp
+    assert conv1.obj_list[1].orig_obj.gsparams == gsp
+
     conv2 = galsim.Convolve(obj1, galsim.Deconvolve(obj2.withGSParams(gsp)))
     conv3 = galsim.Convolve(obj1.withGSParams(gsp), galsim.Deconvolve(obj2))
+    conv4 = galsim.Convolve(obj1, galsim.Deconvolve(obj2, gsparams=gsp))
     assert conv != conv1
     assert conv1 == conv2
     assert conv1 == conv3
+    assert conv1 == conv4
     print('stepk = ',conv.stepk, conv1.stepk)
     assert conv1.stepk < conv.stepk
     print('maxk = ',conv.maxk, conv1.maxk)
     assert conv1.maxk > conv.maxk
 
+    conv5 = galsim.Convolve(obj1, galsim.Deconvolve(obj2, gsparams=gsp, propagate_gsparams=False))
+    assert conv5 != conv4
+    assert conv5.gsparams == gsp
+    assert conv5.obj_list[0].gsparams == gsp
+    assert conv5.obj_list[1].gsparams == gsp
+    assert conv5.obj_list[1].orig_obj.gsparams == galsim.GSParams()
+
+    conv6 = conv5.withGSParams(gsp2)
+    assert conv6 != conv5
+    assert conv6.gsparams == gsp2
+    assert conv6.obj_list[0].gsparams == gsp2
+    assert conv6.obj_list[1].gsparams == gsp2
+    assert conv6.obj_list[1].orig_obj.gsparams == galsim.GSParams()
+
+    # FourierSqrt
     conv = galsim.Convolve(obj1, galsim.FourierSqrt(obj2))
     conv1 = conv.withGSParams(gsp)
+    assert conv.gsparams == galsim.GSParams()
+    assert conv1.gsparams == gsp
+    assert conv1.obj_list[0].gsparams == gsp
+    assert conv1.obj_list[1].gsparams == gsp
+    assert conv1.obj_list[1].orig_obj.gsparams == gsp
+
     conv2 = galsim.Convolve(obj1, galsim.FourierSqrt(obj2.withGSParams(gsp)))
     conv3 = galsim.Convolve(obj1.withGSParams(gsp), galsim.FourierSqrt(obj2))
+    conv4 = galsim.Convolve(obj1, galsim.FourierSqrt(obj2, gsparams=gsp))
     assert conv != conv1
     assert conv1 == conv2
     assert conv1 == conv3
+    assert conv1 == conv4
     print('stepk = ',conv.stepk, conv1.stepk)
     assert conv1.stepk < conv.stepk
     print('maxk = ',conv.maxk, conv1.maxk)
     assert conv1.maxk > conv.maxk
+
+    conv5 = galsim.Convolve(obj1, galsim.FourierSqrt(obj2, gsparams=gsp, propagate_gsparams=False))
+    assert conv5 != conv4
+    assert conv5.gsparams == gsp
+    assert conv5.obj_list[0].gsparams == gsp
+    assert conv5.obj_list[1].gsparams == gsp
+    assert conv5.obj_list[1].orig_obj.gsparams == galsim.GSParams()
+
+    conv6 = conv5.withGSParams(gsp2)
+    assert conv6 != conv5
+    assert conv6.gsparams == gsp2
+    assert conv6.obj_list[0].gsparams == gsp2
+    assert conv6.obj_list[1].gsparams == gsp2
+    assert conv6.obj_list[1].orig_obj.gsparams == galsim.GSParams()
 
 
 if __name__ == "__main__":
