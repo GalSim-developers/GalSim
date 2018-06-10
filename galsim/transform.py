@@ -30,7 +30,8 @@ from .utilities import lazy_property, doc_inherit, WeakMethod
 from .position import PositionD
 from .errors import GalSimError, convert_cpp_errors
 
-def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None):
+def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None,
+              propagate_gsparams=True):
     """A function for transforming either a GSObject or ChromaticObject.
 
     This function will inspect its input argument to decide if a Transformation object or a
@@ -49,6 +50,9 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
                             (Technically, not necessarily the flux.  See above.) [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     @returns a Transformation or ChromaticTransformation instance as appropriate.
     """
@@ -69,7 +73,8 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
         # Don't transform ChromaticSum object, better to just transform the arguments.
         if isinstance(obj, ChromaticSum) or isinstance(obj, Sum):
             new_obj = ChromaticSum(
-                [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.obj_list ])
+                [ Transform(o,jac,offset,flux_ratio,gsparams,propagate_gsparams)
+                  for o in obj.obj_list ])
             if hasattr(obj, 'covspec'):
                 dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
                 new_obj.covspec = obj.covspec.transform(dudx, dudy, dvdx, dvdy)*flux_ratio**2
@@ -81,13 +86,15 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
         elif (isinstance(obj, ChromaticConvolution or isinstance(obj, Convolution))
               and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
               and offset == PositionD(0.,0.)):
-            first = Transform(obj.obj_list[0], flux_ratio=flux_ratio, gsparams=gsparams)
+            first = Transform(obj.obj_list[0], flux_ratio=flux_ratio, gsparams=gsparams,
+                              propagate_gsparams=propagate_gsparams)
             return ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
 
         else:
-            return ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)
+            return ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams,
+                                           propagate_gsparams)
     else:
-        return Transformation(obj, jac, offset, flux_ratio, gsparams)
+        return Transformation(obj, jac, offset, flux_ratio, gsparams, propagate_gsparams)
 
 
 class Transformation(GSObject):
@@ -115,6 +122,9 @@ class Transformation(GSObject):
                             (Technically, not necessarily the flux.  See above.) [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
+                                is normally a good idea, but there may be use cases where one
+                                would not want to do this. [default: True]
 
     Attributes
     ----------
@@ -131,12 +141,14 @@ class Transformation(GSObject):
     threshold parameters will simply be ignored).
     """
     def __init__(self, obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1.,
-                 gsparams=None):
+                 gsparams=None, propagate_gsparams=True):
         self._jac = np.asarray(jac, dtype=float).reshape(2,2)
         self._offset = PositionD(offset)
         self._flux_ratio = float(flux_ratio)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
-        obj = obj.withGSParams(self._gsparams)
+        self._propagate_gsparams = propagate_gsparams
+        if self._propagate_gsparams:
+            obj = obj.withGSParams(self._gsparams)
 
         if isinstance(obj, Transformation):
             # Combine the two affine transformations into one.
@@ -189,7 +201,8 @@ class Transformation(GSObject):
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
-        ret._original = self.original.withGSParams(gsparams)
+        if self._propagate_gsparams:
+            ret._original = self.original.withGSParams(gsparams)
         return ret
 
     def __eq__(self, other):
@@ -198,15 +211,19 @@ class Transformation(GSObject):
                 np.array_equal(self.jac, other.jac) and
                 np.array_equal(self.offset, other.offset) and
                 self.flux_ratio == other.flux_ratio and
-                self.gsparams == other.gsparams)
+                self.gsparams == other.gsparams and
+                self._propagate_gsparams == other._propagate_gsparams)
 
     def __hash__(self):
         return hash(("galsim.Transformation", self.original, tuple(self._jac.ravel()),
-                     self.offset.x, self.offset.y, self.flux_ratio, self.gsparams))
+                     self.offset.x, self.offset.y, self.flux_ratio, self.gsparams,
+                     self._propagate_gsparams))
 
     def __repr__(self):
-        return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
-            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self.gsparams)
+        return ('galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r, '
+                'propagate_gsparams=%r)')%(
+            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self.gsparams,
+            self._propagate_gsparams)
 
     @classmethod
     def _str_from_jac(cls, jac):

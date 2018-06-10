@@ -1282,14 +1282,61 @@ def test_gsparams():
         final.drawImage(bandpass)
 
     # Use a restrictive one this time, so we test the "most restrictive gsparams" feature
-    gsparams = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
-    final = galsim.Convolve([gal, psf], gsparams=gsparams)
-    assert galsim.Convolve([gal, psf]) != final
-    assert galsim.Convolve([gal, psf]).withGSParams(gsparams) == final
-    assert galsim.Convolve([gal.withGSParams(gsparams), psf]) == final
-    assert galsim.Convolve([gal, psf.withGSParams(gsparams)]) == final
+    gsp2 = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
+    final = galsim.Convolve([gal, psf])
+    final1 = galsim.Convolve([gal, psf], gsparams=gsp2)
+    final2 = galsim.Convolve([gal, psf]).withGSParams(gsp2)
+    final3 = galsim.Convolve([gal.withGSParams(gsp2), psf])
+    final4 = galsim.Convolve([gal, psf.withGSParams(gsp2)])
+    assert final1 != final
+    assert final2 == final1
+    assert final3 == final1
+    assert final4 == final1
+    assert final1.gsparams == gsp2
+    assert final1.obj_list[0].gsparams == gsp2
+    assert final1.obj_list[1].gsparams == gsp2
 
-    do_pickle(final)
+    final5 = galsim.Convolve(gal, psf, gsparams=gsp2, propagate_gsparams=False)
+    assert final5 != final1
+    assert final5.gsparams == gsp2
+    assert final5.obj_list[0].gsparams == galsim.GSParams()
+    assert final5.obj_list[1].gsparams == galsim.GSParams()
+
+    final6 = final5.withGSParams(gsparams)
+    assert final6 != final5
+    assert final6.gsparams == gsparams
+    assert final6.obj_list[0].gsparams == galsim.GSParams()
+    assert final6.obj_list[1].gsparams == galsim.GSParams()
+
+    do_pickle(final1)
+
+    # Repeat similar tests for ChromaticSum
+    bulge = galsim.Gaussian(half_light_radius=1) * bulge_SED
+    disk = galsim.Exponential(half_light_radius=2) * disk_SED
+    final = galsim.Add([bulge, disk])
+    final1 = galsim.Add([bulge, disk], gsparams=gsp2)
+    final2 = galsim.Add([bulge, disk]).withGSParams(gsp2)
+    final3 = galsim.Add([bulge.withGSParams(gsp2), disk])
+    final4 = galsim.Add([bulge, disk.withGSParams(gsp2)])
+    assert final1 != final
+    assert final2 == final1
+    assert final3 == final1
+    assert final4 == final1
+    assert final1.gsparams == gsp2
+    assert final1.obj_list[0].gsparams == gsp2
+    assert final1.obj_list[1].gsparams == gsp2
+
+    final5 = galsim.Add(bulge, disk, gsparams=gsp2, propagate_gsparams=False)
+    assert final5 != final1
+    assert final5.gsparams == gsp2
+    assert final5.obj_list[0].gsparams == galsim.GSParams()
+    assert final5.obj_list[1].gsparams == galsim.GSParams()
+
+    final6 = final5.withGSParams(gsparams)
+    assert final6 != final5
+    assert final6.gsparams == gsparams
+    assert final6.obj_list[0].gsparams == galsim.GSParams()
+    assert final6.obj_list[1].gsparams == galsim.GSParams()
 
 
 @timer
@@ -2317,7 +2364,9 @@ def test_ne():
             galsim.ChromaticTransformation(cgal1, jac=jac1, offset=offset1, flux_ratio=flux_ratio1),
             trans_cgal3,
             galsim.ChromaticTransformation(cgal1, gsparams=gsp),
-            galsim.ChromaticTransformation(cgal3).withGSParams(gsp)]
+            galsim.ChromaticTransformation(cgal1, gsparams=gsp, propagate_gsparams=False),
+            galsim.ChromaticTransformation(cgal3).withGSParams(gsp),
+            galsim.ChromaticTransformation(cgal3, propagate_gsparams=False).withGSParams(gsp)]
     all_obj_diff(gals)
 
     # ChromaticSum.  Params are objs to add and potentially gsparams.
@@ -2329,7 +2378,9 @@ def test_ne():
             galsim.ChromaticSum(galsim.ChromaticSum(cgal1, cgal2), cgal2),
             galsim.ChromaticSum(cgal1, galsim.ChromaticSum(cgal2, cgal2)),  # Not! associative.
             galsim.ChromaticSum(cgal1, gsparams=gsp),
-            galsim.ChromaticSum(cgal3).withGSParams(gsp)]
+            galsim.ChromaticSum(cgal1, gsparams=gsp, propagate_gsparams=False),
+            galsim.ChromaticSum(cgal3).withGSParams(gsp),
+            galsim.ChromaticSum(cgal3, propagate_gsparams=False).withGSParams(gsp)]
     all_obj_diff(gals)
 
     # ChromaticConvolution.  Params are objs to convolve and potentially gsparams.
@@ -2344,7 +2395,9 @@ def test_ne():
             # ChromaticConvolution is associative! (unlike galsim.Convolution)
             # galsim.ChromaticConvolution(cgal1, galsim.ChromaticConvolution(cgal2, cgal2)),
             galsim.ChromaticConvolution(cgal1, gsparams=gsp),
-            galsim.ChromaticConvolution(cgal3).withGSParams(gsp)]
+            galsim.ChromaticConvolution(cgal1, gsparams=gsp, propagate_gsparams=False),
+            galsim.ChromaticConvolution(cgal3).withGSParams(gsp),
+            galsim.ChromaticConvolution(cgal3, propagate_gsparams=False).withGSParams(gsp)]
     all_obj_diff(gals)
 
     # ChromaticDeconvolution.  Only params here are obj to deconvolve and gsparams.
@@ -2352,7 +2405,9 @@ def test_ne():
             galsim.ChromaticDeconvolution(cgal2),
             galsim.ChromaticDeconvolution(cgal3),
             galsim.ChromaticDeconvolution(cgal1, gsparams=gsp),
-            galsim.ChromaticDeconvolution(cgal3).withGSParams(gsp)]
+            galsim.ChromaticDeconvolution(cgal1, gsparams=gsp, propagate_gsparams=False),
+            galsim.ChromaticDeconvolution(cgal3).withGSParams(gsp),
+            galsim.ChromaticDeconvolution(cgal3, propagate_gsparams=False).withGSParams(gsp)]
     all_obj_diff(gals)
 
     # ChromaticAutoConvolution.
@@ -2360,7 +2415,9 @@ def test_ne():
             galsim.ChromaticAutoConvolution(cgal2),
             galsim.ChromaticAutoConvolution(cgal3),
             galsim.ChromaticAutoConvolution(cgal1, gsparams=gsp),
-            galsim.ChromaticAutoConvolution(cgal3).withGSParams(gsp)]
+            galsim.ChromaticAutoConvolution(cgal1, gsparams=gsp, propagate_gsparams=False),
+            galsim.ChromaticAutoConvolution(cgal3).withGSParams(gsp),
+            galsim.ChromaticAutoConvolution(cgal3, propagate_gsparams=False).withGSParams(gsp)]
     all_obj_diff(gals)
 
     # ChromaticAutoCorrelation.
@@ -2368,7 +2425,9 @@ def test_ne():
             galsim.ChromaticAutoCorrelation(cgal2),
             galsim.ChromaticAutoCorrelation(cgal3),
             galsim.ChromaticAutoCorrelation(cgal1, gsparams=gsp),
-            galsim.ChromaticAutoCorrelation(cgal3).withGSParams(gsp)]
+            galsim.ChromaticAutoCorrelation(cgal1, gsparams=gsp, propagate_gsparams=False),
+            galsim.ChromaticAutoCorrelation(cgal3).withGSParams(gsp),
+            galsim.ChromaticAutoCorrelation(cgal3, propagate_gsparams=False).withGSParams(gsp)]
     all_obj_diff(gals)
 
     # ChromaticFourierSqrt.
@@ -2376,7 +2435,9 @@ def test_ne():
             galsim.ChromaticFourierSqrtProfile(cgal2),
             galsim.ChromaticFourierSqrtProfile(cgal3),
             galsim.ChromaticFourierSqrtProfile(cgal1, gsparams=gsp),
-            galsim.ChromaticFourierSqrtProfile(cgal3).withGSParams(gsp)]
+            galsim.ChromaticFourierSqrtProfile(cgal1, gsparams=gsp, propagate_gsparams=False),
+            galsim.ChromaticFourierSqrtProfile(cgal3).withGSParams(gsp),
+            galsim.ChromaticFourierSqrtProfile(cgal3, propagate_gsparams=False).withGSParams(gsp)]
     all_obj_diff(gals)
 
     # ChromaticOpticalPSF.  Params include: lam, (diam or lam_over_diam), aberrations, nstruts,
