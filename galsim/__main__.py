@@ -18,4 +18,8 @@
 
 from .main import main
 
-main()
+if __name__ == '__main__':
+    # MJ: I didn't think the if __name__ == '__main__' thing was required inside of __main__.py,
+    # but without it, Python 3 runs main() twice.  I don't really understand why this is, so
+    # if someone has a better way to structure this code, I'm open to suggestions.
+    main()
