@@ -277,6 +277,38 @@ def test_Image_basic():
         assert_raises(galsim.GalSimBoundsError,im1.view().setValue,ncol+1,nrow+1,1)
         assert_raises(galsim.GalSimBoundsError,im1.view().__call__,ncol+1,nrow+1)
 
+        assert_raises(galsim.GalSimBoundsError,im1.__getitem__,galsim.BoundsI(0,ncol,1,nrow))
+        assert_raises(galsim.GalSimBoundsError,im1.__getitem__,galsim.BoundsI(1,ncol,0,nrow))
+        assert_raises(galsim.GalSimBoundsError,im1.__getitem__,galsim.BoundsI(1,ncol+1,1,nrow))
+        assert_raises(galsim.GalSimBoundsError,im1.__getitem__,galsim.BoundsI(1,ncol,1,nrow+1))
+        assert_raises(galsim.GalSimBoundsError,im1.__getitem__,galsim.BoundsI(0,ncol+1,0,nrow+1))
+        assert_raises(galsim.GalSimBoundsError,im1.subImage,galsim.BoundsI(0,ncol,1,nrow))
+        assert_raises(galsim.GalSimBoundsError,im1.subImage,galsim.BoundsI(1,ncol,0,nrow))
+        assert_raises(galsim.GalSimBoundsError,im1.subImage,galsim.BoundsI(1,ncol+1,1,nrow))
+        assert_raises(galsim.GalSimBoundsError,im1.subImage,galsim.BoundsI(1,ncol,1,nrow+1))
+        assert_raises(galsim.GalSimBoundsError,im1.subImage,galsim.BoundsI(0,ncol+1,0,nrow+1))
+
+        assert_raises(galsim.GalSimBoundsError,im1.setSubImage,galsim.BoundsI(0,ncol,1,nrow),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.setSubImage,galsim.BoundsI(1,ncol,0,nrow),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.setSubImage,galsim.BoundsI(1,ncol+1,1,nrow),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.setSubImage,galsim.BoundsI(1,ncol,1,nrow+1),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.setSubImage,galsim.BoundsI(0,ncol+1,0,nrow+1),
+                      galsim.Image(ncol+2,nrow+2, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.__setitem__,galsim.BoundsI(0,ncol,1,nrow),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.__setitem__,galsim.BoundsI(1,ncol,0,nrow),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.__setitem__,galsim.BoundsI(1,ncol+1,1,nrow),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.__setitem__,galsim.BoundsI(1,ncol,1,nrow+1),
+                      galsim.Image(ncol+1,nrow, init_value=10))
+        assert_raises(galsim.GalSimBoundsError,im1.__setitem__,galsim.BoundsI(0,ncol+1,0,nrow+1),
+                      galsim.Image(ncol+2,nrow+2, init_value=10))
+
         # Also, setting values in something that should be const
         assert_raises(galsim.GalSimImmutableError,im1.view(make_const=True).setValue,1,1,1)
         assert_raises(galsim.GalSimImmutableError,im1.view(make_const=True).real.setValue,1,1,1)
@@ -424,6 +456,15 @@ def test_undefined_image():
         assert_raises(galsim.GalSimUndefinedBoundsError,im1.fill, 3)
         assert_raises(galsim.GalSimUndefinedBoundsError,im1.view().fill, 3)
         assert_raises(galsim.GalSimUndefinedBoundsError,im1.invertSelf)
+
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.__getitem__,galsim.BoundsI(1,2,1,2))
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.subImage,galsim.BoundsI(1,2,1,2))
+
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.setSubImage,galsim.BoundsI(1,2,1,2),
+                      galsim.Image(2,2, init_value=10))
+        assert_raises(galsim.GalSimUndefinedBoundsError,im1.__setitem__,galsim.BoundsI(1,2,1,2),
+                      galsim.Image(2,2, init_value=10))
+
         im1.scale = 1.
         assert_raises(galsim.GalSimUndefinedBoundsError,im1.calculate_fft)
         assert_raises(galsim.GalSimUndefinedBoundsError,im1.calculate_inverse_fft)
@@ -1110,7 +1151,7 @@ def test_Image_CubeFITS_IO():
 
         assert_raises(ValueError, galsim.fits.writeCube, image_list[:0], test_cube_file)
         assert_raises(ValueError, galsim.fits.writeCube,
-                      [image_list[0], image_list[1].subImage(galsim.BoundsI(0,4,0,4))],
+                      [image_list[0], image_list[1].subImage(galsim.BoundsI(1,4,1,4))],
                       test_cube_file)
 
         #

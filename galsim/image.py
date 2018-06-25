@@ -599,6 +599,11 @@ class Image(object):
         """
         if not isinstance(bounds, BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
+        if not self.bounds.isDefined():
+            raise GalSimUndefinedBoundsError("Attempt to access subImage of undefined image")
+        if not self.bounds.includes(bounds):
+            raise GalSimBoundsError("Attempt to access subImage not (fully) in image",
+                                    bounds,self.bounds)
         i1 = bounds.ymin - self.ymin
         i2 = bounds.ymax - self.ymin + 1
         j1 = bounds.xmin - self.xmin
