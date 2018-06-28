@@ -129,8 +129,12 @@ class RandomWalk(GSObject):
 
         self._npoints = int(npoints)
 
+        if rng is None:
+            rng = BaseDeviate()
+        self._rng=rng
+
+        self._flux = float(flux)
         if profile is None:
-            self._flux = float(flux)
             if half_light_radius is None:
                 # use runtime error, because this is a fatal error
                 raise RuntimeError("send a half_light_radius "
@@ -139,23 +143,27 @@ class RandomWalk(GSObject):
                 half_light_radius=half_light_radius,
                 flux=flux,
             )
-        elif not isinstance(profile, GSObject):
-            raise TypeError("profile must be a GSObject")
+            self._half_light_radius=half_light_radius
+            self._set_gaussian_rng()
+        else:
+            if not isinstance(profile, GSObject):
+                raise TypeError("profile must be a GSObject")
+            # the half light radius is not used
+            try:
+                # not all GSObjects have this attribute
+                self._half_light_radius = profile.half_light_radius
+            except:
+                self._half_light_radius=-1
 
-        self._half_light_radius=profile.half_light_radius
-        self._flux=profile.flux
+            self._flux=profile.flux
 
         self._profile=profile
 
         self._gsparams = GSParams.check(gsparams)
 
         # we will verify this in the _verify() method
-        if rng is None:
-            rng = BaseDeviate()
-        self._rng=rng
         self._verify()
 
-        self._set_gaussian_rng()
         self._points = self._get_points()
 
     @lazy_property
@@ -174,6 +182,9 @@ class RandomWalk(GSObject):
     def input_half_light_radius(self):
         """
         The input half-light radius is not necessarily the realized hlr.
+
+        If a profile is sent, this will be -1 if it was a transformation
+        object
         """
         return self._half_light_radius
 
@@ -235,7 +246,7 @@ class RandomWalk(GSObject):
         if self._npoints <= 0:
             raise GalSimRangeError("npoints must be > 0", self._npoints, 1)
 
-        if self._half_light_radius <= 0.0:
+        if self._profile is None and self._half_light_radius <= 0.0:
             raise GalSimRangeError("half light radius must be > 0", self._half_light_radius, 0.)
         if self._flux < 0.0:
             raise GalSimRangeError("flux must be >= 0", self._flux, 0.)
