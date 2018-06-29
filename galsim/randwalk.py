@@ -134,16 +134,23 @@ class RandomWalk(GSObject):
         self._rng=rng
 
         self._flux = float(flux)
+        self._verify()
+
         if profile is None:
             if half_light_radius is None:
                 # use runtime error, because this is a fatal error
                 raise RuntimeError("send a half_light_radius "
                                    "when not sending a profile")
+            if half_light_radius <= 0.0:
+                raise GalSimRangeError("half light radius must be > 0", half_light_radius, 0.)
+
             profile=Gaussian(
                 half_light_radius=half_light_radius,
                 flux=flux,
             )
+
             self._half_light_radius=half_light_radius
+
             self._set_gaussian_rng()
         else:
             if not isinstance(profile, GSObject):
@@ -153,16 +160,13 @@ class RandomWalk(GSObject):
                 # not all GSObjects have this attribute
                 self._half_light_radius = profile.half_light_radius
             except:
-                self._half_light_radius=-1
+                self._half_light_radius=None
 
             self._flux=profile.flux
 
         self._profile=profile
 
         self._gsparams = GSParams.check(gsparams)
-
-        # we will verify this in the _verify() method
-        self._verify()
 
         self._points = self._get_points()
 
@@ -246,8 +250,6 @@ class RandomWalk(GSObject):
         if self._npoints <= 0:
             raise GalSimRangeError("npoints must be > 0", self._npoints, 1)
 
-        if self._profile is None and self._half_light_radius <= 0.0:
-            raise GalSimRangeError("half light radius must be > 0", self._half_light_radius, 0.)
         if self._flux < 0.0:
             raise GalSimRangeError("flux must be >= 0", self._flux, 0.)
 
