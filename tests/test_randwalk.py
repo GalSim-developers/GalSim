@@ -136,35 +136,28 @@ def test_randwalk_invalid_inputs():
         galsim.RandomWalk(npoints, half_light_radius=hlr, profile=3.5)
 
     # wrong type for npoints
-    npoints=[35]
+    npoints_bad=[35]
     with assert_raises(TypeError):
-        galsim.RandomWalk(npoints, half_light_radius=hlr)
+        galsim.RandomWalk(npoints_bad, half_light_radius=hlr)
 
     # wrong type for hlr
-    npoints=100
-    hlr=[1.5]
-    args=(npoints, hlr)
-    with assert_raises(TypeError):
-        galsim.RandomWalk(npoints, half_light_radius=hlr)
+    with assert_raises(GalSimRangeError):
+        galsim.RandomWalk(npoints, half_light_radius=-1.5)
 
     # wrong type for flux
-    npoints=100
-    flux=[3.5]
     with assert_raises(TypeError):
-        galsim.RandomWalk(npoints, flux=flux, half_light_radius=hlr)
+        galsim.RandomWalk(npoints, flux=[3.5], half_light_radius=hlr)
 
     # bad value for npoints
-    npoints=-35
+    npoints_bad=-35
     with assert_raises(GalSimRangeError):
-        galsim.RandomWalk(npoints, half_light_radius=hlr)
+        galsim.RandomWalk(npoints_bad, half_light_radius=hlr)
 
     # bad value for hlr
-    npoints=100
     with assert_raises(GalSimRangeError):
         galsim.RandomWalk(npoints, half_light_radius=-1.5)
 
     # negative flux
-    npoints=100
     with assert_raises(GalSimRangeError):
         galsim.RandomWalk(npoints, flux=-35.0, half_light_radius=hlr)
 
