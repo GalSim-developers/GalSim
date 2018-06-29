@@ -87,17 +87,27 @@ def test_randwalk_valid_inputs():
     prof=galsim.Exponential(half_light_radius=hlr, flux=flux)
     kw2 = {'profile':prof, 'rng':rng}
 
-    for kw in (kw1, kw2):
+    # version of profile with a transformation
+    prof=galsim.Exponential(half_light_radius=hlr, flux=flux)
+    prof=prof.shear(g1=-0.05,g2=0.025)
+    kw3 = {'profile':prof, 'rng':rng}
+
+
+    for kw in (kw1, kw2, kw3):
         rw=galsim.RandomWalk(*args, **kw)
 
         assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
-        assert rw.input_half_light_radius==hlr,\
-            "expected hlr==%g, got %g" % (hlr, rw.input_half_light_radius)
+
         assert rw.flux==flux,\
             "expected flux==%g, got %g" % (flux, rw.flux)
 
-        d=rw.points
-        nobj=len(d)
+        if kw is not kw3:
+            # only test if not a transformation object
+            assert rw.input_half_light_radius==hlr,\
+                "expected hlr==%g, got %g" % (hlr, rw.input_half_light_radius)
+
+        pts=rw.points
+        nobj=len(pts)
         assert nobj == npoints==npoints,"expected %d objects, got %d" % (npoints, nobj)
 
         pts=rw.points
