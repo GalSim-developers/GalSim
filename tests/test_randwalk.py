@@ -22,7 +22,7 @@ import os
 import sys
 
 import galsim
-from galsim.errors import GalSimValueError
+from galsim.errors import GalSimValueError, GalSimRangeError
 from galsim_test_helpers import *
 
 
@@ -120,91 +120,53 @@ def test_randwalk_invalid_inputs():
     are raised for invalid inputs
     """
 
-    # try with rng wrong type
-
     npoints=100
     hlr = 8.0
-    rng=37
 
-    # support old style where hlr was required. Still works
-    # because we put the keyword second
-    args=(npoints, hlr)
-    kwargs={'rng':rng}
-    with assert_raises(TypeError):
-        galsim.RandomWalk(*args, **kwargs)
-
-    # new style where hlr is a keyword.
-    args=(npoints)
-    kwargs={'rng':rng, 'half_light_radius':hlr}
-    with assert_raises(TypeError):
-        galsim.RandomWalk(*args, **kwargs)
-
-    # sending a profile
-    args=(npoints)
-    exp_profile=galsim.Exponential(half_light_radius=hlr, flux=3)
-    kwargs={'rng':rng, 'profile':exp_profile}
-    with assert_raises(TypeError):
-        galsim.RandomWalk(*args, **kwargs)
-
-    # try sending wrong type for profile
-    args=(npoints,)
-    bad_profile=3.5
-    kwargs={'rng':rng, 'profile':bad_profile}
-    with assert_raises(TypeError):
-        galsim.RandomWalk(*args, **kwargs)
-
-    # try not sending either profile or hlr
-    args=(npoints,)
-    kwargs={'rng':rng}
+    # try sending neither profile or hlr
     with assert_raises(RuntimeError):
-        galsim.RandomWalk(*args, **kwargs)
+        galsim.RandomWalk(npoints)
 
-    # try sending wrong type for npoints
-    npoints=[35]
-    hlr = 8.0
-    args=(npoints, hlr)
+    # try with rng wrong type
     with assert_raises(TypeError):
-        galsim.RandomWalk(*args)
+        galsim.RandomWalk(npoints, half_light_radius=hlr, rng=37)
 
-    # try sending wrong type for hlr
+    # wrong type for profile
+    with assert_raises(TypeError):
+        galsim.RandomWalk(npoints, half_light_radius=hlr, profile=3.5)
+
+    # wrong type for npoints
+    npoints=[35]
+    with assert_raises(TypeError):
+        galsim.RandomWalk(npoints, half_light_radius=hlr)
+
+    # wrong type for hlr
     npoints=100
     hlr=[1.5]
     args=(npoints, hlr)
     with assert_raises(TypeError):
-        galsim.RandomWalk(*args)
+        galsim.RandomWalk(npoints, half_light_radius=hlr)
 
-    # try sending wrong type for flux
+    # wrong type for flux
     npoints=100
-    hlr=8.0
     flux=[3.5]
-    args=(npoints, hlr)
-    kwargs={'flux':flux}
     with assert_raises(TypeError):
-        galsim.RandomWalk(*args, **kwargs)
+        galsim.RandomWalk(npoints, flux=flux, half_light_radius=hlr)
 
-    # send bad value for npoints
-
+    # bad value for npoints
     npoints=-35
-    hlr = 8.0
-    args=(npoints, hlr)
-    with assert_raises(ValueError):
-        galsim.RandomWalk(*args)
+    with assert_raises(GalSimRangeError):
+        galsim.RandomWalk(npoints, half_light_radius=hlr)
 
-    # try sending bad value for hlr
+    # bad value for hlr
     npoints=100
-    hlr=-1.5
-    args=(npoints, hlr)
-    with assert_raises(ValueError):
-        galsim.RandomWalk(*args)
+    with assert_raises(GalSimRangeError):
+        galsim.RandomWalk(npoints, half_light_radius=-1.5)
 
-    # try sending wrong type for flux
+    # negative flux
     npoints=100
-    hlr=8.0
-    flux=-35.0
-    args=(npoints, hlr)
-    kwargs={'flux':flux}
-    with assert_raises(ValueError):
-        galsim.RandomWalk(*args, **kwargs)
+    with assert_raises(GalSimRangeError):
+        galsim.RandomWalk(npoints, flux=-35.0, half_light_radius=hlr)
 
 
 @timer
