@@ -15,5 +15,5 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-__version__ = '2.0.0rc4'
-__version_info__ = tuple(map(int, __version__.rstrip('rc4').split('.')))
+__version__ = '2.0.0rc5'
+__version_info__ = tuple(map(int, __version__.rstrip('rc5').split('.')))
