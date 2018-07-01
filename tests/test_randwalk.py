@@ -219,13 +219,12 @@ def test_randwalk_config():
     }
     gal_config2 = {
         'type':'RandomWalk',
-        'npoints':100,
-        'profile':galsim.Exponential(half_light_radius=hlr,flux=flux),
-        # TODO: this doesn't work
-        #'profile': {
-        #    'type': 'Exponential',
-        #    'half_light_radius': 2.0,
-        #}
+        'npoints':150,
+        'profile': {
+            'type': 'Exponential',
+            'half_light_radius': hlr,
+            'flux': flux,
+        }
     }
 
     for gal_config in (gal_config1, gal_config2):
@@ -235,6 +234,7 @@ def test_randwalk_config():
         }
 
         rwc = galsim.config.BuildGSObject(config, 'gal')[0]
+        print(repr(rwc._profile))
 
         rw = galsim.RandomWalk(
             gal_config['npoints'],
