@@ -1315,10 +1315,10 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
         if len(weight) != n_choices:
             raise GalSimIncompatibleValuesError(
                 "Array of weights has wrong length", weight=weight, n_choices=n_choices)
-        if (np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or
-            np.any(np.isinf(weight))):
-            raise GalSimValueError("Supplied weights include values outside [0,1] or inf/NaN.",
-                                   weight)
+        if (np.any(np.isnan(weight)) or np.any(np.isinf(weight)) or
+            np.min(weight)<0 or np.max(weight)>1):
+            raise GalSimRangeError("Supplied weights include values outside [0,1] or inf/NaN.",
+                                   weight, 0., 1.)
 
     # We first make a random list of integer indices.
     index = np.zeros(n)
