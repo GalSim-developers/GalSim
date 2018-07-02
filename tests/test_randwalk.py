@@ -283,8 +283,8 @@ def test_randwalk_hlr():
     # test these npoints
     npt_vals=[3, 10, 30, 60, 100, 1000]
 
-    # should be within 4 sigma
-    nstd=4
+    # should be within 5 sigma
+    nstd=5
 
     # number of trials
     ntrial_vals=[100]*len(npt_vals)
