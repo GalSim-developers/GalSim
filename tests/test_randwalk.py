@@ -22,7 +22,11 @@ import os
 import sys
 
 import galsim
-from galsim.errors import GalSimValueError, GalSimRangeError
+from galsim.errors import (
+    GalSimValueError,
+    GalSimRangeError,
+    GalSimIncompatibleValuesError,
+)
 from galsim_test_helpers import *
 
 
@@ -124,7 +128,7 @@ def test_randwalk_invalid_inputs():
     hlr = 8.0
 
     # try sending neither profile or hlr
-    with assert_raises(RuntimeError):
+    with assert_raises(GalSimIncompatibleValuesError):
         galsim.RandomWalk(npoints)
 
     # try with rng wrong type

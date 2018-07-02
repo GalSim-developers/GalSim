@@ -23,7 +23,12 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .position import PositionD
 from .utilities import lazy_property, doc_inherit
-from .errors import GalSimRangeError, GalSimValueError, convert_cpp_errors
+from .errors import (
+    GalSimRangeError,
+    GalSimValueError,
+    GalSimIncompatibleValuesError,
+    convert_cpp_errors,
+)
 from .random import UniformDeviate
 from .gaussian import Gaussian
 
@@ -139,8 +144,10 @@ class RandomWalk(GSObject):
         if profile is None:
             if half_light_radius is None:
                 # use runtime error, because this is a fatal error
-                raise RuntimeError("send a half_light_radius "
-                                   "when not sending a profile")
+                raise GalSimIncompatibleValuesError(
+                    "send a half_light_radius "
+                    "when not sending a profile"
+                )
             if half_light_radius <= 0.0:
                 raise GalSimRangeError("half light radius must be > 0", half_light_radius, 0.)
 
