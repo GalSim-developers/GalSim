@@ -65,7 +65,7 @@ class RandomWalk(GSObject):
     @param  profile                 Optional profile to use for drawing points.
                                     If a profile is sent, the half_light_radius
                                     and flux keywords are ignored.
-                                    [default: Gaussian]
+                                    [default: None]
     @param  rng                     Optional random number generator. Can be
                                     any galsim.BaseDeviate.  If None, the rng
                                     is created internally.
