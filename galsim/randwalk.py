@@ -161,7 +161,7 @@ class RandomWalk(GSObject):
             self._set_gaussian_rng()
         else:
             if not isinstance(profile, GSObject):
-                raise TypeError("profile must be a GSObject")
+                raise GalSimIncompatibleValuesError("profile must be a GSObject")
             # the half light radius is not used
             try:
                 # not all GSObjects have this attribute

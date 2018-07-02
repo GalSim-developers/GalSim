@@ -136,7 +136,7 @@ def test_randwalk_invalid_inputs():
         galsim.RandomWalk(npoints, half_light_radius=hlr, rng=37)
 
     # wrong type for profile
-    with assert_raises(TypeError):
+    with assert_raises(GalSimIncompatibleValuesError):
         galsim.RandomWalk(npoints, half_light_radius=hlr, profile=3.5)
 
     # wrong type for npoints
