@@ -288,9 +288,9 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*g
     @returns a CelestialCoord object indicating the center of the focal plane array.
     """
     if not isinstance(SCA, int):
-        raise ValueError("Must pass in an int corresponding to the SCA")
+        raise TypeError("Must pass in an int corresponding to the SCA")
     if not isinstance(tol, galsim.Angle):
-        raise ValueError("tol must be a galsim.Angle")
+        raise TypeError("tol must be a galsim.Angle")
     use_SCA = SCA
     # Parse inputs appropriately.
     _, _, pa_fpa, _ = _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, [SCA])
@@ -417,7 +417,6 @@ def _calculate_minmax_pix(include_border=False):
 
         # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16.
         # Also use this for top of top row: 1/4/7/10/13/16.
-        # Top of 1/4/7/10/13/16, same as bottom of 2/5/8/11/14/17 and 1/4/7/10/13/16
         border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         list_1 = np.arange(1,18,3)

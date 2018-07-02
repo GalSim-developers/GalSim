@@ -226,6 +226,8 @@ pupil_plane_file_longwave = os.path.join(galsim.meta_data.share_dir,
 shortwave_bands = ['Z087', 'Y106', 'J129', 'H158']
 pupil_plane_file_shortwave = os.path.join(galsim.meta_data.share_dir,
                                          "WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
+pupil_plane_file = pupil_plane_file_shortwave  # Let the canonical pupil be the shortwave one.
+
 # The pupil plane image has non-zero values with a diameter of 2042 pixels.  The WFirst mirror
 # is 2.37 meters.  So the scale is 2.37 / 2042 = 0.00116 meters/pixel.
 pupil_plane_scale = diameter / 2042.
