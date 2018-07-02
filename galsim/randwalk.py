@@ -192,10 +192,16 @@ class RandomWalk(GSObject):
     @property
     def input_half_light_radius(self):
         """
-        The input half-light radius is not necessarily the realized hlr.
+        Get the input half light radius (HLR).
 
-        If a profile is sent, this will be -1 if it was a transformation
-        object
+        Note the input HLR is not necessarily the realized HLR,
+        due to the finite number of points used in the profile.
+
+        If a profile is sent, and that profile is a Transformation object (e.g.
+        it has been sheared, its flux set, etc), then this value will be None.
+
+        You can get the *calculated* half light radius using the calculateHLR
+        method.  That value will be valid in all cases.
         """
         return self._half_light_radius
 
