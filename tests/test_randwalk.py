@@ -56,7 +56,7 @@ def test_randwalk_defaults():
     np.testing.assert_almost_equal(rw.centroid.y, np.mean(pts[:,1]))
 
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
-    rw2 = galsim.RandomWalk(npoints, hlr, rng=rng, gsparams=gsp)
+    rw2 = galsim.RandomWalk(npoints, half_light_radius=hlr, rng=rng, gsparams=gsp)
     assert rw2 != rw
     assert rw2 == rw.withGSParams(gsp)
 
@@ -126,6 +126,11 @@ def test_randwalk_invalid_inputs():
 
     npoints=100
     hlr = 8.0
+    flux = 1.0
+
+    # try sending wrong type for npoints
+    with assert_raises(GalSimValueError):
+        galsim.RandomWalk('blah', half_light_radius=1, flux=3)
 
     # try sending neither profile or hlr
     with assert_raises(GalSimIncompatibleValuesError):
@@ -137,7 +142,7 @@ def test_randwalk_invalid_inputs():
 
     # wrong type for profile
     with assert_raises(GalSimIncompatibleValuesError):
-        galsim.RandomWalk(npoints, half_light_radius=hlr, profile=3.5)
+        galsim.RandomWalk(npoints, profile=3.5)
 
     # wrong type for npoints
     npoints_bad=[35]
@@ -151,6 +156,16 @@ def test_randwalk_invalid_inputs():
     # wrong type for flux
     with assert_raises(TypeError):
         galsim.RandomWalk(npoints, flux=[3.5], half_light_radius=hlr)
+
+    # sending flux with a profile
+    prof=galsim.Exponential(half_light_radius=hlr, flux=2.0)
+    with assert_raises(GalSimIncompatibleValuesError):
+        galsim.RandomWalk(npoints, flux=flux, profile=prof)
+
+    # sending hlr with a profile
+    with assert_raises(GalSimIncompatibleValuesError):
+        galsim.RandomWalk(npoints, half_light_radius=3, profile=prof)
+
 
     # bad value for npoints
     npoints_bad=-35

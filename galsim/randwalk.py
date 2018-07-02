@@ -65,7 +65,8 @@ class RandomWalk(GSObject):
                                     [default None]
     @param  flux                    Optional total flux in all point sources.
                                     This value is used for a Gaussian distribution
-                                    if an explicit profile is not sent. 
+                                    if an explicit profile is not sent. Defaults
+                                    to None if profile is sent, otherwise 1.
                                     [default: 1]
     @param  profile                 Optional profile to use for drawing points.
                                     If a profile is sent, the half_light_radius
@@ -122,46 +123,62 @@ class RandomWalk(GSObject):
     _is_analytic_x = False
     _is_analytic_k = True
 
-    def __init__(self,
-                 npoints,
-                 half_light_radius=None,
-                 flux=1.0,
-                 profile=None,
-                 rng=None,
-                 gsparams=None):
-
+    def __init__(self, npoints, **kw):
         from .random import BaseDeviate
 
-        self._npoints = int(npoints)
+        self._npoints=npoints
+        rng=kw.pop('rng',None)
+        gsparams=kw.pop('gsparams',None)
+        profile=kw.pop('profile',None)
 
         if rng is None:
             rng = BaseDeviate()
         self._rng=rng
 
-        self._flux = float(flux)
         self._verify()
 
         if profile is None:
-            if half_light_radius is None:
-                # use runtime error, because this is a fatal error
+
+            if ('half_light_radius' not in kw
+                    or kw['half_light_radius'] is None):
                 raise GalSimIncompatibleValuesError(
                     "send a half_light_radius "
                     "when not sending a profile"
                 )
-            if half_light_radius <= 0.0:
-                raise GalSimRangeError("half light radius must be > 0", half_light_radius, 0.)
+
+            if 'flux' not in kw or kw['flux'] is None:
+                self._flux = 1.0
+            else:
+                self._flux=float(kw['flux'])
+                if self._flux < 0.0:
+                    raise GalSimRangeError("flux must be >= 0", self._flux, 0.)
+
+            half_light_radius=float(kw['half_light_radius'])
 
             profile=Gaussian(
                 half_light_radius=half_light_radius,
-                flux=flux,
+                flux=self._flux,
             )
 
             self._half_light_radius=half_light_radius
 
             self._set_gaussian_rng()
         else:
+            if 'flux' in kw and kw['flux'] is not None:
+                raise GalSimIncompatibleValuesError(
+                    "don't send a flux "
+                    "when sending a profile"
+                )
+            if ('half_light_radius' in kw
+                    and kw['half_light_radius'] is not None):
+                raise GalSimIncompatibleValuesError(
+                    "don't send a half_light_radius "
+                    "when sending a profile"
+                )
+
             if not isinstance(profile, GSObject):
                 raise GalSimIncompatibleValuesError("profile must be a GSObject")
+
             # the half light radius is not used
             try:
                 # not all GSObjects have this attribute
@@ -257,14 +274,17 @@ class RandomWalk(GSObject):
         type and range checking on the inputs
         """
         from .random import BaseDeviate
+
         if not isinstance(self._rng, BaseDeviate):
             raise TypeError("rng must be an instance of galsim.BaseDeviate, got %s"%self._rng)
 
+        try:
+            self._npoints = int(self._npoints)
+        except ValueError as err:
+            raise GalSimValueError("npoints should be a number: %s", str(err))
+
         if self._npoints <= 0:
             raise GalSimRangeError("npoints must be > 0", self._npoints, 1)
-
-        if self._flux < 0.0:
-            raise GalSimRangeError("flux must be >= 0", self._flux, 0.)
 
     def __str__(self):
         rep='galsim.RandomWalk(%(npoints)d, profile=%(profile)s, gsparams=%(gsparams)s)'
