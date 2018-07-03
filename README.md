@@ -210,7 +210,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.6.0
+    git checkout v2.0.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"
