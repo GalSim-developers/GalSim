@@ -716,31 +716,29 @@ class Image(object):
         # possibly writing data past the edge of the image.
         ret = self.subImage(bounds)
         if not hermitian:
-            # Note: the pragma: no branch bit shouldn't be required, but codecov seems to not
-            # understand this quite right and is marking the lines as yellow.
-            with convert_cpp_errors():  # pragma: no branch
+            with convert_cpp_errors():
                 _galsim.wrapImage(self._image, bounds._b, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires self.bounds.xmin == 0",
                     hermitian=hermitian, bounds=self.bounds)
-            if bounds.xmin != 0:
+            if bounds.xmin != 0:  # pragma: no cover (This is covered, but codecov says it's not.)
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires bounds.xmin == 0",
                     hermitian=hermitian, bounds=bounds)
-            with convert_cpp_errors():  # pragma: no branch
+            with convert_cpp_errors():
                 _galsim.wrapImage(self._image, bounds._b, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires self.bounds.ymin == 0",
                     hermitian=hermitian, bounds=self.bounds)
-            if bounds.ymin != 0:
+            if bounds.ymin != 0:  # pragma: no cover (This is covered, but codecov says it's not.)
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires bounds.ymin == 0",
                     hermitian=hermitian, bounds=bounds)
-            with convert_cpp_errors():  # pragma: no branch
+            with convert_cpp_errors():
                 _galsim.wrapImage(self._image, bounds._b, False, True)
         else:
             raise GalSimValueError("Invalid value for hermitian", hermitian, (False, 'x', 'y'))
