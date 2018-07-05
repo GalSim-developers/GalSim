@@ -265,8 +265,8 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         lines = p.stdout.readlines()
-        #print('output = ',lines)
         p.communicate()
+        #print('output = ',b''.join(lines).decode())
     except (IOError,OSError) as e:
         p.returncode = 1
     if p.returncode != 0:
@@ -281,12 +281,12 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         lines = p.stdout.readlines()
-        #print('output = ',lines)
         p.communicate()
+        #print('output = ',b''.join(lines).decode())
     except (IOError,OSError) as e:
         p.returncode = 1
 
-    if p.returncode and cc.endswith('cc'):
+    if p.returncode:
         # The linker needs to be a c++ linker, which isn't 'cc'.  However, I couldn't figure
         # out how to get setup.py to tell me the actual command to use for linking.  All the
         # executables available from build_ext.compiler.executables are 'cc', not 'c++'.
@@ -294,13 +294,21 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         #    http://bugs.python.org/issue9031
         #    http://bugs.python.org/issue1222585
         # So just switch it manually and see if that works.
-        cmd = 'c++ ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
+        if cc == 'clang':
+            cpp = 'clang++'
+        elif cc == 'icc':
+            cpp = 'icpc'
+        elif cc == 'gcc':
+            cpp = 'g++'
+        else:
+            cpp = 'c++'
+        cmd = cpp + ' ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
         #print('cmd = ',cmd)
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             lines = p.stdout.readlines()
-            #print('output = ',lines)
             p.communicate()
+            #print('output = ',b''.join(lines).decode())
         except (IOError,OSError) as e:
             p.returncode = 1
 
