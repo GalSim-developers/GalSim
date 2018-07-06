@@ -267,7 +267,14 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         lines = p.stdout.readlines()
         p.communicate()
         #print('output = ',b''.join(lines).decode())
+        if p.returncode != 0:
+            print('Trying compile command:')
+            print(cmd)
+            print('output = ',b''.join(lines).decode())
     except (IOError,OSError) as e:
+        print('Trying compile command:')
+        print(cmd)
+        print('Caught error: ',repr(e))
         p.returncode = 1
     if p.returncode != 0:
         os.remove(cpp_file.name)
@@ -294,14 +301,26 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         #    http://bugs.python.org/issue9031
         #    http://bugs.python.org/issue1222585
         # So just switch it manually and see if that works.
-        if cc == 'clang':
-            cpp = 'clang++'
-        elif cc == 'icc':
-            cpp = 'icpc'
-        elif cc == 'gcc':
-            cpp = 'g++'
-        else:
+        if 'clang' in cc:
+            cpp = cc.replace('clang', 'clang++')
+        elif 'icc' in cc:
+            cpp = cc.replace('icc', 'icpc')
+        elif 'gcc' in cc:
+            cpp = cc.replace('gcc', 'g++')
+        elif ' cc' in cc:
+            cpp = cc.replace(' cc', ' c++')
+        elif cc == 'cc':
             cpp = 'c++'
+        else:
+            comp_type = get_compiler(cc)
+            if comp_type == 'gcc':
+                cpp = 'g++'
+            elif comp_type == 'clang':
+                cpp = 'clang++'
+            elif comp_type == 'icc':
+                cpp = 'g++'
+            else:
+                cpp = 'c++'
         cmd = cpp + ' ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
         #print('cmd = ',cmd)
         try:
@@ -309,7 +328,14 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
             lines = p.stdout.readlines()
             p.communicate()
             #print('output = ',b''.join(lines).decode())
+            if p.returncode != 0:
+                print('Trying link command:')
+                print(cmd)
+                print('output = ',b''.join(lines).decode())
         except (IOError,OSError) as e:
+            print('Trying to link using command:')
+            print(cmd)
+            print('Caught error: ',repr(e))
             p.returncode = 1
 
     # Remove the temp files
