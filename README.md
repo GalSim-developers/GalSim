@@ -46,7 +46,7 @@ Source Distribution
 The current released version of GalSim is version 2.0.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v2.0.1
+    https://github.com/GalSim-developers/GalSim/releases/tag/v2.0.2
 
 Also, feel free to fork the repository:
 
