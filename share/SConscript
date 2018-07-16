@@ -10,7 +10,11 @@ RunUninstall = env['_RunUninstall']
 install_subdir = 'share/galsim'
 
 files = glob.glob('*')     # Everything
-files.remove('SConscript') # except this file.
+files.remove('SConscript') # except this file,
+files.remove('SEDs')       # and the directories...
+files.remove('bandpasses')
+files.remove('sensors')
+
 sed_files = glob.glob('SEDs/*')
 bp_files = glob.glob('bandpasses/*')
 sensor_files = glob.glob('sensors/*')
