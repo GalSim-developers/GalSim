@@ -1879,13 +1879,16 @@ BOOST_PYTHON_MODULE(check_bp) {
     # For ubuntu Python 3.  cf. #790.
     # Also https://bugs.launchpad.net/ubuntu/+source/boost1.53/+bug/1231609
     pyxx = 'boost_python-py%s%s'%tuple(py_version.split('.'))
+    pyzz = 'boost_python%s%s'%tuple(py_version.split('.'))
 
     if config.env['PYTHON_VERSION'] >= '3.0':
         result = (
             CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
             CheckModuleLibs(config,['boost_python3'],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
             CheckModuleLibs(config,['boost_python3-mt'],bp_source_file,'check_bp') or
-            CheckModuleLibs(config,[pyxx],bp_source_file,'check_bp') )
+            CheckModuleLibs(config,[pyxx],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,[pyzz],bp_source_file,'check_bp') )
     else:
         result = (
             CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
