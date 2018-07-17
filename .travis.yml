@@ -6,7 +6,7 @@ branches:
 language: python
 python:
     - 2.7
-    - 3.4
+    #- 3.4  # (often takes too long and times out)
     - 3.5
     - 3.6
 
