@@ -186,10 +186,9 @@ def find_fftw_lib(output=False):
         libpath = os.path.realpath(libpath)
         lib = ctypes.cdll.LoadLibrary(libpath)
     except Exception as e:
-        if output:
-            print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
-            print("location such as /usr/local/lib, or the installation directory is either in ")
-            print("your LIBRARY_PATH or FFTW_DIR environment variable.")
+        print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
+        print("location such as /usr/local/lib, or the installation directory is either in ")
+        print("your LIBRARY_PATH or FFTW_DIR environment variable.")
         raise
     else:
         dir, name = os.path.split(libpath)
@@ -579,6 +578,9 @@ def parse_njobs(njobs, task=None, command=None, maxn=4):
                 print('Using %d cpus for %s'%(njobs,task))
     return njobs
 
+do_output = True  # Keep track of whether we used output=True in add_dirs yet.
+                  # It seems that different installation methods do things in different order,
+                  # but we only want to output on the first pass through add_dirs.
 
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_clib(build_clib):
@@ -589,11 +591,13 @@ class my_build_clib(build_clib):
         self.njobs = None
 
     def finalize_options(self):
+        global do_output
         build_clib.finalize_options(self)
         if self.njobs is None and 'glob_njobs' in globals():
             global glob_njobs
             self.njobs = glob_njobs
-        add_dirs(self, output=True)  # This happens first, so only output for this call.
+        add_dirs(self, output=do_output)
+        do_output = False
 
     # Add any extra things based on the compiler being used..
     def build_libraries(self, libraries):
@@ -620,13 +624,15 @@ class my_build_ext(build_ext):
         self.njobs = None
 
     def finalize_options(self):
+        global do_output
         build_ext.finalize_options(self)
         # I couldn't find an easy way to send the user option from my_install to my_buld_ext.
         # So use a global variable. (UGH!)
         if self.njobs is None and 'glob_njobs' in globals():
             global glob_njobs
             self.njobs = glob_njobs
-        add_dirs(self)
+        add_dirs(self, output=do_output)
+        do_output = False
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
