@@ -376,7 +376,6 @@ class SiliconSensor(Sensor):
         Vdiff = max(Vfront - Vbb, 1.0) # This just makes sure that Vdiff is always > 1.0V
         MobilityFactor = 0.27 # This is the factor from Green et.al.        
         # 0.026 is kT/q at room temp (298 K)
-        print("Using New diff_step")
         diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff / MobilityFactor) * SensorThickness
         return diff_step
 
