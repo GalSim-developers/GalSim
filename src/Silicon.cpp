@@ -568,7 +568,8 @@ namespace galsim {
 
             // Now we add in a displacement due to diffusion
             if (_diffStep != 0.) {
-	      double diffStep = std::max(0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
+                double diffStep = std::max(
+                    0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
                 x0 += diffStep * gd();
                 y0 += diffStep * gd();
             }
