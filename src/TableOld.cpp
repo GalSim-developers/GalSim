@@ -1,0 +1,312 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+//#define DEBUGLOGGING
+
+#include <cmath>
+#include <vector>
+#include <iostream>
+
+#include "TableOld.h"
+
+namespace galsim {
+
+    // ArgVecOld
+    // A class to represent an argument vector for a Table or Table2DOld.
+    class ArgVecOld
+    {
+    public:
+        ArgVecOld(const double* args, int n);
+
+        int upperIndex(double a) const;
+
+        // A few things to look similar to a vector<dobule>
+        const double* begin() const { return _vec;}
+        const double* end() const { return _vec + _n;}
+        double front() const { return *_vec; }
+        double back() const { return *(_vec + _n - 1); }
+        double operator[](int i) const { return _vec[i]; }
+        size_t size() const { return _n; }
+
+    private:
+        const double* _vec;
+        int _n;
+        // A few convenient additional member variables.
+        double _lower_slop, _upper_slop;
+        bool _equalSpaced;
+        double _da;
+        mutable int _lastIndex;
+    };
+
+    ArgVecOld::ArgVecOld(const double* vec, int n): _vec(vec), _n(n)
+    {
+        xdbg<<"Make ArgVecOld from vector starting with: "<<vec[0]<<std::endl;
+        const double tolerance = 0.01;
+        _da = (back() - front()) / (_n-1);
+        _equalSpaced = true;
+        for (int i=1; i<_n; i++) {
+            if (std::abs((_vec[i] - _vec[0])/_da - i) > tolerance) _equalSpaced = false;
+        }
+        _lastIndex = 1;
+        _lower_slop = (_vec[1]-_vec[0]) * 1.e-6;
+        _upper_slop = (_vec[_n-1]-_vec[_n-2]) * 1.e-6;
+    }
+
+    // Look up an index.  Use STL binary search.
+    int ArgVecOld::upperIndex(double a) const
+    {
+        // check for slop
+        if (a < front()) return 1;
+        if (a > back()) return _n-1;
+
+        if (_equalSpaced) {
+            xdbg<<"Equal spaced\n";
+            xdbg<<"da = "<<_da<<std::endl;
+            int i = int( std::ceil( (a-front()) / _da) );
+            xdbg<<"i = "<<i<<std::endl;
+            if (i >= _n) --i; // in case of rounding error
+            if (i == 0) ++i;
+            // check if we need to move ahead or back one step due to rounding errors
+            while (a > _vec[i]) ++i;
+            while (a < _vec[i-1]) --i;
+            xdbg<<"i => "<<i<<std::endl;
+            return i;
+        } else {
+            xdbg<<"Not equal spaced\n";
+            xdbg<<"lastIndex = "<<_lastIndex<<"  "<<_vec[_lastIndex-1]<<" "<<_vec[_lastIndex]<<std::endl;
+            xassert(_lastIndex >= 1);
+            xassert(_lastIndex < _n);
+
+            if ( a < _vec[_lastIndex-1] ) {
+                xdbg<<"Go lower\n";
+                xassert(_lastIndex-2 >= 0);
+                // Check to see if the previous one is it.
+                if (a >= _vec[_lastIndex-2]) {
+                    xdbg<<"Previous works: "<<_vec[_lastIndex-2]<<std::endl;
+                    return --_lastIndex;
+                } else {
+                    // Look for the entry from 0.._lastIndex-1:
+                    const double* p = std::upper_bound(begin(), begin()+_lastIndex-1, a);
+                    xassert(p != begin());
+                    xassert(p != begin()+_lastIndex-1);
+                    _lastIndex = p-begin();
+                    xdbg<<"Success: "<<_lastIndex<<"  "<<_vec[_lastIndex]<<std::endl;
+                    return _lastIndex;
+                }
+            } else if (a > _vec[_lastIndex]) {
+                xassert(_lastIndex+1 < _n);
+                // Check to see if the next one is it.
+                if (a <= _vec[_lastIndex+1]) {
+                    xdbg<<"Next works: "<<_vec[_lastIndex+1]<<std::endl;
+                    return ++_lastIndex;
+                } else {
+                    // Look for the entry from _lastIndex..end
+                    const double* p = std::lower_bound(begin()+_lastIndex+1, end(), a);
+                    xassert(p != begin()+_lastIndex+1);
+                    xassert(p != end());
+                    _lastIndex = p-begin();
+                    xdbg<<"Success: "<<_lastIndex<<"  "<<_vec[_lastIndex]<<std::endl;
+                    return _lastIndex;
+                }
+            } else {
+                xdbg<<"lastindex is still good.\n";
+                // Then _lastIndex is correct.
+                return _lastIndex;
+            }
+        }
+    }
+
+
+    // Table2DOldImpl
+    class Table2DOld::Table2DOldImpl
+    {
+    public:
+        Table2DOldImpl(const double* xargs, const double* yargs, const double* vals,
+                       int Nx, int Ny, Table2DOld::interpolant in);
+
+        double lookup(double x, double y) const;
+        double lookup(double x, double y, int i) const;
+        int prelookup_i(double x) const;
+        void gradient(double x, double y, double& dfdx, double& dfdy) const;
+
+    private:
+        Table2DOld::interpolant _iType;
+        const ArgVecOld _xargs;
+        const ArgVecOld _yargs;
+        const double* _vals;
+        const int _ny;
+
+        typedef double (Table2DOldImpl::*MemFn)(double x, double y, int i, int j) const;
+        MemFn interpolate;
+        double linearInterpolate(double x, double y, int i, int j) const;
+        double floorInterpolate(double x, double y, int i, int j) const;
+        double ceilInterpolate(double x, double y, int i, int j) const;
+        double nearestInterpolate(double x, double y, int i, int j) const;
+    };
+
+    Table2DOld::Table2DOldImpl::Table2DOldImpl(const double* xargs, const double* yargs, const double* vals,
+                             int Nx, int Ny, Table2DOld::interpolant in):
+        _iType(in), _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny)
+    {
+        switch (_iType) {
+          case linear:
+               interpolate = &Table2DOldImpl::linearInterpolate;
+               break;
+          case floor:
+               interpolate = &Table2DOldImpl::floorInterpolate;
+               break;
+          case ceil:
+               interpolate = &Table2DOldImpl::ceilInterpolate;
+               break;
+          case nearest:
+               interpolate = &Table2DOldImpl::nearestInterpolate;
+               break;
+          default:
+               throw std::runtime_error("invalid interpolation method");
+        }
+    }
+
+    //lookup and interpolate function value.
+    double Table2DOld::Table2DOldImpl::lookup(double x, double y) const
+    {
+        int i = _xargs.upperIndex(x);
+        int j = _yargs.upperIndex(y);
+        return (this->*interpolate)(x, y, i, j);
+    }
+
+    int Table2DOld::Table2DOldImpl::prelookup_i(double x) const
+    { return _xargs.upperIndex(x); }
+
+    double Table2DOld::Table2DOldImpl::lookup(double x, double y, int i) const
+    {
+        int j = _yargs.upperIndex(y);
+        return (this->*interpolate)(x, y, i, j);
+    }
+
+    /// Estimate many df/dx and df/dy values
+    void Table2DOld::Table2DOldImpl::gradient(double x, double y, double& dfdx, double& dfdy) const
+    {
+        // Note: This is really only accurate for linear interpolation.
+        // The derivative for floor, ceil, nearest interpolation doesn't really make
+        // much sense, so this is probably what the user would want.  However, if we
+        // eventually implement spline interpolation for Table2DOld, then this function will
+        // need to be revisited.
+        int i = _xargs.upperIndex(x);
+        int j = _yargs.upperIndex(y);
+        double dx = _xargs[i] - _xargs[i-1];
+        double dy = _yargs[j] - _yargs[j-1];
+        double f00 = _vals[(i-1)*_ny+j-1];
+        double f01 = _vals[(i-1)*_ny+j];
+        double f10 = _vals[i*_ny+j-1];
+        double f11 = _vals[i*_ny+j];
+        double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
+        double bx = 1.0 - ax;
+        double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
+        double by = 1.0 - ay;
+        dfdx = ( (f10-f00)*ay + (f11-f01)*by ) / dx;
+        dfdy = ( (f01-f00)*ax + (f11-f10)*bx ) / dy;
+    }
+
+    double Table2DOld::Table2DOldImpl::linearInterpolate(double x, double y, int i, int j) const
+    {
+        double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
+        double bx = 1.0 - ax;
+        double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
+        double by = 1.0 - ay;
+
+        return (_vals[(i-1)*_ny+j-1] * ax * ay
+                + _vals[i*_ny+j-1] * bx * ay
+                + _vals[(i-1)*_ny+j] * ax * by
+                + _vals[i*_ny+j] * bx * by);
+    }
+
+    double Table2DOld::Table2DOldImpl::floorInterpolate(double x, double y, int i, int j) const
+    {
+        // On entry, it is only guaranteed that _xargs[i-1] <= x <= _xargs[i] (and similarly y).
+        // Normally those ='s are ok, but for floor and ceil we make the extra
+        // check to see if we should choose the opposite bound.
+        if (x == _xargs[i]) i++;
+        if (y == _yargs[j]) j++;
+        return _vals[(i-1)*_ny+j-1];
+    }
+
+    double Table2DOld::Table2DOldImpl::ceilInterpolate(double x, double y, int i, int j) const
+    {
+        if (x == _xargs[i-1]) i--;
+        if (y == _yargs[j-1]) j--;
+        return _vals[i*_ny+j];
+    }
+
+    double Table2DOld::Table2DOldImpl::nearestInterpolate(double x, double y, int i, int j) const
+    {
+        if ((x - _xargs[i-1]) < (_xargs[i] - x)) i--;
+        if ((y - _yargs[j-1]) < (_yargs[j] - y)) j--;
+        return _vals[i*_ny+j];
+    }
+
+
+    // Table2DOld
+
+    Table2DOld::Table2DOld(const double* xargs, const double* yargs, const double* vals,
+                     int Nx, int Ny, Table2DOld::interpolant in)
+    {
+        _pimpl.reset(new Table2DOldImpl(xargs, yargs, vals, Nx, Ny, in));
+    }
+
+    //lookup and interpolate function value.
+    double Table2DOld::lookup(double x, double y) const
+    { return _pimpl->lookup(x,y); }
+
+    //lookup and interpolate an array of function values.
+    //In this case, the length of xvec is assumed to be the same as the length of yvec, and
+    //will also equal the length of the result array.
+    void Table2DOld::interpMany(const double* xvec, const double* yvec, double* valvec, int N) const
+    {
+        for (int k=0; k<N; k++) {
+            *valvec++ = _pimpl->lookup(xvec[k], yvec[k]);
+        }
+    }
+
+    //lookup and interpolate along the mesh of an x-array and a y-array.
+    //The result will be an array with length outNx * outNy.
+    void Table2DOld::interpManyMesh(const double* xvec, const double* yvec, double* valvec,
+                                 int outNx, int outNy) const
+    {
+        for (int outi=0; outi<outNx; outi++) {
+            int i = _pimpl->prelookup_i(xvec[outi]);
+            for (int outj=0; outj<outNy; outj++) {
+                *valvec++ = _pimpl->lookup(xvec[outi], yvec[outj], i);
+            }
+        }
+    }
+
+    /// Estimate many df/dx and df/dy values
+    void Table2DOld::gradient(double x, double y, double& dfdx, double& dfdy) const
+    { _pimpl->gradient(x, y, dfdx, dfdy); }
+
+    /// Estimate many df/dx and df/dy values
+    void Table2DOld::gradientMany(const double* xvec, const double* yvec,
+                               double* dfdxvec, double* dfdyvec, int N) const
+    {
+        for (int k=0; k<N; ++k) {
+            _pimpl->gradient(xvec[k], yvec[k], dfdxvec[k], dfdyvec[k]);
+        }
+    }
+
+}

@@ -643,3 +643,222 @@ class LookupTable2D(object):
 
     def __setstate__(self, d):
         self.__dict__ = d
+
+
+class LookupTable2DOld(object):
+    def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
+        if edge_mode not in ('raise', 'wrap', 'constant'):
+            raise GalSimValueError("Unknown edge_mode.", edge_mode, ('raise', 'wrap', 'constant'))
+
+        self.x = np.ascontiguousarray(x, dtype=float)
+        self.y = np.ascontiguousarray(y, dtype=float)
+        self.f = np.ascontiguousarray(f, dtype=float)
+
+        dx = np.diff(self.x)
+        dy = np.diff(self.y)
+
+        if not all(dx > 0):
+            raise GalSimValueError("x input grids is not strictly increasing.", x)
+        if not all(dy > 0):
+            raise GalSimValueError("y input grids is not strictly increasing.", y)
+
+        fshape = self.f.shape
+        if fshape != (len(x), len(y)):
+            raise GalSimIncompatibleValuesError(
+                "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
+
+        if interpolant not in ('linear', 'ceil', 'floor', 'nearest'):
+            raise GalSimValueError("Unknown interpolant.", interpolant,
+                                   ('linear', 'ceil', 'floor', 'nearest'))
+        self.interpolant = interpolant
+
+
+        self.interpolant = interpolant
+        self.edge_mode = edge_mode
+        self.constant = float(constant)
+
+        if self.edge_mode == 'wrap':
+            # Can wrap if x and y arrays are equally spaced ...
+            if np.allclose(dx, dx[0]) and np.allclose(dy, dy[0]):
+                # Underlying Table2D requires us to extend x, y, and f.
+                self.x = np.append(self.x, self.x[-1]+dx[0])
+                self.y = np.append(self.y, self.y[-1]+dy[0])
+                self.f = np.pad(self.f, [(0,1), (0,1)], mode='wrap')
+            if (all(self.f[0] == self.f[-1]) and all(self.f[:,0] == self.f[:,-1])):
+                self.xperiod = self.x[-1] - self.x[0]
+                self.yperiod = self.y[-1] - self.y[0]
+            else:
+                raise GalSimIncompatibleValuesError(
+                    "Cannot use edge_mode='wrap' unless either x and y are equally "
+                    "spaced or first/last row/column of f are identical.",
+                    edge_mode=edge_mode, x=x, y=y, f=f)
+
+    @lazy_property
+    def _tab(self):
+        with convert_cpp_errors():
+            return _galsim._LookupTable2DOld(self.x.ctypes.data, self.y.ctypes.data,
+                                             self.f.ctypes.data, len(self.x), len(self.y),
+                                             self.interpolant)
+    def getXArgs(self):
+        return self.x
+
+    def getYArgs(self):
+        return self.y
+
+    def getVals(self):
+        return self.f
+
+    def _inbounds(self, x, y):
+        return (np.min(x) >= self.x[0] and np.max(x) <= self.x[-1] and
+                np.min(y) >= self.y[0] and np.max(y) <= self.y[-1])
+
+    def _wrap_args(self, x, y):
+        return ((x-self.x[0]) % self.xperiod + self.x[0],
+                (y-self.y[0]) % self.yperiod + self.y[0])
+
+    @property
+    def _bounds(self):
+        return BoundsD(self.x[0], self.x[-1], self.y[0], self.y[-1])
+
+    def _call_raise(self, x, y):
+        if not self._inbounds(x, y):
+            raise GalSimBoundsError("Extrapolating beyond input range.",
+                                    PositionD(x,y), self._bounds)
+
+        if isinstance(x, numbers.Real):
+            return self._tab.interp(x, y)
+        else:
+            xx = np.ascontiguousarray(x.ravel(), dtype=float)
+            yy = np.ascontiguousarray(y.ravel(), dtype=float)
+            f = np.empty_like(xx, dtype=float)
+            self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx))
+            f = f.reshape(x.shape)
+            return f
+
+    def _call_wrap(self, x, y):
+        x, y = self._wrap_args(x, y)
+        return self._call_raise(x, y)
+
+    def _call_constant(self, x, y):
+        if isinstance(x, numbers.Real):
+            if self._inbounds(x, y):
+                return self._tab.interp(x, y)
+            else:
+                return self.constant
+        else:
+            x = np.array(x, dtype=float, copy=False)
+            y = np.array(y, dtype=float, copy=False)
+            f = np.empty_like(x, dtype=float)
+            f.fill(self.constant)
+            good = ((x >= self.x[0]) & (x <= self.x[-1]) &
+                    (y >= self.y[0]) & (y <= self.y[-1]))
+            xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
+            yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
+            tmp = np.empty_like(xx, dtype=float)
+            self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, tmp.ctypes.data, len(xx))
+            f[good] = tmp
+            return f
+
+    def __call__(self, x, y):
+        if self.edge_mode == 'raise':
+            return self._call_raise(x, y)
+        elif self.edge_mode == 'wrap':
+            return self._call_wrap(x, y)
+        else: # constant
+            return self._call_constant(x, y)
+
+    def _gradient_raise(self, x, y):
+        if not self._inbounds(x, y):
+            raise GalSimBoundsError("Extrapolating beyond input range.",
+                                    PositionD(x,y), self._bounds)
+
+        if isinstance(x, numbers.Real):
+            grad = np.empty(2, dtype=float)
+            self._tab.gradient(x, y, grad.ctypes.data)
+            return grad[0], grad[1]
+        else:
+            xx = np.ascontiguousarray(x.ravel(), dtype=float)
+            yy = np.ascontiguousarray(y.ravel(), dtype=float)
+            dfdx = np.empty_like(xx)
+            dfdy = np.empty_like(xx)
+            self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
+                                   dfdx.ctypes.data, dfdy.ctypes.data, len(xx))
+            dfdx = dfdx.reshape(x.shape)
+            dfdy = dfdy.reshape(x.shape)
+            return dfdx, dfdy
+
+    def _gradient_wrap(self, x, y):
+        x, y = self._wrap_args(x, y)
+        return self._gradient_raise(x, y)
+
+    def _gradient_constant(self, x, y):
+        if isinstance(x, numbers.Real):
+            if self._inbounds(x, y):
+                grad = np.empty(2, dtype=float)
+                self._tab.gradient(float(x), float(y), grad.ctypes.data)
+                return tuple(grad)
+            else:
+                return 0.0, 0.0
+        else:
+            x = np.array(x, dtype=float, copy=False)
+            y = np.array(y, dtype=float, copy=False)
+            dfdx = np.empty_like(x, dtype=float)
+            dfdy = np.empty_like(x, dtype=float)
+            dfdx.fill(0.0)
+            dfdy.fill(0.0)
+            good = ((x >= self.x[0]) & (x <= self.x[-1]) &
+                    (y >= self.y[0]) & (y <= self.y[-1]))
+            xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
+            yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
+            tmp1 = np.empty_like(xx, dtype=float)
+            tmp2 = np.empty_like(xx, dtype=float)
+            self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
+                                   tmp1.ctypes.data, tmp2.ctypes.data, len(xx))
+            dfdx[good] = tmp1
+            dfdy[good] = tmp2
+            return dfdx, dfdy
+
+    def gradient(self, x, y):
+        if self.edge_mode == 'raise':
+            return self._gradient_raise(x, y)
+        elif self.edge_mode == 'wrap':
+            return self._gradient_wrap(x, y)
+        else: # constant
+            return self._gradient_constant(x, y)
+
+    def __str__(self):
+        return ("galsim.LookupTable2DOld(x=[%s,...,%s], y=[%s,...,%s], "
+                "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r, edge_mode=%r)"%(
+            self.x[0], self.x[-1], self.y[0], self.y[-1],
+            self.f[0,0], self.f[0,-1], self.f[-1,0], self.f[-1,-1],
+            self.edge_mode))
+
+    def __repr__(self):
+        return ("galsim.LookupTable2DOld(x=array(%r), y=array(%r), "
+                "f=array(%r), interpolant=%r, edge_mode=%r, constant=%r)"%(
+            self.x.tolist(), self.y.tolist(), self.f.tolist(), self.interpolant, self.edge_mode,
+            self.constant))
+
+    def __eq__(self, other):
+        return (isinstance(other, LookupTable2DOld) and
+                np.array_equal(self.x,other.x) and
+                np.array_equal(self.y,other.y) and
+                np.array_equal(self.f,other.f) and
+                self.interpolant == other.interpolant and
+                self.edge_mode == other.edge_mode and
+                self.constant == other.constant)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(("galsim.LookupTable2DOld", tuple(self.x.ravel()), tuple(self.y.ravel()),
+                    tuple(self.f.ravel()), self.interpolant, self.edge_mode, self.constant))
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_tab',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
