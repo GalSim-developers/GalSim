@@ -79,7 +79,7 @@ namespace galsim {
         bool finalized() const { return _final; }
 
         double lookup(double a) const
-        { 
+        {
             assert(_final);
             return Table::lookup(a);
         }
@@ -114,24 +114,26 @@ namespace galsim {
         Table2D(const double* xargs, const double* yargs, const double* vals,
                 int Nx, int Ny, interpolant in);
 
-        /// interp, but exception if beyond bounds
+        /// interp
         double lookup(double x, double y) const;
 
         /// interp many values at once
         void interpMany(const double* xvec, const double* yvec, double* valvec, int N) const;
-        void interpManyMesh(const double* xvec, const double* yvec, double* valvec,
-                            int outNx, int outNy) const;
 
         /// Estimate df/dx, df/dy at a single location
-        void gradient(double x, double y, double& dfdxvec, double& dfdyvec) const;
+        void gradient(double x, double y, double& dfdx, double& dfdy) const;
 
         /// Estimate many df/dx and df/dy values
         void gradientMany(const double* xvec, const double* yvec,
                           double* dfdxvec, double* dfdyvec, int N) const;
 
-    protected:
         class Table2DImpl;
+    protected:
         shared_ptr<Table2DImpl> _pimpl;
+
+        static std::shared_ptr<Table2DImpl> makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny, interpolant in);
     };
 }
 

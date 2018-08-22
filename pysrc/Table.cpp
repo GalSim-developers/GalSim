@@ -91,7 +91,7 @@ namespace galsim {
             .def("interp", &Table::lookup)
             .def("interpMany", &InterpMany);
 
-        py::class_<Table2D >(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
+        py::class_<Table2D>(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
             .def(PY_INIT(&MakeTable2D))
             .def("interp", &Table2D::lookup)
             .def("interpMany", &InterpMany2D)

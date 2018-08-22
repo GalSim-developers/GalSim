@@ -330,7 +330,7 @@ namespace galsim {
     }
 
 
- 
+
     // Table
 
     Table::Table(const double* args, const double* vals, int N, Table::interpolant in)
@@ -370,180 +370,209 @@ namespace galsim {
         _final = true;
     }
 
-    // Table2DImpl
-    class Table2D::Table2DImpl
-    {
+
+    class Table2D::Table2DImpl {
     public:
-        Table2DImpl(const double* xargs, const double* yargs, const double* vals,
-                    int Nx, int Ny, Table2D::interpolant in);
-
-        double lookup(double x, double y) const;
-        double lookup(double x, double y, int i) const;
-        int prelookup_i(double x) const;
-        void gradient(double x, double y, double& dfdx, double& dfdy) const;
-
-    private:
-        Table2D::interpolant _iType;
-        const ArgVec _xargs;
-        const ArgVec _yargs;
-        const double* _vals;
-        const int _ny;
-
-        typedef double (Table2DImpl::*MemFn)(double x, double y, int i, int j) const;
-        MemFn interpolate;
-        double linearInterpolate(double x, double y, int i, int j) const;
-        double floorInterpolate(double x, double y, int i, int j) const;
-        double ceilInterpolate(double x, double y, int i, int j) const;
-        double nearestInterpolate(double x, double y, int i, int j) const;
+        virtual double lookup(double x, double y) const = 0;
+        virtual void interpMany(const double* xvec, const double* yvec, double* valvec,
+                                int N) const = 0;
+        virtual void gradient(double x, double y, double& dfdx, double& dfdy) const = 0;
+        virtual void gradientMany(const double* xvec, const double* yvec,
+                                  double* dfdxvec, double* dfdyvec, int N) const = 0;
     };
 
-    Table2D::Table2DImpl::Table2DImpl(const double* xargs, const double* yargs, const double* vals,
-                             int Nx, int Ny, Table2D::interpolant in):
-        _iType(in), _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny)
-    {
-        switch (_iType) {
-          case linear:
-               interpolate = &Table2DImpl::linearInterpolate;
-               break;
-          case floor:
-               interpolate = &Table2DImpl::floorInterpolate;
-               break;
-          case ceil:
-               interpolate = &Table2DImpl::ceilInterpolate;
-               break;
-          case nearest:
-               interpolate = &Table2DImpl::nearestInterpolate;
-               break;
-          default:
-               throw std::runtime_error("invalid interpolation method");
+
+    template<class T2DInterp>
+    class ConcreteTable2DImpl : public Table2D::Table2DImpl {
+    public:
+        ConcreteTable2DImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny
+        ) : _interp(xargs, yargs, vals, Nx, Ny) {}
+
+        double lookup(double x, double y) const {
+            return _interp.interp(x, y);
         }
-    }
 
-    //lookup and interpolate function value.
-    double Table2D::Table2DImpl::lookup(double x, double y) const
-    {
-        int i = _xargs.upperIndex(x);
-        int j = _yargs.upperIndex(y);
-        return (this->*interpolate)(x, y, i, j);
-    }
-
-    int Table2D::Table2DImpl::prelookup_i(double x) const
-    { return _xargs.upperIndex(x); }
-
-    double Table2D::Table2DImpl::lookup(double x, double y, int i) const
-    {
-        int j = _yargs.upperIndex(y);
-        return (this->*interpolate)(x, y, i, j);
-    }
-
-    /// Estimate many df/dx and df/dy values
-    void Table2D::Table2DImpl::gradient(double x, double y, double& dfdx, double& dfdy) const
-    {
-        // Note: This is really only accurate for linear interpolation.
-        // The derivative for floor, ceil, nearest interpolation doesn't really make
-        // much sense, so this is probably what the user would want.  However, if we
-        // eventually implement spline interpolation for Table2D, then this function will
-        // need to be revisited.
-        int i = _xargs.upperIndex(x);
-        int j = _yargs.upperIndex(y);
-        double dx = _xargs[i] - _xargs[i-1];
-        double dy = _yargs[j] - _yargs[j-1];
-        double f00 = _vals[(i-1)*_ny+j-1];
-        double f01 = _vals[(i-1)*_ny+j];
-        double f10 = _vals[i*_ny+j-1];
-        double f11 = _vals[i*_ny+j];
-        double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
-        double bx = 1.0 - ax;
-        double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
-        double by = 1.0 - ay;
-        dfdx = ( (f10-f00)*ay + (f11-f01)*by ) / dx;
-        dfdy = ( (f01-f00)*ax + (f11-f10)*bx ) / dy;
-    }
-
-    double Table2D::Table2DImpl::linearInterpolate(double x, double y, int i, int j) const
-    {
-        double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
-        double bx = 1.0 - ax;
-        double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
-        double by = 1.0 - ay;
-
-        return (_vals[(i-1)*_ny+j-1] * ax * ay
-                + _vals[i*_ny+j-1] * bx * ay
-                + _vals[(i-1)*_ny+j] * ax * by
-                + _vals[i*_ny+j] * bx * by);
-    }
-
-    double Table2D::Table2DImpl::floorInterpolate(double x, double y, int i, int j) const
-    {
-        // On entry, it is only guaranteed that _xargs[i-1] <= x <= _xargs[i] (and similarly y).
-        // Normally those ='s are ok, but for floor and ceil we make the extra
-        // check to see if we should choose the opposite bound.
-        if (x == _xargs[i]) i++;
-        if (y == _yargs[j]) j++;
-        return _vals[(i-1)*_ny+j-1];
-    }
-
-    double Table2D::Table2DImpl::ceilInterpolate(double x, double y, int i, int j) const
-    {
-        if (x == _xargs[i-1]) i--;
-        if (y == _yargs[j-1]) j--;
-        return _vals[i*_ny+j];
-    }
-
-    double Table2D::Table2DImpl::nearestInterpolate(double x, double y, int i, int j) const
-    {
-        if ((x - _xargs[i-1]) < (_xargs[i] - x)) i--;
-        if ((y - _yargs[j-1]) < (_yargs[j] - y)) j--;
-        return _vals[i*_ny+j];
-    }
-
-
-    // Table2D
-
-    Table2D::Table2D(const double* xargs, const double* yargs, const double* vals,
-                     int Nx, int Ny, Table2D::interpolant in)
-    {
-        _pimpl.reset(new Table2DImpl(xargs, yargs, vals, Nx, Ny, in));
-    }
-
-    //lookup and interpolate function value.
-    double Table2D::lookup(double x, double y) const
-    { return _pimpl->lookup(x,y); }
-
-    //lookup and interpolate an array of function values.
-    //In this case, the length of xvec is assumed to be the same as the length of yvec, and
-    //will also equal the length of the result array.
-    void Table2D::interpMany(const double* xvec, const double* yvec, double* valvec, int N) const
-    {
-        for (int k=0; k<N; k++) {
-            *valvec++ = _pimpl->lookup(xvec[k], yvec[k]);
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            _interp.gradient(x, y, dfdx, dfdy);
         }
-    }
 
-    //lookup and interpolate along the mesh of an x-array and a y-array.
-    //The result will be an array with length outNx * outNy.
-    void Table2D::interpManyMesh(const double* xvec, const double* yvec, double* valvec,
-                                 int outNx, int outNy) const
-    {
-        for (int outi=0; outi<outNx; outi++) {
-            int i = _pimpl->prelookup_i(xvec[outi]);
-            for (int outj=0; outj<outNy; outj++) {
-                *valvec++ = _pimpl->lookup(xvec[outi], yvec[outj], i);
+        void interpMany(const double* xvec, const double* yvec, double* valvec, int N) const {
+            for (int k=0; k<N; k++) {
+                *valvec++ = _interp.interp(xvec[k], yvec[k]);
             }
         }
+
+        void gradientMany(const double* xvec, const double* yvec,
+                          double* dfdxvec, double* dfdyvec, int N) const {
+            for (int k=0; k<N; k++) {
+                _interp.gradient(xvec[k], yvec[k], dfdxvec[k], dfdyvec[k]);
+            }
+        }
+
+    private:
+        T2DInterp _interp;
+    };
+
+
+    class T2DInterp {
+    public:
+        T2DInterp(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny
+        ) : _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny) {}
+    protected:
+        ArgVec _xargs;
+        ArgVec _yargs;
+        const double* _vals;
+        const int _ny;
+    };
+
+
+    class T2DLinearInterp : public T2DInterp {
+    public:
+        using T2DInterp::T2DInterp;
+
+        double interp(double x, double y) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+
+            double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
+            double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
+            double bx = 1.0 - ax;
+            double by = 1.0 - ay;
+
+            return (_vals[(i-1)*_ny+j-1] * ax * ay
+                    + _vals[i*_ny+j-1] * bx * ay
+                    + _vals[(i-1)*_ny+j] * ax * by
+                    + _vals[i*_ny+j] * bx * by);
+        }
+
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            double dx = _xargs[i] - _xargs[i-1];
+            double dy = _yargs[j] - _yargs[j-1];
+            double f00 = _vals[(i-1)*_ny+j-1];
+            double f01 = _vals[(i-1)*_ny+j];
+            double f10 = _vals[i*_ny+j-1];
+            double f11 = _vals[i*_ny+j];
+            double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
+            double bx = 1.0 - ax;
+            double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
+            double by = 1.0 - ay;
+            dfdx = ( (f10-f00)*ay + (f11-f01)*by ) / dx;
+            dfdy = ( (f01-f00)*ax + (f11-f10)*bx ) / dy;
+        }
+    };
+
+
+    class T2DFloorInterp : public T2DInterp {
+    public:
+        using T2DInterp::T2DInterp;
+
+        double interp(double x, double y) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            // From upperIndex, it is only guaranteed that _xargs[i-1] <= x <= _xargs[i] (and similarly y).
+            // Normally those ='s are ok, but for floor and ceil we make the extra
+            // check to see if we should choose the opposite bound.
+            if (x == _xargs[i]) i++;
+            if (y == _yargs[j]) j++;
+            return _vals[(i-1)*_ny+j-1];
+        }
+
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            throw std::runtime_error("gradient not implemented for floor interp");
+        }
+    };
+
+
+    class T2DCeilInterp : public T2DInterp {
+    public:
+        using T2DInterp::T2DInterp;
+
+        double interp(double x, double y) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            if (x == _xargs[i-1]) i--;
+            if (y == _yargs[j-1]) j--;
+            return _vals[i*_ny+j];
+        }
+
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            throw std::runtime_error("gradient not implemented for ceil interp");
+        }
+    };
+
+
+    class T2DNearestInterp : public T2DInterp {
+    public:
+        using T2DInterp::T2DInterp;
+
+        double interp(double x, double y) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            if ((x - _xargs[i-1]) < (_xargs[i] - x)) i--;
+            if ((y - _yargs[j-1]) < (_yargs[j] - y)) j--;
+            return _vals[i*_ny+j];
+        }
+
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            throw std::runtime_error("gradient not implemented for nearest interp");
+        }
+    };
+
+
+    Table2D::Table2D(
+        const double* xargs, const double* yargs, const double* vals,
+        int Nx, int Ny, interpolant in
+    ) : _pimpl(makeImpl(xargs, yargs, vals, Nx, Ny, in)) {}
+
+    std::shared_ptr<Table2D::Table2DImpl> Table2D::makeImpl(
+        const double* xargs, const double* yargs, const double* vals,
+        int Nx, int Ny, interpolant in
+    ) {
+        switch(in) {
+            case floor:
+                return std::make_shared<ConcreteTable2DImpl<T2DFloorInterp>>(
+                    xargs, yargs, vals, Nx, Ny
+                );
+            case ceil:
+                return std::make_shared<ConcreteTable2DImpl<T2DCeilInterp>>(
+                    xargs, yargs, vals, Nx, Ny
+                );
+            case nearest:
+                return std::make_shared<ConcreteTable2DImpl<T2DNearestInterp>>(
+                    xargs, yargs, vals, Nx, Ny
+                );
+            case linear:
+                return std::make_shared<ConcreteTable2DImpl<T2DLinearInterp>>(
+                    xargs, yargs, vals, Nx, Ny
+                );
+            default:
+                throw runtime_error("invalid interpolation method");
+        }
     }
 
-    /// Estimate many df/dx and df/dy values
-    void Table2D::gradient(double x, double y, double& dfdx, double& dfdy) const
-    { _pimpl->gradient(x, y, dfdx, dfdy); }
+    double Table2D::lookup(double x, double y) const {
+        return _pimpl->lookup(x, y);
+    }
+
+    void Table2D::interpMany(const double* xvec, const double* yvec, double* valvec, int N) const {
+        _pimpl->interpMany(xvec, yvec, valvec, N);
+    }
+
+    /// Estimate df/dx, df/dy at a single location
+    void Table2D::gradient(double x, double y, double& dfdx, double& dfdy) const {
+        _pimpl->gradient(x, y, dfdx, dfdy);
+    }
 
     /// Estimate many df/dx and df/dy values
     void Table2D::gradientMany(const double* xvec, const double* yvec,
-                               double* dfdxvec, double* dfdyvec, int N) const
-    {
-        for (int k=0; k<N; ++k) {
-            _pimpl->gradient(xvec[k], yvec[k], dfdxvec[k], dfdyvec[k]);
-        }
+                               double* dfdxvec, double* dfdyvec, int N) const {
+        _pimpl->gradientMany(xvec, yvec, dfdxvec, dfdyvec, N);
     }
 
 }
