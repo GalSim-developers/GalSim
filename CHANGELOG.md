@@ -18,3 +18,6 @@ New Features
 
 Bug Fixes
 ---------
+
+- Updated the diffusion functional form for the Silicon class to match lab
+  experiments of ITL sensors. (#981)
