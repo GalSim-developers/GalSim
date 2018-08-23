@@ -549,6 +549,133 @@ def test_table2d_gradient():
 
 
 @timer
+def test_table2d_cubic():
+    # A few functions that should be exactly interpolatable with bicubic
+    # interpolation
+    def f1(x_, y_):
+        return 2*x_ + 3*y_
+    def df1dx(x_, y_):
+        return np.ones_like(x_)*2
+    def df1dy(x_, y_):
+        return np.ones_like(x_)*3
+
+    def f2(x_, y_):
+        return 2*x_*x_
+    def df2dx(x_, y_):
+        return 4*x_
+    def df2dy(x_, y_):
+        return np.zeros_like(x_)
+
+    def f3(x_, y_):
+        return 2*y_*y_
+    def df3dx(x_, y_):
+        return np.zeros_like(x_)
+    def df3dy(x_, y_):
+        return 4*y_
+
+    def f4(x_, y_):
+        return 2*y_*y_ + 3*x_*x_
+    def df4dx(x_, y_):
+        return 6*x_
+    def df4dy(x_, y_):
+        return 4*y_
+
+    def f5(x_, y_):
+        return 2*y_*y_ + 3*x_*x_ + 4*x_*y_
+    def df5dx(x_, y_):
+        return 6*x_ + 4*y_
+    def df5dy(x_, y_):
+        return 4*y_ + 4*x_
+    def d2f5dxdy(x_, y_):
+        return np.ones_like(x_)*4
+
+    fs = [f1, f2, f3, f4, f5]
+    dfdxs = [df1dx, df2dx, df3dx, df4dx, df5dx]
+    dfdys = [df1dy, df2dy, df3dy, df4dy, df5dy]
+
+    x = np.linspace(0.1, 3.3, 250)
+    y = np.linspace(0.2, 10.4, 750)
+    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+
+    for f, dfdx, dfdy in zip(fs, dfdxs, dfdys):
+        z = f(xx, yy)
+        tab2d = galsim.LookupTable2D(x, y, z, interpolant='cubic')
+
+        # Check single value functionality.
+        x1,y1 = 2.3, 1.2
+        np.testing.assert_allclose(tab2d(x1,y1), f(x1, y1), atol=1e-11, rtol=0)
+        ref_dfdx = dfdx(x1,y1)
+        ref_dfdy = dfdy(x1,y1)
+        test_dfdx, test_dfdy = tab2d.gradient(x1,y1)
+        np.testing.assert_allclose(test_dfdx, ref_dfdx, atol=1e-11, rtol=0)
+        np.testing.assert_allclose(test_dfdy, ref_dfdy, atol=1e-11, rtol=0)
+
+        # Check vectorized output
+        newx = np.linspace(0.2, 3.1, 45)
+        newy = np.linspace(0.3, 10.1, 85)
+        newyy, newxx = np.meshgrid(newy, newx)
+
+        np.testing.assert_allclose(tab2d(newxx, newyy), f(newxx, newyy), atol=1e-11, rtol=0)
+        ref_dfdx = dfdx(newxx, newyy)
+        ref_dfdy = dfdy(newxx, newyy)
+        test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+        np.testing.assert_allclose(test_dfdx, ref_dfdx, atol=1e-11, rtol=0)
+        np.testing.assert_allclose(test_dfdy, ref_dfdy, atol=1e-11, rtol=0)
+
+    # I think it ought to be possible to exactly interpolate the following,
+    # provided the exact derivatives are provided.  Use slightly looser tolerances,
+    # which seems reasonable since these are varying more rapidly.
+    def f6(x_, y_):
+        return y_*y_*y_
+    def df6dx(x_, y_):
+        return np.zeros_like(x_)
+    def df6dy(x_, y_):
+        return 3*y_*y_
+    def d2f6dxdy(x_, y_):
+        return np.zeros_like(x_)
+
+    def f7(x_, y_):
+        return 2*y_*y_*y_ + 3*x_*x_*x_ + 4*x_*y_*y_
+    def df7dx(x_, y_):
+        return 9*x_*x_ + 4*y_*y_
+    def df7dy(x_, y_):
+        return 6*y_*y_ + 8*x_*y_
+    def d2f7dxdy(x_, y_):
+        return 8*y_
+
+    fs = [f6, f7]
+    dfdxs = [df6dx, df7dx]
+    dfdys = [df6dy, df7dy]
+    d2fdxdys = [d2f6dxdy, d2f7dxdy]
+
+    for f, dfdx, dfdy, d2fdxdy in zip(fs, dfdxs, dfdys, d2fdxdys):
+        z = f(xx, yy)
+        tab2d = galsim.LookupTable2D(x, y, z, interpolant='cubic',
+            dfdx=dfdx(xx, yy), dfdy=dfdy(xx, yy), d2fdxdy=d2fdxdy(xx, yy))
+
+        # Check single value functionality.
+        x1,y1 = 2.3, 1.2
+        np.testing.assert_allclose(tab2d(x1,y1), f(x1, y1), atol=1e-10, rtol=0)
+        ref_dfdx = dfdx(x1,y1)
+        ref_dfdy = dfdy(x1,y1)
+        test_dfdx, test_dfdy = tab2d.gradient(x1,y1)
+        np.testing.assert_allclose(test_dfdx, ref_dfdx, atol=1e-10, rtol=0)
+        np.testing.assert_allclose(test_dfdy, ref_dfdy, atol=1e-10, rtol=0)
+
+        # Check vectorized output
+        newx = np.linspace(0.2, 3.1, 45)
+        newy = np.linspace(0.3, 10.1, 85)
+        newyy, newxx = np.meshgrid(newy, newx)
+
+        np.testing.assert_allclose(tab2d(newxx, newyy), f(newxx, newyy), atol=1e-10, rtol=0)
+        ref_dfdx = dfdx(newxx, newyy)
+        ref_dfdy = dfdy(newxx, newyy)
+        test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+        np.testing.assert_allclose(test_dfdx, ref_dfdx, atol=1e-10, rtol=0)
+        np.testing.assert_allclose(test_dfdy, ref_dfdy, atol=1e-10, rtol=0)
+
+
+@timer
 def test_ne():
     """ Check that inequality works as expected."""
     # These should all compare as unequal.
@@ -573,4 +700,5 @@ if __name__ == "__main__":
     test_roundoff()
     test_table2d()
     test_table2d_gradient()
+    test_table2d_cubic()
     test_ne()

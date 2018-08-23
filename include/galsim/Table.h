@@ -108,11 +108,13 @@ namespace galsim {
     class Table2D
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest };
+        enum interpolant { linear, floor, ceil, nearest, cubic };
 
         /// Table from xargs, yargs, vals
         Table2D(const double* xargs, const double* yargs, const double* vals,
-                int Nx, int Ny, interpolant in);
+                int Nx, int Ny, interpolant in,
+                const double* dfdx=nullptr, const double* dfdy=nullptr,
+                const double* d2fdxdy=nullptr);
 
         /// interp
         double lookup(double x, double y) const;
@@ -133,7 +135,8 @@ namespace galsim {
 
         static std::shared_ptr<Table2DImpl> makeImpl(
             const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny, interpolant in);
+            int Nx, int Ny, interpolant in,
+            const double* dfdx, const double* dfdy, const double* d2fdxdy);
     };
 }
 

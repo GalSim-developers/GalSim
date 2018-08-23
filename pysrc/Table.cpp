@@ -44,8 +44,11 @@ namespace galsim {
         table.interpMany(args, vals, N);
     }
 
+    // static Table2D* MakeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
+    //                             const char* interp_c)
     static Table2D* MakeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
-                                const char* interp_c)
+                                const char* interp_c, size_t idfdx, size_t idfdy,
+                                size_t id2fdxdy)
     {
         const double* x = reinterpret_cast<const double*>(ix);
         const double* y = reinterpret_cast<const double*>(iy);
@@ -56,6 +59,13 @@ namespace galsim {
         if (interp == "floor") i = Table2D::floor;
         else if (interp == "ceil") i = Table2D::ceil;
         else if (interp == "nearest") i = Table2D::nearest;
+        else if (interp == "cubic") {
+            i = Table2D::cubic;
+            const double* dfdx = reinterpret_cast<const double*>(idfdx);
+            const double* dfdy = reinterpret_cast<const double*>(idfdy);
+            const double* d2fdxdy = reinterpret_cast<const double*>(id2fdxdy);
+            return new Table2D(x, y, vals, Nx, Ny, i, dfdx, dfdy, d2fdxdy);
+        }
 
         return new Table2D(x, y, vals, Nx, Ny, i);
     }

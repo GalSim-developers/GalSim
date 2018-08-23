@@ -387,8 +387,9 @@ namespace galsim {
     public:
         ConcreteTable2DImpl(
             const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny
-        ) : _interp(xargs, yargs, vals, Nx, Ny) {}
+            int Nx, int Ny,
+            const double* dfdx=nullptr, const double* dfdy=nullptr, const double* d2fdxdy=nullptr
+        ) : _interp(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy) {}
 
         double lookup(double x, double y) const {
             return _interp.interp(x, y);
@@ -420,13 +421,18 @@ namespace galsim {
     public:
         T2DInterp(
             const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny
-        ) : _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny) {}
+            int Nx, int Ny,
+            const double* dfdx=nullptr, const double* dfdy=nullptr, const double* d2fdxdy=nullptr
+        ) : _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny),
+            _dfdx(dfdx), _dfdy(dfdy), _d2fdxdy(d2fdxdy) {}
     protected:
         ArgVec _xargs;
         ArgVec _yargs;
         const double* _vals;
         const int _ny;
+        const double* _dfdx;
+        const double* _dfdy;
+        const double* _d2fdxdy;
     };
 
 
@@ -525,14 +531,94 @@ namespace galsim {
     };
 
 
+    class T2DCubicInterp : public T2DInterp {
+    public:
+        using T2DInterp::T2DInterp;
+
+        double oneDSpline(double x, double val0, double val1, double der0, double der1) const {
+            // assuming that x is between 0 and 1, val0 and val1 are the values at
+            // 0 and 1, and der0 and der1 are the derivatives at 0 and 1.
+
+            // I'm assuming the compiler will reduce this all down...
+            double a = 2*(val0-val1) + der0 + der1;
+            double b = 3*(val1-val0) - 2*der0 - der1;
+            double c = der0;
+            double d = val0;
+
+            return d + x*(c + x*(b + x*a));
+        }
+
+        double oneDGrad(double x, double val0, double val1, double der0, double der1) const {
+            double a = 2*(val0-val1) + der0 + der1;
+            double b = 3*(val1-val0) - 2*der0 - der1;
+            double c = der0;
+            return c + x*(2*b + x*3*a);
+        }
+
+        double interp(double x, double y) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            double dxgrid = _xargs[i] - _xargs[i-1];
+            double dygrid = _yargs[j] - _yargs[j-1];
+            double dx = (x - _xargs[i-1])/dxgrid;
+            double dy = (y - _yargs[j-1])/dygrid;
+
+            // Need to first interpolate the y-values and the y-derivatives in the x direction.
+            double val0 = oneDSpline(dx, _vals[(i-1)*_ny+j-1], _vals[i*_ny+j-1],
+                                     _dfdx[(i-1)*_ny+j-1]*dxgrid, _dfdx[i*_ny+j-1]*dxgrid);
+            double val1 = oneDSpline(dx, _vals[(i-1)*_ny+j], _vals[i*_ny+j],
+                                     _dfdx[(i-1)*_ny+j]*dxgrid, _dfdx[i*_ny+j]*dxgrid);
+            double der0 = oneDSpline(dx, _dfdy[(i-1)*_ny+j-1], _dfdy[i*_ny+j-1],
+                                     _d2fdxdy[(i-1)*_ny+j-1]*dxgrid, _d2fdxdy[i*_ny+j-1]*dxgrid);
+            double der1 = oneDSpline(dx, _dfdy[(i-1)*_ny+j], _dfdy[i*_ny+j],
+                                     _d2fdxdy[(i-1)*_ny+j]*dxgrid, _d2fdxdy[i*_ny+j]*dxgrid);
+
+            return oneDSpline(dy, val0, val1, der0*dygrid, der1*dygrid);
+        }
+
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            double dxgrid = _xargs[i] - _xargs[i-1];
+            double dygrid = _yargs[j] - _yargs[j-1];
+            double dx = (x - _xargs[i-1])/dxgrid;
+            double dy = (y - _yargs[j-1])/dygrid;
+
+            // xgradient;
+            double val0 = oneDGrad(dx, _vals[(i-1)*_ny+j-1], _vals[i*_ny+j-1],
+                                   _dfdx[(i-1)*_ny+j-1]*dxgrid, _dfdx[i*_ny+j-1]*dxgrid);
+            double val1 = oneDGrad(dx, _vals[(i-1)*_ny+j], _vals[i*_ny+j],
+                                   _dfdx[(i-1)*_ny+j]*dxgrid, _dfdx[i*_ny+j]*dxgrid);
+            double der0 = oneDGrad(dx, _dfdy[(i-1)*_ny+j-1], _dfdy[i*_ny+j-1],
+                                   _d2fdxdy[(i-1)*_ny+j-1]*dxgrid, _d2fdxdy[i*_ny+j-1]*dxgrid);
+            double der1 = oneDGrad(dx, _dfdy[(i-1)*_ny+j], _dfdy[i*_ny+j],
+                                   _d2fdxdy[(i-1)*_ny+j]*dxgrid, _d2fdxdy[i*_ny+j]*dxgrid);
+            dfdx = oneDSpline(dy, val0, val1, der0*dygrid, der1*dygrid)/dxgrid;
+
+            // ygradient
+            val0 = oneDGrad(dy, _vals[(i-1)*_ny+j-1], _vals[(i-1)*_ny+j],
+                            _dfdy[(i-1)*_ny+j-1]*dygrid, _dfdy[(i-1)*_ny+j]*dygrid);
+            val1 = oneDGrad(dy, _vals[i*_ny+j-1], _vals[i*_ny+j],
+                            _dfdy[i*_ny+j-1]*dygrid, _dfdy[i*_ny+j]*dygrid);
+            der0 = oneDGrad(dy, _dfdx[(i-1)*_ny+j-1], _dfdx[(i-1)*_ny+j],
+                            _d2fdxdy[(i-1)*_ny+j-1]*dygrid, _d2fdxdy[(i-1)*_ny+j]*dygrid);
+            der1 = oneDGrad(dy, _dfdx[i*_ny+j-1], _dfdx[i*_ny+j],
+                            _d2fdxdy[i*_ny+j-1]*dygrid, _d2fdxdy[i*_ny+j]*dygrid);
+            dfdy = oneDSpline(dx, val0, val1, der0*dxgrid, der1*dxgrid)/dygrid;
+        }
+    };
+
+
     Table2D::Table2D(
         const double* xargs, const double* yargs, const double* vals,
-        int Nx, int Ny, interpolant in
-    ) : _pimpl(makeImpl(xargs, yargs, vals, Nx, Ny, in)) {}
+        int Nx, int Ny, interpolant in,
+        const double* dfdx, const double* dfdy, const double* d2fdxdy
+    ) : _pimpl(makeImpl(xargs, yargs, vals, Nx, Ny, in, dfdx, dfdy, d2fdxdy)) {}
 
     std::shared_ptr<Table2D::Table2DImpl> Table2D::makeImpl(
         const double* xargs, const double* yargs, const double* vals,
-        int Nx, int Ny, interpolant in
+        int Nx, int Ny, interpolant in,
+        const double* dfdx, const double* dfdy, const double* d2fdxdy
     ) {
         switch(in) {
             case floor:
@@ -551,8 +637,12 @@ namespace galsim {
                 return std::make_shared<ConcreteTable2DImpl<T2DLinearInterp>>(
                     xargs, yargs, vals, Nx, Ny
                 );
+            case cubic:
+                return std::make_shared<ConcreteTable2DImpl<T2DCubicInterp>>(
+                    xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy
+                );
             default:
-                throw runtime_error("invalid interpolation method");
+                throw std::runtime_error("invalid interpolation method");
         }
     }
 

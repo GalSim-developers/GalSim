@@ -353,6 +353,7 @@ class LookupTable2D(object):
       - 'floor'
       - 'ceil'
       - 'nearest'
+      - 'cubic'
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
         >>> tab2d(2.2, 3.7)
@@ -414,7 +415,8 @@ class LookupTable2D(object):
     @param constant       A constant to return when extrapolating beyond the input range and
                           `edge_mode='constant'`.  [default: 0]
     """
-    def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
+    def __init__(self, x, y, f, dfdx=None, dfdy=None, d2fdxdy=None,
+                 interpolant='linear', edge_mode='raise', constant=0):
         if edge_mode not in ('raise', 'wrap', 'constant'):
             raise GalSimValueError("Unknown edge_mode.", edge_mode, ('raise', 'wrap', 'constant'))
 
@@ -435,13 +437,11 @@ class LookupTable2D(object):
             raise GalSimIncompatibleValuesError(
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
-        if interpolant not in ('linear', 'ceil', 'floor', 'nearest'):
+        if interpolant not in ('linear', 'ceil', 'floor', 'nearest', 'cubic'):
             raise GalSimValueError("Unknown interpolant.", interpolant,
-                                   ('linear', 'ceil', 'floor', 'nearest'))
+                                   ('linear', 'ceil', 'floor', 'nearest', 'cubic'))
         self.interpolant = interpolant
 
-
-        self.interpolant = interpolant
         self.edge_mode = edge_mode
         self.constant = float(constant)
 
@@ -461,12 +461,59 @@ class LookupTable2D(object):
                     "spaced or first/last row/column of f are identical.",
                     edge_mode=edge_mode, x=x, y=y, f=f)
 
+        der_exist = [kw is not None for kw in [dfdx, dfdy, d2fdxdy]]
+        if self.interpolant == 'cubic':
+            if any(der_exist):
+                if not all(der_exist):
+                    raise GalSimIncompatibleValuesError(
+                        "Must specify all of dfdx, dfdy, d2fdxdy if one is specified",
+                        dfdx=dfdx, dfdy=dfdy, d2fdxdy=d2fdxdy)
+            else:
+                # Use finite differences if derivatives not provided
+                dfdx = np.empty_like(f)
+                diffx = self.x[2:] - self.x[:-2]
+                dfdx[1:-1, :] = (f[2:, :] - f[:-2, :])/diffx[:,None]
+                dfdx[0, :] = (f[1, :] - f[0, :])/dx[0]
+                dfdx[-1, :] = (f[-1, :] - f[-2, :])/dx[-1]
+
+                dfdy = np.empty_like(f)
+                diffy = self.y[2:] - self.y[:-2]
+                dfdy[:, 1:-1] = (f[:, 2:] - f[:, :-2])/diffy
+                dfdy[:, 0] = (f[:, 1] - f[:, 0])/dy[0]
+                dfdy[:, -1] = (f[:, -1] - f[:, -2])/dy[-1]
+
+                d2fdxdy = np.empty_like(f)
+                d2fdxdy[1:-1, :] = (dfdy[2:, :] - dfdy[:-2, :])/diffx[:,None]
+                d2fdxdy[0, :] = (dfdy[1, :] - dfdy[0, :])/dx[0]
+                d2fdxdy[-1, :] = (dfdy[-1, :] - dfdy[-2, :])/dx[-1]
+        else:
+            if any(der_exist):
+                raise GalSimIncompatibleValuesError(
+                    "Only specify dfdx, dfdy, d2fdxdy if interpolant is 'cubic'.",
+                    dfdx=dfdx, dfdy=dfdy, d2fdxdy=d2fdxdy, interpolant=interpolant)
+
+        if dfdx is not None:
+            dfdx = np.ascontiguousarray(dfdx, dtype=float)
+            dfdy = np.ascontiguousarray(dfdy, dtype=float)
+            d2fdxdy = np.ascontiguousarray(d2fdxdy, dtype=float)
+
+        self.dfdx = dfdx
+        self.dfdy = dfdy
+        self.d2fdxdy = d2fdxdy
+
     @lazy_property
     def _tab(self):
         with convert_cpp_errors():
-            return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                          self.f.ctypes.data, len(self.x), len(self.y),
-                                          self.interpolant)
+            if self.interpolant == 'cubic':
+                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                              self.f.ctypes.data, len(self.x), len(self.y),
+                                              self.interpolant,
+                                              self.dfdx.ctypes.data, self.dfdy.ctypes.data,
+                                              self.d2fdxdy.ctypes.data)
+            else:
+                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                              self.f.ctypes.data, len(self.x), len(self.y),
+                                              self.interpolant, 0, 0, 0)
     def getXArgs(self):
         return self.x
 
