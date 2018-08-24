@@ -59,6 +59,7 @@ namespace galsim {
         if (interp == "floor") i = Table2D::floor;
         else if (interp == "ceil") i = Table2D::ceil;
         else if (interp == "nearest") i = Table2D::nearest;
+        else if (interp == "cubicConvolve") i = Table2D::cubicConvolve;
         else if (interp == "cubic") {
             i = Table2D::cubic;
             const double* dfdx = reinterpret_cast<const double*>(idfdx);

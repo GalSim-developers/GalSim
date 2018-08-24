@@ -354,6 +354,7 @@ class LookupTable2D(object):
       - 'ceil'
       - 'nearest'
       - 'cubic'
+      - 'cubicConvolve'
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
         >>> tab2d(2.2, 3.7)
@@ -437,9 +438,9 @@ class LookupTable2D(object):
             raise GalSimIncompatibleValuesError(
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
-        if interpolant not in ('linear', 'ceil', 'floor', 'nearest', 'cubic'):
+        if interpolant not in ('linear', 'ceil', 'floor', 'nearest', 'cubic', 'cubicConvolve'):
             raise GalSimValueError("Unknown interpolant.", interpolant,
-                                   ('linear', 'ceil', 'floor', 'nearest', 'cubic'))
+                                   ('linear', 'ceil', 'floor', 'nearest', 'cubic', 'cubicConvolve'))
         self.interpolant = interpolant
 
         self.edge_mode = edge_mode
