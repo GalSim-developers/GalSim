@@ -49,7 +49,7 @@ namespace galsim {
     {
         const double* x = reinterpret_cast<const double*>(ix);
         const double* y = reinterpret_cast<const double*>(iy);
-        const double* vals = reinterpret_cast<const double*>(ivals);
+        const float* vals = reinterpret_cast<const float*>(ivals);
         std::string interp(interp_c);
 
         Table2D::interpolant i = Table2D::linear;
@@ -64,7 +64,7 @@ namespace galsim {
     {
         const double* x = reinterpret_cast<const double*>(ix);
         const double* y = reinterpret_cast<const double*>(iy);
-        double* vals = reinterpret_cast<double*>(ivals);
+        float* vals = reinterpret_cast<float*>(ivals);
         table2d.interpMany(x, y, vals, N);
     }
 

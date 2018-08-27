@@ -111,15 +111,15 @@ namespace galsim {
         enum interpolant { linear, floor, ceil, nearest };
 
         /// Table from xargs, yargs, vals
-        Table2D(const double* xargs, const double* yargs, const double* vals,
+        Table2D(const double* xargs, const double* yargs, const float* vals,
                 int Nx, int Ny, interpolant in);
 
         /// interp, but exception if beyond bounds
         double lookup(double x, double y) const;
 
         /// interp many values at once
-        void interpMany(const double* xvec, const double* yvec, double* valvec, int N) const;
-        void interpManyMesh(const double* xvec, const double* yvec, double* valvec,
+        void interpMany(const double* xvec, const double* yvec, float* valvec, int N) const;
+        void interpManyMesh(const double* xvec, const double* yvec, float* valvec,
                             int outNx, int outNy) const;
 
         /// Estimate df/dx, df/dy at a single location

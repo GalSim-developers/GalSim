@@ -418,9 +418,9 @@ class LookupTable2D(object):
         if edge_mode not in ('raise', 'wrap', 'constant'):
             raise GalSimValueError("Unknown edge_mode.", edge_mode, ('raise', 'wrap', 'constant'))
 
-        self.x = np.ascontiguousarray(x, dtype=float)
-        self.y = np.ascontiguousarray(y, dtype=float)
-        self.f = np.ascontiguousarray(f, dtype=float)
+        self.x = np.ascontiguousarray(x, dtype=np.float64)
+        self.y = np.ascontiguousarray(y, dtype=np.float64)
+        self.f = np.ascontiguousarray(f, dtype=np.float32)
 
         dx = np.diff(self.x)
         dy = np.diff(self.y)
@@ -499,9 +499,9 @@ class LookupTable2D(object):
         if isinstance(x, numbers.Real):
             return self._tab.interp(x, y)
         else:
-            xx = np.ascontiguousarray(x.ravel(), dtype=float)
-            yy = np.ascontiguousarray(y.ravel(), dtype=float)
-            f = np.empty_like(xx, dtype=float)
+            xx = np.ascontiguousarray(x.ravel(), dtype=np.float64)
+            yy = np.ascontiguousarray(y.ravel(), dtype=np.float64)
+            f = np.empty_like(xx, dtype=np.float32)
             self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx))
             f = f.reshape(x.shape)
             return f
@@ -517,15 +517,15 @@ class LookupTable2D(object):
             else:
                 return self.constant
         else:
-            x = np.array(x, dtype=float, copy=False)
-            y = np.array(y, dtype=float, copy=False)
-            f = np.empty_like(x, dtype=float)
+            x = np.array(x, dtype=np.float64, copy=False)
+            y = np.array(y, dtype=np.float64, copy=False)
+            f = np.empty_like(x, dtype=np.float32)
             f.fill(self.constant)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))
-            xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
-            yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
-            tmp = np.empty_like(xx, dtype=float)
+            xx = np.ascontiguousarray(x[good].ravel(), dtype=np.float64)
+            yy = np.ascontiguousarray(y[good].ravel(), dtype=np.float64)
+            tmp = np.empty_like(xx, dtype=np.float32)
             self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, tmp.ctypes.data, len(xx))
             f[good] = tmp
             return f
@@ -544,12 +544,12 @@ class LookupTable2D(object):
                                     PositionD(x,y), self._bounds)
 
         if isinstance(x, numbers.Real):
-            grad = np.empty(2, dtype=float)
+            grad = np.empty(2, dtype=np.float64)
             self._tab.gradient(x, y, grad.ctypes.data)
             return grad[0], grad[1]
         else:
-            xx = np.ascontiguousarray(x.ravel(), dtype=float)
-            yy = np.ascontiguousarray(y.ravel(), dtype=float)
+            xx = np.ascontiguousarray(x.ravel(), dtype=np.float64)
+            yy = np.ascontiguousarray(y.ravel(), dtype=np.float64)
             dfdx = np.empty_like(xx)
             dfdy = np.empty_like(xx)
             self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
@@ -565,24 +565,24 @@ class LookupTable2D(object):
     def _gradient_constant(self, x, y):
         if isinstance(x, numbers.Real):
             if self._inbounds(x, y):
-                grad = np.empty(2, dtype=float)
+                grad = np.empty(2, dtype=np.float64)
                 self._tab.gradient(float(x), float(y), grad.ctypes.data)
                 return tuple(grad)
             else:
                 return 0.0, 0.0
         else:
-            x = np.array(x, dtype=float, copy=False)
-            y = np.array(y, dtype=float, copy=False)
-            dfdx = np.empty_like(x, dtype=float)
-            dfdy = np.empty_like(x, dtype=float)
+            x = np.array(x, dtype=np.float64, copy=False)
+            y = np.array(y, dtype=np.float64, copy=False)
+            dfdx = np.empty_like(x, dtype=np.float64)
+            dfdy = np.empty_like(x, dtype=np.float64)
             dfdx.fill(0.0)
             dfdy.fill(0.0)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))
-            xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
-            yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
-            tmp1 = np.empty_like(xx, dtype=float)
-            tmp2 = np.empty_like(xx, dtype=float)
+            xx = np.ascontiguousarray(x[good].ravel(), dtype=np.float64)
+            yy = np.ascontiguousarray(y[good].ravel(), dtype=np.float64)
+            tmp1 = np.empty_like(xx, dtype=np.float64)
+            tmp2 = np.empty_like(xx, dtype=np.float64)
             self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
                                    tmp1.ctypes.data, tmp2.ctypes.data, len(xx))
             dfdx[good] = tmp1

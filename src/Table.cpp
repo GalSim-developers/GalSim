@@ -374,7 +374,7 @@ namespace galsim {
     class Table2D::Table2DImpl
     {
     public:
-        Table2DImpl(const double* xargs, const double* yargs, const double* vals,
+        Table2DImpl(const double* xargs, const double* yargs, const float* vals,
                     int Nx, int Ny, Table2D::interpolant in);
 
         double lookup(double x, double y) const;
@@ -386,7 +386,7 @@ namespace galsim {
         Table2D::interpolant _iType;
         const ArgVec _xargs;
         const ArgVec _yargs;
-        const double* _vals;
+        const float* _vals;
         const int _ny;
 
         typedef double (Table2DImpl::*MemFn)(double x, double y, int i, int j) const;
@@ -397,7 +397,7 @@ namespace galsim {
         double nearestInterpolate(double x, double y, int i, int j) const;
     };
 
-    Table2D::Table2DImpl::Table2DImpl(const double* xargs, const double* yargs, const double* vals,
+    Table2D::Table2DImpl::Table2DImpl(const double* xargs, const double* yargs, const float* vals,
                              int Nx, int Ny, Table2D::interpolant in):
         _iType(in), _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny)
     {
@@ -500,7 +500,7 @@ namespace galsim {
 
     // Table2D
 
-    Table2D::Table2D(const double* xargs, const double* yargs, const double* vals,
+    Table2D::Table2D(const double* xargs, const double* yargs, const float* vals,
                      int Nx, int Ny, Table2D::interpolant in)
     {
         _pimpl.reset(new Table2DImpl(xargs, yargs, vals, Nx, Ny, in));
@@ -513,7 +513,7 @@ namespace galsim {
     //lookup and interpolate an array of function values.
     //In this case, the length of xvec is assumed to be the same as the length of yvec, and
     //will also equal the length of the result array.
-    void Table2D::interpMany(const double* xvec, const double* yvec, double* valvec, int N) const
+    void Table2D::interpMany(const double* xvec, const double* yvec, float* valvec, int N) const
     {
         for (int k=0; k<N; k++) {
             *valvec++ = _pimpl->lookup(xvec[k], yvec[k]);
@@ -522,7 +522,7 @@ namespace galsim {
 
     //lookup and interpolate along the mesh of an x-array and a y-array.
     //The result will be an array with length outNx * outNy.
-    void Table2D::interpManyMesh(const double* xvec, const double* yvec, double* valvec,
+    void Table2D::interpManyMesh(const double* xvec, const double* yvec, float* valvec,
                                  int outNx, int outNy) const
     {
         for (int outi=0; outi<outNx; outi++) {
