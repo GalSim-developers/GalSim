@@ -751,6 +751,102 @@ def test_table2d_cubicConvolve():
 
 
 @timer
+def test_table2d_lanczos():
+    # A few functions that should be exactly interpolatable with bicubic convolution
+    # interpolation
+    def f1(x_, y_):
+        return 2*x_ + 3*y_
+    def df1dx(x_, y_):
+        return np.ones_like(x_)*2
+    def df1dy(x_, y_):
+        return np.ones_like(x_)*3
+
+    def f2(x_, y_):
+        return 2*x_*x_
+    def df2dx(x_, y_):
+        return 4*x_
+    def df2dy(x_, y_):
+        return np.zeros_like(x_)
+
+    def f3(x_, y_):
+        return 2*y_*y_
+    def df3dx(x_, y_):
+        return np.zeros_like(x_)
+    def df3dy(x_, y_):
+        return 4*y_
+
+    def f4(x_, y_):
+        return 2*y_*y_ + 3*x_*x_
+    def df4dx(x_, y_):
+        return 6*x_
+    def df4dy(x_, y_):
+        return 4*y_
+
+    def f5(x_, y_):
+        return 2*y_*y_ + 3*x_*x_ + 4*x_*y_
+    def df5dx(x_, y_):
+        return 6*x_ + 4*y_
+    def df5dy(x_, y_):
+        return 4*y_ + 4*x_
+    def d2f5dxdy(x_, y_):
+        return np.ones_like(x_)*4
+
+    fs = [f1, f2, f3, f4, f5]
+    dfdxs = [df1dx, df2dx, df3dx, df4dx, df5dx]
+    dfdys = [df1dy, df2dy, df3dy, df4dy, df5dy]
+
+    x = np.linspace(0.1, 3.3, 250)
+    y = np.linspace(0.2, 10.4, 750)
+    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+
+    for n in range(1, 8):
+        for f, dfdx, dfdy in zip(fs, dfdxs, dfdys):
+            z = f(xx, yy)
+            tab2d = galsim.LookupTable2D(x, y, z, interpolant='lanczos'+str(n))
+
+            # Use InterpolatedImage to validate
+            wcs = galsim.JacobianWCS(
+                (max(x) - min(x))/(len(x)-1),
+                0, 0,
+                (max(y) - min(y))/(len(y)-1),
+            )
+            img = galsim.Image(z.T, wcs=wcs)
+            ii = galsim.InterpolatedImage(
+                img,
+                use_true_center=True,
+                offset=(galsim.PositionD(img.xmin,img.ymin)-img.true_center),
+                x_interpolant=galsim.Lanczos(n, conserve_dc=False, tol=1e-10),
+                normalization='sb',
+                calculate_maxk=False, calculate_stepk=False
+            ).shift(min(x), min(y))
+
+            # Check single value functionality.
+            x1,y1 = 2.3, 3.2
+            np.testing.assert_allclose(tab2d(x1,y1), ii.xValue(x1, y1), atol=1e-10, rtol=0)
+            # ref_dfdx = dfdx(x1,y1)
+            # ref_dfdy = dfdy(x1,y1)
+            # test_dfdx, test_dfdy = tab2d.gradient(x1,y1)
+            # np.testing.assert_allclose(test_dfdx, ref_dfdx, atol=1e-10, rtol=0)
+            # np.testing.assert_allclose(test_dfdy, ref_dfdy, atol=1e-10, rtol=0)
+            #
+            # # Check vectorized output
+            newx = np.linspace(0.2, 3.1, 15)
+            newy = np.linspace(0.3, 10.1, 25)
+            newyy, newxx = np.meshgrid(newy, newx)
+
+            np.testing.assert_allclose(
+                tab2d(newxx, newyy).ravel(),
+                np.array([ii.xValue(x_, y_)
+                          for x_, y_ in zip(newxx.ravel(), newyy.ravel())]).ravel(),
+                atol=1e-10, rtol=0)
+            # ref_dfdx = dfdx(newxx, newyy)
+            # ref_dfdy = dfdy(newxx, newyy)
+            # test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+            # np.testing.assert_allclose(test_dfdx, ref_dfdx, atol=1e-10, rtol=0)
+            # np.testing.assert_allclose(test_dfdy, ref_dfdy, atol=1e-10, rtol=0)
+
+
+@timer
 def test_ne():
     """ Check that inequality works as expected."""
     # These should all compare as unequal.
@@ -777,4 +873,5 @@ if __name__ == "__main__":
     test_table2d_gradient()
     test_table2d_cubic()
     test_table2d_cubicConvolve()
+    test_table2d_lanczos()
     test_ne()

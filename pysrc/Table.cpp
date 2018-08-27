@@ -44,8 +44,6 @@ namespace galsim {
         table.interpMany(args, vals, N);
     }
 
-    // static Table2D* MakeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
-    //                             const char* interp_c)
     static Table2D* MakeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
                                 const char* interp_c, size_t idfdx, size_t idfdy,
                                 size_t id2fdxdy)
@@ -60,6 +58,13 @@ namespace galsim {
         else if (interp == "ceil") i = Table2D::ceil;
         else if (interp == "nearest") i = Table2D::nearest;
         else if (interp == "cubicConvolve") i = Table2D::cubicConvolve;
+        else if (interp == "lanczos1") i = Table2D::lanczos1;
+        else if (interp == "lanczos2") i = Table2D::lanczos2;
+        else if (interp == "lanczos3") i = Table2D::lanczos3;
+        else if (interp == "lanczos4") i = Table2D::lanczos4;
+        else if (interp == "lanczos5") i = Table2D::lanczos5;
+        else if (interp == "lanczos6") i = Table2D::lanczos6;
+        else if (interp == "lanczos7") i = Table2D::lanczos7;
         else if (interp == "cubic") {
             i = Table2D::cubic;
             const double* dfdx = reinterpret_cast<const double*>(idfdx);

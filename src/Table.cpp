@@ -670,6 +670,83 @@ namespace galsim {
     };
 
 
+    template<int a>
+    class LanczosInterp : public T2DInterp {
+    public:
+        using T2DInterp::T2DInterp;
+
+        double kernel(double x) const {
+            if (x == 0) return 1.0;
+            return a*std::sin(M_PI*x)*std::sin(M_PI*x/a) / M_PI / M_PI / x / x;
+        }
+
+        double dkernel(double x) const {
+            if (x == 0) return 0.0;
+            double result = M_PI*x*std::sin(M_PI*x)*std::cos(M_PI*x/a);
+            result += a*std::sin(M_PI*x/a)*(M_PI*x*std::cos(M_PI*x)-2*std::sin(M_PI*x/a));
+            result /= M_PI*M_PI*x*x*x;
+            return result;
+        }
+
+        double oneDSpline(double x, const double* vals) const {
+            // assume *vals corresponds to i = 1-a, and that x in [0, 1].
+            double result = 0.0;
+            for (int k=1-a; k<(a+1); k++) {
+                result += (*vals++)*kernel(x-k);
+            }
+            return result;
+        }
+
+        double oneDGrad(double x, const double* vals) const {
+            double result = 0.0;
+            for (int k=1-a; k<(a+1); k++)
+                result += (*vals++)*dkernel(x-k);
+            return result;
+        }
+
+        double interp(double x, double y) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            double dxgrid = _xargs[i] - _xargs[i-1];
+            double dygrid = _yargs[j] - _yargs[j-1];
+            double dx = (x - _xargs[i-1])/dxgrid;
+            double dy = (y - _yargs[j-1])/dygrid;
+
+            double vals[2*a];
+            double* vPtr = &vals[0];
+            for (int k=1-a; k<(a+1); k++) {
+                // *vPtr++ = oneDSpline(dy, &_vals[(i-1+k)*_ny+j-1]);
+                *vPtr++ = oneDSpline(dy, &_vals[(i-1+k)*_ny+j-a]);
+            }
+
+            return oneDSpline(dx, vals);
+        }
+
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            double dxgrid = _xargs[i] - _xargs[i-1];
+            double dygrid = _yargs[j] - _yargs[j-1];
+            double dx = (x - _xargs[i-1])/dxgrid;
+            double dy = (y - _yargs[j-1])/dygrid;
+
+            // x-gradient
+            double vals[2*a];
+            double* vPtr = &vals[0];
+            for (int k=1-a; k<a; k++) {
+                *vPtr++ = oneDGrad(dx, _vals-a);
+            }
+            dfdx = oneDSpline(dy, vals)/dxgrid;
+
+            // y-gradient
+            for (int k=1-a; k<a; k++) {
+                *vPtr++ = oneDGrad(dy, _vals-a);
+            }
+            dfdy = oneDSpline(dx, vals)/dygrid;
+        }
+    };
+
+
     Table2D::Table2D(
         const double* xargs, const double* yargs, const double* vals,
         int Nx, int Ny, interpolant in,
@@ -700,6 +777,28 @@ namespace galsim {
             case cubicConvolve:
                 return std::make_shared<ConcreteTable2DImpl<T2DCubicConvolveInterp>>(
                     xargs, yargs, vals, Nx, Ny);
+            case lanczos1:
+                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<1>>>(
+                    xargs, yargs, vals, Nx, Ny);
+            case lanczos2:
+                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<2>>>(
+                    xargs, yargs, vals, Nx, Ny);
+            case lanczos3:
+                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<3>>>(
+                    xargs, yargs, vals, Nx, Ny);
+            case lanczos4:
+                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<4>>>(
+                    xargs, yargs, vals, Nx, Ny);
+            case lanczos5:
+                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<5>>>(
+                    xargs, yargs, vals, Nx, Ny);
+            case lanczos6:
+                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<6>>>(
+                    xargs, yargs, vals, Nx, Ny);
+            case lanczos7:
+                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<7>>>(
+                    xargs, yargs, vals, Nx, Ny);
+
             default:
                 throw std::runtime_error("invalid interpolation method");
         }
