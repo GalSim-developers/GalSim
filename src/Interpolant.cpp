@@ -862,7 +862,7 @@ namespace galsim {
         } else {
 #ifdef USE_TABLES
             // Build xtab = table of x values
-            _xtab.reset(new TableBuidler(Table::spline));
+            _xtab.reset(new TableBuilder(Table::spline));
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
             const double xStep1 =
                 gsparams.table_spacing * std::pow(gsparams.xvalue_accuracy/10.,0.25);

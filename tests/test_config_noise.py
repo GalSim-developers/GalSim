@@ -300,7 +300,7 @@ def test_ccdnoise():
     var1 = noise.getVariance()
     var2 = galsim.config.CalculateNoiseVariance(config)
     np.testing.assert_almost_equal(var1, var2,
-                                   err_msg="CCDNoiseBuidler calculates the wrong variance")
+                                   err_msg="CCDNoiseBuilder calculates the wrong variance")
 
     # Finally, the config layer also includes its own manual implementation of CCD noise that
     # it uses when there is already some noise in the image.  We want to check that this is
