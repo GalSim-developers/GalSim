@@ -27,6 +27,9 @@ else:
     share_dir = Dir('#share').abspath
 
 if 'install' in COMMAND_LINE_TARGETS:
+    meta_data_dir = os.path.join(env['PYPREFIX'], 'galsim')
+    if not os.path.isdir(meta_data_dir):
+        os.makedirs(meta_data_dir)
     # Write file meta_data.py to have the correct directories.
     meta_data_file = os.path.join(env['PYPREFIX'], 'galsim', 'meta_data.py')
     try:
