@@ -1811,16 +1811,17 @@ def CheckPyBind11(config):
     result, output = TryScript(config,"import pybind11",python)
     config.Result(result)
     if not result:
-        ErrorExit("Unable to import pybind11 using the python executable:\n" + python)
+        print("Unable to import pybind11 using the python executable:\n" + python)
+        print("Continuing on in case the header files are installed, but not the python module.")
+    else:
+        result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
+        print('pybind11 version is',pybind11_ver)
 
-    result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
-    print('pybind11 version is',pybind11_ver)
+        result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
+        result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
+        config.env.Append(CPPPATH=[dir1,dir2])
 
     config.Message('Checking if we can build against PyBind11... ')
-
-    result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
-    result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
-    config.env.Append(CPPPATH=[dir1,dir2])
 
     pb_source_file = """
 #include <pybind11/pybind11.h>
