@@ -56,7 +56,7 @@
 #include <memory>
 using std::shared_ptr;
 
-#elif __cplusplus > 199711L
+#elif __cplusplus >= 201103L
 // Also if using a real C++11 compiler, this should work.
 
 #include <memory>
