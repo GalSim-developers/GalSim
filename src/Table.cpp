@@ -683,7 +683,7 @@ namespace galsim {
         double dkernel(double x) const {
             if (x == 0) return 0.0;
             double result = M_PI*x*std::sin(M_PI*x)*std::cos(M_PI*x/a);
-            result += a*std::sin(M_PI*x/a)*(M_PI*x*std::cos(M_PI*x)-2*std::sin(M_PI*x/a));
+            result += a*std::sin(M_PI*x/a)*(M_PI*x*std::cos(M_PI*x)-2*std::sin(M_PI*x));
             result /= M_PI*M_PI*x*x*x;
             return result;
         }
@@ -715,7 +715,6 @@ namespace galsim {
             double vals[2*a];
             double* vPtr = &vals[0];
             for (int k=1-a; k<(a+1); k++) {
-                // *vPtr++ = oneDSpline(dy, &_vals[(i-1+k)*_ny+j-1]);
                 *vPtr++ = oneDSpline(dy, &_vals[(i-1+k)*_ny+j-a]);
             }
 
@@ -730,19 +729,23 @@ namespace galsim {
             double dx = (x - _xargs[i-1])/dxgrid;
             double dy = (y - _yargs[j-1])/dygrid;
 
-            // x-gradient
+            // y-gradient
             double vals[2*a];
             double* vPtr = &vals[0];
-            for (int k=1-a; k<a; k++) {
-                *vPtr++ = oneDGrad(dx, _vals-a);
-            }
-            dfdx = oneDSpline(dy, vals)/dxgrid;
+            for (int k=1-a; k<(a+1); k++)
+                *vPtr++ = oneDGrad(dy, &_vals[(i-1+k)*_ny+j-a]);
+            dfdy = oneDSpline(dx, vals)/dxgrid;
 
-            // y-gradient
-            for (int k=1-a; k<a; k++) {
-                *vPtr++ = oneDGrad(dy, _vals-a);
+            // x-gradient
+            vPtr = &vals[0];
+            for (int k=1-a; k<(a+1); k++) {
+                double xvals[2*a];
+                double* xvPtr = &xvals[0];
+                for (int k2=1-a; k2<(a+1); k2++)
+                    *xvPtr++ = _vals[(i-1+k2)*_ny+j+k];
+                *vPtr++ = oneDGrad(dx, &xvals[0]);
             }
-            dfdy = oneDSpline(dx, vals)/dygrid;
+            dfdx = oneDSpline(dy, vals)/dygrid;
         }
     };
 
