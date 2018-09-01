@@ -19,6 +19,7 @@
 
 #include "PyBind11Helper.h"
 #include "Table.h"
+#include "Interpolant.h"
 
 namespace galsim {
 
@@ -45,8 +46,7 @@ namespace galsim {
     }
 
     static Table2D* MakeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
-                                const char* interp_c, size_t idfdx, size_t idfdy,
-                                size_t id2fdxdy)
+                                const char* interp_c)
     {
         const double* x = reinterpret_cast<const double*>(ix);
         const double* y = reinterpret_cast<const double*>(iy);
@@ -58,23 +58,39 @@ namespace galsim {
         else if (interp == "ceil") i = Table2D::ceil;
         else if (interp == "nearest") i = Table2D::nearest;
         else if (interp == "cubicConvolve") i = Table2D::cubicConvolve;
-        else if (interp == "lanczos1") i = Table2D::lanczos1;
-        else if (interp == "lanczos2") i = Table2D::lanczos2;
-        else if (interp == "lanczos3") i = Table2D::lanczos3;
-        else if (interp == "lanczos4") i = Table2D::lanczos4;
-        else if (interp == "lanczos5") i = Table2D::lanczos5;
-        else if (interp == "lanczos6") i = Table2D::lanczos6;
-        else if (interp == "lanczos7") i = Table2D::lanczos7;
-        else if (interp == "cubic") {
-            i = Table2D::cubic;
-            const double* dfdx = reinterpret_cast<const double*>(idfdx);
-            const double* dfdy = reinterpret_cast<const double*>(idfdy);
-            const double* d2fdxdy = reinterpret_cast<const double*>(id2fdxdy);
-            return new Table2D(x, y, vals, Nx, Ny, i, dfdx, dfdy, d2fdxdy);
-        }
-
         return new Table2D(x, y, vals, Nx, Ny, i);
     }
+
+    static Table2D* MakeCubicTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
+                                     const char* interp_c, size_t idfdx, size_t idfdy,
+                                     size_t id2fdxdy)
+    {
+        const double* x = reinterpret_cast<const double*>(ix);
+        const double* y = reinterpret_cast<const double*>(iy);
+        const double* vals = reinterpret_cast<const double*>(ivals);
+        const double* dfdx = reinterpret_cast<const double*>(idfdx);
+        const double* dfdy = reinterpret_cast<const double*>(idfdy);
+        const double* d2fdxdy = reinterpret_cast<const double*>(id2fdxdy);
+        std::string interp(interp_c);
+        assert(interp == "cubic");
+
+        return new Table2D(x, y, vals, Nx, Ny, Table2D::cubic, dfdx, dfdy, d2fdxdy);
+    }
+
+
+    static Table2D* MakeGSInterpTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
+                                        const char* interp_c, const Interpolant* gsinterp)
+    {
+        const double* x = reinterpret_cast<const double*>(ix);
+        const double* y = reinterpret_cast<const double*>(iy);
+        const double* vals = reinterpret_cast<const double*>(ivals);
+        std::string interp(interp_c);
+        assert(interp == "GSInterpolant");
+
+        return new Table2D(x, y, vals, Nx, Ny, Table2D::interpolant2d,
+            nullptr, nullptr, nullptr, gsinterp);
+    }
+
 
     static void InterpMany2D(const Table2D& table2d, size_t ix, size_t iy, size_t ivals, int N)
     {
@@ -109,6 +125,8 @@ namespace galsim {
 
         py::class_<Table2D>(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
             .def(PY_INIT(&MakeTable2D))
+            .def(PY_INIT(&MakeCubicTable2D))
+            .def(PY_INIT(&MakeGSInterpTable2D))
             .def("interp", &Table2D::lookup)
             .def("interpMany", &InterpMany2D)
             .def("gradient", &Gradient)

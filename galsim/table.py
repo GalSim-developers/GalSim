@@ -25,7 +25,7 @@ import numpy as np
 import numbers
 
 from . import _galsim
-from .utilities import lazy_property
+from .utilities import lazy_property, convert_interpolant
 from .position import PositionD
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
@@ -321,6 +321,7 @@ class LookupTable(object):
     def __setstate__(self, d):
         self.__dict__ = d
 
+
 class LookupTable2D(object):
     """
     LookupTable2D represents a 2-dimensional lookup table to store function values that may be slow
@@ -355,7 +356,6 @@ class LookupTable2D(object):
       - 'nearest'
       - 'cubic'
       - 'cubicConvolve'
-      - 'lanczos1'
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
         >>> tab2d(2.2, 3.7)
@@ -439,10 +439,13 @@ class LookupTable2D(object):
             raise GalSimIncompatibleValuesError(
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
-        if interpolant not in ('linear', 'ceil', 'floor', 'nearest', 'cubic', 'cubicConvolve', 'lanczos1', 'lanczos2', 'lanczos3', 'lanczos4', 'lanczos5', 'lanczos6', 'lanczos7'):
-            raise GalSimValueError("Unknown interpolant.", interpolant,
-                                   ('linear', 'ceil', 'floor', 'nearest', 'cubic', 'cubicConvolve', 'lanczos1', 'lanczos2', 'lanczos3', 'lanczos4', 'lanczos5', 'lanczos6', 'lanczos7'))
-        self.interpolant = interpolant
+        # Check if interpolant is a string that we understand, if not, try convert_interpolant
+        if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'cubic', 'cubicConvolve'):
+            self._interp2d = None
+            self.interpolant = interpolant
+        else:
+            self._interp2d = convert_interpolant(interpolant)
+            self.interpolant = 'GSInterpolant'
 
         self.edge_mode = edge_mode
         self.constant = float(constant)
@@ -512,10 +515,14 @@ class LookupTable2D(object):
                                               self.interpolant,
                                               self.dfdx.ctypes.data, self.dfdy.ctypes.data,
                                               self.d2fdxdy.ctypes.data)
+            elif self.interpolant == 'GSInterpolant':
+                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                              self.f.ctypes.data, len(self.x), len(self.y),
+                                              self.interpolant, self._interp2d._i)
             else:
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
-                                              self.interpolant, 0, 0, 0)
+                                              self.interpolant)
     def getXArgs(self):
         return self.x
 

@@ -31,6 +31,7 @@
 #include "Std.h"
 #include "OneDimensionalDeviate.h"
 
+
 namespace galsim {
 
     /**
@@ -102,21 +103,22 @@ namespace galsim {
         std::vector<double> _fvec;
     };
 
+    class Interpolant;
     /**
      * @brief A class to represent lookup tables for a function z = f(x, y).
      */
     class Table2D
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest, cubic, cubicConvolve,
-                           lanczos1, lanczos2, lanczos3, lanczos4, lanczos5,
-                           lanczos6, lanczos7 };
+        enum interpolant { linear, floor, ceil, nearest, cubic, cubicConvolve, interpolant2d };
 
         /// Table from xargs, yargs, vals
         Table2D(const double* xargs, const double* yargs, const double* vals,
                 int Nx, int Ny, interpolant in,
                 const double* dfdx=nullptr, const double* dfdy=nullptr,
-                const double* d2fdxdy=nullptr);
+                const double* d2fdxdy=nullptr,
+                const Interpolant* interp2d=nullptr
+            );
 
         /// interp
         double lookup(double x, double y) const;
@@ -138,7 +140,8 @@ namespace galsim {
         static std::shared_ptr<Table2DImpl> makeImpl(
             const double* xargs, const double* yargs, const double* vals,
             int Nx, int Ny, interpolant in,
-            const double* dfdx, const double* dfdy, const double* d2fdxdy);
+            const double* dfdx, const double* dfdy, const double* d2fdxdy,
+            const Interpolant* interp2d);
     };
 }
 

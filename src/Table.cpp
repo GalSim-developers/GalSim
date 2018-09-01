@@ -29,6 +29,8 @@
 #endif
 
 #include "Table.h"
+#include "Interpolant.h"
+
 
 namespace galsim {
 
@@ -370,6 +372,12 @@ namespace galsim {
         _final = true;
     }
 
+    // The hierarchy for Table2DImpl looks like:
+    // Table2DImpl <- ABC
+    // T2DCRTP<T> : Table2DImpl <- curiously recurring template pattern
+    // T2DLinearInterp : T2DCRTP<T2DLinearInterp>
+    // ... similar, Floor, Ceil, Nearest, Cubic
+    // T2DInterpInterp<interpolant> : T2DCRTP<T2DInterpInterp<interpolant>>  <- Use Interpolant2d classes
 
     class Table2D::Table2DImpl {
     public:
@@ -382,68 +390,105 @@ namespace galsim {
     };
 
 
-    template<class T2DInterp>
-    class ConcreteTable2DImpl : public Table2D::Table2DImpl {
+    template<class T>
+    class T2DCRTP : public Table2D::Table2DImpl {
     public:
-        ConcreteTable2DImpl(
-            const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny,
-            const double* dfdx=nullptr, const double* dfdy=nullptr, const double* d2fdxdy=nullptr
-        ) : _interp(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy) {}
+        T2DCRTP(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny) :
+            _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny) {}
 
         double lookup(double x, double y) const {
-            return _interp.interp(x, y);
-        }
-
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            _interp.gradient(x, y, dfdx, dfdy);
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            return static_cast<const T*>(this)->interp(x, y, i, j);
         }
 
         void interpMany(const double* xvec, const double* yvec, double* valvec, int N) const {
             for (int k=0; k<N; k++) {
-                *valvec++ = _interp.interp(xvec[k], yvec[k]);
+                int i = _xargs.upperIndex(xvec[k]);
+                int j = _yargs.upperIndex(yvec[k]);
+                valvec[k] = static_cast<const T*>(this)->interp(xvec[k], yvec[k], i, j);
             }
+        }
+
+        void gradient(double x, double y, double& dfdx, double& dfdy) const {
+            int i = _xargs.upperIndex(x);
+            int j = _yargs.upperIndex(y);
+            static_cast<const T*>(this)->grad(x, y, i, j, dfdx, dfdy);
         }
 
         void gradientMany(const double* xvec, const double* yvec,
                           double* dfdxvec, double* dfdyvec, int N) const {
             for (int k=0; k<N; k++) {
-                _interp.gradient(xvec[k], yvec[k], dfdxvec[k], dfdyvec[k]);
+                int i = _xargs.upperIndex(xvec[k]);
+                int j = _yargs.upperIndex(yvec[k]);
+                static_cast<const T*>(this)->grad(xvec[k], yvec[k], i, j, dfdxvec[k], dfdyvec[k]);
             }
         }
 
-    private:
-        T2DInterp _interp;
-    };
-
-
-    class T2DInterp {
-    public:
-        T2DInterp(
-            const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny,
-            const double* dfdx=nullptr, const double* dfdy=nullptr, const double* d2fdxdy=nullptr
-        ) : _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny),
-            _dfdx(dfdx), _dfdy(dfdy), _d2fdxdy(d2fdxdy) {}
     protected:
         ArgVec _xargs;
         ArgVec _yargs;
         const double* _vals;
         const int _ny;
-        const double* _dfdx;
-        const double* _dfdy;
-        const double* _d2fdxdy;
     };
 
 
-    class T2DLinearInterp : public T2DInterp {
+    class T2DFloor : public T2DCRTP<T2DFloor> {
     public:
-        using T2DInterp::T2DInterp;
+        using T2DCRTP::T2DCRTP;
 
-        double interp(double x, double y) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
+        double interp(double x, double y, int i, int j) const {
+            // From upperIndex, it is only guaranteed that _xargs[i-1] <= x <= _xargs[i] (and similarly y).
+            // Normally those ='s are ok, but for floor and ceil we make the extra
+            // check to see if we should choose the opposite bound.
+            if (x == _xargs[i]) i++;
+            if (y == _yargs[j]) j++;
+            return _vals[(i-1)*_ny+j-1];
+        }
 
+        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
+            throw std::runtime_error("gradient not implemented for floor interp");
+        }
+    };
+
+
+    class T2DCeil : public T2DCRTP<T2DCeil> {
+    public:
+        using T2DCRTP::T2DCRTP;
+
+        double interp(double x, double y, int i, int j) const {
+            if (x == _xargs[i-1]) i--;
+            if (y == _yargs[j-1]) j--;
+            return _vals[i*_ny+j];
+        }
+
+        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
+            throw std::runtime_error("gradient not implemented for ceil interp");
+        }
+    };
+
+
+    class T2DNearest : public T2DCRTP<T2DNearest> {
+    public:
+        using T2DCRTP::T2DCRTP;
+
+        double interp(double x, double y, int i, int j) const {
+            if ((x - _xargs[i-1]) < (_xargs[i] - x)) i--;
+            if ((y - _yargs[j-1]) < (_yargs[j] - y)) j--;
+            return _vals[i*_ny+j];
+        }
+
+        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
+            throw std::runtime_error("gradient not implemented for nearest interp");
+        }
+    };
+
+
+    class T2DLinear : public T2DCRTP<T2DLinear> {
+    public:
+        using T2DCRTP::T2DCRTP;
+
+        double interp(double x, double y, int i, int j) const {
             double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
             double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
             double bx = 1.0 - ax;
@@ -455,9 +500,7 @@ namespace galsim {
                     + _vals[i*_ny+j] * bx * by);
         }
 
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
+        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
             double dx = _xargs[i] - _xargs[i-1];
             double dy = _yargs[j] - _yargs[j-1];
             double f00 = _vals[(i-1)*_ny+j-1];
@@ -474,90 +517,13 @@ namespace galsim {
     };
 
 
-    class T2DFloorInterp : public T2DInterp {
+    class T2DCubic : public T2DCRTP<T2DCubic> {
     public:
-        using T2DInterp::T2DInterp;
+        T2DCubic(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
+                 const double* dfdx, const double* dfdy, const double* d2fdxdy) :
+            T2DCRTP<T2DCubic>(xargs, yargs, vals, Nx, Ny), _dfdx(dfdx), _dfdy(dfdy), _d2fdxdy(d2fdxdy) {}
 
-        double interp(double x, double y) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
-            // From upperIndex, it is only guaranteed that _xargs[i-1] <= x <= _xargs[i] (and similarly y).
-            // Normally those ='s are ok, but for floor and ceil we make the extra
-            // check to see if we should choose the opposite bound.
-            if (x == _xargs[i]) i++;
-            if (y == _yargs[j]) j++;
-            return _vals[(i-1)*_ny+j-1];
-        }
-
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            throw std::runtime_error("gradient not implemented for floor interp");
-        }
-    };
-
-
-    class T2DCeilInterp : public T2DInterp {
-    public:
-        using T2DInterp::T2DInterp;
-
-        double interp(double x, double y) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
-            if (x == _xargs[i-1]) i--;
-            if (y == _yargs[j-1]) j--;
-            return _vals[i*_ny+j];
-        }
-
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            throw std::runtime_error("gradient not implemented for ceil interp");
-        }
-    };
-
-
-    class T2DNearestInterp : public T2DInterp {
-    public:
-        using T2DInterp::T2DInterp;
-
-        double interp(double x, double y) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
-            if ((x - _xargs[i-1]) < (_xargs[i] - x)) i--;
-            if ((y - _yargs[j-1]) < (_yargs[j] - y)) j--;
-            return _vals[i*_ny+j];
-        }
-
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            throw std::runtime_error("gradient not implemented for nearest interp");
-        }
-    };
-
-
-    class T2DCubicInterp : public T2DInterp {
-    public:
-        using T2DInterp::T2DInterp;
-
-        double oneDSpline(double x, double val0, double val1, double der0, double der1) const {
-            // assuming that x is between 0 and 1, val0 and val1 are the values at
-            // 0 and 1, and der0 and der1 are the derivatives at 0 and 1.
-
-            // I'm assuming the compiler will reduce this all down...
-            double a = 2*(val0-val1) + der0 + der1;
-            double b = 3*(val1-val0) - 2*der0 - der1;
-            double c = der0;
-            double d = val0;
-
-            return d + x*(c + x*(b + x*a));
-        }
-
-        double oneDGrad(double x, double val0, double val1, double der0, double der1) const {
-            double a = 2*(val0-val1) + der0 + der1;
-            double b = 3*(val1-val0) - 2*der0 - der1;
-            double c = der0;
-            return c + x*(2*b + x*3*a);
-        }
-
-        double interp(double x, double y) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
+        double interp(double x, double y, int i, int j) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
             double dygrid = _yargs[j] - _yargs[j-1];
             double dx = (x - _xargs[i-1])/dxgrid;
@@ -576,9 +542,7 @@ namespace galsim {
             return oneDSpline(dy, val0, val1, der0*dygrid, der1*dygrid);
         }
 
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
+        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
             double dygrid = _yargs[j] - _yargs[j-1];
             double dx = (x - _xargs[i-1])/dxgrid;
@@ -606,32 +570,39 @@ namespace galsim {
                             _d2fdxdy[i*_ny+j-1]*dygrid, _d2fdxdy[i*_ny+j]*dygrid);
             dfdy = oneDSpline(dx, val0, val1, der0*dxgrid, der1*dxgrid)/dygrid;
         }
+    private:
+
+        double oneDSpline(double x, double val0, double val1, double der0, double der1) const {
+            // assuming that x is between 0 and 1, val0 and val1 are the values at
+            // 0 and 1, and der0 and der1 are the derivatives at 0 and 1.
+
+            // I'm assuming the compiler will reduce this all down...
+            double a = 2*(val0-val1) + der0 + der1;
+            double b = 3*(val1-val0) - 2*der0 - der1;
+            double c = der0;
+            double d = val0;
+
+            return d + x*(c + x*(b + x*a));
+        }
+
+        double oneDGrad(double x, double val0, double val1, double der0, double der1) const {
+            double a = 2*(val0-val1) + der0 + der1;
+            double b = 3*(val1-val0) - 2*der0 - der1;
+            double c = der0;
+            return c + x*(2*b + x*3*a);
+        }
+
+        const double* _dfdx;
+        const double* _dfdy;
+        const double* _d2fdxdy;
     };
 
 
-    class T2DCubicConvolveInterp : public T2DInterp {
+    class T2DCubicConvolution : public T2DCRTP<T2DCubicConvolution> {
     public:
-        using T2DInterp::T2DInterp;
+        using T2DCRTP::T2DCRTP;
 
-        double oneDSpline(double x, double fm1, double f0, double f1, double f2) const {
-            double a = -fm1 + 3*(f0-f1) + f2;
-            double b = 2*fm1 - 5*f0 + 4*f1 - f2;
-            double c = f1-fm1;
-            double d = 2*f0;
-
-            return 0.5*(d + x*(c + x*(b + x*a)));
-        }
-
-        double oneDGrad(double x, double fm1, double f0, double f1, double f2) const {
-            double a = -fm1 + 3*(f0-f1) + f2;
-            double b = 2*fm1 - 5*f0 + 4*f1 - f2;
-            double c = f1-fm1;
-            return 0.5*(c + x*(2*b + x*3*a));
-        }
-
-        double interp(double x, double y) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
+        double interp(double x, double y, int i, int j) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
             double dygrid = _yargs[j] - _yargs[j-1];
             double dx = (x - _xargs[i-1])/dxgrid;
@@ -645,9 +616,7 @@ namespace galsim {
             return oneDSpline(dy, valm1, val0, val1, val2);
         }
 
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
+        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
             double dygrid = _yargs[j] - _yargs[j-1];
             double dx = (x - _xargs[i-1])/dxgrid;
@@ -667,141 +636,108 @@ namespace galsim {
             val2 =  oneDGrad(dy, _vals[(i+1)*_ny+j-2], _vals[(i+1)*_ny+j-1], _vals[(i+1)*_ny+j+0], _vals[(i+1)*_ny+j+1]);
             dfdy = oneDSpline(dx, valm1, val0, val1, val2)/dygrid;
         }
+
+    private:
+        double oneDSpline(double x, double fm1, double f0, double f1, double f2) const {
+            double a = -fm1 + 3*(f0-f1) + f2;
+            double b = 2*fm1 - 5*f0 + 4*f1 - f2;
+            double c = f1-fm1;
+            double d = 2*f0;
+
+            return 0.5*(d + x*(c + x*(b + x*a)));
+        }
+
+        double oneDGrad(double x, double fm1, double f0, double f1, double f2) const {
+            double a = -fm1 + 3*(f0-f1) + f2;
+            double b = 2*fm1 - 5*f0 + 4*f1 - f2;
+            double c = f1-fm1;
+            return 0.5*(c + x*(2*b + x*3*a));
+        }
     };
 
-
-    template<int a>
-    class LanczosInterp : public T2DInterp {
+    class T2DInterpolant2D : public T2DCRTP<T2DInterpolant2D> {
     public:
-        using T2DInterp::T2DInterp;
+        T2DInterpolant2D(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
+                         const Interpolant* interp2d) :
+            T2DCRTP<T2DInterpolant2D>(xargs, yargs, vals, Nx, Ny), _nx(Nx), _interp2d(*interp2d) {}
 
-        double kernel(double x) const {
-            if (x == 0) return 1.0;
-            return a*std::sin(M_PI*x)*std::sin(M_PI*x/a) / M_PI / M_PI / x / x;
-        }
-
-        double dkernel(double x) const {
-            if (x == 0) return 0.0;
-            double result = M_PI*x*std::sin(M_PI*x)*std::cos(M_PI*x/a);
-            result += a*std::sin(M_PI*x/a)*(M_PI*x*std::cos(M_PI*x)-2*std::sin(M_PI*x));
-            result /= M_PI*M_PI*x*x*x;
-            return result;
-        }
-
-        double oneDSpline(double x, const double* vals) const {
-            // assume *vals corresponds to i = 1-a, and that x in [0, 1].
-            double result = 0.0;
-            for (int k=1-a; k<(a+1); k++) {
-                result += (*vals++)*kernel(x-k);
-            }
-            return result;
-        }
-
-        double oneDGrad(double x, const double* vals) const {
-            double result = 0.0;
-            for (int k=1-a; k<(a+1); k++)
-                result += (*vals++)*dkernel(x-k);
-            return result;
-        }
-
-        double interp(double x, double y) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
+        double interp(double x, double y, int i, int j) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
             double dygrid = _yargs[j] - _yargs[j-1];
             double dx = (x - _xargs[i-1])/dxgrid;
             double dy = (y - _yargs[j-1])/dygrid;
 
-            double vals[2*a];
-            double* vPtr = &vals[0];
-            for (int k=1-a; k<(a+1); k++) {
-                *vPtr++ = oneDSpline(dy, &_vals[(i-1+k)*_ny+j-a]);
+            // Stealing from XTable::interpolate
+            int ixMin, ixMax, iyMin, iyMax;
+            if (_interp2d.isExactAtNodes()
+                && std::abs(dx) < 10.*std::numeric_limits<double>::epsilon()) {
+                    ixMin = ixMax = i-1;
+            } else {
+                ixMin = i-1 + int(std::ceil(dx-_interp2d.xrange()));
+                ixMax = i-1 + int(std::floor(dx+_interp2d.xrange()));
             }
+            ixMin = std::max(ixMin, 0);
+            ixMax = std::min(ixMax, _nx-1);
+            if (ixMin > ixMax) return 0.0;
+            if (_interp2d.isExactAtNodes()
+                && std::abs(dy) < 10.*std::numeric_limits<double>::epsilon()) {
+                    iyMin = iyMax = j-1;
+            } else {
+                iyMin = j-1 + int(std::ceil(dy-_interp2d.xrange()));
+                iyMax = j-1 + int(std::floor(dy+_interp2d.xrange()));
+            }
+            iyMin = std::max(iyMin, 0);
+            iyMax = std::min(iyMax, _ny-1);
+            if (iyMin > iyMax) return 0.0;
 
-            return oneDSpline(dx, vals);
+            double sum = 0.0;
+            // Not checking for separability for the moment...
+            for(int iy=iyMin; iy<=iyMax; iy++) {
+                for(int ix=ixMin; ix<=ixMax; ix++) {
+                    sum += _vals[ix*_ny+iy] * _interp2d.xval(i-1+dx-ix, j-1+dy-iy);
+                }
+            }
+            return sum;
         }
 
-        void gradient(double x, double y, double& dfdx, double& dfdy) const {
-            int i = _xargs.upperIndex(x);
-            int j = _yargs.upperIndex(y);
-            double dxgrid = _xargs[i] - _xargs[i-1];
-            double dygrid = _yargs[j] - _yargs[j-1];
-            double dx = (x - _xargs[i-1])/dxgrid;
-            double dy = (y - _yargs[j-1])/dygrid;
-
-            // y-gradient
-            double vals[2*a];
-            double* vPtr = &vals[0];
-            for (int k=1-a; k<(a+1); k++)
-                *vPtr++ = oneDGrad(dy, &_vals[(i-1+k)*_ny+j-a]);
-            dfdy = oneDSpline(dx, vals)/dxgrid;
-
-            // x-gradient
-            vPtr = &vals[0];
-            for (int k=1-a; k<(a+1); k++) {
-                double xvals[2*a];
-                double* xvPtr = &xvals[0];
-                for (int k2=1-a; k2<(a+1); k2++)
-                    *xvPtr++ = _vals[(i-1+k2)*_ny+j+k];
-                *vPtr++ = oneDGrad(dx, &xvals[0]);
-            }
-            dfdx = oneDSpline(dy, vals)/dygrid;
+        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
+            throw std::runtime_error("gradient not implemented for Interp interp");
         }
+
+    private:
+        const int _nx;
+        const InterpolantXY _interp2d;
     };
 
 
     Table2D::Table2D(
         const double* xargs, const double* yargs, const double* vals,
         int Nx, int Ny, interpolant in,
-        const double* dfdx, const double* dfdy, const double* d2fdxdy
-    ) : _pimpl(makeImpl(xargs, yargs, vals, Nx, Ny, in, dfdx, dfdy, d2fdxdy)) {}
+        const double* dfdx, const double* dfdy, const double* d2fdxdy,
+        const Interpolant* interp2d
+    ) : _pimpl(makeImpl(xargs, yargs, vals, Nx, Ny, in, dfdx, dfdy, d2fdxdy, interp2d)) {}
 
     std::shared_ptr<Table2D::Table2DImpl> Table2D::makeImpl(
         const double* xargs, const double* yargs, const double* vals,
         int Nx, int Ny, interpolant in,
-        const double* dfdx, const double* dfdy, const double* d2fdxdy
+        const double* dfdx, const double* dfdy, const double* d2fdxdy,
+        const Interpolant* interp2d
     ) {
         switch(in) {
             case floor:
-                return std::make_shared<ConcreteTable2DImpl<T2DFloorInterp>>(
-                    xargs, yargs, vals, Nx, Ny);
+                return std::make_shared<T2DFloor>(xargs, yargs, vals, Nx, Ny);
             case ceil:
-                return std::make_shared<ConcreteTable2DImpl<T2DCeilInterp>>(
-                    xargs, yargs, vals, Nx, Ny);
+                return std::make_shared<T2DCeil>(xargs, yargs, vals, Nx, Ny);
             case nearest:
-                return std::make_shared<ConcreteTable2DImpl<T2DNearestInterp>>(
-                    xargs, yargs, vals, Nx, Ny);
+                return std::make_shared<T2DNearest>(xargs, yargs, vals, Nx, Ny);
             case linear:
-                return std::make_shared<ConcreteTable2DImpl<T2DLinearInterp>>(
-                    xargs, yargs, vals, Nx, Ny);
+                return std::make_shared<T2DLinear>(xargs, yargs, vals, Nx, Ny);
             case cubic:
-                return std::make_shared<ConcreteTable2DImpl<T2DCubicInterp>>(
-                    xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy);
+                return std::make_shared<T2DCubic>(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy);
             case cubicConvolve:
-                return std::make_shared<ConcreteTable2DImpl<T2DCubicConvolveInterp>>(
-                    xargs, yargs, vals, Nx, Ny);
-            case lanczos1:
-                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<1>>>(
-                    xargs, yargs, vals, Nx, Ny);
-            case lanczos2:
-                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<2>>>(
-                    xargs, yargs, vals, Nx, Ny);
-            case lanczos3:
-                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<3>>>(
-                    xargs, yargs, vals, Nx, Ny);
-            case lanczos4:
-                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<4>>>(
-                    xargs, yargs, vals, Nx, Ny);
-            case lanczos5:
-                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<5>>>(
-                    xargs, yargs, vals, Nx, Ny);
-            case lanczos6:
-                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<6>>>(
-                    xargs, yargs, vals, Nx, Ny);
-            case lanczos7:
-                return std::make_shared<ConcreteTable2DImpl<LanczosInterp<7>>>(
-                    xargs, yargs, vals, Nx, Ny);
-
+                return std::make_shared<T2DCubicConvolution>(xargs, yargs, vals, Nx, Ny);
+            case interpolant2d:
+                return std::make_shared<T2DInterpolant2D>(xargs, yargs, vals, Nx, Ny, interp2d);
             default:
                 throw std::runtime_error("invalid interpolation method");
         }
