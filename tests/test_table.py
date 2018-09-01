@@ -358,6 +358,10 @@ def test_table2d():
         scitab2d = interp2d(x, y, np.transpose(z))
         np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
 
+    # Using a galsim.Interpolant should raise an exception if x/y are not equal spaced.
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        tab2d2 = galsim.LookupTable2D(x, y, z, interpolant=galsim.Linear())
+
     # Try a simpler interpolation function.  We should be able to interpolate a (bi-)linear function
     # exactly with a linear interpolant.
     def f(x_, y_):
@@ -772,8 +776,8 @@ def test_table2d_GSInterp():
     def f(x_, y_):
         return 2*y_*y_ + 3*x_*x_ + 4*x_*y_ - np.cos(x_)
 
-    x = np.linspace(0.1, 3.3, 250)
-    y = np.linspace(0.2, 10.4, 750)
+    x = np.linspace(0.1, 3.3, 25)
+    y = np.linspace(0.2, 10.4, 75)
     yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
 
     interpolants = ['lanczos3', 'lanczos3F', 'lanczos7', 'sinc', 'quintic']

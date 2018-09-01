@@ -429,6 +429,7 @@ class LookupTable2D(object):
 
         dx = np.diff(self.x)
         dy = np.diff(self.y)
+        equal_spaced = np.allclose(dx, dx[0]) and np.allclose(dy, dy[0])
 
         if not all(dx > 0):
             raise GalSimValueError("x input grids is not strictly increasing.", x)
@@ -447,12 +448,18 @@ class LookupTable2D(object):
             self._interp2d = convert_interpolant(interpolant)
         self.interpolant = interpolant
 
+        # Need to ensure equal-spaced arrays if using a galsim.Interpolant
+        if self._interp2d is not None and not equal_spaced:
+            raise GalSimIncompatibleValuesError(
+            "Cannot use a galsim.Interpolant in LookupTable2D unless x and y are"
+            "equally spaced.", interpolant=interpolant, x=x, y=y)
+
         self.edge_mode = edge_mode
         self.constant = float(constant)
 
         if self.edge_mode == 'wrap':
             # Can wrap if x and y arrays are equally spaced ...
-            if np.allclose(dx, dx[0]) and np.allclose(dy, dy[0]):
+            if equal_spaced:
                 # Underlying Table2D requires us to extend x, y, and f.
                 self.x = np.append(self.x, self.x[-1]+dx[0])
                 self.y = np.append(self.y, self.y[-1]+dy[0])
