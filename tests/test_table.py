@@ -816,6 +816,27 @@ def test_table2d_GSInterp():
                       for x_, y_ in zip(newxx.ravel(), newyy.ravel())]).ravel(),
             atol=1e-10, rtol=0)
 
+        # Check that edge_mode='wrap' works
+        tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
+
+        ref_dfdx, ref_dfdy = tab2d.gradient(newxx, newyy)
+        test_dfdx, test_dfdy = tab2d.gradient(newxx+3*tab2d.xperiod, newyy)
+        np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)
+        np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
+
+        test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy+13*tab2d.yperiod)
+        np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)
+        np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
+
+        # Test mix of inside and outside original boundary
+        test_dfdx, test_dfdy = tab2d.gradient(np.dstack([newxx, newxx+3*tab2d.xperiod]),
+                                              np.dstack([newyy, newyy]))
+
+        np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx[:,:,0])
+        np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy[:,:,0])
+        np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx[:,:,1])
+        np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy[:,:,1])
+
 
 @timer
 def test_ne():

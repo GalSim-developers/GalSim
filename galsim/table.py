@@ -423,12 +423,12 @@ class LookupTable2D(object):
         if edge_mode not in ('raise', 'wrap', 'constant'):
             raise GalSimValueError("Unknown edge_mode.", edge_mode, ('raise', 'wrap', 'constant'))
 
-        self.x = np.ascontiguousarray(x, dtype=float)
-        self.y = np.ascontiguousarray(y, dtype=float)
-        self.f = np.ascontiguousarray(f, dtype=float)
+        x = np.asarray(x, dtype=float)
+        y = np.asarray(y, dtype=float)
+        f = np.asarray(f, dtype=float)
 
-        dx = np.diff(self.x)
-        dy = np.diff(self.y)
+        dx = np.diff(x)
+        dy = np.diff(y)
         equal_spaced = np.allclose(dx, dx[0]) and np.allclose(dy, dy[0])
 
         if not all(dx > 0):
@@ -436,7 +436,7 @@ class LookupTable2D(object):
         if not all(dy > 0):
             raise GalSimValueError("y input grids is not strictly increasing.", y)
 
-        fshape = self.f.shape
+        fshape = f.shape
         if fshape != (len(x), len(y)):
             raise GalSimIncompatibleValuesError(
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
@@ -444,12 +444,14 @@ class LookupTable2D(object):
         # Check if interpolant is a string that we understand, if not, try convert_interpolant
         if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'cubic', 'cubicConvolve'):
             self._interp2d = None
+            padrange = 2 if 'cubic' in interpolant else 1
         else:
             self._interp2d = convert_interpolant(interpolant)
+            padrange = int(np.ceil(self._interp2d.xrange))
         self.interpolant = interpolant
 
         # Need to ensure equal-spaced arrays if using a galsim.Interpolant
-        if self._interp2d is not None and not equal_spaced:
+        if (self._interp2d is not None or 'cubic' in interpolant) and not equal_spaced:
             raise GalSimIncompatibleValuesError(
             "Cannot use a galsim.Interpolant in LookupTable2D unless x and y are"
             "equally spaced.", interpolant=interpolant, x=x, y=y)
@@ -461,17 +463,31 @@ class LookupTable2D(object):
             # Can wrap if x and y arrays are equally spaced ...
             if equal_spaced:
                 # Underlying Table2D requires us to extend x, y, and f.
-                self.x = np.append(self.x, self.x[-1]+dx[0])
-                self.y = np.append(self.y, self.y[-1]+dy[0])
-                self.f = np.pad(self.f, [(0,1), (0,1)], mode='wrap')
-            if (all(self.f[0] == self.f[-1]) and all(self.f[:,0] == self.f[:,-1])):
-                self.xperiod = self.x[-1] - self.x[0]
-                self.yperiod = self.y[-1] - self.y[0]
+                self.xperiod = x[-1]-x[0]+dx[0]
+                self.yperiod = y[-1]-y[0]+dy[0]
+                self.x0 = x[0]
+                self.y0 = y[0]
+                x = np.hstack([x[0]-np.cumsum([dx[0]]*(padrange-1)),
+                               x,
+                               x[-1]+np.cumsum([dx[0]]*padrange)])
+                y = np.hstack([y[0]-np.cumsum([dy[0]]*(padrange-1)),
+                               y,
+                               y[-1]+np.cumsum([dy[0]]*padrange)])
+                f = np.pad(f, [(padrange-1, padrange)]*2, mode='wrap')
+            elif (all(f[0] == f[-1]) and all(f[:,0] == f[:,-1])):
+                self.x0 = x[0]
+                self.y0 = y[0]
+                self.xperiod = x[-1] - x[0]
+                self.yperiod = y[-1] - y[0]
             else:
                 raise GalSimIncompatibleValuesError(
                     "Cannot use edge_mode='wrap' unless either x and y are equally "
                     "spaced or first/last row/column of f are identical.",
                     edge_mode=edge_mode, x=x, y=y, f=f)
+
+        self.x = np.ascontiguousarray(x)
+        self.y = np.ascontiguousarray(y)
+        self.f = np.ascontiguousarray(f)
 
         der_exist = [kw is not None for kw in [dfdx, dfdy, d2fdxdy]]
         if self.interpolant == 'cubic':
@@ -547,8 +563,8 @@ class LookupTable2D(object):
 
     def _wrap_args(self, x, y):
         """Wrap points back into the fundamental period."""
-        return ((x-self.x[0]) % self.xperiod + self.x[0],
-                (y-self.y[0]) % self.yperiod + self.y[0])
+        return ((x-self.x0) % self.xperiod + self.x0,
+                (y-self.y0) % self.yperiod + self.y0)
 
     @property
     def _bounds(self):
