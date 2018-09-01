@@ -826,6 +826,23 @@ def test_ne():
            galsim.LookupTable(x, f, interpolant='floor'),
            galsim.LookupTable(x, f, x_log=True),
            galsim.LookupTable(x, f, f_log=True)]
+
+    ff = f+np.array(f)[:, None]
+    ff2 = f2+np.array(f2)[:, None]
+    lts.extend([
+        galsim.LookupTable2D(x, x, ff),
+        galsim.LookupTable2D(x2, x, ff),
+        galsim.LookupTable2D(x, x2, ff),
+        galsim.LookupTable2D(x, x2, ff2),
+        galsim.LookupTable2D(x, x, ff, interpolant='nearest'),
+        galsim.LookupTable2D(x, x, ff, interpolant=galsim.Nearest()),
+        galsim.LookupTable2D(x, x, ff, edge_mode='wrap'),
+        galsim.LookupTable2D(x, x, ff, constant=1),
+        galsim.LookupTable2D(x, x, ff, interpolant='cubic'),
+        galsim.LookupTable2D(x, x, ff, interpolant='cubic',
+            dfdx=ff, dfdy=ff, d2fdxdy=ff
+        )
+    ])
     all_obj_diff(lts)
 
 

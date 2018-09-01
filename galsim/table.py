@@ -677,20 +677,32 @@ class LookupTable2D(object):
             self.constant))
 
     def __eq__(self, other):
-        return (isinstance(other, LookupTable2D) and
+        if not (isinstance(other, LookupTable2D) and
                 np.array_equal(self.x,other.x) and
                 np.array_equal(self.y,other.y) and
                 np.array_equal(self.f,other.f) and
                 self.interpolant == other.interpolant and
                 self.edge_mode == other.edge_mode and
-                self.constant == other.constant)
+                self.constant == other.constant):
+            return False
+        else:
+            if self.interpolant == 'cubic':
+                return (np.array_equal(self.dfdx, other.dfdx) and
+                        np.array_equal(self.dfdy, other.dfdy) and
+                        np.array_equal(self.d2fdxdy, other.d2fdxdy))
+            return True
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(("galsim.LookupTable2D", tuple(self.x.ravel()), tuple(self.y.ravel()),
-                    tuple(self.f.ravel()), self.interpolant, self.edge_mode, self.constant))
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.LookupTable2D", tuple(self.x.ravel()), tuple(self.y.ravel()),
+                               tuple(self.f.ravel()), self.interpolant, self.edge_mode, self.constant,
+                               tuple(self.dfdx.ravel()) if self.dfdx is not None else None,
+                               tuple(self.dfdy.ravel()) if self.dfdy is not None else None,
+                               tuple(self.d2fdxdy.ravel()) if self.d2fdxdy is not None else None))
+        return self._hash
 
     def __getstate__(self):
         d = self.__dict__.copy()
