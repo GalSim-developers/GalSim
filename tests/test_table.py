@@ -781,6 +781,7 @@ def test_table2d_GSInterp():
     for interpolant in interpolants:
         z = f(xx, yy)
         tab2d = galsim.LookupTable2D(x, y, z, interpolant=interpolant)
+        do_pickle(tab2d)
 
         # Use InterpolatedImage to validate
         wcs = galsim.JacobianWCS(

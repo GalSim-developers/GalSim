@@ -30,6 +30,7 @@ from .position import PositionD
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
+from .interpolant import Interpolant
 
 class LookupTable(object):
     """
@@ -442,10 +443,9 @@ class LookupTable2D(object):
         # Check if interpolant is a string that we understand, if not, try convert_interpolant
         if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'cubic', 'cubicConvolve'):
             self._interp2d = None
-            self.interpolant = interpolant
         else:
             self._interp2d = convert_interpolant(interpolant)
-            self.interpolant = 'GSInterpolant'
+        self.interpolant = interpolant
 
         self.edge_mode = edge_mode
         self.constant = float(constant)
@@ -509,16 +509,16 @@ class LookupTable2D(object):
     @lazy_property
     def _tab(self):
         with convert_cpp_errors():
-            if self.interpolant == 'cubic':
+            if self._interp2d is not None:
+                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                              self.f.ctypes.data, len(self.x), len(self.y),
+                                              'GSInterpolant', self._interp2d._i)
+            elif self.interpolant == 'cubic':
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
                                               self.interpolant,
                                               self.dfdx.ctypes.data, self.dfdy.ctypes.data,
                                               self.d2fdxdy.ctypes.data)
-            elif self.interpolant == 'GSInterpolant':
-                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                              self.f.ctypes.data, len(self.x), len(self.y),
-                                              self.interpolant, self._interp2d._i)
             else:
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
