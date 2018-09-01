@@ -22,6 +22,7 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <deque>
 
 #ifdef USE_TMV
 #include "TMV.h"
@@ -655,6 +656,7 @@ namespace galsim {
         }
     };
 
+
     class T2DInterpolant2D : public T2DCRTP<T2DInterpolant2D> {
     public:
         T2DInterpolant2D(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
@@ -691,10 +693,73 @@ namespace galsim {
             if (iyMin > iyMax) return 0.0;
 
             double sum = 0.0;
-            // Not checking for separability for the moment...
-            for(int iy=iyMin; iy<=iyMax; iy++) {
-                for(int ix=ixMin; ix<=ixMax; ix++) {
-                    sum += _vals[ix*_ny+iy] * _interp2d.xval(i-1+dx-ix, j-1+dy-iy);
+            const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&_interp2d);
+            if (ixy) {
+                // Interpolant is seperable
+                // We have the opportunity to speed up the calculation by
+                // re-using the sums over rows.  So we will keep a
+                // cache of them.
+                if (y != _cacheY || ixy != _cacheInterp) {
+                    _clearCache();
+                    _cacheY = y;
+                    _cacheInterp = ixy;
+                } else if (ixMax == ixMin && !_cache.empty()) {
+                    // Special case for interpolation on a single ix value:
+                    // See if we already have this row in cache:
+                    int index = ixMin - _cacheStartX;
+                    // if (index < 0) index += _N;  // JM: I don't understand this line...
+                    if (index >= 0 && index < int(_cache.size()))
+                        // We have it!
+                        return _cache[index];
+                    else
+                        // Desired row not in cache - kill cache, continue as normal.
+                        // (But don't clear ywt, since that's still good.)
+                        _cache.clear();
+                }
+                // Build y factors for interpolant
+                int ny = iyMax - iyMin + 1;
+                // This is also cached if possible.  It gets cleared with y!=cacheY above.
+                if (_ywt.empty()) {
+                    _ywt.resize(ny);
+                    for (int ii=0; ii<ny; ii++) {
+                        _ywt[ii] = ixy->xval1d(j-1+dy-(ii+iyMin));
+                    }
+                } else {
+                    assert(int(_ywt.size()) == ny);
+                }
+                // cache always holds sequential x values (no wrap).  Throw away
+                // elements until we get to the one we need first
+                std::deque<double>::iterator nextSaved = _cache.begin();
+                while (nextSaved != _cache.end() && _cacheStartX != ixMin) {
+                    _cache.pop_front();
+                    ++_cacheStartX;
+                    nextSaved = _cache.begin();
+                }
+                for (int ix=ixMin; ix<=ixMax; ix++) {
+                    double sumx = 0.0;
+                    if (nextSaved != _cache.end()) {
+                        // This row is cached
+                        sumx = *nextSaved;
+                        ++nextSaved;
+                    } else {
+                        // Need to compute a new row's sum
+                        const double* dptr = &_vals[ix*_ny+iyMin];
+                        std::vector<double>::const_iterator ywt_it = _ywt.begin();
+                        int count = ny;
+                        for(; count; --count) sumx += (*ywt_it++) * (*dptr++);
+                        xassert(ywt_it == _ywt.end());
+                        // Add to back of cache
+                        if (_cache.empty()) _cacheStartX = ix;
+                        _cache.push_back(sumx);
+                        nextSaved = _cache.end();
+                    }
+                    sum += sumx * ixy->xval1d(i-1+dx-ix);
+                }
+            } else {
+                for(int iy=iyMin; iy<=iyMax; iy++) {
+                    for(int ix=ixMin; ix<=ixMax; ix++) {
+                        sum += _vals[ix*_ny+iy] * _interp2d.xval(i-1+dx-ix, j-1+dy-iy);
+                    }
                 }
             }
             return sum;
@@ -707,6 +772,17 @@ namespace galsim {
     private:
         const int _nx;
         const InterpolantXY _interp2d;
+
+        void _clearCache() const {
+            _cache.clear();
+            _ywt.clear();
+        }
+
+        mutable std::deque<double> _cache;
+        mutable std::vector<double> _ywt;
+        mutable double _cacheY;
+        mutable int _cacheStartX;
+        mutable const InterpolantXY* _cacheInterp;
     };
 
 

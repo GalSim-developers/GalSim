@@ -877,7 +877,7 @@ namespace galsim {
 
             // Build x factors for interpolant
             int nx = ixMax - ixMin + 1;
-            // This is also cached if possible.  It gets cleared when kx != cacheX above.
+            // This is also cached if possible.  It gets cleared when x != cacheX above.
             if (_xwt.empty()) {
                 _xwt.resize(nx);
                 for (int i=0; i<nx; ++i)

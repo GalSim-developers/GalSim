@@ -166,9 +166,7 @@ namespace galsim {
 
     double Nearest::xval(double x) const
     {
-        if (std::abs(x)>0.5) return 0.;
-        else if (std::abs(x)<0.5) return 1.;
-        else return 0.5;
+        return std::abs(x)>0.5 ? 0. : 1.;
     }
 
     double Nearest::uval(double u) const { return math::sinc(u); }

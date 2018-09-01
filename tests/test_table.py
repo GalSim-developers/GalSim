@@ -332,6 +332,17 @@ def test_table2d():
     # Try using linear GSInterp
     tab2d2 = galsim.LookupTable2D(x, y, z, interpolant=galsim.Linear())
     np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d2(newxx, newyy))
+    np.testing.assert_array_almost_equal(tab2d(newxx.T, newyy.T), tab2d2(newxx.T, newyy.T))
+
+    # Try again using Nearest()
+    tab2d2 = galsim.LookupTable2D(x, y, z, interpolant=galsim.Nearest())
+    tab2d3 = galsim.LookupTable2D(x, y, z, interpolant='nearest')
+    np.testing.assert_array_almost_equal(tab2d2(newxx, newyy), tab2d3(newxx, newyy))
+    np.testing.assert_array_almost_equal(tab2d2(newxx.T, newyy.T), tab2d3(newxx.T, newyy.T))
+    # Make sure we exercise the special case in T2DInterpolant2D::interp
+    np.testing.assert_array_almost_equal(tab2d2(0.3, 0.4), tab2d3(0.3, 0.4))
+    np.testing.assert_array_almost_equal(tab2d2(0.3, 0.4), tab2d3(0.3, 0.4))
+
 
     # Test non-equally-spaced table.
     x = np.delete(x, 10)
