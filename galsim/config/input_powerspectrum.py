@@ -118,13 +118,13 @@ class PowerSpectrumLoader(InputLoader):
             # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
             nx_grid = int(math.ceil(base['image_xsize']/base['grid_xsize']))
             ny_grid = int(math.ceil(base['image_ysize']/base['grid_ysize']))
-            ngrid = max(nx_grid, ny_grid)
+            ngrid = max(nx_grid, ny_grid) + 1
             # Normally that's good, but if tiles aren't square, need to drop through to the
             # second option.
         else:
             image_size = max(base['image_xsize'], base['image_ysize'])
             scale = base['wcs'].maxLinearScale(base['image_center'])
-            ngrid = int(math.ceil(image_size * scale / grid_spacing))
+            ngrid = int(math.ceil(image_size * scale / grid_spacing)) + 1
 
         if 'interpolant' in config:
             interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]

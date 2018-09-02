@@ -1211,7 +1211,7 @@ def test_tiled():
     rng = galsim.BaseDeviate(seed)
     im4a = galsim.Image(nx*size, ny*size, scale=scale)
     center = im4a.true_center * scale
-    ps.buildGrid(grid_spacing=size*scale, ngrid=max(nx,ny), rng=rng, center=center)
+    ps.buildGrid(grid_spacing=size*scale, ngrid=max(nx,ny)+1, rng=rng, center=center)
     for j in range(ny):
         for i in range(nx):
             seed += 1
@@ -1245,7 +1245,7 @@ def test_tiled():
     im5a = galsim.Image(nx*xsize, ny*ysize, scale=scale)
     center = im5a.true_center * scale
     grid_spacing = min(xsize,ysize) * scale
-    ngrid = int(math.ceil(max(nx*xsize, ny*ysize) * scale / grid_spacing))
+    ngrid = int(math.ceil(max(nx*xsize, ny*ysize) * scale / grid_spacing))+1
     ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, rng=rng, center=center)
     for j in range(ny):
         for i in range(nx):

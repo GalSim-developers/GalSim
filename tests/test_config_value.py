@@ -394,33 +394,34 @@ def test_float_value():
     galsim.config.RemoveCurrent(config)
     rng = galsim.BaseDeviate(31415)  # reset this so changes to tests above don't mess this up.
     config['rng'] = rng.duplicate()
-    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
+    ps.buildGrid(grid_spacing=10, ngrid=21, interpolant='linear', rng=rng)
     print("ps mag = ",ps.getMagnification((0.1,0.2)))
     galsim.config.SetupInputsForImage(config, None)
     ps1 = galsim.config.ParseValue(config,'ps',config, float)[0]
     np.testing.assert_almost_equal(ps1, ps.getMagnification((0.1,0.2)))
 
     # Beef up the amplitude to get strong lensing.
-    ps = galsim.PowerSpectrum(e_power_function='100 * np.exp(-k**0.2)')
-    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
+    ps = galsim.PowerSpectrum(e_power_function='1000 * np.exp(-k**0.2)')
+    ps.buildGrid(grid_spacing=10, ngrid=21, interpolant='linear', rng=rng)
+
     print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
     config = galsim.config.CleanConfig(config)
-    config['input']['power_spectrum']['e_power_function'] = '100 * np.exp(-k**0.2)'
+    config['input']['power_spectrum']['e_power_function'] = '1000 * np.exp(-k**0.2)'
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, logger=cl.logger)
         ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
     print(cl.output)
-    assert 'PowerSpectrum mu = -2.778083 means strong lensing. Using mu=25.000000' in cl.output
+    assert 'PowerSpectrum mu = -2.426205 means strong lensing. Using mu=25.000000' in cl.output
     np.testing.assert_almost_equal(ps2a, 25.)
 
     # Need a different point that happens to have strong lensing, since the PS realization changed.
-    config['world_pos'] = galsim.PositionD(5,75)
+    config['world_pos'] = galsim.PositionD(-60, -60)
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, logger=cl.logger)
         ps2b = galsim.config.ParseValue(config, 'ps', config, float)[0]
     print(cl.output)
-    assert "PowerSpectrum mu = 26.949446 means strong lensing. Using mu=25.000000" in cl.output
+    assert "PowerSpectrum mu = 29.760221 means strong lensing. Using mu=25.000000" in cl.output
     np.testing.assert_almost_equal(ps2b, 25.)
 
     # Or set a different maximum
@@ -428,7 +429,7 @@ def test_float_value():
     config['ps']['max_mu'] = 30.
     del config['ps']['_get']
     ps3 = galsim.config.ParseValue(config,'ps',config, float)[0]
-    np.testing.assert_almost_equal(ps3, 26.949445807939387)
+    np.testing.assert_almost_equal(ps3, 29.760221039098028)
 
     # Negative max_mu is invalid.
     galsim.config.RemoveCurrent(config)
@@ -446,8 +447,8 @@ def test_float_value():
         ps2c = galsim.config.ParseValue(config, 'ps', config, float)[0]
     print(cl.output)
     assert ("Extrapolating beyond input range. galsim.PositionD(x=1000.0, y=2000.0) not in "
-            "galsim.BoundsD(xmin=-95.0000000000001, xmax=95.0000000000001, "
-            "ymin=-95.0000000000001, ymax=95.0000000000001)") in cl.output
+            "galsim.BoundsD(xmin=-100.00000000000011, xmax=100.00000000000011, "
+            "ymin=-100.00000000000011, ymax=100.00000000000011)") in cl.output
     np.testing.assert_almost_equal(ps2c, 1.)
 
     # Error if no world_pos
@@ -1640,7 +1641,7 @@ def test_eval():
                               b_power_function = lambda k: np.exp(-k**1.2))
     # ngrid is calculated from the image size by config, which was setup above.
     grid_spacing = 10.
-    ngrid = int(math.ceil(config['image_ysize'] * config['pixel_scale'] / grid_spacing))
+    ngrid = int(math.ceil(config['image_ysize'] * config['pixel_scale'] / grid_spacing)) + 1
     center = config['wcs'].toWorld(config['image_center'])
     ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng)
     g1,g2,mu = ps.getLensing(pos = config['world_pos'])
