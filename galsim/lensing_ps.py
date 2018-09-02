@@ -1,4 +1,6 @@
 # Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -496,26 +498,16 @@ class PowerSpectrum(object):
         self.center = center
 
         # It is also convenient to store the bounds within which an input position is allowed.
-        self.bounds = BoundsD( center.x - ngrid * grid_spacing / 2. ,
-                               center.x + ngrid * grid_spacing / 2. ,
-                               center.y - ngrid * grid_spacing / 2. ,
-                               center.y + ngrid * grid_spacing / 2. )
+        self.bounds = BoundsD( center.x - (ngrid-1) * grid_spacing / 2. ,
+                               center.x + (ngrid-1) * grid_spacing / 2. ,
+                               center.y - (ngrid-1) * grid_spacing / 2. ,
+                               center.y + (ngrid-1) * grid_spacing / 2. )
         # Expand the bounds slightly to make sure rounding errors don't lead to points on the
         # edge being considered off the edge.
         self.bounds = self.bounds.expand( 1. + 1.e-15 )
 
-        # Note that the min/max x_grid values are slightly different than the bounds above, since
-        # they correspond to the centers of the corner pixels instead of the corners of the corner
-        # pixels.
-        self.x_grid = np.linspace(
-            self.bounds.xmin+grid_spacing/2.0,
-            self.bounds.xmax-grid_spacing/2.0,
-            ngrid
-        )
-        self.y_grid = np.linspace(
-            self.bounds.ymin+grid_spacing/2.0,
-            self.bounds.ymax-grid_spacing/2.0,
-            ngrid)
+        self.x_grid = np.linspace(self.bounds.xmin, self.bounds.xmax, ngrid)
+        self.y_grid = np.linspace(self.bounds.ymin, self.bounds.ymax, ngrid)
 
         gd = GaussianDeviate(rng)
 
@@ -874,14 +866,14 @@ class PowerSpectrum(object):
             # get reduced shear (just discard magnification)
             g1_grid, g2_grid, _ = theoryToObserved(g1_grid, g2_grid, self.im_kappa.array)
 
-        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid,
+        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid.T,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
-        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid,
+        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid.T,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
 
-        ret = lut_g1(pos_y, pos_x), lut_g2(pos_y, pos_x)
+        ret = lut_g1(pos_x, pos_y), lut_g2(pos_x, pos_y)
         return ret
 
     def getConvergence(self, pos, units=arcsec, periodic=False):
@@ -938,11 +930,11 @@ class PowerSpectrum(object):
         """
         kappa_grid = self.im_kappa.array
 
-        lut_kappa = LookupTable2D(self.x_grid, self.y_grid, kappa_grid,
+        lut_kappa = LookupTable2D(self.x_grid, self.y_grid, kappa_grid.T,
                                   edge_mode='wrap' if periodic else 'warn',
                                   interpolant=self.interpolant)
 
-        return lut_kappa(pos_y, pos_x)
+        return lut_kappa(pos_x, pos_y)
 
     def getMagnification(self, pos, units=arcsec, periodic=False):
         """
@@ -998,11 +990,11 @@ class PowerSpectrum(object):
         @returns the magnification, mu (either a scalar or a numpy array)
         """
         _, _, mu_grid = theoryToObserved(self.im_g1.array, self.im_g2.array, self.im_kappa.array)
-        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid - 1,
+        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid.T - 1,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
 
-        return lut_mu(pos_y, pos_x) + 1
+        return lut_mu(pos_x, pos_y) + 1
 
     def getLensing(self, pos, units=arcsec, periodic=False):
         """
@@ -1063,17 +1055,17 @@ class PowerSpectrum(object):
         g1_grid, g2_grid, mu_grid = theoryToObserved(
             self.im_g1.array, self.im_g2.array, self.im_kappa.array)
 
-        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid,
+        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid.T,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
-        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid,
+        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid.T,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
-        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid-1,
+        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid.T-1,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
 
-        return lut_g1(pos_y, pos_x), lut_g2(pos_y, pos_x), lut_mu(pos_y, pos_x)+1
+        return lut_g1(pos_x, pos_y), lut_g2(pos_x, pos_y), lut_mu(pos_x, pos_y)+1
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.

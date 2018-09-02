@@ -445,9 +445,9 @@ def test_float_value():
         galsim.config.SetupInputsForImage(config, cl.logger)
         ps2c = galsim.config.ParseValue(config, 'ps', config, float)[0]
     print(cl.output)
-    assert ("Extrapolating beyond input range. galsim.PositionD(x=2000.0, y=1000.0) not in "
-            "galsim.BoundsD(xmin=-95.00000000000011, xmax=95.00000000000011, "
-            "ymin=-95.00000000000011, ymax=95.00000000000011)") in cl.output
+    assert ("Extrapolating beyond input range. galsim.PositionD(x=1000.0, y=2000.0) not in "
+            "galsim.BoundsD(xmin=-95.0000000000001, xmax=95.0000000000001, "
+            "ymin=-95.0000000000001, ymax=95.0000000000001)") in cl.output
     np.testing.assert_almost_equal(ps2c, 1.)
 
     # Error if no world_pos
@@ -1318,7 +1318,7 @@ def test_shear_value():
         galsim.config.SetupInputsForImage(config, cl.logger)
         ps2c = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
     print(cl.output)
-    assert ("Extrapolating beyond input range. galsim.PositionD(x=2000.0, y=1000.0) not in "
+    assert ("Extrapolating beyond input range. galsim.PositionD(x=1000.0, y=2000.0) not in "
             "galsim.BoundsD(xmin=-190.00000000000023, xmax=200.00000000000023, "
             "ymin=-190.00000000000023, ymax=200.00000000000023)") in cl.output
     np.testing.assert_almost_equal((ps2c.g1, ps2c.g2), (0,0))
