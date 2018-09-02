@@ -284,6 +284,52 @@ def test_roundoff():
 
 
 @timer
+def test_table_GSInterp():
+    def f(x_):
+        return x_ + 2*x_*x_ + 3*np.sin(2*x_)
+
+    x = np.linspace(0.1, 3.3, 25)
+    y = np.arange(20) # Need something big enough to avoid having the interpolant fall off the edge
+    yy, xx = np.meshgrid(y, x)
+
+    interpolants = ['lanczos3', 'lanczos3F', 'lanczos7', 'sinc', 'quintic']
+
+    for interpolant in interpolants:
+        z = f(xx)
+
+        tab = galsim.LookupTable(x, z[:,0], interpolant=interpolant)
+        do_pickle(tab)
+
+        # Use InterpolatedImage to validate
+        wcs = galsim.JacobianWCS(
+            (max(x) - min(x))/(len(x)-1),
+            0, 0,
+            (max(y) - min(y))/(len(y)-1),
+        )
+        img = galsim.Image(z.T, wcs=wcs)
+        ii = galsim.InterpolatedImage(
+            img,
+            use_true_center=True,
+            offset=(galsim.PositionD(img.xmin,img.ymin)-img.true_center),
+            x_interpolant=interpolant,
+            normalization='sb',
+            calculate_maxk=False, calculate_stepk=False
+        ).shift(min(x), min(y))
+
+        # Check single value functionality.
+        x1 = 2.3
+        np.testing.assert_allclose(tab(x1), ii.xValue(x1, 10), atol=1e-10, rtol=0)
+
+        # Check vectorized output
+        newx = np.linspace(0.2, 3.1, 15)
+        np.testing.assert_allclose(
+            tab(newx),
+            np.array([ii.xValue(x_, 10) for x_ in newx]),
+            atol=1e-10, rtol=0
+        )
+
+
+@timer
 def test_table2d():
     """Check LookupTable2D functionality.
     """
@@ -806,7 +852,8 @@ def test_table2d_GSInterp():
         # Check single value functionality.
         x1,y1 = 2.3, 3.2
         np.testing.assert_allclose(tab2d(x1,y1), ii.xValue(x1, y1), atol=1e-10, rtol=0)
-        # # Check vectorized output
+
+        # Check vectorized output
         newx = np.linspace(0.2, 3.1, 15)
         newy = np.linspace(0.3, 10.1, 25)
         newyy, newxx = np.meshgrid(newy, newx)
@@ -814,7 +861,8 @@ def test_table2d_GSInterp():
             tab2d(newxx, newyy).ravel(),
             np.array([ii.xValue(x_, y_)
                       for x_, y_ in zip(newxx.ravel(), newyy.ravel())]).ravel(),
-            atol=1e-10, rtol=0)
+            atol=1e-10, rtol=0
+        )
 
         # Check that edge_mode='wrap' works
         tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
@@ -878,6 +926,7 @@ if __name__ == "__main__":
     test_log()
     test_from_func()
     test_roundoff()
+    test_table_GSInterp()
     test_table2d()
     test_table2d_gradient()
     test_table2d_cubic()
