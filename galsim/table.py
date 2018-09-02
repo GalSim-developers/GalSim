@@ -620,7 +620,7 @@ class LookupTable2D(object):
 
     def _call_warn(self, x, y):
         if not self._inbounds(x, y):
-            galsim_warn("Extrapolating beyond input range. %r not in %r".format(
+            galsim_warn("Extrapolating beyond input range. {!r} not in {!r}".format(
                         PositionD(x,y), self._bounds))
         return self._call_constant(x, y)
 
@@ -662,7 +662,7 @@ class LookupTable2D(object):
 
     def _gradient_warn(self, x, y):
         if not self._inbounds(x, y):
-            galsim_warn("Extrapolating beyond input range. %r not in %r".format(
+            galsim_warn("Extrapolating beyond input range. {!r} not in {!r}".format(
                         PositionD(x,y), self._bounds))
         return _gradient_constant(x, y)
 
