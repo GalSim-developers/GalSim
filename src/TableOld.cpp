@@ -133,6 +133,240 @@ namespace galsim {
     }
 
 
+    // TableOldImpl
+    class TableOld::TableOldImpl
+    {
+    public:
+        TableOldImpl(const double* args, const double* vals, int N, TableOld::interpolant in);
+
+        double argMin() const { return _args.front(); }
+        double argMax() const { return _args.back(); }
+        size_t size() const { return _n; }
+
+        double lookup(double a) const;
+
+    private:
+        TableOld::interpolant _iType;
+        ArgVecOld _args;
+        const double* _vals;
+        int _n;
+        std::vector<double> _y2;
+
+        typedef double (TableOldImpl::*MemFn)(double x, int i) const;
+        MemFn interpolate;
+        double linearInterpolate(double a, int i) const;
+        double floorInterpolate(double a, int i) const;
+        double ceilInterpolate(double a, int i) const;
+        double nearestInterpolate(double a, int i) const;
+        double splineInterpolate(double a, int i) const;
+
+        void setupSpline();
+    };
+
+    TableOld::TableOldImpl::TableOldImpl(const double* args, const double* vals, int N,
+                                TableOld::interpolant in):
+        _iType(in), _args(args, N), _vals(vals), _n(N)
+    {
+        switch (_iType) {
+          case TableOld::linear:
+               interpolate = &TableOldImpl::linearInterpolate;
+               break;
+          case TableOld::floor:
+               interpolate = &TableOldImpl::floorInterpolate;
+               break;
+          case TableOld::ceil:
+               interpolate = &TableOldImpl::ceilInterpolate;
+               break;
+          case TableOld::nearest:
+               interpolate = &TableOldImpl::nearestInterpolate;
+               break;
+          case TableOld::spline:
+               interpolate = &TableOldImpl::splineInterpolate;
+               break;
+          default:
+               throw std::runtime_error("invalid interpolation method");
+        }
+        if (_iType == TableOld::spline) setupSpline();
+    }
+
+    void TableOld::TableOldImpl::setupSpline()
+    {
+        /**
+         * Calculate the 2nd derivatives of the natural cubic spline.
+         *
+         * Here we follow the broad procedure outlined in this technical note by Jim
+         * Armstrong, freely available online:
+         * http://www.algorithmist.net/spline.html
+         *
+         * The system we solve is equation [7].  In our adopted notation u_i are the diagonals
+         * of the matrix M, and h_i the off-diagonals.  y'' is z_i and the rhs = v_i.
+         *
+         * For table sizes larger than the fully trivial (2 or 3 elements), we use the
+         * symmetric tridiagonal matrix solution capabilities of MJ's TMV library.
+         */
+        // Set up the 2nd-derivative table for splines
+        _y2.resize(_n);
+        // End points 2nd-derivatives zero for natural cubic spline
+        _y2[0] = 0.;
+        _y2[_n-1] = 0.;
+        // For 3 points second derivative at i=1 is simple
+        if (_n == 3){
+
+            _y2[1] = 3.*((_vals[2] - _vals[1]) / (_args[2] - _args[1]) -
+                        (_vals[1] - _vals[0]) / (_args[1] - _args[0])) / (_args[2] - _args[0]);
+
+        } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
+
+#ifdef USE_TMV
+            tmv::SymBandMatrix<double> M(_n-2, 1);
+            for (int i=1; i<=_n-3; i++){
+                M(i, i-1) = _args[i+1] - _args[i];
+            }
+            tmv::Vector<double> rhs(_n-2);
+            for (int i=1; i<=_n-2; i++){
+                M(i-1, i-1) = 2. * (_args[i+1] - _args[i-1]);
+                rhs(i-1) = 6. * ( (_vals[i+1] - _vals[i]) / (_args[i+1] - _args[i]) -
+                                  (_vals[i] - _vals[i-1]) / (_args[i] - _args[i-1]) );
+            }
+            tmv::Vector<double> solution(_n-2);
+            solution = rhs / M;   // solve the tridiagonal system of equations
+            for (int i=1; i<=_n-2; i++) {
+                _y2[i] = solution[i-1];
+            }
+#else
+            // Eigen doesn't have a BandMatrix class (at least not one that is functional)
+            // But in this case, the band matrix is so simple and stable (diagonal dominant)
+            // that we can just use the Thomas algorithm to solve it directly.
+            // https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
+            std::vector<double> c(_n-3);  // Just need a single temporary vector.
+            for (int i=1; i<=_n-2; i++) {
+                _y2[i] = 6. * ( (_vals[i+1] - _vals[i]) / (_args[i+1] - _args[i]) -
+                                (_vals[i] - _vals[i-1]) / (_args[i] - _args[i-1]) );
+            }
+            double bb = 2. * (_args[2] - _args[0]);
+            for (int i=1; i<=_n-2; ++i) {
+                _y2[i] /= bb;
+                if (i == _n-2) break;
+                double a = _args[i+1] - _args[i];
+                c[i-1] = a;
+                c[i-1] /= bb;
+                bb = 2. * (_args[i+2] - _args[i]);
+                bb -= a * c[i-1];
+                _y2[i+1] -= a * _y2[i];
+            }
+            for (int i=_n-3; i>0; --i) {
+                _y2[i] -= c[i-1] * _y2[i+1];
+            }
+#endif
+
+        }
+
+    }
+
+    //lookup and interpolate function value.
+    double TableOld::TableOldImpl::lookup(double a) const
+    {
+        dbg<<"lookup "<<a<<std::endl;
+        int i = _args.upperIndex(a);
+        dbg<<"i = "<<i<<std::endl;
+        double val = (this->*interpolate)(a, i);
+        dbg<<"val = "<<val<<std::endl;
+        return val;
+    }
+
+    double TableOld::TableOldImpl::linearInterpolate(double a, int i) const
+    {
+        double ax = (_args[i] - a) / (_args[i] - _args[i-1]);
+        double bx = 1.0 - ax;
+        return _vals[i]*bx + _vals[i-1]*ax;
+    }
+
+    double TableOld::TableOldImpl::floorInterpolate(double a, int i) const
+    {
+        // On entry, it is only guaranteed that _args[i-1] <= a <= _args[i].
+        // Normally those ='s are ok, but for floor and ceil we make the extra
+        // check to see if we should choose the opposite bound.
+        if (a == _args[i]) i++;
+        return _vals[i-1];
+    }
+
+    double TableOld::TableOldImpl::ceilInterpolate(double a, int i) const
+    {
+        if (a == _args[i-1]) i--;
+        return _vals[i];
+    }
+
+    double TableOld::TableOldImpl::nearestInterpolate(double a, int i) const
+    {
+        if ((a - _args[i-1]) < (_args[i] - a)) i--;
+        return _vals[i];
+    }
+
+    double TableOld::TableOldImpl::splineInterpolate(double a, int i) const
+    {
+#if 0
+        // Direct calculation saved for comparison:
+        double h = _args[i] - _args[i-1];
+        double aa = (_args[i] - a)/h;
+        double bb = 1. - aa;
+        return aa*_vals[i-1] +bb*_vals[i] +
+            ((aa*aa*aa-aa)*_y2[i-1]+(bb*bb*bb-bb)*_y2[i]) *
+            (h*h)/6.0;
+#else
+        // Factor out h factors, so only need 1 division by h.
+        // Also, use the fact that bb = h-aa to simplify the calculation.
+
+        double h = _args[i] - _args[i-1];
+        double aa = (_args[i] - a);
+        double bb = h-aa;
+        return ( aa*_vals[i-1] + bb*_vals[i] -
+                 (1./6.) * aa * bb * ( (aa+h)*_y2[i-1] +
+                                       (bb+h)*_y2[i]) ) / h;
+#endif
+    }
+
+
+
+    // TableOld
+
+    TableOld::TableOld(const double* args, const double* vals, int N, TableOld::interpolant in)
+    { _pimpl.reset(new TableOldImpl(args, vals, N, in)); }
+
+    double TableOld::argMin() const
+    { return _pimpl->argMin(); }
+
+    double TableOld::argMax() const
+    { return _pimpl->argMax(); }
+
+    size_t TableOld::size() const
+    { return _pimpl->size(); }
+
+    //lookup and interpolate function value.
+    double TableOld::operator()(double a) const
+    {
+        if (a<argMin() || a>argMax()) return 0.;
+        else return _pimpl->lookup(a);
+    }
+
+    //lookup and interpolate function value.
+    double TableOld::lookup(double a) const
+    { return _pimpl->lookup(a); }
+
+    //lookup and interpolate an array of function values.
+    void TableOld::interpMany(const double* argvec, double* valvec, int N) const
+    {
+        for (int k=0; k<N; k++) {
+            valvec[k] = _pimpl->lookup(argvec[k]);
+        }
+    }
+
+    void TableOldBuilder::finalize()
+    {
+        _pimpl.reset(new TableOldImpl(&_xvec[0], &_fvec[0], _xvec.size(), _in));
+        _final = true;
+    }
+
+
     // Table2DOldImpl
     class Table2DOld::Table2DOldImpl
     {

@@ -33,12 +33,9 @@
 
 
 namespace galsim {
+    class Interpolant;
 
-    /**
-     * @brief A class to represent lookup tables for a function y = f(x).
-     */
-    class Table:
-        public FluxDensity
+    class Table : public FluxDensity
     {
     public:
         enum interpolant { linear, floor, ceil, nearest, spline };
@@ -60,11 +57,13 @@ namespace galsim {
         /// interp many values at once
         void interpMany(const double* argvec, double* valvec, int N) const;
 
+        class TableImpl;
     protected:
+        shared_ptr<TableImpl> _pimpl;
+
         Table() {}  // TableBuilder needs this, since it delays making the _pimpl.
 
-        class TableImpl;
-        shared_ptr<TableImpl> _pimpl;
+        void _makeImpl(const double* args, const double* vals, int N, interpolant in);
     };
 
     // This version keeps its own storage of the arg/val arrays.
@@ -103,7 +102,6 @@ namespace galsim {
         std::vector<double> _fvec;
     };
 
-    class Interpolant;
     /**
      * @brief A class to represent lookup tables for a function z = f(x, y).
      */

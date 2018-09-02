@@ -22,6 +22,28 @@
 
 namespace galsim {
 
+    static TableOld* MakeTableOld(size_t iargs, size_t ivals, int N, const char* interp_c)
+    {
+        const double* args = reinterpret_cast<double*>(iargs);
+        const double* vals = reinterpret_cast<double*>(ivals);
+        std::string interp(interp_c);
+
+        TableOld::interpolant i = TableOld::linear;
+        if (interp == "spline") i = TableOld::spline;
+        else if (interp == "floor") i = TableOld::floor;
+        else if (interp == "ceil") i = TableOld::ceil;
+        else if (interp == "nearest") i = TableOld::nearest;
+
+        return new TableOld(args, vals, N, i);
+    }
+
+    static void InterpMany(const TableOld& table, size_t iargs, size_t ivals, int N)
+    {
+        const double* args = reinterpret_cast<const double*>(iargs);
+        double* vals = reinterpret_cast<double*>(ivals);
+        table.interpMany(args, vals, N);
+    }
+
     static Table2DOld* MakeTable2DOld(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
                                 const char* interp_c)
     {
@@ -64,6 +86,11 @@ namespace galsim {
 
     void pyExportTableOld(PY_MODULE& _galsim)
     {
+        py::class_<TableOld>(GALSIM_COMMA "_LookupTableOld" BP_NOINIT)
+            .def(PY_INIT(&MakeTableOld))
+            .def("interp", &TableOld::lookup)
+            .def("interpMany", &InterpMany);
+
         py::class_<Table2DOld>(GALSIM_COMMA "_LookupTable2DOld" BP_NOINIT)
             .def(PY_INIT(&MakeTable2DOld))
             .def("interp", &Table2DOld::lookup)

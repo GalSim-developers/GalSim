@@ -34,6 +34,75 @@
 namespace galsim {
 
     /**
+     * @brief A class to represent lookup tables for a function y = f(x).
+     */
+    class TableOld:
+        public FluxDensity
+    {
+    public:
+        enum interpolant { linear, floor, ceil, nearest, spline };
+
+        /// TableOld from args, vals
+        TableOld(const double* args, const double* vals, int N, interpolant in);
+
+        double argMin() const;
+        double argMax() const;
+        size_t size() const;
+
+        /// interp, return double(0) if beyond bounds
+        /// This is a virtual function from FluxDensity, which lets a TableOld be a FluxDensity.
+        double operator()(double a) const;
+
+        /// interp, but exception if beyond bounds
+        double lookup(double a) const;
+
+        /// interp many values at once
+        void interpMany(const double* argvec, double* valvec, int N) const;
+
+    protected:
+        TableOld() {}  // TableOldBuilder needs this, since it delays making the _pimpl.
+
+        class TableOldImpl;
+        shared_ptr<TableOldImpl> _pimpl;
+    };
+
+    // This version keeps its own storage of the arg/val arrays.
+    // Use it by successively adding entries, which must be in increasing order of x.
+    // Then when done, call finalize() to build up the lookup table.
+    class TableOldBuilder:
+        public TableOld
+    {
+    public:
+        /// TableOld from args, vals
+        TableOldBuilder(interpolant in): _final(false), _in(in) {}
+
+        bool finalized() const { return _final; }
+
+        double lookup(double a) const
+        {
+            assert(_final);
+            return TableOld::lookup(a);
+        }
+
+        /// Insert an (x, y(x)) pair into the table.
+        void addEntry(double x, double f)
+        {
+            assert(!_final);
+            _xvec.push_back(x);
+            _fvec.push_back(f);
+        }
+
+        void finalize();
+
+    private:
+
+        bool _final;
+        interpolant _in;
+        std::vector<double> _xvec;
+        std::vector<double> _fvec;
+    };
+
+    /**
      * @brief A class to represent lookup tables for a function z = f(x, y).
      */
     class Table2DOld

@@ -768,6 +768,195 @@ class LookupTable2D(object):
         self.__dict__ = d
 
 
+class LookupTableOld(object):
+    def __init__(self, x, f, interpolant=None, x_log=False, f_log=False):
+        self.x_log = x_log
+        self.f_log = f_log
+
+        # check for proper interpolant
+        if interpolant is None:
+            interpolant = 'spline'
+        else:
+            if interpolant not in ('spline', 'linear', 'ceil', 'floor', 'nearest'):
+                raise GalSimValueError("Unknown interpolant", interpolant,
+                                       ('spline', 'linear', 'ceil', 'floor', 'nearest'))
+        self.interpolant = interpolant
+
+        # Sanity checks
+        if len(x) != len(f):
+            raise GalSimIncompatibleValuesError("Input array lengths don't match", x=x, f=f)
+        if interpolant == 'spline' and len(x) < 3:
+            raise GalSimValueError("Input arrays too small to spline interpolate", x)
+        if interpolant in ('linear', 'ceil', 'floor', 'nearest') and len(x) < 2:
+            raise GalSimValueError("Input arrays too small to interpolate", x)
+
+        # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
+        # lists, tuples).  Also make sure the dtype is float
+        x = np.asarray(x, dtype=float)
+        f = np.asarray(f, dtype=float)
+        s = np.argsort(x)
+        self.x = np.ascontiguousarray(x[s])
+        self.f = np.ascontiguousarray(f[s])
+
+        self._x_min = self.x[0]
+        self._x_max = self.x[-1]
+        if self._x_min == self._x_max:
+            raise GalSimValueError("All x values are equal", x)
+        if self.x_log and self.x[0] <= 0.:
+            raise GalSimValueError("Cannot interpolate in log(x) when table contains x<=0.", x)
+        if self.f_log and np.any(self.f <= 0.):
+            raise GalSimValueError("Cannot interpolate in log(f) when table contains f<=0.", f)
+
+    @lazy_property
+    def _tab(self):
+        # Store these as attributes, so don't need to worry about C++ layer persisting them.
+        self._x = self.x
+        self._f = self.f
+        if self.x_log: self._x = np.log(self._x)
+        if self.f_log: self._f = np.log(self._f)
+
+        with convert_cpp_errors():
+            return _galsim._LookupTableOld(self._x.ctypes.data, self._f.ctypes.data,
+                                        len(self._x), self.interpolant)
+
+    @property
+    def x_min(self): return self._x_min
+    @property
+    def x_max(self): return self._x_max
+
+    def __len__(self): return len(self.x)
+
+    def __call__(self, x):
+        # Check that all x values are in the allowed range
+        self._check_range(x)
+
+        # Handle the log(x) if necessary
+        if self.x_log:
+            x = np.log(x)
+
+        x = np.asarray(x)
+        if x.shape == ():
+            f = self._tab.interp(float(x))
+        else:
+            dimen = len(x.shape)
+            if dimen > 1:
+                f = np.empty_like(x.ravel(), dtype=float)
+                xx = x.astype(float,copy=False).ravel()
+                self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+                f = f.reshape(x.shape)
+            else:
+                f = np.empty_like(x, dtype=float)
+                xx = x.astype(float,copy=False)
+                self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+
+        # Handle the log(f) if necessary
+        if self.f_log:
+            f = np.exp(f)
+        return f
+
+    def _check_range(self, x):
+        slop = (self.x_max - self.x_min) * 1.e-6
+        if np.min(x) < self.x_min - slop:
+            raise GalSimRangeError("x value(s) below the range of the LookupTable.",
+                                   x, self.x_min, self.x_max)
+        if np.max(x) > self.x_max + slop:
+            raise GalSimRangeError("x value(s) above the range of the LookupTable.",
+                                   x, self.x_min, self.x_max)
+
+    def getArgs(self):
+        return self.x
+
+    def getVals(self):
+        return self.f
+
+    def getInterp(self):
+        return self.interpolant
+
+    def isLogX(self):
+        return self.x_log
+
+    def isLogF(self):
+        return self.f_log
+
+    def __eq__(self, other):
+        return (isinstance(other, LookupTableOld) and
+                np.array_equal(self.x,other.x) and
+                np.array_equal(self.f,other.f) and
+                self.x_log == other.x_log and
+                self.f_log == other.f_log and
+                self.interpolant == other.interpolant)
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self):
+        # Cache this in case self.x, self.f are long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.LookupTableOld", tuple(self.x), tuple(self.f), self.x_log,
+                               self.f_log, self.interpolant))
+        return self._hash
+
+
+    def __repr__(self):
+        return 'galsim.LookupTableOld(x=array(%r), f=array(%r), interpolant=%r, x_log=%r, f_log=%r)'%(
+            self.x.tolist(), self.f.tolist(), self.interpolant, self.x_log, self.f_log)
+
+    def __str__(self):
+        s = 'galsim.LookupTableOld(x=[%s,...,%s], f=[%s,...,%s]'%(
+            self.x[0], self.x[-1], self.f[0], self.f[-1])
+        if self.interpolant != 'spline':
+            s += ', interpolant=%r'%(self.interpolant)
+        if self.x_log:
+            s += ', x_log=True'
+        if self.f_log:
+            s += ', f_log=True'
+        s += ')'
+        return s
+
+    @classmethod
+    def from_file(cls, file_name, interpolant='spline', x_log=False, f_log=False, amplitude=1.0):
+        # We don't require pandas as a dependency, but if it's available, this is much faster.
+        # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
+        CParserError = AttributeError # In case we don't get to the line below where we import
+                                      # it from pandas.parser
+        try:
+            import pandas
+            try:
+                # version >= 0.20
+                from pandas.io.common import CParserError
+            except ImportError:
+                # version < 0.20
+                from pandas.parser import CParserError
+            data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
+            data = data.values.transpose()
+        except (ImportError, AttributeError, CParserError): # pragma: no cover
+            data = np.loadtxt(file_name).transpose()
+        if data.shape[0] != 2:  # pragma: no cover
+            raise GalSimValueError("File provided for LookupTableOld does not have 2 columns",
+                                   file_name)
+        x=data[0]
+        f=data[1]
+        if amplitude != 1.0:
+            f[:] *= amplitude
+        return LookupTableOld(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
+
+    @classmethod
+    def from_func(cls, func, x_min, x_max, npoints=2000, interpolant='spline',
+                  x_log=False, f_log=False):
+        if x_log:
+            x = np.exp(np.linspace(np.log(x_min), np.log(x_max), npoints))
+        else:
+            x = np.linspace(x_min, x_max, npoints)
+        f = np.array([func(xx) for xx in x])
+        return cls(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_tab',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+
 class LookupTable2DOld(object):
     def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
         if edge_mode not in ('raise', 'wrap', 'constant'):

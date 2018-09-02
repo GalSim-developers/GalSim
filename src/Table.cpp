@@ -140,63 +140,136 @@ namespace galsim {
         }
     }
 
-    // TableImpl
-    class Table::TableImpl
-    {
+    // The hierarchy for TableImpl looks like:
+    // TableImpl <- ABC
+    // TCRTP<T> : TableImpl <- curiously recurring template pattern
+    // TLinearInterp : TCRTP<TLinearInterp>
+    // ... similar, Floor, Ceil, Nearest, Spline
+    // TInterpolant<interpolant> : TCRTP<TInterplant<interpolant>> <- Use Interpolant
+
+    class Table::TableImpl {
     public:
-        TableImpl(const double* args, const double* vals, int N, Table::interpolant in);
+        virtual double lookup(double a) const = 0;
+        virtual void interpMany(const double* argvec, double* valvec, int N) const = 0;
+        virtual double argMin() const = 0;
+        virtual double argMax() const = 0;
+        virtual size_t size() const = 0;
+    };
 
-        double argMin() const { return _args.front(); }
-        double argMax() const { return _args.back(); }
-        size_t size() const { return _n; }
 
-        double lookup(double a) const;
+    template<class T>
+    class TCRTP : public Table::TableImpl {
+    public:
+        TCRTP(const double* args, const double* vals, int N) :
+            _args(args, N), _n(N), _vals(vals) {}
+
+        double lookup(double a) const override {
+            int i = _args.upperIndex(a);
+            return static_cast<const T*>(this)->interp(a, i);
+        }
+
+        void interpMany(const double* xvec, double* valvec, int N) const override {
+            for (int k=0; k<N; k++) {
+                int i = _args.upperIndex(xvec[k]);
+                valvec[k] = static_cast<const T*>(this)->interp(xvec[k], i);
+            }
+        }
+
+        double argMin() const override { return _args.front(); }
+        double argMax() const override { return _args.back(); }
+        size_t size() const override { return _args.size(); }
+
+    protected:
+        ArgVec _args;
+        const int _n;
+        const double* _vals;
+    };
+
+
+    class TFloor : public TCRTP<TFloor> {
+    public:
+        using TCRTP::TCRTP;
+
+        double interp(double a, int i) const {
+            // On entry, it is only guaranteed that _args[i-1] <= a <= _args[i].
+            // Normally those ='s are ok, but for floor and ceil we make the extra
+            // check to see if we should choose the opposite bound.
+            if (a == _args[i]) i++;
+            return _vals[i-1];
+        }
+    };
+
+
+    class TCeil : public TCRTP<TCeil> {
+    public:
+        using TCRTP::TCRTP;
+
+        double interp(double a, int i) const {
+            if (a == _args[i-1]) i--;
+            return _vals[i];
+        }
+    };
+
+
+    class TNearest : public TCRTP<TNearest> {
+    public:
+        using TCRTP::TCRTP;
+
+        double interp(double a, int i) const {
+            if ((a - _args[i-1]) < (_args[i] - a)) i--;
+            return _vals[i];
+        }
+    };
+
+
+    class TLinear : public TCRTP<TLinear> {
+    public:
+        using TCRTP::TCRTP;
+
+        double interp(double a, int i) const {
+            double ax = (_args[i] - a) / (_args[i] - _args[i-1]);
+            double bx = 1.0 - ax;
+            return _vals[i]*bx + _vals[i-1]*ax;
+        }
+    };
+
+
+    class TSpline : public TCRTP<TSpline> {
+    public:
+        TSpline(const double* args, const double* vals, int N) :
+            TCRTP<TSpline>(args, vals, N)
+        {
+            setupSpline();
+        }
+
+        double interp(double a, int i) const {
+#if 0
+            // Direct calculation saved for comparison:
+            double h = _args[i] - _args[i-1];
+            double aa = (_args[i] - a)/h;
+            double bb = 1. - aa;
+            return aa*_vals[i-1] +bb*_vals[i] +
+                ((aa*aa*aa-aa)*_y2[i-1]+(bb*bb*bb-bb)*_y2[i]) *
+                (h*h)/6.0;
+#else
+            // Factor out h factors, so only need 1 division by h.
+            // Also, use the fact that bb = h-aa to simplify the calculation.
+
+            double h = _args[i] - _args[i-1];
+            double aa = (_args[i] - a);
+            double bb = h-aa;
+            return ( aa*_vals[i-1] + bb*_vals[i] -
+                     (1./6.) * aa * bb * ( (aa+h)*_y2[i-1] +
+                                           (bb+h)*_y2[i]) ) / h;
+#endif
+        }
 
     private:
-        Table::interpolant _iType;
-        ArgVec _args;
-        const double* _vals;
-        int _n;
         std::vector<double> _y2;
-
-        typedef double (TableImpl::*MemFn)(double x, int i) const;
-        MemFn interpolate;
-        double linearInterpolate(double a, int i) const;
-        double floorInterpolate(double a, int i) const;
-        double ceilInterpolate(double a, int i) const;
-        double nearestInterpolate(double a, int i) const;
-        double splineInterpolate(double a, int i) const;
-
         void setupSpline();
     };
 
-    Table::TableImpl::TableImpl(const double* args, const double* vals, int N,
-                                Table::interpolant in):
-        _iType(in), _args(args, N), _vals(vals), _n(N)
-    {
-        switch (_iType) {
-          case Table::linear:
-               interpolate = &TableImpl::linearInterpolate;
-               break;
-          case Table::floor:
-               interpolate = &TableImpl::floorInterpolate;
-               break;
-          case Table::ceil:
-               interpolate = &TableImpl::ceilInterpolate;
-               break;
-          case Table::nearest:
-               interpolate = &TableImpl::nearestInterpolate;
-               break;
-          case Table::spline:
-               interpolate = &TableImpl::splineInterpolate;
-               break;
-          default:
-               throw std::runtime_error("invalid interpolation method");
-        }
-        if (_iType == Table::spline) setupSpline();
-    }
-
-    void Table::TableImpl::setupSpline()
+    void TSpline::setupSpline()
     {
         /**
          * Calculate the 2nd derivatives of the natural cubic spline.
@@ -265,79 +338,37 @@ namespace galsim {
                 _y2[i] -= c[i-1] * _y2[i+1];
             }
 #endif
-
         }
-
     }
-
-    //lookup and interpolate function value.
-    double Table::TableImpl::lookup(double a) const
-    {
-        dbg<<"lookup "<<a<<std::endl;
-        int i = _args.upperIndex(a);
-        dbg<<"i = "<<i<<std::endl;
-        double val = (this->*interpolate)(a, i);
-        dbg<<"val = "<<val<<std::endl;
-        return val;
-    }
-
-    double Table::TableImpl::linearInterpolate(double a, int i) const
-    {
-        double ax = (_args[i] - a) / (_args[i] - _args[i-1]);
-        double bx = 1.0 - ax;
-        return _vals[i]*bx + _vals[i-1]*ax;
-    }
-
-    double Table::TableImpl::floorInterpolate(double a, int i) const
-    {
-        // On entry, it is only guaranteed that _args[i-1] <= a <= _args[i].
-        // Normally those ='s are ok, but for floor and ceil we make the extra
-        // check to see if we should choose the opposite bound.
-        if (a == _args[i]) i++;
-        return _vals[i-1];
-    }
-
-    double Table::TableImpl::ceilInterpolate(double a, int i) const
-    {
-        if (a == _args[i-1]) i--;
-        return _vals[i];
-    }
-
-    double Table::TableImpl::nearestInterpolate(double a, int i) const
-    {
-        if ((a - _args[i-1]) < (_args[i] - a)) i--;
-        return _vals[i];
-    }
-
-    double Table::TableImpl::splineInterpolate(double a, int i) const
-    {
-#if 0
-        // Direct calculation saved for comparison:
-        double h = _args[i] - _args[i-1];
-        double aa = (_args[i] - a)/h;
-        double bb = 1. - aa;
-        return aa*_vals[i-1] +bb*_vals[i] +
-            ((aa*aa*aa-aa)*_y2[i-1]+(bb*bb*bb-bb)*_y2[i]) *
-            (h*h)/6.0;
-#else
-        // Factor out h factors, so only need 1 division by h.
-        // Also, use the fact that bb = h-aa to simplify the calculation.
-
-        double h = _args[i] - _args[i-1];
-        double aa = (_args[i] - a);
-        double bb = h-aa;
-        return ( aa*_vals[i-1] + bb*_vals[i] -
-                 (1./6.) * aa * bb * ( (aa+h)*_y2[i-1] +
-                                       (bb+h)*_y2[i]) ) / h;
-#endif
-    }
-
-
 
     // Table
 
-    Table::Table(const double* args, const double* vals, int N, Table::interpolant in)
-    { _pimpl.reset(new TableImpl(args, vals, N, in)); }
+    Table::Table(const double* args, const double* vals, int N, Table::interpolant in) {
+        _makeImpl(args, vals, N, in);
+    }
+
+    void Table::_makeImpl(const double* args, const double* vals, int N,
+                                 Table::interpolant in) {
+        switch(in) {
+            case floor:
+                _pimpl.reset(new TFloor(args, vals, N));
+                break;
+            case ceil:
+                _pimpl.reset(new TCeil(args, vals, N));
+                break;
+            case nearest:
+                _pimpl.reset(new TNearest(args, vals, N));
+                break;
+            case linear:
+                _pimpl.reset(new TLinear(args, vals, N));
+                break;
+            case spline:
+                _pimpl.reset(new TSpline(args, vals, N));
+                break;
+            default:
+                throw std::runtime_error("invalid interpolation method");
+        }
+    }
 
     double Table::argMin() const
     { return _pimpl->argMin(); }
@@ -362,14 +393,12 @@ namespace galsim {
     //lookup and interpolate an array of function values.
     void Table::interpMany(const double* argvec, double* valvec, int N) const
     {
-        for (int k=0; k<N; k++) {
-            valvec[k] = _pimpl->lookup(argvec[k]);
-        }
+        _pimpl->interpMany(argvec, valvec, N);
     }
 
     void TableBuilder::finalize()
     {
-        _pimpl.reset(new TableImpl(&_xvec[0], &_fvec[0], _xvec.size(), _in));
+        _makeImpl(&_xvec[0], &_fvec[0], _xvec.size(), _in);
         _final = true;
     }
 
@@ -378,7 +407,7 @@ namespace galsim {
     // T2DCRTP<T> : Table2DImpl <- curiously recurring template pattern
     // T2DLinearInterp : T2DCRTP<T2DLinearInterp>
     // ... similar, Floor, Ceil, Nearest, Cubic
-    // T2DInterpInterp<interpolant> : T2DCRTP<T2DInterpInterp<interpolant>>  <- Use Interpolant2d classes
+    // T2DInterpolant2D<interpolant> : T2DCRTP<T2DInterpolant2D<interpolant>> <- Use Interpolant2d
 
     class Table2D::Table2DImpl {
     public:
