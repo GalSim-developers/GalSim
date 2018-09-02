@@ -38,10 +38,11 @@ namespace galsim {
     class Table : public FluxDensity
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest, spline };
+        enum interpolant { linear, floor, ceil, nearest, spline, interpolant1d };
 
         /// Table from args, vals
         Table(const double* args, const double* vals, int N, interpolant in);
+        Table(const double* args, const double* vals, int N, const Interpolant* interp1d);
 
         double argMin() const;
         double argMax() const;
@@ -64,6 +65,7 @@ namespace galsim {
         Table() {}  // TableBuilder needs this, since it delays making the _pimpl.
 
         void _makeImpl(const double* args, const double* vals, int N, interpolant in);
+        void _makeImpl(const double* args, const double* vals, int N, const Interpolant* interp1d);
     };
 
     // This version keeps its own storage of the arg/val arrays.
@@ -73,8 +75,9 @@ namespace galsim {
         public Table
     {
     public:
-        /// Table from args, vals
         TableBuilder(interpolant in): _final(false), _in(in) {}
+        TableBuilder(interpolant in, const Interpolant* interp1d) :
+            _final(false), _in(in), _interp1d(interp1d) {}
 
         bool finalized() const { return _final; }
 
@@ -98,6 +101,7 @@ namespace galsim {
 
         bool _final;
         interpolant _in;
+        const Interpolant* _interp1d;
         std::vector<double> _xvec;
         std::vector<double> _fvec;
     };

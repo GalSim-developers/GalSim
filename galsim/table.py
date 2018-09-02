@@ -89,17 +89,15 @@ class LookupTable(object):
                          that all inputs / outputs will still be f, it's just a question of how the
                          interpolation is done. [default: False]
     """
-    def __init__(self, x, f, interpolant=None, x_log=False, f_log=False):
+    def __init__(self, x, f, interpolant='spline', x_log=False, f_log=False):
         self.x_log = x_log
         self.f_log = f_log
 
-        # check for proper interpolant
-        if interpolant is None:
-            interpolant = 'spline'
+        # Check if interpolant is a string that we understand.  If not, try convert_interpolant
+        if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'spline'):
+            self._interp1d = None
         else:
-            if interpolant not in ('spline', 'linear', 'ceil', 'floor', 'nearest'):
-                raise GalSimValueError("Unknown interpolant", interpolant,
-                                       ('spline', 'linear', 'ceil', 'floor', 'nearest'))
+            self._interp1d = convert_interpolant(interpolant)
         self.interpolant = interpolant
 
         # Sanity checks
@@ -118,6 +116,13 @@ class LookupTable(object):
         self.x = np.ascontiguousarray(x[s])
         self.f = np.ascontiguousarray(f[s])
 
+        dx = np.diff(self.x)
+        # Need to ensure equal-spaced arrays if using a galsim.Interpolant
+        if self._interp1d is not None and not np.allclose(dx, dx[0]):
+            raise GalSimIncompatibleValuesError(
+            "Cannot use a galsim.Interpolant in LookupTable unless x is"
+            "equally spaced.", interpolant=interpolant, x=x)
+
         self._x_min = self.x[0]
         self._x_max = self.x[-1]
         if self._x_min == self._x_max:
@@ -132,12 +137,16 @@ class LookupTable(object):
         # Store these as attributes, so don't need to worry about C++ layer persisting them.
         self._x = self.x
         self._f = self.f
-        if self.x_log: self._x = np.log(self._x)
-        if self.f_log: self._f = np.log(self._f)
 
         with convert_cpp_errors():
-            return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
-                                        len(self._x), self.interpolant)
+            if self._interp1d is not None:
+                return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
+                                            len(self._x), self._interp1d._i)
+            else:
+                if self.x_log: self._x = np.log(self._x)
+                if self.f_log: self._f = np.log(self._f)
+                return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
+                                            len(self._x), self.interpolant)
 
     @property
     def x_min(self): return self._x_min
@@ -443,7 +452,7 @@ class LookupTable2D(object):
             raise GalSimIncompatibleValuesError(
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
-        # Check if interpolant is a string that we understand, if not, try convert_interpolant
+        # Check if interpolant is a string that we understand.  If not, try convert_interpolant
         if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'cubic', 'cubicConvolve'):
             self._interp2d = None
             padrange = 2 if 'cubic' in interpolant else 1

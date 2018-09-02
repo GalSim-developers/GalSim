@@ -341,10 +341,46 @@ namespace galsim {
         }
     }
 
+    class TGSInterpolant : public TCRTP<TGSInterpolant> {
+    public:
+        TGSInterpolant(const double* args, const double* vals, int N, const Interpolant* interp1d) :
+        TCRTP<TGSInterpolant>(args, vals, N), _interp1d(interp1d) {}
+
+        double interp(double a, int i) const {
+            double dagrid = _args[i] - _args[i-1];
+            double da = (a - _args[i-1])/dagrid;
+
+            int iaMin, iaMax;
+            if (_interp1d->isExactAtNodes()
+                && std::abs(da) < 10.*std::numeric_limits<double>::epsilon()) {
+                    iaMin = iaMax = i-1;
+            } else {
+                iaMin = i-1 + int(std::ceil(da-_interp1d->xrange()));
+                iaMax = i-1 + int(std::floor(da+_interp1d->xrange()));
+            }
+            iaMin = std::max(iaMin, 0);
+            iaMax = std::min(iaMax, _n-1);
+            if (iaMin > iaMax) return 0.0;
+            double sum = 0.0;
+            for(int ia=iaMin; ia<=iaMax; ia++) {
+                sum += _vals[ia] * _interp1d->xval(i-1+da-ia);
+            }
+            return sum;
+        }
+
+    private:
+        const Interpolant* _interp1d;
+    };
+
+
     // Table
 
     Table::Table(const double* args, const double* vals, int N, Table::interpolant in) {
         _makeImpl(args, vals, N, in);
+    }
+
+    Table::Table(const double* args, const double* vals, int N, const Interpolant* interp1d) {
+        _makeImpl(args, vals, N, interp1d);
     }
 
     void Table::_makeImpl(const double* args, const double* vals, int N,
@@ -368,6 +404,11 @@ namespace galsim {
             default:
                 throw std::runtime_error("invalid interpolation method");
         }
+    }
+
+    void Table::_makeImpl(const double* args, const double* vals, int N,
+                          const Interpolant* interp1d) {
+        _pimpl.reset(new TGSInterpolant(args, vals, N, interp1d));
     }
 
     double Table::argMin() const
@@ -398,7 +439,10 @@ namespace galsim {
 
     void TableBuilder::finalize()
     {
-        _makeImpl(&_xvec[0], &_fvec[0], _xvec.size(), _in);
+        if (_in == Table::interpolant1d)
+            _makeImpl(&_xvec[0], &_fvec[0], _xvec.size(), _interp1d);
+        else
+            _makeImpl(&_xvec[0], &_fvec[0], _xvec.size(), _in);
         _final = true;
     }
 

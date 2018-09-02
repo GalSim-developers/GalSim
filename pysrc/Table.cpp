@@ -38,6 +38,14 @@ namespace galsim {
         return new Table(args, vals, N, i);
     }
 
+    static Table* MakeGSInterpTable(size_t iargs, size_t ivals, int N, const Interpolant* gsinterp)
+    {
+        const double* args = reinterpret_cast<double*>(iargs);
+        const double* vals = reinterpret_cast<double*>(ivals);
+
+        return new Table(args, vals, N, gsinterp);
+    }
+
     static void InterpMany(const Table& table, size_t iargs, size_t ivals, int N)
     {
         const double* args = reinterpret_cast<const double*>(iargs);
@@ -120,6 +128,7 @@ namespace galsim {
     {
         py::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
             .def(PY_INIT(&MakeTable))
+            .def(PY_INIT(&MakeGSInterpTable))
             .def("interp", &Table::lookup)
             .def("interpMany", &InterpMany);
 
