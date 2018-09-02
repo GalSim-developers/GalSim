@@ -1318,7 +1318,7 @@ def test_periodic():
 
     # If image is too small, can't use periodic boundaries.
     ps.buildGrid(ngrid=5, grid_spacing=0.1, units=galsim.degrees,
-                 rng=galsim.UniformDeviate(314159), interpolant='nearest',
+                 rng=galsim.UniformDeviate(314159), interpolant='lanczos7',
                  kmin_factor=3., kmax_factor=1., get_convergence=True)
     with assert_raises(galsim.GalSimError):
         ps.getShear(pos=(x.flatten(),y.flatten()), units=galsim.degrees,

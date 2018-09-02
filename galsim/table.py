@@ -29,7 +29,7 @@ from .utilities import lazy_property, convert_interpolant
 from .position import PositionD
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
-from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
+from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
 from .interpolant import Interpolant
 
 class LookupTable(object):
@@ -371,6 +371,7 @@ class LookupTable2D(object):
     The `edge_mode` keyword describes how to handle extrapolation beyond the initial input range.
     Possibilities include:
       - 'raise': raise an exception.  (This is the default.)
+      - 'warn': issues a warning, then falls back to edge_mode='constant'.
       - 'constant': Return a constant specified by the `constant` keyword.
       - 'wrap': infinitely wrap the initial range in both directions.
     In order for LookupTable2D to determine the wrapping period when edge_mode='wrap', either the
@@ -420,8 +421,9 @@ class LookupTable2D(object):
     """
     def __init__(self, x, y, f, dfdx=None, dfdy=None, d2fdxdy=None,
                  interpolant='linear', edge_mode='raise', constant=0):
-        if edge_mode not in ('raise', 'wrap', 'constant'):
-            raise GalSimValueError("Unknown edge_mode.", edge_mode, ('raise', 'wrap', 'constant'))
+        if edge_mode not in ('raise', 'warn', 'wrap', 'constant'):
+            raise GalSimValueError("Unknown edge_mode.", edge_mode,
+                                   ('raise', 'warn', 'wrap', 'constant'))
 
         x = np.asarray(x, dtype=float)
         y = np.asarray(y, dtype=float)
@@ -462,6 +464,10 @@ class LookupTable2D(object):
         if self.edge_mode == 'wrap':
             # Can wrap if x and y arrays are equally spaced ...
             if equal_spaced:
+                if 2*padrange > len(x) or 2*padrange > len(y):
+                    raise GalSimValueError(
+                        "Cannot wrap an image which is smaller than the Interpolant",
+                        (x, y, interpolant))
                 # Underlying Table2D requires us to extend x, y, and f.
                 self.xperiod = x[-1]-x[0]+dx[0]
                 self.yperiod = y[-1]-y[0]+dy[0]
@@ -474,6 +480,7 @@ class LookupTable2D(object):
                                y,
                                y[-1]+np.cumsum([dy[0]]*padrange)])
                 f = np.pad(f, [(padrange-1, padrange)]*2, mode='wrap')
+            # Can also wrap non-uniform grids if edges match
             elif (all(f[0] == f[-1]) and all(f[:,0] == f[:,-1])):
                 self.x0 = x[0]
                 self.y0 = y[0]
@@ -558,23 +565,23 @@ class LookupTable2D(object):
     def _inbounds(self, x, y):
         """Return whether or not *all* coords specified by x and y are in bounds of the original
         interpolated array."""
+        # Only used if edge_mode != 'wrap', so original x/y arrays are unmodified.
         return (np.min(x) >= self.x[0] and np.max(x) <= self.x[-1] and
                 np.min(y) >= self.y[0] and np.max(y) <= self.y[-1])
 
     def _wrap_args(self, x, y):
         """Wrap points back into the fundamental period."""
+        # Original x and y may have been modified, so need to use x0 and xperiod attributes here.
         return ((x-self.x0) % self.xperiod + self.x0,
                 (y-self.y0) % self.yperiod + self.y0)
 
     @property
     def _bounds(self):
+        # Only meaningful if edge_mode is 'raise' or 'warn', in which case original x/y arrays are
+        # unmodified.
         return BoundsD(self.x[0], self.x[-1], self.y[0], self.y[-1])
 
-    def _call_raise(self, x, y):
-        if not self._inbounds(x, y):
-            raise GalSimBoundsError("Extrapolating beyond input range.",
-                                    PositionD(x,y), self._bounds)
-
+    def _call_inbounds(self, x, y):
         if isinstance(x, numbers.Real):
             return self._tab.interp(x, y)
         else:
@@ -584,10 +591,6 @@ class LookupTable2D(object):
             self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx))
             f = f.reshape(x.shape)
             return f
-
-    def _call_wrap(self, x, y):
-        x, y = self._wrap_args(x, y)
-        return self._call_raise(x, y)
 
     def _call_constant(self, x, y):
         if isinstance(x, numbers.Real):
@@ -609,19 +612,33 @@ class LookupTable2D(object):
             f[good] = tmp
             return f
 
+    def _call_raise(self, x, y):
+        if not self._inbounds(x, y):
+            raise GalSimBoundsError("Extrapolating beyond input range.",
+                                    PositionD(x,y), self._bounds)
+        return self._call_inbounds(x, y)
+
+    def _call_warn(self, x, y):
+        if not self._inbounds(x, y):
+            galsim_warn("Extrapolating beyond input range. %r not in %r".format(
+                        PositionD(x,y), self._bounds))
+        return self._call_constant(x, y)
+
+    def _call_wrap(self, x, y):
+        x, y = self._wrap_args(x, y)
+        return self._call_inbounds(x, y)
+
     def __call__(self, x, y):
         if self.edge_mode == 'raise':
             return self._call_raise(x, y)
+        if self.edge_mode == 'warn':
+            return self._call_warn(x, y)
         elif self.edge_mode == 'wrap':
             return self._call_wrap(x, y)
         else: # constant
             return self._call_constant(x, y)
 
-    def _gradient_raise(self, x, y):
-        if not self._inbounds(x, y):
-            raise GalSimBoundsError("Extrapolating beyond input range.",
-                                    PositionD(x,y), self._bounds)
-
+    def _gradient_inbounds(self, x, y):
         if isinstance(x, numbers.Real):
             grad = np.empty(2, dtype=float)
             self._tab.gradient(x, y, grad.ctypes.data)
@@ -637,9 +654,21 @@ class LookupTable2D(object):
             dfdy = dfdy.reshape(x.shape)
             return dfdx, dfdy
 
+    def _gradient_raise(self, x, y):
+        if not self._inbounds(x, y):
+            raise GalSimBoundsError("Extrapolating beyond input range.",
+                                    PositionD(x,y), self._bounds)
+        return self._gradient_inbounds(x, y)
+
+    def _gradient_warn(self, x, y):
+        if not self._inbounds(x, y):
+            galsim_warn("Extrapolating beyond input range. %r not in %r".format(
+                        PositionD(x,y), self._bounds))
+        return _gradient_constant(x, y)
+
     def _gradient_wrap(self, x, y):
         x, y = self._wrap_args(x, y)
-        return self._gradient_raise(x, y)
+        return self._gradient_inbounds(x, y)
 
     def _gradient_constant(self, x, y):
         if isinstance(x, numbers.Real):
@@ -681,6 +710,8 @@ class LookupTable2D(object):
         """
         if self.edge_mode == 'raise':
             return self._gradient_raise(x, y)
+        if self.edge_mode == 'warn':
+            return self._gradient_warn(x, y)
         elif self.edge_mode == 'wrap':
             return self._gradient_wrap(x, y)
         else: # constant
@@ -721,7 +752,8 @@ class LookupTable2D(object):
     def __hash__(self):
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.LookupTable2D", tuple(self.x.ravel()), tuple(self.y.ravel()),
-                               tuple(self.f.ravel()), self.interpolant, self.edge_mode, self.constant,
+                               tuple(self.f.ravel()), self.interpolant, self.edge_mode,
+                               self.constant,
                                tuple(self.dfdx.ravel()) if self.dfdx is not None else None,
                                tuple(self.dfdy.ravel()) if self.dfdy is not None else None,
                                tuple(self.d2fdxdy.ravel()) if self.d2fdxdy is not None else None))
