@@ -449,7 +449,7 @@ namespace galsim {
     // Table2DImpl <- ABC
     // T2DCRTP<T> : Table2DImpl <- curiously recurring template pattern
     // T2DLinearInterp : T2DCRTP<T2DLinearInterp>
-    // ... similar, Floor, Ceil, Nearest, Cubic
+    // ... similar, Floor, Ceil, Nearest, Spline
     // T2DInterpolant2D<interpolant> : T2DCRTP<T2DInterpolant2D<interpolant>> <- Use Interpolant2d
 
     class Table2D::Table2DImpl {
@@ -591,11 +591,11 @@ namespace galsim {
     };
 
 
-    class T2DCubic : public T2DCRTP<T2DCubic> {
+    class T2DSpline : public T2DCRTP<T2DSpline> {
     public:
-        T2DCubic(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
-                 const double* dfdx, const double* dfdy, const double* d2fdxdy) :
-            T2DCRTP<T2DCubic>(xargs, yargs, vals, Nx, Ny), _dfdx(dfdx), _dfdy(dfdy), _d2fdxdy(d2fdxdy) {}
+        T2DSpline(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
+                  const double* dfdx, const double* dfdy, const double* d2fdxdy) :
+            T2DCRTP<T2DSpline>(xargs, yargs, vals, Nx, Ny), _dfdx(dfdx), _dfdy(dfdy), _d2fdxdy(d2fdxdy) {}
 
         double interp(double x, double y, int i, int j) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
@@ -881,8 +881,8 @@ namespace galsim {
                 return std::make_shared<T2DNearest>(xargs, yargs, vals, Nx, Ny);
             case linear:
                 return std::make_shared<T2DLinear>(xargs, yargs, vals, Nx, Ny);
-            case cubic:
-                return std::make_shared<T2DCubic>(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy);
+            case spline:
+                return std::make_shared<T2DSpline>(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy);
             case cubicConvolve:
                 return std::make_shared<T2DCubicConvolution>(xargs, yargs, vals, Nx, Ny);
             case interpolant2d:

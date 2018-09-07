@@ -582,11 +582,10 @@ class LookupTable2D(object):
             if self._interp2d is not None:
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
-                                              'GSInterpolant', self._interp2d._i)
+                                              self._interp2d._i)
             elif self.interpolant == 'spline':
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
-                                              self.interpolant,
                                               self.dfdx.ctypes.data, self.dfdy.ctypes.data,
                                               self.d2fdxdy.ctypes.data)
             else:
