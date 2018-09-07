@@ -79,7 +79,7 @@ namespace galsim {
         const double* dfdy = reinterpret_cast<const double*>(idfdy);
         const double* d2fdxdy = reinterpret_cast<const double*>(id2fdxdy);
 
-        return new Table2D(x, y, vals, Nx, Ny, Table2D::spline, dfdx, dfdy, d2fdxdy);
+        return new Table2D(x, y, vals, Nx, Ny, dfdx, dfdy, d2fdxdy);
     }
 
 
@@ -90,8 +90,7 @@ namespace galsim {
         const double* y = reinterpret_cast<const double*>(iy);
         const double* vals = reinterpret_cast<const double*>(ivals);
 
-        return new Table2D(x, y, vals, Nx, Ny, Table2D::interpolant2d,
-            nullptr, nullptr, nullptr, gsinterp);
+        return new Table2D(x, y, vals, Nx, Ny, gsinterp);
     }
 
 

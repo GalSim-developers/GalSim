@@ -116,11 +116,11 @@ namespace galsim {
 
         /// Table from xargs, yargs, vals
         Table2D(const double* xargs, const double* yargs, const double* vals,
-                int Nx, int Ny, interpolant in,
-                const double* dfdx=nullptr, const double* dfdy=nullptr,
-                const double* d2fdxdy=nullptr,
-                const Interpolant* interp2d=nullptr
-            );
+                int Nx, int Ny, interpolant in);
+        Table2D(const double* xargs, const double* yargs, const double* vals,
+                int Nx, int Ny, const double* dfdx, const double* dfdy, const double* d2fdxdy);
+        Table2D(const double* xargs, const double* yargs, const double* vals,
+                int Nx, int Ny, const Interpolant* interp2d);
 
         /// interp
         double lookup(double x, double y) const;
@@ -137,13 +137,18 @@ namespace galsim {
 
         class Table2DImpl;
     protected:
-        shared_ptr<Table2DImpl> _pimpl;
+        const shared_ptr<Table2DImpl> _pimpl;
 
-        static std::shared_ptr<Table2DImpl> makeImpl(
+        static std::shared_ptr<Table2DImpl> _makeImpl(
             const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny, interpolant in,
-            const double* dfdx, const double* dfdy, const double* d2fdxdy,
-            const Interpolant* interp2d);
+            int Nx, int Ny, interpolant in);
+        static std::shared_ptr<Table2DImpl> _makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny,
+            const double* dfdx, const double* dfdy, const double* d2fdxdy);
+        static std::shared_ptr<Table2DImpl> _makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny, const Interpolant* interp2d);
     };
 }
 

@@ -464,8 +464,8 @@ namespace galsim {
         virtual void gradientMany(const double* xvec, const double* yvec,
                                   double* dfdxvec, double* dfdyvec, int N) const = 0;
     protected:
-        ArgVec _xargs;
-        ArgVec _yargs;
+        const ArgVec _xargs;
+        const ArgVec _yargs;
         const double* _vals;
         const int _ny;
     };
@@ -859,19 +859,26 @@ namespace galsim {
     };
 
 
-    Table2D::Table2D(
-        const double* xargs, const double* yargs, const double* vals,
-        int Nx, int Ny, interpolant in,
-        const double* dfdx, const double* dfdy, const double* d2fdxdy,
-        const Interpolant* interp2d
-    ) : _pimpl(makeImpl(xargs, yargs, vals, Nx, Ny, in, dfdx, dfdy, d2fdxdy, interp2d)) {}
+    Table2D::Table2D(const double* xargs, const double* yargs, const double* vals,
+                     int Nx, int Ny, interpolant in) :
+        _pimpl(_makeImpl(xargs, yargs, vals, Nx, Ny, in)) {}
 
-    std::shared_ptr<Table2D::Table2DImpl> Table2D::makeImpl(
-        const double* xargs, const double* yargs, const double* vals,
-        int Nx, int Ny, interpolant in,
-        const double* dfdx, const double* dfdy, const double* d2fdxdy,
-        const Interpolant* interp2d
-    ) {
+
+    Table2D::Table2D(const double* xargs, const double* yargs, const double* vals,
+                     int Nx, int Ny,
+                     const double* dfdx, const double* dfdy, const double* d2fdxdy) :
+        _pimpl(_makeImpl(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy)) {}
+
+
+    Table2D::Table2D(const double* xargs, const double* yargs, const double* vals,
+                     int Nx, int Ny, const Interpolant* interp2d) :
+        _pimpl(_makeImpl(xargs, yargs, vals, Nx, Ny, interp2d)) {}
+
+
+    std::shared_ptr<Table2D::Table2DImpl> Table2D::_makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny, interpolant in)
+    {
         switch(in) {
             case floor:
                 return std::make_shared<T2DFloor>(xargs, yargs, vals, Nx, Ny);
@@ -881,15 +888,26 @@ namespace galsim {
                 return std::make_shared<T2DNearest>(xargs, yargs, vals, Nx, Ny);
             case linear:
                 return std::make_shared<T2DLinear>(xargs, yargs, vals, Nx, Ny);
-            case spline:
-                return std::make_shared<T2DSpline>(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy);
             case cubicConvolve:
                 return std::make_shared<T2DCubicConvolution>(xargs, yargs, vals, Nx, Ny);
-            case interpolant2d:
-                return std::make_shared<T2DInterpolant2D>(xargs, yargs, vals, Nx, Ny, interp2d);
             default:
                 throw std::runtime_error("invalid interpolation method");
         }
+    }
+
+    std::shared_ptr<Table2D::Table2DImpl> Table2D::_makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny,
+            const double* dfdx, const double* dfdy, const double* d2fdxdy)
+    {
+            return std::make_shared<T2DSpline>(xargs, yargs, vals, Nx, Ny, dfdx, dfdy, d2fdxdy);
+    }
+
+    std::shared_ptr<Table2D::Table2DImpl> Table2D::_makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny, const Interpolant* interp2d)
+    {
+            return std::make_shared<T2DInterpolant2D>(xargs, yargs, vals, Nx, Ny, interp2d);
     }
 
     double Table2D::lookup(double x, double y) const {
