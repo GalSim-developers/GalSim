@@ -149,19 +149,27 @@ namespace galsim {
 
     class Table::TableImpl {
     public:
+        TableImpl(const double* args, const double* vals, int N) :
+            _args(args, N), _n(N), _vals(vals) {}
+
         virtual double lookup(double a) const = 0;
         virtual void interpMany(const double* argvec, double* valvec, int N) const = 0;
-        virtual double argMin() const = 0;
-        virtual double argMax() const = 0;
-        virtual size_t size() const = 0;
+
+        double argMin() const { return _args.front(); }
+        double argMax() const { return _args.back(); }
+        size_t size() const { return _args.size(); }
+
+    protected:
+        ArgVec _args;
+        const int _n;
+        const double* _vals;
     };
 
 
     template<class T>
     class TCRTP : public Table::TableImpl {
     public:
-        TCRTP(const double* args, const double* vals, int N) :
-            _args(args, N), _n(N), _vals(vals) {}
+        using Table::TableImpl::TableImpl;
 
         double lookup(double a) const override {
             int i = _args.upperIndex(a);
@@ -174,21 +182,12 @@ namespace galsim {
                 valvec[k] = static_cast<const T*>(this)->interp(xvec[k], i);
             }
         }
-
-        double argMin() const override { return _args.front(); }
-        double argMax() const override { return _args.back(); }
-        size_t size() const override { return _args.size(); }
-
-    protected:
-        ArgVec _args;
-        const int _n;
-        const double* _vals;
     };
 
 
     class TFloor : public TCRTP<TFloor> {
     public:
-        using TCRTP::TCRTP;
+        using TCRTP<TFloor>::TCRTP;
 
         double interp(double a, int i) const {
             // On entry, it is only guaranteed that _args[i-1] <= a <= _args[i].
@@ -202,7 +201,7 @@ namespace galsim {
 
     class TCeil : public TCRTP<TCeil> {
     public:
-        using TCRTP::TCRTP;
+        using TCRTP<TCeil>::TCRTP;
 
         double interp(double a, int i) const {
             if (a == _args[i-1]) i--;
@@ -213,7 +212,7 @@ namespace galsim {
 
     class TNearest : public TCRTP<TNearest> {
     public:
-        using TCRTP::TCRTP;
+        using TCRTP<TNearest>::TCRTP;
 
         double interp(double a, int i) const {
             if ((a - _args[i-1]) < (_args[i] - a)) i--;
@@ -224,7 +223,7 @@ namespace galsim {
 
     class TLinear : public TCRTP<TLinear> {
     public:
-        using TCRTP::TCRTP;
+        using TCRTP<TLinear>::TCRTP;
 
         double interp(double a, int i) const {
             double ax = (_args[i] - a) / (_args[i] - _args[i-1]);
@@ -237,7 +236,7 @@ namespace galsim {
     class TSpline : public TCRTP<TSpline> {
     public:
         TSpline(const double* args, const double* vals, int N) :
-            TCRTP<TSpline>(args, vals, N)
+            TCRTP<TSpline>::TCRTP(args, vals, N)
         {
             setupSpline();
         }
@@ -344,7 +343,7 @@ namespace galsim {
     class TGSInterpolant : public TCRTP<TGSInterpolant> {
     public:
         TGSInterpolant(const double* args, const double* vals, int N, const Interpolant* interp1d) :
-        TCRTP<TGSInterpolant>(args, vals, N), _interp1d(interp1d) {}
+            TCRTP<TGSInterpolant>::TCRTP(args, vals, N), _interp1d(interp1d) {}
 
         double interp(double a, int i) const {
             double dagrid = _args[i] - _args[i-1];
@@ -384,7 +383,7 @@ namespace galsim {
     }
 
     void Table::_makeImpl(const double* args, const double* vals, int N,
-                                 Table::interpolant in) {
+                          Table::interpolant in) {
         switch(in) {
             case floor:
                 _pimpl.reset(new TFloor(args, vals, N));
@@ -455,20 +454,27 @@ namespace galsim {
 
     class Table2D::Table2DImpl {
     public:
+        Table2DImpl(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny) :
+            _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny) {}
+
         virtual double lookup(double x, double y) const = 0;
         virtual void interpMany(const double* xvec, const double* yvec, double* valvec,
                                 int N) const = 0;
         virtual void gradient(double x, double y, double& dfdx, double& dfdy) const = 0;
         virtual void gradientMany(const double* xvec, const double* yvec,
                                   double* dfdxvec, double* dfdyvec, int N) const = 0;
+    protected:
+        ArgVec _xargs;
+        ArgVec _yargs;
+        const double* _vals;
+        const int _ny;
     };
 
 
     template<class T>
     class T2DCRTP : public Table2D::Table2DImpl {
     public:
-        T2DCRTP(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny) :
-            _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny) {}
+        using Table2D::Table2DImpl::Table2DImpl;
 
         double lookup(double x, double y) const {
             int i = _xargs.upperIndex(x);
@@ -498,12 +504,6 @@ namespace galsim {
                 static_cast<const T*>(this)->grad(xvec[k], yvec[k], i, j, dfdxvec[k], dfdyvec[k]);
             }
         }
-
-    protected:
-        ArgVec _xargs;
-        ArgVec _yargs;
-        const double* _vals;
-        const int _ny;
     };
 
 
