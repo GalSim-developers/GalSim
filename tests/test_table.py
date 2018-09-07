@@ -129,6 +129,9 @@ def test_table():
     assert_raises(ValueError, galsim.LookupTable, x=[-1,0,1], f=[1,2,3], x_log=True)
     assert_raises(ValueError, galsim.LookupTable, x=[0,1,2], f=[0,1,2], f_log=True)
     assert_raises(ValueError, galsim.LookupTable, x=[0,1,2], f=[2,-1,2], f_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=args2, f=vals2, interpolant=galsim.Linear())
+    assert_raises(ValueError, galsim.LookupTable, x=args1, f=vals1, interpolant=galsim.Linear(),
+                  x_log=True)
 
 
 @timer
