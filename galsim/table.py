@@ -19,7 +19,7 @@
 A few adjustments to galsim.LookupTable at the Python layer, including the
 addition of the docstring and few extra features.
 
-Also, a simple 2D table for gridded input data: LookupTable2D.
+Also, a 2D table for gridded input data: LookupTable2D.
 """
 import numpy as np
 import numbers
@@ -55,9 +55,9 @@ class LookupTable(object):
         ...     [... use val ...]
 
 
-    The default interpolation method is cubic spline interpolation.  This is usually the
-    best choice, but we also provide three other options, which can be specified by
-    the `interpolant` kwarg.  The choices are 'floor', 'ceil', 'linear' and 'spline':
+    The default interpolation method is a natural cubic spline.  This is usually the best choice,
+    but we also provide other options, which can be specified by the `interpolant` kwarg.  The
+    choices include 'floor', 'ceil', 'linear', 'spline', or a galsim.Interpolant object:
 
     - 'floor' takes the value from the previous argument in the table.
     - 'ceil' takes the value from the next argument in the table.
@@ -65,23 +65,35 @@ class LookupTable(object):
     - 'linear' does linear interpolation between these two values.
     - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at
       each argument in the table.
+    - a galsim.Interpolant object or a string convertible to one.  This option can be used for
+      Lanczos or Quintic interpolation, for example.
+
+    Note that specifying the string 'nearest' or 'linear' will use a LookupTable-optimized
+    interpolant instead of galsim.Nearest or galsim.Linear, though the latter options can still be
+    used by passing an Interpolant object instead of a string.  Also note that to use a
+    galsim.Interpolant in a LookupTable, the input data must be equally spaced.  Finally, although
+    the natural cubic spline used when interpolant='spline' and the cubic convolution interpolant
+    used when interpolant=galsim.Cubic both produce piecewise cubic polynomial interpolations, their
+    treatments of the continuity of derivatives are different (the natural spline is smoother).
 
     There are also two factory functions which can be used to build a LookupTable:
 
         LookupTable.from_func   makes a LookupTable from a callable function
         LookupTable.from_file   reads in a file of x and f values.
 
-    The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
-    It may be a wise choice depending on the particular function, e.g., for a nearly power-law
-    f(x) (or at least one that is locally power-law-ish for much of the x range) then it might
-    be a good idea to interpolate in log(x) and log(f) rather than x and f.
+    The user can also opt to interpolate in log(x) and/or log(f) (if not using a
+    galsim.Interpolant), though this is not the default.  It may be a wise choice depending on the
+    particular function, e.g., for a nearly power-law f(x) (or at least one that is locally
+    power-law-ish for much of the x range) then it might be a good idea to interpolate in log(x) and
+    log(f) rather than x and f.
 
     @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
     @param f             The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
     @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
-                         'linear' and 'spline'. [default: 'spline']
+                         'linear', 'spline', or a galsim.Interpolant or string convertible to one.
+                         [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
                          that all inputs / outputs will still be x, it's just a question of how the
                          interpolation is done. [default: False]
@@ -118,10 +130,15 @@ class LookupTable(object):
 
         dx = np.diff(self.x)
         # Need to ensure equal-spaced arrays if using a galsim.Interpolant
-        if self._interp1d is not None and not np.allclose(dx, dx[0]):
-            raise GalSimIncompatibleValuesError(
-            "Cannot use a galsim.Interpolant in LookupTable unless x is"
-            "equally spaced.", interpolant=interpolant, x=x)
+        if self._interp1d is not None:
+            if not np.allclose(dx, dx[0]):
+                raise GalSimIncompatibleValuesError(
+                    "Cannot use a galsim.Interpolant in LookupTable unless x is"
+                    "equally spaced.", interpolant=interpolant, x=x)
+            if self.x_log or self.f_log:
+                raise GalSimIncompatibleValuesError(
+                    "Cannot use log-interpolation in LookupTable with a galsim.Interpolant.",
+                    interpolant=interpolant, x_log=x_log, f_log=f_log)
 
         self._x_min = self.x[0]
         self._x_max = self.x[-1]
@@ -364,8 +381,8 @@ class LookupTable2D(object):
       - 'floor'
       - 'ceil'
       - 'nearest'
-      - 'cubic'
-      - 'cubicConvolve'
+      - 'spline' (a Catmull-Rom cubic spline).
+      - a galsim.Interpolant or string convertible to one.
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
         >>> tab2d(2.2, 3.7)
@@ -376,6 +393,12 @@ class LookupTable2D(object):
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='nearest')
         >>> tab2d(2.2, 3.7)
         6.0
+
+    For interpolant='spline' or a galsim.Interpolant, the input arrays must be uniformly spaced.
+    For interpolant='spline', the derivatives df / dx, df / dy, and d^2 f / dx dy at grid-points may
+    also optionally be provided if they're known, which will generally yield a more accurate
+    interpolation (these derivatives will be estimated from finite differences if they're not
+    provided).
 
     The `edge_mode` keyword describes how to handle extrapolation beyond the initial input range.
     Possibilities include:
@@ -421,7 +444,14 @@ class LookupTable2D(object):
     @param x              Strictly increasing array of `x` positions at which to create table.
     @param y              Strictly increasing array of `y` positions at which to create table.
     @param f              Nx by Ny input array of function values.
-    @param interpolant    Interpolant to use.  One of 'floor', 'ceil', 'nearest', or 'linear'.
+    @param dfdx           Optional first derivative of f wrt x.  Only used if interpolant='spline'.
+                          [default: None]
+    @param dfdy           Optional first derivative of f wrt y.  Only used if interpolant='spline'.
+                          [default: None]
+    @param d2fdxdy        Optional cross derivative of f wrt x and y.  Only used if
+                          interpolant='spline'.  [default: None]
+    @param interpolant    Interpolant to use.  One of 'floor', 'ceil', 'nearest', 'linear',
+                          'spline', or a galsim.Interpolant or string convertible to one.
                           [default: 'linear']
     @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
                           See above for details.  [default: 'raise']
@@ -453,19 +483,20 @@ class LookupTable2D(object):
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
         # Check if interpolant is a string that we understand.  If not, try convert_interpolant
-        if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'cubic', 'cubicConvolve'):
+        if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'spline', 'cubicConvolve'):
             self._interp2d = None
-            padrange = 2 if 'cubic' in interpolant else 1
+            padrange = 2 if interpolant in ['spline', 'cubicConvolve'] else 1
         else:
             self._interp2d = convert_interpolant(interpolant)
             padrange = int(np.ceil(self._interp2d.xrange))
         self.interpolant = interpolant
 
-        # Need to ensure equal-spaced arrays if using a galsim.Interpolant
-        if (self._interp2d is not None or 'cubic' in interpolant) and not equal_spaced:
-            raise GalSimIncompatibleValuesError(
-            "Cannot use a galsim.Interpolant in LookupTable2D unless x and y are"
-            "equally spaced.", interpolant=interpolant, x=x, y=y)
+        # Check if need equal-spaced arrays
+        if (self._interp2d is not None or interpolant in ['spline', 'cubicConvolve']):
+            if not equal_spaced:
+                raise GalSimIncompatibleValuesError(
+                "Cannot use a galsim.Interpolant in LookupTable2D unless x and y are"
+                "equally spaced.", interpolant=interpolant, x=x, y=y)
 
         self.edge_mode = edge_mode
         self.constant = float(constant)
@@ -506,7 +537,7 @@ class LookupTable2D(object):
         self.f = np.ascontiguousarray(f)
 
         der_exist = [kw is not None for kw in [dfdx, dfdy, d2fdxdy]]
-        if self.interpolant == 'cubic':
+        if self.interpolant == 'spline':
             if any(der_exist):
                 if not all(der_exist):
                     raise GalSimIncompatibleValuesError(
@@ -533,7 +564,7 @@ class LookupTable2D(object):
         else:
             if any(der_exist):
                 raise GalSimIncompatibleValuesError(
-                    "Only specify dfdx, dfdy, d2fdxdy if interpolant is 'cubic'.",
+                    "Only specify dfdx, dfdy, d2fdxdy if interpolant is 'spline'.",
                     dfdx=dfdx, dfdy=dfdy, d2fdxdy=d2fdxdy, interpolant=interpolant)
 
         if dfdx is not None:
@@ -552,7 +583,7 @@ class LookupTable2D(object):
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
                                               'GSInterpolant', self._interp2d._i)
-            elif self.interpolant == 'cubic':
+            elif self.interpolant == 'spline':
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
                                               self.interpolant,
@@ -749,7 +780,7 @@ class LookupTable2D(object):
                 self.constant == other.constant):
             return False
         else:
-            if self.interpolant == 'cubic':
+            if self.interpolant == 'spline':
                 return (np.array_equal(self.dfdx, other.dfdx) and
                         np.array_equal(self.dfdy, other.dfdy) and
                         np.array_equal(self.d2fdxdy, other.d2fdxdy))

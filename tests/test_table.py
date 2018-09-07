@@ -666,7 +666,7 @@ def test_table2d_cubic():
 
     for f, dfdx, dfdy in zip(fs, dfdxs, dfdys):
         z = f(xx, yy)
-        tab2d = galsim.LookupTable2D(x, y, z, interpolant='cubic')
+        tab2d = galsim.LookupTable2D(x, y, z, interpolant='spline')
 
         # Check single value functionality.
         x1,y1 = 2.3, 1.2
@@ -717,7 +717,7 @@ def test_table2d_cubic():
 
     for f, dfdx, dfdy, d2fdxdy in zip(fs, dfdxs, dfdys, d2fdxdys):
         z = f(xx, yy)
-        tab2d = galsim.LookupTable2D(x, y, z, interpolant='cubic',
+        tab2d = galsim.LookupTable2D(x, y, z, interpolant='spline',
             dfdx=dfdx(xx, yy), dfdy=dfdy(xx, yy), d2fdxdy=d2fdxdy(xx, yy))
 
         # Check single value functionality.
@@ -912,8 +912,8 @@ def test_ne():
         galsim.LookupTable2D(x, x, ff, interpolant=galsim.Nearest()),
         galsim.LookupTable2D(x, x, ff, edge_mode='wrap'),
         galsim.LookupTable2D(x, x, ff, constant=1),
-        galsim.LookupTable2D(x, x, ff, interpolant='cubic'),
-        galsim.LookupTable2D(x, x, ff, interpolant='cubic',
+        galsim.LookupTable2D(x, x, ff, interpolant='spline'),
+        galsim.LookupTable2D(x, x, ff, interpolant='spline',
             dfdx=ff, dfdy=ff, d2fdxdy=ff
         )
     ])
