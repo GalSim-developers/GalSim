@@ -430,6 +430,13 @@ def test_table2d():
     with assert_raises(ValueError):
         tab2d.gradient(1e6, 1e6)
 
+    # Check warning mode
+    tab2dw = galsim.LookupTable2D(x, y, z, edge_mode='warn', constant=1)
+    with assert_warns(galsim.GalSimWarning):
+        assert tab2dw(1e6, 1e6) == 1
+    with assert_warns(galsim.GalSimWarning):
+        assert tab2dw.gradient(1e6, 1e6) == (0.0, 0.0)
+
     # Test edge wrapping
     # Check that can't construct table with edge-wrapping if edges don't match
     with assert_raises(ValueError):
@@ -481,6 +488,21 @@ def test_table2d():
     y[0] = y[1]+1
     assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
 
+    # Test that x,y arrays are larger than interpolant
+    x = y = np.arange(2)
+    z = x[:,None]+y
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z, interpolant='spline', edge_mode='wrap')
+
+    # Check dfdx input
+    x = y = np.arange(20)
+    z = x[:,None]+y
+    # Not using interpolant='spline'
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z, dfdx=z)
+    # Only specifying one derivative
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z, dfdx=z, interpolant='spline')
+    # Derivative is wrong shape
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z, dfdx=z, dfdy=z, d2fdxdy=z[::2],
+                  interpolant='spline')
 
 @timer
 def test_table2d_gradient():

@@ -572,6 +572,11 @@ class LookupTable2D(object):
             dfdy = np.ascontiguousarray(dfdy, dtype=float)
             d2fdxdy = np.ascontiguousarray(d2fdxdy, dtype=float)
 
+            if dfdx.shape != f.shape or dfdy.shape != f.shape or d2fdxdy.shape != f.shape:
+                raise GalSimIncompatibleValuesError(
+                    "derivative shapes must match f shape",
+                    dfdx=dfdx, dfdy=dfdy, d2fdxdy=d2fdxdy)
+
         self.dfdx = dfdx
         self.dfdy = dfdy
         self.d2fdxdy = d2fdxdy
@@ -703,7 +708,7 @@ class LookupTable2D(object):
         if not self._inbounds(x, y):
             galsim_warn("Extrapolating beyond input range. {!r} not in {!r}".format(
                         PositionD(x,y), self._bounds))
-        return _gradient_constant(x, y)
+        return self._gradient_constant(x, y)
 
     def _gradient_wrap(self, x, y):
         x, y = self._wrap_args(x, y)
