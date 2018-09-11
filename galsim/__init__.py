@@ -99,7 +99,7 @@ from .shear import Shear, _Shear
 from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, arcsec
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
-from .table import LookupTable, LookupTable2D, LookupTable2DOld, LookupTableOld
+from .table import LookupTable, LookupTable2D
 
 # Exception and Warning classes
 from .errors import GalSimError, GalSimRangeError, GalSimValueError

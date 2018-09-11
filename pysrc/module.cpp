@@ -47,7 +47,6 @@ namespace galsim {
     void pyExportSBSecondKick(PY_MODULE&);
     void pyExportRandom(PY_MODULE&);
     void pyExportTable(PY_MODULE&);
-    void pyExportTableOld(PY_MODULE&);
     void pyExportInterpolant(PY_MODULE&);
     void pyExportCDModel(PY_MODULE&);
     void pyExportSilicon(PY_MODULE&);
@@ -98,7 +97,6 @@ PYBIND11_MODULE(_galsim, _galsim)
     galsim::pyExportSBSecondKick(_galsim);
     galsim::pyExportRandom(_galsim);
     galsim::pyExportTable(_galsim);
-    galsim::pyExportTableOld(_galsim);
     galsim::pyExportInterpolant(_galsim);
     galsim::pyExportCDModel(_galsim);
     galsim::pyExportSilicon(_galsim);
