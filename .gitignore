@@ -26,3 +26,4 @@ examples_bin
 build
 dist
 .pytest_cache
+.clang_complete
