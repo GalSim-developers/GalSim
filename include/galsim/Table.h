@@ -116,7 +116,7 @@ namespace galsim {
     class Table2D
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest, spline, cubicConvolve, gsinterp };
+        enum interpolant { linear, floor, ceil, nearest, spline, gsinterp };
 
         /// Table from xargs, yargs, vals
         Table2D(const double* xargs, const double* yargs, const double* vals,

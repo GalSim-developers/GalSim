@@ -483,16 +483,16 @@ class LookupTable2D(object):
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
         # Check if interpolant is a string that we understand.  If not, try convert_interpolant
-        if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'spline', 'cubicConvolve'):
+        if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'spline'):
             self._interp2d = None
-            padrange = 2 if interpolant in ['spline', 'cubicConvolve'] else 1
+            padrange = 2 if interpolant == 'spline' else 1
         else:
             self._interp2d = convert_interpolant(interpolant)
             padrange = int(np.ceil(self._interp2d.xrange))
         self.interpolant = interpolant
 
         # Check if need equal-spaced arrays
-        if (self._interp2d is not None or interpolant in ['spline', 'cubicConvolve']):
+        if (self._interp2d is not None or interpolant  == 'spline'):
             if not equal_spaced:
                 raise GalSimIncompatibleValuesError(
                 "Cannot use a galsim.Interpolant in LookupTable2D unless x and y are"

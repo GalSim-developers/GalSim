@@ -672,64 +672,6 @@ namespace galsim {
     };
 
 
-    class T2DCubicConvolution : public T2DCRTP<T2DCubicConvolution> {
-    public:
-        using T2DCRTP::T2DCRTP;
-
-        double interp(double x, double y, int i, int j) const {
-            double dxgrid = _xargs[i] - _xargs[i-1];
-            double dygrid = _yargs[j] - _yargs[j-1];
-            double dx = (x - _xargs[i-1])/dxgrid;
-            double dy = (y - _yargs[j-1])/dygrid;
-
-            // First interpolate in the x direction.
-            double valm1 = oneDSpline(dx, _vals[(i-2)*_ny+j-2], _vals[(i-1)*_ny+j-2], _vals[(i+0)*_ny+j-2], _vals[(i+1)*_ny+j-2]);
-            double val0 =  oneDSpline(dx, _vals[(i-2)*_ny+j-1], _vals[(i-1)*_ny+j-1], _vals[(i+0)*_ny+j-1], _vals[(i+1)*_ny+j-1]);
-            double val1 =  oneDSpline(dx, _vals[(i-2)*_ny+j+0], _vals[(i-1)*_ny+j+0], _vals[(i+0)*_ny+j+0], _vals[(i+1)*_ny+j+0]);
-            double val2 =  oneDSpline(dx, _vals[(i-2)*_ny+j+1], _vals[(i-1)*_ny+j+1], _vals[(i+0)*_ny+j+1], _vals[(i+1)*_ny+j+1]);
-            return oneDSpline(dy, valm1, val0, val1, val2);
-        }
-
-        void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
-            double dxgrid = _xargs[i] - _xargs[i-1];
-            double dygrid = _yargs[j] - _yargs[j-1];
-            double dx = (x - _xargs[i-1])/dxgrid;
-            double dy = (y - _yargs[j-1])/dygrid;
-
-            // x-gradient
-            double valm1 = oneDGrad(dx, _vals[(i-2)*_ny+j-2], _vals[(i-1)*_ny+j-2], _vals[(i+0)*_ny+j-2], _vals[(i+1)*_ny+j-2]);
-            double val0 =  oneDGrad(dx, _vals[(i-2)*_ny+j-1], _vals[(i-1)*_ny+j-1], _vals[(i+0)*_ny+j-1], _vals[(i+1)*_ny+j-1]);
-            double val1 =  oneDGrad(dx, _vals[(i-2)*_ny+j+0], _vals[(i-1)*_ny+j+0], _vals[(i+0)*_ny+j+0], _vals[(i+1)*_ny+j+0]);
-            double val2 =  oneDGrad(dx, _vals[(i-2)*_ny+j+1], _vals[(i-1)*_ny+j+1], _vals[(i+0)*_ny+j+1], _vals[(i+1)*_ny+j+1]);
-            dfdx = oneDSpline(dy, valm1, val0, val1, val2)/dxgrid;
-
-            // y-gradient
-            valm1 = oneDGrad(dy, _vals[(i-2)*_ny+j-2], _vals[(i-2)*_ny+j-1], _vals[(i-2)*_ny+j+0], _vals[(i-2)*_ny+j+1]);
-            val0 =  oneDGrad(dy, _vals[(i-1)*_ny+j-2], _vals[(i-1)*_ny+j-1], _vals[(i-1)*_ny+j+0], _vals[(i-1)*_ny+j+1]);
-            val1 =  oneDGrad(dy, _vals[(i+0)*_ny+j-2], _vals[(i+0)*_ny+j-1], _vals[(i+0)*_ny+j+0], _vals[(i+0)*_ny+j+1]);
-            val2 =  oneDGrad(dy, _vals[(i+1)*_ny+j-2], _vals[(i+1)*_ny+j-1], _vals[(i+1)*_ny+j+0], _vals[(i+1)*_ny+j+1]);
-            dfdy = oneDSpline(dx, valm1, val0, val1, val2)/dygrid;
-        }
-
-    private:
-        double oneDSpline(double x, double fm1, double f0, double f1, double f2) const {
-            double a = -fm1 + 3*(f0-f1) + f2;
-            double b = 2*fm1 - 5*f0 + 4*f1 - f2;
-            double c = f1-fm1;
-            double d = 2*f0;
-
-            return 0.5*(d + x*(c + x*(b + x*a)));
-        }
-
-        double oneDGrad(double x, double fm1, double f0, double f1, double f2) const {
-            double a = -fm1 + 3*(f0-f1) + f2;
-            double b = 2*fm1 - 5*f0 + 4*f1 - f2;
-            double c = f1-fm1;
-            return 0.5*(c + x*(2*b + x*3*a));
-        }
-    };
-
-
     class T2DGSInterpolant : public T2DCRTP<T2DGSInterpolant> {
     public:
         T2DGSInterpolant(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
@@ -888,8 +830,6 @@ namespace galsim {
                 return std::make_shared<T2DNearest>(xargs, yargs, vals, Nx, Ny);
             case linear:
                 return std::make_shared<T2DLinear>(xargs, yargs, vals, Nx, Ny);
-            case cubicConvolve:
-                return std::make_shared<T2DCubicConvolution>(xargs, yargs, vals, Nx, Ny);
             default:
                 throw std::runtime_error("invalid interpolation method");
         }

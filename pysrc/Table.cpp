@@ -65,7 +65,6 @@ namespace galsim {
         if (interp == "floor") i = Table2D::floor;
         else if (interp == "ceil") i = Table2D::ceil;
         else if (interp == "nearest") i = Table2D::nearest;
-        else if (interp == "cubicConvolve") i = Table2D::cubicConvolve;
         return new Table2D(x, y, vals, Nx, Ny, i);
     }
 
