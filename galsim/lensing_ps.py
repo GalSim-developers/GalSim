@@ -1,6 +1,4 @@
 # Copyright (c) 2012-2018 by the GalSim developers team on GitHub
-# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
-# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -27,7 +25,6 @@ from .angle import arcsec, AngleUnit
 from .position import PositionD, PositionI
 from .bounds import BoundsD, BoundsI
 from .interpolant import Quintic, Lanczos
-from .interpolatedimage import _InterpolatedImage
 from .image import Image, ImageD
 from .random import GaussianDeviate
 from .table import LookupTable, LookupTable2D
@@ -551,7 +548,8 @@ class PowerSpectrum(object):
             self.grid_kappa = np.array(self.grid_kappa[s,s], copy=True, order='C')
 
         # Set up the images to be interpolated.
-        # Note: We don't make the InterpolatedImages yet, since it's not picklable.
+        # Note: We don't make the LookupTable2D's yet, since we don't know if
+        #       the user wants periodic wrapping or not.
         #       So we wait to create them when we are actually going to use them.
         self.im_g1 = ImageD(self.grid_g1, scale=self.grid_spacing)
         self.im_g2 = ImageD(self.grid_g2, scale=self.grid_spacing)

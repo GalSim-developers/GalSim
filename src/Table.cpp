@@ -145,7 +145,7 @@ namespace galsim {
     // TCRTP<T> : TableImpl <- curiously recurring template pattern
     // TLinearInterp : TCRTP<TLinearInterp>
     // ... similar, Floor, Ceil, Nearest, Spline
-    // TInterpolant<interpolant> : TCRTP<TInterplant<interpolant>> <- Use Interpolant
+    // TGSInterpolant<interpolant> : TCRTP<TGSInterpolant<interpolant>> <- Use Interpolant
 
     class Table::TableImpl {
     public:
@@ -342,33 +342,33 @@ namespace galsim {
 
     class TGSInterpolant : public TCRTP<TGSInterpolant> {
     public:
-        TGSInterpolant(const double* args, const double* vals, int N, const Interpolant* interp1d) :
-            TCRTP<TGSInterpolant>::TCRTP(args, vals, N), _interp1d(interp1d) {}
+        TGSInterpolant(const double* args, const double* vals, int N, const Interpolant* gsinterp) :
+            TCRTP<TGSInterpolant>::TCRTP(args, vals, N), _gsinterp(gsinterp) {}
 
         double interp(double a, int i) const {
             double dagrid = _args[i] - _args[i-1];
             double da = (a - _args[i-1])/dagrid;
 
             int iaMin, iaMax;
-            if (_interp1d->isExactAtNodes()
+            if (_gsinterp->isExactAtNodes()
                 && std::abs(da) < 10.*std::numeric_limits<double>::epsilon()) {
                     iaMin = iaMax = i-1;
             } else {
-                iaMin = i-1 + int(std::ceil(da-_interp1d->xrange()));
-                iaMax = i-1 + int(std::floor(da+_interp1d->xrange()));
+                iaMin = i-1 + int(std::ceil(da-_gsinterp->xrange()));
+                iaMax = i-1 + int(std::floor(da+_gsinterp->xrange()));
             }
             iaMin = std::max(iaMin, 0);
             iaMax = std::min(iaMax, _n-1);
             if (iaMin > iaMax) return 0.0;
             double sum = 0.0;
             for(int ia=iaMin; ia<=iaMax; ia++) {
-                sum += _vals[ia] * _interp1d->xval(i-1+da-ia);
+                sum += _vals[ia] * _gsinterp->xval(i-1+da-ia);
             }
             return sum;
         }
 
     private:
-        const Interpolant* _interp1d;
+        const Interpolant* _gsinterp;
     };
 
 
@@ -378,8 +378,8 @@ namespace galsim {
         _makeImpl(args, vals, N, in);
     }
 
-    Table::Table(const double* args, const double* vals, int N, const Interpolant* interp1d) {
-        _makeImpl(args, vals, N, interp1d);
+    Table::Table(const double* args, const double* vals, int N, const Interpolant* gsinterp) {
+        _makeImpl(args, vals, N, gsinterp);
     }
 
     void Table::_makeImpl(const double* args, const double* vals, int N,
@@ -406,8 +406,8 @@ namespace galsim {
     }
 
     void Table::_makeImpl(const double* args, const double* vals, int N,
-                          const Interpolant* interp1d) {
-        _pimpl.reset(new TGSInterpolant(args, vals, N, interp1d));
+                          const Interpolant* gsinterp) {
+        _pimpl.reset(new TGSInterpolant(args, vals, N, gsinterp));
     }
 
     double Table::argMin() const
@@ -438,8 +438,8 @@ namespace galsim {
 
     void TableBuilder::finalize()
     {
-        if (_in == Table::interpolant1d)
-            _makeImpl(&_xvec[0], &_fvec[0], _xvec.size(), _interp1d);
+        if (_in == Table::gsinterp)
+            _makeImpl(&_xvec[0], &_fvec[0], _xvec.size(), _gsinterp);
         else
             _makeImpl(&_xvec[0], &_fvec[0], _xvec.size(), _in);
         _final = true;
@@ -450,7 +450,7 @@ namespace galsim {
     // T2DCRTP<T> : Table2DImpl <- curiously recurring template pattern
     // T2DLinearInterp : T2DCRTP<T2DLinearInterp>
     // ... similar, Floor, Ceil, Nearest, Spline
-    // T2DInterpolant2D<interpolant> : T2DCRTP<T2DInterpolant2D<interpolant>> <- Use Interpolant2d
+    // T2DGSInterpolant<interpolant> : T2DCRTP<T2DGSInterpolant<interpolant>> <- Use Interpolant
 
     class Table2D::Table2DImpl {
     public:
@@ -730,11 +730,11 @@ namespace galsim {
     };
 
 
-    class T2DInterpolant2D : public T2DCRTP<T2DInterpolant2D> {
+    class T2DGSInterpolant : public T2DCRTP<T2DGSInterpolant> {
     public:
-        T2DInterpolant2D(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
-                         const Interpolant* interp2d) :
-            T2DCRTP<T2DInterpolant2D>(xargs, yargs, vals, Nx, Ny), _nx(Nx), _interp2d(*interp2d) {}
+        T2DGSInterpolant(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
+                         const Interpolant* gsinterp) :
+            T2DCRTP<T2DGSInterpolant>(xargs, yargs, vals, Nx, Ny), _nx(Nx), _gsinterp(*gsinterp) {}
 
         double interp(double x, double y, int i, int j) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
@@ -744,29 +744,29 @@ namespace galsim {
 
             // Stealing from XTable::interpolate
             int ixMin, ixMax, iyMin, iyMax;
-            if (_interp2d.isExactAtNodes()
+            if (_gsinterp.isExactAtNodes()
                 && std::abs(dx) < 10.*std::numeric_limits<double>::epsilon()) {
                     ixMin = ixMax = i-1;
             } else {
-                ixMin = i-1 + int(std::ceil(dx-_interp2d.xrange()));
-                ixMax = i-1 + int(std::floor(dx+_interp2d.xrange()));
+                ixMin = i-1 + int(std::ceil(dx-_gsinterp.xrange()));
+                ixMax = i-1 + int(std::floor(dx+_gsinterp.xrange()));
             }
             ixMin = std::max(ixMin, 0);
             ixMax = std::min(ixMax, _nx-1);
             if (ixMin > ixMax) return 0.0;
-            if (_interp2d.isExactAtNodes()
+            if (_gsinterp.isExactAtNodes()
                 && std::abs(dy) < 10.*std::numeric_limits<double>::epsilon()) {
                     iyMin = iyMax = j-1;
             } else {
-                iyMin = j-1 + int(std::ceil(dy-_interp2d.xrange()));
-                iyMax = j-1 + int(std::floor(dy+_interp2d.xrange()));
+                iyMin = j-1 + int(std::ceil(dy-_gsinterp.xrange()));
+                iyMax = j-1 + int(std::floor(dy+_gsinterp.xrange()));
             }
             iyMin = std::max(iyMin, 0);
             iyMax = std::min(iyMax, _ny-1);
             if (iyMin > iyMax) return 0.0;
 
             double sum = 0.0;
-            const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&_interp2d);
+            const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&_gsinterp);
             if (ixy) {
                 // Interpolant is seperable
                 // We have the opportunity to speed up the calculation by
@@ -831,7 +831,7 @@ namespace galsim {
             } else {
                 for(int iy=iyMin; iy<=iyMax; iy++) {
                     for(int ix=ixMin; ix<=ixMax; ix++) {
-                        sum += _vals[ix*_ny+iy] * _interp2d.xval(i-1+dx-ix, j-1+dy-iy);
+                        sum += _vals[ix*_ny+iy] * _gsinterp.xval(i-1+dx-ix, j-1+dy-iy);
                     }
                 }
             }
@@ -844,7 +844,7 @@ namespace galsim {
 
     private:
         const int _nx;
-        const InterpolantXY _interp2d;
+        const InterpolantXY _gsinterp;
 
         void _clearCache() const {
             _cache.clear();
@@ -871,8 +871,8 @@ namespace galsim {
 
 
     Table2D::Table2D(const double* xargs, const double* yargs, const double* vals,
-                     int Nx, int Ny, const Interpolant* interp2d) :
-        _pimpl(_makeImpl(xargs, yargs, vals, Nx, Ny, interp2d)) {}
+                     int Nx, int Ny, const Interpolant* gsinterp) :
+        _pimpl(_makeImpl(xargs, yargs, vals, Nx, Ny, gsinterp)) {}
 
 
     std::shared_ptr<Table2D::Table2DImpl> Table2D::_makeImpl(
@@ -905,9 +905,9 @@ namespace galsim {
 
     std::shared_ptr<Table2D::Table2DImpl> Table2D::_makeImpl(
             const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny, const Interpolant* interp2d)
+            int Nx, int Ny, const Interpolant* gsinterp)
     {
-            return std::make_shared<T2DInterpolant2D>(xargs, yargs, vals, Nx, Ny, interp2d);
+            return std::make_shared<T2DGSInterpolant>(xargs, yargs, vals, Nx, Ny, gsinterp);
     }
 
     double Table2D::lookup(double x, double y) const {

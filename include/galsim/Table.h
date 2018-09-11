@@ -35,14 +35,18 @@
 namespace galsim {
     class Interpolant;
 
-    class Table : public FluxDensity
+    /**
+     * @brief A class to represent lookup tables for a function y = f(x).
+     */
+    class Table :
+        public FluxDensity
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest, spline, interpolant1d };
+        enum interpolant { linear, floor, ceil, nearest, spline, gsinterp };
 
         /// Table from args, vals
         Table(const double* args, const double* vals, int N, interpolant in);
-        Table(const double* args, const double* vals, int N, const Interpolant* interp1d);
+        Table(const double* args, const double* vals, int N, const Interpolant* gsinterp);
 
         double argMin() const;
         double argMax() const;
@@ -65,7 +69,7 @@ namespace galsim {
         Table() {}  // TableBuilder needs this, since it delays making the _pimpl.
 
         void _makeImpl(const double* args, const double* vals, int N, interpolant in);
-        void _makeImpl(const double* args, const double* vals, int N, const Interpolant* interp1d);
+        void _makeImpl(const double* args, const double* vals, int N, const Interpolant* gsinterp);
     };
 
     // This version keeps its own storage of the arg/val arrays.
@@ -76,8 +80,8 @@ namespace galsim {
     {
     public:
         TableBuilder(interpolant in): _final(false), _in(in) {}
-        TableBuilder(interpolant in, const Interpolant* interp1d) :
-            _final(false), _in(in), _interp1d(interp1d) {}
+        TableBuilder(const Interpolant* gsinterp) :
+            _final(false), _in(Table::gsinterp), _gsinterp(gsinterp) {}
 
         bool finalized() const { return _final; }
 
@@ -101,7 +105,7 @@ namespace galsim {
 
         bool _final;
         interpolant _in;
-        const Interpolant* _interp1d;
+        const Interpolant* _gsinterp;
         std::vector<double> _xvec;
         std::vector<double> _fvec;
     };
@@ -112,7 +116,7 @@ namespace galsim {
     class Table2D
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest, spline, cubicConvolve, interpolant2d };
+        enum interpolant { linear, floor, ceil, nearest, spline, cubicConvolve, gsinterp };
 
         /// Table from xargs, yargs, vals
         Table2D(const double* xargs, const double* yargs, const double* vals,
@@ -120,7 +124,7 @@ namespace galsim {
         Table2D(const double* xargs, const double* yargs, const double* vals,
                 int Nx, int Ny, const double* dfdx, const double* dfdy, const double* d2fdxdy);
         Table2D(const double* xargs, const double* yargs, const double* vals,
-                int Nx, int Ny, const Interpolant* interp2d);
+                int Nx, int Ny, const Interpolant* gsinterp);
 
         /// interp
         double lookup(double x, double y) const;
@@ -148,7 +152,7 @@ namespace galsim {
             const double* dfdx, const double* dfdy, const double* d2fdxdy);
         static std::shared_ptr<Table2DImpl> _makeImpl(
             const double* xargs, const double* yargs, const double* vals,
-            int Nx, int Ny, const Interpolant* interp2d);
+            int Nx, int Ny, const Interpolant* gsinterp);
     };
 }
 
