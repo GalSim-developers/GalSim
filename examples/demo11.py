@@ -196,7 +196,7 @@ def main(argv):
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  The lensing engine wants positions in arcsec, so calculate that:
     ps.buildGrid(grid_spacing = grid_spacing,
-                 ngrid = int(math.ceil(image_size_arcsec / grid_spacing)), rng=rng)
+                 ngrid = int(math.ceil(image_size_arcsec / grid_spacing))+1, rng=rng)
     logger.info('Made gridded shears')
 
     # We keep track of how much noise is already in the image from the RealGalaxies.

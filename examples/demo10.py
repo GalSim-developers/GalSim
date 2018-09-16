@@ -146,7 +146,7 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed)
 
     # Have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
+    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles+1, rng=rng)
 
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
