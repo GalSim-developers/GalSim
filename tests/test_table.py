@@ -436,6 +436,9 @@ def test_table2d():
         assert tab2dw(1e6, 1e6) == 1
     with assert_warns(galsim.GalSimWarning):
         assert tab2dw.gradient(1e6, 1e6) == (0.0, 0.0)
+    # But doesn't warn if in bounds
+    tab2dw(1.0, 1.0)
+    tab2dw.gradient(1.0, 1.0)
 
     # Test edge wrapping
     # Check that can't construct table with edge-wrapping if edges don't match
@@ -782,6 +785,8 @@ def test_table2d_GSInterp():
         z = f(xx, yy)
         tab2d = galsim.LookupTable2D(x, y, z, interpolant=interpolant)
         do_pickle(tab2d)
+        # Make sure precomputed-hash gets covered
+        hash(tab2d)
 
         # Use InterpolatedImage to validate
         wcs = galsim.JacobianWCS(
