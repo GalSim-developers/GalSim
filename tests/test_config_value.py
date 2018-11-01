@@ -447,8 +447,7 @@ def test_float_value():
         ps2c = galsim.config.ParseValue(config, 'ps', config, float)[0]
     print(cl.output)
     assert ("Extrapolating beyond input range. galsim.PositionD(x=1000.0, y=2000.0) not in "
-            "galsim.BoundsD(xmin=-100.00000000000011, xmax=100.00000000000011, "
-            "ymin=-100.00000000000011, ymax=100.00000000000011)") in cl.output
+            "galsim.BoundsD") in cl.output
     np.testing.assert_almost_equal(ps2c, 1.)
 
     # Error if no world_pos
