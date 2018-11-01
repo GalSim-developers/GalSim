@@ -655,8 +655,13 @@ namespace galsim {
         double oneDSpline(double x, double val0, double val1, double der0, double der1) const {
             // assuming that x is between 0 and 1, val0 and val1 are the values at
             // 0 and 1, and der0 and der1 are the derivatives at 0 and 1.
-
-            // I'm assuming the compiler will reduce this all down...
+            // Let f(x) = ax^3 + bx^2 + cx + d
+            //  => f'(x) = 3ax^2 + 2bx + c
+            //  => f(0) = d
+            //     f(1) = a + b + c + d
+            //     f'(0) = c
+            //     f'(1) = 3a + 2b + c
+            //  Solve above for a,b,c,d to obtain below:
             double a = 2*(val0-val1) + der0 + der1;
             double b = 3*(val1-val0) - 2*der0 - der1;
             double c = der0;
