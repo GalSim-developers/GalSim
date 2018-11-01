@@ -350,9 +350,15 @@ namespace galsim {
             double da = (a - _args[i-1])/dagrid;
 
             int iaMin, iaMax;
-            if (_gsinterp->isExactAtNodes()
-                && std::abs(da) < 10.*std::numeric_limits<double>::epsilon()) {
+            if (_gsinterp->isExactAtNodes()) {
+                if (std::abs(da) < 10.*std::numeric_limits<double>::epsilon()) {
                     iaMin = iaMax = i-1;
+                } else if (std::abs(da-1.) < 10.*std::numeric_limits<double>::epsilon()) {
+                    iaMin = iaMax = i;
+                } else {
+                    iaMin = i-1 + int(std::ceil(da-_gsinterp->xrange()));
+                    iaMax = i-1 + int(std::floor(da+_gsinterp->xrange()));
+                }
             } else {
                 iaMin = i-1 + int(std::ceil(da-_gsinterp->xrange()));
                 iaMax = i-1 + int(std::floor(da+_gsinterp->xrange()));
