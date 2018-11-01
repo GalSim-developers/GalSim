@@ -681,8 +681,6 @@ def test_table2d_cubic():
         return 6*x_ + 4*y_
     def df5dy(x_, y_):
         return 4*y_ + 4*x_
-    def d2f5dxdy(x_, y_):
-        return np.ones_like(x_)*4
 
     fs = [f1, f2, f3, f4, f5]
     dfdxs = [df1dx, df2dx, df3dx, df4dx, df5dx]
