@@ -43,6 +43,7 @@ namespace galsim {
         ArgVec(const double* args, int n);
 
         int upperIndex(double a) const;
+        void upperIndexMany(const double* a, int* idx, int N) const;
 
         // A few things to look similar to a vector<dobule>
         const double* begin() const { return _vec;}
@@ -140,6 +141,53 @@ namespace galsim {
         }
     }
 
+    void ArgVec::upperIndexMany(const double* a, int* indices, int N) const {
+        if (_equalSpaced) {
+            for (int k=0; k<N; k++) {
+                int idx = int(std::ceil(a[k]-front()) / _da);
+                if (idx >= _n) --idx;
+                if (idx == 0) ++idx;
+                while (a[k] > _vec[idx]) ++idx;
+                while (a[k] < _vec[idx-1]) --idx;
+                indices[k] = idx;
+            }
+        } else {
+            int idx = 1;
+            double lowerBound = _vec[0];
+            double upperBound = _vec[1];
+
+            for (int k=0; k<N; k++) {
+                if (a[k] < lowerBound) { // Go lower
+                    if (a[k] > _vec[idx-2]) {  // Check previous index
+                        indices[k] = --idx;
+                        upperBound = lowerBound;
+                        lowerBound = _vec[idx-1];
+                    } else {
+                        const double* p = std::upper_bound(begin(), begin()+idx-1, a[k]);
+                        idx = p-begin();
+                        indices[k] = idx;
+                        upperBound = _vec[k];
+                        lowerBound = _vec[k-1];
+                    }
+                } else if (a[k] > upperBound) { //Go higher
+                    if (a[k] < _vec[idx+1]) { // Check next index
+                        indices[k] = ++idx;
+                        lowerBound = upperBound;
+                        upperBound = _vec[idx];
+                    } else {
+                        const double* p = std::lower_bound(begin()+idx+1, end(), a[k]);
+                        idx = p-begin();
+                        indices[k] = idx;
+                        upperBound = _vec[k];
+                        lowerBound = _vec[k-1];
+                    }
+                } else {
+                    indices[k] = idx;
+                }
+            }
+        }
+    }
+
     // The hierarchy for TableImpl looks like:
     // TableImpl <- ABC
     // TCRTP<T> : TableImpl <- curiously recurring template pattern
@@ -178,9 +226,11 @@ namespace galsim {
         }
 
         void interpMany(const double* xvec, double* valvec, int N) const override {
+            std::vector<int> indices(N);
+            indices.reserve(N);
+            _args.upperIndexMany(xvec, indices.data(), N);
             for (int k=0; k<N; k++) {
-                int i = _args.upperIndex(xvec[k]);
-                valvec[k] = static_cast<const T*>(this)->interp(xvec[k], i);
+                valvec[k] = static_cast<const T*>(this)->interp(xvec[k], indices[k]);
             }
         }
     };
