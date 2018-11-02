@@ -71,10 +71,11 @@ class LookupTable(object):
     Note that specifying the string 'nearest' or 'linear' will use a LookupTable-optimized
     interpolant instead of galsim.Nearest or galsim.Linear, though the latter options can still be
     used by passing an Interpolant object instead of a string.  Also note that to use a
-    galsim.Interpolant in a LookupTable, the input data must be equally spaced.  Finally, although
-    the natural cubic spline used when interpolant='spline' and the cubic convolution interpolant
-    used when interpolant=galsim.Cubic both produce piecewise cubic polynomial interpolations, their
-    treatments of the continuity of derivatives are different (the natural spline is smoother).
+    galsim.Interpolant in a LookupTable, the input data must be equally spaced, or logarithmically
+    spaced if `x_log` is set to True (see below).  Finally, although natural cubic spline used when
+    interpolant='spline' and the cubic convolution interpolant used when interpolant=galsim.Cubic
+    both produce piecewise cubic polynomial interpolations, their treatments of the continuity of
+    derivatives are different (the natural spline is smoother).
 
     There are also two factory functions which can be used to build a LookupTable:
 
@@ -128,18 +129,6 @@ class LookupTable(object):
         self.x = np.ascontiguousarray(x[s])
         self.f = np.ascontiguousarray(f[s])
 
-        dx = np.diff(self.x)
-        # Need to ensure equal-spaced arrays if using a galsim.Interpolant
-        if self._interp1d is not None:
-            if not np.allclose(dx, dx[0]):
-                raise GalSimIncompatibleValuesError(
-                    "Cannot use a galsim.Interpolant in LookupTable unless x is"
-                    "equally spaced.", interpolant=interpolant, x=x)
-            if self.x_log or self.f_log:
-                raise GalSimIncompatibleValuesError(
-                    "Cannot use log-interpolation in LookupTable with a galsim.Interpolant.",
-                    interpolant=interpolant, x_log=x_log, f_log=f_log)
-
         self._x_min = self.x[0]
         self._x_max = self.x[-1]
         if self._x_min == self._x_max:
@@ -149,19 +138,35 @@ class LookupTable(object):
         if self.f_log and np.any(self.f <= 0.):
             raise GalSimValueError("Cannot interpolate in log(f) when table contains f<=0.", f)
 
+        # Check equal-spaced arrays
+        if self._interp1d is not None:
+            if self.x_log:
+                logx = np.log(self.x)
+                dlogx = np.diff(np.log(self.x))
+                if not np.allclose(dlogx, dlogx[0]):
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot use a galsim.Interpolant with x_log=True unless log(x) is"
+                        "equally spaced.",
+                        interpolant=interpolant, x_log=x_log, x=x)
+            else:
+                dx = np.diff(self.x)
+                if not np.allclose(dx, dx[0]):
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot use a galsim.Interpolant with x_log=False unless x is"
+                        "equally spaced.",
+                        interpolant=interpolant, x_log=x_log, x=x)
+
     @lazy_property
     def _tab(self):
         # Store these as attributes, so don't need to worry about C++ layer persisting them.
-        self._x = self.x
-        self._f = self.f
+        self._x = np.log(self.x) if self.x_log else self.x
+        self._f = np.log(self.f) if self.f_log else self.f
 
         with convert_cpp_errors():
             if self._interp1d is not None:
                 return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
                                             len(self._x), self._interp1d._i)
             else:
-                if self.x_log: self._x = np.log(self._x)
-                if self.f_log: self._f = np.log(self._f)
                 return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
                                             len(self._x), self.interpolant)
 
