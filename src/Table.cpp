@@ -227,8 +227,8 @@ namespace galsim {
 
         void interpMany(const double* xvec, double* valvec, int N) const override {
             std::vector<int> indices(N);
-            indices.reserve(N);
             _args.upperIndexMany(xvec, indices.data(), N);
+
             for (int k=0; k<N; k++) {
                 valvec[k] = static_cast<const T*>(this)->interp(xvec[k], indices[k]);
             }
@@ -541,10 +541,15 @@ namespace galsim {
         }
 
         void interpMany(const double* xvec, const double* yvec, double* valvec, int N) const {
+            std::vector<int> xindices(N);
+            std::vector<int> yindices(N);
+            _xargs.upperIndexMany(xvec, xindices.data(), N);
+            _yargs.upperIndexMany(yvec, yindices.data(), N);
+
             for (int k=0; k<N; k++) {
-                int i = _xargs.upperIndex(xvec[k]);
-                int j = _yargs.upperIndex(yvec[k]);
-                valvec[k] = static_cast<const T*>(this)->interp(xvec[k], yvec[k], i, j);
+                valvec[k] = static_cast<const T*>(this)->interp(
+                    xvec[k], yvec[k], xindices[k], yindices[k]
+                );
             }
         }
 
@@ -556,10 +561,15 @@ namespace galsim {
 
         void gradientMany(const double* xvec, const double* yvec,
                           double* dfdxvec, double* dfdyvec, int N) const {
+            std::vector<int> xindices(N);
+            std::vector<int> yindices(N);
+            _xargs.upperIndexMany(xvec, xindices.data(), N);
+            _yargs.upperIndexMany(yvec, yindices.data(), N);
+
             for (int k=0; k<N; k++) {
-                int i = _xargs.upperIndex(xvec[k]);
-                int j = _yargs.upperIndex(yvec[k]);
-                static_cast<const T*>(this)->grad(xvec[k], yvec[k], i, j, dfdxvec[k], dfdyvec[k]);
+                static_cast<const T*>(this)->grad(
+                    xvec[k], yvec[k], xindices[k], yindices[k], dfdxvec[k], dfdyvec[k]
+                );
             }
         }
     };
