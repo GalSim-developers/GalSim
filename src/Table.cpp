@@ -159,6 +159,7 @@ namespace galsim {
         double argMax() const { return _args.back(); }
         size_t size() const { return _args.size(); }
 
+        virtual ~TableImpl() {}
     protected:
         ArgVec _args;
         const int _n;
@@ -469,6 +470,7 @@ namespace galsim {
         virtual void gradient(double x, double y, double& dfdx, double& dfdy) const = 0;
         virtual void gradientMany(const double* xvec, const double* yvec,
                                   double* dfdxvec, double* dfdyvec, int N) const = 0;
+        virtual ~Table2DImpl() {}
     protected:
         const ArgVec _xargs;
         const ArgVec _yargs;
