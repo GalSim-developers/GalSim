@@ -777,6 +777,7 @@ lib=("galsim", {'sources' : cpp_sources,
                 'undef_macros' : undef_macros })
 ext=Extension("galsim._galsim",
               py_sources,
+              depends = cpp_sources + headers,
               undef_macros = undef_macros)
 
 build_dep = ['setuptools>=38', 'pybind11>=2.2']
