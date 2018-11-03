@@ -54,6 +54,17 @@ if LooseVersion(matplotlib.__version__) < LooseVersion('1.2'):
     raise RuntimeError("This demo requires matplotlib version 1.2 or greater!")
 
 try:
+    from contextlib import ExitStack
+except ImportError:
+    # ExitStack was introduced in python 3.3, so need to do something else in python 2.7.
+    # Really just need a dummy context manager, not the real ExitStack, so this is vv simple.
+    class ExitStack():
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+try:
     from astropy.utils.console import ProgressBar
 except ImportError:
     raise ImportError("This demo requires astropy!")
@@ -117,9 +128,11 @@ def make_movie(args):
     if args.nlayers > 0:
         print("Instantiating screens")
         with ProgressBar(2*args.nlayers) as bar:
-            fft_atm.instantiate(_bar=bar)
-            r0 = args.r0_500*(args.lam/500)**1.2
-            geom_atm.instantiate(kmax=0.2/r0, _bar=bar)
+            if args.do_fft:
+                fft_atm.instantiate(_bar=bar)
+            if args.do_geom:
+                r0 = args.r0_500*(args.lam/500)**1.2
+                geom_atm.instantiate(kmax=0.2/r0, _bar=bar)
             # After instantiation, they're only equal if there's no atmosphere.
             assert fft_atm != geom_atm
 
@@ -141,7 +154,8 @@ def make_movie(args):
 
     # Code to setup the Matplotlib animation.
     metadata = dict(title="FFT vs geom movie", artist='Matplotlib')
-    writer = anim.FFMpegWriter(fps=15, bitrate=10000, metadata=metadata)
+    if args.make_movie:
+        writer = anim.FFMpegWriter(fps=15, bitrate=10000, metadata=metadata)
 
     fig = Figure(facecolor='k', figsize=(16, 9))
     FigureCanvasAgg(fig)
@@ -197,37 +211,44 @@ def make_movie(args):
 
     print("Drawing PSFs")
     with ProgressBar(args.n) as bar:
-        with writer.saving(fig, fullpath, 100):
+        with writer.saving(fig, fullpath, 100) if args.make_movie else ExitStack():
             t0 = 0.0
             for i, aberration in enumerate(aberrations):
                 optics = galsim.OpticalScreen(args.diam, obscuration=args.obscuration,
-                                              aberrations=[0]+aberration.tolist())
-                fft_psl = galsim.PhaseScreenList(fft_atm._layers+[optics])
-                geom_psl = galsim.PhaseScreenList(geom_atm._layers+[optics])
-                fft_psf = fft_psl.makePSF(
-                        lam=args.lam, aper=fft_aper, t0=t0, exptime=args.time_step)
-                geom_psf = geom_psl.makePSF(
-                        lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
+                                              aberrations=[0]+aberration.tolist(),
+                                              annular_zernike=True)
+                if args.do_fft:
+                    fft_psl = galsim.PhaseScreenList(fft_atm._layers+[optics])
+                    fft_psf = fft_psl.makePSF(
+                            lam=args.lam, aper=fft_aper, t0=t0, exptime=args.time_step)
+                    fft_img0 = fft_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale)
 
-                fft_img0 = fft_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale)
-
-                geom_img0 = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
-                                               method='phot', n_photons=100000)
+                if args.do_geom:
+                    geom_psl = galsim.PhaseScreenList(geom_atm._layers+[optics])
+                    geom_psf = geom_psl.makePSF(
+                            lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
+                    geom_img0 = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
+                                                   method='phot', n_photons=100000)
 
                 t0 += args.time_step
 
                 if args.accumulate:
-                    fft_img_sum += fft_img0
-                    geom_img_sum += geom_img0
-                    fft_img = fft_img_sum/(i+1)
-                    geom_img = geom_img_sum/(i+1)
+                    if args.do_fft:
+                        fft_img_sum += fft_img0
+                        fft_img = fft_img_sum/(i+1)
+                    if args.do_geom:
+                        geom_img_sum += geom_img0
+                        geom_img = geom_img_sum/(i+1)
                 else:
-                    fft_img = fft_img0
-                    geom_img = geom_img0
+                    if args.do_fft:
+                        fft_img = fft_img0
+                    if args.do_geom:
+                        geom_img = geom_img0
 
-
-                fft_im.set_array(fft_img.array)
-                geom_im.set_array(geom_img.array)
+                if args.do_fft:
+                    fft_im.set_array(fft_img.array)
+                if args.do_geom:
+                    geom_im.set_array(geom_img.array)
 
                 for j, ab in enumerate(aberration):
                     if j == 0:
@@ -235,41 +256,42 @@ def make_movie(args):
                     ztext[j-1].set_text("Z{:d} = {:5.3f}".format(j+1, ab))
 
                 # Calculate simple estimate of ellipticity
-                mom_fft = galsim.utilities.unweighted_moments(fft_img, origin=fft_img.true_center)
-                mom_geom = galsim.utilities.unweighted_moments(geom_img,
-                                                               origin=geom_img.true_center)
-                e_fft = galsim.utilities.unweighted_shape(mom_fft)
-                e_geom = galsim.utilities.unweighted_shape(mom_geom)
-
                 Is = ("$M_x$={: 6.4f}, $M_y$={: 6.4f}, $M_{{xx}}$={:6.4f},"
                       " $M_{{yy}}$={:6.4f}, $M_{{xy}}$={: 6.4f}")
-                M_fft.set_text(Is.format(mom_fft['Mx']*fft_img.scale,
-                                         mom_fft['My']*fft_img.scale,
-                                         mom_fft['Mxx']*fft_img.scale**2,
-                                         mom_fft['Myy']*fft_img.scale**2,
-                                         mom_fft['Mxy']*fft_img.scale**2))
-                M_geom.set_text(Is.format(mom_geom['Mx']*geom_img.scale,
-                                          mom_geom['My']*geom_img.scale,
-                                          mom_geom['Mxx']*geom_img.scale**2,
-                                          mom_geom['Myy']*geom_img.scale**2,
-                                          mom_geom['Mxy']*geom_img.scale**2))
-                etext_fft.set_text("$e_1$={: 6.4f}, $e_2$={: 6.4f}, $r^2$={:6.4f}".format(
-                                   e_fft['e1'], e_fft['e2'], e_fft['rsqr']*fft_img.scale**2))
-                etext_geom.set_text("$e_1$={: 6.4f}, $e_2$={: 6.4f}, $r^2$={:6.4f}".format(
-                                    e_geom['e1'], e_geom['e2'], e_geom['rsqr']*geom_img.scale**2))
 
+                if args.do_fft:
+                    mom_fft = galsim.utilities.unweighted_moments(fft_img, origin=fft_img.true_center)
+                    e_fft = galsim.utilities.unweighted_shape(mom_fft)
+                    M_fft.set_text(Is.format(mom_fft['Mx']*fft_img.scale,
+                                             mom_fft['My']*fft_img.scale,
+                                             mom_fft['Mxx']*fft_img.scale**2,
+                                             mom_fft['Myy']*fft_img.scale**2,
+                                             mom_fft['Mxy']*fft_img.scale**2))
+                    etext_fft.set_text("$e_1$={: 6.4f}, $e_2$={: 6.4f}, $r^2$={:6.4f}".format(
+                                       e_fft['e1'], e_fft['e2'], e_fft['rsqr']*fft_img.scale**2))
+                    fft_mom[i] = (mom_fft['Mx']*fft_img.scale, mom_fft['My']*fft_img.scale,
+                                  mom_fft['Mxx']*fft_img.scale**2, mom_fft['Myy']*fft_img.scale**2,
+                                  mom_fft['Mxy']*fft_img.scale**2,
+                                  e_fft['e1'], e_fft['e2'], e_fft['rsqr']*fft_img.scale**2)
 
-                fft_mom[i] = (mom_fft['Mx']*fft_img.scale, mom_fft['My']*fft_img.scale,
-                              mom_fft['Mxx']*fft_img.scale**2, mom_fft['Myy']*fft_img.scale**2,
-                              mom_fft['Mxy']*fft_img.scale**2,
-                              e_fft['e1'], e_fft['e2'], e_fft['rsqr']*fft_img.scale**2)
+                if args.do_geom:
+                    mom_geom = galsim.utilities.unweighted_moments(geom_img,
+                                                                   origin=geom_img.true_center)
+                    e_geom = galsim.utilities.unweighted_shape(mom_geom)
+                    M_geom.set_text(Is.format(mom_geom['Mx']*geom_img.scale,
+                                              mom_geom['My']*geom_img.scale,
+                                              mom_geom['Mxx']*geom_img.scale**2,
+                                              mom_geom['Myy']*geom_img.scale**2,
+                                              mom_geom['Mxy']*geom_img.scale**2))
+                    etext_geom.set_text("$e_1$={: 6.4f}, $e_2$={: 6.4f}, $r^2$={:6.4f}".format(
+                                        e_geom['e1'], e_geom['e2'], e_geom['rsqr']*geom_img.scale**2))
+                    geom_mom[i] = (mom_geom['Mx']*geom_img.scale, mom_geom['My']*geom_img.scale,
+                                  mom_geom['Mxx']*geom_img.scale**2, mom_geom['Myy']*geom_img.scale**2,
+                                  mom_geom['Mxy']*geom_img.scale**2,
+                                  e_geom['e1'], e_geom['e2'], e_geom['rsqr']*geom_img.scale**2)
 
-                geom_mom[i] = (mom_geom['Mx']*geom_img.scale, mom_geom['My']*geom_img.scale,
-                              mom_geom['Mxx']*geom_img.scale**2, mom_geom['Myy']*geom_img.scale**2,
-                              mom_geom['Mxy']*geom_img.scale**2,
-                              e_geom['e1'], e_geom['e2'], e_geom['rsqr']*geom_img.scale**2)
-
-                writer.grab_frame(facecolor=fig.get_facecolor())
+                if args.make_movie:
+                    writer.grab_frame(facecolor=fig.get_facecolor())
 
                 bar.update()
 
@@ -425,5 +447,9 @@ Atmosphere only simulation:
 
     parser.add_argument("--out", type=str, default="output/fft_vs_geom_",
                         help="Prefix for output files.  Default['output/fft_vs_geom_']")
+    parser.add_argument("--do_fft", type=int, default=1, help="Do the FFT PSFs?")
+    parser.add_argument("--do_geom", type=int, default=1, help="Do the geometric PSFs?")
+    parser.add_argument("--make_movie", type=int, default=1, help="Make the movie?")
+
     args = parser.parse_args()
     make_movie(args)
