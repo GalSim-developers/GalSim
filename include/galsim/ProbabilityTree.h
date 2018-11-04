@@ -21,6 +21,7 @@
 #define GalSim_ProbabilityTree_H
 
 #include <vector>
+#include "Std.h"
 
 namespace galsim {
 
@@ -48,19 +49,19 @@ namespace galsim {
     template <class FluxData>
     class ProbabilityTree :
         //! @cond  This keeps doxygen from adding vector to our list of classes.
-        private std::vector<FluxData>
+        private std::vector<shared_ptr<FluxData> >
         //! @endcond
     {
-        typedef typename std::vector<FluxData>::iterator VecIter;
+        typedef typename std::vector<shared_ptr<FluxData> >::iterator VecIter;
         class FluxCompare;
     public:
-        using std::vector<FluxData>::size;
-        using std::vector<FluxData>::begin;
-        using std::vector<FluxData>::end;
-        using std::vector<FluxData>::push_back;
-        using std::vector<FluxData>::insert;
-        using std::vector<FluxData>::empty;
-        using std::vector<FluxData>::clear;
+        using std::vector<shared_ptr<FluxData> >::size;
+        using std::vector<shared_ptr<FluxData> >::begin;
+        using std::vector<shared_ptr<FluxData> >::end;
+        using std::vector<shared_ptr<FluxData> >::push_back;
+        using std::vector<shared_ptr<FluxData> >::insert;
+        using std::vector<shared_ptr<FluxData> >::empty;
+        using std::vector<shared_ptr<FluxData> >::clear;
 
         /// @brief Constructor - nothing to do.
         ProbabilityTree() : _root(0) {}
@@ -82,7 +83,7 @@ namespace galsim {
          *               holds a new uniform deviate.
          * @returns Pointer to the selected tree member.
          */
-        const FluxData* find(double& unitRandom) const
+        const shared_ptr<FluxData> find(double& unitRandom) const
         {
             // Note: Don't need floor here, since rhs is positive, so floor is superfluous.
             int i = int(unitRandom * _shortcut.size());
@@ -113,7 +114,7 @@ namespace galsim {
             // NB. Accumulate from end for better numerical accuracy adding up small values.
             _totalAbsFlux = 0.;
             for (VecIter it=last; it!=start;)
-                _totalAbsFlux += std::abs((--it)->getFlux());
+                _totalAbsFlux += std::abs((*--it)->getFlux());
             dbg<<"totalAbsFlux = "<<_totalAbsFlux<<std::endl;
             // leftAbsFlux will be updated for each element to be the total flux up the that one.
             double leftAbsFlux = 0.;
@@ -149,7 +150,7 @@ namespace galsim {
                 xassert(start != end);
                 if (start + 1 == end) {
                     // Only one element.
-                    _dataPtr = &(*start);
+                    _dataPtr = *start;
                     // absFlux on input should equal the absolute flux in this dataPtr.
                     xassert(std::abs(std::abs(_dataPtr->getFlux()) - absFlux) <=
                             1.e-8 * (leftAbsFlux+absFlux));
@@ -158,8 +159,8 @@ namespace galsim {
                 } else if (start + 2 == end) {
                     // Two elements, so just split
                     VecIter mid = start+1;
-                    _left = new Element(start, mid, leftAbsFlux, std::abs(start->getFlux()));
-                    _right = new Element(mid, end, leftAbsFlux, std::abs(mid->getFlux()));
+                    _left = new Element(start, mid, leftAbsFlux, std::abs((*start)->getFlux()));
+                    _right = new Element(mid, end, leftAbsFlux, std::abs((*mid)->getFlux()));
                 } else {
                     xassert(end > start+2);
                     xassert(absFlux > 0.);
@@ -169,14 +170,14 @@ namespace galsim {
                     // stops quickly with the large flux Elements on the left.
                     double half_tot = absFlux/2.;
                     double leftSum=0.;
-                    for (; leftSum < half_tot; ++mid) leftSum += std::abs(mid->getFlux());
+                    for (; leftSum < half_tot; ++mid) leftSum += std::abs((*mid)->getFlux());
 
                     if (mid == end) {
                         dbg<<"mid passed the end.  Backtracking...\n";
                         dbg<<"leftSum = "<<leftSum<<std::endl;
                         // Shouldn't happen in exact arithmetic, but just in case...
                         --mid;
-                        leftSum -= std::abs(mid->getFlux());
+                        leftSum -= std::abs((*mid)->getFlux());
                         dbg<<"leftSum => "<<leftSum<<std::endl;
                     }
 
@@ -191,7 +192,7 @@ namespace galsim {
                         dbg<<"leftAbsFlux = "<<leftAbsFlux<<std::endl;
                         dbg<<"absFlux - leftSum = "<<absFlux - leftSum<<std::endl;
                         rightSum = 0.;
-                        for (VecIter it=end; it!=mid;) rightSum += std::abs((--it)->getFlux());
+                        for (VecIter it=end; it!=mid;) rightSum += std::abs((*--it)->getFlux());
                         dbg<<"rightSum = "<<rightSum<<std::endl;
                         _absFlux = leftSum + rightSum;
                         dbg<<"leftSum + rightSum = "<<_absFlux<<std::endl;
@@ -225,7 +226,7 @@ namespace galsim {
              *  below the input value on cumulative flux distribution.
              * @returns pointer to member that contains input cumulative flux point.
              */
-            const FluxData* find(double& cumulativeFlux) const
+            const shared_ptr<FluxData> find(double& cumulativeFlux) const
             {
                 xassert(cumulativeFlux >= _leftAbsFlux);
                 xassert(cumulativeFlux <= _leftAbsFlux + _absFlux);
@@ -249,7 +250,7 @@ namespace galsim {
             double getLeftAbsFlux() const { return _leftAbsFlux; }
             const Element* getLeft() const { return _left; }
             const Element* getRight() const { return _right; }
-            const FluxData* getData() const { return _dataPtr; }
+            const shared_ptr<FluxData> getData() const { return _dataPtr; }
 
             bool isNode() const { return bool(_left); }
             bool isLeaf() const { return !isNode(); }
@@ -257,7 +258,7 @@ namespace galsim {
         private:
 
             // Each Element has either a dataPtr (if it is a leaf) or left/right (if it is a node)
-            const FluxData* _dataPtr; ///< Pointer to the member for this element
+            shared_ptr<FluxData> _dataPtr; ///< Pointer to the member for this element
             Element* _left; ///< Pointer to left child member
             Element* _right; ///< Pointer to right child member
 
@@ -273,12 +274,12 @@ namespace galsim {
         class FluxCompare
         {
         public:
-            bool operator()(const FluxData& lhs, const FluxData& rhs) const
-            { return std::abs(lhs.getFlux()) > std::abs(rhs.getFlux()); }
-            bool operator()(const FluxData& lhs, double val) const
-            { return std::abs(lhs.getFlux()) > val; }
-            bool operator()(double val, const FluxData& lhs) const
-            { return val > std::abs(lhs.getFlux()); }
+            bool operator()(const shared_ptr<FluxData> lhs, const shared_ptr<FluxData> rhs) const
+            { return std::abs(lhs->getFlux()) > std::abs(rhs->getFlux()); }
+            bool operator()(const shared_ptr<FluxData> lhs, double val) const
+            { return std::abs(lhs->getFlux()) > val; }
+            bool operator()(double val, const shared_ptr<FluxData> lhs) const
+            { return val > std::abs(lhs->getFlux()); }
         };
 
         void buildShortcut(const Element* element, int i1, int i2)
