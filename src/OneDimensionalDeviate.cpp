@@ -184,10 +184,9 @@ namespace galsim {
     }
 
 
-    // Select a photon from within the interval.  unitRandom
-    // as an initial random value, more from ud if needed for rejections.
-    void Interval::drawWithin(double unitRandom, double& x, double& flux,
-                              UniformDeviate ud) const
+    // Select a photon from within the interval.
+    // unitRandom is a random value to use.
+    void Interval::drawWithin(double unitRandom, double& x, double& flux) const
     {
         xdbg<<"drawWithin interval\n";
         xdbg<<"_flux = "<<_flux<<std::endl;
@@ -198,16 +197,7 @@ namespace galsim {
         x = interpolateFlux(fractionOfInterval);
         xdbg<<"x = "<<x<<std::endl;
         flux = 1.;
-        if (_useRejectionMethod) {
-            xdbg<<"use rejection\n";
-            while ( ud() > std::abs((*_fluxDensityPtr)(x)) * _invMaxAbsDensity) {
-                x = interpolateFlux(ud());
-            }
-            xdbg<<"x => "<<x<<std::endl;
-            if (_flux < 0) flux = -1.;
-        } else {
-            flux = (*_fluxDensityPtr)(x) * _invMeanAbsDensity;
-        }
+        flux = (*_fluxDensityPtr)(x) * _invMeanAbsDensity;
         xdbg<<"flux = "<<flux<<std::endl;
     }
 
@@ -257,12 +247,9 @@ namespace galsim {
         if (densityVariation > 1.) densityVariation = 1. / densityVariation;
         if (densityVariation > _gsparams.allowed_flux_variation) {
             // Don't split if flux range is small
-            _useRejectionMethod = false;
             result.push_back(shared_ptr<Interval>(new Interval(*this)));
         } else if (std::abs(_flux) < smallFlux) {
             // Don't split further, as it will be rare to be in this interval
-            // and rejection is ok.
-            _useRejectionMethod = true;
             result.push_back(shared_ptr<Interval>(new Interval(*this)));
         } else {
             // Split the interval.  Call (recursively) split() for left & right
@@ -385,7 +372,7 @@ namespace galsim {
                 const shared_ptr<Interval> chosen = _pt.find(unitRandom);
                 // Now draw a radius from within selected interval
                 double radius, flux;
-                chosen->drawWithin(unitRandom, radius, flux, ud);
+                chosen->drawWithin(unitRandom, radius, flux);
                 // Draw second ud to get azimuth
                 double theta = 2.*M_PI*ud();
                 double sintheta, costheta;
@@ -405,7 +392,7 @@ namespace galsim {
                 const shared_ptr<Interval> chosen = _pt.find(unitRandom);
                 // Now draw a radius from within selected interval
                 double radius, flux;
-                chosen->drawWithin(unitRandom, radius, flux, ud);
+                chosen->drawWithin(unitRandom, radius, flux);
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
                 photons.setPhoton(i, xu*rScale, yu*rScale, flux*fluxPerPhoton);
@@ -416,12 +403,12 @@ namespace galsim {
                 shared_ptr<Interval> chosen = _pt.find(unitRandom);
                 // Now draw an x from within selected interval
                 double x, flux;
-                chosen->drawWithin(unitRandom, x, flux, ud);
+                chosen->drawWithin(unitRandom, x, flux);
                 if (xandy) {
                     double y, flux2;
                     unitRandom = ud();
                     chosen = _pt.find(unitRandom);
-                    chosen->drawWithin(unitRandom, y, flux2, ud);
+                    chosen->drawWithin(unitRandom, y, flux2);
                     photons.setPhoton(i, x, y, flux*flux2*fluxPerPhoton);
                 } else {
                     photons.setPhoton(i, x, 0., flux*fluxPerPhoton);
