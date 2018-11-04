@@ -228,7 +228,7 @@ def make_movie(args):
                     geom_psf = geom_psl.makePSF(
                             lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
                     geom_img0 = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
-                                                   method='phot', n_photons=100000)
+                                                   method='phot', n_photons=args.geom_nphot)
 
                 t0 += args.time_step
 
@@ -441,6 +441,8 @@ Atmosphere only simulation:
                              "Default: 1.0")
     parser.add_argument("--geom_oversampling", type=float, default=1.0,
                         help="Factor by which to oversample geometric *pupil plane*.  Default: 1.0")
+    parser.add_argument("--geom_nphot", type=float, default=100000,
+                        help="Number of photons to use for geometric image")
 
     parser.add_argument("--vmax", type=float, default=1.e-3,
                         help="Matplotlib imshow vmax kwarg to use  Default: 1e-3.")
