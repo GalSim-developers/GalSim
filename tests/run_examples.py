@@ -445,8 +445,12 @@ def test_fft_vs_geom_movie():
         pad_factor = 1.0
         oversampling = 1.0
         geom_oversampling = 1.0
+        geom_nphot = 100000
         vmax = 1.e-3
         out = "output/test_fft_vs_geom_"
+        do_fft=1
+        do_geom=1
+        make_movie=1
     import fft_vs_geom_movie
     try:
         fft_vs_geom_movie.make_movie(Args)
