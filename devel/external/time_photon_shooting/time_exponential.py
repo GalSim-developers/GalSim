@@ -43,7 +43,7 @@ EXPONENTIAL_SCALE_RADIUS = 5.
 RANDOM_SEED = 3231139901
 
 def time_exponential_shoot():
-    """Shoot photons through an Exponential profile recording times for comparison between 
+    """Shoot photons through an Exponential profile recording times for comparison between
     USE_COS_SIN  method in SBProfile.cpp and the unit circle rejection method, and for comparing
     the customized radius sampling method against the use of the OneDimensionalDeviate with a
     Sersic(n=1) profile.
@@ -54,7 +54,7 @@ def time_exponential_shoot():
     rng = galsim.UniformDeviate(RANDOM_SEED)
 
     # Build the image for drawing the galaxy into
-    image = galsim.ImageF(IMAGE_XMAX, IMAGE_YMAX, PIXEL_SCALE)
+    image = galsim.ImageF(IMAGE_XMAX, IMAGE_YMAX, scale=PIXEL_SCALE)
 
     # Start the timer
     t1 = time.time()
@@ -62,15 +62,13 @@ def time_exponential_shoot():
     for i in range(NIMAGES):
         # Build the galaxy
         gal = galsim.Exponential(scale_radius=EXPONENTIAL_SCALE_RADIUS)
-        # Build the image for drawing the galaxy into
-        image = galsim.ImageF(IMAGE_XMAX, IMAGE_YMAX)
         # Shoot the galaxy
-        gal.drawShoot(image, NPHOTONS) 
+        gal.drawImage(image, method='phot', n_photons=NPHOTONS)
 
     # Get the time
     t2 = time.time()
     logger.info(
-        'time_exponential_shoot: NIMAGES = %d, NPHOTONS = %d, total time = %f sec', NIMAGES, 
+        'time_exponential_shoot: NIMAGES = %d, NPHOTONS = %d, total time = %f sec', NIMAGES,
         NPHOTONS, t2-t1
     )
 
