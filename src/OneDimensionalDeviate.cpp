@@ -274,14 +274,12 @@ namespace galsim {
         dbg<<"  x0, x1 = "<<_xLower<<"  "<<_xUpper<<std::endl;
         double linear_flux;
         if (_isRadial) {
-            _invMeanAbsDensity = std::abs((M_PI*_xRange*(_xUpper+_xLower)) / _flux);
             // linear flux would be 2pi int_r0..r1 f0 r + (f1-f0)/(r1-r0) (r-r0) r
             // = pi/3 (r1-r0) (f0*(2r0 + r1) + f1*(2r1 + r0))
             // All but pi (r1-r0) is what we will want to call _d.  So do it now.
             _d = (_fLower*(2.*_xLower+_xUpper) + _fUpper*(2.*_xUpper+_xLower)) / 3.;
             linear_flux = M_PI * _xRange * _d;
         } else {
-            _invMeanAbsDensity = std::abs(_xRange/_flux);
             // linear flux would be int_x0..x1 f0 + (f1-f0)/(x1-x0) (x-x0)
             // = 1/2 (x1-x0) (f1 + f0)
             _c = _fUpper + _fLower;
