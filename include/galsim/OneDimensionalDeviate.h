@@ -69,16 +69,9 @@ namespace galsim {
      * interval/annulus, and the cumulative flux of all intervals up to and including this one.
      *
      * The `drawWithin()` method will select one photon (and flux) drawn from within this interval
-     * or annulus, such that the expected flux distribution matches the FluxDensity function.  This
-     * can be done one of two ways: If `_useRejectionMethod=true`, then an x (or r) position is
-     * chosen that would match the chosen cumulative flux were the FluxDensity uniform over the
-     * interval.  Then the FluxDensity is evaluated, compared to the maximum within the interval
-     * (which is always an endpoint), and a UniformDeviate is drawn to decide whether to keep or
-     * reject this x photon.  This repeats until a position is kept.
-     *
-     * If `_useRejectionMethod=false`, then no rejection is done.  The photon is kept, but is given
-     * a flux value equal to the FluxDensity at x relative to the mean over the interval.  This is
-     * faster but makes the statistics of the photons harder to interpret.
+     * or annulus, such that the expected flux distribution matches the FluxDensity function.
+     * Each photon is given a flux value equal to the FluxDensity at x relative to the mean over
+     * the interval.
      *
      * See the `OneDimensionalDeviate` docstrings for more information.
      */
@@ -109,7 +102,6 @@ namespace galsim {
             _isRadial(isRadial),
             _gsparams(gsparams),
             _fluxIsReady(false),
-            _useRejectionMethod(false),
             _invMaxAbsDensity(0.),
             _invMeanAbsDensity(0.)
         {}
@@ -121,7 +113,6 @@ namespace galsim {
             _isRadial(rhs._isRadial),
             _gsparams(rhs._gsparams),
             _fluxIsReady(false),
-            _useRejectionMethod(rhs._useRejectionMethod),
             _invMaxAbsDensity(rhs._invMaxAbsDensity),
             _invMeanAbsDensity(rhs._invMeanAbsDensity)
         {}
@@ -133,7 +124,6 @@ namespace galsim {
             _xUpper = rhs._xUpper;
             _isRadial = rhs._isRadial;
             _fluxIsReady = false;
-            _useRejectionMethod = rhs._useRejectionMethod;
             _invMaxAbsDensity = rhs._invMaxAbsDensity;
             _invMeanAbsDensity = rhs._invMeanAbsDensity;
             return *this;
@@ -147,8 +137,7 @@ namespace galsim {
          *             using rejection.
          * @param[out] ud UniformDeviate used for rejection sampling, if needed.
          */
-        void drawWithin(double unitRandom, double& x, double& flux,
-                        UniformDeviate ud) const;
+        void drawWithin(double unitRandom, double& x, double& flux) const;
 
         /**
          * @brief Get integrated flux over this interval or annulus.
@@ -196,10 +185,6 @@ namespace galsim {
         // Finds the x or radius coord that would enclose fraction of this interval's flux
         // if flux were constant.
         double interpolateFlux(double fraction) const;
-
-        // Set this variable true if returning equal fluxes with rejection method, vs returning
-        // non-unity flux weight.
-        bool _useRejectionMethod;
 
         // 1. / (Maximum absolute flux density in the interval (assumed to be at an endpoint))
         double _invMaxAbsDensity;
