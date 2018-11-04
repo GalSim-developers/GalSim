@@ -99,6 +99,7 @@ namespace galsim {
             _fluxDensityPtr(&fluxDensity),
             _xLower(xLower),
             _xUpper(xUpper),
+            _xRange(_xUpper - _xLower),
             _isRadial(isRadial),
             _gsparams(gsparams),
             _fluxIsReady(false),
@@ -110,11 +111,15 @@ namespace galsim {
             _fluxDensityPtr(rhs._fluxDensityPtr),
             _xLower(rhs._xLower),
             _xUpper(rhs._xUpper),
+            _xRange(rhs._xRange),
+            _fLower(rhs._fLower),
+            _fUpper(rhs._fUpper),
             _isRadial(rhs._isRadial),
             _gsparams(rhs._gsparams),
             _fluxIsReady(false),
             _invMaxAbsDensity(rhs._invMaxAbsDensity),
-            _invMeanAbsDensity(rhs._invMeanAbsDensity)
+            _invMeanAbsDensity(rhs._invMeanAbsDensity),
+            _a(rhs._a), _b(rhs._b), _c(rhs._c), _d(rhs._d)
         {}
 
         Interval& operator=(const Interval& rhs)
@@ -122,10 +127,17 @@ namespace galsim {
             // Everything else is constant, so no need to copy.
             _xLower = rhs._xLower;
             _xUpper = rhs._xUpper;
+            _xRange = rhs._xRange;
+            _fLower = rhs._fLower;
+            _fUpper = rhs._fUpper;
             _isRadial = rhs._isRadial;
             _fluxIsReady = false;
             _invMaxAbsDensity = rhs._invMaxAbsDensity;
             _invMeanAbsDensity = rhs._invMeanAbsDensity;
+            _a = rhs._a;
+            _b = rhs._b;
+            _c = rhs._c;
+            _d = rhs._d;
             return *this;
         }
 
@@ -163,10 +175,10 @@ namespace galsim {
          * @brief Return a list of intervals that divide this one into acceptably small ones.
          *
          * This routine works by recursive bisection.  Intervals that are returned have all had
-         * their fluxes integrated.  Intervals are split until the FluxDensity does not vary too
-         * much within an interval, or when their flux is below `smallFlux`.
-         * @param[in] smallFlux Flux below which a sub-interval is not further split.
-         * @returns List contiguous Intervals whose union is this one.
+         * their fluxes integrated.  Intervals are split until the error from a linear
+         * approximation to f(x) is less than toler;
+         * @param[in] toler Tolerance on the flux error below which a sub-interval is not split.
+         * @returns List of contiguous Intervals whose union is this one.
          */
         std::list<shared_ptr<Interval> > split(double toler);
 
@@ -175,6 +187,9 @@ namespace galsim {
         const FluxDensity* _fluxDensityPtr;  // Pointer to the parent FluxDensity function.
         double _xLower; // Interval lower bound
         double _xUpper; // Interval upper bound
+        double _xRange; // _xUpper - _xLower  (used a lot)
+        double _fLower; // flux density at lower bound
+        double _fUpper; // flux density at upper bound
         bool _isRadial; // True if domain is an annulus, otherwise domain is a linear interval.
         const GSParams& _gsparams;
 
@@ -190,6 +205,8 @@ namespace galsim {
         double _invMaxAbsDensity;
 
         double _invMeanAbsDensity; // 1. / (Mean absolute flux density in the interval)
+
+        double _a, _b, _c, _d;  // Coefficients used for solving for dx in the interval.
 
     };
 
