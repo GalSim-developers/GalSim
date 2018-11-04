@@ -102,9 +102,7 @@ namespace galsim {
             _xRange(_xUpper - _xLower),
             _isRadial(isRadial),
             _gsparams(gsparams),
-            _fluxIsReady(false),
-            _invMaxAbsDensity(0.),
-            _invMeanAbsDensity(0.)
+            _fluxIsReady(false)
         {}
 
         Interval(const Interval& rhs) :
@@ -117,8 +115,6 @@ namespace galsim {
             _isRadial(rhs._isRadial),
             _gsparams(rhs._gsparams),
             _fluxIsReady(false),
-            _invMaxAbsDensity(rhs._invMaxAbsDensity),
-            _invMeanAbsDensity(rhs._invMeanAbsDensity),
             _a(rhs._a), _b(rhs._b), _c(rhs._c), _d(rhs._d)
         {}
 
@@ -132,8 +128,6 @@ namespace galsim {
             _fUpper = rhs._fUpper;
             _isRadial = rhs._isRadial;
             _fluxIsReady = false;
-            _invMaxAbsDensity = rhs._invMaxAbsDensity;
-            _invMeanAbsDensity = rhs._invMeanAbsDensity;
             _a = rhs._a;
             _b = rhs._b;
             _c = rhs._c;
@@ -200,11 +194,6 @@ namespace galsim {
         // Finds the x or radius coord that would enclose fraction of this interval's flux
         // if flux were constant.
         double interpolateFlux(double fraction) const;
-
-        // 1. / (Maximum absolute flux density in the interval (assumed to be at an endpoint))
-        double _invMaxAbsDensity;
-
-        double _invMeanAbsDensity; // 1. / (Mean absolute flux density in the interval)
 
         double _a, _b, _c, _d;  // Coefficients used for solving for dx in the interval.
 
