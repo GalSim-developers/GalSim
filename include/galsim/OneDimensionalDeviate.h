@@ -110,8 +110,6 @@ namespace galsim {
             _xLower(rhs._xLower),
             _xUpper(rhs._xUpper),
             _xRange(rhs._xRange),
-            _fLower(rhs._fLower),
-            _fUpper(rhs._fUpper),
             _isRadial(rhs._isRadial),
             _gsparams(rhs._gsparams),
             _fluxIsReady(false),
@@ -124,8 +122,6 @@ namespace galsim {
             _xLower = rhs._xLower;
             _xUpper = rhs._xUpper;
             _xRange = rhs._xRange;
-            _fLower = rhs._fLower;
-            _fUpper = rhs._fUpper;
             _isRadial = rhs._isRadial;
             _fluxIsReady = false;
             _a = rhs._a;
@@ -182,8 +178,6 @@ namespace galsim {
         double _xLower; // Interval lower bound
         double _xUpper; // Interval upper bound
         double _xRange; // _xUpper - _xLower  (used a lot)
-        double _fLower; // flux density at lower bound
-        double _fUpper; // flux density at upper bound
         bool _isRadial; // True if domain is an annulus, otherwise domain is a linear interval.
         const GSParams& _gsparams;
 

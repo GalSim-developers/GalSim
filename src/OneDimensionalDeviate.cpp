@@ -265,39 +265,39 @@ namespace galsim {
         // Specifically, we know that there should not be any extrema in the interval at this
         // point, so we can just check if the flux that would result from the linear model
         // is within tolerance of the actual flux calculated by the integral.
-        _fLower = (*_fluxDensityPtr)(_xLower);
-        _fUpper = (*_fluxDensityPtr)(_xUpper);
+        double fLower = (*_fluxDensityPtr)(_xLower);
+        double fUpper = (*_fluxDensityPtr)(_xUpper);
 
         std::list<shared_ptr<Interval> > result;
         dbg<<"  flux = "<<_flux<<std::endl;
-        dbg<<"  min, max density = "<<_fLower<<"  "<<_fUpper<<std::endl;
+        dbg<<"  min, max density = "<<fLower<<"  "<<fUpper<<std::endl;
         dbg<<"  x0, x1 = "<<_xLower<<"  "<<_xUpper<<std::endl;
         double linear_flux;
         if (_isRadial) {
             // linear flux would be 2pi int_r0..r1 f0 r + (f1-f0)/(r1-r0) (r-r0) r
             // = pi/3 (r1-r0) (f0*(2r0 + r1) + f1*(2r1 + r0))
             // All but pi (r1-r0) is what we will want to call _d.  So do it now.
-            _d = (_fLower*(2.*_xLower+_xUpper) + _fUpper*(2.*_xUpper+_xLower)) / 3.;
+            _d = (fLower*(2.*_xLower+_xUpper) + fUpper*(2.*_xUpper+_xLower)) / 3.;
             linear_flux = M_PI * _xRange * _d;
         } else {
             // linear flux would be int_x0..x1 f0 + (f1-f0)/(x1-x0) (x-x0)
             // = 1/2 (x1-x0) (f1 + f0)
-            _c = _fUpper + _fLower;
+            _c = fUpper + fLower;
             linear_flux = 0.5 * _xRange * _c;
         }
         dbg<<"  If linear, flux = "<<linear_flux<<"  error = "<<linear_flux - _flux<<std::endl;
         if (std::abs(linear_flux - _flux) < toler) {
             if (_isRadial) {
                 // Store a few other combinations that will be used when drawing within interval.
-                double fRange = _fUpper - _fLower;
+                double fRange = fUpper - fLower;
                 _a = fRange * _xRange / 3.;
-                _b = _fLower * _xRange + fRange * _xLower;
-                _c = 2. * _fLower * _xLower;
+                _b = fLower * _xRange + fRange * _xLower;
+                _c = 2. * fLower * _xLower;
             } else {
                 // These aren't as important to store as the radial ones, since they are pretty
                 // trivial, but might as well.
-                _a = _fUpper - _fLower;
-                _b = _fLower;
+                _a = fUpper - fLower;
+                _b = fLower;
                 _d = 0.;
             }
             if (_flux < 0) {
