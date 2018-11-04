@@ -825,7 +825,7 @@ def test_ne():
 def test_geometric_shoot():
     """Test that geometric photon shooting is reasonably consistent with Fourier optics."""
     jmax = 20
-    bd = galsim.BaseDeviate(11111111)
+    bd = galsim.BaseDeviate(1111111)
     u = galsim.UniformDeviate(bd)
 
     lam = 500.0
@@ -834,8 +834,7 @@ def test_geometric_shoot():
     for i in range(4):  # Do a few random tests.  Takes about 1 sec.
         aberrations = [0]+[u()*0.1 for i in range(jmax)]
         opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations,
-                                    geometric_shooting=True,
-                                    gsparams=galsim.GSParams(small_fraction_of_flux=1.e-5))
+                                    geometric_shooting=True)
 
         # Use really good seeing, so that the optics contribution actually matters.
         psf = galsim.Convolve(opt_psf, galsim.Kolmogorov(fwhm=0.4))
