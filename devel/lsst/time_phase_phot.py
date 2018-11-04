@@ -29,6 +29,7 @@ def time_geom():
         pad_factor = 1.0
         oversampling = 1.0
         geom_oversampling = 1.0
+        geom_nphot = 100000
         vmax = 1.e-3
         out = "output/time_geom_"
         do_fft=0
