@@ -237,7 +237,7 @@ namespace galsim {
     // In the former case, photons will be selected by drawing from a uniform distribution and then
     // adjusting weights by flux.  In latter case, rejection sampling will be used to select
     // within interval.
-    std::list<Interval> Interval::split(double smallFlux)
+    std::list<shared_ptr<Interval> > Interval::split(double smallFlux)
     {
         // Get the flux in this interval
         checkFlux();
@@ -250,7 +250,7 @@ namespace galsim {
         double densityUpper = (*_fluxDensityPtr)(_xUpper);
         _invMaxAbsDensity = 1. / std::max(std::abs(densityLower), std::abs(densityUpper));
 
-        std::list<Interval> result;
+        std::list<shared_ptr<Interval> > result;
         double densityVariation = 0.;
         if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
             densityVariation = densityLower / densityUpper;
@@ -258,18 +258,18 @@ namespace galsim {
         if (densityVariation > _gsparams.allowed_flux_variation) {
             // Don't split if flux range is small
             _useRejectionMethod = false;
-            result.push_back(*this);
+            result.push_back(shared_ptr<Interval>(new Interval(*this)));
         } else if (std::abs(_flux) < smallFlux) {
             // Don't split further, as it will be rare to be in this interval
             // and rejection is ok.
             _useRejectionMethod = true;
-            result.push_back(*this);
+            result.push_back(shared_ptr<Interval>(new Interval(*this)));
         } else {
             // Split the interval.  Call (recursively) split() for left & right
             double midpoint = 0.5*(_xLower + _xUpper);
             Interval left(*_fluxDensityPtr, _xLower, midpoint, _isRadial, _gsparams);
             Interval right(*_fluxDensityPtr, midpoint, _xUpper, _isRadial, _gsparams);
-            std::list<Interval> add = left.split(smallFlux);
+            std::list<shared_ptr<Interval> > add = left.split(smallFlux);
             result.splice(result.end(), add);
             add = right.split(smallFlux);
             result.splice(result.end(), add);
@@ -310,7 +310,8 @@ namespace galsim {
 
         if (totalAbsoluteFlux == 0.) {
             // The below calculation will crash, so do something trivial that works.
-            Interval segment(fluxDensity, range[0], range[1], _isRadial, _gsparams);
+            shared_ptr<Interval> segment(new Interval(fluxDensity, range[0], range[1], _isRadial,
+                                                      _gsparams));
             _pt.push_back(segment);
             _pt.buildTree();
             return;
@@ -330,14 +331,14 @@ namespace galsim {
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial, _gsparams);
-                    std::list<Interval> leftList = splitit.split(
+                    std::list<shared_ptr<Interval> > leftList = splitit.split(
                         _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                     xdbg<<"Add "<<leftList.size()<<" intervals on left of extremem\n";
                     _pt.insert(_pt.end(), leftList.begin(), leftList.end());
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial, _gsparams);
-                    std::list<Interval> rightList = splitit.split(
+                    std::list<shared_ptr<Interval> > rightList = splitit.split(
                         _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                     xdbg<<"Add "<<rightList.size()<<" intervals on right of extremem\n";
                     _pt.insert(_pt.end(), rightList.begin(), rightList.end());
@@ -347,7 +348,7 @@ namespace galsim {
                 xdbg<<"single interval\n";
                 Interval splitit(
                     _fluxDensity, range[iRange], range[iRange+1], _isRadial, _gsparams);
-                std::list<Interval> leftList = splitit.split(
+                std::list<shared_ptr<Interval> > leftList = splitit.split(
                     _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                 xdbg<<"Add "<<leftList.size()<<" intervals\n";
                 _pt.insert(_pt.end(), leftList.begin(), leftList.end());
@@ -381,7 +382,7 @@ namespace galsim {
             if (_isRadial) {
 #ifdef USE_COS_SIN
                 double unitRandom = ud();
-                Interval* chosen = _pt.find(unitRandom);
+                const shared_ptr<Interval> chosen = _pt.find(unitRandom);
                 // Now draw a radius from within selected interval
                 double radius, flux;
                 chosen->drawWithin(unitRandom, radius, flux, ud);
@@ -401,7 +402,7 @@ namespace galsim {
                 } while (rsq>=1. || rsq==0.);
                 // Now rsq is unit deviate from 0 to 1
                 double unitRandom = rsq;
-                const Interval* chosen = _pt.find(unitRandom);
+                const shared_ptr<Interval> chosen = _pt.find(unitRandom);
                 // Now draw a radius from within selected interval
                 double radius, flux;
                 chosen->drawWithin(unitRandom, radius, flux, ud);
@@ -412,7 +413,7 @@ namespace galsim {
             } else {
                 // Simple 1d interpolation
                 double unitRandom = ud();
-                const Interval* chosen = _pt.find(unitRandom);
+                shared_ptr<Interval> chosen = _pt.find(unitRandom);
                 // Now draw an x from within selected interval
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);

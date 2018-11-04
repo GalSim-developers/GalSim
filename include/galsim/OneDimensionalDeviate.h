@@ -179,7 +179,7 @@ namespace galsim {
          * @param[in] smallFlux Flux below which a sub-interval is not further split.
          * @returns List contiguous Intervals whose union is this one.
          */
-        std::list<Interval> split(double smallFlux);
+        std::list<shared_ptr<Interval> > split(double toler);
 
     private:
 

@@ -626,7 +626,7 @@ namespace galsim {
                 } else {
                     _negativeFlux += -flux;
                 }
-                _pt.push_back(Pixel(xx,yy,flux));
+                _pt.push_back(shared_ptr<Pixel>(new Pixel(xx,yy,flux)));
             }
         }
 
@@ -675,7 +675,7 @@ namespace galsim {
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
         for (int i=0; i<N; ++i) {
             double unitRandom = ud();
-            const Pixel* p = _pt.find(unitRandom);
+            const shared_ptr<Pixel> p = _pt.find(unitRandom);
             photons.setPhoton(i, p->x, p->y, p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
         dbg<<"photons.getTotalFlux = "<<photons.getTotalFlux()<<std::endl;
