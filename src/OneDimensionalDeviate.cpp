@@ -41,7 +41,7 @@ namespace galsim {
     class RTimesF: public std::unary_function<double,double> {
     public:
         RTimesF(const F& function): _function(function) {}
-        double operator()(double r) const { return 2.*M_PI*r*_function(r); }
+        double operator()(double r) const { return r*_function(r); }
     private:
         const F& _function;
     };
@@ -180,7 +180,6 @@ namespace galsim {
         } else {
             return _xLower + (_xUpper - _xLower)*fraction;
         }
-        return 0.;      // Will never get here.
     }
 
 
@@ -196,7 +195,6 @@ namespace galsim {
         xdbg<<"fractionOfInterval => "<<fractionOfInterval<<std::endl;
         x = interpolateFlux(fractionOfInterval);
         xdbg<<"x = "<<x<<std::endl;
-        flux = 1.;
         flux = (*_fluxDensityPtr)(x) * _invMeanAbsDensity;
         xdbg<<"flux = "<<flux<<std::endl;
     }
@@ -211,6 +209,7 @@ namespace galsim {
                                  _xLower, _xUpper,
                                  _gsparams.integration_relerr,
                                  _gsparams.integration_abserr);
+            _flux *= 2. * M_PI;
         } else {
             // Integrate the input function
             _flux = integ::int1d(*_fluxDensityPtr,
@@ -356,7 +355,7 @@ namespace galsim {
         dbg<<"isradial? "<<_isRadial<<std::endl;
         dbg<<"xandy = "<<xandy<<std::endl;
         dbg<<"N = "<<N<<std::endl;
-        assert(N>=0);
+        xassert(N>=0);
         if (N==0) return;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         dbg<<"totalAbsFlux = "<<totalAbsoluteFlux<<std::endl;
@@ -365,8 +364,8 @@ namespace galsim {
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
 
         // For each photon, first decide which Interval it's in, then drawWithin the interval.
-        for (int i=0; i<N; i++) {
-            if (_isRadial) {
+        if (_isRadial) {
+            for (int i=0; i<N; i++) {
 #ifdef USE_COS_SIN
                 double unitRandom = ud();
                 const shared_ptr<Interval> chosen = _pt.find(unitRandom);
@@ -397,7 +396,9 @@ namespace galsim {
                 double rScale = radius / std::sqrt(rsq);
                 photons.setPhoton(i, xu*rScale, yu*rScale, flux*fluxPerPhoton);
 #endif
-            } else {
+            }
+        } else {
+            for (int i=0; i<N; i++) {
                 // Simple 1d interpolation
                 double unitRandom = ud();
                 shared_ptr<Interval> chosen = _pt.find(unitRandom);
