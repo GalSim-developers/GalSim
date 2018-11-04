@@ -287,18 +287,16 @@ namespace galsim {
         }
         dbg<<"  If linear, flux = "<<linear_flux<<"  error = "<<linear_flux - _flux<<std::endl;
         if (std::abs(linear_flux - _flux) < toler) {
+            // Store a few other combinations that will be used when drawing within interval.
             if (_isRadial) {
-                // Store a few other combinations that will be used when drawing within interval.
                 double fRange = fUpper - fLower;
                 _a = fRange * _xRange / 3.;
                 _b = fLower * _xRange + fRange * _xLower;
                 _c = 2. * fLower * _xLower;
             } else {
-                // These aren't as important to store as the radial ones, since they are pretty
-                // trivial, but might as well.
                 _a = fUpper - fLower;
                 _b = fLower;
-                _d = 0.;
+                _d = 0.;  // Not used, but set it to 0 anyway.
             }
             if (_flux < 0) {
                 // The solution we choose assumes flux is positive.  If not, all coefficients
