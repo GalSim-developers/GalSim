@@ -143,43 +143,80 @@ namespace galsim {
 
     void ArgVec::upperIndexMany(const double* a, int* indices, int N) const {
         if (_equalSpaced) {
+            xdbg << "Equal spaced\n";
+            xdbg << "da = "<<_da<<'\n';
             for (int k=0; k<N; k++) {
-                int idx = int(std::ceil(a[k]-front()) / _da);
+                if (a[k] < front()) {
+                    indices[k] = 1;
+                    continue;
+                }
+                if (a[k] > back()) {
+                    indices[k] = _n-1;
+                    continue;
+                }
+                int idx = int(std::ceil((a[k]-front()) / _da));
+                xdbg << "idx = "<<idx<<'\n';
                 if (idx >= _n) --idx;
                 if (idx == 0) ++idx;
                 while (a[k] > _vec[idx]) ++idx;
                 while (a[k] < _vec[idx-1]) --idx;
+                xdbg << "idx => "<<idx<<'\n';
                 indices[k] = idx;
             }
         } else {
+            xdbg << "Not equal spaced\n";
             int idx = 1;
             double lowerBound = _vec[0];
             double upperBound = _vec[1];
 
             for (int k=0; k<N; k++) {
+                xassert(idx >= 1);
+                xassert(idx < _n);
+                if (a[k] < front()) {
+                    indices[k] = 1;
+                    continue;
+                }
+                if (a[k] > back()) {
+                    indices[k] = _n - 1;
+                    continue;
+                }
                 if (a[k] < lowerBound) { // Go lower
-                    if (a[k] > _vec[idx-2]) {  // Check previous index
-                        indices[k] = --idx;
+                    xdbg << "Go lower\n";
+                    xassert(idx-2 >= 0);
+                    if (a[k] >= _vec[idx-2]) {  // Check previous index
+                        xdbg << "Previous works  "<<_vec[idx-2]<<'\n';
+                        --idx;
+                        indices[k] = idx;
                         upperBound = lowerBound;
                         lowerBound = _vec[idx-1];
                     } else {
                         const double* p = std::upper_bound(begin(), begin()+idx-1, a[k]);
+                        xassert(p != begin());
+                        xassert(p != begin()+idx-1);
                         idx = p-begin();
                         indices[k] = idx;
-                        upperBound = _vec[k];
-                        lowerBound = _vec[k-1];
+                        upperBound = _vec[idx];
+                        lowerBound = _vec[idx-1];
+                        xdbg << "Sucess: "<<idx<<" "<<upperBound<<'\n';
                     }
                 } else if (a[k] > upperBound) { //Go higher
-                    if (a[k] < _vec[idx+1]) { // Check next index
-                        indices[k] = ++idx;
+                    xdbg << "Go higher\n";
+                    xassert(idx+1 < _n);
+                    if (a[k] <= _vec[idx+1]) { // Check next index
+                        xdbg << "Next works  "<<_vec[idx-2]<<'\n';
+                        ++idx;
+                        indices[k] = idx;
                         lowerBound = upperBound;
                         upperBound = _vec[idx];
                     } else {
                         const double* p = std::lower_bound(begin()+idx+1, end(), a[k]);
+                        xassert(p != begin()+idx+1);
+                        xassert(p != end());
                         idx = p-begin();
                         indices[k] = idx;
-                        upperBound = _vec[k];
-                        lowerBound = _vec[k-1];
+                        upperBound = _vec[idx];
+                        lowerBound = _vec[idx-1];
+                        xdbg << "Sucess: "<<idx<<" "<<upperBound<<'\n';
                     }
                 } else {
                     indices[k] = idx;

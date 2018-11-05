@@ -145,14 +145,14 @@ class LookupTable(object):
                 dlogx = np.diff(np.log(self.x))
                 if not np.allclose(dlogx, dlogx[0]):
                     raise GalSimIncompatibleValuesError(
-                        "Cannot use a galsim.Interpolant with x_log=True unless log(x) is"
+                        "Cannot use a galsim.Interpolant with x_log=True unless log(x) is "
                         "equally spaced.",
                         interpolant=interpolant, x_log=x_log, x=x)
             else:
                 dx = np.diff(self.x)
                 if not np.allclose(dx, dx[0]):
                     raise GalSimIncompatibleValuesError(
-                        "Cannot use a galsim.Interpolant with x_log=False unless x is"
+                        "Cannot use a galsim.Interpolant with x_log=False unless x is "
                         "equally spaced.",
                         interpolant=interpolant, x_log=x_log, x=x)
 
@@ -500,7 +500,7 @@ class LookupTable2D(object):
         if (self._interp2d is not None or interpolant  == 'spline'):
             if not equal_spaced:
                 raise GalSimIncompatibleValuesError(
-                "Cannot use a galsim.Interpolant in LookupTable2D unless x and y are"
+                "Cannot use a galsim.Interpolant in LookupTable2D unless x and y are "
                 "equally spaced.", interpolant=interpolant, x=x, y=y)
 
         self.edge_mode = edge_mode
