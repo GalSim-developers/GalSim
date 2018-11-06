@@ -25,7 +25,7 @@ import numpy as np
 import numbers
 
 from . import _galsim
-from .utilities import lazy_property, convert_interpolant
+from .utilities import lazy_property, convert_interpolant, find_out_of_bounds_position
 from .position import PositionD
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
@@ -692,14 +692,22 @@ class LookupTable2D(object):
 
     def _call_raise(self, x, y, grid=False):
         if not self._inbounds(x, y):
+            if isinstance(x, numbers.Real):
+                pos = PositionD(x, y)
+            else:
+                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             raise GalSimBoundsError("Extrapolating beyond input range.",
-                                    PositionD(x,y), self._bounds)
+                                    pos, self._bounds)
         return self._call_inbounds(x, y, grid)
 
     def _call_warn(self, x, y, grid=False):
         if not self._inbounds(x, y):
+            if isinstance(x, numbers.Real):
+                pos = PositionD(x, y)
+            else:
+                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             galsim_warn("Extrapolating beyond input range. {!r} not in {!r}".format(
-                        PositionD(x,y), self._bounds))
+                        pos, self._bounds))
         return self._call_constant(x, y, grid)
 
     def _call_wrap(self, x, y, grid=False):
@@ -754,14 +762,22 @@ class LookupTable2D(object):
 
     def _gradient_raise(self, x, y, grid=False):
         if not self._inbounds(x, y):
+            if isinstance(x, numbers.Real):
+                pos = PositionD(x, y)
+            else:
+                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             raise GalSimBoundsError("Extrapolating beyond input range.",
-                                    PositionD(x,y), self._bounds)
+                                    pos, self._bounds)
         return self._gradient_inbounds(x, y, grid)
 
     def _gradient_warn(self, x, y, grid=False):
         if not self._inbounds(x, y):
+            if isinstance(x, numbers.Real):
+                pos = PositionD(x, y)
+            else:
+                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             galsim_warn("Extrapolating beyond input range. {!r} not in {!r}".format(
-                        PositionD(x,y), self._bounds))
+                        pos, self._bounds))
         return self._gradient_constant(x, y, grid)
 
     def _gradient_wrap(self, x, y, grid=False):

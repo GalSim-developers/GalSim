@@ -458,20 +458,43 @@ def test_table2d():
     with assert_raises(ValueError):
         tab2d(1e6, 1e6)
     with assert_raises(ValueError):
-        tab2d(np.array([1e6]), np.array([1e6]))
+        tab2d(np.array([1e5, 1e6]), np.array([1e5, 1e6]))
     with assert_raises(ValueError):
-        tab2d(np.array([1e6]), np.array([1e6]), grid=True)
+        tab2d(np.array([1e5, 1e6]), np.array([1e5, 1e6]), grid=True)
     with assert_raises(ValueError):
         tab2d.gradient(1e6, 1e6)
     with assert_raises(ValueError):
-        tab2d.gradient(np.array([1e6]), np.array([1e6]))
+        tab2d.gradient(np.array([1e5, 1e6]), np.array([1e5, 1e6]))
+    with assert_raises(ValueError):
+        tab2d.gradient(np.array([1e5, 1e6]), np.array([1e5, 1e6]), grid=True)
 
     # Check warning mode
     tab2dw = galsim.LookupTable2D(x, y, z, edge_mode='warn', constant=1)
     with assert_warns(galsim.GalSimWarning):
         assert tab2dw(1e6, 1e6) == 1
     with assert_warns(galsim.GalSimWarning):
+        np.testing.assert_array_equal(
+            tab2dw(np.array([1e5, 1e6]), np.array([1e5, 1e6])),
+            np.array([1.0, 1.0])
+        )
+    with assert_warns(galsim.GalSimWarning):
+        np.testing.assert_array_equal(
+            tab2dw(np.array([1e5, 1e6]), np.array([1e5, 1e6]), grid=True),
+            np.array([[1.0, 1.0], [1.0, 1.0]])
+        )
+    with assert_warns(galsim.GalSimWarning):
         assert tab2dw.gradient(1e6, 1e6) == (0.0, 0.0)
+    with assert_warns(galsim.GalSimWarning):
+        np.testing.assert_array_equal(
+            tab2dw.gradient(np.array([1e5, 1e6]), np.array([1e5, 1e6])),
+            np.zeros((2, 2), dtype=float)
+        )
+    with assert_warns(galsim.GalSimWarning):
+        np.testing.assert_array_equal(
+            tab2dw.gradient(np.array([1e5, 1e6]), np.array([1e5, 1e6]), grid=True),
+            np.zeros((2, 2, 2), dtype=float)
+        )
+
     # But doesn't warn if in bounds
     tab2dw(1.0, 1.0)
     tab2dw(np.array([1.0]), np.array([1.0]))

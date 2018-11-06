@@ -1492,3 +1492,34 @@ def ensure_dir(target):
         raise OSError("tried to make directory '%s' "
                       "but a non-directory file of that "
                       "name already exists" % dir)
+
+
+def find_out_of_bounds_position(x, y, bounds, grid=False):
+    """Given arrays of x and y values that are known to contain at least one
+    position that is out-of-bounds of the given bounds instance, return one
+    such PositionD.
+
+    @param x  Array of x values
+    @param y  Array of y values
+    @param bounds  Bounds instance
+    @param grid  Bool indicating whether to check the outer product of x and y
+                 (grid=True), or each sequential pair of x and y (grid=False).
+                 If the latter, then x and y should have the same shape.
+
+    @returns a PositionD from x and y that is out-of-bounds of bounds.
+    """
+    from .position import PositionD
+    if grid:
+        # It's enough to check corners for grid input
+        for x_ in (np.min(x), np.max(x)):
+            for y_ in (np.min(y), np.max(y)):
+                if (x_ < bounds.xmin or x_ > bounds.xmax or
+                    y_ < bounds.ymin or y_ > bounds.ymax):
+                    return PositionD(x_, y_)
+    else:
+        # Faster to check all points than to iterate through them one-by-one?
+        w = np.where((x < bounds.xmin) | (x > bounds.xmax) |
+                     (y < bounds.ymin) | (y > bounds.ymax))
+        if len(w) > 0:
+            return PositionD(x[w[0][0]], y[w[0][0]])
+    raise GalSimError("No out-of-bounds position")
