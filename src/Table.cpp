@@ -554,9 +554,13 @@ namespace galsim {
         virtual double lookup(double x, double y) const = 0;
         virtual void interpMany(const double* xvec, const double* yvec, double* valvec,
                                 int N) const = 0;
+        virtual void interpGrid(const double* xvec, const double* yvec, double* valvec,
+                                int Nx, int Ny) const = 0;
         virtual void gradient(double x, double y, double& dfdx, double& dfdy) const = 0;
         virtual void gradientMany(const double* xvec, const double* yvec,
                                   double* dfdxvec, double* dfdyvec, int N) const = 0;
+        virtual void gradientGrid(const double* xvec, const double* yvec,
+                                  double* dfdxvec, double* dfdyvec, int Nx, int Ny) const = 0;
         virtual ~Table2DImpl() {}
     protected:
         const ArgVec _xargs;
@@ -590,6 +594,21 @@ namespace galsim {
             }
         }
 
+        void interpGrid(const double* xvec, const double* yvec, double* valvec, int Nx, int Ny) const {
+            std::vector<int> xindices(Nx);
+            std::vector<int> yindices(Ny);
+            _xargs.upperIndexMany(xvec, xindices.data(), Nx);
+            _yargs.upperIndexMany(yvec, yindices.data(), Ny);
+
+            for (int kx=0, k=0; kx<Nx; kx++) {
+                for (int ky=0; ky<Ny; ky++, k++) {
+                    valvec[k] = static_cast<const T*>(this)->interp(
+                        xvec[kx], yvec[ky], xindices[kx], yindices[ky]
+                    );
+                }
+            }
+        }
+
         void gradient(double x, double y, double& dfdx, double& dfdy) const {
             int i = _xargs.upperIndex(x);
             int j = _yargs.upperIndex(y);
@@ -609,6 +628,23 @@ namespace galsim {
                 );
             }
         }
+
+        void gradientGrid(const double* xvec, const double* yvec,
+                          double* dfdxvec, double* dfdyvec, int Nx, int Ny) const {
+            std::vector<int> xindices(Nx);
+            std::vector<int> yindices(Ny);
+            _xargs.upperIndexMany(xvec, xindices.data(), Nx);
+            _yargs.upperIndexMany(yvec, yindices.data(), Ny);
+
+            for (int kx=0, k=0; kx<Nx; kx++) {
+                for (int ky=0; ky<Ny; ky++, k++) {
+                    static_cast<const T*>(this)->grad(
+                        xvec[kx], yvec[ky], xindices[kx], yindices[ky], dfdxvec[k], dfdyvec[k]
+                    );
+                }
+            }
+        }
+
     };
 
 
@@ -968,6 +1004,10 @@ namespace galsim {
         _pimpl->interpMany(xvec, yvec, valvec, N);
     }
 
+    void Table2D::interpGrid(const double* xvec, const double* yvec, double* valvec, int Nx, int Ny) const {
+        _pimpl->interpGrid(xvec, yvec, valvec, Nx, Ny);
+    }
+
     /// Estimate df/dx, df/dy at a single location
     void Table2D::gradient(double x, double y, double& dfdx, double& dfdy) const {
         _pimpl->gradient(x, y, dfdx, dfdy);
@@ -977,6 +1017,11 @@ namespace galsim {
     void Table2D::gradientMany(const double* xvec, const double* yvec,
                                double* dfdxvec, double* dfdyvec, int N) const {
         _pimpl->gradientMany(xvec, yvec, dfdxvec, dfdyvec, N);
+    }
+
+    void Table2D::gradientGrid(const double* xvec, const double* yvec,
+                               double* dfdxvec, double* dfdyvec, int Nx, int Ny) const {
+        _pimpl->gradientGrid(xvec, yvec, dfdxvec, dfdyvec, Nx, Ny);
     }
 
 }

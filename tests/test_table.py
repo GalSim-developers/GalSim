@@ -371,9 +371,11 @@ def test_table2d():
 
     # Compare different ways of evaluating Table2D
     ref = tab2d(newxx, newyy)
+    np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, grid=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
                                                         for x0 in newx]))
+
     if has_scipy:
         scitab2d = interp2d(x, y, np.transpose(z))
         np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
@@ -400,6 +402,7 @@ def test_table2d():
     z = f(xx, yy)
     tab2d = galsim.LookupTable2D(x, y, z)
     ref = tab2d(newxx, newyy)
+    np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, grid=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
                                                         for x0 in newx]))
@@ -428,7 +431,13 @@ def test_table2d():
     with assert_raises(ValueError):
         tab2d(1e6, 1e6)
     with assert_raises(ValueError):
+        tab2d(np.array([1e6]), np.array([1e6]))
+    with assert_raises(ValueError):
+        tab2d(np.array([1e6]), np.array([1e6]), grid=True)
+    with assert_raises(ValueError):
         tab2d.gradient(1e6, 1e6)
+    with assert_raises(ValueError):
+        tab2d.gradient(np.array([1e6]), np.array([1e6]))
 
     # Check warning mode
     tab2dw = galsim.LookupTable2D(x, y, z, edge_mode='warn', constant=1)
@@ -438,7 +447,10 @@ def test_table2d():
         assert tab2dw.gradient(1e6, 1e6) == (0.0, 0.0)
     # But doesn't warn if in bounds
     tab2dw(1.0, 1.0)
+    tab2dw(np.array([1.0]), np.array([1.0]))
+    tab2dw(np.array([1.0]), np.array([1.0]), grid=True)
     tab2dw.gradient(1.0, 1.0)
+    tab2dw.gradient(np.array([1.0]), np.array([1.0]))
 
     # Test edge wrapping
     # Check that can't construct table with edge-wrapping if edges don't match
@@ -452,7 +464,11 @@ def test_table2d():
     tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
 
     np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx+3*(x[-1]-x[0]), newyy))
+    np.testing.assert_array_almost_equal(
+        tab2d(newx, newy, grid=True), tab2d(newxx+3*(x[-1]-x[0]), newyy))
     np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx, newyy+13*(y[-1]-y[0])))
+    np.testing.assert_array_almost_equal(
+        tab2d(newxx, newyy), tab2d(newx, newy+13*(y[-1]-y[0]), grid=True))
 
     # Test edge_mode='constant'
     tab2d = galsim.LookupTable2D(x, y, z, edge_mode='constant', constant=42)
@@ -541,14 +557,19 @@ def test_table2d_gradient():
     test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
     np.testing.assert_almost_equal(test_dfdx, ref_dfdx, decimal=2)
     np.testing.assert_almost_equal(test_dfdy, ref_dfdy, decimal=2)
-
+    test2_dfdx, test2_dfdy = tab2d.gradient(newx, newy, grid=True)
+    np.testing.assert_almost_equal(test2_dfdx, ref_dfdx, decimal=2)
+    np.testing.assert_almost_equal(test2_dfdy, ref_dfdy, decimal=2)
 
     # Check edge wrapping
     tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
 
     test_dfdx, test_dfdy = tab2d.gradient(newxx+13*tab2d.xperiod, newyy)
+    test2_dfdx, test2_dfdy = tab2d.gradient(newx+13*tab2d.xperiod, newy, grid=True)
     np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx, decimal=2)
     np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy, decimal=2)
+    np.testing.assert_array_almost_equal(ref_dfdx, test2_dfdx, decimal=2)
+    np.testing.assert_array_almost_equal(ref_dfdy, test2_dfdy, decimal=2)
 
     test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy+12*tab2d.yperiod)
     np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx, decimal=2)
@@ -564,13 +585,19 @@ def test_table2d_gradient():
 
     # Should work the same inside original boundary
     test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+    test2_dfdx, test2_dfdy = tab2d.gradient(newx, newy, grid=True)
     np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx, decimal=2)
     np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy, decimal=2)
+    np.testing.assert_array_almost_equal(ref_dfdx, test2_dfdx, decimal=2)
+    np.testing.assert_array_almost_equal(ref_dfdy, test2_dfdy, decimal=2)
 
     # Should come out zero outside original boundary
     test_dfdx, test_dfdy = tab2d.gradient(newxx+2*np.max(newxx), newyy+2*np.max(newyy))
+    test2_dfdx, test2_dfdy = tab2d.gradient(newx+2*np.max(newx), newy+2*np.max(newy), grid=True)
     np.testing.assert_array_equal(0.0, test_dfdx)
     np.testing.assert_array_equal(0.0, test_dfdy)
+    np.testing.assert_array_equal(0.0, test2_dfdx)
+    np.testing.assert_array_equal(0.0, test2_dfdy)
 
     # Test single value
     np.testing.assert_almost_equal(tab2d.gradient(x1, y1), (dfdx(x1,y1), dfdy(x1, y1)), decimal=2)
@@ -585,8 +612,11 @@ def test_table2d_gradient():
 
     tab2d = galsim.LookupTable2D(x, y, z)
     test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+    test2_dfdx, test2_dfdy = tab2d.gradient(newx, newy, grid=True)
     np.testing.assert_almost_equal(test_dfdx, 2.-4*newyy, decimal=7)
     np.testing.assert_almost_equal(test_dfdy, 3.-4*newxx, decimal=7)
+    np.testing.assert_almost_equal(test2_dfdx, 2.-4*newyy, decimal=7)
+    np.testing.assert_almost_equal(test2_dfdy, 3.-4*newxx, decimal=7)
 
     # Check single value functionality.
     np.testing.assert_almost_equal(tab2d.gradient(x1,y1), (2.-4*y1, 3.-4*x1))
@@ -596,8 +626,11 @@ def test_table2d_gradient():
 
     ref_dfdx, ref_dfdy = tab2d.gradient(newxx, newyy)
     test_dfdx, test_dfdy = tab2d.gradient(newxx+3*tab2d.xperiod, newyy)
+    test2_dfdx, test2_dfdy = tab2d.gradient(newx+3*tab2d.xperiod, newy, grid=True)
     np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)
     np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
+    np.testing.assert_array_almost_equal(ref_dfdx, test2_dfdx)
+    np.testing.assert_array_almost_equal(ref_dfdy, test2_dfdy)
 
     test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy+13*tab2d.yperiod)
     np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)

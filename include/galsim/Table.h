@@ -132,12 +132,17 @@ namespace galsim {
         /// interp many values at once
         void interpMany(const double* xvec, const double* yvec, double* valvec, int N) const;
 
+        void interpGrid(const double* xvec, const double* yvec, double* valvec, int Nx, int Ny) const;
+
         /// Estimate df/dx, df/dy at a single location
         void gradient(double x, double y, double& dfdx, double& dfdy) const;
 
         /// Estimate many df/dx and df/dy values
         void gradientMany(const double* xvec, const double* yvec,
                           double* dfdxvec, double* dfdyvec, int N) const;
+
+        void gradientGrid(const double* xvec, const double* yvec,
+                          double* dfdxvec, double* dfdyvec, int Nx, int Ny) const;
 
         class Table2DImpl;
     protected:

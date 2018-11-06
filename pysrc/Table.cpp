@@ -101,6 +101,14 @@ namespace galsim {
         table2d.interpMany(x, y, vals, N);
     }
 
+    static void InterpGrid(const Table2D& table2d, size_t ix, size_t iy, size_t ivals, int Nx, int Ny)
+    {
+        const double* x = reinterpret_cast<const double*>(ix);
+        const double* y = reinterpret_cast<const double*>(iy);
+        double* vals = reinterpret_cast<double*>(ivals);
+        table2d.interpGrid(x, y, vals, Nx, Ny);
+    }
+
     static void Gradient(const Table2D& table2d, double x, double y, size_t igrad)
     {
         double* grad = reinterpret_cast<double*>(igrad);
@@ -117,6 +125,16 @@ namespace galsim {
         table2d.gradientMany(x, y, dfdx, dfdy, N);
     }
 
+    static void GradientGrid(const Table2D& table2d,
+                             size_t ix, size_t iy, size_t idfdx, size_t idfdy, int Nx, int Ny)
+    {
+        const double* x = reinterpret_cast<const double*>(ix);
+        const double* y = reinterpret_cast<const double*>(iy);
+        double* dfdx = reinterpret_cast<double*>(idfdx);
+        double* dfdy = reinterpret_cast<double*>(idfdy);
+        table2d.gradientGrid(x, y, dfdx, dfdy, Nx, Ny);
+    }
+
     void pyExportTable(PY_MODULE& _galsim)
     {
         py::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
@@ -131,8 +149,10 @@ namespace galsim {
             .def(PY_INIT(&MakeGSInterpTable2D))
             .def("interp", &Table2D::lookup)
             .def("interpMany", &InterpMany2D)
+            .def("interpGrid", &InterpGrid)
             .def("gradient", &Gradient)
-            .def("gradientMany", &GradientMany);
+            .def("gradientMany", &GradientMany)
+            .def("gradientGrid", &GradientGrid);
     }
 
 } // namespace galsim
