@@ -141,9 +141,8 @@ class LookupTable(object):
         # Check equal-spaced arrays
         if self._interp1d is not None:
             if self.x_log:
-                logx = np.log(self.x)
-                dlogx = np.diff(np.log(self.x))
-                if not np.allclose(dlogx, dlogx[0]):
+                ratio = self.x[1:]/self.x[:-1]
+                if not np.allclose(ratio, ratio[0]):
                     raise GalSimIncompatibleValuesError(
                         "Cannot use a galsim.Interpolant with x_log=True unless log(x) is "
                         "equally spaced.",
@@ -675,7 +674,7 @@ class LookupTable2D(object):
                 self._tab.interpGrid(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx), len(yy))
                 badx = (x < self.x[0]) | (x > self.x[-1])
                 bady = (y < self.y[0]) | (y > self.y[-1])
-                f[badx,:] = self.constant
+                f[badx, :] = self.constant
                 f[:, bady] = self.constant
                 return f
             else:
