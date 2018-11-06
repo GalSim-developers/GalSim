@@ -634,6 +634,8 @@ class LookupTable2D(object):
         if isinstance(x, numbers.Real):
             return self._tab.interp(x, y)
         else:
+            x = np.array(x, dtype=float, copy=False)
+            y = np.array(y, dtype=float, copy=False)
             xx = np.ascontiguousarray(x.ravel(), dtype=float)
             yy = np.ascontiguousarray(y.ravel(), dtype=float)
             f = np.empty_like(xx, dtype=float)
@@ -693,6 +695,8 @@ class LookupTable2D(object):
             self._tab.gradient(x, y, grad.ctypes.data)
             return grad[0], grad[1]
         else:
+            x = np.array(x, dtype=float, copy=False)
+            y = np.array(y, dtype=float, copy=False)
             xx = np.ascontiguousarray(x.ravel(), dtype=float)
             yy = np.ascontiguousarray(y.ravel(), dtype=float)
             dfdx = np.empty_like(xx)
