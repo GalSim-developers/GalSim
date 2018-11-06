@@ -223,6 +223,29 @@ def test_log():
     assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, f_log=True)
     assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True, f_log=True)
 
+    # Check that doing log transform explicitly matches expected behavior of x_log and f_log.
+    expx = np.exp(x)
+    expy = np.exp(y)
+    for interpolant in ['linear', 'spline', galsim.Quintic()]:
+        tab_1 = galsim.LookupTable(x, y, interpolant=interpolant)
+        tab_2 = galsim.LookupTable(expx, y, x_log=True, interpolant=interpolant)
+        tab_3 = galsim.LookupTable(x, expy, f_log=True, interpolant=interpolant)
+        tab_4 = galsim.LookupTable(expx, expy, x_log=True, f_log=True, interpolant=interpolant)
+        for test_val in test_x_vals:
+            result_1 = tab_1(test_val)
+            result_2 = tab_2(np.exp(test_val))
+            result_3 = np.log(tab_3(test_val))
+            result_4 = np.log(tab_4(np.exp(test_val)))
+            np.testing.assert_almost_equal(
+                result_2, result_1, decimal=10,
+                err_msg='Disagreement when interpolating in log(x)')
+            np.testing.assert_almost_equal(
+                result_3, result_1, decimal=10,
+                err_msg='Disagreement when interpolating in log(f)')
+            np.testing.assert_almost_equal(
+                result_4, result_1, decimal=10,
+                err_msg='Disagreement when interpolating in log(f) and log(x)')
+
 
 @timer
 def test_from_func():
@@ -849,6 +872,7 @@ def test_table2d_GSInterp():
                       for x_, y_ in zip(newxx.ravel(), newyy.ravel())]).ravel(),
             atol=1e-10, rtol=0
         )
+        np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newx, newy, grid=True))
 
         # Check that edge_mode='wrap' works
         tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
@@ -859,6 +883,10 @@ def test_table2d_GSInterp():
         np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
 
         test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy+13*tab2d.yperiod)
+        np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)
+        np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
+
+        test_dfdx, test_dfdy = tab2d.gradient(newx, newy+13*tab2d.yperiod, grid=True)
         np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)
         np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
 
