@@ -246,6 +246,10 @@ def test_log():
                 result_4, result_1, decimal=10,
                 err_msg='Disagreement when interpolating in log(f) and log(x)')
 
+    # Verify for exception when using x_log with non-equal-spaced galsim.Interpolant
+    galsim.LookupTable(x, y, x_log=True, interpolant='linear') # works fine
+    assert_raises(ValueError, galsim.LookupTable, x, y, x_log=True, interpolant=galsim.Linear())
+
 
 @timer
 def test_from_func():
