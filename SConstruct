@@ -1328,8 +1328,9 @@ def GetPythonVersion(config):
     # there:
     if not result:
         py_version = ''
-        for v in ['2.7', '3.4', '3.5', '3.6', # supported versions first
-                  '2.6', '2.5', '2,4', '3.3', '3.2', '3.1', '3.0']: # these are mostly to give accurate logging and error messages
+        for v in ['2.7', '3.5', '3.6', # supported versions first
+                  '3.7', # not technically "supported" yet, but should be soon.
+                  '2.6', '2.5', '2,4', '3.4', '3.3', '3.2', '3.1', '3.0']: # these are mostly to give accurate logging and error messages
             if v in py_inc or v in python:
                 py_version = v
                 break
@@ -1811,16 +1812,17 @@ def CheckPyBind11(config):
     result, output = TryScript(config,"import pybind11",python)
     config.Result(result)
     if not result:
-        ErrorExit("Unable to import pybind11 using the python executable:\n" + python)
+        print("Unable to import pybind11 using the python executable:\n" + python)
+        print("Continuing on in case the header files are installed, but not the python module.")
+    else:
+        result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
+        print('pybind11 version is',pybind11_ver)
 
-    result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
-    print('pybind11 version is',pybind11_ver)
+        result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
+        result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
+        config.env.Append(CPPPATH=[dir1,dir2])
 
     config.Message('Checking if we can build against PyBind11... ')
-
-    result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
-    result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
-    config.env.Append(CPPPATH=[dir1,dir2])
 
     pb_source_file = """
 #include <pybind11/pybind11.h>

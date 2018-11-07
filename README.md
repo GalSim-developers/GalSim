@@ -39,6 +39,10 @@ packages.
 See INSTALL.md for full details including one dependency (FFTW) that is not
 pip installable, so you may need to install before running this command.
 
+You can also use conda via conda-forge
+
+    conda install -c conda-forge galsim
+
 
 Source Distribution
 -------------------

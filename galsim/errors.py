@@ -298,6 +298,11 @@ class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
         message += " Values {0!s}".format(self.values)
         super().__init__(message)
 
+    # Note: the repr of values can rearrange the items, but the dicts should compare equal.
+    def __eq__(self, other):
+        return (isinstance(other, GalSimIncompatibleValuesError) and
+                self.message == other.message and
+                self.values == other.values)
     def __repr__(self):
         return 'galsim.GalSimIncompatibleValuesError(%r,%r)'%(self.message, self.values)
     def __reduce__(self):

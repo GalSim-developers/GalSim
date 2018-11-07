@@ -38,7 +38,7 @@ Overall summary
 
 GalSim is a python module that has much of its implementation in C++ for
 improved computational efficiency.  GalSim supports both Python 2 and
-Python 3.  It is regularly tested on Python versions (2.7, 3.4, 3.5, 3.6).
+Python 3.  It is regularly tested on Python versions (2.7, 3.5, 3.6).
 
 The usual way to install GalSim is now (starting with version 2.0) simply
 
@@ -379,25 +379,10 @@ Using Conda
 ===========
 
 If you use conda (normally via the Anaconda Python distribution), then all of
-the prerequisites are available from the conda-forge channel, so you can use
-that as follows (from within the main GalSim directory):
+the prerequisites and galsim itself are available from the conda-forge channel, 
+so you can use that as follows:
 
-    conda create -y -n galsim
-    conda activate galsim
-    conda install -y -c conda-forge --file conda_requirements.txt
-    pip install -r requirements.txt
-    pip install .
-
-The first two lines are optional, but they let you keep the GalSim installation
-separate from any other conda environments you might have.
-
-If your conda version is 4.3 or earlier, replace the above conda activate line
-with
-
-    source activate galsim
-
-which does the same thing.  They just changed the name of this command to use
-the conda executable instead of source.
+    conda install -c conda-forge galsim 
 
 Also, if you prefer to use the defaults channel, then (at least as of this
 writing), it had all the items in conda_requirements.txt, except for pybind11.
