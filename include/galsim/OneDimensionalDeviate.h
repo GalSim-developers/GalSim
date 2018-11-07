@@ -70,8 +70,6 @@ namespace galsim {
      *
      * The `drawWithin()` method will select one photon (and flux) drawn from within this interval
      * or annulus, such that the expected flux distribution matches the FluxDensity function.
-     * Each photon is given a flux value equal to the FluxDensity at x relative to the mean over
-     * the interval.
      *
      * See the `OneDimensionalDeviate` docstrings for more information.
      */
@@ -135,9 +133,7 @@ namespace galsim {
          * @brief Draw one photon position and flux from within this interval
          * @param[in] unitRandom An initial uniform deviate to select photon
          * @param[out] x (or radial) coordinate of the selected photon.
-         * @param[out] flux flux of the selected photon, nominally +-1, but can differ if not
-         *             using rejection.
-         * @param[out] ud UniformDeviate used for rejection sampling, if needed.
+         * @param[out] flux flux of the selected photon = +-1
          */
         void drawWithin(double unitRandom, double& x, double& flux) const;
 

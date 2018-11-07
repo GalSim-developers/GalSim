@@ -172,7 +172,7 @@ namespace galsim {
     double Interval::interpolateFlux(double fraction) const
     {
         // Find the x (or radius) value that encloses fraction
-        // of the flux in this Interval if the function were constant
+        // of the flux in this Interval if the function were linear
         // over the interval.
         if (_isRadial) {
             // The model is pdf(r) = f0 r + (f1-f0)/(r1-r0) * (r-r0) r
