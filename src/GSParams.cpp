@@ -33,10 +33,7 @@ namespace galsim {
                        double _realspace_abserr,
                        double _integration_relerr,
                        double _integration_abserr,
-                       double _shoot_accuracy,
-                       double _allowed_flux_variation,
-                       int _range_division_for_extrema,
-                       double _small_fraction_of_flux) :
+                       double _shoot_accuracy):
         minimum_fft_size(_minimum_fft_size),
         maximum_fft_size(_maximum_fft_size),
         folding_threshold(_folding_threshold),
@@ -49,10 +46,7 @@ namespace galsim {
         realspace_abserr(_realspace_abserr),
         integration_relerr(_integration_relerr),
         integration_abserr(_integration_abserr),
-        shoot_accuracy(_shoot_accuracy),
-        allowed_flux_variation(_allowed_flux_variation),
-        range_division_for_extrema(_range_division_for_extrema),
-        small_fraction_of_flux(_small_fraction_of_flux)
+        shoot_accuracy(_shoot_accuracy)
     {}
 
     bool GSParams::operator==(const GSParams& rhs) const
@@ -76,9 +70,6 @@ namespace galsim {
         else if (integration_abserr != rhs.integration_abserr) return false;
 
         else if (shoot_accuracy != rhs.shoot_accuracy) return false;
-        else if (allowed_flux_variation != rhs.allowed_flux_variation) return false;
-        else if (range_division_for_extrema != rhs.range_division_for_extrema) return false;
-        else if (small_fraction_of_flux != rhs.small_fraction_of_flux) return false;
         else return true;
     }
 
@@ -111,12 +102,6 @@ namespace galsim {
         else if (integration_abserr > rhs.integration_abserr) return false;
         else if (shoot_accuracy < rhs.shoot_accuracy) return true;
         else if (shoot_accuracy > rhs.shoot_accuracy) return false;
-        else if (allowed_flux_variation < rhs.allowed_flux_variation) return true;
-        else if (allowed_flux_variation > rhs.allowed_flux_variation) return false;
-        else if (range_division_for_extrema < rhs.range_division_for_extrema) return true;
-        else if (range_division_for_extrema > rhs.range_division_for_extrema) return false;
-        else if (small_fraction_of_flux < rhs.small_fraction_of_flux) return true;
-        else if (small_fraction_of_flux > rhs.small_fraction_of_flux) return false;
         else return false;
     }
 
@@ -129,9 +114,7 @@ namespace galsim {
             << gsp.table_spacing << ", "
             << gsp.realspace_relerr << "," << gsp.realspace_abserr << ",  "
             << gsp.integration_relerr << "," << gsp.integration_abserr << ",  "
-            << gsp.shoot_accuracy << ","
-            << gsp.allowed_flux_variation << "," << gsp.range_division_for_extrema << ","
-            << gsp.small_fraction_of_flux;
+            << gsp.shoot_accuracy;
         return os;
     }
 

@@ -33,5 +33,11 @@ def check_dep(f, *args, **kwargs):
         res = f(*args, **kwargs)
     return res
 
+@timer
+def test_gsparams():
+    check_dep(galsim.GSParams, allowed_flux_variation=0.90)
+    check_dep(galsim.GSParams, range_division_for_extrema=50)
+    check_dep(galsim.GSParams, small_fraction_of_flux=1.e-6)
+
 if __name__ == "__main__":
-    pass
+    test_gsparams()
