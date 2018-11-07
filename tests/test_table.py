@@ -467,6 +467,12 @@ def test_table2d():
         tab2d.gradient(np.array([1e5, 1e6]), np.array([1e5, 1e6]))
     with assert_raises(ValueError):
         tab2d.gradient(np.array([1e5, 1e6]), np.array([1e5, 1e6]), grid=True)
+    with assert_raises(galsim.GalSimError):
+        galsim.utilities.find_out_of_bounds_position(
+            np.array([1, 3]), np.array([2, 4]), galsim.BoundsD(0,5,0,5))
+    with assert_raises(galsim.GalSimError):
+        galsim.utilities.find_out_of_bounds_position(
+            np.array([1, 3]), np.array([2, 4]), galsim.BoundsD(0,5,0,5), grid=True)
 
     # Check warning mode
     tab2dw = galsim.LookupTable2D(x, y, z, edge_mode='warn', constant=1)

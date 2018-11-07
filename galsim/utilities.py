@@ -1511,15 +1511,15 @@ def find_out_of_bounds_position(x, y, bounds, grid=False):
     from .position import PositionD
     if grid:
         # It's enough to check corners for grid input
-        for x_ in (np.min(x), np.max(x)):  # pragma: no branch
-            for y_ in (np.min(y), np.max(y)):  # pragma: no branch
-                if (x_ < bounds.xmin or x_ > bounds.xmax or  # pragma: no branch
+        for x_ in (np.min(x), np.max(x)):
+            for y_ in (np.min(y), np.max(y)):
+                if (x_ < bounds.xmin or x_ > bounds.xmax or
                     y_ < bounds.ymin or y_ > bounds.ymax):
                     return PositionD(x_, y_)
     else:
         # Faster to check all points than to iterate through them one-by-one?
         w = np.where((x < bounds.xmin) | (x > bounds.xmax) |
                      (y < bounds.ymin) | (y > bounds.ymax))
-        if len(w) > 0:  # pragma: no branch
+        if len(w[0]) > 0:
             return PositionD(x[w[0][0]], y[w[0][0]])
-    raise GalSimError("No out-of-bounds position")  # pragma: no cover
+    raise GalSimError("No out-of-bounds position")
