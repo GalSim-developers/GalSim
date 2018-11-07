@@ -51,7 +51,7 @@ namespace galsim {
                        double xmin,
                        double xmax,
                        double& extremum,
-                       int divisionSteps,
+                       int divisionSteps = 32,
                        double xFractionalTolerance = 1e-4)
     {
         if (xmax < xmin) std::swap(xmax,xmin);
@@ -367,22 +367,21 @@ namespace galsim {
             if (findExtremum(_fluxDensity,
                              range[iRange],
                              range[iRange+1],
-                             extremum,
-                             _gsparams.range_division_for_extrema)) {
+                             extremum)) {
                 xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<
                     "  has an extremum at "<<extremum<<std::endl;
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial, _gsparams);
                     std::list<shared_ptr<Interval> > leftList = splitit.split(
-                        _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
+                        _gsparams.shoot_accuracy * totalAbsoluteFlux);
                     xdbg<<"Add "<<leftList.size()<<" intervals on left of extremem\n";
                     _pt.insert(_pt.end(), leftList.begin(), leftList.end());
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial, _gsparams);
                     std::list<shared_ptr<Interval> > rightList = splitit.split(
-                        _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
+                        _gsparams.shoot_accuracy * totalAbsoluteFlux);
                     xdbg<<"Add "<<rightList.size()<<" intervals on right of extremem\n";
                     _pt.insert(_pt.end(), rightList.begin(), rightList.end());
                 }
@@ -392,7 +391,7 @@ namespace galsim {
                 Interval splitit(
                     _fluxDensity, range[iRange], range[iRange+1], _isRadial, _gsparams);
                 std::list<shared_ptr<Interval> > leftList = splitit.split(
-                    _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
+                    _gsparams.shoot_accuracy * totalAbsoluteFlux);
                 xdbg<<"Add "<<leftList.size()<<" intervals\n";
                 _pt.insert(_pt.end(), leftList.begin(), leftList.end());
             }
