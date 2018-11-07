@@ -84,28 +84,28 @@ def make_movie(args):
     aberrations *= args.sigma/measured_std
     aberrations -= np.mean(aberrations, axis=0)
 
-    # For the atmosphere screens, we first estimates weights, so that the turbulence is dominated by
-    # the lower layers consistent with direct measurements.  The specific values we use are from
-    # SCIDAR measurements on Cerro Pachon as part of the 1998 Gemini site selection process
-    # (Ellerbroek 2002, JOSA Vol 19 No 9).
-    Ellerbroek_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
-    Ellerbroek_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
-    Ellerbroek_interp = galsim.LookupTable(Ellerbroek_alts, Ellerbroek_weights,
-                                           interpolant='linear')
-    alts = np.max(Ellerbroek_alts)*np.arange(args.nlayers)/(args.nlayers-1)
-    weights = Ellerbroek_interp(alts)  # interpolate the weights
-    weights /= sum(weights)  # and renormalize
-    spd = []  # Wind speed in m/s
-    dirn = [] # Wind direction in radians
-    r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
-    for i in range(args.nlayers):
-        spd.append(u()*args.max_speed)  # Use a random speed between 0 and args.max_speed
-        dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
-        r0_500.append(args.r0_500*weights[i]**(-3./5))
-        print("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
-              "and r0_500 {:5.3f} m."
-              .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
     if args.nlayers > 0:
+        # For the atmosphere screens, we first estimates weights, so that the turbulence is dominated by
+        # the lower layers consistent with direct measurements.  The specific values we use are from
+        # SCIDAR measurements on Cerro Pachon as part of the 1998 Gemini site selection process
+        # (Ellerbroek 2002, JOSA Vol 19 No 9).
+        Ellerbroek_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
+        Ellerbroek_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
+        Ellerbroek_interp = galsim.LookupTable(Ellerbroek_alts, Ellerbroek_weights,
+                                               interpolant='linear')
+        alts = np.max(Ellerbroek_alts)*np.arange(args.nlayers)/(args.nlayers-1)
+        weights = Ellerbroek_interp(alts)  # interpolate the weights
+        weights /= sum(weights)  # and renormalize
+        spd = []  # Wind speed in m/s
+        dirn = [] # Wind direction in radians
+        r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
+        for i in range(args.nlayers):
+            spd.append(u()*args.max_speed)  # Use a random speed between 0 and args.max_speed
+            dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
+            r0_500.append(args.r0_500*weights[i]**(-3./5))
+            print("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
+                  "and r0_500 {:5.3f} m."
+                  .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
         # Make two identical Atmospheres.  They will diverge when one gets drawn using Fourier
         # optics and the other gets drawn with geometric optics.
         fft_atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts,
