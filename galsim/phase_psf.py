@@ -1219,7 +1219,7 @@ class PhaseScreenPSF(GSObject):
         self._force_stepk = _force_stepk
         self._force_maxk = _force_maxk
 
-        self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
+        self._img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
         if self.exptime < 0:
             raise GalSimRangeError("Cannot integrate PSF for negative time.", self.exptime, 0.)
@@ -1234,18 +1234,18 @@ class PhaseScreenPSF(GSObject):
         # We'll set these more intelligently as needed below
         self._second_kick = second_kick
         self._screen_list._delayCalculation(self)
-        self.finalized = False
+        self._finalized = False
 
     @lazy_property
     def _real_ii(self):
         ii = InterpolatedImage(
-                self.img, x_interpolant=self.interpolant,
+                self._img, x_interpolant=self.interpolant,
                 _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
 
         if not self._suppress_warning:
-            specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
+            specified_stepk = 2*np.pi/(self._img.array.shape[0]*self.scale)
             observed_stepk = ii.stepk
 
             if observed_stepk < specified_stepk:
@@ -1279,7 +1279,7 @@ class PhaseScreenPSF(GSObject):
 
     @property
     def _ii(self):
-        if self.finalized:
+        if self._finalized:
             return self._real_ii
         else:
             return self._dummy_ii
@@ -1378,17 +1378,17 @@ class PhaseScreenPSF(GSObject):
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = fft.fft2(expwf_grid, shift_in=True, shift_out=True)
-        self.img += np.abs(ftexpwf)**2
+        self._img += np.abs(ftexpwf)**2
         if self._bar:  # pragma: no cover
             self._bar.update()
 
     def _finalize(self):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        self.img *= self._flux / self.img.sum(dtype=float)
+        self._img *= self._flux / self._img.sum(dtype=float)
         b = _BoundsI(1,self.aper.npix,1,self.aper.npix)
-        self.img = _Image(self.img, b, PixelScale(self.scale))
+        self._img = _Image(self._img, b, PixelScale(self.scale))
 
-        self.finalized = True
+        self._finalized = True
 
     @property
     def _sbp(self):
@@ -1486,6 +1486,18 @@ class PhaseScreenPSF(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._ii._drawKImage(image)
+
+    @property
+    def img(self):
+        from .deprecated import depr
+        depr('img', 2.1, '', "This functionality has been removed.")
+        return self._img
+
+    @property
+    def finalized(self):
+        from .deprecated import depr
+        depr('finalized', 2.1, "This functionality has been removed.")
+        return self._finalized
 
 
 class OpticalPSF(GSObject):
