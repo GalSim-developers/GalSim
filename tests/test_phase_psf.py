@@ -433,7 +433,7 @@ def test_opt_indiv_aberrations():
     psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0)
 
     np.testing.assert_array_equal(
-            psf1.img, psf2.img,
+            psf1._img, psf2._img,
             "Individually specified aberrations differs from aberrations specified as list.")
 
 
