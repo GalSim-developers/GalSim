@@ -995,7 +995,8 @@ def test_withGSP():
     psl = galsim.PhaseScreenList(screen)
     psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
     psf2 = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
-
+    do_pickle(psf)
+    
 
 if __name__ == "__main__":
     test_aperture()
