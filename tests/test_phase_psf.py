@@ -985,6 +985,18 @@ def test_gc():
     assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
 
+@timer
+def test_withGSP():
+    class DummyScreen(galsim.OpticalScreen):
+        def _wavefront(self, *args):
+            raise RuntimeError("Shouldn't reach this")
+
+    screen = DummyScreen(1.0)
+    psl = galsim.PhaseScreenList(screen)
+    psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psf2 = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+
+
 if __name__ == "__main__":
     test_aperture()
     test_atm_screen_size()
@@ -1003,3 +1015,4 @@ if __name__ == "__main__":
     test_speedup()
     test_instantiation_check()
     test_gc()
+    test_withGSP()
