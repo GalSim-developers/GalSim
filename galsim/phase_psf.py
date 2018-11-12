@@ -1185,7 +1185,7 @@ class PhaseScreenPSF(GSObject):
                  theta=(0.0*arcsec, 0.0*arcsec), interpolant=None,
                  scale_unit=arcsec, ii_pad_factor=4., suppress_warning=False,
                  geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
-                 gsparams=None, _bar=None, _force_stepk=0., _force_maxk=0., **kwargs):
+                 gsparams=None, _force_stepk=0., _force_maxk=0., _bar=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1324,11 +1324,14 @@ class PhaseScreenPSF(GSObject):
     @doc_inherit
     def withGSParams(self, gsparams):
         if gsparams is self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
-        ret.aper = self.aper.withGSParams(gsparams)
-        return ret
+        gsparams = GSParams.check(gsparams)
+        aper = self.aper.withGSParams(gsparams)
+        return PhaseScreenPSF(
+            self.screen_list, self.lam, self.t0, self.exptime, self.time_step, self.flux,
+            self.theta, self.interpolant, self.scale_unit, self._ii_pad_factor,
+            self._suppress_warning, self._geometric_shooting, aper, self._second_kick, self._kcrit,
+            gsparams, self._force_stepk, self._force_maxk
+        )
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
