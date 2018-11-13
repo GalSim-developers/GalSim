@@ -375,7 +375,7 @@ class AtmosphericScreen(object):
             t = self._time
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
-        return self._tab2d(u, v)
+        return self._tab2d._call_wrap(u, v)
 
     def wavefront_gradient(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute gradient of wavefront due to atmospheric phase screen.
@@ -431,7 +431,7 @@ class AtmosphericScreen(object):
         # Same as wavefront(), but no argument checking and no boiling updates.
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
-        return self._tab2d.gradient(u, v)
+        return self._tab2d._gradient_wrap(u, v)
 
 
 def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
