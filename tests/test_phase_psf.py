@@ -1061,6 +1061,14 @@ def test_withGSP():
     for testimg in testimgs:
         assert testimg == img
 
+    # Also test OpticalPSF
+    optPSF = galsim.OpticalPSF(lam=500, diam=1.0)
+    optPSF2 = optPSF.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    assert isinstance(optPSF2, galsim.OpticalPSF)
+    # And check that we really did get a different folding_threshold by comparing stepk and default
+    # bounds
+    assert optPSF.stepk != optPSF2.stepk
+    assert optPSF.drawImage().bounds != optPSF2.drawImage().bounds
 
 if __name__ == "__main__":
     test_aperture()
