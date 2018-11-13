@@ -987,7 +987,7 @@ def test_gc():
 
 @timer
 def test_withGSP():
-    screen = galsim._DummyScreen(1.0, aberrations=[0,0,0,0,1])
+    screen = galsim.phase_screens._DummyScreen(1.0, aberrations=[0,0,0,0,1])
     # Make sure screen really fails if we try to access _wavefront
     with np.testing.assert_raises(RuntimeError):
         screen._wavefront()
