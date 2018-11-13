@@ -778,3 +778,9 @@ class OpticalScreen(object):
         # Note, this phase screen is actually independent of time and theta.
         gradx, grady = self._zernike.evalCartesianGrad(u, v)
         return gradx * self.lam_0, grady * self.lam_0
+
+
+# Used only for testing
+class _DummyScreen(OpticalScreen):
+    def _wavefront(self, *args):
+        raise RuntimeError("Shouldn't reach this")

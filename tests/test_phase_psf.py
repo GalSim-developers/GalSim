@@ -987,16 +987,77 @@ def test_gc():
 
 @timer
 def test_withGSP():
-    class DummyScreen(galsim.OpticalScreen):
-        def _wavefront(self, *args):
-            raise RuntimeError("Shouldn't reach this")
-
-    screen = DummyScreen(1.0)
+    screen = galsim._DummyScreen(1.0, aberrations=[0,0,0,0,1])
     psl = galsim.PhaseScreenList(screen)
     psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
-    psf2 = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
-    do_pickle(psf)
-    
+    psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    # Don't worry about repr for DummyScreen
+    do_pickle(psf, irreprable=True)
+    do_pickle(psfGSP, irreprable=True)
+
+    # We can't use do_pickle with func that involves a random number generator, so just hard-code
+    # the equivalent here.
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
+    import copy
+    copiers = [lambda x:pickle.loads(pickle.dumps(x)), copy.copy, copy.deepcopy]
+    drawKwargs = dict(nx=32, ny=32, scale=0.2, method='phot', n_photons=10000)
+
+    rng = galsim.BaseDeviate(57721)
+    img = psf.drawImage(rng=rng, **drawKwargs)
+    for copier in copiers:
+        psf2 = copier(psf)
+        assert psf2 is not psf
+        rng = galsim.BaseDeviate(57721) # reset rng
+        img2 = psf2.drawImage(rng=rng, **drawKwargs)
+        assert img2 == img
+
+    # Repeat but make a fresh (not previously drawn) source psf each time.  I.e.,
+    # make sure that drawing and copy/pickling are commutative
+    testimgs = []
+    for copier in copiers:
+        psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+        psf2 = copier(psf)
+        assert psf2 is not psf
+        rng = galsim.BaseDeviate(57721) # reset rng
+        testimgs.append(psf2.drawImage(rng=rng, **drawKwargs))
+    # Now draw the fresh psf and compare
+    psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    rng = galsim.BaseDeviate(57721)
+    img = psf.drawImage(rng=rng, **drawKwargs)
+    for testimg in testimgs:
+        assert testimg == img
+
+    # Want to check that copying and withGSParams are also commutative.  So repeat steps above
+    # using psfGSP as the source/test.
+    rng = galsim.BaseDeviate(57721)
+    img = psfGSP.drawImage(rng=rng, **drawKwargs)  # uncopied withGSP img
+    for copier in copiers:
+        psf2 = copier(psfGSP)
+        assert psf2 is not psfGSP
+        rng = galsim.BaseDeviate(57721) # reset rng
+        img2 = psf2.drawImage(rng=rng, **drawKwargs)  # this is a copy of a withGSP
+        assert img2 == img
+
+    # And finally, look at copies of undrawn withGSP PSFs.
+    testimgs = []
+    for copier in copiers:
+        psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+        psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))  # hasn't been drawn yet
+        psf2 = copier(psfGSP)  # copy of undrawn
+        assert psf2 is not psfGSP
+        rng = galsim.BaseDeviate(57721) # reset rng
+        testimgs.append(psf2.drawImage(rng=rng, **drawKwargs))
+    # Draw the (fresh) withGSP PSF and compare
+    psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    rng = galsim.BaseDeviate(57721)
+    img = psfGSP.drawImage(rng=rng, **drawKwargs)
+    for testimg in testimgs:
+        assert testimg == img
+
 
 if __name__ == "__main__":
     test_aperture()
