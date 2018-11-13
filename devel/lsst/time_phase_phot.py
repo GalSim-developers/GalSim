@@ -35,6 +35,7 @@ def time_geom():
         do_fft=0
         do_geom=1
         make_movie=0
+        make_plots=0
     original_dir = os.getcwd()
     try:
         os.chdir('../../examples')

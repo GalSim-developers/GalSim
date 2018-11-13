@@ -245,11 +245,6 @@ def make_movie(args):
                     if args.do_geom:
                         geom_img = geom_img0
 
-                if args.do_fft:
-                    fft_im.set_array(fft_img.array)
-                if args.do_geom:
-                    geom_im.set_array(geom_img.array)
-
                 for j, ab in enumerate(aberration):
                     if j == 0:
                         continue
@@ -259,7 +254,9 @@ def make_movie(args):
                 Is = ("$M_x$={: 6.4f}, $M_y$={: 6.4f}, $M_{{xx}}$={:6.4f},"
                       " $M_{{yy}}$={:6.4f}, $M_{{xy}}$={: 6.4f}")
 
-                if args.do_fft:
+                if args.do_fft and (args.make_movie or args.make_plots):
+                    fft_im.set_array(fft_img.array)
+
                     mom_fft = galsim.utilities.unweighted_moments(fft_img, origin=fft_img.true_center)
                     e_fft = galsim.utilities.unweighted_shape(mom_fft)
                     M_fft.set_text(Is.format(mom_fft['Mx']*fft_img.scale,
@@ -274,7 +271,9 @@ def make_movie(args):
                                   mom_fft['Mxy']*fft_img.scale**2,
                                   e_fft['e1'], e_fft['e2'], e_fft['rsqr']*fft_img.scale**2)
 
-                if args.do_geom:
+                if args.do_geom and (args.make_movie or args.make_plots):
+                    geom_im.set_array(geom_img.array)
+
                     mom_geom = galsim.utilities.unweighted_moments(geom_img,
                                                                    origin=geom_img.true_center)
                     e_geom = galsim.utilities.unweighted_shape(mom_geom)
@@ -303,62 +302,63 @@ def make_movie(args):
         ax.set_ylim(lim)
         ax.plot(lim, lim)
 
-    # Centroid plot
-    fig = Figure(figsize=(10, 6))
-    FigureCanvasAgg(fig)
-    axes = []
-    axes.append(fig.add_subplot(1, 2, 1))
-    axes.append(fig.add_subplot(1, 2, 2))
-    axes[0].scatter(fft_mom[:, 0], geom_mom[:, 0])
-    axes[1].scatter(fft_mom[:, 1], geom_mom[:, 1])
-    axes[0].set_title("Mx")
-    axes[1].set_title("My")
-    for ax in axes:
-        ax.set_xlabel("Fourier Optics")
-        ax.set_ylabel("Geometric Optics")
-        symmetrize_axis(ax)
-    fig.tight_layout()
-    fig.savefig(args.out+"centroid.png", dpi=300)
+    if args.make_plots:
+        # Centroid plot
+        fig = Figure(figsize=(10, 6))
+        FigureCanvasAgg(fig)
+        axes = []
+        axes.append(fig.add_subplot(1, 2, 1))
+        axes.append(fig.add_subplot(1, 2, 2))
+        axes[0].scatter(fft_mom[:, 0], geom_mom[:, 0])
+        axes[1].scatter(fft_mom[:, 1], geom_mom[:, 1])
+        axes[0].set_title("Mx")
+        axes[1].set_title("My")
+        for ax in axes:
+            ax.set_xlabel("Fourier Optics")
+            ax.set_ylabel("Geometric Optics")
+            symmetrize_axis(ax)
+        fig.tight_layout()
+        fig.savefig(args.out+"centroid.png", dpi=300)
 
-    # Second moment plot
-    fig = Figure(figsize=(16, 6))
-    FigureCanvasAgg(fig)
-    axes = []
-    axes.append(fig.add_subplot(1, 3, 1))
-    axes.append(fig.add_subplot(1, 3, 2))
-    axes.append(fig.add_subplot(1, 3, 3))
-    axes[0].scatter(fft_mom[:, 2], geom_mom[:, 2])
-    axes[1].scatter(fft_mom[:, 3], geom_mom[:, 3])
-    axes[2].scatter(fft_mom[:, 4], geom_mom[:, 4])
-    axes[0].set_title("Mxx")
-    axes[1].set_title("Myy")
-    axes[2].set_title("Mxy")
-    for ax in axes:
-        ax.set_xlabel("Fourier Optics")
-        ax.set_ylabel("Geometric Optics")
-        symmetrize_axis(ax)
-    fig.tight_layout()
-    fig.savefig(args.out+"2ndMoment.png", dpi=300)
+        # Second moment plot
+        fig = Figure(figsize=(16, 6))
+        FigureCanvasAgg(fig)
+        axes = []
+        axes.append(fig.add_subplot(1, 3, 1))
+        axes.append(fig.add_subplot(1, 3, 2))
+        axes.append(fig.add_subplot(1, 3, 3))
+        axes[0].scatter(fft_mom[:, 2], geom_mom[:, 2])
+        axes[1].scatter(fft_mom[:, 3], geom_mom[:, 3])
+        axes[2].scatter(fft_mom[:, 4], geom_mom[:, 4])
+        axes[0].set_title("Mxx")
+        axes[1].set_title("Myy")
+        axes[2].set_title("Mxy")
+        for ax in axes:
+            ax.set_xlabel("Fourier Optics")
+            ax.set_ylabel("Geometric Optics")
+            symmetrize_axis(ax)
+        fig.tight_layout()
+        fig.savefig(args.out+"2ndMoment.png", dpi=300)
 
-    # Ellipticity plot
-    fig = Figure(figsize=(16, 6))
-    FigureCanvasAgg(fig)
-    axes = []
-    axes.append(fig.add_subplot(1, 3, 1))
-    axes.append(fig.add_subplot(1, 3, 2))
-    axes.append(fig.add_subplot(1, 3, 3))
-    axes[0].scatter(fft_mom[:, 5], geom_mom[:, 5])
-    axes[1].scatter(fft_mom[:, 6], geom_mom[:, 6])
-    axes[2].scatter(fft_mom[:, 7], geom_mom[:, 7])
-    axes[0].set_title("e1")
-    axes[1].set_title("e2")
-    axes[2].set_title("rsqr")
-    for ax in axes:
-        ax.set_xlabel("Fourier Optics")
-        ax.set_ylabel("Geometric Optics")
-        symmetrize_axis(ax)
-    fig.tight_layout()
-    fig.savefig(args.out+"ellipticity.png", dpi=300)
+        # Ellipticity plot
+        fig = Figure(figsize=(16, 6))
+        FigureCanvasAgg(fig)
+        axes = []
+        axes.append(fig.add_subplot(1, 3, 1))
+        axes.append(fig.add_subplot(1, 3, 2))
+        axes.append(fig.add_subplot(1, 3, 3))
+        axes[0].scatter(fft_mom[:, 5], geom_mom[:, 5])
+        axes[1].scatter(fft_mom[:, 6], geom_mom[:, 6])
+        axes[2].scatter(fft_mom[:, 7], geom_mom[:, 7])
+        axes[0].set_title("e1")
+        axes[1].set_title("e2")
+        axes[2].set_title("rsqr")
+        for ax in axes:
+            ax.set_xlabel("Fourier Optics")
+            ax.set_ylabel("Geometric Optics")
+            symmetrize_axis(ax)
+        fig.tight_layout()
+        fig.savefig(args.out+"ellipticity.png", dpi=300)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -452,6 +452,7 @@ Atmosphere only simulation:
     parser.add_argument("--do_fft", type=int, default=1, help="Do the FFT PSFs?")
     parser.add_argument("--do_geom", type=int, default=1, help="Do the geometric PSFs?")
     parser.add_argument("--make_movie", type=int, default=1, help="Make the movie?")
+    parser.add_argument("--make_plots", type=int, default=1, help="Make the plots?")
 
     args = parser.parse_args()
     make_movie(args)
