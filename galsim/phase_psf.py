@@ -619,6 +619,14 @@ class Aperture(object):
         return self._uv[1]
 
     @lazy_property
+    def u_illuminated(self):
+        return self.u[self.illuminated]
+
+    @lazy_property
+    def v_illuminated(self):
+        return self.v[self.illuminated]
+
+    @lazy_property
     def rsqr(self):
         """Pupil radius squared array in meters squared."""
         return self.u**2 + self.v**2
@@ -637,7 +645,7 @@ class Aperture(object):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
         # pickle.
         d = self.__dict__.copy()
-        for k in ('rho', '_uv', 'rsqr'):
+        for k in ('rho', '_uv', 'rsqr', 'u_illuminated', 'v_illuminated'):
             d.pop(k, None)
         # Only reconstruct _illuminated if we made it from geometry.  If loaded, it's probably
         # faster to serialize the array.
@@ -1387,8 +1395,8 @@ class PhaseScreenPSF(GSObject):
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         from . import fft
-        u = self.aper.u[self.aper.illuminated]
-        v = self.aper.v[self.aper.illuminated]
+        u = self.aper.u_illuminated
+        v = self.aper.v_illuminated
         # This is where I need to make sure the screens are instantiated for FFT.
         self._screen_list.instantiate(check='FFT')
         wf = self._screen_list._wavefront(u, v, None, self.theta)
@@ -1480,8 +1488,8 @@ class PhaseScreenPSF(GSObject):
         ud.generate(t)
         t *= self.exptime
         t += self.t0
-        u = self.aper.u[self.aper.illuminated]
-        v = self.aper.v[self.aper.illuminated]
+        u = self.aper.u_illuminated
+        v = self.aper.v_illuminated
         pick = np.empty((n_photons,), dtype=float)
         ud.generate(pick)
         pick *= len(u)
