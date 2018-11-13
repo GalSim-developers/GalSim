@@ -1194,7 +1194,7 @@ class PhaseScreenPSF(GSObject):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
-        self.screen_list = screen_list
+        self._screen_list = screen_list
         self.t0 = float(t0)
         self.lam = float(lam)
         self.exptime = float(exptime)
@@ -1204,7 +1204,7 @@ class PhaseScreenPSF(GSObject):
             if 'diam' not in kwargs:
                 raise GalSimIncompatibleValuesError(
                     "Diameter required if aperture not specified directly.", diam=None, aper=aper)
-            aper = Aperture(lam=lam, screen_list=self.screen_list, gsparams=gsparams, **kwargs)
+            aper = Aperture(lam=lam, screen_list=self._screen_list, gsparams=gsparams, **kwargs)
         elif gsparams is None:
             gsparams = aper.gsparams
         else:
@@ -1238,7 +1238,7 @@ class PhaseScreenPSF(GSObject):
         self._kcrit = kcrit
         # We'll set these more intelligently as needed below
         self._second_kick = second_kick
-        self.screen_list._delayCalculation(self)
+        self._screen_list._delayCalculation(self)
         self._finalized = False
 
     @lazy_property
@@ -1268,7 +1268,7 @@ class PhaseScreenPSF(GSObject):
         if self._force_stepk > 0.:
             stepk = self._force_stepk
         else:
-            stepk = self.screen_list._getStepK(lam=self.lam, diam=self.aper.diam,
+            stepk = self._screen_list._getStepK(lam=self.lam, diam=self.aper.diam,
                                                 obscuration=self.aper.obscuration,
                                                 gsparams=self._gsparams)
         if self._force_maxk > 0.:
@@ -1295,7 +1295,7 @@ class PhaseScreenPSF(GSObject):
 
     @lazy_property
     def screen_kmax(self):
-        r0_500 = self.screen_list.r0_500_effective
+        r0_500 = self._screen_list.r0_500_effective
         if r0_500 is None:
             return np.inf
         else:
@@ -1309,7 +1309,7 @@ class PhaseScreenPSF(GSObject):
         from .airy import Airy
         from .second_kick import SecondKick
         if self._second_kick is None:
-            r0_500 = self.screen_list.r0_500_effective
+            r0_500 = self._screen_list.r0_500_effective
             if r0_500 is None:  # No AtmosphericScreens in list
                 return Airy(lam=self.lam, diam=self.aper.diam,
                             obscuration=self.aper.obscuration, gsparams=self._gsparams)
@@ -1326,13 +1326,17 @@ class PhaseScreenPSF(GSObject):
     def flux(self):
         return self._flux
 
+    @property
+    def screen_list(self):
+        return self._screen_list
+
     @doc_inherit
     def withGSParams(self, gsparams):
         if gsparams is self.gsparams: return self
         gsparams = GSParams.check(gsparams)
         aper = self.aper.withGSParams(gsparams)
         return PhaseScreenPSF(
-            self.screen_list, self.lam, self.t0, self.exptime, self.time_step, self.flux,
+            self._screen_list, self.lam, self.t0, self.exptime, self.time_step, self.flux,
             self.theta, self.interpolant, self.scale_unit, self._ii_pad_factor,
             self._suppress_warning, self._geometric_shooting, aper, self._second_kick, self._kcrit,
             gsparams, self._force_stepk, self._force_maxk
@@ -1340,19 +1344,19 @@ class PhaseScreenPSF(GSObject):
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
-                (self.screen_list, self.lam, self.exptime))
+                (self._screen_list, self.lam, self.exptime))
 
     def __repr__(self):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, "
                   "interpolant=%r, scale_unit=%r, gsparams=%r)")
-        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.aper,
+        return outstr % (self._screen_list, self.lam, self.exptime, self.flux, self.aper,
                          self.theta, self.interpolant, self.scale_unit, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
         return (isinstance(other, PhaseScreenPSF) and
-                self.screen_list == other.screen_list and
+                self._screen_list == other._screen_list and
                 self.lam == other.lam and
                 self.aper == other.aper and
                 self.t0 == other.t0 and
@@ -1366,13 +1370,13 @@ class PhaseScreenPSF(GSObject):
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.PhaseScreenPSF", tuple(self.screen_list), self.lam, self.aper,
+        return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
                      self.t0, self.exptime, self.time_step, self._flux, self.interpolant,
                      self._force_stepk, self._force_maxk, self._ii_pad_factor, self.gsparams))
 
     def _prepareDraw(self):
         # Trigger delayed computation of all pending PSFs.
-        self.screen_list._prepareDraw()
+        self._screen_list._prepareDraw()
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
@@ -1380,8 +1384,8 @@ class PhaseScreenPSF(GSObject):
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
         # This is where I need to make sure the screens are instantiated for FFT.
-        self.screen_list.instantiate(check='FFT')
-        wf = self.screen_list._wavefront(u, v, None, self.theta)
+        self._screen_list.instantiate(check='FFT')
+        wf = self._screen_list._wavefront(u, v, None, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
@@ -1414,7 +1418,7 @@ class PhaseScreenPSF(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         if not self._finalized:
-            self.screen_list._delayCalculation(self)
+            self._screen_list._delayCalculation(self)
 
     @property
     def _maxk(self):
@@ -1479,9 +1483,9 @@ class PhaseScreenPSF(GSObject):
 
         # This is where the screens need to be instantiated for drawing with geometric photon
         # shooting.
-        self.screen_list.instantiate(kmax=self.screen_kmax, check='phot')
+        self._screen_list.instantiate(kmax=self.screen_kmax, check='phot')
         nm_to_arcsec = 1.e-9 * radians / arcsec
-        photons.x, photons.y = self.screen_list._wavefront_gradient(u, v, t, self.theta)
+        photons.x, photons.y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
         photons.x *= nm_to_arcsec
         photons.y *= nm_to_arcsec
         photons.flux = self._flux / n_photons
