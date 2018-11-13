@@ -451,6 +451,7 @@ def test_fft_vs_geom_movie():
         do_fft=1
         do_geom=1
         make_movie=1
+        make_plots=1
     import fft_vs_geom_movie
     try:
         fft_vs_geom_movie.make_movie(Args)
