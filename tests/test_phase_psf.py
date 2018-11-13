@@ -988,6 +988,9 @@ def test_gc():
 @timer
 def test_withGSP():
     screen = galsim._DummyScreen(1.0, aberrations=[0,0,0,0,1])
+    # Make sure screen really fails if we try to access _wavefront
+    with np.testing.assert_raises(RuntimeError):
+        screen._wavefront()
     psl = galsim.PhaseScreenList(screen)
     psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
     psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
