@@ -1224,7 +1224,7 @@ class PhaseScreenPSF(GSObject):
         self._force_stepk = _force_stepk
         self._force_maxk = _force_maxk
 
-        self._img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
+        self._img = None
 
         if self.exptime < 0:
             raise GalSimRangeError("Cannot integrate PSF for negative time.", self.exptime, 0.)
@@ -1345,6 +1345,7 @@ class PhaseScreenPSF(GSObject):
         # Make sure we mark that we need to recalculate any previously finalized InterpolatedImage
         ret._finalized = False
         ret._screen_list._delayCalculation(ret)
+        ret._img = None
         return ret
 
     def __str__(self):
@@ -1395,6 +1396,8 @@ class PhaseScreenPSF(GSObject):
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = fft.fft2(expwf_grid, shift_in=True, shift_out=True)
+        if self._img is None:
+            self._img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
         self._img += np.abs(ftexpwf)**2
         if self._bar:  # pragma: no cover
             self._bar.update()
