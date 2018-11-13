@@ -1451,11 +1451,17 @@ class PhaseScreenPSF(GSObject):
 
     @property
     def _positive_flux(self):
-        return self._ii.positive_flux
+        if self._geometric_shooting:
+            return self._flux
+        else:
+            return self._ii.positive_flux
 
     @property
     def _negative_flux(self):
-        return self._ii.negative_flux
+        if self._geometric_shooting:
+            return 0
+        else:
+            return self._ii.negative_flux
 
     @property
     def _max_sb(self):
