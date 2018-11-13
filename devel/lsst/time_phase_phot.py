@@ -5,16 +5,14 @@ def time_geom():
     # Mock a command-line arguments object so we can run in the current process
     class Args(object):
         seed = 12345
-        n = 1000
+        n = 100000
         jmax = 22
         ell = 4.0
         sigma = 0.05
         r0_500 = 0.2
-        #nlayers = 6
-        nlayers = 2
+        nlayers = 6
         time_step = 10
-        #screen_size = 819.2
-        screen_size = 102.4
+        screen_size = 409.6
         screen_scale = 0.1
         max_speed = 20.0
         lam = 700.0
@@ -29,7 +27,7 @@ def time_geom():
         pad_factor = 1.0
         oversampling = 1.0
         geom_oversampling = 1.0
-        geom_nphot = 100000
+        geom_nphot = 10
         vmax = 1.e-3
         out = "output/time_geom_"
         do_fft=0
