@@ -1816,12 +1816,12 @@ class OpticalPSF(GSObject):
     @lazy_property
     def _psf(self):
         psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                   aper=self._aper, interpolant=self._interpolant,
-                                   scale_unit=self._scale_unit, gsparams=self._gsparams,
-                                   suppress_warning=self._suppress_warning,
-                                   geometric_shooting=self._geometric_shooting,
-                                   _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
-                                   ii_pad_factor=self._ii_pad_factor)
+                             aper=self._aper, interpolant=self._interpolant,
+                             scale_unit=self._scale_unit, gsparams=self._gsparams,
+                             suppress_warning=self._suppress_warning,
+                             geometric_shooting=self._geometric_shooting,
+                             _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
+                             ii_pad_factor=self._ii_pad_factor)
         psf._prepareDraw()  # No need to delay an OpticalPSF.
         return psf
 
