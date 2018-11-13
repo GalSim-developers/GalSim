@@ -1032,6 +1032,11 @@ class PhaseScreenList(object):
         # screens, we'll use that relation.
         return np.sum([layer._getStepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['_pending'] = []
+        return d
+
 
 class PhaseScreenPSF(GSObject):
     """A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
@@ -1398,8 +1403,6 @@ class PhaseScreenPSF(GSObject):
         return self._ii._sbp
 
     def __getstate__(self):
-        # Finish calculating before pickling.
-        self._prepareDraw()
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
@@ -1410,6 +1413,8 @@ class PhaseScreenPSF(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
+        if not self._finalized:
+            self.screen_list._delayCalculation(self)
 
     @property
     def _maxk(self):
