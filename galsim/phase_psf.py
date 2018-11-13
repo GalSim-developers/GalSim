@@ -1335,12 +1335,17 @@ class PhaseScreenPSF(GSObject):
         if gsparams is self.gsparams: return self
         gsparams = GSParams.check(gsparams)
         aper = self.aper.withGSParams(gsparams)
-        return PhaseScreenPSF(
-            self._screen_list, self.lam, self.t0, self.exptime, self.time_step, self.flux,
-            self.theta, self.interpolant, self.scale_unit, self._ii_pad_factor,
-            self._suppress_warning, self._geometric_shooting, aper, self._second_kick, self._kcrit,
-            gsparams, self._force_stepk, self._force_maxk
-        )
+        ret = self.__class__.__new__(self.__class__)
+        ret.__dict__.update(self.__dict__)
+        # Make sure we generate fresh versions of any attrs that depend on gsparams
+        for attr in ['second_kick', '_real_ii', '_dummy_ii']:
+            ret.__dict__.pop(attr, None)
+        ret._gsparams = gsparams
+        ret.aper = aper
+        # Make sure we mark that we need to recalculate any previously finalized InterpolatedImage
+        ret._finalized = False
+        ret._screen_list._delayCalculation(ret)
+        return ret
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
