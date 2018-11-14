@@ -589,15 +589,20 @@ def horner(x, coef, dtype=None):
 
     @returns a numpy array of the evaluated polynomial.  Will be the same shape as x.
     """
-    coef = np.trim_zeros(coef, trim='b')
-    result = np.zeros_like(x, dtype=dtype)
-    if len(coef) == 0: return result
-    result += coef[-1]
+    result = np.empty_like(x, dtype=dtype)
+    _horner(x, coef, result)
+    return result
+
+def _horner(x, coef, result):
+    coef = np.trim_zeros(coef, trim='b')  # trim only from the back
+    if len(coef) == 0:
+        result.fill(0)
+        return
+    result.fill(coef[-1])
     for c in coef[-2::-1]:
         result *= x
         if c != 0: result += c
     #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
-    return result
 
 def horner2d(x, y, coefs, dtype=None):
     """Evaluate bivariate polynomial using nested Horner's method.
@@ -612,9 +617,11 @@ def horner2d(x, y, coefs, dtype=None):
     @returns a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
     """
     result = horner(y, coefs[-1], dtype=dtype)
+    temp = np.empty_like(x, dtype=dtype)
     for coef in coefs[-2::-1]:
         result *= x
-        result += horner(y, coef, dtype=dtype)
+        _horner(y, coef, temp)
+        result += temp
     # Useful when working on this... (Numpy method is much slower, btw.)
     #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
     return result
