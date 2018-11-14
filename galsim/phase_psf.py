@@ -928,8 +928,8 @@ class PhaseScreenList(object):
         gradx, grady = self._layers[0]._wavefront_gradient(u, v, t, theta)
         for layer in self._layers[1:]:
             gx, gy = layer._wavefront_gradient(u, v, t, theta)
-            gradx[...] += gx
-            grady[...] += gy
+            gradx += gx
+            grady += gy
         return gradx, grady
 
     def makePSF(self, lam, **kwargs):
