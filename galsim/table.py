@@ -629,8 +629,11 @@ class LookupTable2D(object):
     def _wrap_args(self, x, y):
         """Wrap points back into the fundamental period."""
         # Original x and y may have been modified, so need to use x0 and xperiod attributes here.
-        return ((x-self.x0) % self.xperiod + self.x0,
-                (y-self.y0) % self.yperiod + self.y0)
+        #x = (x-self.x0) % self.xperiod + self.x0
+        #y = (y-self.y0) % self.yperiod + self.y0
+        _galsim.WrapArrayToPeriod(x.ctypes.data, len(x), self.x0, self.xperiod)
+        _galsim.WrapArrayToPeriod(y.ctypes.data, len(y), self.y0, self.yperiod)
+        return x, y
 
     @property
     def _bounds(self):
@@ -703,8 +706,8 @@ class LookupTable2D(object):
 
         @returns  a scalar value if x and y are scalar, or a numpy array if x and y are arrays.
         """
-        x1 = np.array(x, dtype=float, copy=False)
-        y1 = np.array(y, dtype=float, copy=False)
+        x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
+        y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')
         x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
         y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
 
@@ -803,8 +806,8 @@ class LookupTable2D(object):
         @returns A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
         values) or numpy arrays.
         """
-        x1 = np.array(x, dtype=float, copy=False)
-        y1 = np.array(y, dtype=float, copy=False)
+        x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
+        y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')
         x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
         y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
 

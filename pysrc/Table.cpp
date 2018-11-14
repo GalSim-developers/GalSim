@@ -135,6 +135,13 @@ namespace galsim {
         table2d.gradientGrid(x, y, dfdx, dfdy, Nx, Ny);
     }
 
+    static void _WrapArrayToPeriod(size_t ix, int n, double x0, double period)
+    {
+        double* x = reinterpret_cast<double*>(ix);
+        WrapArrayToPeriod(x,n,x0,period);
+    }
+
+
     void pyExportTable(PY_MODULE& _galsim)
     {
         py::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
@@ -153,6 +160,8 @@ namespace galsim {
             .def("gradient", &Gradient)
             .def("gradientMany", &GradientMany)
             .def("gradientGrid", &GradientGrid);
+
+        GALSIM_DOT def("WrapArrayToPeriod", &_WrapArrayToPeriod);
     }
 
 } // namespace galsim
