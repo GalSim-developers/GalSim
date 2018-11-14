@@ -384,7 +384,7 @@ _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
 class Zernike(object):
-    """A class to represent a Zernike polynomial series
+    r"""A class to represent a Zernike polynomial series
     (http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials).
 
     Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is

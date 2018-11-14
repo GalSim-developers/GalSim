@@ -27,7 +27,7 @@ from galsim_test_helpers import *
 
 @timer
 def test_Zernike_orthonormality():
-    """ Zernike optical screens *should* be normalized such that
+    r""" Zernike optical screens *should* be normalized such that
     \int_{unit disc} Z(n1, m1) Z(n2, m2) dA = \pi in unit disc coordinates, or alternatively
     = aperture area if radial coordinate is not normalized (i.e., diam != 2).
     """
