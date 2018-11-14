@@ -240,11 +240,11 @@ class Convolution(GSObject):
                     break
                 _noise = obj.noise
                 others = [ obj2 for k, obj2 in enumerate(self.obj_list) if k != i ]
-                assert len(others) > 0
                 if len(others) == 1:
                     _noise = _noise.convolvedWith(others[0])
-                else:
+                elif len(others) > 1:
                     _noise = _noise.convolvedWith(Convolve(others))
+                # else len == 0, so just use _noise directly.
         return _noise
 
     @doc_inherit

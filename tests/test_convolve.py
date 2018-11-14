@@ -780,6 +780,10 @@ def test_convolve_noise():
     with assert_warns(galsim.GalSimWarning):
         assert conv3.noise == obj1.noise.convolvedWith(galsim.Convolve(obj2,obj3))
 
+    # Convolution with only one object uses that object's noise
+    conv1 = galsim.Convolution(obj1)
+    assert conv1.noise == obj1.noise
+
     # Other types don't propagate noise and give a warning about it.
     deconv = galsim.Deconvolution(obj2)
     autoconv = galsim.AutoConvolution(obj2)

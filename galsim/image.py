@@ -568,7 +568,7 @@ class Image(object):
         buf = np.zeros(nbytes + 16, dtype=np.uint8)
         start_index = -buf.ctypes.data % 16
         a = buf[start_index:start_index + nbytes].view(dtype).reshape(shape)
-        assert a.ctypes.data % 16 == 0
+        #assert a.ctypes.data % 16 == 0
         return a
 
     def resize(self, bounds, wcs=None):

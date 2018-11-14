@@ -250,20 +250,20 @@ class PhotonArray(object):
 
     @property
     def _pa(self):
-        assert(self._x.strides[0] == self._x.itemsize)
-        assert(self._y.strides[0] == self._y.itemsize)
-        assert(self._flux.strides[0] == self._flux.itemsize)
+        #assert(self._x.strides[0] == self._x.itemsize)
+        #assert(self._y.strides[0] == self._y.itemsize)
+        #assert(self._flux.strides[0] == self._flux.itemsize)
         _x = self._x.ctypes.data
         _y = self._y.ctypes.data
         _flux = self._flux.ctypes.data
         _dxdz = _dydz = _wave = 0
         if self.hasAllocatedAngles():
-            assert(self._dxdz.strides[0] == self._dxdz.itemsize)
-            assert(self._dydz.strides[0] == self._dydz.itemsize)
+            #assert(self._dxdz.strides[0] == self._dxdz.itemsize)
+            #assert(self._dydz.strides[0] == self._dydz.itemsize)
             _dxdz = self._dxdz.ctypes.data
             _dydz = self._dydz.ctypes.data
         if self.hasAllocatedWavelengths():
-            assert(self._wave.strides[0] == self._wave.itemsize)
+            #assert(self._wave.strides[0] == self._wave.itemsize)
             _wave = self._wave.ctypes.data
         with convert_cpp_errors():
             return _galsim.PhotonArray(int(self.size()), _x, _y, _flux, _dxdz, _dydz, _wave,

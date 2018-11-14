@@ -1080,7 +1080,7 @@ def structure_function(image):
     corr = np.fft.ifft2(np.abs(np.fft.fft2(np.fft.fftshift(array)))**2).real / (nx * ny)
     # Check that the zero-lag correlation function is equal to the variance before doing the
     # ifftshift.
-    assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
+    #assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
     corr = np.fft.ifftshift(corr)
 
     x = scale * (np.arange(nx) - nx//2)

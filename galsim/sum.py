@@ -334,8 +334,8 @@ class Sum(GSObject):
                 istart += thisN
             remainingN -= thisN
             remainingAbsoluteFlux -= thisAbsoluteFlux
-        assert remainingN == 0
-        assert np.isclose(remainingAbsoluteFlux, 0.0)
+        #assert remainingN == 0
+        #assert np.isclose(remainingAbsoluteFlux, 0.0)
 
         # This process produces correlated photons, so mark the resulting array as such.
         if len(self.obj_list) > 1:
