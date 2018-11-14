@@ -528,7 +528,7 @@ def test_table2d():
 
     # Test edge_mode='constant'
     tab2d = galsim.LookupTable2D(x, y, z, edge_mode='constant', constant=42)
-    assert type(tab2d(x[0]-1, y[0]-1)) == float
+    assert type(tab2d(x[0]-1, y[0]-1)) in [float, np.float64]
     assert tab2d(x[0]-1, y[0]-1) == 42.0
     # One in-bounds, one out-of-bounds
     np.testing.assert_array_almost_equal(tab2d([x[0], x[0]-1], [y[0], y[0]-1]),

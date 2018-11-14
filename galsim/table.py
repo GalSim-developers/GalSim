@@ -639,73 +639,51 @@ class LookupTable2D(object):
         return BoundsD(self.x[0], self.x[-1], self.y[0], self.y[-1])
 
     def _call_inbounds(self, x, y, grid=False):
-        if isinstance(x, numbers.Real):
-            return self._tab.interp(x, y)
+        if grid:
+            f = np.empty((len(x), len(y)), dtype=float)
+            self._tab.interpGrid(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x), len(y))
+            return f
         else:
-            x = np.array(x, dtype=float, copy=False)
-            y = np.array(y, dtype=float, copy=False)
-            xx = np.ascontiguousarray(x.ravel(), dtype=float)
-            yy = np.ascontiguousarray(y.ravel(), dtype=float)
-            if grid:
-                f = np.empty((len(xx), len(yy)), dtype=float)
-                self._tab.interpGrid(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx), len(yy))
-                return f
-            else:
-                f = np.empty_like(xx, dtype=float)
-                self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx))
-                f = f.reshape(x.shape)
-                return f
+            f = np.empty_like(x, dtype=float)
+            self._tab.interpMany(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x))
+            return f
 
     def _call_constant(self, x, y, grid=False):
-        if isinstance(x, numbers.Real):
-            if self._inbounds(x, y):
-                return self._tab.interp(x, y)
-            else:
-                return self.constant
+        x = np.array(x, dtype=float, copy=False)
+        y = np.array(y, dtype=float, copy=False)
+        if grid:
+            f = np.empty((len(x), len(y)), dtype=float)
+            # Fill in interpolated values first, then go back and fill in
+            # constants
+            self._tab.interpGrid(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x), len(y))
+            badx = (x < self.x[0]) | (x > self.x[-1])
+            bady = (y < self.y[0]) | (y > self.y[-1])
+            f[badx, :] = self.constant
+            f[:, bady] = self.constant
+            return f
         else:
-            x = np.array(x, dtype=float, copy=False)
-            y = np.array(y, dtype=float, copy=False)
-            if grid:
-                f = np.empty((len(x), len(y)), dtype=float)
-                # Fill in interpolated values first, then go back and fill in
-                # constants
-                xx = np.ascontiguousarray(x.ravel(), dtype=float)
-                yy = np.ascontiguousarray(y.ravel(), dtype=float)
-                self._tab.interpGrid(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx), len(yy))
-                badx = (x < self.x[0]) | (x > self.x[-1])
-                bady = (y < self.y[0]) | (y > self.y[-1])
-                f[badx, :] = self.constant
-                f[:, bady] = self.constant
-                return f
-            else:
-                # Start with constant array, then interpolate good positions
-                f = np.empty_like(x, dtype=float)
-                f.fill(self.constant)
-                good = ((x >= self.x[0]) & (x <= self.x[-1]) &
-                        (y >= self.y[0]) & (y <= self.y[-1]))
-                xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
-                yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
-                tmp = np.empty_like(xx, dtype=float)
-                self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, tmp.ctypes.data, len(xx))
-                f[good] = tmp
-                return f
+            # Start with constant array, then interpolate good positions
+            f = np.empty_like(x, dtype=float)
+            f.fill(self.constant)
+            good = ((x >= self.x[0]) & (x <= self.x[-1]) &
+                    (y >= self.y[0]) & (y <= self.y[-1]))
+            xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
+            yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
+            tmp = np.empty_like(xx, dtype=float)
+            self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, tmp.ctypes.data, len(xx))
+            f[good] = tmp
+            return f
 
     def _call_raise(self, x, y, grid=False):
         if not self._inbounds(x, y):
-            if isinstance(x, numbers.Real):
-                pos = PositionD(x, y)
-            else:
-                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
+            pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             raise GalSimBoundsError("Extrapolating beyond input range.",
                                     pos, self._bounds)
         return self._call_inbounds(x, y, grid)
 
     def _call_warn(self, x, y, grid=False):
         if not self._inbounds(x, y):
-            if isinstance(x, numbers.Real):
-                pos = PositionD(x, y)
-            else:
-                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
+            pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             galsim_warn("Extrapolating beyond input range. {!r} not in {!r}".format(
                         pos, self._bounds))
         return self._call_constant(x, y, grid)
@@ -725,57 +703,52 @@ class LookupTable2D(object):
 
         @returns  a scalar value if x and y are scalar, or a numpy array if x and y are arrays.
         """
+        x1 = np.array(x, dtype=float, copy=False)
+        y1 = np.array(y, dtype=float, copy=False)
+        x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
+        y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
+
         if self.edge_mode == 'raise':
-            return self._call_raise(x, y, grid)
+            f = self._call_raise(x2, y2, grid)
         elif self.edge_mode == 'warn':
-            return self._call_warn(x, y, grid)
+            f = self._call_warn(x2, y2, grid)
         elif self.edge_mode == 'wrap':
-            return self._call_wrap(x, y, grid)
+            f = self._call_wrap(x2, y2, grid)
         else: # constant
-            return self._call_constant(x, y, grid)
+            f = self._call_constant(x2, y2, grid)
+
+        if isinstance(x, numbers.Real):
+            return f[0]
+        else:
+            if not grid:
+                f = f.reshape(x1.shape)
+            return f
 
     def _gradient_inbounds(self, x, y, grid=False):
-        if isinstance(x, numbers.Real):
-            grad = np.empty(2, dtype=float)
-            self._tab.gradient(x, y, grad.ctypes.data)
-            return grad[0], grad[1]
+        if grid:
+            dfdx = np.empty((len(x), len(y)), dtype=float)
+            dfdy = np.empty((len(x), len(y)), dtype=float)
+            self._tab.gradientGrid(x.ctypes.data, y.ctypes.data,
+                                   dfdx.ctypes.data, dfdy.ctypes.data,
+                                   len(x), len(y))
+            return dfdx, dfdy
         else:
-            x = np.array(x, dtype=float, copy=False)
-            y = np.array(y, dtype=float, copy=False)
-            xx = np.ascontiguousarray(x.ravel(), dtype=float)
-            yy = np.ascontiguousarray(y.ravel(), dtype=float)
-            if grid:
-                dfdx = np.empty((len(xx), len(yy)), dtype=float)
-                dfdy = np.empty((len(xx), len(yy)), dtype=float)
-                self._tab.gradientGrid(xx.ctypes.data, yy.ctypes.data,
-                                       dfdx.ctypes.data, dfdy.ctypes.data,
-                                       len(xx), len(yy))
-                return dfdx, dfdy
-            else:
-                dfdx = np.empty_like(xx)
-                dfdy = np.empty_like(xx)
-                self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
-                                       dfdx.ctypes.data, dfdy.ctypes.data, len(xx))
-                dfdx = dfdx.reshape(x.shape)
-                dfdy = dfdy.reshape(x.shape)
-                return dfdx, dfdy
+            dfdx = np.empty_like(x)
+            dfdy = np.empty_like(x)
+            self._tab.gradientMany(x.ctypes.data, y.ctypes.data,
+                                   dfdx.ctypes.data, dfdy.ctypes.data, len(x))
+            return dfdx, dfdy
 
     def _gradient_raise(self, x, y, grid=False):
         if not self._inbounds(x, y):
-            if isinstance(x, numbers.Real):
-                pos = PositionD(x, y)
-            else:
-                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
+            pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             raise GalSimBoundsError("Extrapolating beyond input range.",
                                     pos, self._bounds)
         return self._gradient_inbounds(x, y, grid)
 
     def _gradient_warn(self, x, y, grid=False):
         if not self._inbounds(x, y):
-            if isinstance(x, numbers.Real):
-                pos = PositionD(x, y)
-            else:
-                pos = find_out_of_bounds_position(x, y, self._bounds, grid)
+            pos = find_out_of_bounds_position(x, y, self._bounds, grid)
             galsim_warn("Extrapolating beyond input range. {!r} not in {!r}".format(
                         pos, self._bounds))
         return self._gradient_constant(x, y, grid)
@@ -785,46 +758,36 @@ class LookupTable2D(object):
         return self._gradient_inbounds(x, y, grid)
 
     def _gradient_constant(self, x, y, grid=False):
-        if isinstance(x, numbers.Real):
-            if self._inbounds(x, y):
-                grad = np.empty(2, dtype=float)
-                self._tab.gradient(float(x), float(y), grad.ctypes.data)
-                return tuple(grad)
-            else:
-                return 0.0, 0.0
+        x = np.array(x, dtype=float, copy=False)
+        y = np.array(y, dtype=float, copy=False)
+        if grid:
+            dfdx = np.empty((len(x), len(y)), dtype=float)
+            dfdy = np.empty((len(x), len(y)), dtype=float)
+            self._tab.gradientGrid(x.ctypes.data, y.ctypes.data,
+                dfdx.ctypes.data, dfdy.ctypes.data, len(x), len(y))
+            badx = (x < self.x[0]) | (x > self.x[-1])
+            bady = (y < self.y[0]) | (y > self.y[-1])
+            dfdx[badx,:] = 0.0
+            dfdx[:, bady] = 0.0
+            dfdy[badx,:] = 0.0
+            dfdy[:, bady] = 0.0
+            return dfdx, dfdy
         else:
-            x = np.array(x, dtype=float, copy=False)
-            y = np.array(y, dtype=float, copy=False)
-            if grid:
-                dfdx = np.empty((len(x), len(y)), dtype=float)
-                dfdy = np.empty((len(x), len(y)), dtype=float)
-                xx = np.ascontiguousarray(x.ravel(), dtype=float)
-                yy = np.ascontiguousarray(y.ravel(), dtype=float)
-                self._tab.gradientGrid(xx.ctypes.data, yy.ctypes.data,
-                    dfdx.ctypes.data, dfdy.ctypes.data, len(xx), len(yy))
-                badx = (x < self.x[0]) | (x > self.x[-1])
-                bady = (y < self.y[0]) | (y > self.y[-1])
-                dfdx[badx,:] = 0.0
-                dfdx[:, bady] = 0.0
-                dfdy[badx,:] = 0.0
-                dfdy[:, bady] = 0.0
-                return dfdx, dfdy
-            else:
-                dfdx = np.empty_like(x, dtype=float)
-                dfdy = np.empty_like(x, dtype=float)
-                dfdx.fill(0.0)
-                dfdy.fill(0.0)
-                good = ((x >= self.x[0]) & (x <= self.x[-1]) &
-                        (y >= self.y[0]) & (y <= self.y[-1]))
-                xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
-                yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
-                tmp1 = np.empty_like(xx, dtype=float)
-                tmp2 = np.empty_like(xx, dtype=float)
-                self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
-                                       tmp1.ctypes.data, tmp2.ctypes.data, len(xx))
-                dfdx[good] = tmp1
-                dfdy[good] = tmp2
-                return dfdx, dfdy
+            dfdx = np.empty_like(x, dtype=float)
+            dfdy = np.empty_like(x, dtype=float)
+            dfdx.fill(0.0)
+            dfdy.fill(0.0)
+            good = ((x >= self.x[0]) & (x <= self.x[-1]) &
+                    (y >= self.y[0]) & (y <= self.y[-1]))
+            x = np.ascontiguousarray(x[good].ravel(), dtype=float)
+            y = np.ascontiguousarray(y[good].ravel(), dtype=float)
+            tmp1 = np.empty_like(x, dtype=float)
+            tmp2 = np.empty_like(x, dtype=float)
+            self._tab.gradientMany(x.ctypes.data, y.ctypes.data,
+                                   tmp1.ctypes.data, tmp2.ctypes.data, len(x))
+            dfdx[good] = tmp1
+            dfdy[good] = tmp2
+            return dfdx, dfdy
 
     def gradient(self, x, y, grid=False):
         """Calculate the gradient of the function at an arbitrary point or points.
@@ -840,14 +803,27 @@ class LookupTable2D(object):
         @returns A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
         values) or numpy arrays.
         """
+        x1 = np.array(x, dtype=float, copy=False)
+        y1 = np.array(y, dtype=float, copy=False)
+        x2 = np.ascontiguousarray(x1.ravel(), dtype=float)
+        y2 = np.ascontiguousarray(y1.ravel(), dtype=float)
+
         if self.edge_mode == 'raise':
-            return self._gradient_raise(x, y, grid)
+            dfdx, dfdy = self._gradient_raise(x2, y2, grid)
         if self.edge_mode == 'warn':
-            return self._gradient_warn(x, y, grid)
+            dfdx, dfdy = self._gradient_warn(x2, y2, grid)
         elif self.edge_mode == 'wrap':
-            return self._gradient_wrap(x, y, grid)
+            dfdx, dfdy = self._gradient_wrap(x2, y2, grid)
         else: # constant
-            return self._gradient_constant(x, y, grid)
+            dfdx, dfdy = self._gradient_constant(x2, y2, grid)
+
+        if isinstance(x, numbers.Real):
+            return dfdx[0], dfdy[0]
+        else:
+            if not grid:
+                dfdx = dfdx.reshape(x1.shape)
+                dfdy = dfdy.reshape(x1.shape)
+            return dfdx, dfdy
 
     def __str__(self):
         return ("galsim.LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
