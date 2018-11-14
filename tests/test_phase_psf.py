@@ -941,6 +941,12 @@ def test_gc():
     """Make sure that pending psfs don't leak memory.
     """
     import gc
+    # The below check about this may fail if some other test using PhaseScreenPSFs has failed.
+    # To avoid this spurious double error, only do the below check if we start out with
+    # nothing in the garbage collector.
+    gc.collect()
+    already_in_gc = any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
     atm = galsim.Atmosphere(screen_size=10.0, altitude=0, r0_500=0.15, suppress_warning=True)
 
     # First check that no PhaseScreenPSFs are known to the garbage collector
@@ -968,7 +974,8 @@ def test_gc():
     # And if then deleted, they again don't exist anywhere
     del psf, psf2
     gc.collect()
-    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+    if not already_in_gc:
+        assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
     # A corner case revealed in coverage tests:
     # Make sure that everything still works if some, but not all static pending PSFs are deleted.
@@ -982,7 +989,8 @@ def test_gc():
     del psf1, psf3
     assert phaseScreenList._pending == []
     gc.collect()
-    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+    if not already_in_gc:
+        assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
 
 @timer
