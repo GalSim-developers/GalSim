@@ -120,7 +120,7 @@ class AtmosphericScreen(object):
         self.npix = Image.good_fft_size(int(np.ceil(screen_size/screen_scale)))
         self.screen_scale = screen_scale
         self.screen_size = screen_scale * self.npix
-        self.altitude = altitude
+        self._altitude = altitude * 1000.  # meters
         self.time_step = time_step
         self.r0_500 = r0_500
         if L0 == np.inf:  # Allow np.inf as synonym for None.
@@ -142,6 +142,10 @@ class AtmosphericScreen(object):
         # These will be None until screens are instantiated.
         self.kmin = None
         self.kmax = None
+
+    @property
+    def altitude(self):
+        return self._altitude / 1000.  # convert back to km
 
     def __str__(self):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
@@ -168,7 +172,7 @@ class AtmosphericScreen(object):
         return (isinstance(other, AtmosphericScreen) and
                 self.screen_size == other.screen_size and
                 self.screen_scale == other.screen_scale and
-                self.altitude == other.altitude and
+                self._altitude == other._altitude and
                 self.r0_500 == other.r0_500 and
                 self.L0 == other.L0 and
                 self.vx == other.vx and
@@ -373,8 +377,12 @@ class AtmosphericScreen(object):
         # screen instantiation checking
         if t is None:
             t = self._time
-        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
-        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
+        u = u - t*self.vx
+        if theta[0].rad != 0.:
+            u += self._altitude*theta[0].tan()
+        v = v - t*self.vy
+        if theta[1].rad != 0.:
+            v += self._altitude*theta[1].tan()
         return self._tab2d._call_wrap(u.ravel(), v.ravel()).reshape(u.shape)
 
     def wavefront_gradient(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
@@ -429,8 +437,12 @@ class AtmosphericScreen(object):
 
     def _wavefront_gradient(self, u, v, t, theta):
         # Same as wavefront(), but no argument checking and no boiling updates.
-        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
-        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
+        u = u - t*self.vx
+        if theta[0].rad != 0:
+            u += self._altitude*theta[0].tan()
+        v = v - t*self.vy
+        if theta[1].rad != 0:
+            v += self._altitude*theta[1].tan()
         dfdx, dfdy = self._tab2d._gradient_wrap(u.ravel(), v.ravel())
         return dfdx.reshape(u.shape), dfdy.reshape(u.shape)
 
