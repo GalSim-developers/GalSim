@@ -91,11 +91,8 @@ namespace galsim {
             xdbg<<"da = "<<_da<<std::endl;
             int i = int( std::ceil( (a-front()) / _da) );
             xdbg<<"i = "<<i<<std::endl;
-            if (i >= _n) --i; // in case of rounding error
-            if (i == 0) ++i;
-            // check if we need to move ahead or back one step due to rounding errors
-            while (a > _vec[i]) ++i;
-            while (a < _vec[i-1]) --i;
+            if (i >= _n) i = _n-1; // in case of rounding error or off the edge
+            if (i <= 0) i = 1;
             xdbg<<"i => "<<i<<std::endl;
             return i;
         } else {
@@ -143,26 +140,18 @@ namespace galsim {
         }
     }
 
-    void ArgVec::upperIndexMany(const double* a, int* indices, int N) const {
+    void ArgVec::upperIndexMany(const double* a, int* indices, int N) const
+    {
+        xdbg<<"Start upperIndexMany\n";
         if (_equalSpaced) {
             xdbg << "Equal spaced\n";
             xdbg << "da = "<<_da<<'\n';
             for (int k=0; k<N; k++) {
-                if (a[k] < front()) {
-                    indices[k] = 1;
-                    continue;
-                }
-                if (a[k] > back()) {
-                    indices[k] = _n-1;
-                    continue;
-                }
+                xdbg<<"a[k] = "<<a[k]<<std::endl;
                 int idx = int(std::ceil((a[k]-front()) / _da));
+                if (idx >= _n) idx = _n-1; // in case of rounding error or off the edge
+                if (idx <= 0) idx = 1;
                 xdbg << "idx = "<<idx<<'\n';
-                if (idx >= _n) --idx;
-                if (idx == 0) ++idx;
-                while (a[k] > _vec[idx]) ++idx;
-                while (a[k] < _vec[idx-1]) --idx;
-                xdbg << "idx => "<<idx<<'\n';
                 indices[k] = idx;
             }
         } else {
