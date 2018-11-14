@@ -1140,6 +1140,12 @@ class ChromaticRealGalaxy(ChromaticSum):
         obj.index = None
         obj.catalog_files = None
         obj.rng = kwargs.pop('rng', BaseDeviate())
+
+        if len(images) != len(bands) or len(images) != len(xis) or len(images) != len(PSFs):
+            raise GalSimIncompatibleValuesError(
+                "The number of images, bands, xis, and PSFs must match.",
+                images=images, bands=bands, xis=xis, PSFs=PSFs)
+
         obj._initialize(images, bands, xis, PSFs, **kwargs)
         return obj
 
@@ -1149,6 +1155,10 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         if SEDs is None:
             SEDs = self._poly_SEDs(bands)
+        elif len(SEDs) > len(imgs):
+            raise GalSimIncompatibleValuesError(
+                "The number of SEDs must be <= the number of images",
+                images=imgs, SEDs=SEDs)
         self.SEDs = SEDs
 
         if k_interpolant is None:
@@ -1162,10 +1172,10 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         NSED = len(self.SEDs)
         Nim = len(imgs)
-        assert Nim == len(bands)
-        assert Nim == len(xis)
-        assert Nim == len(PSFs)
-        assert Nim >= NSED
+        #assert Nim == len(bands)
+        #assert Nim == len(xis)
+        #assert Nim == len(PSFs)
+        #assert Nim >= NSED
 
         if area_norm != 1.0:
             imgs = [img/area_norm for img in imgs]

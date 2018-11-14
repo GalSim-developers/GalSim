@@ -460,12 +460,12 @@ class InterpolatedImage(GSObject):
 
         # The the user gives us a pad image to use, fill the relevant portion with that.
         if pad_image:
-            assert self._xim.bounds.includes(pad_image.bounds)
+            #assert self._xim.bounds.includes(pad_image.bounds)
             self._xim[pad_image.bounds] = pad_image
             nz_bounds += pad_image.bounds
 
         # Now place the given image in the center of the padding image:
-        assert self._xim.bounds.includes(self._image.bounds)
+        #assert self._xim.bounds.includes(self._image.bounds)
         self._xim[self._image.bounds] = self._image
         self._xim.wcs = self._wcs
 
@@ -522,7 +522,7 @@ class InterpolatedImage(GSObject):
         half_size = noise_pad_size // 2
         b = _BoundsI(-half_size, -half_size + noise_pad_size-1,
                      -half_size, -half_size + noise_pad_size-1)
-        assert self._xim.bounds.includes(b)
+        #assert self._xim.bounds.includes(b)
         noise_image = self._xim[b]
         # Add the noise
         noise_image.addNoise(noise)

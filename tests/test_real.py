@@ -530,6 +530,44 @@ def test_crg_roundtrip_larger_target_psf():
                                rtol=0, atol=1e-4)
 
 
+    # Invalid arguments
+    with assert_raises(ValueError):
+        crg = galsim.ChromaticRealGalaxy.makeFromImages(
+            images=[f606w_image],
+            bands=[f606w, f814w],
+            PSFs=[f606w_PSF, f814w_PSF],
+            xis=[galsim.UncorrelatedNoise(1e-16)]*2,
+            SEDs=[bulge_SED, disk_SED])
+    with assert_raises(ValueError):
+        crg = galsim.ChromaticRealGalaxy.makeFromImages(
+            images=[f606w_image, f814w_image],
+            bands=[f606w],
+            PSFs=[f606w_PSF, f814w_PSF],
+            xis=[galsim.UncorrelatedNoise(1e-16)]*2,
+            SEDs=[bulge_SED, disk_SED])
+    with assert_raises(ValueError):
+        crg = galsim.ChromaticRealGalaxy.makeFromImages(
+            images=[f606w_image, f814w_image],
+            bands=[f606w, f814w],
+            PSFs=[f606w_PSF],
+            xis=[galsim.UncorrelatedNoise(1e-16)]*2,
+            SEDs=[bulge_SED, disk_SED])
+    with assert_raises(ValueError):
+        crg = galsim.ChromaticRealGalaxy.makeFromImages(
+            images=[f606w_image, f814w_image],
+            bands=[f606w, f814w],
+            PSFs=[f606w_PSF, f814w_PSF],
+            xis=[galsim.UncorrelatedNoise(1e-16)],
+            SEDs=[bulge_SED, disk_SED])
+    with assert_raises(ValueError):
+        crg = galsim.ChromaticRealGalaxy.makeFromImages(
+            images=[f606w_image, f814w_image],
+            bands=[f606w, f814w],
+            PSFs=[f606w_PSF, f814w_PSF],
+            xis=[galsim.UncorrelatedNoise(1e-16)]*2,
+            SEDs=[bulge_SED, disk_SED, disk_SED])
+
+
 @timer
 def test_ne():
     """ Check that inequality works as expected."""

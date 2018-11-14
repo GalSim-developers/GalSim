@@ -149,8 +149,8 @@ class Bandpass(object):
             self.wave_list = _wave_list
             # This also means that red_limit and blue_limit are already set correctly.
             # Don't change them.
-            assert self.blue_limit is not None
-            assert self.red_limit is not None
+            #assert self.blue_limit is not None
+            #assert self.red_limit is not None
             self._setup_func()
             return
 

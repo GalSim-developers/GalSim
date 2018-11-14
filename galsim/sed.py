@@ -250,13 +250,13 @@ class SED(object):
             self._get_rest_native_waves = WeakMethod(self._get_rest_native_waves_slow)
 
         if self.flux_type == 'fphotons':
-            assert self.flux_factor is not None
+            #assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_fphot)
         elif self.flux_type == 'flambda':
-            assert self.flux_factor is not None
+            #assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_flam)
         elif self.flux_type == 'fnu':
-            assert self.flux_factor is not None
+            #assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_fnu)
         else:
             self._flux_to_photons = WeakMethod(self._flux_to_photons_slow)

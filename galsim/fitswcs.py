@@ -202,8 +202,8 @@ class AstropyWCS(CelestialWCS):
             len(x)
         except TypeError:
             # Otherwise, return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             ra = ra[0]
             dec = dec[0]
         return ra, dec
@@ -448,8 +448,8 @@ class PyAstWCS(CelestialWCS):
             len(x)
         except TypeError:
             # If the inputs weren't numpy arrays, return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             ra = ra[0]
             dec = dec[0]
         return ra, dec
@@ -685,8 +685,8 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
             return np.array(ra)*factor, np.array(dec)*factor
         except TypeError:
             # Otherwise return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             return ra[0]*factor, dec[0]*factor
 
     def _xy(self, ra, dec, color=None):
@@ -1267,8 +1267,8 @@ class GSFitsWCS(CelestialWCS):
             return ra, dec
         except TypeError:
             # Otherwise return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             return ra[0], dec[0]
 
     def _invert_pv(self, u, v):
