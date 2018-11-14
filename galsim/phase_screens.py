@@ -337,8 +337,8 @@ class AtmosphericScreen(object):
                         permitted.
         @returns        Array of wavefront lag or lead in nanometers.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape",u=u,v=v)
 
@@ -351,7 +351,7 @@ class AtmosphericScreen(object):
             tmp.fill(t)
             t = tmp
         else:
-            t = np.array(t, dtype=float)
+            t = np.array(t, dtype=float, copy=False)
             if t.shape != u.shape:
                 raise GalSimIncompatibleValuesError(
                     "t.shape must match u.shape if t is not a scalar", t=t, u=u)
@@ -402,8 +402,8 @@ class AtmosphericScreen(object):
                         permitted.
         @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
 
@@ -413,7 +413,7 @@ class AtmosphericScreen(object):
             tmp.fill(t)
             t = tmp
         else:
-            t = np.array(t, dtype=float)
+            t = np.array(t, dtype=float, copy=False)
             if t.shape != u.shape:
                 raise GalSimIncompatibleValuesError(
                     "t.shape must match u.shape if t is not a scalar", t=t, u=u)
@@ -757,8 +757,8 @@ class OpticalScreen(object):
         @param theta    Ignored for OpticalScreen.
         @returns        Array of wavefront lag or lead in nanometers.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront(u, v, t, theta)
@@ -779,8 +779,8 @@ class OpticalScreen(object):
         @param theta    Ignored for OpticalScreen.
         @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront_gradient(u, v, t, theta)
