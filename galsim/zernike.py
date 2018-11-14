@@ -437,8 +437,11 @@ class Zernike(object):
         arr = _noll_coef_array_xy(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
 
         if self.R_outer != 1.0:
-            shape = arr.shape
-            arr /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0))
+            n = arr.shape[0]
+            norm = np.power(1./self.R_outer, np.arange(1,n))
+            arr[0,1:] *= norm
+            for i in range(1,n):
+                arr[i,0:-i] *= norm[i-1:]
         return arr
 
     @lazy_property
