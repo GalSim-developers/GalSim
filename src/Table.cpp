@@ -29,6 +29,8 @@
 #include "TMV_SymBand.h"
 #endif
 
+#include "fmath/fmath.hpp"  // For SSE
+
 #include "Table.h"
 #include "Interpolant.h"
 
@@ -1024,4 +1026,40 @@ namespace galsim {
         _pimpl->gradientGrid(xvec, yvec, dfdxvec, dfdyvec, Nx, Ny);
     }
 
+    void WrapArrayToPeriod(double* x, int n, double x0, double period)
+    {
+#ifdef __SSE2__
+        for (; n && !IsAligned(x); --n)
+            *x -= period * floor((*x-x0)/period);
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        if (n2) {
+            __m128d xx0 = _mm_set1_pd(x0);
+            __m128d xperiod = _mm_set1_pd(period);
+            __m128d xzero = _mm_set1_pd(0.);
+            __m128d* xx = reinterpret_cast<__m128d*>(x);
+            do {
+                __m128d xoffset = _mm_sub_pd(*xx, xx0);
+                __m128d nperiod = _mm_div_pd(xoffset,xperiod);
+                __m128d floornp = _mm_cvtepi32_pd(_mm_cvttpd_epi32(nperiod));
+                __m128d shift = _mm_mul_pd(xperiod, floornp);
+                __m128d neg = _mm_cmpge_pd(xoffset, xzero);
+                __m128d shift2 = _mm_sub_pd(shift, _mm_andnot_pd(neg, xperiod));
+                *xx = _mm_sub_pd(*xx, shift2);
+                ++xx;
+            } while (--n2);
+        }
+
+        if (n) {
+            x += na;
+            *x -= period * floor((*x-x0)/period);
+        }
+#else
+        for (; n; --n, ++x)
+            *x -= period * floor((*x-x0)/period);
+#endif
+    }
 }
