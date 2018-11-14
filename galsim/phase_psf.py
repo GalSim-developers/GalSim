@@ -751,15 +751,20 @@ class PhaseScreenList(object):
         return len(self._layers)
 
     def __getitem__(self, index):
-        import numbers
-        cls = type(self)
-        if isinstance(index, slice):
-            return cls(self._layers[index])
-        elif isinstance(index, numbers.Integral):
-            return self._layers[index]
+        try:
+            items = self._layers[index]
+        except TypeError:
+            msg = "{cls.__name__} indices must be integers or slices"
+            raise TypeError(msg.format(cls=self.__class__))
+        try:
+            index + 1   # Regular in indices are the norm, so try something that works for it,
+                        # but not for slices, where we need different handling.
+        except TypeError:
+            # index is a slice, so items is a list.
+            return PhaseScreenList(items)
         else:
-            msg = "{cls.__name__} indices must be integers"
-            raise TypeError(msg.format(cls=cls))
+            # index is an int, so items is just one screen.
+            return items
 
     def __setitem__(self, index, layer):
         self._layers[index] = layer
