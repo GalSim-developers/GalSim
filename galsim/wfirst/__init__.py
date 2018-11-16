@@ -104,8 +104,9 @@ Currently, the module includes the following numbers, which were updated as of W
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC), using
                  galsim.wfirst.applyIPC().
 
-    persistence_coefficients - The retention fraction of the previous eight exposures in a simple,
-                               linear model for persistence.
+    persistence_fermi_params - The parameters in the persistence fermi model.
+
+    max_exps - The number of previous exposures considered in persistence.
 
     n_sca - The number of SCAs in the focal plane.
 
@@ -190,6 +191,7 @@ usage.
 import os
 import galsim
 import numpy as np
+from LinkedList import *
 
 gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
@@ -231,7 +233,11 @@ ipc_kernel = np.array([ [0.001269938, 0.015399776, 0.001199862], \
                         [0.001270391, 0.016129619, 0.001200137] ])
 ipc_kernel /= np.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
-persistence_coefficients = np.array([0.045707683,0.014959818,0.009115737,0.00656769,0.005135571,0.004217028,0.003577534,0.003106601])/100.
+
+# parameters in the fermi model = [ A, x0, dx, a, r]
+# The following parameters are for H4RG-lo, the conservative model for low x.
+persistence_fermi_params = np.array([0.017, 60000., 50000., 0.045, 1.])
+max_exps = 8
 n_sca = 18
 n_pix_tot = 4096
 n_pix = 4088
@@ -267,3 +273,10 @@ def _parse_SCAs(SCAs):
     else:
         SCAs = all_SCAs
     return SCAs
+
+def fermi(x,t):
+    """
+    The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (.exp( -(x-x0)/dx ) +1. )
+    """
+
+    return galsim.wfirst.persistence_fermi_params[0]* (x/galsim.wfirst.persistence_fermi_params[1])**galsim.wfirst.persistence_fermi_params[3] * (t/1000.)**(-galsim.wfirst.persistence_fermi_params[4]) / ( numpy.exp( -(x-galsim.wfirst.persistence_fermi_params[1])/galsim.wfirst.persistence_fermi_params[2] ) +1. )

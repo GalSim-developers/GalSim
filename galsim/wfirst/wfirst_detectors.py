@@ -85,24 +85,23 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
 
 def applyPersistence(img, prev_exposures):
     """
-    Applies the persistence effect to the Image instance by adding a small fraction of the previous
-    exposures (up to {ncoeff}) supplied as the 'prev_exposures' argument.
-
-    For more information about persistence, see the docstring for galsim.Image.applyPersistence.
-    Unlike that routine, this one does not need the coefficients to be specified. However, the list
-    of previous eight exposures will have to be supplied. Earlier exposures, if supplied, will be
-    ignored.
+    Applies the persistence effect to the Image instance by adding the accumullated persistence dark
+    current of the previous exposures (up to galsim.wfirst.max_exps) supplied as the LinkedList 'prev_exposures' argument.
+    Unlike galsim.Image.applyPersistence, this one does not use constant cieffiients but a fermi model
+    (galsim.wfirst.fermi) for the WFIRST detectors.
 
     @param img               The Image to be transformed.
-    @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with the
+    @param prev_exposures    LinkedList of up to previous Image instances in the order of exposures, with the
                              recent exposure being the first element.
-    """.format(ncoeff=len(galsim.wfirst.persistence_coefficients))
-    if not hasattr(prev_exposures,'__iter__'):
-        raise TypeError("In wfirst.applyPersistence, prev_exposures must be a list of Image "
-                        "instances")
+    """
 
-    n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
-    img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
+    prev_exposures.addNode(fermi(img.array)*galsim.wfirst.exptime)
+    node = pre_exposures.cur_node.next
+    list_len = pre_exposures.listLen()
+    n_exp = min(galsim.wfirst.max_exps, list_len)
+    for i in xrange(n_exp):
+        img.array += node.data/(1.+ 2*i)
+        node = node.next
 
 def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime):
     """
@@ -149,13 +148,13 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(rng, dark_current))
     img.addNoise(dark_noise)
 
-    # Persistence (use WFIRST coefficients)
-    prev_exposures = list(prev_exposures)
+    # Persistence (use WFIRST H4RG-lo fermi model)
+    prev_exposures = LinkedList(prev_exposures)
     applyPersistence(img,prev_exposures)
 
-    # Update the 'prev_exposures' queue
-    ncoeff = len(galsim.wfirst.persistence_coefficients)
-    prev_exposures = [img.copy()] + prev_exposures[:ncoeff-1]
+    # Update the 'prev_exposures' LinkedList, remove the adundant item.
+    if prev_exposuresprev.listLen() > galsim.wfirst.max_exps:
+        prev_exposures.deleteNode(galsim.wfirst.max_exps)
 
     # Nonlinearity (use WFIRST routine).
     applyNonlinearity(img)
