@@ -31,9 +31,21 @@ namespace math {
         Horner(x, nx, coef, nc, result);
     }
 
+    static void _Horner2D(size_t ix, size_t iy, int nx, size_t icoef, int ncx, int ncy,
+                          size_t iresult, size_t itemp)
+    {
+        double* x = reinterpret_cast<double*>(ix);
+        double* y = reinterpret_cast<double*>(iy);
+        double* coef = reinterpret_cast<double*>(icoef);
+        double* result = reinterpret_cast<double*>(iresult);
+        double* temp = reinterpret_cast<double*>(itemp);
+        Horner2D(x, y, nx, coef, ncx, ncy, result, temp);
+    }
+
     void pyExportHorner(PY_MODULE& _galsim)
     {
         GALSIM_DOT def("Horner", &_Horner);
+        GALSIM_DOT def("Horner2D", &_Horner2D);
     }
 
 } // namespace math

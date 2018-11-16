@@ -600,6 +600,8 @@ def horner(x, coef, dtype=None):
     else:
         x = np.array(x, copy=False)
         coef = np.array(coef, copy=False)
+    if len(coef.shape) != 1:
+        raise GalSimValueError("coef must be 1-dimensional", coef)
     _horner(x, coef, result)
     return result
 
@@ -630,11 +632,16 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
 
     @returns a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
     """
-    result = np.empty_like(y, dtype=dtype)
-    temp = np.empty_like(x, dtype=dtype)
+    if len(x) != len(y):
+        raise GalSimIncompatibleValuesError("x and y are not the same size",
+                                            x=x, y=y)
 
+    result = np.empty_like(x, dtype=dtype)
+    temp = np.empty_like(x, dtype=dtype)
     # Make sure everything is an array
     if result.dtype == float:
+        # And if the result is float, it's worth making sure x, coef are also float,
+        # so we can use the faster c++ implementation.
         x = np.ascontiguousarray(x, dtype=float)
         y = np.ascontiguousarray(y, dtype=float)
         coefs = np.ascontiguousarray(coefs, dtype=float)
@@ -642,22 +649,34 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
         x = np.array(x, copy=False)
         y = np.array(y, copy=False)
         coefs = np.array(coefs, copy=False)
-
-    if triangle:
-        result.fill(coefs[-1][0])
-        for k, coef in enumerate(coefs[-2::-1]):
-            result *= x
-            _horner(y, coef[:k+2], temp)
-            result += temp
-    else:
-        _horner(y, coefs[-1], result)
-        for coef in coefs[-2::-1]:
-            result *= x
-            _horner(y, coef, temp)
-            result += temp
-    # Useful when working on this... (Numpy method is much slower, btw.)
-    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
+    if len(coefs.shape) != 2:
+        raise GalSimValueError("coefs must be 2-dimensional", coefs)
+    if triangle and coefs.shape[0] != coefs.shape[1]:
+        raise GalSimIncompatibleValuesError("coefs must be square if triangle is True",
+                                            coefs=coefs, triangle=triangle)
+    _horner2d(x, y, coefs, result, temp, triangle)
     return result
+
+def _horner2d(x, y, coefs, result, temp, triangle=False):
+    if result.dtype == float:
+        # Note: the c++ implementation doesn't need to care about triangle.
+        # It is able to trivially account for the zeros without special handling.
+        _galsim.Horner2D(x.ctypes.data, y.ctypes.data, x.size,
+                         coefs.ctypes.data, coefs.shape[0], coefs.shape[1],
+                         result.ctypes.data, temp.ctypes.data)
+    else:
+        if triangle:
+            result.fill(coefs[-1][0])
+            for k, coef in enumerate(coefs[-2::-1]):
+                result *= x
+                _horner(y, coef[:k+2], temp)
+                result += temp
+        else:
+            _horner(y, coefs[-1], result)
+            for coef in coefs[-2::-1]:
+                result *= x
+                _horner(y, coef, temp)
+                result += temp
 
 
 def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):

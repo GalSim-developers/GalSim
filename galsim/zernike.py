@@ -479,7 +479,7 @@ class Zernike(object):
         @param y  y-coordinate of evaluation points.  Can be list-like.
         @returns  Series evaluations as numpy array.
         """
-        return horner2d(x, y, self._coef_array_xy, triangle=True)
+        return horner2d(x, y, self._coef_array_xy, dtype=float)
 
     def evalPolar(self, rho, theta):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
@@ -621,6 +621,6 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
 
     noll_coef = _noll_coef_array_xy(jmax, eps)
     out = np.zeros(tuple((jmax+1,)+x.shape), dtype=float)
-    out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc, triangle=True)
+    out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc, dtype=float)
                         for nc in noll_coef.transpose(2,0,1)])
     return out
