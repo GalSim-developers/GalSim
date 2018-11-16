@@ -1098,10 +1098,107 @@ def test_horner():
     result = galsim.utilities.horner(x, [0,0,0,0])
     np.testing.assert_almost_equal(result, 0)
 
-
-    # Check that x may be non-continuous
+    # Check that x may be non-contiguous
     result = galsim.utilities.horner(x[::3], coef)
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[::3],coef))
+
+    # Check that coef may be non-contiguous
+    result = galsim.utilities.horner(x, coef[::-1])
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef[::-1]))
+
+    # Check invalid arguments
+    with assert_raises(galsim.GalSimValueError):
+        galsim.utilities.horner(x, [coef])
+
+@timer
+def test_horner2d():
+    # Make a random 2d polynomial
+    coef = [ [1.2332, 3.4324, 4.1231, -0.2342, 0.4242],
+             [-0.2341, 1.4689, 3.5322, -1.0039, 0.02142],
+             [4.02342, -2.2352, 0.1414, 2.9352, -1.3521] ]
+    coef = np.array(coef)
+
+    # Make a random list of values to test
+    x = np.empty(20)
+    y = np.empty(20)
+    rng = galsim.UniformDeviate(1234)
+    rng.generate(x)
+    rng.generate(y)
+
+    # Check against the direct calculation
+    truth = coef[0,0] + coef[0,1]*y + coef[0,2]*y**2 + coef[0,3]*y**3 + coef[0,4]*y**4
+    truth += (coef[1,0] + coef[1,1]*y + coef[1,2]*y**2 + coef[1,3]*y**3 + coef[1,4]*y**4)*x
+    truth += (coef[2,0] + coef[2,1]*y + coef[2,2]*y**2 + coef[2,3]*y**3 + coef[2,4]*y**4)*x**2
+    result = galsim.utilities.horner2d(x, y, coef)
+    np.testing.assert_almost_equal(result, truth)
+
+    # Also check against the (slower) numpy code
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef))
+
+    # Check that trailing zeros give the same answer
+    result = galsim.utilities.horner2d(x, y, np.hstack([coef, np.zeros((3,1))]))
+    np.testing.assert_almost_equal(result, truth)
+    result = galsim.utilities.horner2d(x, y, np.hstack([coef, np.zeros((3,6))]))
+    np.testing.assert_almost_equal(result, truth)
+    result = galsim.utilities.horner2d(x, y, np.vstack([coef, np.zeros((1,5))]))
+    np.testing.assert_almost_equal(result, truth)
+    result = galsim.utilities.horner2d(x, y, np.vstack([coef, np.zeros((6,5))]))
+    np.testing.assert_almost_equal(result, truth)
+
+    # Check that leading zeros give the right answer
+    result = galsim.utilities.horner2d(x, y, np.hstack([np.zeros((3,1)), coef]))
+    np.testing.assert_almost_equal(result, truth*y)
+    result = galsim.utilities.horner2d(x, y, np.hstack([np.zeros((3,6)), coef]))
+    np.testing.assert_almost_equal(result, truth*y**6)
+    result = galsim.utilities.horner2d(x, y, np.vstack([np.zeros((1,5)), coef]))
+    np.testing.assert_almost_equal(result, truth*x)
+    result = galsim.utilities.horner2d(x, y, np.vstack([np.zeros((6,5)), coef]))
+    np.testing.assert_almost_equal(result, truth*x**6)
+
+    # Check using a different dtype
+    result = galsim.utilities.horner2d(x, y, coef, dtype=complex)
+    np.testing.assert_almost_equal(result, truth)
+
+    # Check that x,y may be non-contiguous
+    result = galsim.utilities.horner2d(x[::3], y[:7], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[::3],y[:7],coef))
+    result = galsim.utilities.horner2d(x[:7], y[::-3], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:7],y[::-3],coef))
+
+    # Check that coef may be non-contiguous
+    result = galsim.utilities.horner2d(x, y, coef[:,::-1])
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[:,::-1]))
+    result = galsim.utilities.horner2d(x, y, coef[::-1,:])
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[::-1,:]))
+
+    # Check the triangle = True option
+    coef = [ [1.2332, 3.4324, 4.1231],
+             [-0.2341, 1.4689, 0.],
+             [4.02342, 0., 0.] ]
+    coef = np.array(coef)
+
+    # Check against the direct calculation
+    truth = coef[0,0] + coef[0,1]*y + coef[0,2]*y**2
+    truth += coef[1,0]*x + coef[1,1]*x*y
+    truth += coef[2,0]*x**2
+    result = galsim.utilities.horner2d(x, y, coef)
+    np.testing.assert_almost_equal(result, truth)
+    result = galsim.utilities.horner2d(x, y, coef, triangle=True)
+    np.testing.assert_almost_equal(result, truth)
+
+    # Check using a different dtype
+    result = galsim.utilities.horner2d(x, y, coef, dtype=complex, triangle=True)
+    np.testing.assert_almost_equal(result, truth)
+
+    # Check invalid arguments
+    with assert_raises(galsim.GalSimValueError):
+        galsim.utilities.horner2d(x, y, [coef])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.utilities.horner2d(x, y, coef[0])
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        galsim.utilities.horner2d(x, y, coef[0:1], triangle=True)
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        galsim.utilities.horner2d(x, y[:10], coef)
 
 
 if __name__ == "__main__":
@@ -1122,3 +1219,4 @@ if __name__ == "__main__":
     test_dol_to_lod()
     test_nCr()
     test_horner()
+    test_horner2d()

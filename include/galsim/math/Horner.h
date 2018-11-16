@@ -25,7 +25,19 @@ namespace math {
 
     // Use Horner's method to evaluate polynomial
     // result[i] = coef[0] + coef[1]*x[i] + coef[2]*x[i]**2 + ...
+    // The result array should already be allocated and have the same size as x.
     void Horner(double* x, const int nx, double* coef, const int nc, double* result);
+
+    // 2D version of Horner's method
+    // result[i] = coef[0,0] + coef[0,1]*y[i] + coef[0,2]*y[i]**2 + ...
+    //             + (coef[1,0] + coef[1,1]*y[i] + coef[1,2]*y[i]**2 + ...) * x[i]
+    //             + (coef[2,0] + coef[2,1]*y[i] + coef[2,2]*y[i]**2 + ...) * x[i]**2
+    //             + ...
+    // The result array should already be allocated and have the same size as x and y.
+    // This also requires a temporary array of the same size as well.
+    void Horner2D(double* x, double* y, const int nx,
+                  double* coef, const int ncx, const int ncy,
+                  double* result, double* temp);
 
 } }
 

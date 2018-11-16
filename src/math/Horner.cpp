@@ -36,4 +36,16 @@ namespace math {
         // In the last step, we will have added the constant term, and we're done.
     }
 
+    void Horner2D(double* x, double* y, const int nx,
+                  double* coef, const int ncx, const int ncy,
+                  double* result, double* temp)
+    {
+        double* c = coef + (ncx-1) * ncy;
+        Horner(y, nx, c, ncy, result);
+        while((c -= ncy) >= coef) {
+            Horner(y, nx, c, ncy, temp);
+            for (int i=0; i<nx; ++i) result[i] = result[i]*x[i] + temp[i];
+        }
+     }
+
 }}
