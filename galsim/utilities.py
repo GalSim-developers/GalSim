@@ -1602,3 +1602,80 @@ def find_out_of_bounds_position(x, y, bounds, grid=False):
         if len(w[0]) > 0:
             return PositionD(x[w[0][0]], y[w[0][0]])
     raise GalSimError("No out-of-bounds position")
+
+class Node:
+    """A node object contains data (of any kind) and a link to the next node.
+    """
+    def __init__(self):
+        self.data = None # the data content
+        self.next = None # the reference to the next node
+
+class LinkedList:
+    """Array is a static structure of fixed size. So the insertion and deletions
+    of elements in an array is expensive. LinkedList, however, is a dynamic data
+    structure. The number of nodes could be added or deleted on demand. 
+    """
+    def __init__(self, data=None):
+        self.cur_node = None
+        if isinstance(data, LinkedList):
+            self.cur_node = data.cur_node
+        elif isinstance(data, list):
+            for i in data[::-1]:
+                self.addNode(i)
+        elif data is not None:
+            raise TypeError("linked_list constructor accepts only None, linked_list or list")
+
+    def addNode(self, data):
+        new_node = Node() # create a new node
+        new_node.data = data
+        new_node.next = self.cur_node # link the new node to the 'previous' node.
+        self.cur_node = new_node #  set the current node to the new one.
+
+    def __str__(self):
+        node = self.cur_node
+        s = ""
+        while node:
+            s += str(node.data)+'\n'
+            node = node.next
+        return s[:-1]
+
+    def listPrint(self):
+        node = self.cur_node
+        while node:
+            print node.data
+            node = node.next
+
+    def listLen(self):
+        count = 0 
+        node = self.cur_node
+        while node:
+            count += 1 
+            node = node.next
+        return count
+
+    #Remove the node with index {location}. 
+    #Eg: a = LinkedList(range(5))
+    #    a.deleteNode(3) == [0, 1, 2, 4]
+    def deleteNode(self,location):
+        if location == 0:
+            try:
+                self.cur_node = cur_node.next
+            except AttributeError:
+                # The list is empty
+                self.cur_node = None
+            finally:
+                return 
+
+        node = self.cur_node        
+        try:
+            for _ in xrange(location-1):
+                node = node.next
+        except AttributeError:
+            # The list isn't long enough
+            raise ValueError("List does not have index {0}".format(location))
+
+        try:
+            node.next = node.next.next
+        except AttributeError:
+            # The desired node is the last one.
+            node.next = None
