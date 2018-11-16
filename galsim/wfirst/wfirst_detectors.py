@@ -86,24 +86,28 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
 def applyPersistence(img, prev_exposures):
     """
     Applies the persistence effect to the Image instance by adding the accumullated persistence dark
-    current of the previous exposures (up to galsim.wfirst.max_exps) supplied as the LinkedList 'prev_exposures' argument.
-    Unlike galsim.Image.applyPersistence, this one does not use constant cieffiients but a fermi model
+    current of the previous exposures (up to galsim.wfirst.max_exps) supplied as the 
+    galsim.utilities.LinkedList (a dynamic data structure) 'prev_exposures' argument. 
+    Unlike galsim.Image.applyPersistence, this one does not use constant coeffiients but a fermi model 
     (galsim.wfirst.fermi) for the WFIRST detectors.
 
     @param img               The Image to be transformed.
-    @param prev_exposures    LinkedList of up to previous Image instances in the order of exposures, with the
-                             recent exposure being the first element.
+    @param prev_exposures    galsim.utilities.LinkedList of up to previous Image instances in the 
+                             order of exposures, with the recent exposure being the first element.
     """
 
-    prev_exposures.addNode(fermi(img.array)*galsim.wfirst.exptime)
-    node = pre_exposures.cur_node.next
-    list_len = pre_exposures.listLen()
+    try:
+        node = pre_exposures.cur_node
+        list_len = pre_exposures.listLen()
+    except AttributeError:
+        raise TypeError("prev_exposures must be a galsim.utilities.LinkedList")
+
     n_exp = min(galsim.wfirst.max_exps, list_len)
     for i in xrange(n_exp):
         img.array += node.data/(1.+ 2*i)
         node = node.next
 
-def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime):
+def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime):
     """
     This utility applies all sources of noise and detector effects for WFIRST that are implemented
     in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
@@ -113,12 +117,12 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     Image with all sources of signal (background plus astronomical objects), and the Image will be
     modified to include all subsequent steps in the image generation process for WFIRST that are
     implemented in GalSim. However, to include the effect of persistence, the user needs to provide
-    a list of up to {ncoeff} recent exposures (without the readout effects such nonlinearity and
-    interpixel capacitance included) and the routine returns an updated list of up to {ncoeff}
+    a LinkedList of up to {max_exps} recent exposures (without the readout effects such nonlinearity and
+    interpixel capacitance included) and the routine returns an updated LinkedList of up to {max_exps}
     recent exposures.
 
     @param img               The Image to be modified.
-    @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with
+    @param prev_exposures    LinkedList of up to {max_exps} Image instances in the order of exposures, with
                              the recent exposure being the first element. [default: []]
     @param rng               An optional galsim.BaseDeviate to use for the addition of noise.  If
                              None, a new one will be initialized.  [default: None]
@@ -127,7 +131,7 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
 
     @returns prev_exposures  Updated list of previous exposures containing up to {ncoeff} Image
                              instances.
-    """.format(ncoeff=len(galsim.wfirst.persistence_coefficients), exptime=default_exptime)
+    """.format(max_exps=galsim.wfirst.max_exps, exptime=default_exptime)
 
     # Make sure we don't have any negative values.
     img.replaceNegative(0.)
@@ -149,10 +153,13 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     img.addNoise(dark_noise)
 
     # Persistence (use WFIRST H4RG-lo fermi model)
-    prev_exposures = LinkedList(prev_exposures)
+    prev_exposures = galsim.utilities.LinkedList(prev_exposures)
     applyPersistence(img,prev_exposures)
 
-    # Update the 'prev_exposures' LinkedList, remove the adundant item.
+    # Update the 'prev_exposures' LinkedList and remove the adundant item.
+    # In the H4RG-lo fermi model, persistence decays linearly in time.
+    # So the average persistence happens at exptime/2. 
+    prev_exposures.addNode(fermi(img.array, galsim.wfirst.exptime/2.)*galsim.wfirst.exptime)
     if prev_exposuresprev.listLen() > galsim.wfirst.max_exps:
         prev_exposures.deleteNode(galsim.wfirst.max_exps)
 

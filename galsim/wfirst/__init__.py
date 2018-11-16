@@ -191,7 +191,6 @@ usage.
 import os
 import galsim
 import numpy as np
-from LinkedList import *
 
 gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
