@@ -26,6 +26,7 @@ import weakref
 import os
 import numpy as np
 
+from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
 from .errors import galsim_warn
 
@@ -590,19 +591,30 @@ def horner(x, coef, dtype=None):
     @returns a numpy array of the evaluated polynomial.  Will be the same shape as x.
     """
     result = np.empty_like(x, dtype=dtype)
+    # Make sure everything is an array
+    if result.dtype == float:
+        # And if the result is float, it's worth making sure x, coef are also float and
+        # contiguous, so we can use the faster c++ implementation.
+        x = np.ascontiguousarray(x, dtype=float)
+        coef = np.ascontiguousarray(coef, dtype=float)
+    else:
+        x = np.array(x, copy=False)
+        coef = np.array(coef, copy=False)
     _horner(x, coef, result)
     return result
 
 def _horner(x, coef, result):
-    coef = np.trim_zeros(coef, trim='b')  # trim only from the back
-    if len(coef) == 0:
-        result.fill(0)
-        return
-    result.fill(coef[-1])
-    for c in coef[-2::-1]:
-        result *= x
-        if c != 0: result += c
-    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
+    if result.dtype == float:
+        _galsim.Horner(x.ctypes.data, x.size, coef.ctypes.data, coef.size, result.ctypes.data)
+    else:
+        coef = np.trim_zeros(coef, trim='b')  # trim only from the back
+        if len(coef) == 0:
+            result.fill(0)
+            return
+        result.fill(coef[-1])
+        for c in coef[-2::-1]:
+            result *= x
+            if c != 0: result += c
 
 def horner2d(x, y, coefs, dtype=None, triangle=False):
     """Evaluate bivariate polynomial using nested Horner's method.
@@ -620,6 +632,17 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
     """
     result = np.empty_like(y, dtype=dtype)
     temp = np.empty_like(x, dtype=dtype)
+
+    # Make sure everything is an array
+    if result.dtype == float:
+        x = np.ascontiguousarray(x, dtype=float)
+        y = np.ascontiguousarray(y, dtype=float)
+        coefs = np.ascontiguousarray(coefs, dtype=float)
+    else:
+        x = np.array(x, copy=False)
+        y = np.array(y, copy=False)
+        coefs = np.array(coefs, copy=False)
+
     if triangle:
         result.fill(coefs[-1][0])
         for k, coef in enumerate(coefs[-2::-1]):

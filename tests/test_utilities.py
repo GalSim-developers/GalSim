@@ -1054,6 +1054,56 @@ def test_nCr():
     for n in range(300):
         assert sum([galsim.utilities.nCr(n, r) for r in range(n+1)]) == 2**n
 
+@timer
+def test_horner():
+    # Make a random polynomial
+    coef = [1.2332, 3.43242, 4.1231, -0.2342, 0.4242]
+
+    # Make a random list of values to test
+    x = np.empty(20)
+    rng = galsim.UniformDeviate(1234)
+    rng.generate(x)
+
+    # Check against the direct calculation
+    truth = coef[0] + coef[1]*x + coef[2]*x**2 + coef[3]*x**3 + coef[4]*x**4
+    result = galsim.utilities.horner(x, coef)
+    np.testing.assert_almost_equal(result, truth)
+
+    # Also check against the (slower) numpy code
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
+
+    # Check that trailing zeros give the same answer
+    result = galsim.utilities.horner(x, coef + [0]*3)
+    np.testing.assert_almost_equal(result, truth)
+
+    # Check that leading zeros give the right answer
+    result = galsim.utilities.horner(x, [0]*3 + coef)
+    np.testing.assert_almost_equal(result, truth*x**3)
+
+    # Check using a different dtype
+    result = galsim.utilities.horner(x, coef, dtype=complex)
+    np.testing.assert_almost_equal(result, truth)
+
+    # Check that a single element coef gives the right answer
+    result = galsim.utilities.horner([1,2,3], [17])
+    np.testing.assert_almost_equal(result, 17)
+    result = galsim.utilities.horner(x, [17])
+    np.testing.assert_almost_equal(result, 17)
+    result = galsim.utilities.horner([1,2,3], [17,0,0,0])
+    np.testing.assert_almost_equal(result, 17)
+    result = galsim.utilities.horner(x, [17,0,0,0])
+    np.testing.assert_almost_equal(result, 17)
+    result = galsim.utilities.horner([1,2,3], [0,0,0,0])
+    np.testing.assert_almost_equal(result, 0)
+    result = galsim.utilities.horner(x, [0,0,0,0])
+    np.testing.assert_almost_equal(result, 0)
+
+
+    # Check that x may be non-continuous
+    result = galsim.utilities.horner(x[::3], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[::3],coef))
+
+
 if __name__ == "__main__":
     test_pos()
     test_bounds()
@@ -1071,3 +1121,4 @@ if __name__ == "__main__":
     test_unweighted_moments()
     test_dol_to_lod()
     test_nCr()
+    test_horner()
