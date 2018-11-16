@@ -24,6 +24,7 @@ import numpy as np
 
 from . import _galsim
 from .random import UniformDeviate
+from .utilities import lazy_property
 from .angle import radians, arcsec
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
@@ -167,12 +168,14 @@ class PhotonArray(object):
         if self._dxdz is None:
             self._dxdz = np.zeros_like(self._x)
             self._dydz = np.zeros_like(self._x)
+            self.__dict__.pop('_pa', None)
 
     def hasAllocatedWavelengths(self):
         return self._wave is not None
     def allocateWavelengths(self):
         if self._wave is None:
             self._wave = np.zeros_like(self._x)
+            self.__dict__.pop('_pa', None)
 
     def isCorrelated(self):
         "Returns whether the photons are correlated"
@@ -230,6 +233,14 @@ class PhotonArray(object):
     def __str__(self):
         return "galsim.PhotonArray(%d)"%self.size()
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_pa',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     __hash__ = None
 
     def __eq__(self, other):
@@ -248,7 +259,7 @@ class PhotonArray(object):
     def __ne__(self, other):
         return not self == other
 
-    @property
+    @lazy_property
     def _pa(self):
         #assert(self._x.strides[0] == self._x.itemsize)
         #assert(self._y.strides[0] == self._y.itemsize)
