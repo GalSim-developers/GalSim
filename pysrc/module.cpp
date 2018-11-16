@@ -63,6 +63,7 @@ namespace galsim {
 
     namespace math {
         void pyExportBessel(PY_MODULE&);
+        void pyExportHorner(PY_MODULE&);
     }
 
 } // namespace galsim
@@ -106,4 +107,5 @@ PYBIND11_MODULE(_galsim, _galsim)
     galsim::hsm::pyExportHSM(_galsim);
     galsim::integ::pyExportInteg(_galsim);
     galsim::math::pyExportBessel(_galsim);
+    galsim::math::pyExportHorner(_galsim);
 }
