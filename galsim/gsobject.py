@@ -1597,15 +1597,6 @@ class GSObject(object):
         # Get the local WCS, accounting for the offset correctly.
         local_wcs = self._local_wcs(wcs, image, offset, use_true_center, new_bounds)
 
-        # Convert the profile in world coordinates to the profile in image coordinates:
-        prof = local_wcs.toImage(self)
-
-        # Apply the offset, and possibly fix the centering for even-sized images
-        offset = self._adjust_offset(new_bounds, offset, use_true_center)
-        if offset != PositionD(0,0):
-            prof = prof._shift(offset)
-            local_wcs = local_wcs.withOrigin(offset)
-
         # Account for area and exptime.
         flux_scale = area * exptime
         # For surface brightness normalization, also scale by the pixel area.
@@ -1616,7 +1607,13 @@ class GSObject(object):
         if gain != 1 and method != 'phot' and sensor is None:
             flux_scale /= gain
 
-        prof *= flux_scale
+        # Determine the offset, and possibly fix the centering for even-sized images
+        offset = self._adjust_offset(new_bounds, offset, use_true_center)
+
+        # Convert the profile in world coordinates to the profile in image coordinates:
+        prof = local_wcs.toImage(self, flux_ratio=flux_scale, offset=offset)
+        if offset != PositionD(0,0):
+            local_wcs = local_wcs.withOrigin(offset)
 
         # If necessary, convolve by the pixel
         if method in ('auto', 'fft', 'real_space'):

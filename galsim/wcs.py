@@ -210,9 +210,11 @@ class BaseWCS(object):
            coordinates to world coordinates, returning the profile in world coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located, so the right
-           transformation can be performed.
+           transformation can be performed.  And optionally, you may provide a flux scaling
+           to be performed at the same time.
 
-               >>> world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None)
+               >>> world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None,
+                                               flux_ratio=1, offset=(0,0))
         """
         if isinstance(arg, GSObject):
             return self.profileToWorld(arg, **kwargs)
@@ -237,7 +239,8 @@ class BaseWCS(object):
             raise TypeError("image_pos must be a PositionD or PositionI argument")
         return self._posToWorld(image_pos, color=color, **kwargs)
 
-    def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None):
+    def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None,
+                       flux_ratio=1., offset=(0,0)):
         """Convert a profile from image coordinates to world coordinates.
 
         This is equivalent to `wcs.toWorld(image_profile, ...)`.
@@ -246,9 +249,13 @@ class BaseWCS(object):
         @param image_pos        The image coordinate position (for non-uniform WCS types)
         @param world_pos        The world coordinate position (for non-uniform WCS types)
         @param color            For color-dependent WCS's, the color term to use. [default: None]
+        @param flux_ratio       An optional flux scaling to be applied at the same time.
+                                [default: 1]
+        @param offset           An optional offset to be applied at the same time. [default: 0,0]
         """
         if color is None: color = self._color
-        return self.local(image_pos, world_pos, color=color)._profileToWorld(image_profile)
+        return self.local(image_pos, world_pos, color=color)._profileToWorld(
+                    image_profile, flux_ratio, offset)
 
     def toImage(self, arg, **kwargs):
         """Convert from world coordinates to image coordinates
@@ -266,9 +273,11 @@ class BaseWCS(object):
            coordinates to image coordinates, returning the profile in image coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located so the right
-           transformation can be performed.
+           transformation can be performed.  And optionally, you may provide a flux scaling
+           to be performed at the same time.
 
-               >>> image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None)
+               >>> image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None,
+                                               flux_ratio=1, offset=(0,0))
         """
         if isinstance(arg, GSObject):
             return self.profileToImage(arg, **kwargs)
@@ -290,7 +299,8 @@ class BaseWCS(object):
             raise TypeError("world_pos must be a PositionD or PositionI argument")
         return self._posToImage(world_pos, color=color)
 
-    def profileToImage(self, world_profile, image_pos=None, world_pos=None, color=None):
+    def profileToImage(self, world_profile, image_pos=None, world_pos=None, color=None,
+                       flux_ratio=1., offset=(0,0)):
         """Convert a profile from world coordinates to image coordinates.
 
         This is equivalent to `wcs.toImage(world_profile, ...)`.
@@ -299,9 +309,13 @@ class BaseWCS(object):
         @param image_pos        The image coordinate position (for non-uniform WCS types)
         @param world_pos        The world coordinate position (for non-uniform WCS types)
         @param color            For color-dependent WCS's, the color term to use. [default: None]
+        @param flux_ratio       An optional flux scaling to be applied at the same time.
+                                [default: 1]
+        @param offset           An optional offset to be applied at the same time. [default: 0,0]
         """
         if color is None: color = self._color
-        return self.local(image_pos, world_pos, color=color)._profileToImage(world_profile)
+        return self.local(image_pos, world_pos, color=color)._profileToImage(
+                    world_profile, flux_ratio, offset)
 
     def pixelArea(self, image_pos=None, world_pos=None, color=None):
         """Return the area of a pixel in arcsec**2 (or in whatever units you are using for
@@ -1166,15 +1180,15 @@ class PixelScale(LocalWCS):
     def _y(self, u, v, color=None):
         return v / self._scale
 
-    def _profileToWorld(self, image_profile):
+    def _profileToWorld(self, image_profile, flux_ratio, offset):
         from .transform import _Transform
         return _Transform(image_profile, (self._scale, 0., 0., self._scale),
-                          flux_ratio=self._scale**-2)
+                          flux_ratio=self._scale**-2 * flux_ratio, offset=offset)
 
-    def _profileToImage(self, world_profile):
+    def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform
         return _Transform(world_profile, (1./self._scale, 0., 0., 1./self._scale),
-                          flux_ratio=self._scale**2)
+                          flux_ratio=self._scale**2 * flux_ratio, offset=offset)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1284,11 +1298,11 @@ class ShearWCS(LocalWCS):
         y *= self._gfactor / self._scale
         return y
 
-    def _profileToWorld(self, image_profile):
-        return image_profile.dilate(self._scale).shear(-self.shear)
+    def _profileToWorld(self, image_profile, flux_ratio, offset):
+        return image_profile.dilate(self._scale).shear(-self.shear).shift(offset) * flux_ratio
 
-    def _profileToImage(self, world_profile):
-        return world_profile.dilate(1./self._scale).shear(self.shear)
+    def _profileToImage(self, world_profile, flux_ratio, offset):
+        return world_profile.dilate(1./self._scale).shear(self.shear).shift(offset) * flux_ratio
 
     def _pixelArea(self):
         return self._scale**2
@@ -1419,18 +1433,18 @@ class JacobianWCS(LocalWCS):
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
-    def _profileToWorld(self, image_profile):
+    def _profileToWorld(self, image_profile, flux_ratio, offset):
         from .transform import _Transform
         return _Transform(image_profile, (self._dudx, self._dudy, self._dvdx, self._dvdy),
-                          flux_ratio=1./self._pixelArea())
+                          flux_ratio=flux_ratio/self._pixelArea(), offset=offset)
 
-    def _profileToImage(self, world_profile):
+    def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform
         try:
             return _Transform(world_profile,
                               (self._dvdy/self._det, -self._dudy/self._det,
                                -self._dvdx/self._det, self._dudx/self._det),
-                              flux_ratio=self._pixelArea())
+                              flux_ratio=flux_ratio*self._pixelArea(), offset=offset)
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
