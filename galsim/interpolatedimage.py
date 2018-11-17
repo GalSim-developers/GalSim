@@ -381,12 +381,15 @@ class InterpolatedImage(GSObject):
         if self._offset != PositionD(0,0):
             prof = prof._shift(-self._offset)  # Opposite direction of what drawImage does.
 
-        # Bring the profile from image coordinates into world coordinates
-        prof = self._wcs._profileToWorld(prof)
-
         # If the user specified a flux, then set to that flux value.
         if self._flux != self._image_flux:
-            prof *= self._flux / self._image_flux
+            flux_ratio = self._flux / self._image_flux
+        else:
+            flux_ratio = 1.
+
+        # Bring the profile from image coordinates into world coordinates
+        # Note: offset needs to happen first before the transformation, so can't bundle it here.
+        prof = self._wcs._profileToWorld(prof, flux_ratio, (0,0))
 
         return prof._sbp
 
