@@ -55,7 +55,6 @@ def noll_to_zern(j):
 
     return _noll_n[j], _noll_m[j]
 
-
 def _zern_norm(n, m):
     r"""Normalization coefficient for zernike (n, m).
 
@@ -449,10 +448,10 @@ class Zernike(object):
         """The x-derivative of this Zernike as a new Zernike object.
         """
         j = len(self.coef)-1
-        newCoef = np.hstack([
-            [0],
-            _noll_coef_array_gradx(j, self.R_inner/self.R_outer).dot(self.coef[1:])
-        ])
+        ncagx = _noll_coef_array_gradx(j, self.R_inner/self.R_outer).dot(self.coef[1:])
+        newCoef = np.empty((len(ncagx)+1,), dtype=float)
+        newCoef[0] = 0.0
+        newCoef[1:] = ncagx
         # Handle R_outer with
         # df/dx = df/d(x/R) * d(x/R)/dx = df/d(x/R) * 1/R
         newCoef /= self.R_outer
@@ -463,10 +462,10 @@ class Zernike(object):
         """The y-derivative of this Zernike as a new Zernike object.
         """
         j = len(self.coef)-1
-        newCoef = np.hstack([
-            [0],
-            _noll_coef_array_grady(j, self.R_inner/self.R_outer).dot(self.coef[1:])
-        ])
+        ncagy = _noll_coef_array_grady(j, self.R_inner/self.R_outer).dot(self.coef[1:])
+        newCoef = np.empty((len(ncagy)+1,), dtype=float)
+        newCoef[0] = 0.0
+        newCoef[1:] = ncagy
         # Handle R_outer with
         # df/dy = df/d(y/R) * d(y/R)/dy = df/d(y/R) * 1/R
         newCoef /= self.R_outer
