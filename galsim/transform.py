@@ -490,8 +490,8 @@ class Transformation(GSObject):
             self._sbp.draw(image._image, image.scale)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
-        self._original._shoot(photons, ud)
+    def _shoot(self, photons, rng):
+        self._original._shoot(photons, rng)
         photons.x, photons.y = self._fwd(photons.x, photons.y)
         photons.x += self.offset.x
         photons.y += self.offset.y

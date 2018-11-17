@@ -685,9 +685,9 @@ class InterpolatedImage(GSObject):
         return self._sbp.kValue(kpos._p)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         with convert_cpp_errors():
-            self._sbp.shoot(photons._pa, ud._rng)
+            self._sbp.shoot(photons._pa, rng._rng)
 
     @doc_inherit
     def _drawReal(self, image):

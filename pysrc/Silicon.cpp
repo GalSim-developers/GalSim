@@ -25,7 +25,7 @@ namespace galsim {
 
     template <typename T, typename W>
     static void WrapTemplates(W& wrapper) {
-        typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
+        typedef double (Silicon::*accumulate_fn)(const PhotonArray&, BaseDeviate,
                                                  ImageView<T>, Position<int>, bool);
         typedef void (Silicon::*area_fn)(ImageView<T>, Position<int>);
 

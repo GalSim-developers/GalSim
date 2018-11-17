@@ -400,18 +400,18 @@ class Convolution(GSObject):
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
 
-        self.obj_list[0]._shoot(photons, ud)
+        self.obj_list[0]._shoot(photons, rng)
         # It may be necessary to shuffle when convolving because we do not have a
         # gaurantee that the convolvee's photons are uncorrelated, e.g., they might
         # both have their negative ones at the end.
         # However, this decision is now made by the convolve method.
         for obj in self.obj_list[1:]:
             p1 = PhotonArray(len(photons))
-            obj._shoot(p1, ud)
-            photons.convolve(p1, ud)
+            obj._shoot(p1, rng)
+            photons.convolve(p1, rng)
 
     @doc_inherit
     def _drawKImage(self, image):
@@ -774,12 +774,12 @@ class AutoConvolution(Convolution):
         self.orig_obj._prepareDraw()
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
-        self.orig_obj._shoot(photons, ud)
+        self.orig_obj._shoot(photons, rng)
         photons2 = PhotonArray(len(photons))
-        self.orig_obj._shoot(photons2, ud)
-        photons.convolve(photons2, ud)
+        self.orig_obj._shoot(photons2, rng)
+        photons.convolve(photons2, rng)
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
@@ -935,13 +935,13 @@ class AutoCorrelation(Convolution):
         self._orig_obj._prepareDraw()
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
-        self.orig_obj._shoot(photons, ud)
+        self.orig_obj._shoot(photons, rng)
         photons2 = PhotonArray(len(photons))
-        self.orig_obj._shoot(photons2, ud)
+        self.orig_obj._shoot(photons2, rng)
 
         # Flip sign of (x, y) in one of the results
         photons2.scaleXY(-1)
 
-        photons.convolve(photons2, ud)
+        photons.convolve(photons2, rng)

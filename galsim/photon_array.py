@@ -23,7 +23,7 @@ Also includes classes that modify PhotonArray objects in a number of ways.
 import numpy as np
 
 from . import _galsim
-from .random import UniformDeviate
+from .random import UniformDeviate, BaseDeviate
 from .utilities import lazy_property
 from .angle import radians, arcsec
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
@@ -217,8 +217,9 @@ class PhotonArray(object):
         if rhs.size() != self.size():
             raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
                                                 self_pa=self, rhs=rhs)
-        ud = UniformDeviate(rng)
-        self._pa.convolve(rhs._pa, ud._rng)
+        if rng is None:
+            rng = BaseDeviate()
+        self._pa.convolve(rhs._pa, rng._rng)
 
     def __repr__(self):
         s = "galsim.PhotonArray(%d, x=array(%r), y=array(%r), flux=array(%r)"%(
@@ -315,7 +316,6 @@ class PhotonArray(object):
 
         @returns a PhotonArray
         """
-        ud = UniformDeviate(rng)
         max_flux = float(max_flux)
         if (max_flux <= 0):
             raise GalSimRangeError("max_flux must be positive", max_flux, 0.)
@@ -326,7 +326,9 @@ class PhotonArray(object):
         N = int(np.prod(image.array.shape) + total_flux / max_flux)
         photons = cls(N)
 
-        N = photons._pa.setFrom(image._image, max_flux, ud._rng)
+        if rng is None:
+            rng = BaseDeviate()
+        N = photons._pa.setFrom(image._image, max_flux, rng._rng)
         photons._x = photons.x[:N]
         photons._y = photons.y[:N]
         photons._flux = photons.flux[:N]
@@ -415,6 +417,8 @@ class WavelengthSampler(object):
     def __init__(self, sed, bandpass, rng=None, npoints=None):
         self.sed = sed
         self.bandpass = bandpass
+        if rng is None:
+            rng = BaseDeviate()
         self.rng = rng
         self.npoints = npoints
 

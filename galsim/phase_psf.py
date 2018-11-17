@@ -1487,15 +1487,17 @@ class PhaseScreenPSF(GSObject):
         self._ii._drawReal(image)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
+        from .random import UniformDeviate
 
         if not self._geometric_shooting:
             self._prepareDraw()
-            return self._ii._shoot(photons, ud)
+            return self._ii._shoot(photons, rng)
 
         n_photons = len(photons)
         t = np.empty((n_photons,), dtype=float)
+        ud = UniformDeviate(rng)
         ud.generate(t)
         t *= self.exptime
         t += self.t0
@@ -1519,8 +1521,8 @@ class PhaseScreenPSF(GSObject):
 
         if self.second_kick:
             p2 = PhotonArray(len(photons))
-            self.second_kick._shoot(p2, ud)
-            photons.convolve(p2, ud)
+            self.second_kick._shoot(p2, rng)
+            photons.convolve(p2, rng)
 
     @doc_inherit
     def _drawKImage(self, image):
@@ -1956,8 +1958,8 @@ class OpticalPSF(GSObject):
         self._psf._drawReal(image)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
-        self._psf._shoot(photons, ud)
+    def _shoot(self, photons, rng):
+        self._psf._shoot(photons, rng)
 
     @doc_inherit
     def _drawKImage(self, image):
