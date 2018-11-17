@@ -263,8 +263,7 @@ class RandomWalk(GSObject):
 
         The most efficient way is to write into an image
         """
-        ud = UniformDeviate(self._rng)
-        photons = self._profile.shoot(self._npoints, ud)
+        photons = self._profile.shoot(self._npoints, self._rng)
         ar = np.column_stack([ photons.x, photons.y ])
 
         return ar
@@ -354,8 +353,8 @@ class RandomWalk(GSObject):
         return self._sbp.kValue(kpos._p)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
-        self._sbp.shoot(photons._pa, ud._rng)
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
 
     @doc_inherit
     def _drawKImage(self, image):

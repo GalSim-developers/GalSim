@@ -207,9 +207,9 @@ namespace galsim {
          * totals, if the two photon streams are uncorrelated.
          *
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
-         * @param[in] ud  A UniformDeviate in case we need to shuffle.
+         * @param[in] rng  A BaseDeviate in case we need to shuffle.
          */
-        void convolve(const PhotonArray& rhs, UniformDeviate ud);
+        void convolve(const PhotonArray& rhs, BaseDeviate ud);
 
         /**
          * @brief Convolve this array with another, shuffling the order in which photons are
@@ -219,9 +219,9 @@ namespace galsim {
          * multiplied into the array is randomized to destroy any flux or position correlations.
          *
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
-         * @param[in] ud  A UniformDeviate used to shuffle the input photons.
+         * @param[in] rng  A BaseDeviate used to shuffle the input photons.
          */
-        void convolveShuffle(const PhotonArray& rhs, UniformDeviate ud);
+        void convolveShuffle(const PhotonArray& rhs, BaseDeviate rng);
 
         /**
          * @brief Add flux of photons to an image by binning into pixels.
@@ -250,12 +250,12 @@ namespace galsim {
          *
          * @param image     The image to use for the photon fluxes and positions.
          * @param maxFlux   The maximum flux that any photon should have.
-         * @param ud        A UniformDeviate in case we need to shuffle.
+         * @param rng       A BaseDeviate in case we need to shuffle.
          *
          * @returns the total number of photons set.
          */
         template <class T>
-        int setFrom(const BaseImage<T>& image, double maxFlux, UniformDeviate ud);
+        int setFrom(const BaseImage<T>& image, double maxFlux, BaseDeviate ud);
 
         /**
          * @brief Check if the current array has correlated photons.

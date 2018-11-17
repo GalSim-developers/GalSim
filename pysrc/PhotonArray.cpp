@@ -27,7 +27,7 @@ namespace galsim {
         wrapper
             .def("addTo", (double (PhotonArray::*)(ImageView<T>) const) &PhotonArray::addTo)
             .def("setFrom",
-                 (int (PhotonArray::*)(const BaseImage<T>&, double, UniformDeviate))
+                 (int (PhotonArray::*)(const BaseImage<T>&, double, BaseDeviate))
                  &PhotonArray::setFrom);
     }
 

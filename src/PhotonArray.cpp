@@ -45,8 +45,8 @@ namespace galsim {
     struct AddImagePhotons
     {
         AddImagePhotons(double* x, double* y, double* f,
-                        double maxFlux, UniformDeviate ud) :
-            _x(x), _y(y), _f(f), _maxFlux(maxFlux), _ud(ud), _count(0) {}
+                        double maxFlux, BaseDeviate rng) :
+            _x(x), _y(y), _f(f), _maxFlux(maxFlux), _ud(rng), _count(0) {}
 
         void operator()(T flux, int i, int j)
         {
@@ -73,11 +73,11 @@ namespace galsim {
     };
 
     template <class T>
-    int PhotonArray::setFrom(const BaseImage<T>& image, double maxFlux, UniformDeviate ud)
+    int PhotonArray::setFrom(const BaseImage<T>& image, double maxFlux, BaseDeviate rng)
     {
         dbg<<"bounds = "<<image.getBounds()<<std::endl;
         dbg<<"flux, maxflux = "<<_flux<<','<<maxFlux<<std::endl;
-        AddImagePhotons<T> adder(_x, _y, _flux, maxFlux, ud);
+        AddImagePhotons<T> adder(_x, _y, _flux, maxFlux, rng);
         for_each_pixel_ij_ref(image, adder);
         dbg<<"Done: size = "<<adder.getCount()<<std::endl;
         _N = adder.getCount();
@@ -137,11 +137,11 @@ namespace galsim {
         double _scale;
     };
 
-    void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud)
+    void PhotonArray::convolve(const PhotonArray& rhs, BaseDeviate rng)
     {
         // If both arrays have correlated photons, then we need to shuffle the photons
         // as we convolve them.
-        if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,ud);
+        if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,rng);
 
         // If neither or only one is correlated, we are ok to just use them in order.
         if (rhs.size() != size())
@@ -158,8 +158,9 @@ namespace galsim {
         if (rhs._is_correlated) _is_correlated = true;
     }
 
-    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud)
+    void PhotonArray::convolveShuffle(const PhotonArray& rhs, BaseDeviate rng)
     {
+        UniformDeviate ud(rng);
         if (rhs.size() != size())
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
         double xSave=0.;
@@ -215,7 +216,7 @@ namespace galsim {
     template double PhotonArray::addTo(ImageView<float> image) const;
     template double PhotonArray::addTo(ImageView<double> image) const;
     template int PhotonArray::setFrom(const BaseImage<float>& image, double maxFlux,
-                                      UniformDeviate ud);
+                                      BaseDeviate rng);
     template int PhotonArray::setFrom(const BaseImage<double>& image, double maxFlux,
-                                      UniformDeviate ud);
+                                      BaseDeviate rng);
 }

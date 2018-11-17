@@ -270,7 +270,7 @@ class GSObject(object):
     #     _xValue(self, pos)
     #     _kValue(self, kpos)
     #     _drawReal(self, image)
-    #     _shoot(self, photons, ud):
+    #     _shoot(self, photons, rng):
     #     _drawKImage(self, image)
     #
     # Required for real-space convolution
@@ -1518,7 +1518,6 @@ class GSObject(object):
         from .convolve import Convolve, Convolution, Deconvolve
         from .box import Pixel
         from .wcs import PixelScale
-        from .random import UniformDeviate
         from .photon_array import PhotonArray
 
         # Check that image is sane
@@ -1680,8 +1679,7 @@ class GSObject(object):
                 added_photons = prof.drawFFT(draw_image, add)
 
             if sensor is not None:
-                ud = UniformDeviate(rng)
-                photons = PhotonArray.makeFromImage(draw_image, rng=ud)
+                photons = PhotonArray.makeFromImage(draw_image, rng=rng)
                 for op in surface_ops:
                     op.applyTo(photons, local_wcs)
                 if imview.dtype in (np.float32, np.float64):
@@ -2079,7 +2077,6 @@ class GSObject(object):
             nphotons is the total flux of photons that landed inside the image bounds, and
             photons is the PhotonArray that was applied to the image.
         """
-        from .random import UniformDeviate
         from .sensor import Sensor
         from .image import ImageD
         # Make sure the type of n_photons is correct and has a valid value:
@@ -2096,8 +2093,6 @@ class GSObject(object):
                     "Warning: drawImage for object with flux == 1, area == 1, and "
                     "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
 
-        ud = UniformDeviate(rng)
-
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
         if image.wcs is None or not image.wcs.isPixelScale():
             raise GalSimValueError("drawPhot requires an image with a PixelScale wcs", image)
@@ -2107,7 +2102,7 @@ class GSObject(object):
         elif not isinstance(sensor, Sensor):
             raise TypeError("The sensor provided is not a Sensor instance")
 
-        Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, ud)
+        Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, rng)
 
         if gain != 1.:
             g /= gain
@@ -2129,7 +2124,7 @@ class GSObject(object):
             thisN = min(maxN, Nleft)
 
             try:
-                photons = self.shoot(thisN, ud)
+                photons = self.shoot(thisN, rng)
             except (GalSimError, NotImplementedError) as e:
                 raise GalSimNotImplementedError(
                         "Unable to draw this GSObject with photon shooting.  Perhaps it "
@@ -2170,23 +2165,24 @@ class GSObject(object):
 
         @returns PhotonArray.
         """
-        from .random import UniformDeviate
+        from .random import BaseDeviate
         from .photon_array import PhotonArray
 
         photons = PhotonArray(n_photons)
         if n_photons == 0:
             # It's ok to shoot 0, but downstream can have problems with it, so just stop now.
             return photons
+        if rng is None:
+            rng = BaseDeviate()
 
-        ud = UniformDeviate(rng)
-        self._shoot(photons, ud)
+        self._shoot(photons, rng)
         return photons
 
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         """Shoot photons into the given PhotonArray
 
         @param photons      A PhotonArray instance into which the photons should be placed.
-        @param ud           A UniformDeviate instance to use for the photon shooting,
+        @param rng          A BaseDeviate instance to use for the photon shooting,
         """
         raise NotImplementedError("%s does not implement shoot"%self.__class__.__name__)
 

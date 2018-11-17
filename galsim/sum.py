@@ -303,7 +303,7 @@ class Sum(GSObject):
                 image += im1
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
         from .random import BinomialDeviate
 
@@ -322,10 +322,10 @@ class Sum(GSObject):
             thisN = remainingN  # All of what's left, if this is the last summand...
             if i < len(self.obj_list)-1:
                 # otherwise, allocate a randomized fraction of the remaining photons to summand.
-                bd = BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
+                bd = BinomialDeviate(rng, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
                 thisN = int(bd())
             if thisN > 0:
-                thisPA = obj.shoot(thisN, ud)
+                thisPA = obj.shoot(thisN, rng)
                 # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
                 # whereas the shoot() routine would have made them each nominally
                 # thisAbsoluteFlux/thisN

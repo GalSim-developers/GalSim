@@ -47,7 +47,7 @@ namespace galsim
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target, bool* off_edge=0) const;
 
-        double calculateConversionDepth(const PhotonArray& photons, int i, UniformDeviate ud) const;
+        double calculateConversionDepth(const PhotonArray& photons, int i, BaseDeviate rng) const;
 
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);
@@ -56,7 +56,7 @@ namespace galsim
         void addTreeRingDistortions(ImageView<T> target, Position<int> orig_center);
 
         template <typename T>
-        double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target,
+        double accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
                           Position<int> orig_center, bool resume);
 
         template <typename T>

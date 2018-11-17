@@ -228,7 +228,8 @@ def make_movie(args):
                     geom_psf = geom_psl.makePSF(
                             lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
                     geom_img0 = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
-                                                   method='phot', n_photons=args.geom_nphot)
+                                                   method='phot', n_photons=args.geom_nphot,
+                                                   rng=rng)
 
                 t0 += args.time_step
 

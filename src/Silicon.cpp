@@ -342,8 +342,9 @@ namespace galsim {
     // an electron.
 
     double Silicon::calculateConversionDepth(const PhotonArray& photons, int i,
-                                             UniformDeviate ud) const
+                                             BaseDeviate rng) const
     {
+        UniformDeviate ud(rng);
         // Determine the distance the photon travels into the silicon
         double si_length;
         if (photons.hasAllocatedWavelengths()) {
@@ -458,9 +459,10 @@ namespace galsim {
     }
 
     template <typename T>
-    double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target,
+    double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
                                Position<int> orig_center, bool resume)
     {
+        UniformDeviate ud(rng);
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
@@ -693,10 +695,10 @@ namespace galsim {
     template void Silicon::addTreeRingDistortions(ImageView<float> target,
                                                   Position<int> orig_center);
 
-    template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
+    template double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng,
                                         ImageView<double> target, Position<int> orig_center,
                                         bool resume);
-    template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
+    template double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng,
                                         ImageView<float> target, Position<int> orig_center,
                                         bool resume);
 
