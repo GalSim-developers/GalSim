@@ -1034,7 +1034,8 @@ class GSObject(object):
     def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False):
         from .image import Image
         from .bounds import _BoundsI
-        # Check validity of nx,ny,bounds:
+
+        # If image is given, check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
                 raise GalSimIncompatibleValuesError(
@@ -1047,8 +1048,21 @@ class GSObject(object):
                     "Cannot specify dtype != image.array.dtype if image is provided",
                     dtype=dtype, image=image)
 
-        # Make image if necessary
-        if image is None:
+            # Resize the given image if necessary
+            if not image.bounds.isDefined():
+                # Can't add to image if need to resize
+                if add_to_image:
+                    raise GalSimIncompatibleValuesError(
+                        "Cannot add_to_image if image bounds are not defined",
+                        add_to_image=add_to_image, image=image)
+                N = self.getGoodImageSize(1.0)
+                if odd: N += 1
+                bounds = _BoundsI(1,N,1,N)
+                image.resize(bounds)
+            # Else use the given image as is
+
+        # Otherwise, make a new image
+        else:
             # Can't add to image if none is provided.
             if add_to_image:
                 raise GalSimIncompatibleValuesError(
@@ -1070,20 +1084,6 @@ class GSObject(object):
                 N = self.getGoodImageSize(1.0)
                 if odd: N += 1
                 image = Image(N, N, dtype=dtype)
-
-        # Resize the given image if necessary
-        elif not image.bounds.isDefined():
-            # Can't add to image if need to resize
-            if add_to_image:
-                raise GalSimIncompatibleValuesError(
-                    "Cannot add_to_image if image bounds are not defined",
-                    add_to_image=add_to_image, image=image)
-            N = self.getGoodImageSize(1.0)
-            if odd: N += 1
-            bounds = _BoundsI(1,N,1,N)
-            image.resize(bounds)
-
-        # Else use the given image as is
 
         return image
 
@@ -1580,10 +1580,6 @@ class GSObject(object):
                 raise GalSimIncompatibleValuesError(
                     "Setting maxN is incompatible with save_photons=True")
 
-        # Do any delayed computation needed by fft or real_space drawing.
-        if method != 'phot':
-            self._prepareDraw()
-
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
 
@@ -1610,21 +1606,25 @@ class GSObject(object):
         offset = self._adjust_offset(new_bounds, offset, use_true_center)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
-        prof = local_wcs.toImage(self, flux_ratio=flux_scale, offset=offset)
+        prof = local_wcs.profileToImage(self, flux_ratio=flux_scale, offset=offset)
         if offset != PositionD(0,0):
             local_wcs = local_wcs.withOrigin(offset)
 
-        # If necessary, convolve by the pixel
-        if method in ('auto', 'fft', 'real_space'):
-            if method == 'auto':
-                real_space = None
-            elif method == 'fft':
-                real_space = False
-            else:
-                real_space = True
-            prof_no_pixel = prof
-            prof = Convolve(prof, Pixel(scale=1.0, gsparams=self.gsparams),
-                            real_space=real_space, gsparams=self.gsparams)
+        # Do any delayed computation needed by fft or real_space drawing.
+        if method != 'phot':
+            self._prepareDraw()
+
+            # If necessary, convolve by the pixel
+            if method in ('auto', 'fft', 'real_space'):
+                if method == 'auto':
+                    real_space = None
+                elif method == 'fft':
+                    real_space = False
+                else:
+                    real_space = True
+                prof_no_pixel = prof
+                prof = Convolve(prof, Pixel(scale=1.0, gsparams=self.gsparams),
+                                real_space=real_space, gsparams=self.gsparams)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype)
@@ -1636,7 +1636,7 @@ class GSObject(object):
 
         # Making a view of the image lets us change the center without messing up the original.
         imview = image._view()
-        imview.setCenter(0,0)
+        imview._shift(-image.center)  # equiv. to setCenter(0,0), but faster
         imview.wcs = PixelScale(1.0)
         orig_center = image.center  # Save the original center to pass to sensor.accumulate
         if method == 'phot':
@@ -1652,7 +1652,7 @@ class GSObject(object):
                 else:
                     dtype = np.float64
                 draw_image = imview.real.subsample(n_subsample, n_subsample, dtype=dtype)
-                draw_image.setCenter(0,0)
+                draw_image._shift(-draw_image.center)  # eqiv. to setCenter(0,0)
                 if method in ('auto', 'fft', 'real_space'):
                     # Need to reconvolve by the new smaller pixel instead
                     prof = Convolve(
@@ -2262,7 +2262,7 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         if image is None or not image.bounds.isDefined():
-            real_prof = PixelScale(dx).toImage(self)
+            real_prof = PixelScale(dx).profileToImage(self)
             dtype = np.complex128 if image is None else image.dtype
             image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, odd=True)
         else:

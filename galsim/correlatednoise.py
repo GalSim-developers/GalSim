@@ -1474,7 +1474,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         sigma = math.sqrt(variance)
         pix = Pixel(scale=1.0, flux=sigma, gsparams=gsparams)
         cf = AutoConvolve(pix, real_space=True, gsparams=gsparams)
-        world_cf = wcs.toWorld(cf)
+        world_cf = wcs.profileToWorld(cf)
         # This gets the shape right, but not the amplitude.  Need to rescale by the pixel area
         world_cf *= wcs.pixelArea()
         _BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
