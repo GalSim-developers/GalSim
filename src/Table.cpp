@@ -1018,7 +1018,7 @@ namespace galsim {
     void WrapArrayToPeriod(double* x, int n, double x0, double period)
     {
 #ifdef __SSE2__
-        for (; n && !IsAligned(x); --n)
+        for (; n && !IsAligned(x); --n, ++x)
             *x -= period * floor((*x-x0)/period);
 
         int n2 = n>>1;
