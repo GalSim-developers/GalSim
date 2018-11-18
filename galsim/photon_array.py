@@ -183,6 +183,7 @@ class PhotonArray(object):
     def setCorrelated(self, is_corr=True):
         "Set whether the photons are correlated"
         self._is_corr = is_corr
+        self.__dict__.pop('_pa', None)
 
     def getTotalFlux(self):
         return self.flux.sum()
