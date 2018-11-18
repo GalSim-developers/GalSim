@@ -210,13 +210,76 @@ def test_photon_array():
     undef = galsim.Image()
     assert_raises(galsim.GalSimUndefinedBoundsError, pa2.addTo, undef)
 
-    # This shouldn't be able to happen in regular photon-shooting usage, so check here.
-    # TODO: Would be nice to have some real tests of the convolve functionality here,
-    #       rather than just implicitly in the shooting tests.
-    assert_raises(galsim.GalSimError, pa2.convolve, pa1)
-
     # Check picklability again with non-zero values for everything
     do_pickle(photon_array)
+
+@timer
+def test_convolve():
+    nphotons = 1000000
+
+    obj = galsim.Gaussian(flux=1.7, sigma=2.3)
+    rng = galsim.UniformDeviate(1234)
+    pa1 = obj.shoot(nphotons, rng)
+    pa2 = obj.shoot(nphotons, rng)
+
+    # If not correlated then convolve is deterministic
+    conv_x = pa1.x + pa2.x
+    conv_y = pa1.y + pa2.y
+    conv_flux = pa1.flux * pa2.flux * nphotons
+
+    np.testing.assert_allclose(np.sum(pa1.flux), 1.7)
+    np.testing.assert_allclose(np.sum(pa2.flux), 1.7)
+    np.testing.assert_allclose(np.sum(conv_flux), 1.7*1.7)
+
+    np.testing.assert_allclose(np.sum(pa1.x**2)/nphotons, 2.3**2, rtol=0.01)
+    np.testing.assert_allclose(np.sum(pa2.x**2)/nphotons, 2.3**2, rtol=0.01)
+    np.testing.assert_allclose(np.sum(conv_x**2)/nphotons, 2.*2.3**2, rtol=0.01)
+
+    np.testing.assert_allclose(np.sum(pa1.y**2)/nphotons, 2.3**2, rtol=0.01)
+    np.testing.assert_allclose(np.sum(pa2.y**2)/nphotons, 2.3**2, rtol=0.01)
+    np.testing.assert_allclose(np.sum(conv_y**2)/nphotons, 2.*2.3**2, rtol=0.01)
+
+    pa3 = galsim.PhotonArray(nphotons)
+    pa3.assignAt(0, pa1)  # copy from pa1
+    pa3.convolve(pa2)
+    np.testing.assert_allclose(pa3.x, conv_x)
+    np.testing.assert_allclose(pa3.y, conv_y)
+    np.testing.assert_allclose(pa3.flux, conv_flux)
+
+    # If one of them is correlated, it is still deterministic.
+    pa3.assignAt(0, pa1)
+    pa3.setCorrelated()
+    pa3.convolve(pa2)
+    np.testing.assert_allclose(pa3.x, conv_x)
+    np.testing.assert_allclose(pa3.y, conv_y)
+    np.testing.assert_allclose(pa3.flux, conv_flux)
+
+    pa3.assignAt(0, pa1)
+    pa3.setCorrelated(False)
+    pa2.setCorrelated()
+    pa3.convolve(pa2)
+    np.testing.assert_allclose(pa3.x, conv_x)
+    np.testing.assert_allclose(pa3.y, conv_y)
+    np.testing.assert_allclose(pa3.flux, conv_flux)
+
+    # But if both are correlated, then it's not this simple.
+    pa3.assignAt(0, pa1)
+    pa3.setCorrelated()
+    assert pa3.isCorrelated()
+    assert pa2.isCorrelated()
+    pa3.convolve(pa2)
+    with assert_raises(AssertionError):
+        np.testing.assert_allclose(pa3.x, conv_x)
+    with assert_raises(AssertionError):
+        np.testing.assert_allclose(pa3.y, conv_y)
+    np.testing.assert_allclose(np.sum(pa3.flux), 1.7*1.7)
+    np.testing.assert_allclose(np.sum(pa3.x**2)/nphotons, 2*2.3**2, rtol=0.01)
+    np.testing.assert_allclose(np.sum(pa3.y**2)/nphotons, 2*2.3**2, rtol=0.01)
+
+    # Error to have different lengths
+    pa4 = galsim.PhotonArray(50, pa1.x[:50], pa1.y[:50], pa1.flux[:50])
+    assert_raises(galsim.GalSimError, pa1.convolve, pa4)
+
 
 @timer
 def test_wavelength_sampler():
@@ -801,6 +864,7 @@ def test_dcr_moments():
 
 if __name__ == '__main__':
     test_photon_array()
+    test_convolve()
     test_wavelength_sampler()
     test_photon_angles()
     test_photon_io()
