@@ -805,6 +805,7 @@ class PhaseScreenList(object):
             self.rng = None
         self.dynamic = any(l.dynamic for l in self)
         self.reversible = all(l.reversible for l in self)
+        self.__dict__.pop('r0_500_effective', None)
 
     def _seek(self, t):
         """Set all layers' internal clocks to time t."""
@@ -1018,7 +1019,7 @@ class PhaseScreenList(object):
         """
         return PhaseScreenPSF(self, lam, **kwargs)
 
-    @property
+    @lazy_property
     def r0_500_effective(self):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         r0_500s = np.array([l.r0_500 for l in self if hasattr(l, 'r0_500')])
