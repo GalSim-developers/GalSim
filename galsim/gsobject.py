@@ -1580,6 +1580,10 @@ class GSObject(object):
                 raise GalSimIncompatibleValuesError(
                     "Setting maxN is incompatible with save_photons=True")
 
+        # Do any delayed computation needed by fft or real_space drawing.
+        if method != 'phot':
+            self._prepareDraw()
+
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
 
@@ -1610,21 +1614,17 @@ class GSObject(object):
         if offset != PositionD(0,0):
             local_wcs = local_wcs.withOrigin(offset)
 
-        # Do any delayed computation needed by fft or real_space drawing.
-        if method != 'phot':
-            self._prepareDraw()
-
-            # If necessary, convolve by the pixel
-            if method in ('auto', 'fft', 'real_space'):
-                if method == 'auto':
-                    real_space = None
-                elif method == 'fft':
-                    real_space = False
-                else:
-                    real_space = True
-                prof_no_pixel = prof
-                prof = Convolve(prof, Pixel(scale=1.0, gsparams=self.gsparams),
-                                real_space=real_space, gsparams=self.gsparams)
+        # If necessary, convolve by the pixel
+        if method in ('auto', 'fft', 'real_space'):
+            if method == 'auto':
+                real_space = None
+            elif method == 'fft':
+                real_space = False
+            else:
+                real_space = True
+            prof_no_pixel = prof
+            prof = Convolve(prof, Pixel(scale=1.0, gsparams=self.gsparams),
+                            real_space=real_space, gsparams=self.gsparams)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype)
