@@ -801,8 +801,6 @@ class PhaseScreenList(object):
         # dummy rng sentinel attribute so do_pickle() will know to skip the obj == eval(repr(obj))
         # test.
         self.__dict__.pop('rng', None)
-        if any(hasattr(l, 'rng') for l in self):
-            self.rng = None
         self.dynamic = any(l.dynamic for l in self)
         self.reversible = all(l.reversible for l in self)
         self.__dict__.pop('r0_500_effective', None)
