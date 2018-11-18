@@ -1106,6 +1106,20 @@ def test_horner():
     result = galsim.utilities.horner(x, coef[::-1])
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef[::-1]))
 
+    # Check odd length
+    result = galsim.utilities.horner(x[:15], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[:15],coef))
+
+    # Check unaligned array
+    result = galsim.utilities.horner(x[1:], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x[1:],coef))
+
+    # Check length > 64
+    xx = np.empty(2000)
+    rng.generate(xx)
+    result = galsim.utilities.horner(xx, coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
+
     # Check invalid arguments
     with assert_raises(galsim.GalSimValueError):
         galsim.utilities.horner(x, [coef])
@@ -1170,6 +1184,27 @@ def test_horner2d():
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[:,::-1]))
     result = galsim.utilities.horner2d(x, y, coef[::-1,:])
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coef[::-1,:]))
+
+    # Check odd length
+    result = galsim.utilities.horner2d(x[:15], y[:15], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:15],y[:15],coef))
+
+    # Check unaligned array
+    result = galsim.utilities.horner2d(x[1:], y[1:], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[1:],coef))
+    result = galsim.utilities.horner2d(x[1:], y[:-1], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[1:],y[:-1],coef))
+    result = galsim.utilities.horner2d(x[:-1], y[1:], coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x[:-1],y[1:],coef))
+
+    # Check length > 64
+    xx = np.empty(2000)
+    yy = np.empty(2000)
+    rng.generate(xx)
+    rng.generate(yy)
+    result = galsim.utilities.horner2d(xx, yy, coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
+
 
     # Check the triangle = True option
     coef = [ [1.2332, 3.4324, 4.1231],
