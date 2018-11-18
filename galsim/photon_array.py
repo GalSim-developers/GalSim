@@ -418,9 +418,7 @@ class WavelengthSampler(object):
     def __init__(self, sed, bandpass, rng=None, npoints=None):
         self.sed = sed
         self.bandpass = bandpass
-        if rng is None:
-            rng = BaseDeviate()
-        self.rng = rng
+        self.rng = BaseDeviate(rng)
         self.npoints = npoints
 
     def applyTo(self, photon_array, local_wcs=None):
