@@ -632,10 +632,6 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
 
     @returns a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
     """
-    if len(x) != len(y):
-        raise GalSimIncompatibleValuesError("x and y are not the same size",
-                                            x=x, y=y)
-
     result = np.empty_like(x, dtype=dtype)
     temp = np.empty_like(x, dtype=dtype)
     # Make sure everything is an array
@@ -649,6 +645,10 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
         x = np.array(x, copy=False)
         y = np.array(y, copy=False)
         coefs = np.array(coefs, copy=False)
+
+    if len(x) != len(y):
+        raise GalSimIncompatibleValuesError("x and y are not the same size",
+                                            x=x, y=y)
     if len(coefs.shape) != 2:
         raise GalSimValueError("coefs must be 2-dimensional", coefs)
     if triangle and coefs.shape[0] != coefs.shape[1]:

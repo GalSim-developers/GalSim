@@ -1120,6 +1120,10 @@ def test_horner():
     result = galsim.utilities.horner(xx, coef)
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(xx,coef))
 
+    # Check scalar x
+    result = galsim.utilities.horner(3.9, coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9],coef))
+
     # Check invalid arguments
     with assert_raises(galsim.GalSimValueError):
         galsim.utilities.horner(x, [coef])
@@ -1204,6 +1208,10 @@ def test_horner2d():
     rng.generate(yy)
     result = galsim.utilities.horner2d(xx, yy, coef)
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(xx,yy,coef))
+
+    # Check scalar x, y
+    result = galsim.utilities.horner2d(3.9, 1.7, coef)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d([3.9],[1.7],coef))
 
 
     # Check the triangle = True option
