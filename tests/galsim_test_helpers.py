@@ -645,7 +645,12 @@ class Dummy(unittest.TestCase):
         pass
 _t = Dummy('nop')
 assert_raises = getattr(_t, 'assertRaises')
-if sys.version_info > (3,2):
+#if sys.version_info > (3,2):
+if False:
+    # Note: this should work, but at least sometimes it fails with:
+    #    RuntimeError: dictionary changed size during iteration
+    # cf. https://bugs.python.org/issue29620
+    # So just use our own (working) implementation for all Python versions.
     assert_warns = getattr(_t, 'assertWarns')
 else:
     from contextlib import contextmanager
