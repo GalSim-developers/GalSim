@@ -203,7 +203,9 @@ def download(url, target, unpack_dir, args, logger):
 
         # Check that this is the current version.
         meta_file = os.path.join(unpack_dir, 'meta.json')
+        logger.debug('meta_file = %s',meta_file)
         if os.path.isfile(meta_file):
+            logger.debug('meta_file exists')
             with open(meta_file) as fp:
                 saved_meta_dict = json.load(fp)
                 # Get rid of the unicode
@@ -213,7 +215,7 @@ def download(url, target, unpack_dir, args, logger):
             logger.debug("url's meta information is %s",meta_dict)
             obsolete = False
             for k in meta_dict:
-                if k == 'date':
+                if k.lower() == 'date':
                     continue  # This one isn't expected to match.
                 elif k not in saved_meta_dict:
                     logger.debug("key %s is missing in saved meta information",k)
@@ -224,6 +226,7 @@ def download(url, target, unpack_dir, args, logger):
                 else:
                     logger.debug("key %s matches",k)
         else:
+            logger.debug('meta_file does not exist')
             obsolete = True
 
         if obsolete:
