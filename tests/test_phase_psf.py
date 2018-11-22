@@ -723,7 +723,7 @@ def test_phase_gradient_shoot():
         time_step = 0.05
         centroid_tolerance = 0.06
         size_tolerance = 0.06  # absolute
-        size_bias = 0.02  # as a fraction
+        size_bias = 0.015  # as a fraction
         shape_tolerance = 0.01
     else:
         exptime = 1.0
@@ -779,6 +779,9 @@ def test_phase_gradient_shoot():
             rtol=0, atol=centroid_tolerance,
             err_msg='Phase gradient centroid y not close to fft centroid')
 
+        print('shoot_moment sigma = ',shoot_moment.moments_sigma)
+        print('fft_moment sigma = ',fft_moment.moments_sigma)
+        print('biased fft_moment sigma = ',fft_moment.moments_sigma * (1+size_bias))
         np.testing.assert_allclose(
             shoot_moment.moments_sigma,
             fft_moment.moments_sigma*(1+size_bias),
