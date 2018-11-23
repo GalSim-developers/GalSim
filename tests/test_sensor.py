@@ -765,7 +765,7 @@ def test_resume():
         flux_per_pixel = 40
         nx = 200
         ny = 200
-        block_size = int(1.3e5)
+        block_size = int(1.2e5)
         nrecalc = 1.e6
     else:
         flux_per_pixel = 40
