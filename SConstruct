@@ -109,6 +109,7 @@ opts.Add(BoolVariable('IMPORT_PATHS',
          False))
 opts.Add(BoolVariable('IMPORT_ENV',
          'Import full environment from calling shell',True))
+opts.Add(BoolVariable('ADD_PYTHON_SYS_FLAGS','Add compile and link flags from sysconfig',True))
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('IMPORT_PREFIX',
          'Use PREFIX/include and PREFIX/lib in search paths', True))
@@ -1382,15 +1383,16 @@ PyMODINIT_FUNC initcheck_python(void)
 """
     config.Message('Checking if we can build against Python... ')
 
-    # Check if we need to add any additional linking flags according to what is given in
-    # sysconfig.get_config_var("LDSHARED").  cf. Issue #924
-    sys_builder = distutils.sysconfig.get_config_var("LDSHARED")
-    ldflags = sys_builder.split()
-    ldflags = ldflags[1:]  # strip off initial gcc or cc
-    config.env.Replace(LDMODULEFLAGS=['$LINKFLAGS'] + ldflags)
-    # Need this too to get consistency, e.g. with --arch options.
-    ccflags = distutils.sysconfig.get_config_var("CCSHARED")
-    config.env.Append(CCFLAGS=ccflags.split())
+    if config.env['ADD_PYTHON_SYS_FLAGS']:
+        # Check if we need to add any additional linking flags according to what is given in
+        # sysconfig.get_config_var("LDSHARED").  cf. Issue #924
+        sys_builder = distutils.sysconfig.get_config_var("LDSHARED")
+        ldflags = sys_builder.split()
+        ldflags = ldflags[1:]  # strip off initial gcc or cc
+        config.env.Replace(LDMODULEFLAGS=['$LINKFLAGS'] + ldflags)
+        # Need this too to get consistency, e.g. with --arch options.
+        ccflags = distutils.sysconfig.get_config_var("CCSHARED")
+        config.env.Append(CCFLAGS=ccflags.split())
 
     # First check the python include directory -- see if we can compile the module.
     source_file2 = "import distutils.sysconfig; print(distutils.sysconfig.get_python_inc())"
