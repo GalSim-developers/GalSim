@@ -146,12 +146,22 @@ class AstropyWCS(CelestialWCS):
                 self.header = fits.FitsHeader(header)
                 try:
                     wcs = self._load_from_header(self.header)
-                except (TypeError, AttributeError, ValueError) as e:
+                except (TypeError, AttributeError, ValueError, RuntimeError) as e:
                     # When parsing ZPX files, astropy raises a very unhelpful error message.
                     # Ignore that (ValueError in that case, but ignore any similarly mundane error)
                     # and turn it into a more appropriate OSError.
                     raise OSError("Astropy failed to read WCS from %s. Original error: %s"%(
                                   file_name, e))
+                else:
+                    # New kind of error starting in astropy 2.0.5 (I think).  Sometimes, it
+                    # gets through the above, but doesn't actually load the right WCS.
+                    # E.g. ZPX gets marked as just a ZPN.
+                    if 'CTYPE1' in header and 'CTYPE2' in header:
+                        if (header['CTYPE1'] != wcs.wcs.ctype[0] or
+                            header['CTYPE2'] != wcs.wcs.ctype[1]):
+                            raise OSError("Astropy failed to read WCS from %s. Converted %s->%s"%(
+                                          file_name, (header['CTYPE1'], header['CTYPE2']),
+                                          wcs.wcs.ctype))
             else:
                 self.header = None
 
