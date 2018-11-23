@@ -545,6 +545,7 @@ def test_Image_FITS_IO():
         assert_raises(ValueError, ref_image.write, test_file, compression='invalid')
         assert_raises(OSError, galsim.fits.read, test_file, compression='rice')
         assert_raises(OSError, galsim.fits.read, 'invalid.fits')
+        assert_raises(OSError, galsim.fits.read, 'config_input/catalog.fits', hdu=1)
 
         assert_raises(TypeError, galsim.fits.read)
         assert_raises(TypeError, galsim.fits.read, test_file, hdu_list=hdu)
@@ -1278,7 +1279,6 @@ def test_Image_CubeFITS_IO():
 
         assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='rice')
         assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
-        assert_raises(OSError, galsim.fits.readCube, test_cube_file, hdu=1, compression='none')
 
         # Test gzip_tile
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.gzt")

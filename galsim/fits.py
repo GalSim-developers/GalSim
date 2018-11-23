@@ -340,7 +340,7 @@ def _check_hdu(hdu, pyfits_compress):
         if not isinstance(hdu, pyfits.CompImageHDU):
             raise OSError('Found invalid HDU type reading FITS file (expected a CompImageHDU)')
     else:
-        if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
+        if not isinstance(hdu, (pyfits.CompImageHDU, pyfits.ImageHDU, pyfits.PrimaryHDU)):
             raise OSError('Found invalid HDU type reading FITS file (expected an ImageHDU)')
 
 
