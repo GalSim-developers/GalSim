@@ -143,6 +143,13 @@ class AstropyWCS(CelestialWCS):
                 if wcs is not None:
                     raise GalSimIncompatibleValuesError(
                         "Cannot provide both pyfits header and wcs", header=header, wcs=wcs)
+
+                # These can mess things up later if they stick around.
+                if 'BZERO' in header:
+                    del header['BZERO']
+                if 'BSCALE' in header:
+                    del header['BSCALE']
+
                 self.header = fits.FitsHeader(header)
                 try:
                     wcs = self._load_from_header(self.header)
@@ -369,6 +376,13 @@ class PyAstWCS(CelestialWCS):
                     raise GalSimIncompatibleValuesError(
                         "Cannot provide both pyfits header and wcsinfo",
                         header=header, wcsinfo=wcsinfo)
+
+                # These can mess things up later if they stick around.
+                if 'BZERO' in header:
+                    del header['BZERO']
+                if 'BSCALE' in header:
+                    del header['BSCALE']
+
                 self.header = fits.FitsHeader(header)
                 wcsinfo = self._load_from_header(self.header)
             else:
