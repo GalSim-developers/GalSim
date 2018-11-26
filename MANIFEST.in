@@ -2,4 +2,6 @@ recursive-include galsim *.py
 include *.md
 include LICENSE
 recursive-include include *.h *.hpp
+recursive-include src *.cpp *.inst *.h
+recursive-include pysrc *.cpp *.h
 global-exclude .gitignore SCons*
