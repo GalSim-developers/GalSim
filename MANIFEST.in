@@ -1,5 +1,4 @@
 recursive-include galsim *.py
 include *.md
 include LICENSE
-recursive-include share *
 global-exclude .gitignore SCons*
