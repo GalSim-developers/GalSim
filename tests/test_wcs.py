@@ -2297,6 +2297,38 @@ def test_coadd():
     np.testing.assert_almost_equal(mom.moments_centroid.x, 24.5, decimal=2)
     np.testing.assert_almost_equal(mom.moments_centroid.y, 24.5, decimal=2)
 
+def test_lowercase():
+    # The WCS parsing should be insensitive to the case of the header key values.
+    # Matt Becker ran into a problem when his wcs dict had lowercase keys.
+    wcs_dict = {
+        'simple': True,
+        'bitpix': -32,
+        'naxis': 2,
+        'naxis1': 10000,
+        'naxis2': 10000,
+        'extend': True,
+        'gs_xmin': 1,
+        'gs_ymin': 1,
+        'gs_wcs': 'GSFitsWCS',
+        'ctype1': 'RA---TAN',
+        'ctype2': 'DEC--TAN',
+        'crpix1': 5000.5,
+        'crpix2': 5000.5,
+        'cd1_1': -7.305555555556e-05,
+        'cd1_2': 0.0,
+        'cd2_1': 0.0,
+        'cd2_2': 7.305555555556e-05,
+        'cunit1': 'deg     ',
+        'cunit2': 'deg     ',
+        'crval1': 86.176841,
+        'crval2': -22.827778}
+    wcs = galsim.FitsWCS(header=wcs_dict)
+    print('wcs = ',wcs)
+    assert isinstance(wcs, galsim.GSFitsWCS)
+    print(wcs.local(galsim.PositionD(0,0)))
+    np.testing.assert_allclose(wcs.local(galsim.PositionD(0,0)).getMatrix().ravel(),
+                               [0.26298, 0.00071,
+                                -0.00072, 0.26298], atol=1.e-4)
 
 if __name__ == "__main__":
     test_pixelscale()
@@ -2313,3 +2345,4 @@ if __name__ == "__main__":
     test_scamp()
     test_compateq()
     test_coadd()
+    test_lowercase()

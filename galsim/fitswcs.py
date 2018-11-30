@@ -1638,6 +1638,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     if header is None:
         raise GalSimIncompatibleValuesError(
             "Must provide either file_name or header", file_name=file_name, header=header)
+    if not isinstance(header, fits.FitsHeader):
+        header = fits.FitsHeader(header)
 
     # For linear WCS specifications, AffineTransformation should work.
     if header.get('CTYPE1', 'LINEAR') == 'LINEAR':

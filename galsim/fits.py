@@ -1119,6 +1119,7 @@ class FitsHeader(object):
             if header is not None:
                 if hasattr(header, 'items'):
                     # update() should handle anything that acts like a dict.
+                    header = {k.upper(): v for k, v in header.items()}
                     self.update(header)
                 else:
                     for card in header:
