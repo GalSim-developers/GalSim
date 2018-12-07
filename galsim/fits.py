@@ -1118,8 +1118,10 @@ class FitsHeader(object):
             self.header = pyfits.Header()
             if header is not None:
                 if hasattr(header, 'items'):
+                    # For dicts, make sure all the keys are uppercase.
+                    if isinstance(header, dict):
+                        header = {k.upper(): v for k, v in header.items()}
                     # update() should handle anything that acts like a dict.
-                    header = {k.upper(): v for k, v in header.items()}
                     self.update(header)
                 else:
                     for card in header:
