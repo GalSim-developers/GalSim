@@ -170,14 +170,7 @@ def test_scamp():
     do_pickle(header)
 
 
-@timer
-def test_dict():
-    """Test that we can create a FitsHeader from a dict
-    """
-    d = { 'TIME-OBS' : '04:28:14.105' ,
-          'FILTER'   : 'I',
-          'AIRMASS'  : 1.185 }
-
+def do_test_dict(d):
     def check_dict(header):
         """Check that the header object has correct values from the given dict
         """
@@ -220,8 +213,27 @@ def test_dict():
     check_dict(header)
     do_pickle(header)
 
+@timer
+def test_dict():
+    """Test that we can create a FitsHeader from a dict
+    """
+    d = { 'TIME-OBS' : '04:28:14.105' ,
+          'FILTER'   : 'I',
+          'AIRMASS'  : 1.185 }
+    do_test_dict(d)
+
+@timer
+def test_lowercase():
+    """Test that lowercase keys are turned into uppercase.
+    """
+    d = { 'Time-Obs' : '04:28:14.105' ,
+          'filter'   : 'I',
+          'AirMAsS'  : 1.185 }
+    do_test_dict(d)
+
 
 if __name__ == "__main__":
     test_read()
     test_scamp()
     test_dict()
+    test_lowercase()
