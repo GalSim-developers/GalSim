@@ -1153,6 +1153,9 @@ class FitsHeader(object):
     def get(self, key, default=None):
         return self.header.get(key, default)
 
+    def pop(self, key, default=None):
+        return self.header.pop(key, default)
+
     def items(self):
         return self.header.items()
 
