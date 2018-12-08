@@ -145,10 +145,8 @@ class AstropyWCS(CelestialWCS):
                         "Cannot provide both pyfits header and wcs", header=header, wcs=wcs)
 
                 # These can mess things up later if they stick around.
-                if 'BZERO' in header:
-                    del header['BZERO']
-                if 'BSCALE' in header:
-                    del header['BSCALE']
+                header.pop('BZERO', None)
+                header.pop('BSCALE', None)
 
                 self.header = fits.FitsHeader(header)
                 try:
@@ -378,10 +376,8 @@ class PyAstWCS(CelestialWCS):
                         header=header, wcsinfo=wcsinfo)
 
                 # These can mess things up later if they stick around.
-                if 'BZERO' in header:
-                    del header['BZERO']
-                if 'BSCALE' in header:
-                    del header['BSCALE']
+                header.pop('BZERO', None)
+                header.pop('BSCALE', None)
 
                 self.header = fits.FitsHeader(header)
                 wcsinfo = self._load_from_header(self.header)
