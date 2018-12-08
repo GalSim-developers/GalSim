@@ -1118,9 +1118,6 @@ class FitsHeader(object):
             self.header = pyfits.Header()
             if header is not None:
                 if hasattr(header, 'items'):
-                    # For dicts, make sure all the keys are uppercase.
-                    if isinstance(header, dict):
-                        header = {k.upper(): v for k, v in header.items()}
                     # update() should handle anything that acts like a dict.
                     self.update(header)
                 else:
@@ -1147,7 +1144,7 @@ class FitsHeader(object):
 
     def __setitem__(self, key, value):
         self._tag = None
-        self.header[key] = value
+        self.header[key.upper()] = value
 
     def clear(self):
         self._tag = None
@@ -1177,7 +1174,7 @@ class FitsHeader(object):
     def update(self, dict2):
         self._tag = None
         for key, item in dict2.items():
-            self.header[key] = item
+            self.header[key.upper()] = item
 
     def values(self):
         return self.header.values()
@@ -1194,7 +1191,7 @@ class FitsHeader(object):
                             overwritten with the new entry? [default: True]
         """
         self._tag = None
-        self.header.insert(len(self), (key, value), useblanks=useblanks)
+        self.header.insert(len(self), (key.upper(), value), useblanks=useblanks)
 
     def __repr__(self):
         if self._tag is None:
