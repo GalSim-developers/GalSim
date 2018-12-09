@@ -188,7 +188,7 @@ def test_scamp():
     do_pickle(header)
 
 
-def do_test_dict(d):
+def check_dict(d):
     def check_dict(header):
         """Check that the header object has correct values from the given dict
         """
@@ -238,7 +238,7 @@ def test_dict():
     d = { 'TIME-OBS' : '04:28:14.105' ,
           'FILTER'   : 'I',
           'AIRMASS'  : 1.185 }
-    do_test_dict(d)
+    check_dict(d)
 
 @timer
 def test_lowercase():
@@ -247,7 +247,7 @@ def test_lowercase():
     d = { 'Time-Obs' : '04:28:14.105' ,
           'filter'   : 'I',
           'AirMAsS'  : 1.185 }
-    do_test_dict(d)
+    check_dict(d)
 
 
 if __name__ == "__main__":
