@@ -123,6 +123,22 @@ def test_read():
     assert header.get('AIRMASS') == 2
     assert header != orig_header
 
+    # Pop does a similar thing:
+    assert header.pop('AIRMASS') == 2.0
+    assert 'AIRMASS' not in header
+
+    # Works if not preset, given default
+    assert header.pop('AIRMASS', 2.0) == 2.0
+    assert 'AIRMASS' not in header
+    header['AIRMASS'] = 2
+    assert header['AIRMASS'] == 2
+
+    # Get real value if preset and given default value
+    assert header.pop('AIRMASS', 1.9) == 2.0
+    assert 'AIRMASS' not in header
+    header['AIRMASS'] = 2
+    assert header['AIRMASS'] == 2
+
     # Overwrite an existing value
     header['AIRMASS'] = 1.7
     assert header.get('AIRMASS') == 1.7
@@ -138,8 +154,10 @@ def test_read():
     header.update(d)
     assert header.get('AIRMASS') == 1.185
     # We are essentially back to where we started, except the len won't be right.
-    # Deleting a key removed an item, but setting it overwrote a blank item.
-    # But if we add back another one of these, we should be back to the original values.
+    # Deleting a key removed an item each time, but setting it overwrote a blank item.
+    # But if we add back another few of these, we should be back to the original values.
+    header.append('','', useblanks=False)
+    header.append('','', useblanks=False)
     header.append('','', useblanks=False)
     check_tpv(header)
     do_pickle(header)
