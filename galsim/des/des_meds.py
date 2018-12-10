@@ -465,8 +465,10 @@ class MEDSBuilder(galsim.config.OutputBuilder):
                 "MEDS files are not compatible with image type %s."%base['image']['type'])
 
         req = { 'nobjects' : int , 'nstamps_per_object' : int }
+        opt  = {'first_id' : int }
         ignore += [ 'file_name', 'dir', 'nfiles' ]
-        params = galsim.config.GetAllParams(config,base,ignore=ignore,req=req)[0]
+        params = galsim.config.GetAllParams(config,base,ignore=ignore,req=req, opt=opt)[0]
+        first_id = params.get('first_id', obj_num)
 
         nobjects = params['nobjects']
         nstamps_per_object = params['nstamps_per_object']
@@ -502,7 +504,7 @@ class MEDSBuilder(galsim.config.OutputBuilder):
                                       weight = weight_images[k1:k2],
                                       badpix = bpk,
                                       psf = psf_images[k1:k2],
-                                      id = obj_num + i,
+                                      id = first_id + i,
                                       cutout_row = cutout_rows[k1:k2],
                                       cutout_col = cutout_cols[k1:k2])
             obj_list.append(obj)
