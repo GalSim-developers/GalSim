@@ -464,6 +464,7 @@ class CCDNoise(BaseNoise):
         # First add the poisson noise from the signal + sky:
         if self.gain > 0.:
             noise_array *= self.gain  # convert to electrons
+            noise_array = noise_array.clip(0.)
             # The noise_image now has the expectation values for each pixel with the sky added.
             self._pd.generate_from_expectation(noise_array)
             # Subtract off the sky, since we don't want it in the final image.
