@@ -414,6 +414,8 @@ class PoissonDeviate(BaseDeviate):
         106
     """
     def __init__(self, seed=None, mean=1.):
+        if mean < 0:
+            raise GalSimValueError("PoissonDeviate is only defined for mean >= 0.", mean)
         self._rng_type = _galsim.PoissonDeviateImpl
         self._rng_args = (float(mean),)
         self.reset(seed)
@@ -433,6 +435,8 @@ class PoissonDeviate(BaseDeviate):
         """Generate many Poisson deviate values using the existing array values as the
         expectation value (aka mean) for each.
         """
+        if np.any(array < 0):
+            raise GalSimValueError("Expectation array may not have values < 0.", array)
         array_1d = np.ascontiguousarray(array.ravel(), dtype=float)
         #assert(array_1d.strides[0] == array_1d.itemsize)
         self._rng.generate_from_expectation(len(array_1d), array_1d.ctypes.data)
