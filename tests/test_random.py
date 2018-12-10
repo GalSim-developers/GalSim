@@ -791,6 +791,7 @@ def test_poisson_zeromean():
     p = galsim.PoissonDeviate(testseed, mean=0)
     p2 = p.duplicate()
     p3 = galsim.PoissonDeviate(p.serialize(), mean=0)
+    do_pickle(p)
 
     # Test direct draws
     testResult = (p(), p(), p())
