@@ -278,6 +278,12 @@ class UniformDeviate(BaseDeviate):
         """
         return self._rng.generate1()
 
+    def __repr__(self):
+        return 'galsim.UniformDeviate(seed=%r)'%(self._seed_repr())
+    def __str__(self):
+        return 'galsim.UniformDeviate()'
+
+
 class GaussianDeviate(BaseDeviate):
     """Pseudo-random number generator with Gaussian distribution.
 
@@ -337,6 +343,12 @@ class GaussianDeviate(BaseDeviate):
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
+    def __repr__(self):
+        return 'galsim.GaussianDeviate(seed=%r, mean=%r, sigma=%r)'%(
+                self._seed_repr(), self.mean, self.sigma)
+    def __str__(self):
+        return 'galsim.GaussianDeviate(mean=%r, sigma=%r)'%(self.mean, self.sigma)
+
 
 class BinomialDeviate(BaseDeviate):
     """Pseudo-random Binomial deviate for `N` trials each of probability `p`.
@@ -385,6 +397,12 @@ class BinomialDeviate(BaseDeviate):
         Returns a Binomial deviate with the given n and p.
         """
         return self._rng.generate1()
+
+    def __repr__(self):
+        return 'galsim.BinomialDeviate(seed=%r, N=%r, p=%r)'%(self._seed_repr(), self.n, self.p)
+    def __str__(self):
+        return 'galsim.BinomialDeviate(N=%r, p=%r)'%(self.n, self.p)
+
 
 class PoissonDeviate(BaseDeviate):
     """Pseudo-random Poisson deviate with specified `mean`.
@@ -444,6 +462,11 @@ class PoissonDeviate(BaseDeviate):
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
+    def __repr__(self):
+        return 'galsim.PoissonDeviate(seed=%r, mean=%r)'%(self._seed_repr(), self.mean)
+    def __str__(self):
+        return 'galsim.PoissonDeviate(mean=%r)'%(self.mean)
+
 
 class WeibullDeviate(BaseDeviate):
     """Pseudo-random Weibull-distributed deviate for shape parameter `a` and scale parameter `b`.
@@ -496,6 +519,11 @@ class WeibullDeviate(BaseDeviate):
         """
         return self._rng.generate1()
 
+    def __repr__(self):
+        return 'galsim.WeibullDeviate(seed=%r, a=%r, b=%r)'%(self._seed_repr(), self.a, self.b)
+    def __str__(self):
+        return 'galsim.WeibullDeviate(a=%r, b=%r)'%(self.a, self.b)
+
 
 class GammaDeviate(BaseDeviate):
     """A Gamma-distributed deviate with shape parameter `k` and scale parameter `theta`.
@@ -544,6 +572,12 @@ class GammaDeviate(BaseDeviate):
         """
         return self._rng.generate1()
 
+    def __repr__(self):
+        return 'galsim.GammaDeviate(seed=%r, k=%r, theta=%r)'%(
+                self._seed_repr(), self.k, self.theta)
+    def __str__(self):
+        return 'galsim.GammaDeviate(k=%r, theta=%r)'%(self.k, self.theta)
+
 
 class Chi2Deviate(BaseDeviate):
     """Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter `n`.
@@ -588,6 +622,11 @@ class Chi2Deviate(BaseDeviate):
         Returns a Chi2-distributed deviate with the given number of degrees of freedom.
         """
         return self._rng.generate1()
+
+    def __repr__(self):
+        return 'galsim.Chi2Deviate(seed=%r, n=%r)'%(self._seed_repr(), self.n)
+    def __str__(self):
+        return 'galsim.Chi2Deviate(n=%r)'%(self.n)
 
 
 class DistDeviate(BaseDeviate):
