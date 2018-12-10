@@ -374,7 +374,7 @@ namespace galsim {
 
             if (mean != _mean) {
                 _mean = mean;
-                if (mean > MAX_POISSON) setMeanGD(mean);
+                if (mean > MAX_POISSON || mean == 0.) setMeanGD(mean);
                 else setMeanPD(mean);
             }
         }
