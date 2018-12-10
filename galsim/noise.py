@@ -331,6 +331,8 @@ class PoissonNoise(BaseNoise):
 
         if self.sky_level != 0.:
             noise_array += self.sky_level
+        # Make sure no negative values
+        noise_array = noise_array.clip(0.)
         # The noise_image now has the expectation values for each pixel with the sky added.
         self._pd.generate_from_expectation(noise_array)
         # Subtract off the sky, since we don't want it in the final image.
