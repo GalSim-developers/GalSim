@@ -232,10 +232,13 @@ def test_uniform():
     do_pickle(u, lambda x: x.serialize())
     do_pickle(u, lambda x: (x(), x(), x(), x()))
     do_pickle(u)
+    do_pickle(rng)
     assert 'UniformDeviate' in repr(u)
     assert 'UniformDeviate' in str(u)
     assert isinstance(eval(repr(u)), galsim.UniformDeviate)
     assert isinstance(eval(str(u)), galsim.UniformDeviate)
+    assert isinstance(eval(repr(rng)), galsim.BaseDeviate)
+    assert isinstance(eval(str(rng)), galsim.BaseDeviate)
 
     # Check that we can construct a UniformDeviate from None, and that it depends on dev/random.
     u1 = galsim.UniformDeviate(None)
