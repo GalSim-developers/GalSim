@@ -769,6 +769,51 @@ def test_poisson_highmean():
 
 
 @timer
+def test_poisson_zeromean():
+    """Make sure Poisson Deviate behaves sensibly when mean=0.
+    """
+    p = galsim.PoissonDeviate(testseed, mean=0)
+    p2 = p.duplicate()
+    p3 = galsim.PoissonDeviate(p.serialize(), mean=0)
+
+    # Test direct draws
+    testResult = (p(), p(), p())
+    testResult2 = (p2(), p2(), p2())
+    testResult3 = (p3(), p3(), p3())
+    np.testing.assert_allclose(testResult, 0)
+    np.testing.assert_allclose(testResult2, 0)
+    np.testing.assert_allclose(testResult3, 0)
+
+    # Test generate
+    test_array = np.empty(3, dtype=int)
+    p.generate(test_array)
+    np.testing.assert_allclose(test_array, 0)
+    p2.generate(test_array)
+    np.testing.assert_allclose(test_array, 0)
+    p3.generate(test_array)
+    np.testing.assert_allclose(test_array, 0)
+
+    # Test generate_from_expectation
+    test_array = np.array([0,0,0])
+    np.testing.assert_allclose(test_array, 0)
+    test_array = np.array([1,0,4])
+    assert test_array[0] != 0
+    assert test_array[1] == 0
+    assert test_array[2] != 0
+
+    # Error raised if mean<0
+    with assert_raises(ValueError):
+        p = galsim.PoissonDeviate(testseed, mean=-0.1)
+    with assert_raises(ValueError):
+        p = galsim.PoissonDeviate(testseed, mean=-10)
+    test_array = np.array([-1,1,4])
+    with assert_raises(ValueError):
+        p.generate_from_expectation(test_array)
+    test_array = np.array([1,-1,-4])
+    with assert_raises(ValueError):
+        p.generate_from_expectation(test_array)
+
+@timer
 def test_weibull():
     """Test Weibull random number generator
     """
