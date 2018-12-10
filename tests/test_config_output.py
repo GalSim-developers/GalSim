@@ -85,12 +85,19 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
     # Can also use Process to do this
-    config = galsim.config.CopyConfig(config1)
-    galsim.config.Process(config)
+    config = galsim.config.Process(config1)
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
         im2 = galsim.fits.read(file_name)
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
+
+    # The returned config is modified relative to the original.
+    assert config['image']['type'] == 'Single' # It has the items from the input.
+    assert config1['image']['type'] == 'Single'
+    assert config['image']['random_seed']['type'] == 'Sequence'  # Some things are modified.
+    assert config1['image']['random_seed'] == 1234
+    assert isinstance(config['rng'], galsim.BaseDeviate)  # And some new things
+    assert 'rng' not in config1
 
     # For the first file, you don't need the file_num.
     os.remove('output_fits/test_fits_0.fits')
