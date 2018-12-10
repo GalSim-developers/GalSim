@@ -796,18 +796,18 @@ def test_poisson_zeromean():
     testResult = (p(), p(), p())
     testResult2 = (p2(), p2(), p2())
     testResult3 = (p3(), p3(), p3())
-    np.testing.assert_allclose(testResult, 0)
-    np.testing.assert_allclose(testResult2, 0)
-    np.testing.assert_allclose(testResult3, 0)
+    np.testing.assert_array_equal(testResult, 0)
+    np.testing.assert_array_equal(testResult2, 0)
+    np.testing.assert_array_equal(testResult3, 0)
 
     # Test generate
     test_array = np.empty(3, dtype=int)
     p.generate(test_array)
-    np.testing.assert_allclose(test_array, 0)
+    np.testing.assert_array_equal(test_array, 0)
     p2.generate(test_array)
-    np.testing.assert_allclose(test_array, 0)
+    np.testing.assert_array_equal(test_array, 0)
     p3.generate(test_array)
-    np.testing.assert_allclose(test_array, 0)
+    np.testing.assert_array_equal(test_array, 0)
 
     # Test generate_from_expectation
     test_array = np.array([0,0,0])
@@ -1685,6 +1685,7 @@ if __name__ == "__main__":
     test_binomial()
     test_poisson()
     test_poisson_highmean()
+    test_poisson_zeromean()
     test_weibull()
     test_gamma()
     test_chi2()
