@@ -35,3 +35,12 @@ Bug Fixes
 - Fixed a bug in the PhaseScreenPSF `withGSParams` function when using
   geometric_shooting=True.  It had been erroneously preparing the screens
   for FFT rendering, which was both incorrect and slow. (#990)
+
+Changes from v2.1.0 to v2.1.2
+=============================
+
+Bug Fix
+-------
+
+- Fix a seg fault bug when PoissonDeviate is given `mean=0`. (#996)
+
