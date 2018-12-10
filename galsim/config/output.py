@@ -162,6 +162,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
                            nfiles_written,nproc,t2-t1)
         logger.warning('Done building files')
 
+    #Return the config used for the run - this may be useful since one can
+    #save information here in e.g. custom output types
+    return orig_config
 
 output_ignore = [ 'nproc', 'skip', 'noclobber', 'retry_io' ]
 
