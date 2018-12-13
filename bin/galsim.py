@@ -21,7 +21,7 @@ in a configuration file.
 """
 
 # Equivalent to python -m galsim ...
-import runpy
+import galsim.main
 
 if __name__ == '__main__':
-    runpy.run_module('galsim')
+    galsim.main.main()

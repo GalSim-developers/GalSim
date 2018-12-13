@@ -19,7 +19,8 @@
 from .main import main
 
 if __name__ == '__main__':
-    # MJ: I didn't think the if __name__ == '__main__' thing was required inside of __main__.py,
-    # but without it, Python 3 runs main() twice.  I don't really understand why this is, so
-    # if someone has a better way to structure this code, I'm open to suggestions.
+    # The galsim executable will import this and then run main().
+    # So in that case, we don't want to also run main() here, since then it would run twice.
+    # However, `python -m galsim config.yaml` will run this as a program, so then we do want
+    # to call main.  Hence this `__name__ == '__main__'` block.
     main()
