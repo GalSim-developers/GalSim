@@ -44,7 +44,7 @@ def parse_args():
         import argparse
         
         # Build the parser and add arguments
-        parser = argparse.ArgumentParser(description=description, add_help=True, epilog=epilog)
+        parser = argparse.ArgumentParser(prog='galsim', description=description, add_help=True, epilog=epilog)
         parser.add_argument('config_file', type=str, nargs='?', help='the configuration file')
         parser.add_argument(
             'variables', type=str, nargs='*',
