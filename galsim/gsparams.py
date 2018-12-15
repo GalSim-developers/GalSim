@@ -203,6 +203,8 @@ class GSParams(object):
         """
         if len(gsp_list) == 1:
             return gsp_list[0]
+        elif all(g is gsp_list[0] for g in gsp_list[1:]):
+            return gsp_list[0]
         else:
             return GSParams(
                 max([g.minimum_fft_size for g in gsp_list]),
