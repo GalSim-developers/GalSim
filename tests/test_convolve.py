@@ -58,6 +58,9 @@ def test_convolve():
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Moffat convolved with Pixel disagrees with expected result")
+        assert psf.gsparams is galsim.GSParams.default
+        assert pixel.gsparams is galsim.GSParams.default
+        assert conv.gsparams is galsim.GSParams.default
 
         # Other ways to do the convolution:
         conv = galsim.Convolve(psf,pixel,real_space=False)
@@ -65,6 +68,7 @@ def test_convolve():
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
+        assert conv.gsparams is galsim.GSParams.default
 
         # Check with default_params
         conv = galsim.Convolve([psf,pixel],real_space=False,gsparams=default_params)
@@ -73,12 +77,18 @@ def test_convolve():
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with default_params disagrees with"
                 "expected result")
+        # In this case, it's not the same object, but it should be ==
+        assert conv.gsparams is not galsim.GSParams.default
+        assert conv.gsparams == galsim.GSParams.default
+
         conv = galsim.Convolve([psf,pixel],real_space=False,gsparams=galsim.GSParams())
         conv.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
                 "expected result")
+        assert conv.gsparams is not galsim.GSParams.default
+        assert conv.gsparams == galsim.GSParams.default
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(conv.centroid, cen)
