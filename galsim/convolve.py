@@ -284,12 +284,12 @@ class Convolution(GSObject):
         for obj in self.obj_list:
             obj._prepareDraw()
 
-    @property
+    @lazy_property
     def _maxk(self):
         maxk_list = [obj.maxk for obj in self.obj_list]
         return np.min(maxk_list)
 
-    @property
+    @lazy_property
     def _stepk(self):
         # This is approximate.  stepk ~ 2pi/R
         # Assume R_final^2 = Sum(R_i^2)
@@ -297,16 +297,16 @@ class Convolution(GSObject):
         inv_stepksq_list = [obj.stepk**(-2) for obj in self.obj_list]
         return np.sum(inv_stepksq_list)**(-0.5)
 
-    @property
+    @lazy_property
     def _has_hard_edges(self):
         return len(self.obj_list) == 1 and self.obj_list[0].has_hard_edges
 
-    @property
+    @lazy_property
     def _is_axisymmetric(self):
         axi_list = [obj.is_axisymmetric for obj in self.obj_list]
         return bool(np.all(axi_list))
 
-    @property
+    @lazy_property
     def _is_analytic_x(self):
         if len(self.obj_list) == 1:
             return self.obj_list[0].is_analytic_x
@@ -316,12 +316,12 @@ class Convolution(GSObject):
         else:
             return False
 
-    @property
+    @lazy_property
     def _is_analytic_k(self):
         ak_list = [obj.is_analytic_k for obj in self.obj_list]
         return bool(np.all(ak_list))
 
-    @property
+    @lazy_property
     def _centroid(self):
         cen_list = [obj.centroid for obj in self.obj_list]
         return sum(cen_list[1:], cen_list[0])
@@ -350,7 +350,7 @@ class Convolution(GSObject):
         p,n = self._calc_pn()
         return n
 
-    @property
+    @lazy_property
     def _max_sb(self):
         # This one is probably the least accurate of all the estimates of maxSB.
         # The calculation is based on the exact value for Gaussians.
@@ -574,15 +574,15 @@ class Deconvolution(GSObject):
     def _flux(self):
         return 1./self.orig_obj.flux
 
-    @property
+    @lazy_property
     def _positive_flux(self):
         return 1./self.orig_obj.positive_flux
 
-    @property
+    @lazy_property
     def _negative_flux(self):
         return 0. if self.orig_obj.negative_flux==0. else 1./self.orig_obj.negative_flux
 
-    @property
+    @lazy_property
     def _max_sb(self):
         # The only way to really give this any meaning is to consider it in the context
         # of being part of a larger convolution with other components.  The calculation
