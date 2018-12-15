@@ -43,7 +43,7 @@ Changes from v2.1.0 to v2.1.2
 Bug Fix
 -------
 
-- Fix a seg fault bug when PoissonDeviate is given `mean=0`. (#996)
+- Fixed a seg fault bug when PoissonDeviate is given `mean=0`. (#996)
 
 
 Changes from v2.1.2 to v2.1.3
@@ -52,5 +52,15 @@ Changes from v2.1.2 to v2.1.3
 Bug Fix
 -------
 
-- Fix the galsim executable to work correctly when installed by SCons.
+- Fixed the galsim executable to work correctly when installed by SCons.
 
+
+Changes from v2.1.3 to v2.1.4
+=============================
+
+Bug Fix
+-------
+
+- Fixed Convolve and Sum to recognize when objects all have the same gsparams,
+  and thus avoid making gratuitous copies of the components.
+- Added some caching for some non-trivial calculations for PhaseScreens.
