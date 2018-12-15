@@ -275,7 +275,7 @@ class Aperture(object):
         self._illuminated
         return self._npix
 
-    @property
+    @lazy_property
     def good_pupil_size(self):
         # Although the user can set the pupil plane size and scale directly if desired, in most
         # cases it's nicer to have GalSim try to pick good values for these.
@@ -290,7 +290,7 @@ class Aperture(object):
         # which would otherwise tend to damp contributions at large k.
         return 2 * self.diam * self._oversampling
 
-    @property
+    @lazy_property
     def good_pupil_scale(self):
         from .airy import Airy
         # For the pupil plane sampling interval, details like the obscuration and GSParams *are*

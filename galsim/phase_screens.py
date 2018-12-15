@@ -26,7 +26,24 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
+from .utilities import LRU_Cache
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
+
+
+# Two helper functions to cache the calculation required for _getStepK
+def __calcAtmStepK(lam, r0_500, gsparams):
+    from .kolmogorov import Kolmogorov
+    # Use an Airy for get appropriate stepk.
+    obj = Kolmogorov(lam=lam, r0_500=r0_500, gsparams=gsparams)
+    return obj.stepk
+_calcAtmStepK = LRU_Cache(__calcAtmStepK)
+
+def __calcOptStepK(lam, diam, obscuration, gsparams):
+    from .airy import Airy
+    # Use an Airy for get appropriate stepk.
+    obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
+    return obj.stepk
+_calcOptStepK = LRU_Cache(__calcOptStepK)
 
 
 class AtmosphericScreen(object):
@@ -306,16 +323,13 @@ class AtmosphericScreen(object):
         """Return an appropriate stepk for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
-        @param scale_unit  Sky coordinate units of output profile. [default: galsim.arcsec]
         @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
                            details. [default: None]
         @returns  Good pupil scale size in meters.
         """
-        from .kolmogorov import Kolmogorov
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
-        obj = Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
-        return obj.stepk
+        return _calcAtmStepK(lam, self.r0_500, gsparams)
 
     def wavefront(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute wavefront due to atmospheric phase screen.
@@ -734,14 +748,11 @@ class OpticalScreen(object):
                            details. [default: None]
         @returns stepk in inverse arcsec.
         """
-        from .airy import Airy
         lam = kwargs['lam']
         diam = kwargs['diam']
         obscuration = kwargs.get('obscuration', 0.0)
         gsparams = kwargs.get('gsparams', None)
-        # Use an Airy for get appropriate stepk.
-        obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
-        return obj.stepk
+        return _calcOptStepK(lam, diam, obscuration, gsparams)
 
     def wavefront(self, u, v, t=None, theta=None):
         """ Compute wavefront due to optical phase screen.
