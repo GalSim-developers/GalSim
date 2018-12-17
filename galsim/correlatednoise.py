@@ -114,7 +114,7 @@ class _BaseCorrelatedNoise(object):
         return self._profile.gsparams
 
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         return _BaseCorrelatedNoise(self.rng, self._profile.withGSParams(gsparams), self.wcs)
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
@@ -1480,7 +1480,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         _BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
 
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         return UncorrelatedNoise(self.variance, self.rng, wcs=self.wcs, gsparams=gsparams)
 
     def __repr__(self):

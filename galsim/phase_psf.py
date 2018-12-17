@@ -488,7 +488,7 @@ class Aperture(object):
     def withGSParams(self, gsparams):
         """Create a version of the current aperture with the given gsparams
         """
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -1344,7 +1344,7 @@ class PhaseScreenPSF(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         gsparams = GSParams.check(gsparams)
         aper = self.aper.withGSParams(gsparams)
         ret = self.__class__.__new__(self.__class__)

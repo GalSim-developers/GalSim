@@ -80,6 +80,10 @@ def test_convolve():
         # In this case, it's not the same object, but it should be ==
         assert conv.gsparams is not galsim.GSParams.default
         assert conv.gsparams == galsim.GSParams.default
+        assert conv.gsparams is default_params
+        # Also the components shouldn't have changed.
+        assert conv.obj_list[0] is psf
+        assert conv.obj_list[1] is pixel
 
         conv = galsim.Convolve([psf,pixel],real_space=False,gsparams=galsim.GSParams())
         conv.drawImage(myImg,scale=dx, method="sb", use_true_center=False)

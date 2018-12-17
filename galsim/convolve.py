@@ -249,7 +249,7 @@ class Convolution(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -522,7 +522,7 @@ class Deconvolution(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -739,7 +739,7 @@ class AutoConvolution(Convolution):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -900,7 +900,7 @@ class AutoCorrelation(Convolution):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)

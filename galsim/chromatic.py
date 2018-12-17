@@ -183,7 +183,7 @@ class ChromaticObject(object):
         Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
         those component objects will also have their gsparams updated to the new value.
         """
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._obj = self._obj.withGSParams(gsparams)
@@ -1093,7 +1093,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret.deinterpolated = self.deinterpolated.withGSParams(gsparams)
@@ -1385,7 +1385,7 @@ class ChromaticAtmosphere(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret.base_obj = self.base_obj.withGSParams(gsparams)
@@ -1564,7 +1564,7 @@ class ChromaticTransformation(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -1869,7 +1869,7 @@ class ChromaticSum(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2082,7 +2082,7 @@ class ChromaticConvolution(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2371,7 +2371,7 @@ class ChromaticDeconvolution(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2453,7 +2453,7 @@ class ChromaticAutoConvolution(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2539,7 +2539,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2632,7 +2632,7 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2770,7 +2770,7 @@ class ChromaticOpticalPSF(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2887,7 +2887,7 @@ class ChromaticAiry(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams=GSParams.check(gsparams)

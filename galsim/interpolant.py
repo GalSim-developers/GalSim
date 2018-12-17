@@ -103,7 +103,7 @@ class Interpolant(object):
     def withGSParams(self, gsparams):
         """Create a version of the current interpolant with the given gsparams
         """
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
