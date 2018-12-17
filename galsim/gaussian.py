@@ -123,10 +123,11 @@ class Gaussian(GSObject):
     def fwhm(self): return self.sigma * Gaussian._fwhm_factor
 
     def __eq__(self, other):
-        return (isinstance(other, Gaussian) and
-                self.sigma == other.sigma and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Gaussian) and
+                 self.sigma == other.sigma and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Gaussian", self.sigma, self.flux, self.gsparams))

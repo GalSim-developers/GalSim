@@ -102,10 +102,11 @@ class Exponential(GSObject):
     def half_light_radius(self): return self._r0 * Exponential._hlr_factor
 
     def __eq__(self, other):
-        return (isinstance(other, Exponential) and
-                self.scale_radius == other.scale_radius and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Exponential) and
+                 self.scale_radius == other.scale_radius and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Exponential", self.scale_radius, self.flux, self.gsparams))

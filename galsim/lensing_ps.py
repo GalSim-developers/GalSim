@@ -218,11 +218,12 @@ class PowerSpectrum(object):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, PowerSpectrum) and
-                self.e_power_function == other.e_power_function and
-                self.b_power_function == other.b_power_function and
-                self.delta2 == other.delta2 and
-                self.scale == other.scale)
+        return (self is other or
+                (isinstance(other, PowerSpectrum) and
+                 self.e_power_function == other.e_power_function and
+                 self.b_power_function == other.b_power_function and
+                 self.delta2 == other.delta2 and
+                 self.scale == other.scale))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self): return hash(repr(self))
@@ -1095,7 +1096,7 @@ class PowerSpectrumRealizer(object):
     def __str__(self):
         return "galsim.lensing_ps.PowerSpectrumRealizer(ngrid=%r, pixel_size=%r, p_E=%s, p_B=%s)"%(
                 self.nx, self.pixel_size, self.p_E, self.p_B)
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 

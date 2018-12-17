@@ -221,10 +221,11 @@ class BaseDeviate(object):
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
     def __eq__(self, other):
-        return (type(self) == type(other) and
-                self._rng_type == other._rng_type and
-                self._rng_args == other._rng_args and
-                self.serialize() == other.serialize())
+        return (self is other or
+                (isinstance(other, self.__class__) and
+                 self._rng_type == other._rng_type and
+                 self._rng_args == other._rng_args and
+                 self.serialize() == other.serialize()))
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -861,14 +862,14 @@ class DistDeviate(BaseDeviate):
                 self._function, self._xmin, self._xmax, self._interpolant, self._npoints)
 
     def __eq__(self, other):
-        if repr(self) != repr(other):
-            return False
-        return (self.serialize() == other.serialize() and
-                self._function == other._function and
-                self._xmin == other._xmin and
-                self._xmax == other._xmax and
-                self._interpolant == other._interpolant and
-                self._npoints == other._npoints)
+        return (self is other or
+                (isinstance(other, DistDeviate) and
+                 self.serialize() == other.serialize() and
+                 self._function == other._function and
+                 self._xmin == other._xmin and
+                 self._xmax == other._xmax and
+                 self._interpolant == other._interpolant and
+                 self._npoints == other._npoints))
 
     # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
     # original function parameter, which may be a string or a file name.

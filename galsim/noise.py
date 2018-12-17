@@ -199,7 +199,7 @@ class BaseNoise(object):
 
     def __eq__(self, other):
         # Quick and dirty.  Just check reprs are equal.
-        return repr(self) == repr(other)
+        return self is other or repr(self) == repr(other)
 
     def __ne__(self, other):
         return not self.__eq__(other)

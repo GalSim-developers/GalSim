@@ -263,9 +263,10 @@ class AstropyWCS(CelestialWCS):
         return ret
 
     def __eq__(self, other):
-        return ( isinstance(other, AstropyWCS) and
+        return (self is other or
+                (isinstance(other, AstropyWCS) and
                  self.wcs.to_header(relax=True) == other.wcs.to_header(relax=True) and
-                 self.origin == other.origin )
+                 self.origin == other.origin))
 
     def __repr__(self):
         if self._tag is not None:
@@ -537,9 +538,10 @@ class PyAstWCS(CelestialWCS):
         return ret
 
     def __eq__(self, other):
-        return ( isinstance(other, PyAstWCS) and
+        return (self is other or
+                (isinstance(other, PyAstWCS) and
                  repr(self.wcsinfo) == repr(other.wcsinfo) and
-                 self.origin == other.origin)
+                 self.origin == other.origin))
 
     def __repr__(self):
         if self._tag is not None:
@@ -782,9 +784,10 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         return copy.copy(self)
 
     def __eq__(self, other):
-        return ( isinstance(other, WcsToolsWCS) and
+        return (self is other or
+                (isinstance(other, WcsToolsWCS) and
                  self._file_name == other.file_name and
-                 self.origin == other.origin )
+                 self.origin == other.origin))
 
     def __repr__(self):
         return "galsim.WcsToolsWCS(%r, origin=%r)"%(self._file_name, self.origin)
@@ -1477,7 +1480,8 @@ class GSFitsWCS(CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
-        return ( isinstance(other, GSFitsWCS) and
+        return (self is other or
+                (isinstance(other, GSFitsWCS) and
                  self.wcs_type == other.wcs_type and
                  np.array_equal(self.crpix,other.crpix) and
                  np.array_equal(self.cd,other.cd) and
@@ -1485,8 +1489,7 @@ class GSFitsWCS(CelestialWCS):
                  self.center == other.center and
                  np.array_equal(self.pv,other.pv) and
                  np.array_equal(self.ab,other.ab) and
-                 np.array_equal(self.abp,other.abp)
-               )
+                 np.array_equal(self.abp,other.abp)))
 
     def __repr__(self):
         if self.pv is None:

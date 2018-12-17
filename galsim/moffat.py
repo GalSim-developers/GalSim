@@ -157,12 +157,13 @@ class Moffat(GSObject):
         return self._fwhm
 
     def __eq__(self, other):
-        return (isinstance(other, Moffat) and
-                self.beta == other.beta and
-                self.scale_radius == other.scale_radius and
-                self.trunc == other.trunc and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Moffat) and
+                 self.beta == other.beta and
+                 self.scale_radius == other.scale_radius and
+                 self.trunc == other.trunc and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Moffat", self.beta, self.scale_radius, self.trunc, self.flux,

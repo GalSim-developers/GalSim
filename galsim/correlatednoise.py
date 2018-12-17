@@ -159,7 +159,7 @@ class _BaseCorrelatedNoise(object):
         return "galsim.correlatednoise._BaseCorrelatedNoise(%s,%s)"%(self._profile, self.wcs)
 
     # Quick and dirty.  Just check reprs are equal.
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
@@ -1564,9 +1564,10 @@ class CovarianceSpectrum(object):
         return _BaseCorrelatedNoise(rng, iki, wcs)
 
     def __eq__(self, other):
-        return (isinstance(other, CovarianceSpectrum) and
-                self.SEDs == other.SEDs and
-                self.Sigma == other.Sigma)
+        return (self is other or
+                (isinstance(other, CovarianceSpectrum) and
+                 self.SEDs == other.SEDs and
+                 self.Sigma == other.Sigma))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):

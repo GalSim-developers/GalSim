@@ -213,10 +213,11 @@ class Sum(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Sum) and
-                self.obj_list == other.obj_list and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Sum) and
+                 self.obj_list == other.obj_list and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Sum", tuple(self.obj_list), self.gsparams, self._propagate_gsparams))

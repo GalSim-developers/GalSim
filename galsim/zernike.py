@@ -510,10 +510,11 @@ class Zernike(object):
         return Zernike(M.dot(self.coef), self.R_outer, self.R_inner)
 
     def __eq__(self, other):
-        return (isinstance(other, Zernike) and
-                np.array_equal(self.coef, other.coef) and
-                self.R_outer == other.R_outer and
-                self.R_inner == other.R_inner)
+        return (self is other or
+                (isinstance(other, Zernike) and
+                 np.array_equal(self.coef, other.coef) and
+                 self.R_outer == other.R_outer and
+                 self.R_inner == other.R_inner))
 
     def __hash__(self):
         return hash(("galsim.Zernike", tuple(self.coef), self.R_outer, self.R_inner))

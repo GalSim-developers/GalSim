@@ -595,15 +595,16 @@ class InterpolatedImage(GSObject):
             return self._x_interpolant.krange / max_scale
 
     def __eq__(self, other):
-        return (isinstance(other, InterpolatedImage) and
-                self._xim == other._xim and
-                self.x_interpolant == other.x_interpolant and
-                self.k_interpolant == other.k_interpolant and
-                self.flux == other.flux and
-                self._offset == other._offset and
-                self.gsparams == other.gsparams and
-                self._stepk == other._stepk and
-                self._maxk == other._maxk)
+        return (self is other or
+                (isinstance(other, InterpolatedImage) and
+                 self._xim == other._xim and
+                 self.x_interpolant == other.x_interpolant and
+                 self.k_interpolant == other.k_interpolant and
+                 self.flux == other.flux and
+                 self._offset == other._offset and
+                 self.gsparams == other.gsparams and
+                 self._stepk == other._stepk and
+                 self._maxk == other._maxk))
 
     def __hash__(self):
         # Definitely want to cache this, since the size of the image could be large.
@@ -968,12 +969,13 @@ class InterpolatedKImage(GSObject):
             return self._sbiki
 
     def __eq__(self, other):
-        return (isinstance(other, InterpolatedKImage) and
-                np.array_equal(self.kimage.array, other.kimage.array) and
-                self.kimage.scale == other.kimage.scale and
-                self.k_interpolant == other.k_interpolant and
-                self.stepk == other.stepk and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, InterpolatedKImage) and
+                 np.array_equal(self.kimage.array, other.kimage.array) and
+                 self.kimage.scale == other.kimage.scale and
+                 self.k_interpolant == other.k_interpolant and
+                 self.stepk == other.stepk and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         # Definitely want to cache this, since the kimage could be large.

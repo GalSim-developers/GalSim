@@ -76,8 +76,9 @@ class Sensor(object):
         return 'galsim.Sensor()'
 
     def __eq__(self, other):
-        return (isinstance(other, Sensor) and
-                repr(self) == repr(other))  # Checks that neither is a subclass
+        return (self is other or
+                (isinstance(other, Sensor) and
+                 repr(self) == repr(other)))  # Checks that neither is a subclass
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -232,16 +233,17 @@ class SiliconSensor(Sensor):
                         self.treering_func, self.treering_center, self.transpose)
 
     def __eq__(self, other):
-        return (isinstance(other, SiliconSensor) and
-                self.config == other.config and
-                self.strength == other.strength and
-                self.rng == other.rng and
-                self.diffusion_factor == other.diffusion_factor and
-                self.qdist == other.qdist and
-                self.nrecalc == other.nrecalc and
-                self.treering_func == other.treering_func and
-                self.treering_center == other.treering_center and
-                self.transpose == other.transpose)
+        return (self is other or
+                (isinstance(other, SiliconSensor) and
+                 self.config == other.config and
+                 self.strength == other.strength and
+                 self.rng == other.rng and
+                 self.diffusion_factor == other.diffusion_factor and
+                 self.qdist == other.qdist and
+                 self.nrecalc == other.nrecalc and
+                 self.treering_func == other.treering_func and
+                 self.treering_center == other.treering_center and
+                 self.transpose == other.transpose))
 
     __hash__ = None
 

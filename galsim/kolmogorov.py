@@ -215,10 +215,11 @@ class Kolmogorov(GSObject):
         return self._lor0 * Kolmogorov._hlr_factor
 
     def __eq__(self, other):
-        return (isinstance(other, Kolmogorov) and
-                self.lam_over_r0 == other.lam_over_r0 and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Kolmogorov) and
+                 self.lam_over_r0 == other.lam_over_r0 and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Kolmogorov", self.lam_over_r0, self.flux, self.gsparams))

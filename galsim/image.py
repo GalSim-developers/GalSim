@@ -1521,11 +1521,12 @@ class Image(object):
         # >>> assert galsim.ImageD(int_array) == galsim.ImageF(int_array) # passes
         # >>> assert galsim.ImageD(double_array) == galsim.ImageF(double_array) # fails
 
-        return (isinstance(other, Image) and
-                self.bounds == other.bounds and
-                self.wcs == other.wcs and
-                (not self.bounds.isDefined() or np.array_equal(self.array,other.array)) and
-                self.isconst == other.isconst)
+        return (self is other or
+                (isinstance(other, Image) and
+                 self.bounds == other.bounds and
+                 self.wcs == other.wcs and
+                 (not self.bounds.isDefined() or np.array_equal(self.array,other.array)) and
+                 self.isconst == other.isconst))
 
     def __ne__(self, other): return not self.__eq__(other)
 

@@ -139,7 +139,7 @@ class GalSimError(RuntimeError):
     """
     # Minimal version of these to make GalSimError reprable and picklable.
     def __repr__(self): return 'galsim.GalSimError(%r)'%(str(self))
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __hash__(self): return hash(repr(self))
 
 
@@ -300,9 +300,10 @@ class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
 
     # Note: the repr of values can rearrange the items, but the dicts should compare equal.
     def __eq__(self, other):
-        return (isinstance(other, GalSimIncompatibleValuesError) and
-                self.message == other.message and
-                self.values == other.values)
+        return (self is other or
+                (isinstance(other, GalSimIncompatibleValuesError) and
+                 self.message == other.message and
+                 self.values == other.values))
     def __repr__(self):
         return 'galsim.GalSimIncompatibleValuesError(%r,%r)'%(self.message, self.values)
     def __reduce__(self):
@@ -404,7 +405,7 @@ class GalSimWarning(UserWarning):
     """The base class for GalSim-emitted warnings.
     """
     def __repr__(self): return 'galsim.GalSimWarning(%r)'%(str(self))
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __hash__(self): return hash(repr(self))
 
 

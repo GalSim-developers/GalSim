@@ -206,13 +206,14 @@ class Transformation(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Transformation) and
-                self.original == other.original and
-                np.array_equal(self.jac, other.jac) and
-                np.array_equal(self.offset, other.offset) and
-                self.flux_ratio == other.flux_ratio and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Transformation) and
+                 self.original == other.original and
+                 np.array_equal(self.jac, other.jac) and
+                 np.array_equal(self.offset, other.offset) and
+                 self.flux_ratio == other.flux_ratio and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Transformation", self.original, tuple(self._jac.ravel()),

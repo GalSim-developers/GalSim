@@ -1206,8 +1206,9 @@ class FitsHeader(object):
             return "galsim.FitsHeader(%s)"%self._tag
 
     def __eq__(self, other):
-        return (isinstance(other,FitsHeader) and
-                list(self.header.items()) == list(other.header.items()))
+        return (self is other or
+                (isinstance(other,FitsHeader) and
+                 list(self.header.items()) == list(other.header.items())))
 
     def __ne__(self, other): return not self.__eq__(other)
 

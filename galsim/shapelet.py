@@ -171,11 +171,12 @@ class Shapelet(GSObject):
         return self.getPQ((N+m)//2,(N-m)//2)
 
     def __eq__(self, other):
-        return (isinstance(other, Shapelet) and
-                self.sigma == other.sigma and
-                self.order == other.order and
-                np.array_equal(self.bvec, other.bvec) and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Shapelet) and
+                 self.sigma == other.sigma and
+                 self.order == other.order and
+                 np.array_equal(self.bvec, other.bvec) and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Shapelet", self.sigma, self.order, tuple(self.bvec), self.gsparams))

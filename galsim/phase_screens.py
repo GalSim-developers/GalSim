@@ -186,19 +186,20 @@ class AtmosphericScreen(object):
     # not equal to an otherwise identical uninstantiated screen.
 
     def __eq__(self, other):
-        return (isinstance(other, AtmosphericScreen) and
-                self.screen_size == other.screen_size and
-                self.screen_scale == other.screen_scale and
-                self._altitude == other._altitude and
-                self.r0_500 == other.r0_500 and
-                self.L0 == other.L0 and
-                self.vx == other.vx and
-                self.vy == other.vy and
-                self.alpha == other.alpha and
-                self.time_step == other.time_step and
-                self._orig_rng == other._orig_rng and
-                self.kmin == other.kmin and
-                self.kmax == other.kmax)
+        return (self is other or
+                (isinstance(other, AtmosphericScreen) and
+                 self.screen_size == other.screen_size and
+                 self.screen_scale == other.screen_scale and
+                 self._altitude == other._altitude and
+                 self.r0_500 == other.r0_500 and
+                 self.L0 == other.L0 and
+                 self.vx == other.vx and
+                 self.vy == other.vy and
+                 self.alpha == other.alpha and
+                 self.time_step == other.time_step and
+                 self._orig_rng == other._orig_rng and
+                 self.kmin == other.kmin and
+                 self.kmax == other.kmax))
 
     def __hash__(self):
         if not hasattr(self, '_hash'):
@@ -724,10 +725,11 @@ class OpticalScreen(object):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, OpticalScreen)
-                and self.diam == other.diam
-                and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
-                and self.annular_zernike == other.annular_zernike)
+        return (self is other or
+                (isinstance(other, OpticalScreen)
+                 and self.diam == other.diam
+                 and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
+                 and self.annular_zernike == other.annular_zernike))
 
     def __ne__(self, other): return not self == other
 

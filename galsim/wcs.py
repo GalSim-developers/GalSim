@@ -932,11 +932,11 @@ class UniformWCS(EuclideanWCS):
 
     # Just check if the locals match and if the origins match.
     def __eq__(self, other):
-        return ( isinstance(other, self.__class__) and
+        return (self is other or
+                (isinstance(other, self.__class__) and
                  self._local_wcs == other._local_wcs and
                  self.origin == other.origin and
-                 self.world_origin == other.world_origin )
-
+                 self.world_origin == other.world_origin))
 
 
 class LocalWCS(UniformWCS):
@@ -1222,8 +1222,9 @@ class PixelScale(LocalWCS):
         return PixelScale(self._scale)
 
     def __eq__(self, other):
-        return ( isinstance(other, PixelScale) and
-                 self.scale == other.scale )
+        return (self is other or
+                (isinstance(other, PixelScale) and
+                 self.scale == other.scale))
 
     def __repr__(self): return "galsim.PixelScale(%r)"%self.scale
     def __hash__(self): return hash(repr(self))
@@ -1348,9 +1349,10 @@ class ShearWCS(LocalWCS):
         return ShearWCS(self._scale, self._shear)
 
     def __eq__(self, other):
-        return ( isinstance(other, ShearWCS) and
+        return (self is other or
+                (isinstance(other, ShearWCS) and
                  self.scale == other.scale and
-                 self.shear == other.shear )
+                 self.shear == other.shear))
 
     def __repr__(self): return "galsim.ShearWCS(%r, %r)"%(self.scale,self.shear)
     def __hash__(self): return hash(repr(self))
@@ -1585,11 +1587,12 @@ class JacobianWCS(LocalWCS):
         return JacobianWCS(self._dudx, self._dudy, self._dvdx, self._dvdy)
 
     def __eq__(self, other):
-        return ( isinstance(other, JacobianWCS) and
+        return (self is other or
+                (isinstance(other, JacobianWCS) and
                  self.dudx == other.dudx and
                  self.dudy == other.dudy and
                  self.dvdx == other.dvdx and
-                 self.dvdy == other.dvdy )
+                 self.dvdy == other.dvdy))
 
     def __repr__(self): return "galsim.JacobianWCS(%r, %r, %r, %r)"%(
             self.dudx,self.dudy,self.dvdx,self.dvdy)
@@ -2240,14 +2243,15 @@ class UVFunction(EuclideanWCS):
                           self.origin, self.world_origin, self._uses_color)
 
     def __eq__(self, other):
-        return ( isinstance(other, UVFunction) and
+        return (self is other or
+                (isinstance(other, UVFunction) and
                  self._orig_ufunc == other._orig_ufunc and
                  self._orig_vfunc == other._orig_vfunc and
                  self._orig_xfunc == other._orig_xfunc and
                  self._orig_yfunc == other._orig_yfunc and
                  self.origin == other.origin and
                  self.world_origin == other.world_origin and
-                 self._uses_color == other._uses_color)
+                 self._uses_color == other._uses_color))
 
     def __repr__(self):
         return ("galsim.UVFunction(%r, %r, %r, %r, %r, %r, %r)")%(
@@ -2385,10 +2389,11 @@ class RaDecFunction(CelestialWCS):
         return RaDecFunction(self._orig_ra_func, self._orig_dec_func, self.origin)
 
     def __eq__(self, other):
-        return ( isinstance(other, RaDecFunction) and
+        return (self is other or
+                (isinstance(other, RaDecFunction) and
                  self._orig_ra_func == other._orig_ra_func and
                  self._orig_dec_func == other._orig_dec_func and
-                 self.origin == other.origin )
+                 self.origin == other.origin))
 
     def __repr__(self):
         return "galsim.RaDecFunction(%r, %r, %r)"%(

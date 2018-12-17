@@ -362,17 +362,18 @@ class RealGalaxy(GSObject):
         return RealGalaxy((image, psf_image, noise_image, pixel_scale, var))
 
     def __eq__(self, other):
-        return (isinstance(other, RealGalaxy) and
-                self.catalog == other.catalog and
-                self.index == other.index and
-                self._x_interpolant == other._x_interpolant and
-                self._k_interpolant == other._k_interpolant and
-                self._pad_factor == other._pad_factor and
-                self._noise_pad_size == other._noise_pad_size and
-                self._input_flux == other._input_flux and
-                self._flux_rescale == other._flux_rescale and
-                self._area_norm == other._area_norm and
-                self._gsparams == other._gsparams)
+        return (self is other or
+                (isinstance(other, RealGalaxy) and
+                 self.catalog == other.catalog and
+                 self.index == other.index and
+                 self._x_interpolant == other._x_interpolant and
+                 self._k_interpolant == other._k_interpolant and
+                 self._pad_factor == other._pad_factor and
+                 self._noise_pad_size == other._noise_pad_size and
+                 self._input_flux == other._input_flux and
+                 self._flux_rescale == other._flux_rescale and
+                 self._area_norm == other._area_norm and
+                 self._gsparams == other._gsparams))
 
     def __hash__(self):
         return hash(("galsim.RealGalaxy", self.catalog, self.index, self._x_interpolant,
@@ -809,9 +810,10 @@ class RealGalaxyCatalog(object):
         return 'galsim.RealGalaxyCatalog(%r)'%self.file_name
 
     def __eq__(self, other):
-        return (isinstance(other, RealGalaxyCatalog) and
-                self.file_name == other.file_name and
-                self.image_dir == other.image_dir)
+        return (self is other or
+                (isinstance(other, RealGalaxyCatalog) and
+                 self.file_name == other.file_name and
+                 self.image_dir == other.image_dir))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self): return hash(repr(self))
@@ -1304,13 +1306,14 @@ class ChromaticRealGalaxy(ChromaticSum):
         return SEDs
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticRealGalaxy) and
-                self.catalog_files == other.catalog_files and
-                self.index == other.index and
-                self.SEDs == other.SEDs and
-                self._k_interpolant == other._k_interpolant and
-                self._area_norm == other._area_norm and
-                self._gsparams == other._gsparams)
+        return (self is other or
+                (isinstance(other, ChromaticRealGalaxy) and
+                 self.catalog_files == other.catalog_files and
+                 self.index == other.index and
+                 self.SEDs == other.SEDs and
+                 self._k_interpolant == other._k_interpolant and
+                 self._area_norm == other._area_norm and
+                 self._gsparams == other._gsparams))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):

@@ -258,11 +258,12 @@ class Convolution(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Convolution) and
-                self.obj_list == other.obj_list and
-                self.real_space == other.real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Convolution) and
+                 self.obj_list == other.obj_list and
+                 self.real_space == other.real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Convolution", tuple(self.obj_list), self.real_space, self.gsparams,
@@ -531,10 +532,11 @@ class Deconvolution(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Deconvolution) and
-                self.orig_obj == other.orig_obj and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Deconvolution) and
+                 self.orig_obj == other.orig_obj and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Deconvolution", self.orig_obj, self.gsparams,
@@ -749,11 +751,12 @@ class AutoConvolution(Convolution):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, AutoConvolution) and
-                self.orig_obj == other.orig_obj and
-                self.real_space == other.real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, AutoConvolution) and
+                 self.orig_obj == other.orig_obj and
+                 self.real_space == other.real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self.gsparams,
@@ -910,11 +913,12 @@ class AutoCorrelation(Convolution):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, AutoCorrelation) and
-                self.orig_obj == other.orig_obj and
-                self.real_space == other.real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, AutoCorrelation) and
+                 self.orig_obj == other.orig_obj and
+                 self.real_space == other.real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self.gsparams,

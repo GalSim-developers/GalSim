@@ -553,6 +553,7 @@ class Aperture(object):
         return s
 
     def __eq__(self, other):
+        if self is other: return True
         if not (isinstance(other, Aperture) and
                 self.diam == other.diam and
                 self._gsparams == other._gsparams):
@@ -789,7 +790,8 @@ class PhaseScreenList(object):
         return "galsim.PhaseScreenList(%r)" % self._layers
 
     def __eq__(self, other):
-        return isinstance(other,PhaseScreenList) and self._layers == other._layers
+        return (self is other or
+                (isinstance(other,PhaseScreenList) and self._layers == other._layers))
 
     def __ne__(self, other): return not self == other
 
@@ -1373,19 +1375,20 @@ class PhaseScreenPSF(GSObject):
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
-        return (isinstance(other, PhaseScreenPSF) and
-                self._screen_list == other._screen_list and
-                self.lam == other.lam and
-                self.aper == other.aper and
-                self.t0 == other.t0 and
-                self.exptime == other.exptime and
-                self.time_step == other.time_step and
-                self._flux == other._flux and
-                self.interpolant == other.interpolant and
-                self._force_stepk == other._force_stepk and
-                self._force_maxk == other._force_maxk and
-                self._ii_pad_factor == other._ii_pad_factor and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, PhaseScreenPSF) and
+                 self._screen_list == other._screen_list and
+                 self.lam == other.lam and
+                 self.aper == other.aper and
+                 self.t0 == other.t0 and
+                 self.exptime == other.exptime and
+                 self.time_step == other.time_step and
+                 self._flux == other._flux and
+                 self.interpolant == other.interpolant and
+                 self._force_stepk == other._force_stepk and
+                 self._force_maxk == other._force_maxk and
+                 self._ii_pad_factor == other._ii_pad_factor and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
@@ -1889,17 +1892,18 @@ class OpticalPSF(GSObject):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, OpticalPSF) and
-                self._lam == other._lam and
-                self._aper == other._aper and
-                self._psf.screen_list == other._psf.screen_list and
-                self._flux == other._flux and
-                self._interpolant == other._interpolant and
-                self._scale_unit == other._scale_unit and
-                self._force_stepk == other._force_stepk and
-                self._force_maxk == other._force_maxk and
-                self._ii_pad_factor == other._ii_pad_factor and
-                self._gsparams == other._gsparams)
+        return (self is other or
+                (isinstance(other, OpticalPSF) and
+                 self._lam == other._lam and
+                 self._aper == other._aper and
+                 self._psf.screen_list == other._psf.screen_list and
+                 self._flux == other._flux and
+                 self._interpolant == other._interpolant and
+                 self._scale_unit == other._scale_unit and
+                 self._force_stepk == other._force_stepk and
+                 self._force_maxk == other._force_maxk and
+                 self._ii_pad_factor == other._ii_pad_factor and
+                 self._gsparams == other._gsparams))
 
     def __hash__(self):
         return hash(("galsim.OpticalPSF", self._lam, self._aper, self._psf.screen_list[0],

@@ -245,12 +245,13 @@ class LookupTable(object):
         return self.f_log
 
     def __eq__(self, other):
-        return (isinstance(other, LookupTable) and
-                np.array_equal(self.x,other.x) and
-                np.array_equal(self.f,other.f) and
-                self.x_log == other.x_log and
-                self.f_log == other.f_log and
-                self.interpolant == other.interpolant)
+        return (self is other or
+                (isinstance(other, LookupTable) and
+                 np.array_equal(self.x,other.x) and
+                 np.array_equal(self.f,other.f) and
+                 self.x_log == other.x_log and
+                 self.f_log == other.f_log and
+                 self.interpolant == other.interpolant))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
@@ -842,6 +843,7 @@ class LookupTable2D(object):
             self.constant))
 
     def __eq__(self, other):
+        if self is other: return True
         if not (isinstance(other, LookupTable2D) and
                 np.array_equal(self.x,other.x) and
                 np.array_equal(self.y,other.y) and

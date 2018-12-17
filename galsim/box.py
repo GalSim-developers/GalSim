@@ -77,11 +77,12 @@ class Box(GSObject):
     def height(self): return self._height
 
     def __eq__(self, other):
-        return (isinstance(other, Box) and
-                self.width == other.width and
-                self.height == other.height and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Box) and
+                 self.width == other.width and
+                 self.height == other.height and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Box", self.width, self.height, self.flux, self.gsparams))
@@ -234,10 +235,11 @@ class TopHat(GSObject):
     def radius(self): return self._radius
 
     def __eq__(self, other):
-        return (isinstance(other, TopHat) and
-                self.radius == other.radius and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, TopHat) and
+                 self.radius == other.radius and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.TopHat", self.radius, self.flux, self.gsparams))

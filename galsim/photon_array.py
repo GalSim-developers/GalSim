@@ -246,17 +246,17 @@ class PhotonArray(object):
     __hash__ = None
 
     def __eq__(self, other):
-        return (
-            isinstance(other, PhotonArray) and
-            np.array_equal(self.x,other.x) and
-            np.array_equal(self.y,other.y) and
-            np.array_equal(self.flux,other.flux) and
-            self.hasAllocatedAngles() == other.hasAllocatedAngles() and
-            self.hasAllocatedWavelengths() == other.hasAllocatedWavelengths() and
-            (np.array_equal(self.dxdz,other.dxdz) if self.hasAllocatedAngles() else True) and
-            (np.array_equal(self.dydz,other.dydz) if self.hasAllocatedAngles() else True) and
-            (np.array_equal(self.wavelength,other.wavelength)
-                    if self.hasAllocatedWavelengths() else True) )
+        return (self is other or
+                (isinstance(other, PhotonArray) and
+                 np.array_equal(self.x,other.x) and
+                 np.array_equal(self.y,other.y) and
+                 np.array_equal(self.flux,other.flux) and
+                 self.hasAllocatedAngles() == other.hasAllocatedAngles() and
+                 self.hasAllocatedWavelengths() == other.hasAllocatedWavelengths() and
+                 (np.array_equal(self.dxdz,other.dxdz) if self.hasAllocatedAngles() else True) and
+                 (np.array_equal(self.dydz,other.dydz) if self.hasAllocatedAngles() else True) and
+                 (np.array_equal(self.wavelength,other.wavelength)
+                    if self.hasAllocatedWavelengths() else True) ))
 
     def __ne__(self, other):
         return not self == other

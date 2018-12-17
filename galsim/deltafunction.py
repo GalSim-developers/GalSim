@@ -76,9 +76,10 @@ class DeltaFunction(GSObject):
             return _galsim.SBDeltaFunction(self._flux, self.gsparams._gsp)
 
     def __eq__(self, other):
-        return (isinstance(other, DeltaFunction) and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, DeltaFunction) and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.DeltaFunction", self.flux, self.gsparams))

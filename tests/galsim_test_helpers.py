@@ -548,6 +548,8 @@ def all_obj_diff(objs, check_hash=True):
     # elements of objs are hashable (and that they have unique hashes!, which is what we're trying
     # to test!.  So instead, we just loop over all combinations.
     for i, obji in enumerate(objs):
+        assert obji == obji
+        assert not (obji != obji)
         # Could probably start the next loop at `i+1`, but we start at 0 for completeness
         # (and to verify a != b implies b != a)
         for j, objj in enumerate(objs):

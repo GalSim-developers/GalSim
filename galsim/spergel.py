@@ -166,11 +166,12 @@ class Spergel(GSObject):
         return self._sbp.calculateFluxRadius(float(f))
 
     def __eq__(self, other):
-        return (isinstance(other, Spergel) and
-                self.nu == other.nu and
-                self.scale_radius == other.scale_radius and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Spergel) and
+                 self.nu == other.nu and
+                 self.scale_radius == other.scale_radius and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Spergel", self.nu, self.scale_radius, self.flux, self.gsparams))
