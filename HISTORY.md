@@ -30,8 +30,9 @@ Bug Fixes
 
 - Corrected the diffusion functional form in SiliconSensor. (#981)
 - Fixed a bug in the PhaseScreenPSF withGSParams function. (#990)
-- Fix a seg fault bug when PoissonDeviate is given mean=0. (#996)
-
+- Fixed a seg fault bug when PoissonDeviate is given mean=0. (#996)
+- Fixed the galsim executable to work correctly when installed by SCons.
+- Fixed Convolve and Sum sometimes making unnecessary copies.
 
 v2.0
 ====
