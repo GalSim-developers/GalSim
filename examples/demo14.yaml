@@ -1,0 +1,45 @@
+
+
+# Define the PSF profile
+psf :
+    # We introduce here a new way to describe a profile.  We can use an image from a fits
+    # file and interpolate between the pixels with type = InterpolatedImage.
+    type : InterpolatedImage
+
+    # The only required parameter is the name of the file with the image.  Note: the file is
+    # bzipped, to demonstrate the new capability of reading in a file that has been compressed
+    # in various ways (which GalSim can infer from the filename).
+    image : "data/example_sdss_psf_sky0.fits.bz2"
+    scale : 0.1
+
+# Define the galaxy profile
+gal :
+    type : GenerativeModelGalaxy
+    flux_radius : { type : Random , min : 1, max : 20 }
+
+# The image field specifies some other information about the image to be drawn.
+image :
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 1
+
+    stamp_size : 64  # pixels
+
+    pixel_scale : 0.1  # arcsec / pixel
+    #
+    # noise :
+    #     sky_level : 1.0e4  # ADU / arcsec^2
+
+
+# Typically, you will want to specify the output format and file name.
+# If this is omitted, the output will be to a fits file with the same root name as the
+# config file, but that's usually not a great choice.
+# So at the very least, you would typically want to specify at least the file_name.
+output :
+    dir : output_yaml
+    file_name : demo14.fits
+
+# Define the input files
+input :
+    hub_module :
+        file_name : 'https://raw.githubusercontent.com/EiffL/GalSim-Hub/master/modules/test_sampler.tar.gz'

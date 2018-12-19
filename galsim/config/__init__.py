@@ -38,6 +38,7 @@ from . import output_datacube
 from . import input_fitsheader
 from . import input_real
 from . import input_cosmos
+from . import input_generative
 from . import input_nfw
 from . import input_powerspectrum
 
