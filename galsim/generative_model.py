@@ -43,24 +43,20 @@ class GenerativeGalaxyModel(object):
         dir: string
             Path to the tensorflow model to load
         """
-        # Introspects the module
-        module = hub.Module(file_name)
         self.file_name = file_name
-
-        # Introspect the module and create a placeholder for each input
         self.module = None
 
         self.quantities = []
-
         self.sample_req_params = {}
         self.sample_opt_params = {}
         self.sample_single_params = []
 
+        module = hub.Module(self.file_name)
+        self.stamp_size = module.get_attached_message("stamp_size", tf.train.Int64List).value[0]
+        self.pixel_size = module.get_attached_message("pixel_size", tf.train.FloatList).value[0]
         for k in module.get_input_info_dict():
             self.quantities.append(k)
             self.sample_req_params[k] = float
-            #tensor_info = module.get_input_info_dict()[k]
-            #self.inputs[k] = tf.placeholder(tensor_info.dtype, shape=[None], name=k)
 
     def sample(self, cat, noise=None,  rng=None, x_interpolant=None, k_interpolant=None,
                 pad_factor=4, noise_pad_size=0, gsparams=None,
@@ -86,8 +82,8 @@ class GenerativeGalaxyModel(object):
         # Now, we build an InterpolatedImage for each of these
         ims = []
         for i in range(len(x)):
-            im = galsim.Image(np.ascontiguousarray(x[i].reshape((32,32)).astype(np.float64)),
-                              scale=0.06)
+            im = galsim.Image(np.ascontiguousarray(x[i].reshape((self.stamp_size, self.stamp_size)).astype(np.float64)),
+                              scale=self.pixel_size)
 
             ims.append(galsim.InterpolatedImage(im,
                                                 x_interpolant=x_interpolant,
