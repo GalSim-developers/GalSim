@@ -535,16 +535,20 @@ def add_dirs(builder, output=False):
     import pybind11
     print('PyBind11 is version ',pybind11.__version__)
     print('Looking for pybind11 header files: ')
-    for user in [True, False, None]:
-        if user is None:
+    locations = [pybind11.get_include(user=True),
+                 pybind11.get_include(user=False),
+                 '/usr/include',
+                 None]
+    for try_dir in locations:
+        if try_dir is None:
             # Last time through, raise an error.
             print("Could not find pybind11 header files.")
             print("They should have been in one of the following two locations:")
-            print("   ",pybind11.get_include(True))
-            print("   ",pybind11.get_include(False))
+            for l in locations:
+                if l is not None:
+                    print("   ", l)
             raise OSError("Could not find PyBind11")
 
-        try_dir = pybind11.get_include(user=user)
         print('  ',try_dir,end='')
         if os.path.isfile(os.path.join(try_dir, 'pybind11/pybind11.h')):
             print('  (yes)')
