@@ -41,5 +41,5 @@ output :
 
 # Define the input files
 input :
-    hub_module :
-        file_name : 'https://raw.githubusercontent.com/EiffL/GalSim-Hub/master/modules/test_sampler.tar.gz'
+    generative_model :
+        file_name : 'https://raw.githubusercontent.com/EiffL/GalSim-Hub/master/modules/generative_model.tar.gz'

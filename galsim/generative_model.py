@@ -21,14 +21,14 @@ Functions defining a light profile produced by a deep generative model
 TODO: add more documentation
 """
 import galsim
-import tensorflow as tf
-import tensorflow_hub as hub
 import numpy as np
 
 class GenerativeGalaxyModel(object):
     """
     Generator object
     """
+    import tensorflow as tf
+    import tensorflow_hub as hub
 
     _req_params = {'file_name': str}
     _opt_params = {}
@@ -74,9 +74,10 @@ class GenerativeGalaxyModel(object):
             for k in self.quantities:
                 tensor_info = self.module.get_input_info_dict()[k]
                 self.inputs[k] = tf.placeholder(tensor_info.dtype, shape=[None], name=k)
+            self.generated_images = self.module(self.inputs)
 
         # Run the graph
-        x = self.sess.run(self.module(self.inputs),
+        x = self.sess.run(self.generated_images,
                           feed_dict={self.inputs[k]: cat[k] for k in self.quantities })
 
         # Now, we build an InterpolatedImage for each of these

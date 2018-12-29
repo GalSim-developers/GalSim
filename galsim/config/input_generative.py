@@ -54,14 +54,14 @@ class GenerativeModelLoader(InputLoader):
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
         return kwargs, safe
 
-RegisterInputType('hub_module', GenerativeModelLoader(GenerativeGalaxyModel))
+RegisterInputType('generative_model', GenerativeModelLoader(GenerativeGalaxyModel))
 
 
 def _SampleGalaxy(config, base, ignore, gsparams, logger, param_name='GenerativeModelGalaxy'):
     """
     Samples a galaxy from a generative model
     """
-    model = galsim.config.GetInputObj('hub_module', config, base, param_name)
+    model = galsim.config.GetInputObj('generative_model', config, base, param_name)
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = model.sample_req_params,
@@ -82,4 +82,4 @@ def _SampleGalaxy(config, base, ignore, gsparams, logger, param_name='Generative
 
 # Register this as a valid  gsobject type
 from .gsobject import RegisterObjectType
-RegisterObjectType('GenerativeModelGalaxy', _SampleGalaxy, input_type='hub_module')
+RegisterObjectType('GenerativeModelGalaxy', _SampleGalaxy, input_type='generative_model')
