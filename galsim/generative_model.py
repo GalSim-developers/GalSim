@@ -22,13 +22,13 @@ TODO: add more documentation
 """
 import galsim
 import numpy as np
+import tensorflow as tf
+import tensorflow_hub as hub
 
 class GenerativeGalaxyModel(object):
     """
     Generator object
     """
-    import tensorflow as tf
-    import tensorflow_hub as hub
 
     _req_params = {'file_name': str}
     _opt_params = {}
