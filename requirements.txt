@@ -20,6 +20,6 @@ pandas>=0.20
 LSSTDESC.Coord>=1.0.5
 starlink-pyast>=3.9.0  # Also not required, but useful.
 
-# For generative galaxy models
+# Optional dependencies for galsim.tensorflow
 tensorflow>=1.10.0
 tensorflow-hub>=0.2.0

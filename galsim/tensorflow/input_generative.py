@@ -16,14 +16,13 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
+import galsim.config
 import logging
 import numpy as np
 
-from ..generative_model import GenerativeGalaxyModel
+from .generative_model import GenerativeGalaxyModel
 
-from .input import  RegisterInputType, InputLoader
-
-class GenerativeModelLoader(InputLoader):
+class GenerativeModelLoader(galsim.config.InputLoader):
 
     def getKwargs(self, config, base, logger):
         """Parse the config dict and return the kwargs needed to build the input object.
@@ -54,7 +53,7 @@ class GenerativeModelLoader(InputLoader):
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
         return kwargs, safe
 
-RegisterInputType('generative_model', GenerativeModelLoader(GenerativeGalaxyModel))
+galsim.config.RegisterInputType('generative_model', GenerativeModelLoader(GenerativeGalaxyModel))
 
 
 def _SampleGalaxy(config, base, ignore, gsparams, logger, param_name='GenerativeModelGalaxy'):
@@ -81,5 +80,4 @@ def _SampleGalaxy(config, base, ignore, gsparams, logger, param_name='Generative
     return gal, safe
 
 # Register this as a valid  gsobject type
-from .gsobject import RegisterObjectType
-RegisterObjectType('GenerativeModelGalaxy', _SampleGalaxy, input_type='generative_model')
+galsim.config.RegisterObjectType('GenerativeModelGalaxy', _SampleGalaxy, input_type='generative_model')

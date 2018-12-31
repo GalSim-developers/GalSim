@@ -1,3 +1,5 @@
+modules:
+    - galsim.tensorflow
 
 psf :
     type : Gaussian
