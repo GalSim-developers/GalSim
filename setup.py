@@ -538,12 +538,13 @@ def add_dirs(builder, output=False):
     locations = [pybind11.get_include(user=True),
                  pybind11.get_include(user=False),
                  '/usr/include',
+                 '/usr/local/include',
                  None]
     for try_dir in locations:
         if try_dir is None:
             # Last time through, raise an error.
             print("Could not find pybind11 header files.")
-            print("They should have been in one of the following two locations:")
+            print("They should have been in one of the following locations:")
             for l in locations:
                 if l is not None:
                     print("   ", l)
