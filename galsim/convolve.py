@@ -240,16 +240,16 @@ class Convolution(GSObject):
                     break
                 _noise = obj.noise
                 others = [ obj2 for k, obj2 in enumerate(self.obj_list) if k != i ]
-                assert len(others) > 0
                 if len(others) == 1:
                     _noise = _noise.convolvedWith(others[0])
-                else:
+                elif len(others) > 1:
                     _noise = _noise.convolvedWith(Convolve(others))
+                # else len == 0, so just use _noise directly.
         return _noise
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -258,11 +258,12 @@ class Convolution(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Convolution) and
-                self.obj_list == other.obj_list and
-                self.real_space == other.real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Convolution) and
+                 self.obj_list == other.obj_list and
+                 self.real_space == other.real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Convolution", tuple(self.obj_list), self.real_space, self.gsparams,
@@ -284,12 +285,12 @@ class Convolution(GSObject):
         for obj in self.obj_list:
             obj._prepareDraw()
 
-    @property
+    @lazy_property
     def _maxk(self):
         maxk_list = [obj.maxk for obj in self.obj_list]
         return np.min(maxk_list)
 
-    @property
+    @lazy_property
     def _stepk(self):
         # This is approximate.  stepk ~ 2pi/R
         # Assume R_final^2 = Sum(R_i^2)
@@ -297,16 +298,16 @@ class Convolution(GSObject):
         inv_stepksq_list = [obj.stepk**(-2) for obj in self.obj_list]
         return np.sum(inv_stepksq_list)**(-0.5)
 
-    @property
+    @lazy_property
     def _has_hard_edges(self):
         return len(self.obj_list) == 1 and self.obj_list[0].has_hard_edges
 
-    @property
+    @lazy_property
     def _is_axisymmetric(self):
         axi_list = [obj.is_axisymmetric for obj in self.obj_list]
         return bool(np.all(axi_list))
 
-    @property
+    @lazy_property
     def _is_analytic_x(self):
         if len(self.obj_list) == 1:
             return self.obj_list[0].is_analytic_x
@@ -316,12 +317,12 @@ class Convolution(GSObject):
         else:
             return False
 
-    @property
+    @lazy_property
     def _is_analytic_k(self):
         ak_list = [obj.is_analytic_k for obj in self.obj_list]
         return bool(np.all(ak_list))
 
-    @property
+    @lazy_property
     def _centroid(self):
         cen_list = [obj.centroid for obj in self.obj_list]
         return sum(cen_list[1:], cen_list[0])
@@ -350,7 +351,7 @@ class Convolution(GSObject):
         p,n = self._calc_pn()
         return n
 
-    @property
+    @lazy_property
     def _max_sb(self):
         # This one is probably the least accurate of all the estimates of maxSB.
         # The calculation is based on the exact value for Gaussians.
@@ -400,18 +401,18 @@ class Convolution(GSObject):
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
 
-        self.obj_list[0]._shoot(photons, ud)
+        self.obj_list[0]._shoot(photons, rng)
         # It may be necessary to shuffle when convolving because we do not have a
         # gaurantee that the convolvee's photons are uncorrelated, e.g., they might
         # both have their negative ones at the end.
         # However, this decision is now made by the convolve method.
         for obj in self.obj_list[1:]:
             p1 = PhotonArray(len(photons))
-            obj._shoot(p1, ud)
-            photons.convolve(p1, ud)
+            obj._shoot(p1, rng)
+            photons.convolve(p1, rng)
 
     @doc_inherit
     def _drawKImage(self, image):
@@ -522,7 +523,7 @@ class Deconvolution(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -531,10 +532,11 @@ class Deconvolution(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Deconvolution) and
-                self.orig_obj == other.orig_obj and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Deconvolution) and
+                 self.orig_obj == other.orig_obj and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Deconvolution", self.orig_obj, self.gsparams,
@@ -574,15 +576,15 @@ class Deconvolution(GSObject):
     def _flux(self):
         return 1./self.orig_obj.flux
 
-    @property
+    @lazy_property
     def _positive_flux(self):
         return 1./self.orig_obj.positive_flux
 
-    @property
+    @lazy_property
     def _negative_flux(self):
         return 0. if self.orig_obj.negative_flux==0. else 1./self.orig_obj.negative_flux
 
-    @property
+    @lazy_property
     def _max_sb(self):
         # The only way to really give this any meaning is to consider it in the context
         # of being part of a larger convolution with other components.  The calculation
@@ -739,7 +741,7 @@ class AutoConvolution(Convolution):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -749,11 +751,12 @@ class AutoConvolution(Convolution):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, AutoConvolution) and
-                self.orig_obj == other.orig_obj and
-                self.real_space == other.real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, AutoConvolution) and
+                 self.orig_obj == other.orig_obj and
+                 self.real_space == other.real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self.gsparams,
@@ -774,12 +777,12 @@ class AutoConvolution(Convolution):
         self.orig_obj._prepareDraw()
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
-        self.orig_obj._shoot(photons, ud)
+        self.orig_obj._shoot(photons, rng)
         photons2 = PhotonArray(len(photons))
-        self.orig_obj._shoot(photons2, ud)
-        photons.convolve(photons2, ud)
+        self.orig_obj._shoot(photons2, rng)
+        photons.convolve(photons2, rng)
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
@@ -900,7 +903,7 @@ class AutoCorrelation(Convolution):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -910,11 +913,12 @@ class AutoCorrelation(Convolution):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, AutoCorrelation) and
-                self.orig_obj == other.orig_obj and
-                self.real_space == other.real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, AutoCorrelation) and
+                 self.orig_obj == other.orig_obj and
+                 self.real_space == other.real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self.gsparams,
@@ -935,13 +939,13 @@ class AutoCorrelation(Convolution):
         self._orig_obj._prepareDraw()
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
-        self.orig_obj._shoot(photons, ud)
+        self.orig_obj._shoot(photons, rng)
         photons2 = PhotonArray(len(photons))
-        self.orig_obj._shoot(photons2, ud)
+        self.orig_obj._shoot(photons2, rng)
 
         # Flip sign of (x, y) in one of the results
         photons2.scaleXY(-1)
 
-        photons.convolve(photons2, ud)
+        photons.convolve(photons2, rng)

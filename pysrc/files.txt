@@ -29,6 +29,7 @@ Integ.cpp
 Table.cpp
 Interpolant.cpp
 Bessel.cpp
+Horner.cpp
 CDModel.cpp
 Silicon.cpp
 RealGalaxy.cpp

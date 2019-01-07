@@ -51,7 +51,7 @@ class Cosmology(object):
         return "galsim.Cosmology(omega_m=%r, omega_lam=%r)"%(self.omega_m, self.omega_lam)
     def __str__(self):
         return "galsim.Cosmology(%s,%s)"%(self.omega_m, self.omega_lam)
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
@@ -181,7 +181,7 @@ class NFWHalo(object):
         return s
     def __str__(self):
         return "galsim.NFWHalo(mass=%s, conc=%s, redshift=%s)"%(self.M, self.c, self.z)
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 

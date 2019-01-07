@@ -568,7 +568,7 @@ class Image(object):
         buf = np.zeros(nbytes + 16, dtype=np.uint8)
         start_index = -buf.ctypes.data % 16
         a = buf[start_index:start_index + nbytes].view(dtype).reshape(shape)
-        assert a.ctypes.data % 16 == 0
+        #assert a.ctypes.data % 16 == 0
         return a
 
     def resize(self, bounds, wcs=None):
@@ -723,7 +723,7 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires self.bounds.xmin == 0",
                     hermitian=hermitian, bounds=self.bounds)
-            if bounds.xmin != 0:
+            if bounds.xmin != 0:  # pragma: no cover (This is covered, but codecov says it's not.)
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires bounds.xmin == 0",
                     hermitian=hermitian, bounds=bounds)
@@ -734,7 +734,7 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires self.bounds.ymin == 0",
                     hermitian=hermitian, bounds=self.bounds)
-            if bounds.ymin != 0:
+            if bounds.ymin != 0:  # pragma: no cover (This is covered, but codecov says it's not.)
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires bounds.ymin == 0",
                     hermitian=hermitian, bounds=bounds)
@@ -1521,11 +1521,12 @@ class Image(object):
         # >>> assert galsim.ImageD(int_array) == galsim.ImageF(int_array) # passes
         # >>> assert galsim.ImageD(double_array) == galsim.ImageF(double_array) # fails
 
-        return (isinstance(other, Image) and
-                self.bounds == other.bounds and
-                self.wcs == other.wcs and
-                (not self.bounds.isDefined() or np.array_equal(self.array,other.array)) and
-                self.isconst == other.isconst)
+        return (self is other or
+                (isinstance(other, Image) and
+                 self.bounds == other.bounds and
+                 self.wcs == other.wcs and
+                 (not self.bounds.isDefined() or np.array_equal(self.array,other.array)) and
+                 self.isconst == other.isconst))
 
     def __ne__(self, other): return not self.__eq__(other)
 
@@ -1607,7 +1608,7 @@ def check_image_consistency(im1, im2, integer=False):
     if integer and not im1.isinteger:
         raise GalSimValueError("Image must have integer values.",im1)
     if isinstance(im2, Image):
-        if im1.array.shape != im2.array.shape:
+        if im1.array.shape != im2.array.shape: # pragma: no cover  (covered, but codecov says it's not.)
             raise GalSimIncompatibleValuesError( "Image shapes are inconsistent", im1=im1, im2=im2)
         if integer and not im2.isinteger:
             raise GalSimValueError("Image must have integer values.",im2)

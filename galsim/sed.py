@@ -250,13 +250,13 @@ class SED(object):
             self._get_rest_native_waves = WeakMethod(self._get_rest_native_waves_slow)
 
         if self.flux_type == 'fphotons':
-            assert self.flux_factor is not None
+            #assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_fphot)
         elif self.flux_type == 'flambda':
-            assert self.flux_factor is not None
+            #assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_flam)
         elif self.flux_type == 'fnu':
-            assert self.flux_factor is not None
+            #assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_fnu)
         else:
             self._flux_to_photons = WeakMethod(self._flux_to_photons_slow)
@@ -950,15 +950,16 @@ class SED(object):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, SED) and
-                self._orig_spec == other._orig_spec and
-                self.fast == other.fast and
-                self.wave_type == other.wave_type and
-                self.flux_type == other.flux_type and
-                self.redshift == other.redshift and
-                self.red_limit == other.red_limit and
-                self.blue_limit == other.blue_limit and
-                np.array_equal(self.wave_list,other.wave_list))
+        return (self is other or
+                (isinstance(other, SED) and
+                 self._orig_spec == other._orig_spec and
+                 self.fast == other.fast and
+                 self.wave_type == other.wave_type and
+                 self.flux_type == other.flux_type and
+                 self.redshift == other.redshift and
+                 self.red_limit == other.red_limit and
+                 self.blue_limit == other.blue_limit and
+                 np.array_equal(self.wave_list,other.wave_list)))
 
     def __ne__(self, other): return not self.__eq__(other)
 

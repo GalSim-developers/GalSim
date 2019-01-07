@@ -1,8 +1,8 @@
 setupRequired(numpy)
-setupRequired(pyfits)
-setupRequired(boost)
+setupRequired(astropy)
 setupRequired(fftw)
-setupRequired(tmv)
+setupRequired(eigen)
+setupRequired(pybind11)
 
 envPrepend(PYTHONPATH, ${PRODUCT_DIR})
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)

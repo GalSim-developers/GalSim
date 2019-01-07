@@ -592,14 +592,22 @@ namespace galsim {
                 photons.setPhoton(i,0.,0.,fluxPerPhoton);
                 continue;
             }
-            // Initial guess
+            // Convert from y = (1+r)exp(-r)
+            // to y' = -log(y) = r - log(1+r)
             y = -std::log(y);
-            double r = y>2. ? y : sqrt(2.*y);
+            // Initial guess.  Good to +- 0.1 out to quite large values of r.
+            dbg<<"y = "<<y<<std::endl;
+            double r = y<0.07 ? sqrt(2.*y) : y<0.9 ? 1.8*y+0.37 : 1.3*y+0.83;
             double dy = y - r + std::log(1.+r);
+            dbg<<"dy, r = \n";
+            dbg<<dy<<"  "<<r<<std::endl;
             while ( std::abs(dy) > Y_TOLERANCE) {
-                r = r + (1.+r)*dy/r;
+                // Newton step: dy/dr = r / (1+r)
+                r += (1.+r)*dy/r;
                 dy = y - r + std::log(1.+r);
+                dbg<<dy<<"  "<<r<<std::endl;
             }
+
             // Draw another (or multiple) randoms for azimuthal angle
 #ifdef USE_COS_SIN
             double theta = 2. * M_PI * ud();

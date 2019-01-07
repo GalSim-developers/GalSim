@@ -114,7 +114,7 @@ class _BaseCorrelatedNoise(object):
         return self._profile.gsparams
 
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         return _BaseCorrelatedNoise(self.rng, self._profile.withGSParams(gsparams), self.wcs)
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
@@ -159,7 +159,7 @@ class _BaseCorrelatedNoise(object):
         return "galsim.correlatednoise._BaseCorrelatedNoise(%s,%s)"%(self._profile, self.wcs)
 
     # Quick and dirty.  Just check reprs are equal.
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
@@ -1474,13 +1474,13 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         sigma = math.sqrt(variance)
         pix = Pixel(scale=1.0, flux=sigma, gsparams=gsparams)
         cf = AutoConvolve(pix, real_space=True, gsparams=gsparams)
-        world_cf = wcs.toWorld(cf)
+        world_cf = wcs.profileToWorld(cf)
         # This gets the shape right, but not the amplitude.  Need to rescale by the pixel area
         world_cf *= wcs.pixelArea()
         _BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
 
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         return UncorrelatedNoise(self.variance, self.rng, wcs=self.wcs, gsparams=gsparams)
 
     def __repr__(self):
@@ -1564,9 +1564,10 @@ class CovarianceSpectrum(object):
         return _BaseCorrelatedNoise(rng, iki, wcs)
 
     def __eq__(self, other):
-        return (isinstance(other, CovarianceSpectrum) and
-                self.SEDs == other.SEDs and
-                self.Sigma == other.Sigma)
+        return (self is other or
+                (isinstance(other, CovarianceSpectrum) and
+                 self.SEDs == other.SEDs and
+                 self.Sigma == other.Sigma))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):

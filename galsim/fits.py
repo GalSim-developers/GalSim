@@ -340,7 +340,7 @@ def _check_hdu(hdu, pyfits_compress):
         if not isinstance(hdu, pyfits.CompImageHDU):
             raise OSError('Found invalid HDU type reading FITS file (expected a CompImageHDU)')
     else:
-        if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
+        if not isinstance(hdu, (pyfits.CompImageHDU, pyfits.ImageHDU, pyfits.PrimaryHDU)):
             raise OSError('Found invalid HDU type reading FITS file (expected an ImageHDU)')
 
 
@@ -1153,6 +1153,9 @@ class FitsHeader(object):
     def get(self, key, default=None):
         return self.header.get(key, default)
 
+    def pop(self, key, default=None):
+        return self.header.pop(key, default)
+
     def items(self):
         return self.header.items()
 
@@ -1203,8 +1206,9 @@ class FitsHeader(object):
             return "galsim.FitsHeader(%s)"%self._tag
 
     def __eq__(self, other):
-        return (isinstance(other,FitsHeader) and
-                list(self.header.items()) == list(other.header.items()))
+        return (self is other or
+                (isinstance(other,FitsHeader) and
+                 list(self.header.items()) == list(other.header.items())))
 
     def __ne__(self, other): return not self.__eq__(other)
 

@@ -58,6 +58,9 @@ def test_convolve():
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Moffat convolved with Pixel disagrees with expected result")
+        assert psf.gsparams is galsim.GSParams.default
+        assert pixel.gsparams is galsim.GSParams.default
+        assert conv.gsparams is galsim.GSParams.default
 
         # Other ways to do the convolution:
         conv = galsim.Convolve(psf,pixel,real_space=False)
@@ -65,6 +68,7 @@ def test_convolve():
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
+        assert conv.gsparams is galsim.GSParams.default
 
         # Check with default_params
         conv = galsim.Convolve([psf,pixel],real_space=False,gsparams=default_params)
@@ -73,12 +77,22 @@ def test_convolve():
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with default_params disagrees with"
                 "expected result")
+        # In this case, it's not the same object, but it should be ==
+        assert conv.gsparams is not galsim.GSParams.default
+        assert conv.gsparams == galsim.GSParams.default
+        assert conv.gsparams is default_params
+        # Also the components shouldn't have changed.
+        assert conv.obj_list[0] is psf
+        assert conv.obj_list[1] is pixel
+
         conv = galsim.Convolve([psf,pixel],real_space=False,gsparams=galsim.GSParams())
         conv.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
                 "expected result")
+        assert conv.gsparams is not galsim.GSParams.default
+        assert conv.gsparams == galsim.GSParams.default
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(conv.centroid, cen)
@@ -779,6 +793,10 @@ def test_convolve_noise():
         assert conv2.noise == obj1.noise.convolvedWith(obj2)
     with assert_warns(galsim.GalSimWarning):
         assert conv3.noise == obj1.noise.convolvedWith(galsim.Convolve(obj2,obj3))
+
+    # Convolution with only one object uses that object's noise
+    conv1 = galsim.Convolution(obj1)
+    assert conv1.noise == obj1.noise
 
     # Other types don't propagate noise and give a warning about it.
     deconv = galsim.Deconvolution(obj2)

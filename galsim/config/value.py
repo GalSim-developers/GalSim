@@ -45,6 +45,10 @@ def ParseValue(config, key, base, value_type):
 
     @returns the tuple (value, safe).
     """
+    # Special: if the "value_type" is GSObject, then switch over to that builder instead.
+    if value_type is galsim.GSObject:
+        return galsim.config.BuildGSObject(config, key, base)
+
     param = config[key]
     #print('ParseValue for key = ',key,', value_type = ',str(value_type))
     #print('param = ',param)
@@ -88,7 +92,7 @@ def ParseValue(config, key, base, value_type):
             # (See valid_value_types defined at the top of the file.)
             if type_name not in valid_value_types:
                 raise galsim.GalSimConfigValueError("Unrecognized %s.type"%(key), type_name,
-                                                    valid_value_types)
+                                                    valid_value_types.keys())
 
             # Get the generating function and the list of valid types for it.
             generate_func, valid_types = valid_value_types[type_name]

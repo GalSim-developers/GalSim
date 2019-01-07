@@ -282,12 +282,13 @@ class Sersic(GSObject):
         return self._hlr
 
     def __eq__(self, other):
-        return (isinstance(other, Sersic) and
-                self.n == other.n and
-                self.scale_radius == other.scale_radius and
-                self.trunc == other.trunc and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Sersic) and
+                 self.n == other.n and
+                 self.scale_radius == other.scale_radius and
+                 self.trunc == other.trunc and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.SBSersic", self.n, self.scale_radius, self.trunc, self.flux,

@@ -162,7 +162,8 @@ class InclinedExponential(GSObject):
     def scale_h_over_r(self): return self._h0 / self._r0
 
     def __eq__(self, other):
-        return ((isinstance(other, InclinedExponential) and
+        return (self is other or
+                (isinstance(other, InclinedExponential) and
                  (self.inclination == other.inclination) and
                  (self.scale_radius == other.scale_radius) and
                  (self.scale_height == other.scale_height) and
@@ -399,7 +400,8 @@ class InclinedSersic(GSObject):
         return self._hlr
 
     def __eq__(self, other):
-        return ((isinstance(other, InclinedSersic) and
+        return (self is other or
+                (isinstance(other, InclinedSersic) and
                  (self.n == other.n) and
                  (self.inclination == other.inclination) and
                  (self.scale_radius == other.scale_radius) and

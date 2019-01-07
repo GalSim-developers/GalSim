@@ -55,7 +55,6 @@ def noll_to_zern(j):
 
     return _noll_n[j], _noll_m[j]
 
-
 def _zern_norm(n, m):
     r"""Normalization coefficient for zernike (n, m).
 
@@ -384,7 +383,7 @@ _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
 class Zernike(object):
-    """A class to represent a Zernike polynomial series
+    r"""A class to represent a Zernike polynomial series
     (http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials).
 
     Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is
@@ -437,8 +436,11 @@ class Zernike(object):
         arr = _noll_coef_array_xy(len(self.coef)-1, self.R_inner/self.R_outer).dot(self.coef[1:])
 
         if self.R_outer != 1.0:
-            shape = arr.shape
-            arr /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0))
+            n = arr.shape[0]
+            norm = np.power(1./self.R_outer, np.arange(1,n))
+            arr[0,1:] *= norm
+            for i in range(1,n):
+                arr[i,0:-i] *= norm[i-1:]
         return arr
 
     @lazy_property
@@ -446,10 +448,10 @@ class Zernike(object):
         """The x-derivative of this Zernike as a new Zernike object.
         """
         j = len(self.coef)-1
-        newCoef = np.hstack([
-            [0],
-            _noll_coef_array_gradx(j, self.R_inner/self.R_outer).dot(self.coef[1:])
-        ])
+        ncagx = _noll_coef_array_gradx(j, self.R_inner/self.R_outer).dot(self.coef[1:])
+        newCoef = np.empty((len(ncagx)+1,), dtype=float)
+        newCoef[0] = 0.0
+        newCoef[1:] = ncagx
         # Handle R_outer with
         # df/dx = df/d(x/R) * d(x/R)/dx = df/d(x/R) * 1/R
         newCoef /= self.R_outer
@@ -460,10 +462,10 @@ class Zernike(object):
         """The y-derivative of this Zernike as a new Zernike object.
         """
         j = len(self.coef)-1
-        newCoef = np.hstack([
-            [0],
-            _noll_coef_array_grady(j, self.R_inner/self.R_outer).dot(self.coef[1:])
-        ])
+        ncagy = _noll_coef_array_grady(j, self.R_inner/self.R_outer).dot(self.coef[1:])
+        newCoef = np.empty((len(ncagy)+1,), dtype=float)
+        newCoef[0] = 0.0
+        newCoef[1:] = ncagy
         # Handle R_outer with
         # df/dy = df/d(y/R) * d(y/R)/dy = df/d(y/R) * 1/R
         newCoef /= self.R_outer
@@ -476,7 +478,7 @@ class Zernike(object):
         @param y  y-coordinate of evaluation points.  Can be list-like.
         @returns  Series evaluations as numpy array.
         """
-        return horner2d(x, y, self._coef_array_xy)
+        return horner2d(x, y, self._coef_array_xy, dtype=float)
 
     def evalPolar(self, rho, theta):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
@@ -488,7 +490,7 @@ class Zernike(object):
         """
         x = rho * np.cos(theta)
         y = rho * np.sin(theta)
-        return horner2d(x, y, self._coef_array_xy)
+        return self.evalCartesian(x, y)
 
     def evalCartesianGrad(self, x, y):
         return self.gradX.evalCartesian(x, y), self.gradY.evalCartesian(x, y)
@@ -508,10 +510,11 @@ class Zernike(object):
         return Zernike(M.dot(self.coef), self.R_outer, self.R_inner)
 
     def __eq__(self, other):
-        return (isinstance(other, Zernike) and
-                np.array_equal(self.coef, other.coef) and
-                self.R_outer == other.R_outer and
-                self.R_inner == other.R_inner)
+        return (self is other or
+                (isinstance(other, Zernike) and
+                 np.array_equal(self.coef, other.coef) and
+                 self.R_outer == other.R_outer and
+                 self.R_inner == other.R_inner))
 
     def __hash__(self):
         return hash(("galsim.Zernike", tuple(self.coef), self.R_outer, self.R_inner))
@@ -618,5 +621,6 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
 
     noll_coef = _noll_coef_array_xy(jmax, eps)
     out = np.zeros(tuple((jmax+1,)+x.shape), dtype=float)
-    out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc) for nc in noll_coef.transpose(2,0,1)])
+    out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc, dtype=float)
+                        for nc in noll_coef.transpose(2,0,1)])
     return out

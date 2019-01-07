@@ -232,6 +232,13 @@ def test_uniform():
     do_pickle(u, lambda x: x.serialize())
     do_pickle(u, lambda x: (x(), x(), x(), x()))
     do_pickle(u)
+    do_pickle(rng)
+    assert 'UniformDeviate' in repr(u)
+    assert 'UniformDeviate' in str(u)
+    assert isinstance(eval(repr(u)), galsim.UniformDeviate)
+    assert isinstance(eval(str(u)), galsim.UniformDeviate)
+    assert isinstance(eval(repr(rng)), galsim.BaseDeviate)
+    assert isinstance(eval(str(rng)), galsim.BaseDeviate)
 
     # Check that we can construct a UniformDeviate from None, and that it depends on dev/random.
     u1 = galsim.UniformDeviate(None)
@@ -381,6 +388,10 @@ def test_gaussian():
     do_pickle(g, lambda x: (x.serialize(), x.mean, x.sigma))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(g)
+    assert 'GaussianDeviate' in repr(g)
+    assert 'GaussianDeviate' in str(g)
+    assert isinstance(eval(repr(g)), galsim.GaussianDeviate)
+    assert isinstance(eval(str(g)), galsim.GaussianDeviate)
 
     # Check that we can construct a GaussianDeviate from None, and that it depends on dev/random.
     g1 = galsim.GaussianDeviate(None)
@@ -512,6 +523,10 @@ def test_binomial():
     do_pickle(b, lambda x: (x.serialize(), x.n, x.p))
     do_pickle(b, lambda x: (x(), x(), x(), x()))
     do_pickle(b)
+    assert 'BinomialDeviate' in repr(b)
+    assert 'BinomialDeviate' in str(b)
+    assert isinstance(eval(repr(b)), galsim.BinomialDeviate)
+    assert isinstance(eval(str(b)), galsim.BinomialDeviate)
 
     # Check that we can construct a BinomialDeviate from None, and that it depends on dev/random.
     b1 = galsim.BinomialDeviate(None)
@@ -657,6 +672,10 @@ def test_poisson():
     do_pickle(p, lambda x: (x.serialize(), x.mean))
     do_pickle(p, lambda x: (x(), x(), x(), x()))
     do_pickle(p)
+    assert 'PoissonDeviate' in repr(p)
+    assert 'PoissonDeviate' in str(p)
+    assert isinstance(eval(repr(p)), galsim.PoissonDeviate)
+    assert isinstance(eval(str(p)), galsim.PoissonDeviate)
 
     # Check that we can construct a PoissonDeviate from None, and that it depends on dev/random.
     p1 = galsim.PoissonDeviate(None)
@@ -767,6 +786,52 @@ def test_poisson_highmean():
                 var, pn.getVariance(), rtol=rtol_var,
                 err_msg='Realized variance for PoissonNoise did not match getVariance()')
 
+
+@timer
+def test_poisson_zeromean():
+    """Make sure Poisson Deviate behaves sensibly when mean=0.
+    """
+    p = galsim.PoissonDeviate(testseed, mean=0)
+    p2 = p.duplicate()
+    p3 = galsim.PoissonDeviate(p.serialize(), mean=0)
+    do_pickle(p)
+
+    # Test direct draws
+    testResult = (p(), p(), p())
+    testResult2 = (p2(), p2(), p2())
+    testResult3 = (p3(), p3(), p3())
+    np.testing.assert_array_equal(testResult, 0)
+    np.testing.assert_array_equal(testResult2, 0)
+    np.testing.assert_array_equal(testResult3, 0)
+
+    # Test generate
+    test_array = np.empty(3, dtype=int)
+    p.generate(test_array)
+    np.testing.assert_array_equal(test_array, 0)
+    p2.generate(test_array)
+    np.testing.assert_array_equal(test_array, 0)
+    p3.generate(test_array)
+    np.testing.assert_array_equal(test_array, 0)
+
+    # Test generate_from_expectation
+    test_array = np.array([0,0,0])
+    np.testing.assert_allclose(test_array, 0)
+    test_array = np.array([1,0,4])
+    assert test_array[0] != 0
+    assert test_array[1] == 0
+    assert test_array[2] != 0
+
+    # Error raised if mean<0
+    with assert_raises(ValueError):
+        p = galsim.PoissonDeviate(testseed, mean=-0.1)
+    with assert_raises(ValueError):
+        p = galsim.PoissonDeviate(testseed, mean=-10)
+    test_array = np.array([-1,1,4])
+    with assert_raises(ValueError):
+        p.generate_from_expectation(test_array)
+    test_array = np.array([1,-1,-4])
+    with assert_raises(ValueError):
+        p.generate_from_expectation(test_array)
 
 @timer
 def test_weibull():
@@ -893,6 +958,10 @@ def test_weibull():
     do_pickle(w, lambda x: (x.serialize(), x.a, x.b))
     do_pickle(w, lambda x: (x(), x(), x(), x()))
     do_pickle(w)
+    assert 'WeibullDeviate' in repr(w)
+    assert 'WeibullDeviate' in str(w)
+    assert isinstance(eval(repr(w)), galsim.WeibullDeviate)
+    assert isinstance(eval(str(w)), galsim.WeibullDeviate)
 
     # Check that we can construct a WeibullDeviate from None, and that it depends on dev/random.
     w1 = galsim.WeibullDeviate(None)
@@ -1020,6 +1089,10 @@ def test_gamma():
     do_pickle(g, lambda x: (x.serialize(), x.k, x.theta))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(g)
+    assert 'GammaDeviate' in repr(g)
+    assert 'GammaDeviate' in str(g)
+    assert isinstance(eval(repr(g)), galsim.GammaDeviate)
+    assert isinstance(eval(str(g)), galsim.GammaDeviate)
 
     # Check that we can construct a GammaDeviate from None, and that it depends on dev/random.
     g1 = galsim.GammaDeviate(None)
@@ -1147,6 +1220,10 @@ def test_chi2():
     do_pickle(c, lambda x: (x.serialize(), x.n))
     do_pickle(c, lambda x: (x(), x(), x(), x()))
     do_pickle(c)
+    assert 'Chi2Deviate' in repr(c)
+    assert 'Chi2Deviate' in str(c)
+    assert isinstance(eval(repr(c)), galsim.Chi2Deviate)
+    assert isinstance(eval(str(c)), galsim.Chi2Deviate)
 
     # Check that we can construct a Chi2Deviate from None, and that it depends on dev/random.
     c1 = galsim.Chi2Deviate(None)
@@ -1336,6 +1413,10 @@ def test_distfunction():
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))
     do_pickle(d)
+    assert 'DistDeviate' in repr(d)
+    assert 'DistDeviate' in str(d)
+    assert isinstance(eval(repr(d)), galsim.DistDeviate)
+    assert isinstance(eval(str(d)), galsim.DistDeviate)
 
     # Check that we can construct a DistDeviate from None, and that it depends on dev/random.
     c1 = galsim.DistDeviate(None, lambda x:1, 0, 1)
@@ -1489,6 +1570,10 @@ def test_distLookupTable():
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))
     do_pickle(d)
+    assert 'DistDeviate' in repr(d)
+    assert 'DistDeviate' in str(d)
+    assert isinstance(eval(repr(d)), galsim.DistDeviate)
+    assert isinstance(eval(str(d)), galsim.DistDeviate)
 
 
 @timer
@@ -1604,6 +1689,7 @@ if __name__ == "__main__":
     test_binomial()
     test_poisson()
     test_poisson_highmean()
+    test_poisson_zeromean()
     test_weibull()
     test_gamma()
     test_chi2()

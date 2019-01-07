@@ -7,3 +7,4 @@ Gamma.cpp
 Sinc.cpp
 Angle.cpp
 Nan.cpp
+Horner.cpp

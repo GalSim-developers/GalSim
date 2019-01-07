@@ -23,7 +23,8 @@ Also includes classes that modify PhotonArray objects in a number of ways.
 import numpy as np
 
 from . import _galsim
-from .random import UniformDeviate
+from .random import UniformDeviate, BaseDeviate
+from .utilities import lazy_property
 from .angle import radians, arcsec
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
@@ -167,12 +168,14 @@ class PhotonArray(object):
         if self._dxdz is None:
             self._dxdz = np.zeros_like(self._x)
             self._dydz = np.zeros_like(self._x)
+            self.__dict__.pop('_pa', None)
 
     def hasAllocatedWavelengths(self):
         return self._wave is not None
     def allocateWavelengths(self):
         if self._wave is None:
             self._wave = np.zeros_like(self._x)
+            self.__dict__.pop('_pa', None)
 
     def isCorrelated(self):
         "Returns whether the photons are correlated"
@@ -180,6 +183,7 @@ class PhotonArray(object):
     def setCorrelated(self, is_corr=True):
         "Set whether the photons are correlated"
         self._is_corr = is_corr
+        self.__dict__.pop('_pa', None)
 
     def getTotalFlux(self):
         return self.flux.sum()
@@ -214,8 +218,9 @@ class PhotonArray(object):
         if rhs.size() != self.size():
             raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
                                                 self_pa=self, rhs=rhs)
-        ud = UniformDeviate(rng)
-        self._pa.convolve(rhs._pa, ud._rng)
+        if rng is None:
+            rng = BaseDeviate()
+        self._pa.convolve(rhs._pa, rng._rng)
 
     def __repr__(self):
         s = "galsim.PhotonArray(%d, x=array(%r), y=array(%r), flux=array(%r)"%(
@@ -230,40 +235,48 @@ class PhotonArray(object):
     def __str__(self):
         return "galsim.PhotonArray(%d)"%self.size()
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_pa',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
     __hash__ = None
 
     def __eq__(self, other):
-        return (
-            isinstance(other, PhotonArray) and
-            np.array_equal(self.x,other.x) and
-            np.array_equal(self.y,other.y) and
-            np.array_equal(self.flux,other.flux) and
-            self.hasAllocatedAngles() == other.hasAllocatedAngles() and
-            self.hasAllocatedWavelengths() == other.hasAllocatedWavelengths() and
-            (np.array_equal(self.dxdz,other.dxdz) if self.hasAllocatedAngles() else True) and
-            (np.array_equal(self.dydz,other.dydz) if self.hasAllocatedAngles() else True) and
-            (np.array_equal(self.wavelength,other.wavelength)
-                    if self.hasAllocatedWavelengths() else True) )
+        return (self is other or
+                (isinstance(other, PhotonArray) and
+                 np.array_equal(self.x,other.x) and
+                 np.array_equal(self.y,other.y) and
+                 np.array_equal(self.flux,other.flux) and
+                 self.hasAllocatedAngles() == other.hasAllocatedAngles() and
+                 self.hasAllocatedWavelengths() == other.hasAllocatedWavelengths() and
+                 (np.array_equal(self.dxdz,other.dxdz) if self.hasAllocatedAngles() else True) and
+                 (np.array_equal(self.dydz,other.dydz) if self.hasAllocatedAngles() else True) and
+                 (np.array_equal(self.wavelength,other.wavelength)
+                    if self.hasAllocatedWavelengths() else True) ))
 
     def __ne__(self, other):
         return not self == other
 
-    @property
+    @lazy_property
     def _pa(self):
-        assert(self._x.strides[0] == self._x.itemsize)
-        assert(self._y.strides[0] == self._y.itemsize)
-        assert(self._flux.strides[0] == self._flux.itemsize)
+        #assert(self._x.strides[0] == self._x.itemsize)
+        #assert(self._y.strides[0] == self._y.itemsize)
+        #assert(self._flux.strides[0] == self._flux.itemsize)
         _x = self._x.ctypes.data
         _y = self._y.ctypes.data
         _flux = self._flux.ctypes.data
         _dxdz = _dydz = _wave = 0
         if self.hasAllocatedAngles():
-            assert(self._dxdz.strides[0] == self._dxdz.itemsize)
-            assert(self._dydz.strides[0] == self._dydz.itemsize)
+            #assert(self._dxdz.strides[0] == self._dxdz.itemsize)
+            #assert(self._dydz.strides[0] == self._dydz.itemsize)
             _dxdz = self._dxdz.ctypes.data
             _dydz = self._dydz.ctypes.data
         if self.hasAllocatedWavelengths():
-            assert(self._wave.strides[0] == self._wave.itemsize)
+            #assert(self._wave.strides[0] == self._wave.itemsize)
             _wave = self._wave.ctypes.data
         with convert_cpp_errors():
             return _galsim.PhotonArray(int(self.size()), _x, _y, _flux, _dxdz, _dydz, _wave,
@@ -304,7 +317,6 @@ class PhotonArray(object):
 
         @returns a PhotonArray
         """
-        ud = UniformDeviate(rng)
         max_flux = float(max_flux)
         if (max_flux <= 0):
             raise GalSimRangeError("max_flux must be positive", max_flux, 0.)
@@ -315,7 +327,9 @@ class PhotonArray(object):
         N = int(np.prod(image.array.shape) + total_flux / max_flux)
         photons = cls(N)
 
-        N = photons._pa.setFrom(image._image, max_flux, ud._rng)
+        if rng is None:
+            rng = BaseDeviate()
+        N = photons._pa.setFrom(image._image, max_flux, rng._rng)
         photons._x = photons.x[:N]
         photons._y = photons.y[:N]
         photons._flux = photons.flux[:N]
@@ -404,7 +418,7 @@ class WavelengthSampler(object):
     def __init__(self, sed, bandpass, rng=None, npoints=None):
         self.sed = sed
         self.bandpass = bandpass
-        self.rng = rng
+        self.rng = BaseDeviate(rng)
         self.npoints = npoints
 
     def applyTo(self, photon_array, local_wcs=None):

@@ -123,7 +123,7 @@ class FourierSqrtProfile(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -132,10 +132,11 @@ class FourierSqrtProfile(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, FourierSqrtProfile) and
-                self.orig_obj == other.orig_obj and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, FourierSqrtProfile) and
+                 self.orig_obj == other.orig_obj and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.FourierSqrtProfile", self.orig_obj, self.gsparams,

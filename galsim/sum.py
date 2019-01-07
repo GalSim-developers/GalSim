@@ -177,7 +177,7 @@ class Sum(GSObject):
     @property
     def obj_list(self): return self._obj_list
 
-    @property
+    @lazy_property
     def _sbp(self):
         # NB. I only need this until compound and transform are reimplemented in Python...
         sb_list = [obj._sbp for obj in self.obj_list]
@@ -204,7 +204,7 @@ class Sum(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -213,10 +213,11 @@ class Sum(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Sum) and
-                self.obj_list == other.obj_list and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Sum) and
+                 self.obj_list == other.obj_list and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Sum", tuple(self.obj_list), self.gsparams, self._propagate_gsparams))
@@ -233,52 +234,52 @@ class Sum(GSObject):
         for obj in self.obj_list:
             obj._prepareDraw()
 
-    @property
+    @lazy_property
     def _maxk(self):
         maxk_list = [obj.maxk for obj in self.obj_list]
         return np.max(maxk_list)
 
-    @property
+    @lazy_property
     def _stepk(self):
         stepk_list = [obj.stepk for obj in self.obj_list]
         return np.min(stepk_list)
 
-    @property
+    @lazy_property
     def _has_hard_edges(self):
         hard_list = [obj.has_hard_edges for obj in self.obj_list]
         return bool(np.any(hard_list))
 
-    @property
+    @lazy_property
     def _is_axisymmetric(self):
         axi_list = [obj.is_axisymmetric for obj in self.obj_list]
         return bool(np.all(axi_list))
 
-    @property
+    @lazy_property
     def _is_analytic_x(self):
         ax_list = [obj.is_analytic_x for obj in self.obj_list]
         return bool(np.all(ax_list))
 
-    @property
+    @lazy_property
     def _is_analytic_k(self):
         ak_list = [obj.is_analytic_k for obj in self.obj_list]
         return bool(np.all(ak_list))
 
-    @property
+    @lazy_property
     def _centroid(self):
         cen_list = [obj.centroid * obj.flux for obj in self.obj_list]
         return sum(cen_list[1:], cen_list[0]) / self.flux
 
-    @property
+    @lazy_property
     def _positive_flux(self):
         pflux_list = [obj.positive_flux for obj in self.obj_list]
         return np.sum(pflux_list)
 
-    @property
+    @lazy_property
     def _negative_flux(self):
         nflux_list = [obj.negative_flux for obj in self.obj_list]
         return np.sum(nflux_list)
 
-    @property
+    @lazy_property
     def _max_sb(self):
         sb_list = [obj.max_sb for obj in self.obj_list]
         return np.sum(sb_list)
@@ -303,7 +304,7 @@ class Sum(GSObject):
                 image += im1
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
         from .random import BinomialDeviate
 
@@ -322,10 +323,10 @@ class Sum(GSObject):
             thisN = remainingN  # All of what's left, if this is the last summand...
             if i < len(self.obj_list)-1:
                 # otherwise, allocate a randomized fraction of the remaining photons to summand.
-                bd = BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
+                bd = BinomialDeviate(rng, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
                 thisN = int(bd())
             if thisN > 0:
-                thisPA = obj.shoot(thisN, ud)
+                thisPA = obj.shoot(thisN, rng)
                 # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
                 # whereas the shoot() routine would have made them each nominally
                 # thisAbsoluteFlux/thisN
@@ -334,8 +335,8 @@ class Sum(GSObject):
                 istart += thisN
             remainingN -= thisN
             remainingAbsoluteFlux -= thisAbsoluteFlux
-        assert remainingN == 0
-        assert np.isclose(remainingAbsoluteFlux, 0.0)
+        #assert remainingN == 0
+        #assert np.isclose(remainingAbsoluteFlux, 0.0)
 
         # This process produces correlated photons, so mark the resulting array as such.
         if len(self.obj_list) > 1:
@@ -349,3 +350,11 @@ class Sum(GSObject):
             for obj in self.obj_list[1:]:
                 obj._drawKImage(im1)
                 image += im1
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d

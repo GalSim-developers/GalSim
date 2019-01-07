@@ -56,6 +56,12 @@
 #include <memory>
 using std::shared_ptr;
 
+#elif __cplusplus >= 201103L
+// Also if using a real C++11 compiler, this should work.
+
+#include <memory>
+using std::shared_ptr;
+
 #else  // !_LIBCPP_VERSION
 // not using libc++
 

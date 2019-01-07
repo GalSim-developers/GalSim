@@ -361,7 +361,7 @@ namespace galsim {
 
     struct PoissonDeviate::PoissonDeviateImpl
     {
-        PoissonDeviateImpl(double mean) : _mean(0) { setMean(mean); }
+        PoissonDeviateImpl(double mean) : _mean(-1) { setMean(mean); }
 
         double getMean() { return _mean; }
 
@@ -374,7 +374,7 @@ namespace galsim {
 
             if (mean != _mean) {
                 _mean = mean;
-                if (mean > MAX_POISSON) setMeanGD(mean);
+                if (mean > MAX_POISSON || mean == 0.) setMeanGD(mean);
                 else setMeanPD(mean);
             }
         }

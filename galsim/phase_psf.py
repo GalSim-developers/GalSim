@@ -275,7 +275,7 @@ class Aperture(object):
         self._illuminated
         return self._npix
 
-    @property
+    @lazy_property
     def good_pupil_size(self):
         # Although the user can set the pupil plane size and scale directly if desired, in most
         # cases it's nicer to have GalSim try to pick good values for these.
@@ -290,7 +290,7 @@ class Aperture(object):
         # which would otherwise tend to damp contributions at large k.
         return 2 * self.diam * self._oversampling
 
-    @property
+    @lazy_property
     def good_pupil_scale(self):
         from .airy import Airy
         # For the pupil plane sampling interval, details like the obscuration and GSParams *are*
@@ -488,7 +488,7 @@ class Aperture(object):
     def withGSParams(self, gsparams):
         """Create a version of the current aperture with the given gsparams
         """
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -553,6 +553,7 @@ class Aperture(object):
         return s
 
     def __eq__(self, other):
+        if self is other: return True
         if not (isinstance(other, Aperture) and
                 self.diam == other.diam and
                 self._gsparams == other._gsparams):
@@ -619,6 +620,14 @@ class Aperture(object):
         return self._uv[1]
 
     @lazy_property
+    def u_illuminated(self):
+        return self.u[self.illuminated]
+
+    @lazy_property
+    def v_illuminated(self):
+        return self.v[self.illuminated]
+
+    @lazy_property
     def rsqr(self):
         """Pupil radius squared array in meters squared."""
         return self.u**2 + self.v**2
@@ -637,7 +646,7 @@ class Aperture(object):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
         # pickle.
         d = self.__dict__.copy()
-        for k in ('rho', '_uv', 'rsqr'):
+        for k in ('rho', '_uv', 'rsqr', 'u_illuminated', 'v_illuminated'):
             d.pop(k, None)
         # Only reconstruct _illuminated if we made it from geometry.  If loaded, it's probably
         # faster to serialize the array.
@@ -743,15 +752,20 @@ class PhaseScreenList(object):
         return len(self._layers)
 
     def __getitem__(self, index):
-        import numbers
-        cls = type(self)
-        if isinstance(index, slice):
-            return cls(self._layers[index])
-        elif isinstance(index, numbers.Integral):
-            return self._layers[index]
+        try:
+            items = self._layers[index]
+        except TypeError:
+            msg = "{cls.__name__} indices must be integers or slices"
+            raise TypeError(msg.format(cls=self.__class__))
+        try:
+            index + 1   # Regular in indices are the norm, so try something that works for it,
+                        # but not for slices, where we need different handling.
+        except TypeError:
+            # index is a slice, so items is a list.
+            return PhaseScreenList(items)
         else:
-            msg = "{cls.__name__} indices must be integers"
-            raise TypeError(msg.format(cls=cls))
+            # index is an int, so items is just one screen.
+            return items
 
     def __setitem__(self, index, layer):
         self._layers[index] = layer
@@ -776,7 +790,8 @@ class PhaseScreenList(object):
         return "galsim.PhaseScreenList(%r)" % self._layers
 
     def __eq__(self, other):
-        return isinstance(other,PhaseScreenList) and self._layers == other._layers
+        return (self is other or
+                (isinstance(other,PhaseScreenList) and self._layers == other._layers))
 
     def __ne__(self, other): return not self == other
 
@@ -788,10 +803,9 @@ class PhaseScreenList(object):
         # dummy rng sentinel attribute so do_pickle() will know to skip the obj == eval(repr(obj))
         # test.
         self.__dict__.pop('rng', None)
-        if any(hasattr(l, 'rng') for l in self):
-            self.rng = None
         self.dynamic = any(l.dynamic for l in self)
         self.reversible = all(l.reversible for l in self)
+        self.__dict__.pop('r0_500_effective', None)
 
     def _seek(self, t):
         """Set all layers' internal clocks to time t."""
@@ -920,8 +934,8 @@ class PhaseScreenList(object):
         gradx, grady = self._layers[0]._wavefront_gradient(u, v, t, theta)
         for layer in self._layers[1:]:
             gx, gy = layer._wavefront_gradient(u, v, t, theta)
-            gradx[...] += gx
-            grady[...] += gy
+            gradx += gx
+            grady += gy
         return gradx, grady
 
     def makePSF(self, lam, **kwargs):
@@ -1005,7 +1019,7 @@ class PhaseScreenList(object):
         """
         return PhaseScreenPSF(self, lam, **kwargs)
 
-    @property
+    @lazy_property
     def r0_500_effective(self):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         r0_500s = np.array([l.r0_500 for l in self if hasattr(l, 'r0_500')])
@@ -1031,6 +1045,11 @@ class PhaseScreenList(object):
         # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
         # screens, we'll use that relation.
         return np.sum([layer._getStepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['_pending'] = []
+        return d
 
 
 class PhaseScreenPSF(GSObject):
@@ -1185,7 +1204,7 @@ class PhaseScreenPSF(GSObject):
                  theta=(0.0*arcsec, 0.0*arcsec), interpolant=None,
                  scale_unit=arcsec, ii_pad_factor=4., suppress_warning=False,
                  geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
-                 gsparams=None, _bar=None, _force_stepk=0., _force_maxk=0., **kwargs):
+                 gsparams=None, _force_stepk=0., _force_maxk=0., _bar=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1219,7 +1238,7 @@ class PhaseScreenPSF(GSObject):
         self._force_stepk = _force_stepk
         self._force_maxk = _force_maxk
 
-        self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
+        self._img = None
 
         if self.exptime < 0:
             raise GalSimRangeError("Cannot integrate PSF for negative time.", self.exptime, 0.)
@@ -1234,18 +1253,18 @@ class PhaseScreenPSF(GSObject):
         # We'll set these more intelligently as needed below
         self._second_kick = second_kick
         self._screen_list._delayCalculation(self)
-        self.finalized = False
+        self._finalized = False
 
     @lazy_property
     def _real_ii(self):
         ii = InterpolatedImage(
-                self.img, x_interpolant=self.interpolant,
+                self._img, x_interpolant=self.interpolant,
                 _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
 
         if not self._suppress_warning:
-            specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
+            specified_stepk = 2*np.pi/(self._img.array.shape[0]*self.scale)
             observed_stepk = ii.stepk
 
             if observed_stepk < specified_stepk:
@@ -1279,7 +1298,7 @@ class PhaseScreenPSF(GSObject):
 
     @property
     def _ii(self):
-        if self.finalized:
+        if self._finalized:
             return self._real_ii
         else:
             return self._dummy_ii
@@ -1299,7 +1318,7 @@ class PhaseScreenPSF(GSObject):
 
     @lazy_property
     def second_kick(self):
-        """Make a SecondKick object based on contents of _screen_list and aper.
+        """Make a SecondKick object based on contents of screen_list and aper.
         """
         from .airy import Airy
         from .second_kick import SecondKick
@@ -1321,13 +1340,26 @@ class PhaseScreenPSF(GSObject):
     def flux(self):
         return self._flux
 
+    @property
+    def screen_list(self):
+        return self._screen_list
+
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
-        from copy import copy
-        ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
-        ret.aper = self.aper.withGSParams(gsparams)
+        if gsparams == self.gsparams: return self
+        gsparams = GSParams.check(gsparams)
+        aper = self.aper.withGSParams(gsparams)
+        ret = self.__class__.__new__(self.__class__)
+        ret.__dict__.update(self.__dict__)
+        # Make sure we generate fresh versions of any attrs that depend on gsparams
+        for attr in ['second_kick', '_real_ii', '_dummy_ii']:
+            ret.__dict__.pop(attr, None)
+        ret._gsparams = gsparams
+        ret.aper = aper
+        # Make sure we mark that we need to recalculate any previously finalized InterpolatedImage
+        ret._finalized = False
+        ret._screen_list._delayCalculation(ret)
+        ret._img = None
         return ret
 
     def __str__(self):
@@ -1343,19 +1375,20 @@ class PhaseScreenPSF(GSObject):
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
-        return (isinstance(other, PhaseScreenPSF) and
-                self._screen_list == other._screen_list and
-                self.lam == other.lam and
-                self.aper == other.aper and
-                self.t0 == other.t0 and
-                self.exptime == other.exptime and
-                self.time_step == other.time_step and
-                self._flux == other._flux and
-                self.interpolant == other.interpolant and
-                self._force_stepk == other._force_stepk and
-                self._force_maxk == other._force_maxk and
-                self._ii_pad_factor == other._ii_pad_factor and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, PhaseScreenPSF) and
+                 self._screen_list == other._screen_list and
+                 self.lam == other.lam and
+                 self.aper == other.aper and
+                 self.t0 == other.t0 and
+                 self.exptime == other.exptime and
+                 self.time_step == other.time_step and
+                 self._flux == other._flux and
+                 self.interpolant == other.interpolant and
+                 self._force_stepk == other._force_stepk and
+                 self._force_maxk == other._force_maxk and
+                 self._ii_pad_factor == other._ii_pad_factor and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
@@ -1369,8 +1402,8 @@ class PhaseScreenPSF(GSObject):
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         from . import fft
-        u = self.aper.u[self.aper.illuminated]
-        v = self.aper.v[self.aper.illuminated]
+        u = self.aper.u_illuminated
+        v = self.aper.v_illuminated
         # This is where I need to make sure the screens are instantiated for FFT.
         self._screen_list.instantiate(check='FFT')
         wf = self._screen_list._wavefront(u, v, None, self.theta)
@@ -1378,25 +1411,25 @@ class PhaseScreenPSF(GSObject):
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = fft.fft2(expwf_grid, shift_in=True, shift_out=True)
-        self.img += np.abs(ftexpwf)**2
+        if self._img is None:
+            self._img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
+        self._img += np.abs(ftexpwf)**2
         if self._bar:  # pragma: no cover
             self._bar.update()
 
     def _finalize(self):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        self.img *= self._flux / self.img.sum(dtype=float)
+        self._img *= self._flux / self._img.sum(dtype=float)
         b = _BoundsI(1,self.aper.npix,1,self.aper.npix)
-        self.img = _Image(self.img, b, PixelScale(self.scale))
+        self._img = _Image(self._img, b, PixelScale(self.scale))
 
-        self.finalized = True
+        self._finalized = True
 
     @property
     def _sbp(self):
         return self._ii._sbp
 
     def __getstate__(self):
-        # Finish calculating before pickling.
-        self._prepareDraw()
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
@@ -1407,6 +1440,8 @@ class PhaseScreenPSF(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
+        if not self._finalized:
+            self._screen_list._delayCalculation(self)
 
     @property
     def _maxk(self):
@@ -1423,11 +1458,17 @@ class PhaseScreenPSF(GSObject):
 
     @property
     def _positive_flux(self):
-        return self._ii.positive_flux
+        if self._geometric_shooting:
+            return self._flux
+        else:
+            return self._ii.positive_flux
 
     @property
     def _negative_flux(self):
-        return self._ii.negative_flux
+        if self._geometric_shooting:
+            return 0
+        else:
+            return self._ii.negative_flux
 
     @property
     def _max_sb(self):
@@ -1448,20 +1489,22 @@ class PhaseScreenPSF(GSObject):
         self._ii._drawReal(image)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
+        from .random import UniformDeviate
 
         if not self._geometric_shooting:
             self._prepareDraw()
-            return self._ii._shoot(photons, ud)
+            return self._ii._shoot(photons, rng)
 
         n_photons = len(photons)
         t = np.empty((n_photons,), dtype=float)
+        ud = UniformDeviate(rng)
         ud.generate(t)
         t *= self.exptime
         t += self.t0
-        u = self.aper.u[self.aper.illuminated]
-        v = self.aper.v[self.aper.illuminated]
+        u = self.aper.u_illuminated
+        v = self.aper.v_illuminated
         pick = np.empty((n_photons,), dtype=float)
         ud.generate(pick)
         pick *= len(u)
@@ -1480,12 +1523,24 @@ class PhaseScreenPSF(GSObject):
 
         if self.second_kick:
             p2 = PhotonArray(len(photons))
-            self.second_kick._shoot(p2, ud)
-            photons.convolve(p2, ud)
+            self.second_kick._shoot(p2, rng)
+            photons.convolve(p2, rng)
 
     @doc_inherit
     def _drawKImage(self, image):
         self._ii._drawKImage(image)
+
+    @property
+    def img(self):
+        from .deprecated import depr
+        depr('img', 2.1, '', "This functionality has been removed.")
+        return self._img
+
+    @property
+    def finalized(self):
+        from .deprecated import depr
+        depr('finalized', 2.1, "This functionality has been removed.")
+        return self._finalized
 
 
 class OpticalPSF(GSObject):
@@ -1792,17 +1847,17 @@ class OpticalPSF(GSObject):
     @lazy_property
     def _psf(self):
         psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                   aper=self._aper, interpolant=self._interpolant,
-                                   scale_unit=self._scale_unit, gsparams=self._gsparams,
-                                   suppress_warning=self._suppress_warning,
-                                   geometric_shooting=self._geometric_shooting,
-                                   _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
-                                   ii_pad_factor=self._ii_pad_factor)
+                             aper=self._aper, interpolant=self._interpolant,
+                             scale_unit=self._scale_unit, gsparams=self._gsparams,
+                             suppress_warning=self._suppress_warning,
+                             geometric_shooting=self._geometric_shooting,
+                             _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
+                             ii_pad_factor=self._ii_pad_factor)
         psf._prepareDraw()  # No need to delay an OpticalPSF.
         return psf
 
     def __str__(self):
-        screen = self._psf._screen_list[0]
+        screen = self._psf.screen_list[0]
         s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
@@ -1817,7 +1872,7 @@ class OpticalPSF(GSObject):
         return s
 
     def __repr__(self):
-        screen = self._psf._screen_list[0]
+        screen = self._psf.screen_list[0]
         s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
         s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
@@ -1837,20 +1892,21 @@ class OpticalPSF(GSObject):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, OpticalPSF) and
-                self._lam == other._lam and
-                self._aper == other._aper and
-                self._psf._screen_list == other._psf._screen_list and
-                self._flux == other._flux and
-                self._interpolant == other._interpolant and
-                self._scale_unit == other._scale_unit and
-                self._force_stepk == other._force_stepk and
-                self._force_maxk == other._force_maxk and
-                self._ii_pad_factor == other._ii_pad_factor and
-                self._gsparams == other._gsparams)
+        return (self is other or
+                (isinstance(other, OpticalPSF) and
+                 self._lam == other._lam and
+                 self._aper == other._aper and
+                 self._psf.screen_list == other._psf.screen_list and
+                 self._flux == other._flux and
+                 self._interpolant == other._interpolant and
+                 self._scale_unit == other._scale_unit and
+                 self._force_stepk == other._force_stepk and
+                 self._force_maxk == other._force_maxk and
+                 self._ii_pad_factor == other._ii_pad_factor and
+                 self._gsparams == other._gsparams))
 
     def __hash__(self):
-        return hash(("galsim.OpticalPSF", self._lam, self._aper, self._psf._screen_list[0],
+        return hash(("galsim.OpticalPSF", self._lam, self._aper, self._psf.screen_list[0],
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
                      self._force_maxk, self._ii_pad_factor, self._gsparams))
 
@@ -1905,8 +1961,8 @@ class OpticalPSF(GSObject):
         self._psf._drawReal(image)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
-        self._psf._shoot(photons, ud)
+    def _shoot(self, photons, rng):
+        self._psf._shoot(photons, rng)
 
     @doc_inherit
     def _drawKImage(self, image):

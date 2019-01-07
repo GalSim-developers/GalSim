@@ -83,7 +83,11 @@ class DES_PSFEx(object):
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
-    (nor integrate over the pixel).  This would effectively include the pixel twice!
+    (nor integrate over the pixel).  This would effectively include the pixel twice!  
+    
+    In GalSim, you should always pass `method='no_pixel` when drawing images of objects
+    convolved with PSFs produced with this class.  Other drawing methods, such as photon shooting
+    (`method='phot'`) or an FFT (`method='fft'`), will result in convolving the pixel twice.
 
     @param file_name       The file name to be read in, or a pyfits HDU in which case it is used
                            directly instead of being opened.

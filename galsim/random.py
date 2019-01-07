@@ -204,7 +204,7 @@ class BaseDeviate(object):
         """Generate many pseudo-random values, filling in the values of a numpy array.
         """
         array_1d = np.ascontiguousarray(array.ravel(),dtype=float)
-        assert(array_1d.strides[0] == array_1d.itemsize)
+        #assert(array_1d.strides[0] == array_1d.itemsize)
         self._rng.generate(len(array_1d), array_1d.ctypes.data)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
@@ -214,17 +214,18 @@ class BaseDeviate(object):
         """Generate many pseudo-random values, adding them to the values of a numpy array.
         """
         array_1d = np.ascontiguousarray(array.ravel(),dtype=float)
-        assert(array_1d.strides[0] == array_1d.itemsize)
+        #assert(array_1d.strides[0] == array_1d.itemsize)
         self._rng.add_generate(len(array_1d), array_1d.ctypes.data)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
     def __eq__(self, other):
-        return (type(self) == type(other) and
-                self._rng_type == other._rng_type and
-                self._rng_args == other._rng_args and
-                self.serialize() == other.serialize())
+        return (self is other or
+                (isinstance(other, self.__class__) and
+                 self._rng_type == other._rng_type and
+                 self._rng_args == other._rng_args and
+                 self.serialize() == other.serialize()))
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -277,6 +278,12 @@ class UniformDeviate(BaseDeviate):
         Returns a uniform deviate between 0 and 1.
         """
         return self._rng.generate1()
+
+    def __repr__(self):
+        return 'galsim.UniformDeviate(seed=%r)'%(self._seed_repr())
+    def __str__(self):
+        return 'galsim.UniformDeviate()'
+
 
 class GaussianDeviate(BaseDeviate):
     """Pseudo-random number generator with Gaussian distribution.
@@ -331,11 +338,17 @@ class GaussianDeviate(BaseDeviate):
         variance for each.
         """
         array_1d = np.ascontiguousarray(array.ravel(), dtype=float)
-        assert(array_1d.strides[0] == array_1d.itemsize)
+        #assert(array_1d.strides[0] == array_1d.itemsize)
         self._rng.generate_from_variance(len(array_1d), array_1d.ctypes.data)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
+
+    def __repr__(self):
+        return 'galsim.GaussianDeviate(seed=%r, mean=%r, sigma=%r)'%(
+                self._seed_repr(), self.mean, self.sigma)
+    def __str__(self):
+        return 'galsim.GaussianDeviate(mean=%r, sigma=%r)'%(self.mean, self.sigma)
 
 
 class BinomialDeviate(BaseDeviate):
@@ -386,6 +399,12 @@ class BinomialDeviate(BaseDeviate):
         """
         return self._rng.generate1()
 
+    def __repr__(self):
+        return 'galsim.BinomialDeviate(seed=%r, N=%r, p=%r)'%(self._seed_repr(), self.n, self.p)
+    def __str__(self):
+        return 'galsim.BinomialDeviate(N=%r, p=%r)'%(self.n, self.p)
+
+
 class PoissonDeviate(BaseDeviate):
     """Pseudo-random Poisson deviate with specified `mean`.
 
@@ -414,6 +433,8 @@ class PoissonDeviate(BaseDeviate):
         106
     """
     def __init__(self, seed=None, mean=1.):
+        if mean < 0:
+            raise GalSimValueError("PoissonDeviate is only defined for mean >= 0.", mean)
         self._rng_type = _galsim.PoissonDeviateImpl
         self._rng_args = (float(mean),)
         self.reset(seed)
@@ -433,12 +454,19 @@ class PoissonDeviate(BaseDeviate):
         """Generate many Poisson deviate values using the existing array values as the
         expectation value (aka mean) for each.
         """
+        if np.any(array < 0):
+            raise GalSimValueError("Expectation array may not have values < 0.", array)
         array_1d = np.ascontiguousarray(array.ravel(), dtype=float)
-        assert(array_1d.strides[0] == array_1d.itemsize)
+        #assert(array_1d.strides[0] == array_1d.itemsize)
         self._rng.generate_from_expectation(len(array_1d), array_1d.ctypes.data)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
+
+    def __repr__(self):
+        return 'galsim.PoissonDeviate(seed=%r, mean=%r)'%(self._seed_repr(), self.mean)
+    def __str__(self):
+        return 'galsim.PoissonDeviate(mean=%r)'%(self.mean)
 
 
 class WeibullDeviate(BaseDeviate):
@@ -492,6 +520,11 @@ class WeibullDeviate(BaseDeviate):
         """
         return self._rng.generate1()
 
+    def __repr__(self):
+        return 'galsim.WeibullDeviate(seed=%r, a=%r, b=%r)'%(self._seed_repr(), self.a, self.b)
+    def __str__(self):
+        return 'galsim.WeibullDeviate(a=%r, b=%r)'%(self.a, self.b)
+
 
 class GammaDeviate(BaseDeviate):
     """A Gamma-distributed deviate with shape parameter `k` and scale parameter `theta`.
@@ -540,6 +573,12 @@ class GammaDeviate(BaseDeviate):
         """
         return self._rng.generate1()
 
+    def __repr__(self):
+        return 'galsim.GammaDeviate(seed=%r, k=%r, theta=%r)'%(
+                self._seed_repr(), self.k, self.theta)
+    def __str__(self):
+        return 'galsim.GammaDeviate(k=%r, theta=%r)'%(self.k, self.theta)
+
 
 class Chi2Deviate(BaseDeviate):
     """Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter `n`.
@@ -584,6 +623,11 @@ class Chi2Deviate(BaseDeviate):
         Returns a Chi2-distributed deviate with the given number of degrees of freedom.
         """
         return self._rng.generate1()
+
+    def __repr__(self):
+        return 'galsim.Chi2Deviate(seed=%r, n=%r)'%(self._seed_repr(), self.n)
+    def __str__(self):
+        return 'galsim.Chi2Deviate(n=%r)'%(self.n)
 
 
 class DistDeviate(BaseDeviate):
@@ -818,14 +862,14 @@ class DistDeviate(BaseDeviate):
                 self._function, self._xmin, self._xmax, self._interpolant, self._npoints)
 
     def __eq__(self, other):
-        if repr(self) != repr(other):
-            return False
-        return (self.serialize() == other.serialize() and
-                self._function == other._function and
-                self._xmin == other._xmin and
-                self._xmax == other._xmax and
-                self._interpolant == other._interpolant and
-                self._npoints == other._npoints)
+        return (self is other or
+                (isinstance(other, DistDeviate) and
+                 self.serialize() == other.serialize() and
+                 self._function == other._function and
+                 self._xmin == other._xmin and
+                 self._xmax == other._xmax and
+                 self._interpolant == other._interpolant and
+                 self._npoints == other._npoints))
 
     # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
     # original function parameter, which may be a string or a file name.

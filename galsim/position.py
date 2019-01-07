@@ -147,7 +147,8 @@ class Position(object):
         return "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.x == other.x and self.y == other.y
+        return (self is other or
+                (isinstance(other, self.__class__) and self.x == other.x and self.y == other.y))
 
     def __ne__(self, other):
         return not self.__eq__(other)

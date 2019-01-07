@@ -513,18 +513,18 @@ def do_jac_decomp(wcs, name):
     scale, shear, theta, flip = wcs.getDecomposition()
 
     # First see if we can recreate the right matrix from this:
-    S = np.matrix( [ [ 1.+shear.g1, shear.g2 ],
-                     [ shear.g2, 1.-shear.g1 ] ] ) / np.sqrt(1.-shear.g1**2-shear.g2**2)
-    R = np.matrix( [ [ np.cos(theta), -np.sin(theta) ],
-                     [ np.sin(theta), np.cos(theta) ] ] )
+    S = np.array( [ [ 1.+shear.g1, shear.g2 ],
+                    [ shear.g2, 1.-shear.g1 ] ] ) / np.sqrt(1.-shear.g1**2-shear.g2**2)
+    R = np.array( [ [ np.cos(theta), -np.sin(theta) ],
+                    [ np.sin(theta), np.cos(theta) ] ] )
     if flip:
-        F = np.matrix( [ [ 0, 1 ],
-                         [ 1, 0 ] ] )
+        F = np.array( [ [ 0, 1 ],
+                        [ 1, 0 ] ] )
     else:
-        F = np.matrix( [ [ 1, 0 ],
-                         [ 0, 1 ] ] )
+        F = np.array( [ [ 1, 0 ],
+                        [ 0, 1 ] ] )
 
-    M = scale * S * R * F
+    M = scale * S.dot(R).dot(F)
     J = wcs.getMatrix()
     np.testing.assert_almost_equal(
             M, J, 8, "Decomposition was inconsistent with jacobian for "+name)
@@ -1840,7 +1840,7 @@ def test_pyastwcs():
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
                       'TAN-PV', 'TAN-FLIP', 'REGION', 'TNX' ]
     else:
-        test_tags = [ 'TAN', 'ZPX', 'SIP', 'TAN-PV' ]
+        test_tags = [ 'TAN', 'ZPX', 'SIP', 'TAN-PV', 'TNX' ]
 
     dir = 'fits_files'
     for tag in test_tags:

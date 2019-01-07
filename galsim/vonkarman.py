@@ -182,14 +182,15 @@ class VonKarman(GSObject):
         return self._sbvk.structureFunction(rho)
 
     def __eq__(self, other):
-        return (isinstance(other, VonKarman) and
-        self.lam == other.lam and
-        self.r0 == other.r0 and
-        self.L0 == other.L0 and
-        self.flux == other.flux and
-        self.scale_unit == other.scale_unit and
-        self.do_delta == other.do_delta and
-        self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, VonKarman) and
+                 self.lam == other.lam and
+                 self.r0 == other.r0 and
+                 self.L0 == other.L0 and
+                 self.flux == other.flux and
+                 self.scale_unit == other.scale_unit and
+                 self.do_delta == other.do_delta and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.VonKarman", self.lam, self.r0, self.L0, self.flux, self.scale_unit,

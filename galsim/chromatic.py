@@ -183,7 +183,7 @@ class ChromaticObject(object):
         Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
         those component objects will also have their gsparams updated to the new value.
         """
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._obj = self._obj.withGSParams(gsparams)
@@ -235,9 +235,10 @@ class ChromaticObject(object):
         raise GalSimError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticObject) and
-                hasattr(other, '_obj') and  # not all ChromaticObjects have an _obj attribute.
-                self._obj == other._obj)
+        return (self is other or
+                (isinstance(other, ChromaticObject) and
+                 hasattr(other, '_obj') and  # not all ChromaticObjects have an _obj attribute.
+                 self._obj == other._obj))
 
     def __ne__(self, other): return not self.__eq__(other)
 
@@ -1093,7 +1094,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret.deinterpolated = self.deinterpolated.withGSParams(gsparams)
@@ -1101,11 +1102,12 @@ class InterpolatedChromaticObject(ChromaticObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, InterpolatedChromaticObject) and
-                self.deinterpolated == other.deinterpolated and
-                np.array_equal(self.waves, other.waves) and
-                self.oversample == other.oversample and
-                self.use_exact_SED == other.use_exact_SED)
+        return (self is other or
+                (isinstance(other, InterpolatedChromaticObject) and
+                 self.deinterpolated == other.deinterpolated and
+                 np.array_equal(self.waves, other.waves) and
+                 self.oversample == other.oversample and
+                 self.use_exact_SED == other.use_exact_SED))
 
     def __hash__(self):
         return hash(("galsim.InterpolatedChromaticObject", self.deinterpolated, tuple(self.waves),
@@ -1183,7 +1185,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         if _flux_ratio is None:
             _flux_ratio = lambda w: 1.0
         # Constant flux_ratio is already an SED at this point, so can treat as function.
-        assert hasattr(_flux_ratio, '__call__')
+        #assert hasattr(_flux_ratio, '__call__')
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
@@ -1385,21 +1387,22 @@ class ChromaticAtmosphere(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret.base_obj = self.base_obj.withGSParams(gsparams)
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticAtmosphere) and
-                self.base_obj == other.base_obj and
-                self.base_wavelength == other.base_wavelength and
-                self.alpha == other.alpha and
-                self.zenith_angle == other.zenith_angle and
-                self.parallactic_angle == other.parallactic_angle and
-                self.scale_unit == other.scale_unit and
-                self.kw == other.kw)
+        return (self is other or
+                (isinstance(other, ChromaticAtmosphere) and
+                 self.base_obj == other.base_obj and
+                 self.base_wavelength == other.base_wavelength and
+                 self.alpha == other.alpha and
+                 self.zenith_angle == other.zenith_angle and
+                 self.parallactic_angle == other.parallactic_angle and
+                 self.scale_unit == other.scale_unit and
+                 self.kw == other.kw))
 
     def __hash__(self):
         return hash(("galsim.ChromaticAtmosphere", self.base_obj, self.base_wavelength,
@@ -1564,7 +1567,7 @@ class ChromaticTransformation(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -1581,6 +1584,7 @@ class ChromaticTransformation(ChromaticObject):
         return self._original
 
     def __eq__(self, other):
+        if self is other: return True
         if not (isinstance(other, ChromaticTransformation) and
                 self.original == other.original and
                 self._gsparams == other._gsparams and
@@ -1869,7 +1873,7 @@ class ChromaticSum(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -1878,10 +1882,11 @@ class ChromaticSum(ChromaticObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticSum) and
-                self.obj_list == other.obj_list and
-                self._gsparams == other._gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, ChromaticSum) and
+                 self.obj_list == other.obj_list and
+                 self._gsparams == other._gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.ChromaticSum", tuple(self.obj_list), self._gsparams,
@@ -2082,7 +2087,7 @@ class ChromaticConvolution(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2123,10 +2128,11 @@ class ChromaticConvolution(ChromaticObject):
         ChromaticConvolution._effective_prof_cache.resize(maxsize)
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticConvolution) and
-                self.obj_list == other.obj_list and
-                self._gsparams == other._gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, ChromaticConvolution) and
+                 self.obj_list == other.obj_list and
+                 self._gsparams == other._gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.ChromaticConvolution", tuple(self.obj_list), self._gsparams,
@@ -2371,7 +2377,7 @@ class ChromaticDeconvolution(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2380,10 +2386,11 @@ class ChromaticDeconvolution(ChromaticObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticDeconvolution) and
-                self._obj == other._obj and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, ChromaticDeconvolution) and
+                 self._obj == other._obj and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.ChromaticDeconvolution", self._obj, self.gsparams,
@@ -2453,7 +2460,7 @@ class ChromaticAutoConvolution(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2462,11 +2469,12 @@ class ChromaticAutoConvolution(ChromaticObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticAutoConvolution) and
-                self._obj == other._obj and
-                self._real_space == other._real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, ChromaticAutoConvolution) and
+                 self._obj == other._obj and
+                 self._real_space == other._real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.ChromaticAutoConvolution", self._obj, self._real_space, self.gsparams,
@@ -2539,7 +2547,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2548,11 +2556,12 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticAutoCorrelation) and
-                self._obj == other._obj and
-                self._real_space == other._real_space and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, ChromaticAutoCorrelation) and
+                 self._obj == other._obj and
+                 self._real_space == other._real_space and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.ChromaticAutoCorrelation", self._obj, self._real_space, self.gsparams,
@@ -2632,7 +2641,7 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -2641,10 +2650,11 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticFourierSqrtProfile) and
-                self._obj == other._obj and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, ChromaticFourierSqrtProfile) and
+                 self._obj == other._obj and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.ChromaticFourierSqrtProfile", self._obj, self.gsparams,
@@ -2770,20 +2780,21 @@ class ChromaticOpticalPSF(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticOpticalPSF) and
-                self.lam == other.lam and
-                self.lam_over_diam == other.lam_over_diam and
-                np.array_equal(self.aberrations, other.aberrations) and
-                self.scale_unit == other.scale_unit and
-                self.gsparams == other.gsparams and
-                self.kwargs == other.kwargs)
+        return (self is other or
+                (isinstance(other, ChromaticOpticalPSF) and
+                 self.lam == other.lam and
+                 self.lam_over_diam == other.lam_over_diam and
+                 np.array_equal(self.aberrations, other.aberrations) and
+                 self.scale_unit == other.scale_unit and
+                 self.gsparams == other.gsparams and
+                 self.kwargs == other.kwargs))
 
     def __hash__(self):
         return hash(("galsim.ChromaticOpticalPSF", self.lam, self.lam_over_diam,
@@ -2887,19 +2898,20 @@ class ChromaticAiry(ChromaticObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams=GSParams.check(gsparams)
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, ChromaticAiry) and
-                self.lam == other.lam and
-                self.lam_over_diam == other.lam_over_diam and
-                self.scale_unit == other.scale_unit and
-                self.gsparams == other.gsparams and
-                self.kwargs == other.kwargs)
+        return (self is other or
+                (isinstance(other, ChromaticAiry) and
+                 self.lam == other.lam and
+                 self.lam_over_diam == other.lam_over_diam and
+                 self.scale_unit == other.scale_unit and
+                 self.gsparams == other.gsparams and
+                 self.kwargs == other.kwargs))
 
     def __hash__(self):
         return hash(("galsim.ChromaticAiry", self.lam, self.lam_over_diam, self.scale_unit,

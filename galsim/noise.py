@@ -199,7 +199,7 @@ class BaseNoise(object):
 
     def __eq__(self, other):
         # Quick and dirty.  Just check reprs are equal.
-        return repr(self) == repr(other)
+        return self is other or repr(self) == repr(other)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -331,6 +331,8 @@ class PoissonNoise(BaseNoise):
 
         if self.sky_level != 0.:
             noise_array += self.sky_level
+        # Make sure no negative values
+        noise_array = noise_array.clip(0.)
         # The noise_image now has the expectation values for each pixel with the sky added.
         self._pd.generate_from_expectation(noise_array)
         # Subtract off the sky, since we don't want it in the final image.
@@ -462,6 +464,7 @@ class CCDNoise(BaseNoise):
         # First add the poisson noise from the signal + sky:
         if self.gain > 0.:
             noise_array *= self.gain  # convert to electrons
+            noise_array = noise_array.clip(0.)
             # The noise_image now has the expectation values for each pixel with the sky added.
             self._pd.generate_from_expectation(noise_array)
             # Subtract off the sky, since we don't want it in the final image.

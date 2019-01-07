@@ -76,8 +76,9 @@ class Sensor(object):
         return 'galsim.Sensor()'
 
     def __eq__(self, other):
-        return (isinstance(other, Sensor) and
-                repr(self) == repr(other))  # Checks that neither is a subclass
+        return (self is other or
+                (isinstance(other, Sensor) and
+                 repr(self) == repr(other)))  # Checks that neither is a subclass
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -232,16 +233,17 @@ class SiliconSensor(Sensor):
                         self.treering_func, self.treering_center, self.transpose)
 
     def __eq__(self, other):
-        return (isinstance(other, SiliconSensor) and
-                self.config == other.config and
-                self.strength == other.strength and
-                self.rng == other.rng and
-                self.diffusion_factor == other.diffusion_factor and
-                self.qdist == other.qdist and
-                self.nrecalc == other.nrecalc and
-                self.treering_func == other.treering_func and
-                self.treering_center == other.treering_center and
-                self.transpose == other.transpose)
+        return (self is other or
+                (isinstance(other, SiliconSensor) and
+                 self.config == other.config and
+                 self.strength == other.strength and
+                 self.rng == other.rng and
+                 self.diffusion_factor == other.diffusion_factor and
+                 self.qdist == other.qdist and
+                 self.nrecalc == other.nrecalc and
+                 self.treering_func == other.treering_func and
+                 self.treering_center == other.treering_center and
+                 self.transpose == other.transpose))
 
     __hash__ = None
 
@@ -348,22 +350,35 @@ class SiliconSensor(Sensor):
         PixelSize = self.config['PixelSizeX']
         SensorThickness = self.config['SensorThickness']
         ChannelStopWidth = self.config['ChannelStopWidth']
+        FieldOxideTaper = self.config["FieldOxideTaper"]        
         Vbb = self.config['Vbb']
         Vparallel_lo = self.config['Vparallel_lo']
         Vparallel_hi = self.config['Vparallel_hi']
+        qfh = self.config["qfh"]        
         CCDTemperature = self.config['CCDTemperature']
         # This calculates the diffusion step size given the detector
         # parameters.  The diffusion step size is the mean radius of diffusion
         # assuming the electron propagates the full width of the sensor.
         # It depends on the temperature, the sensor voltages, and
         # the diffusion_factor parameter.
+        # The diffusion sigma will be scaled in Silicon.cpp
+        # depending on the conversion depth
 
         # Set up the diffusion step size at the operating temperature
-        HiPhases = CollectingPhases
-        LoPhases = NumPhases - CollectingPhases
-        Vdiff = (LoPhases * Vparallel_lo + HiPhases * Vparallel_hi) / NumPhases - Vbb
+        # First, calculate the approximate front side voltage
+        VChannelStop = qfh # near zero
+        VCollect = Vparallel_hi + 12.0 # Estimate from simulation
+        VBarrier = Vparallel_lo + 15.0 # Estimate from simulation
+        ChannelStopRegionWidth = 2.0 * (ChannelStopWidth / 2.0 + FieldOxideTaper)
+        ChannelStopRegionArea = ChannelStopRegionWidth * PixelSize
+        CollectArea = (PixelSize - ChannelStopRegionWidth) * PixelSize * CollectingPhases / NumPhases 
+        BarrierArea = (PixelSize - ChannelStopRegionWidth) * PixelSize * (NumPhases - CollectingPhases) / NumPhases 
+        Vfront = (ChannelStopRegionArea * VChannelStop + CollectArea * VCollect + BarrierArea * VBarrier) / (PixelSize**2)
+        # Then, the total voltage across the silicon 
+        Vdiff = max(Vfront - Vbb, 1.0) # This just makes sure that Vdiff is always > 1.0V
+        MobilityFactor = 0.27 # This is the factor from Green et.al.        
         # 0.026 is kT/q at room temp (298 K)
-        diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff) * SensorThickness
+        diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff / MobilityFactor) * SensorThickness
         return diff_step
 
     @classmethod

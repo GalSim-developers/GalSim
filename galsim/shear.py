@@ -270,7 +270,8 @@ class Shear(object):
     # order of operations: shear by -other._shear, then by self._shear
     def __sub__(self, other): return self + (-other)
 
-    def __eq__(self, other): return isinstance(other, Shear) and self._g == other._g
+    def __eq__(self, other):
+        return self is other or (isinstance(other, Shear) and self._g == other._g)
     def __ne__(self, other): return not self.__eq__(other)
 
     def getMatrix(self):

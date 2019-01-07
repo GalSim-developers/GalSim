@@ -244,7 +244,8 @@ class ShapeData(object):
         return s
 
     def __eq__(self, other):
-        return isinstance(other,ShapeData) and self._getinitargs() == other._getinitargs()
+        return (self is other or
+                (isinstance(other,ShapeData) and self._getinitargs() == other._getinitargs()))
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(("galsim.hsm.ShapeData", self._getinitargs()))
 
@@ -428,7 +429,8 @@ class HSMParams(object):
         return ('galsim.hsm.HSMParams(' + 14*'%r,' + '%r)')%self._getinitargs()
 
     def __eq__(self, other):
-        return isinstance(other, HSMParams) and self._getinitargs() == other._getinitargs()
+        return (self is other or
+                (isinstance(other, HSMParams) and self._getinitargs() == other._getinitargs()))
     def __ne__(self, other):
         return not self.__eq__(other)
     def __hash__(self):

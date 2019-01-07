@@ -431,7 +431,7 @@ def test_silicon_area():
     np.testing.assert_almost_equal(im(0,0), 149462.06966413918)
 
     rng = galsim.BaseDeviate(5678)
-    silicon = galsim.SiliconSensor(rng=rng)
+    silicon = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)
     area_image = silicon.calculate_pixel_areas(im)
     print('area min = ',area_image.array.min())
     print('area max = ',area_image.array.max())
@@ -461,12 +461,12 @@ def test_silicon_area():
     print('+- 1 along row:    ',im2(1,0),im2(-1,0))
     assert im2(0,0) == im2.array.max()
     assert im2(0,1) + im2(0,-1) > im2(1,0) + im2(-1,0)
-    np.testing.assert_almost_equal(im2(0,0), 133749)
-    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 58784.5)
-    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 58477.5)
+    np.testing.assert_almost_equal(im2(0,0), 143352)
+    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59306.5)
+    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59032.0)
 
     # Repeat with transpose=True to check that things are transposed properly.
-    siliconT = galsim.SiliconSensor(rng=rng, transpose=True)
+    siliconT = galsim.SiliconSensor(rng=rng, transpose=True, diffusion_factor=0.0)
     area_imageT = siliconT.calculate_pixel_areas(im)
     print('with transpose=True:')
     print('area min = ',area_imageT.array.min())
@@ -489,9 +489,9 @@ def test_silicon_area():
     assert im2T(0,0) == im2T.array.max()
     assert im2T(0,1) + im2T(0,-1) < im2T(1,0) + im2T(-1,0)
     # Actual values are different, since rng is in different state. But qualitatively transposed.
-    np.testing.assert_almost_equal(im2T(0,0), 134220)
-    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58216.5)
-    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59255)
+    np.testing.assert_almost_equal(im2T(0,0), 143842)
+    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58895.0)
+    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59243.0)
 
     do_pickle(siliconT)
 
@@ -765,7 +765,7 @@ def test_resume():
         flux_per_pixel = 40
         nx = 200
         ny = 200
-        block_size = int(1.3e5)
+        block_size = int(1.2e5)
         nrecalc = 1.e6
     else:
         flux_per_pixel = 40

@@ -31,19 +31,26 @@
 #include "Std.h"
 #include "OneDimensionalDeviate.h"
 
+
 namespace galsim {
+
+    // Used by LookupTable2D in Python.  Defined in Table.cpp
+    void WrapArrayToPeriod(double* x, int n, double x0, double period);
+
+    class Interpolant;
 
     /**
      * @brief A class to represent lookup tables for a function y = f(x).
      */
-    class Table:
+    class Table :
         public FluxDensity
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest, spline };
+        enum interpolant { linear, floor, ceil, nearest, spline, gsinterp };
 
         /// Table from args, vals
         Table(const double* args, const double* vals, int N, interpolant in);
+        Table(const double* args, const double* vals, int N, const Interpolant* gsinterp);
 
         double argMin() const;
         double argMax() const;
@@ -59,11 +66,14 @@ namespace galsim {
         /// interp many values at once
         void interpMany(const double* argvec, double* valvec, int N) const;
 
+        class TableImpl;
     protected:
+        shared_ptr<TableImpl> _pimpl;
+
         Table() {}  // TableBuilder needs this, since it delays making the _pimpl.
 
-        class TableImpl;
-        shared_ptr<TableImpl> _pimpl;
+        void _makeImpl(const double* args, const double* vals, int N, interpolant in);
+        void _makeImpl(const double* args, const double* vals, int N, const Interpolant* gsinterp);
     };
 
     // This version keeps its own storage of the arg/val arrays.
@@ -73,13 +83,14 @@ namespace galsim {
         public Table
     {
     public:
-        /// Table from args, vals
         TableBuilder(interpolant in): _final(false), _in(in) {}
+        TableBuilder(const Interpolant* gsinterp) :
+            _final(false), _in(Table::gsinterp), _gsinterp(gsinterp) {}
 
         bool finalized() const { return _final; }
 
         double lookup(double a) const
-        { 
+        {
             assert(_final);
             return Table::lookup(a);
         }
@@ -98,6 +109,7 @@ namespace galsim {
 
         bool _final;
         interpolant _in;
+        const Interpolant* _gsinterp;
         std::vector<double> _xvec;
         std::vector<double> _fvec;
     };
@@ -108,30 +120,48 @@ namespace galsim {
     class Table2D
     {
     public:
-        enum interpolant { linear, floor, ceil, nearest };
+        enum interpolant { linear, floor, ceil, nearest, spline, gsinterp };
 
         /// Table from xargs, yargs, vals
         Table2D(const double* xargs, const double* yargs, const double* vals,
                 int Nx, int Ny, interpolant in);
+        Table2D(const double* xargs, const double* yargs, const double* vals,
+                int Nx, int Ny, const double* dfdx, const double* dfdy, const double* d2fdxdy);
+        Table2D(const double* xargs, const double* yargs, const double* vals,
+                int Nx, int Ny, const Interpolant* gsinterp);
 
-        /// interp, but exception if beyond bounds
+        /// interp
         double lookup(double x, double y) const;
 
         /// interp many values at once
         void interpMany(const double* xvec, const double* yvec, double* valvec, int N) const;
-        void interpManyMesh(const double* xvec, const double* yvec, double* valvec,
-                            int outNx, int outNy) const;
+
+        void interpGrid(const double* xvec, const double* yvec, double* valvec, int Nx, int Ny) const;
 
         /// Estimate df/dx, df/dy at a single location
-        void gradient(double x, double y, double& dfdxvec, double& dfdyvec) const;
+        void gradient(double x, double y, double& dfdx, double& dfdy) const;
 
         /// Estimate many df/dx and df/dy values
         void gradientMany(const double* xvec, const double* yvec,
                           double* dfdxvec, double* dfdyvec, int N) const;
 
-    protected:
+        void gradientGrid(const double* xvec, const double* yvec,
+                          double* dfdxvec, double* dfdyvec, int Nx, int Ny) const;
+
         class Table2DImpl;
-        shared_ptr<Table2DImpl> _pimpl;
+    protected:
+        const shared_ptr<Table2DImpl> _pimpl;
+
+        static std::shared_ptr<Table2DImpl> _makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny, interpolant in);
+        static std::shared_ptr<Table2DImpl> _makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny,
+            const double* dfdx, const double* dfdy, const double* d2fdxdy);
+        static std::shared_ptr<Table2DImpl> _makeImpl(
+            const double* xargs, const double* yargs, const double* vals,
+            int Nx, int Ny, const Interpolant* gsinterp);
     };
 }
 

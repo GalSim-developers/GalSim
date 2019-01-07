@@ -825,7 +825,7 @@ def test_ne():
 def test_geometric_shoot():
     """Test that geometric photon shooting is reasonably consistent with Fourier optics."""
     jmax = 20
-    bd = galsim.BaseDeviate(11111111)
+    bd = galsim.BaseDeviate(1111111)
     u = galsim.UniformDeviate(bd)
 
     lam = 500.0

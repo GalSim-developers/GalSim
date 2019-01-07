@@ -197,7 +197,7 @@ class Transformation(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -206,13 +206,14 @@ class Transformation(GSObject):
         return ret
 
     def __eq__(self, other):
-        return (isinstance(other, Transformation) and
-                self.original == other.original and
-                np.array_equal(self.jac, other.jac) and
-                np.array_equal(self.offset, other.offset) and
-                self.flux_ratio == other.flux_ratio and
-                self.gsparams == other.gsparams and
-                self._propagate_gsparams == other._propagate_gsparams)
+        return (self is other or
+                (isinstance(other, Transformation) and
+                 self.original == other.original and
+                 np.array_equal(self.jac, other.jac) and
+                 np.array_equal(self.offset, other.offset) and
+                 self.flux_ratio == other.flux_ratio and
+                 self.gsparams == other.gsparams and
+                 self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
         return hash(("galsim.Transformation", self.original, tuple(self._jac.ravel()),
@@ -490,8 +491,8 @@ class Transformation(GSObject):
             self._sbp.draw(image._image, image.scale)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
-        self._original._shoot(photons, ud)
+    def _shoot(self, photons, rng):
+        self._original._shoot(photons, rng)
         photons.x, photons.y = self._fwd(photons.x, photons.y)
         photons.x += self.offset.x
         photons.y += self.offset.y

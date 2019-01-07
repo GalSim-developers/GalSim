@@ -149,8 +149,8 @@ class Bandpass(object):
             self.wave_list = _wave_list
             # This also means that red_limit and blue_limit are already set correctly.
             # Don't change them.
-            assert self.blue_limit is not None
-            assert self.red_limit is not None
+            #assert self.blue_limit is not None
+            #assert self.red_limit is not None
             self._setup_func()
             return
 
@@ -581,13 +581,14 @@ class Bandpass(object):
             return self
 
     def __eq__(self, other):
-        return (isinstance(other, Bandpass) and
-                self._orig_tp == other._orig_tp and
-                self.blue_limit == other.blue_limit and
-                self.red_limit == other.red_limit and
-                self.wave_factor == other.wave_factor and
-                self.zeropoint == other.zeropoint and
-                np.array_equal(self.wave_list, other.wave_list))
+        return (self is other or
+                (isinstance(other, Bandpass) and
+                 self._orig_tp == other._orig_tp and
+                 self.blue_limit == other.blue_limit and
+                 self.red_limit == other.red_limit and
+                 self.wave_factor == other.wave_factor and
+                 self.zeropoint == other.zeropoint and
+                 np.array_equal(self.wave_list, other.wave_list)))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):

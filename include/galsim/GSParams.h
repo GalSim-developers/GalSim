@@ -93,13 +93,6 @@ namespace galsim {
          *                                    sample the radial profile out to some value.  We
          *                                    choose the outer radius such that the integral
          *                                    encloses at least (1-shoot_accuracy) of the flux.
-         * @param allowed_flux_variation      Max range of allowed (abs value of) photon fluxes
-         *                                    within an Interval before rejection sampling is
-         *                                    invoked.
-         * @param range_division_for_extrema  Range will be split into this many parts to bracket
-         *                                    extrema.
-         * @param small_fraction_of_flux      Intervals with less than this fraction of probability
-         *                                    are ok to use dominant-sampling method.
          */
         GSParams(int _minimum_fft_size,
                  int _maximum_fft_size,
@@ -113,10 +106,7 @@ namespace galsim {
                  double _realspace_abserr,
                  double _integration_relerr,
                  double _integration_abserr,
-                 double _shoot_accuracy,
-                 double _allowed_flux_variation,
-                 int _range_division_for_extrema,
-                 double _small_fraction_of_flux);
+                 double _shoot_accuracy);
 
         /**
          * A reasonable set of default values
@@ -137,10 +127,7 @@ namespace galsim {
             integration_relerr(1.e-6),
             integration_abserr(1.e-8),
 
-            shoot_accuracy(1.e-5),
-            allowed_flux_variation(0.81),
-            range_division_for_extrema(32),
-            small_fraction_of_flux(1.e-4)
+            shoot_accuracy(1.e-5)
             {}
 
         bool operator==(const GSParams& rhs) const;
@@ -164,9 +151,6 @@ namespace galsim {
         double integration_abserr;
 
         double shoot_accuracy;
-        double allowed_flux_variation;
-        int range_division_for_extrema;
-        double small_fraction_of_flux;
 
     };
 

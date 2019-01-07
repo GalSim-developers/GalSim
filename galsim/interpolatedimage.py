@@ -354,7 +354,7 @@ class InterpolatedImage(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -381,12 +381,15 @@ class InterpolatedImage(GSObject):
         if self._offset != PositionD(0,0):
             prof = prof._shift(-self._offset)  # Opposite direction of what drawImage does.
 
-        # Bring the profile from image coordinates into world coordinates
-        prof = self._wcs._profileToWorld(prof)
-
         # If the user specified a flux, then set to that flux value.
         if self._flux != self._image_flux:
-            prof *= self._flux / self._image_flux
+            flux_ratio = self._flux / self._image_flux
+        else:
+            flux_ratio = 1.
+
+        # Bring the profile from image coordinates into world coordinates
+        # Note: offset needs to happen first before the transformation, so can't bundle it here.
+        prof = self._wcs._profileToWorld(prof, flux_ratio, (0,0))
 
         return prof._sbp
 
@@ -460,12 +463,12 @@ class InterpolatedImage(GSObject):
 
         # The the user gives us a pad image to use, fill the relevant portion with that.
         if pad_image:
-            assert self._xim.bounds.includes(pad_image.bounds)
+            #assert self._xim.bounds.includes(pad_image.bounds)
             self._xim[pad_image.bounds] = pad_image
             nz_bounds += pad_image.bounds
 
         # Now place the given image in the center of the padding image:
-        assert self._xim.bounds.includes(self._image.bounds)
+        #assert self._xim.bounds.includes(self._image.bounds)
         self._xim[self._image.bounds] = self._image
         self._xim.wcs = self._wcs
 
@@ -522,7 +525,7 @@ class InterpolatedImage(GSObject):
         half_size = noise_pad_size // 2
         b = _BoundsI(-half_size, -half_size + noise_pad_size-1,
                      -half_size, -half_size + noise_pad_size-1)
-        assert self._xim.bounds.includes(b)
+        #assert self._xim.bounds.includes(b)
         noise_image = self._xim[b]
         # Add the noise
         noise_image.addNoise(noise)
@@ -592,15 +595,16 @@ class InterpolatedImage(GSObject):
             return self._x_interpolant.krange / max_scale
 
     def __eq__(self, other):
-        return (isinstance(other, InterpolatedImage) and
-                self._xim == other._xim and
-                self.x_interpolant == other.x_interpolant and
-                self.k_interpolant == other.k_interpolant and
-                self.flux == other.flux and
-                self._offset == other._offset and
-                self.gsparams == other.gsparams and
-                self._stepk == other._stepk and
-                self._maxk == other._maxk)
+        return (self is other or
+                (isinstance(other, InterpolatedImage) and
+                 self._xim == other._xim and
+                 self.x_interpolant == other.x_interpolant and
+                 self.k_interpolant == other.k_interpolant and
+                 self.flux == other.flux and
+                 self._offset == other._offset and
+                 self.gsparams == other.gsparams and
+                 self._stepk == other._stepk and
+                 self._maxk == other._maxk))
 
     def __hash__(self):
         # Definitely want to cache this, since the size of the image could be large.
@@ -682,9 +686,9 @@ class InterpolatedImage(GSObject):
         return self._sbp.kValue(kpos._p)
 
     @doc_inherit
-    def _shoot(self, photons, ud):
+    def _shoot(self, photons, rng):
         with convert_cpp_errors():
-            self._sbp.shoot(photons._pa, ud._rng)
+            self._sbp.shoot(photons._pa, rng._rng)
 
     @doc_inherit
     def _drawReal(self, image):
@@ -941,7 +945,7 @@ class InterpolatedKImage(GSObject):
 
     @doc_inherit
     def withGSParams(self, gsparams):
-        if gsparams is self.gsparams: return self
+        if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
         ret._gsparams = GSParams.check(gsparams)
@@ -965,12 +969,13 @@ class InterpolatedKImage(GSObject):
             return self._sbiki
 
     def __eq__(self, other):
-        return (isinstance(other, InterpolatedKImage) and
-                np.array_equal(self.kimage.array, other.kimage.array) and
-                self.kimage.scale == other.kimage.scale and
-                self.k_interpolant == other.k_interpolant and
-                self.stepk == other.stepk and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, InterpolatedKImage) and
+                 np.array_equal(self.kimage.array, other.kimage.array) and
+                 self.kimage.scale == other.kimage.scale and
+                 self.k_interpolant == other.k_interpolant and
+                 self.stepk == other.stepk and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         # Definitely want to cache this, since the kimage could be large.

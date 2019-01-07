@@ -210,9 +210,11 @@ class BaseWCS(object):
            coordinates to world coordinates, returning the profile in world coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located, so the right
-           transformation can be performed.
+           transformation can be performed.  And optionally, you may provide a flux scaling
+           to be performed at the same time.
 
-               >>> world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None)
+               >>> world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None,
+                                               flux_ratio=1, offset=(0,0))
         """
         if isinstance(arg, GSObject):
             return self.profileToWorld(arg, **kwargs)
@@ -237,7 +239,8 @@ class BaseWCS(object):
             raise TypeError("image_pos must be a PositionD or PositionI argument")
         return self._posToWorld(image_pos, color=color, **kwargs)
 
-    def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None):
+    def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None,
+                       flux_ratio=1., offset=(0,0)):
         """Convert a profile from image coordinates to world coordinates.
 
         This is equivalent to `wcs.toWorld(image_profile, ...)`.
@@ -246,9 +249,13 @@ class BaseWCS(object):
         @param image_pos        The image coordinate position (for non-uniform WCS types)
         @param world_pos        The world coordinate position (for non-uniform WCS types)
         @param color            For color-dependent WCS's, the color term to use. [default: None]
+        @param flux_ratio       An optional flux scaling to be applied at the same time.
+                                [default: 1]
+        @param offset           An optional offset to be applied at the same time. [default: 0,0]
         """
         if color is None: color = self._color
-        return self.local(image_pos, world_pos, color=color)._profileToWorld(image_profile)
+        return self.local(image_pos, world_pos, color=color)._profileToWorld(
+                    image_profile, flux_ratio, offset)
 
     def toImage(self, arg, **kwargs):
         """Convert from world coordinates to image coordinates
@@ -266,9 +273,11 @@ class BaseWCS(object):
            coordinates to image coordinates, returning the profile in image coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located so the right
-           transformation can be performed.
+           transformation can be performed.  And optionally, you may provide a flux scaling
+           to be performed at the same time.
 
-               >>> image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None)
+               >>> image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None,
+                                               flux_ratio=1, offset=(0,0))
         """
         if isinstance(arg, GSObject):
             return self.profileToImage(arg, **kwargs)
@@ -290,7 +299,8 @@ class BaseWCS(object):
             raise TypeError("world_pos must be a PositionD or PositionI argument")
         return self._posToImage(world_pos, color=color)
 
-    def profileToImage(self, world_profile, image_pos=None, world_pos=None, color=None):
+    def profileToImage(self, world_profile, image_pos=None, world_pos=None, color=None,
+                       flux_ratio=1., offset=(0,0)):
         """Convert a profile from world coordinates to image coordinates.
 
         This is equivalent to `wcs.toImage(world_profile, ...)`.
@@ -299,9 +309,13 @@ class BaseWCS(object):
         @param image_pos        The image coordinate position (for non-uniform WCS types)
         @param world_pos        The world coordinate position (for non-uniform WCS types)
         @param color            For color-dependent WCS's, the color term to use. [default: None]
+        @param flux_ratio       An optional flux scaling to be applied at the same time.
+                                [default: 1]
+        @param offset           An optional offset to be applied at the same time. [default: 0,0]
         """
         if color is None: color = self._color
-        return self.local(image_pos, world_pos, color=color)._profileToImage(world_profile)
+        return self.local(image_pos, world_pos, color=color)._profileToImage(
+                    world_profile, flux_ratio, offset)
 
     def pixelArea(self, image_pos=None, world_pos=None, color=None):
         """Return the area of a pixel in arcsec**2 (or in whatever units you are using for
@@ -918,11 +932,11 @@ class UniformWCS(EuclideanWCS):
 
     # Just check if the locals match and if the origins match.
     def __eq__(self, other):
-        return ( isinstance(other, self.__class__) and
+        return (self is other or
+                (isinstance(other, self.__class__) and
                  self._local_wcs == other._local_wcs and
                  self.origin == other.origin and
-                 self.world_origin == other.world_origin )
-
+                 self.world_origin == other.world_origin))
 
 
 class LocalWCS(UniformWCS):
@@ -1166,15 +1180,15 @@ class PixelScale(LocalWCS):
     def _y(self, u, v, color=None):
         return v / self._scale
 
-    def _profileToWorld(self, image_profile):
+    def _profileToWorld(self, image_profile, flux_ratio, offset):
         from .transform import _Transform
         return _Transform(image_profile, (self._scale, 0., 0., self._scale),
-                          flux_ratio=self._scale**-2)
+                          flux_ratio=self._scale**-2 * flux_ratio, offset=offset)
 
-    def _profileToImage(self, world_profile):
+    def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform
         return _Transform(world_profile, (1./self._scale, 0., 0., 1./self._scale),
-                          flux_ratio=self._scale**2)
+                          flux_ratio=self._scale**2 * flux_ratio, offset=offset)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1208,8 +1222,9 @@ class PixelScale(LocalWCS):
         return PixelScale(self._scale)
 
     def __eq__(self, other):
-        return ( isinstance(other, PixelScale) and
-                 self.scale == other.scale )
+        return (self is other or
+                (isinstance(other, PixelScale) and
+                 self.scale == other.scale))
 
     def __repr__(self): return "galsim.PixelScale(%r)"%self.scale
     def __hash__(self): return hash(repr(self))
@@ -1284,11 +1299,11 @@ class ShearWCS(LocalWCS):
         y *= self._gfactor / self._scale
         return y
 
-    def _profileToWorld(self, image_profile):
-        return image_profile.dilate(self._scale).shear(-self.shear)
+    def _profileToWorld(self, image_profile, flux_ratio, offset):
+        return image_profile.dilate(self._scale).shear(-self.shear).shift(offset) * flux_ratio
 
-    def _profileToImage(self, world_profile):
-        return world_profile.dilate(1./self._scale).shear(self.shear)
+    def _profileToImage(self, world_profile, flux_ratio, offset):
+        return world_profile.dilate(1./self._scale).shear(self.shear).shift(offset) * flux_ratio
 
     def _pixelArea(self):
         return self._scale**2
@@ -1334,9 +1349,10 @@ class ShearWCS(LocalWCS):
         return ShearWCS(self._scale, self._shear)
 
     def __eq__(self, other):
-        return ( isinstance(other, ShearWCS) and
+        return (self is other or
+                (isinstance(other, ShearWCS) and
                  self.scale == other.scale and
-                 self.shear == other.shear )
+                 self.shear == other.shear))
 
     def __repr__(self): return "galsim.ShearWCS(%r, %r)"%(self.scale,self.shear)
     def __hash__(self): return hash(repr(self))
@@ -1419,18 +1435,18 @@ class JacobianWCS(LocalWCS):
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
-    def _profileToWorld(self, image_profile):
+    def _profileToWorld(self, image_profile, flux_ratio, offset):
         from .transform import _Transform
         return _Transform(image_profile, (self._dudx, self._dudy, self._dvdx, self._dvdy),
-                          flux_ratio=1./self._pixelArea())
+                          flux_ratio=flux_ratio/self._pixelArea(), offset=offset)
 
-    def _profileToImage(self, world_profile):
+    def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform
         try:
             return _Transform(world_profile,
                               (self._dvdy/self._det, -self._dudy/self._det,
                                -self._dvdx/self._det, self._dudx/self._det),
-                              flux_ratio=self._pixelArea())
+                              flux_ratio=flux_ratio*self._pixelArea(), offset=offset)
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
@@ -1571,11 +1587,12 @@ class JacobianWCS(LocalWCS):
         return JacobianWCS(self._dudx, self._dudy, self._dvdx, self._dvdy)
 
     def __eq__(self, other):
-        return ( isinstance(other, JacobianWCS) and
+        return (self is other or
+                (isinstance(other, JacobianWCS) and
                  self.dudx == other.dudx and
                  self.dudy == other.dudy and
                  self.dvdx == other.dvdx and
-                 self.dvdy == other.dvdy )
+                 self.dvdy == other.dvdy))
 
     def __repr__(self): return "galsim.JacobianWCS(%r, %r, %r, %r)"%(
             self.dudx,self.dudy,self.dvdx,self.dvdy)
@@ -2226,14 +2243,15 @@ class UVFunction(EuclideanWCS):
                           self.origin, self.world_origin, self._uses_color)
 
     def __eq__(self, other):
-        return ( isinstance(other, UVFunction) and
+        return (self is other or
+                (isinstance(other, UVFunction) and
                  self._orig_ufunc == other._orig_ufunc and
                  self._orig_vfunc == other._orig_vfunc and
                  self._orig_xfunc == other._orig_xfunc and
                  self._orig_yfunc == other._orig_yfunc and
                  self.origin == other.origin and
                  self.world_origin == other.world_origin and
-                 self._uses_color == other._uses_color)
+                 self._uses_color == other._uses_color))
 
     def __repr__(self):
         return ("galsim.UVFunction(%r, %r, %r, %r, %r, %r, %r)")%(
@@ -2371,10 +2389,11 @@ class RaDecFunction(CelestialWCS):
         return RaDecFunction(self._orig_ra_func, self._orig_dec_func, self.origin)
 
     def __eq__(self, other):
-        return ( isinstance(other, RaDecFunction) and
+        return (self is other or
+                (isinstance(other, RaDecFunction) and
                  self._orig_ra_func == other._orig_ra_func and
                  self._orig_dec_func == other._orig_dec_func and
-                 self.origin == other.origin )
+                 self.origin == other.origin))
 
     def __repr__(self):
         return "galsim.RaDecFunction(%r, %r, %r)"%(

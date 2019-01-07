@@ -433,7 +433,7 @@ def test_opt_indiv_aberrations():
     psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0)
 
     np.testing.assert_array_equal(
-            psf1.img, psf2.img,
+            psf1._img, psf2._img,
             "Individually specified aberrations differs from aberrations specified as list.")
 
 
@@ -723,7 +723,7 @@ def test_phase_gradient_shoot():
         time_step = 0.05
         centroid_tolerance = 0.06
         size_tolerance = 0.06  # absolute
-        size_bias = 0.02  # as a fraction
+        size_bias = 0.015  # as a fraction
         shape_tolerance = 0.01
     else:
         exptime = 1.0
@@ -779,6 +779,9 @@ def test_phase_gradient_shoot():
             rtol=0, atol=centroid_tolerance,
             err_msg='Phase gradient centroid y not close to fft centroid')
 
+        print('shoot_moment sigma = ',shoot_moment.moments_sigma)
+        print('fft_moment sigma = ',fft_moment.moments_sigma)
+        print('biased fft_moment sigma = ',fft_moment.moments_sigma * (1+size_bias))
         np.testing.assert_allclose(
             shoot_moment.moments_sigma,
             fft_moment.moments_sigma*(1+size_bias),
@@ -941,6 +944,12 @@ def test_gc():
     """Make sure that pending psfs don't leak memory.
     """
     import gc
+    # The below check about this may fail if some other test using PhaseScreenPSFs has failed.
+    # To avoid this spurious double error, only do the below check if we start out with
+    # nothing in the garbage collector.
+    gc.collect()
+    already_in_gc = any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
     atm = galsim.Atmosphere(screen_size=10.0, altitude=0, r0_500=0.15, suppress_warning=True)
 
     # First check that no PhaseScreenPSFs are known to the garbage collector
@@ -968,7 +977,8 @@ def test_gc():
     # And if then deleted, they again don't exist anywhere
     del psf, psf2
     gc.collect()
-    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+    if not already_in_gc:
+        assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
     # A corner case revealed in coverage tests:
     # Make sure that everything still works if some, but not all static pending PSFs are deleted.
@@ -982,8 +992,94 @@ def test_gc():
     del psf1, psf3
     assert phaseScreenList._pending == []
     gc.collect()
-    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+    if not already_in_gc:
+        assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
+
+@timer
+def test_withGSP():
+    screen = galsim.phase_screens._DummyScreen(1.0, aberrations=[0,0,0,0,1])
+    # Make sure screen really fails if we try to access _wavefront
+    with np.testing.assert_raises(RuntimeError):
+        screen._wavefront()
+    psl = galsim.PhaseScreenList(screen)
+    psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    # Don't worry about repr for DummyScreen
+    do_pickle(psf, irreprable=True)
+    do_pickle(psfGSP, irreprable=True)
+
+    # We can't use do_pickle with func that involves a random number generator, so just hard-code
+    # the equivalent here.
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
+    import copy
+    copiers = [lambda x:pickle.loads(pickle.dumps(x)), copy.copy, copy.deepcopy]
+    drawKwargs = dict(nx=32, ny=32, scale=0.2, method='phot', n_photons=10000)
+
+    rng = galsim.BaseDeviate(57721)
+    img = psf.drawImage(rng=rng, **drawKwargs)
+    for copier in copiers:
+        psf2 = copier(psf)
+        assert psf2 is not psf
+        rng = galsim.BaseDeviate(57721) # reset rng
+        img2 = psf2.drawImage(rng=rng, **drawKwargs)
+        assert img2 == img
+
+    # Repeat but make a fresh (not previously drawn) source psf each time.  I.e.,
+    # make sure that drawing and copy/pickling are commutative
+    testimgs = []
+    for copier in copiers:
+        psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+        psf2 = copier(psf)
+        assert psf2 is not psf
+        rng = galsim.BaseDeviate(57721) # reset rng
+        testimgs.append(psf2.drawImage(rng=rng, **drawKwargs))
+    # Now draw the fresh psf and compare
+    psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    rng = galsim.BaseDeviate(57721)
+    img = psf.drawImage(rng=rng, **drawKwargs)
+    for testimg in testimgs:
+        assert testimg == img
+
+    # Want to check that copying and withGSParams are also commutative.  So repeat steps above
+    # using psfGSP as the source/test.
+    rng = galsim.BaseDeviate(57721)
+    img = psfGSP.drawImage(rng=rng, **drawKwargs)  # uncopied withGSP img
+    for copier in copiers:
+        psf2 = copier(psfGSP)
+        assert psf2 is not psfGSP
+        rng = galsim.BaseDeviate(57721) # reset rng
+        img2 = psf2.drawImage(rng=rng, **drawKwargs)  # this is a copy of a withGSP
+        assert img2 == img
+
+    # And finally, look at copies of undrawn withGSP PSFs.
+    testimgs = []
+    for copier in copiers:
+        psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+        psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))  # hasn't been drawn yet
+        psf2 = copier(psfGSP)  # copy of undrawn
+        assert psf2 is not psfGSP
+        rng = galsim.BaseDeviate(57721) # reset rng
+        testimgs.append(psf2.drawImage(rng=rng, **drawKwargs))
+    # Draw the (fresh) withGSP PSF and compare
+    psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    rng = galsim.BaseDeviate(57721)
+    img = psfGSP.drawImage(rng=rng, **drawKwargs)
+    for testimg in testimgs:
+        assert testimg == img
+
+    # Also test OpticalPSF
+    optPSF = galsim.OpticalPSF(lam=500, diam=1.0)
+    optPSF2 = optPSF.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    assert isinstance(optPSF2, galsim.OpticalPSF)
+    # And check that we really did get a different folding_threshold by comparing stepk and default
+    # bounds
+    assert optPSF.stepk != optPSF2.stepk
+    assert optPSF.drawImage().bounds != optPSF2.drawImage().bounds
 
 if __name__ == "__main__":
     test_aperture()
@@ -1003,3 +1099,4 @@ if __name__ == "__main__":
     test_speedup()
     test_instantiation_check()
     test_gc()
+    test_withGSP()

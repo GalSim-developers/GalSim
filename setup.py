@@ -186,10 +186,9 @@ def find_fftw_lib(output=False):
         libpath = os.path.realpath(libpath)
         lib = ctypes.cdll.LoadLibrary(libpath)
     except Exception as e:
-        if output:
-            print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
-            print("location such as /usr/local/lib, or the installation directory is either in ")
-            print("your LIBRARY_PATH or FFTW_DIR environment variable.")
+        print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
+        print("location such as /usr/local/lib, or the installation directory is either in ")
+        print("your LIBRARY_PATH or FFTW_DIR environment variable.")
         raise
     else:
         dir, name = os.path.split(libpath)
@@ -265,9 +264,16 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         lines = p.stdout.readlines()
-        #print('output = ',lines)
         p.communicate()
+        #print('output = ',b''.join(lines).decode())
+        if p.returncode != 0:
+            print('Trying compile command:')
+            print(cmd)
+            print('output = ',b''.join(lines).decode())
     except (IOError,OSError) as e:
+        print('Trying compile command:')
+        print(cmd)
+        print('Caught error: ',repr(e))
         p.returncode = 1
     if p.returncode != 0:
         os.remove(cpp_file.name)
@@ -281,12 +287,12 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         lines = p.stdout.readlines()
-        #print('output = ',lines)
         p.communicate()
+        #print('output = ',b''.join(lines).decode())
     except (IOError,OSError) as e:
         p.returncode = 1
 
-    if p.returncode and cc.endswith('cc'):
+    if p.returncode:
         # The linker needs to be a c++ linker, which isn't 'cc'.  However, I couldn't figure
         # out how to get setup.py to tell me the actual command to use for linking.  All the
         # executables available from build_ext.compiler.executables are 'cc', not 'c++'.
@@ -294,14 +300,41 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         #    http://bugs.python.org/issue9031
         #    http://bugs.python.org/issue1222585
         # So just switch it manually and see if that works.
-        cmd = 'c++ ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
+        if 'clang' in cc:
+            cpp = cc.replace('clang', 'clang++')
+        elif 'icc' in cc:
+            cpp = cc.replace('icc', 'icpc')
+        elif 'gcc' in cc:
+            cpp = cc.replace('gcc', 'g++')
+        elif ' cc' in cc:
+            cpp = cc.replace(' cc', ' c++')
+        elif cc == 'cc':
+            cpp = 'c++'
+        else:
+            comp_type = get_compiler(cc)
+            if comp_type == 'gcc':
+                cpp = 'g++'
+            elif comp_type == 'clang':
+                cpp = 'clang++'
+            elif comp_type == 'icc':
+                cpp = 'g++'
+            else:
+                cpp = 'c++'
+        cmd = cpp + ' ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
         #print('cmd = ',cmd)
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             lines = p.stdout.readlines()
-            #print('output = ',lines)
             p.communicate()
+            #print('output = ',b''.join(lines).decode())
+            if p.returncode != 0:
+                print('Trying link command:')
+                print(cmd)
+                print('output = ',b''.join(lines).decode())
         except (IOError,OSError) as e:
+            print('Trying to link using command:')
+            print(cmd)
+            print('Caught error: ',repr(e))
             p.returncode = 1
 
     # Remove the temp files
@@ -502,16 +535,21 @@ def add_dirs(builder, output=False):
     import pybind11
     print('PyBind11 is version ',pybind11.__version__)
     print('Looking for pybind11 header files: ')
-    for user in [True, False, None]:
-        if user is None:
+    locations = [pybind11.get_include(user=True),
+                 pybind11.get_include(user=False),
+                 '/usr/include',
+                 '/usr/local/include',
+                 None]
+    for try_dir in locations:
+        if try_dir is None:
             # Last time through, raise an error.
             print("Could not find pybind11 header files.")
-            print("They should have been in one of the following two locations:")
-            print("   ",pybind11.get_include(True))
-            print("   ",pybind11.get_include(False))
+            print("They should have been in one of the following locations:")
+            for l in locations:
+                if l is not None:
+                    print("   ", l)
             raise OSError("Could not find PyBind11")
 
-        try_dir = pybind11.get_include(user=user)
         print('  ',try_dir,end='')
         if os.path.isfile(os.path.join(try_dir, 'pybind11/pybind11.h')):
             print('  (yes)')
@@ -545,6 +583,9 @@ def parse_njobs(njobs, task=None, command=None, maxn=4):
                 print('Using %d cpus for %s'%(njobs,task))
     return njobs
 
+do_output = True  # Keep track of whether we used output=True in add_dirs yet.
+                  # It seems that different installation methods do things in different order,
+                  # but we only want to output on the first pass through add_dirs.
 
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_clib(build_clib):
@@ -555,11 +596,13 @@ class my_build_clib(build_clib):
         self.njobs = None
 
     def finalize_options(self):
+        global do_output
         build_clib.finalize_options(self)
         if self.njobs is None and 'glob_njobs' in globals():
             global glob_njobs
             self.njobs = glob_njobs
-        add_dirs(self, output=True)  # This happens first, so only output for this call.
+        add_dirs(self, output=do_output)
+        do_output = False
 
     # Add any extra things based on the compiler being used..
     def build_libraries(self, libraries):
@@ -586,13 +629,15 @@ class my_build_ext(build_ext):
         self.njobs = None
 
     def finalize_options(self):
+        global do_output
         build_ext.finalize_options(self)
         # I couldn't find an easy way to send the user option from my_install to my_buld_ext.
         # So use a global variable. (UGH!)
         if self.njobs is None and 'glob_njobs' in globals():
             global glob_njobs
             self.njobs = glob_njobs
-        add_dirs(self)
+        add_dirs(self, output=do_output)
+        do_output = False
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
@@ -737,6 +782,7 @@ lib=("galsim", {'sources' : cpp_sources,
                 'undef_macros' : undef_macros })
 ext=Extension("galsim._galsim",
               py_sources,
+              depends = cpp_sources + headers,
               undef_macros = undef_macros)
 
 build_dep = ['setuptools>=38', 'pybind11>=2.2']

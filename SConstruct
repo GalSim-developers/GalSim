@@ -109,6 +109,7 @@ opts.Add(BoolVariable('IMPORT_PATHS',
          False))
 opts.Add(BoolVariable('IMPORT_ENV',
          'Import full environment from calling shell',True))
+opts.Add(BoolVariable('ADD_PYTHON_SYS_FLAGS','Add compile and link flags from sysconfig',True))
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('IMPORT_PREFIX',
          'Use PREFIX/include and PREFIX/lib in search paths', True))
@@ -1328,8 +1329,9 @@ def GetPythonVersion(config):
     # there:
     if not result:
         py_version = ''
-        for v in ['2.7', '3.4', '3.5', '3.6', # supported versions first
-                  '2.6', '2.5', '2,4', '3.3', '3.2', '3.1', '3.0']: # these are mostly to give accurate logging and error messages
+        for v in ['2.7', '3.5', '3.6', # supported versions first
+                  '3.7', # not technically "supported" yet, but should be soon.
+                  '2.6', '2.5', '2,4', '3.4', '3.3', '3.2', '3.1', '3.0']: # these are mostly to give accurate logging and error messages
             if v in py_inc or v in python:
                 py_version = v
                 break
@@ -1381,15 +1383,16 @@ PyMODINIT_FUNC initcheck_python(void)
 """
     config.Message('Checking if we can build against Python... ')
 
-    # Check if we need to add any additional linking flags according to what is given in
-    # sysconfig.get_config_var("LDSHARED").  cf. Issue #924
-    sys_builder = distutils.sysconfig.get_config_var("LDSHARED")
-    ldflags = sys_builder.split()
-    ldflags = ldflags[1:]  # strip off initial gcc or cc
-    config.env.Replace(LDMODULEFLAGS=['$LINKFLAGS'] + ldflags)
-    # Need this too to get consistency, e.g. with --arch options.
-    ccflags = distutils.sysconfig.get_config_var("CCSHARED")
-    config.env.Append(CCFLAGS=ccflags.split())
+    if config.env['ADD_PYTHON_SYS_FLAGS']:
+        # Check if we need to add any additional linking flags according to what is given in
+        # sysconfig.get_config_var("LDSHARED").  cf. Issue #924
+        sys_builder = distutils.sysconfig.get_config_var("LDSHARED")
+        ldflags = sys_builder.split()
+        ldflags = ldflags[1:]  # strip off initial gcc or cc
+        config.env.Replace(LDMODULEFLAGS=['$LINKFLAGS'] + ldflags)
+        # Need this too to get consistency, e.g. with --arch options.
+        ccflags = distutils.sysconfig.get_config_var("CCSHARED")
+        config.env.Append(CCFLAGS=ccflags.split())
 
     # First check the python include directory -- see if we can compile the module.
     source_file2 = "import distutils.sysconfig; print(distutils.sysconfig.get_python_inc())"
@@ -1811,16 +1814,17 @@ def CheckPyBind11(config):
     result, output = TryScript(config,"import pybind11",python)
     config.Result(result)
     if not result:
-        ErrorExit("Unable to import pybind11 using the python executable:\n" + python)
+        print("Unable to import pybind11 using the python executable:\n" + python)
+        print("Continuing on in case the header files are installed, but not the python module.")
+    else:
+        result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
+        print('pybind11 version is',pybind11_ver)
 
-    result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
-    print('pybind11 version is',pybind11_ver)
+        result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
+        result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
+        config.env.Append(CPPPATH=[dir1,dir2])
 
     config.Message('Checking if we can build against PyBind11... ')
-
-    result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
-    result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
-    config.env.Append(CPPPATH=[dir1,dir2])
 
     pb_source_file = """
 #include <pybind11/pybind11.h>
@@ -1879,13 +1883,16 @@ BOOST_PYTHON_MODULE(check_bp) {
     # For ubuntu Python 3.  cf. #790.
     # Also https://bugs.launchpad.net/ubuntu/+source/boost1.53/+bug/1231609
     pyxx = 'boost_python-py%s%s'%tuple(py_version.split('.'))
+    pyzz = 'boost_python%s%s'%tuple(py_version.split('.'))
 
     if config.env['PYTHON_VERSION'] >= '3.0':
         result = (
             CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
             CheckModuleLibs(config,['boost_python3'],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
             CheckModuleLibs(config,['boost_python3-mt'],bp_source_file,'check_bp') or
-            CheckModuleLibs(config,[pyxx],bp_source_file,'check_bp') )
+            CheckModuleLibs(config,[pyxx],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,[pyzz],bp_source_file,'check_bp') )
     else:
         result = (
             CheckModuleLibs(config,[''],bp_source_file,'check_bp') or

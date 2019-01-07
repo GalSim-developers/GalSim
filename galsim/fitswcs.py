@@ -143,15 +143,30 @@ class AstropyWCS(CelestialWCS):
                 if wcs is not None:
                     raise GalSimIncompatibleValuesError(
                         "Cannot provide both pyfits header and wcs", header=header, wcs=wcs)
+
+                # These can mess things up later if they stick around.
+                header.pop('BZERO', None)
+                header.pop('BSCALE', None)
+
                 self.header = fits.FitsHeader(header)
                 try:
                     wcs = self._load_from_header(self.header)
-                except (TypeError, AttributeError, ValueError) as e:
+                except (TypeError, AttributeError, ValueError, RuntimeError) as e:
                     # When parsing ZPX files, astropy raises a very unhelpful error message.
                     # Ignore that (ValueError in that case, but ignore any similarly mundane error)
                     # and turn it into a more appropriate OSError.
                     raise OSError("Astropy failed to read WCS from %s. Original error: %s"%(
                                   file_name, e))
+                else:
+                    # New kind of error starting in astropy 2.0.5 (I think).  Sometimes, it
+                    # gets through the above, but doesn't actually load the right WCS.
+                    # E.g. ZPX gets marked as just a ZPN.
+                    if 'CTYPE1' in header and 'CTYPE2' in header:
+                        if (header['CTYPE1'] != wcs.wcs.ctype[0] or
+                            header['CTYPE2'] != wcs.wcs.ctype[1]):
+                            raise OSError("Astropy failed to read WCS from %s. Converted %s->%s"%(
+                                          file_name, (header['CTYPE1'], header['CTYPE2']),
+                                          wcs.wcs.ctype))
             else:
                 self.header = None
 
@@ -202,8 +217,8 @@ class AstropyWCS(CelestialWCS):
             len(x)
         except TypeError:
             # Otherwise, return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             ra = ra[0]
             dec = dec[0]
         return ra, dec
@@ -248,9 +263,10 @@ class AstropyWCS(CelestialWCS):
         return ret
 
     def __eq__(self, other):
-        return ( isinstance(other, AstropyWCS) and
+        return (self is other or
+                (isinstance(other, AstropyWCS) and
                  self.wcs.to_header(relax=True) == other.wcs.to_header(relax=True) and
-                 self.origin == other.origin )
+                 self.origin == other.origin))
 
     def __repr__(self):
         if self._tag is not None:
@@ -359,6 +375,11 @@ class PyAstWCS(CelestialWCS):
                     raise GalSimIncompatibleValuesError(
                         "Cannot provide both pyfits header and wcsinfo",
                         header=header, wcsinfo=wcsinfo)
+
+                # These can mess things up later if they stick around.
+                header.pop('BZERO', None)
+                header.pop('BSCALE', None)
+
                 self.header = fits.FitsHeader(header)
                 wcsinfo = self._load_from_header(self.header)
             else:
@@ -448,8 +469,8 @@ class PyAstWCS(CelestialWCS):
             len(x)
         except TypeError:
             # If the inputs weren't numpy arrays, return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             ra = ra[0]
             dec = dec[0]
         return ra, dec
@@ -517,9 +538,10 @@ class PyAstWCS(CelestialWCS):
         return ret
 
     def __eq__(self, other):
-        return ( isinstance(other, PyAstWCS) and
+        return (self is other or
+                (isinstance(other, PyAstWCS) and
                  repr(self.wcsinfo) == repr(other.wcsinfo) and
-                 self.origin == other.origin)
+                 self.origin == other.origin))
 
     def __repr__(self):
         if self._tag is not None:
@@ -685,8 +707,8 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
             return np.array(ra)*factor, np.array(dec)*factor
         except TypeError:
             # Otherwise return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             return ra[0]*factor, dec[0]*factor
 
     def _xy(self, ra, dec, color=None):
@@ -762,9 +784,10 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         return copy.copy(self)
 
     def __eq__(self, other):
-        return ( isinstance(other, WcsToolsWCS) and
+        return (self is other or
+                (isinstance(other, WcsToolsWCS) and
                  self._file_name == other.file_name and
-                 self.origin == other.origin )
+                 self.origin == other.origin))
 
     def __repr__(self):
         return "galsim.WcsToolsWCS(%r, origin=%r)"%(self._file_name, self.origin)
@@ -1267,8 +1290,8 @@ class GSFitsWCS(CelestialWCS):
             return ra, dec
         except TypeError:
             # Otherwise return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
+            #assert len(ra) == 1
+            #assert len(dec) == 1
             return ra[0], dec[0]
 
     def _invert_pv(self, u, v):
@@ -1457,7 +1480,8 @@ class GSFitsWCS(CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
-        return ( isinstance(other, GSFitsWCS) and
+        return (self is other or
+                (isinstance(other, GSFitsWCS) and
                  self.wcs_type == other.wcs_type and
                  np.array_equal(self.crpix,other.crpix) and
                  np.array_equal(self.cd,other.cd) and
@@ -1465,8 +1489,7 @@ class GSFitsWCS(CelestialWCS):
                  self.center == other.center and
                  np.array_equal(self.pv,other.pv) and
                  np.array_equal(self.ab,other.ab) and
-                 np.array_equal(self.abp,other.abp)
-               )
+                 np.array_equal(self.abp,other.abp)))
 
     def __repr__(self):
         if self.pv is None:

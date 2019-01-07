@@ -190,7 +190,7 @@ class Catalog(object):
 
     def __str__(self): return "galsim.Catalog(file_name=%r)"%self.file_name
 
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
@@ -343,7 +343,7 @@ class Dict(object):
 
     def __str__(self): return "galsim.Dict(file_name=%r)"%self.file_name
 
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
@@ -575,7 +575,7 @@ class OutputCatalog(object):
     def __repr__(self):
         def make_type_str(t):
             s = repr(t)
-            if s[1:5] == 'type': return s[7:-2]
+            if s[1:5] == 'type': return s[7:-2]  # pragma: no cover  (old repr style)
             elif s[1:6] == 'class': return s[8:-2]
             else: return s
         type_str = "( " + ", ".join([ make_type_str(t) for t in self.types ]) + " )"
@@ -585,7 +585,7 @@ class OutputCatalog(object):
     def __str__(self):
         return "galsim.OutputCatalog(name=%r)"%self.names
 
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 

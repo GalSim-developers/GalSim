@@ -744,9 +744,10 @@ class COSMOSCatalog(object):
         return self.use_real
 
     def __eq__(self, other):
-        return (isinstance(other, COSMOSCatalog) and
-                self.use_real == other.use_real and
-                self.use_sample == other.use_sample and
-                self.real_cat == other.real_cat and
-                np.array_equal(self.param_cat, other.param_cat) and
-                np.array_equal(self.orig_index, other.orig_index))
+        return (self is other or
+                (isinstance(other, COSMOSCatalog) and
+                 self.use_real == other.use_real and
+                 self.use_sample == other.use_sample and
+                 self.real_cat == other.real_cat and
+                 np.array_equal(self.param_cat, other.param_cat) and
+                 np.array_equal(self.orig_index, other.orig_index)))

@@ -171,15 +171,16 @@ class SecondKick(GSObject):
         return self._sbs.structureFunction(rho)
 
     def __eq__(self, other):
-        return (isinstance(other, SecondKick) and
-        self.lam == other.lam and
-        self.r0 == other.r0 and
-        self.diam == other.diam and
-        self.obscuration == other.obscuration and
-        self.kcrit == other.kcrit and
-        self.flux == other.flux and
-        self.scale_unit == other.scale_unit and
-        self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, SecondKick) and
+                 self.lam == other.lam and
+                 self.r0 == other.r0 and
+                 self.diam == other.diam and
+                 self.obscuration == other.obscuration and
+                 self.kcrit == other.kcrit and
+                 self.flux == other.flux and
+                 self.scale_unit == other.scale_unit and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.SecondKick", self.lam, self.r0, self.diam, self.obscuration,

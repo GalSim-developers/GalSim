@@ -69,16 +69,7 @@ namespace galsim {
      * interval/annulus, and the cumulative flux of all intervals up to and including this one.
      *
      * The `drawWithin()` method will select one photon (and flux) drawn from within this interval
-     * or annulus, such that the expected flux distribution matches the FluxDensity function.  This
-     * can be done one of two ways: If `_useRejectionMethod=true`, then an x (or r) position is
-     * chosen that would match the chosen cumulative flux were the FluxDensity uniform over the
-     * interval.  Then the FluxDensity is evaluated, compared to the maximum within the interval
-     * (which is always an endpoint), and a UniformDeviate is drawn to decide whether to keep or
-     * reject this x photon.  This repeats until a position is kept.
-     *
-     * If `_useRejectionMethod=false`, then no rejection is done.  The photon is kept, but is given
-     * a flux value equal to the FluxDensity at x relative to the mean over the interval.  This is
-     * faster but makes the statistics of the photons harder to interpret.
+     * or annulus, such that the expected flux distribution matches the FluxDensity function.
      *
      * See the `OneDimensionalDeviate` docstrings for more information.
      */
@@ -106,24 +97,21 @@ namespace galsim {
             _fluxDensityPtr(&fluxDensity),
             _xLower(xLower),
             _xUpper(xUpper),
+            _xRange(_xUpper - _xLower),
             _isRadial(isRadial),
             _gsparams(gsparams),
-            _fluxIsReady(false),
-            _useRejectionMethod(false),
-            _invMaxAbsDensity(0.),
-            _invMeanAbsDensity(0.)
+            _fluxIsReady(false)
         {}
 
         Interval(const Interval& rhs) :
             _fluxDensityPtr(rhs._fluxDensityPtr),
             _xLower(rhs._xLower),
             _xUpper(rhs._xUpper),
+            _xRange(rhs._xRange),
             _isRadial(rhs._isRadial),
             _gsparams(rhs._gsparams),
             _fluxIsReady(false),
-            _useRejectionMethod(rhs._useRejectionMethod),
-            _invMaxAbsDensity(rhs._invMaxAbsDensity),
-            _invMeanAbsDensity(rhs._invMeanAbsDensity)
+            _a(rhs._a), _b(rhs._b), _c(rhs._c), _d(rhs._d)
         {}
 
         Interval& operator=(const Interval& rhs)
@@ -131,11 +119,13 @@ namespace galsim {
             // Everything else is constant, so no need to copy.
             _xLower = rhs._xLower;
             _xUpper = rhs._xUpper;
+            _xRange = rhs._xRange;
             _isRadial = rhs._isRadial;
             _fluxIsReady = false;
-            _useRejectionMethod = rhs._useRejectionMethod;
-            _invMaxAbsDensity = rhs._invMaxAbsDensity;
-            _invMeanAbsDensity = rhs._invMeanAbsDensity;
+            _a = rhs._a;
+            _b = rhs._b;
+            _c = rhs._c;
+            _d = rhs._d;
             return *this;
         }
 
@@ -143,12 +133,9 @@ namespace galsim {
          * @brief Draw one photon position and flux from within this interval
          * @param[in] unitRandom An initial uniform deviate to select photon
          * @param[out] x (or radial) coordinate of the selected photon.
-         * @param[out] flux flux of the selected photon, nominally +-1, but can differ if not
-         *             using rejection.
-         * @param[out] ud UniformDeviate used for rejection sampling, if needed.
+         * @param[out] flux flux of the selected photon = +-1
          */
-        void drawWithin(double unitRandom, double& x, double& flux,
-                        UniformDeviate ud) const;
+        void drawWithin(double unitRandom, double& x, double& flux) const;
 
         /**
          * @brief Get integrated flux over this interval or annulus.
@@ -174,18 +161,19 @@ namespace galsim {
          * @brief Return a list of intervals that divide this one into acceptably small ones.
          *
          * This routine works by recursive bisection.  Intervals that are returned have all had
-         * their fluxes integrated.  Intervals are split until the FluxDensity does not vary too
-         * much within an interval, or when their flux is below `smallFlux`.
-         * @param[in] smallFlux Flux below which a sub-interval is not further split.
-         * @returns List contiguous Intervals whose union is this one.
+         * their fluxes integrated.  Intervals are split until the error from a linear
+         * approximation to f(x) is less than toler;
+         * @param[in] toler Tolerance on the flux error below which a sub-interval is not split.
+         * @returns List of contiguous Intervals whose union is this one.
          */
-        std::list<Interval> split(double smallFlux);
+        std::list<shared_ptr<Interval> > split(double toler);
 
     private:
 
         const FluxDensity* _fluxDensityPtr;  // Pointer to the parent FluxDensity function.
         double _xLower; // Interval lower bound
         double _xUpper; // Interval upper bound
+        double _xRange; // _xUpper - _xLower  (used a lot)
         bool _isRadial; // True if domain is an annulus, otherwise domain is a linear interval.
         const GSParams& _gsparams;
 
@@ -197,14 +185,7 @@ namespace galsim {
         // if flux were constant.
         double interpolateFlux(double fraction) const;
 
-        // Set this variable true if returning equal fluxes with rejection method, vs returning
-        // non-unity flux weight.
-        bool _useRejectionMethod;
-
-        // 1. / (Maximum absolute flux density in the interval (assumed to be at an endpoint))
-        double _invMaxAbsDensity;
-
-        double _invMeanAbsDensity; // 1. / (Mean absolute flux density in the interval)
+        double _a, _b, _c, _d;  // Coefficients used for solving for dx in the interval.
 
     };
 

@@ -26,7 +26,24 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
+from .utilities import LRU_Cache
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
+
+
+# Two helper functions to cache the calculation required for _getStepK
+def __calcAtmStepK(lam, r0_500, gsparams):
+    from .kolmogorov import Kolmogorov
+    # Use an Airy for get appropriate stepk.
+    obj = Kolmogorov(lam=lam, r0_500=r0_500, gsparams=gsparams)
+    return obj.stepk
+_calcAtmStepK = LRU_Cache(__calcAtmStepK)
+
+def __calcOptStepK(lam, diam, obscuration, gsparams):
+    from .airy import Airy
+    # Use an Airy for get appropriate stepk.
+    obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
+    return obj.stepk
+_calcOptStepK = LRU_Cache(__calcOptStepK)
 
 
 class AtmosphericScreen(object):
@@ -120,7 +137,7 @@ class AtmosphericScreen(object):
         self.npix = Image.good_fft_size(int(np.ceil(screen_size/screen_scale)))
         self.screen_scale = screen_scale
         self.screen_size = screen_scale * self.npix
-        self.altitude = altitude
+        self._altitude = altitude * 1000.  # meters
         self.time_step = time_step
         self.r0_500 = r0_500
         if L0 == np.inf:  # Allow np.inf as synonym for None.
@@ -142,6 +159,10 @@ class AtmosphericScreen(object):
         # These will be None until screens are instantiated.
         self.kmin = None
         self.kmax = None
+
+    @property
+    def altitude(self):
+        return self._altitude / 1000.  # convert back to km
 
     def __str__(self):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
@@ -165,19 +186,20 @@ class AtmosphericScreen(object):
     # not equal to an otherwise identical uninstantiated screen.
 
     def __eq__(self, other):
-        return (isinstance(other, AtmosphericScreen) and
-                self.screen_size == other.screen_size and
-                self.screen_scale == other.screen_scale and
-                self.altitude == other.altitude and
-                self.r0_500 == other.r0_500 and
-                self.L0 == other.L0 and
-                self.vx == other.vx and
-                self.vy == other.vy and
-                self.alpha == other.alpha and
-                self.time_step == other.time_step and
-                self._orig_rng == other._orig_rng and
-                self.kmin == other.kmin and
-                self.kmax == other.kmax)
+        return (self is other or
+                (isinstance(other, AtmosphericScreen) and
+                 self.screen_size == other.screen_size and
+                 self.screen_scale == other.screen_scale and
+                 self._altitude == other._altitude and
+                 self.r0_500 == other.r0_500 and
+                 self.L0 == other.L0 and
+                 self.vx == other.vx and
+                 self.vy == other.vy and
+                 self.alpha == other.alpha and
+                 self.time_step == other.time_step and
+                 self._orig_rng == other._orig_rng and
+                 self.kmin == other.kmin and
+                 self.kmax == other.kmax))
 
     def __hash__(self):
         if not hasattr(self, '_hash'):
@@ -302,16 +324,13 @@ class AtmosphericScreen(object):
         """Return an appropriate stepk for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
-        @param scale_unit  Sky coordinate units of output profile. [default: galsim.arcsec]
         @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
                            details. [default: None]
         @returns  Good pupil scale size in meters.
         """
-        from .kolmogorov import Kolmogorov
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
-        obj = Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
-        return obj.stepk
+        return _calcAtmStepK(lam, self.r0_500, gsparams)
 
     def wavefront(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute wavefront due to atmospheric phase screen.
@@ -333,8 +352,8 @@ class AtmosphericScreen(object):
                         permitted.
         @returns        Array of wavefront lag or lead in nanometers.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape",u=u,v=v)
 
@@ -347,7 +366,7 @@ class AtmosphericScreen(object):
             tmp.fill(t)
             t = tmp
         else:
-            t = np.array(t, dtype=float)
+            t = np.array(t, dtype=float, copy=False)
             if t.shape != u.shape:
                 raise GalSimIncompatibleValuesError(
                     "t.shape must match u.shape if t is not a scalar", t=t, u=u)
@@ -373,9 +392,13 @@ class AtmosphericScreen(object):
         # screen instantiation checking
         if t is None:
             t = self._time
-        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
-        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
-        return self._tab2d(u, v)
+        u = u - t*self.vx
+        if theta[0].rad != 0.:
+            u += self._altitude*theta[0].tan()
+        v = v - t*self.vy
+        if theta[1].rad != 0.:
+            v += self._altitude*theta[1].tan()
+        return self._tab2d._call_wrap(u.ravel(), v.ravel()).reshape(u.shape)
 
     def wavefront_gradient(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute gradient of wavefront due to atmospheric phase screen.
@@ -394,8 +417,8 @@ class AtmosphericScreen(object):
                         permitted.
         @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
 
@@ -405,7 +428,7 @@ class AtmosphericScreen(object):
             tmp.fill(t)
             t = tmp
         else:
-            t = np.array(t, dtype=float)
+            t = np.array(t, dtype=float, copy=False)
             if t.shape != u.shape:
                 raise GalSimIncompatibleValuesError(
                     "t.shape must match u.shape if t is not a scalar", t=t, u=u)
@@ -429,9 +452,14 @@ class AtmosphericScreen(object):
 
     def _wavefront_gradient(self, u, v, t, theta):
         # Same as wavefront(), but no argument checking and no boiling updates.
-        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
-        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
-        return self._tab2d.gradient(u, v)
+        u = u - t*self.vx
+        if theta[0].rad != 0:
+            u += self._altitude*theta[0].tan()
+        v = v - t*self.vy
+        if theta[1].rad != 0:
+            v += self._altitude*theta[1].tan()
+        dfdx, dfdy = self._tab2d._gradient_wrap(u.ravel(), v.ravel())
+        return dfdx.reshape(u.shape), dfdy.reshape(u.shape)
 
 
 def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
@@ -697,10 +725,11 @@ class OpticalScreen(object):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, OpticalScreen)
-                and self.diam == other.diam
-                and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
-                and self.annular_zernike == other.annular_zernike)
+        return (self is other or
+                (isinstance(other, OpticalScreen)
+                 and self.diam == other.diam
+                 and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
+                 and self.annular_zernike == other.annular_zernike))
 
     def __ne__(self, other): return not self == other
 
@@ -721,14 +750,11 @@ class OpticalScreen(object):
                            details. [default: None]
         @returns stepk in inverse arcsec.
         """
-        from .airy import Airy
         lam = kwargs['lam']
         diam = kwargs['diam']
         obscuration = kwargs.get('obscuration', 0.0)
         gsparams = kwargs.get('gsparams', None)
-        # Use an Airy for get appropriate stepk.
-        obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
-        return obj.stepk
+        return _calcOptStepK(lam, diam, obscuration, gsparams)
 
     def wavefront(self, u, v, t=None, theta=None):
         """ Compute wavefront due to optical phase screen.
@@ -744,8 +770,8 @@ class OpticalScreen(object):
         @param theta    Ignored for OpticalScreen.
         @returns        Array of wavefront lag or lead in nanometers.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront(u, v, t, theta)
@@ -766,8 +792,8 @@ class OpticalScreen(object):
         @param theta    Ignored for OpticalScreen.
         @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
-        u = np.array(u, dtype=float)
-        v = np.array(v, dtype=float)
+        u = np.array(u, dtype=float, copy=False)
+        v = np.array(v, dtype=float, copy=False)
         if u.shape != v.shape:
             raise GalSimIncompatibleValuesError("u.shape not equal to v.shape", u=u, v=v)
         return self._wavefront_gradient(u, v, t, theta)
@@ -777,4 +803,12 @@ class OpticalScreen(object):
         # Same as wavefront(), but no argument checking.
         # Note, this phase screen is actually independent of time and theta.
         gradx, grady = self._zernike.evalCartesianGrad(u, v)
-        return gradx * self.lam_0, grady * self.lam_0
+        gradx *= self.lam_0
+        grady *= self.lam_0
+        return gradx, grady
+
+
+# Used only for testing
+class _DummyScreen(OpticalScreen):
+    def _wavefront(self, *args):
+        raise RuntimeError("Shouldn't reach this")

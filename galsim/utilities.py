@@ -26,6 +26,7 @@ import weakref
 import os
 import numpy as np
 
+from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
 from .errors import galsim_warn
 
@@ -589,17 +590,35 @@ def horner(x, coef, dtype=None):
 
     @returns a numpy array of the evaluated polynomial.  Will be the same shape as x.
     """
-    coef = np.trim_zeros(coef, trim='b')
-    result = np.zeros_like(x, dtype=dtype)
-    if len(coef) == 0: return result
-    result += coef[-1]
-    for c in coef[-2::-1]:
-        result *= x
-        if c != 0: result += c
-    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
+    result = np.empty_like(x, dtype=dtype)
+    # Make sure everything is an array
+    if result.dtype == float:
+        # And if the result is float, it's worth making sure x, coef are also float and
+        # contiguous, so we can use the faster c++ implementation.
+        x = np.ascontiguousarray(x, dtype=float)
+        coef = np.ascontiguousarray(coef, dtype=float)
+    else:
+        x = np.array(x, copy=False)
+        coef = np.array(coef, copy=False)
+    if len(coef.shape) != 1:
+        raise GalSimValueError("coef must be 1-dimensional", coef)
+    _horner(x, coef, result)
     return result
 
-def horner2d(x, y, coefs, dtype=None):
+def _horner(x, coef, result):
+    if result.dtype == float:
+        _galsim.Horner(x.ctypes.data, x.size, coef.ctypes.data, coef.size, result.ctypes.data)
+    else:
+        coef = np.trim_zeros(coef, trim='b')  # trim only from the back
+        if len(coef) == 0:
+            result.fill(0)
+            return
+        result.fill(coef[-1])
+        for c in coef[-2::-1]:
+            result *= x
+            if c != 0: result += c
+
+def horner2d(x, y, coefs, dtype=None, triangle=False):
     """Evaluate bivariate polynomial using nested Horner's method.
 
     @param x        A numpy array of the x values at which to evaluate the polynomial.
@@ -608,16 +627,56 @@ def horner2d(x, y, coefs, dtype=None):
                     The first axis corresponds to increasing the power of y, and the second to
                     increasing the power of x.
     @param dtype    Optionally specify the dtype of the return array. [default: None]
+    @param triangle If True, then the coefs are only non-zero in the upper-left triangle
+                    of the array. [default: False]
 
     @returns a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
     """
-    result = horner(y, coefs[-1], dtype=dtype)
-    for coef in coefs[-2::-1]:
-        result *= x
-        result += horner(y, coef, dtype=dtype)
-    # Useful when working on this... (Numpy method is much slower, btw.)
-    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
+    result = np.empty_like(x, dtype=dtype)
+    temp = np.empty_like(x, dtype=dtype)
+    # Make sure everything is an array
+    if result.dtype == float:
+        # And if the result is float, it's worth making sure x, coef are also float,
+        # so we can use the faster c++ implementation.
+        x = np.ascontiguousarray(x, dtype=float)
+        y = np.ascontiguousarray(y, dtype=float)
+        coefs = np.ascontiguousarray(coefs, dtype=float)
+    else:
+        x = np.array(x, copy=False)
+        y = np.array(y, copy=False)
+        coefs = np.array(coefs, copy=False)
+
+    if len(x) != len(y):
+        raise GalSimIncompatibleValuesError("x and y are not the same size",
+                                            x=x, y=y)
+    if len(coefs.shape) != 2:
+        raise GalSimValueError("coefs must be 2-dimensional", coefs)
+    if triangle and coefs.shape[0] != coefs.shape[1]:
+        raise GalSimIncompatibleValuesError("coefs must be square if triangle is True",
+                                            coefs=coefs, triangle=triangle)
+    _horner2d(x, y, coefs, result, temp, triangle)
     return result
+
+def _horner2d(x, y, coefs, result, temp, triangle=False):
+    if result.dtype == float:
+        # Note: the c++ implementation doesn't need to care about triangle.
+        # It is able to trivially account for the zeros without special handling.
+        _galsim.Horner2D(x.ctypes.data, y.ctypes.data, x.size,
+                         coefs.ctypes.data, coefs.shape[0], coefs.shape[1],
+                         result.ctypes.data, temp.ctypes.data)
+    else:
+        if triangle:
+            result.fill(coefs[-1][0])
+            for k, coef in enumerate(coefs[-2::-1]):
+                result *= x
+                _horner(y, coef[:k+2], temp)
+                result += temp
+        else:
+            _horner(y, coefs[-1], result)
+            for coef in coefs[-2::-1]:
+                result *= x
+                _horner(y, coef, temp)
+                result += temp
 
 
 def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
@@ -1080,7 +1139,7 @@ def structure_function(image):
     corr = np.fft.ifft2(np.abs(np.fft.fft2(np.fft.fftshift(array)))**2).real / (nx * ny)
     # Check that the zero-lag correlation function is equal to the variance before doing the
     # ifftshift.
-    assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
+    #assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
     corr = np.fft.ifftshift(corr)
 
     x = scale * (np.arange(nx) - nx//2)
@@ -1492,3 +1551,34 @@ def ensure_dir(target):
         raise OSError("tried to make directory '%s' "
                       "but a non-directory file of that "
                       "name already exists" % dir)
+
+
+def find_out_of_bounds_position(x, y, bounds, grid=False):
+    """Given arrays of x and y values that are known to contain at least one
+    position that is out-of-bounds of the given bounds instance, return one
+    such PositionD.
+
+    @param x  Array of x values
+    @param y  Array of y values
+    @param bounds  Bounds instance
+    @param grid  Bool indicating whether to check the outer product of x and y
+                 (grid=True), or each sequential pair of x and y (grid=False).
+                 If the latter, then x and y should have the same shape.
+
+    @returns a PositionD from x and y that is out-of-bounds of bounds.
+    """
+    from .position import PositionD
+    if grid:
+        # It's enough to check corners for grid input
+        for x_ in (np.min(x), np.max(x)):
+            for y_ in (np.min(y), np.max(y)):
+                if (x_ < bounds.xmin or x_ > bounds.xmax or
+                    y_ < bounds.ymin or y_ > bounds.ymax):
+                    return PositionD(x_, y_)
+    else:
+        # Faster to check all points than to iterate through them one-by-one?
+        w = np.where((x < bounds.xmin) | (x > bounds.xmax) |
+                     (y < bounds.ymin) | (y > bounds.ymax))
+        if len(w[0]) > 0:
+            return PositionD(x[w[0][0]], y[w[0][0]])
+    raise GalSimError("No out-of-bounds position")

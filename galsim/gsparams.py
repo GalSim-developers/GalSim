@@ -115,14 +115,6 @@ class GSParams(object):
                                 radial profile. When such approximations need to be made, it makes
                                 sure that the resulting fractional error in the flux will be at
                                 most this much. [default: 1.e-5]
-    @param allowed_flux_variation      The maximum range of allowed (abs value of) photon fluxes
-                                within an interval before the rejection sampling algorithm is
-                                invoked for photon shooting. [default: 0.81]
-    @param range_division_for_extrema  The number of parts into which to split a range to bracket
-                                extrema when photon shooting. [default: 32]
-    @param small_fraction_of_flux      When photon shooting, intervals with less than this fraction
-                                of probability are considered ok to use with the dominant-sampling
-                                algorithm. [default: 1.e-4]
     """
     def __init__(self, minimum_fft_size=128, maximum_fft_size=8192,
                  folding_threshold=5.e-3, stepk_minimum_hlr=5, maxk_threshold=1.e-3,
@@ -144,9 +136,17 @@ class GSParams(object):
         self._integration_relerr = float(integration_relerr)
         self._integration_abserr = float(integration_abserr)
         self._shoot_accuracy = float(shoot_accuracy)
-        self._allowed_flux_variation = float(allowed_flux_variation)
-        self._range_division_for_extrema = int(range_division_for_extrema)
-        self._small_fraction_of_flux = float(small_fraction_of_flux)
+
+        if allowed_flux_variation != 0.81:
+            from .deprecated import depr
+            depr('allowed_flux_variation', 2.1, "", "This parameter is no longer used.")
+        if range_division_for_extrema != 32:
+            from .deprecated import depr
+            depr('range_division_for_extrema', 2.1, "", "This parameter is no longer used.")
+        if small_fraction_of_flux != 1.e-4:
+            from .deprecated import depr
+            depr('small_fraction_of_flux', 2.1, "", "This parameter is no longer used.")
+
 
         # This is the thing that is needed for any c++ calls.
         with convert_cpp_errors():
@@ -179,12 +179,6 @@ class GSParams(object):
     def integration_abserr(self): return self._integration_abserr
     @property
     def shoot_accuracy(self): return self._shoot_accuracy
-    @property
-    def allowed_flux_variation(self): return self._allowed_flux_variation
-    @property
-    def range_division_for_extrema(self): return self._range_division_for_extrema
-    @property
-    def small_fraction_of_flux(self): return self._small_fraction_of_flux
 
     @staticmethod
     def check(gsparams, default=None):
@@ -205,10 +199,11 @@ class GSParams(object):
         """Combine a list of GSParams instances using the most restrictive parameter from each.
 
         Uses the minimum value for most parameters. For the following parameters, it uses the
-        maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr,
-        allowed_flux_variation, range_division_for_extrema.
+        maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr.
         """
         if len(gsp_list) == 1:
+            return gsp_list[0]
+        elif all(g == gsp_list[0] for g in gsp_list[1:]):
             return gsp_list[0]
         else:
             return GSParams(
@@ -224,10 +219,7 @@ class GSParams(object):
                 min([g.realspace_abserr for g in gsp_list]),
                 min([g.integration_relerr for g in gsp_list]),
                 min([g.integration_abserr for g in gsp_list]),
-                min([g.shoot_accuracy for g in gsp_list]),
-                max([g.allowed_flux_variation for g in gsp_list]),
-                max([g.range_division_for_extrema for g in gsp_list]),
-                min([g.small_fraction_of_flux for g in gsp_list]))
+                min([g.shoot_accuracy for g in gsp_list]))
 
     # Define once the order of args in __init__, since we use it a few times.
     def _getinitargs(self):
@@ -236,18 +228,18 @@ class GSParams(object):
                 self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
                 self.realspace_relerr, self.realspace_abserr,
                 self.integration_relerr, self.integration_abserr,
-                self.shoot_accuracy, self.allowed_flux_variation,
-                self.range_division_for_extrema, self.small_fraction_of_flux)
+                self.shoot_accuracy)
 
     def __getstate__(self): return self._getinitargs()
     def __setstate__(self, state): self.__init__(*state)
 
     def __repr__(self):
-        return 'galsim.GSParams(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)'% \
+        return 'galsim.GSParams(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)'% \
                 self._getinitargs()
 
     def __eq__(self, other):
-        return isinstance(other, GSParams) and self._getinitargs() == other._getinitargs()
+        return (self is other or
+                (isinstance(other, GSParams) and self._getinitargs() == other._getinitargs()))
     def __ne__(self, other):
         return not self.__eq__(other)
 

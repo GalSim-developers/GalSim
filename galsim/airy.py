@@ -183,11 +183,12 @@ class Airy(GSObject):
                     "objects with non-zero obscuration.")
 
     def __eq__(self, other):
-        return (isinstance(other, Airy) and
-                self.lam_over_diam == other.lam_over_diam and
-                self.obscuration == other.obscuration and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
+        return (self is other or
+                (isinstance(other, Airy) and
+                 self.lam_over_diam == other.lam_over_diam and
+                 self.obscuration == other.obscuration and
+                 self.flux == other.flux and
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.Airy", self.lam_over_diam, self.obscuration, self.flux,

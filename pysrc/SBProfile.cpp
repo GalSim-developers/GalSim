@@ -36,7 +36,7 @@ namespace galsim {
         py::class_<GSParams>(GALSIM_COMMA "GSParams" BP_NOINIT)
             .def(py::init<
                  int, int, double, double, double, double, double, double, double, double,
-                 double, double, double, double, int, double>());
+                 double, double, double>());
 
         py::class_<SBProfile> pySBProfile(GALSIM_COMMA "SBProfile" BP_NOINIT);
         pySBProfile

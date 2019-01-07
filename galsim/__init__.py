@@ -83,7 +83,7 @@ import re
 # We don't use setup.py, so it's not so important to do it this way, but if we ever switch...
 # And it does make it a bit easier to get the version number in SCons too.
 from ._version import __version__
-vi = re.split('\.|-',__version__)
+vi = re.split(r'\.|-',__version__)
 __version_info__ = tuple([int(x) for x in vi if x.isdigit()])
 
 # Define the current code version, in addition to the hidden attribute, to be consistent with

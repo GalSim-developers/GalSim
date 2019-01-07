@@ -25,10 +25,9 @@ from .angle import arcsec, AngleUnit
 from .position import PositionD, PositionI
 from .bounds import BoundsD, BoundsI
 from .interpolant import Quintic, Lanczos
-from .interpolatedimage import _InterpolatedImage
 from .image import Image, ImageD
 from .random import GaussianDeviate
-from .table import LookupTable
+from .table import LookupTable, LookupTable2D
 from . import utilities
 from . import integ
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
@@ -219,11 +218,12 @@ class PowerSpectrum(object):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, PowerSpectrum) and
-                self.e_power_function == other.e_power_function and
-                self.b_power_function == other.b_power_function and
-                self.delta2 == other.delta2 and
-                self.scale == other.scale)
+        return (self is other or
+                (isinstance(other, PowerSpectrum) and
+                 self.e_power_function == other.e_power_function and
+                 self.b_power_function == other.b_power_function and
+                 self.delta2 == other.delta2 and
+                 self.scale == other.scale))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self): return hash(repr(self))
@@ -496,13 +496,16 @@ class PowerSpectrum(object):
         self.center = center
 
         # It is also convenient to store the bounds within which an input position is allowed.
-        self.bounds = BoundsD( center.x - ngrid * grid_spacing / 2. ,
-                               center.x + ngrid * grid_spacing / 2. ,
-                               center.y - ngrid * grid_spacing / 2. ,
-                               center.y + ngrid * grid_spacing / 2. )
+        self.bounds = BoundsD( center.x - (ngrid-1) * grid_spacing / 2. ,
+                               center.x + (ngrid-1) * grid_spacing / 2. ,
+                               center.y - (ngrid-1) * grid_spacing / 2. ,
+                               center.y + (ngrid-1) * grid_spacing / 2. )
         # Expand the bounds slightly to make sure rounding errors don't lead to points on the
         # edge being considered off the edge.
         self.bounds = self.bounds.expand( 1. + 1.e-15 )
+
+        self.x_grid = np.linspace(self.bounds.xmin, self.bounds.xmax, ngrid)
+        self.y_grid = np.linspace(self.bounds.ymin, self.bounds.ymax, ngrid)
 
         gd = GaussianDeviate(rng)
 
@@ -546,7 +549,8 @@ class PowerSpectrum(object):
             self.grid_kappa = np.array(self.grid_kappa[s,s], copy=True, order='C')
 
         # Set up the images to be interpolated.
-        # Note: We don't make the InterpolatedImages yet, since it's not picklable.
+        # Note: We don't make the LookupTable2D's yet, since we don't know if
+        #       the user wants periodic wrapping or not.
         #       So we wait to create them when we are actually going to use them.
         self.im_g1 = ImageD(self.grid_g1, scale=self.grid_spacing)
         self.im_g2 = ImageD(self.grid_g2, scale=self.grid_spacing)
@@ -762,79 +766,6 @@ class PowerSpectrum(object):
         else:
             return (k < k_max).astype(float)
 
-    def _wrap_image(self, im, border=7):
-        """
-        Utility function to wrap an input image with some number of border pixels.  By default, the
-        number of border pixels is 7, but this function works as long as it's less than the size of
-        the input image itself.  This function is used for periodic interpolation by the
-        getShear() and other methods, but eventually if we upgrade LookupTable2D to allow
-        Lanczos interpolation, we should ust that.  cf. Issue #751
-        """
-        # We should throw an exception if the image is smaller than 'border', since at this point
-        # this process doesn't make sense.
-        if im.bounds.xmax - im.bounds.xmin < border:
-            raise GalSimError("Periodic wrapping does not work with images this small!")
-        expanded_bounds = im.bounds.withBorder(border)
-        # Make new image with those bounds.
-        im_new = ImageD(expanded_bounds, scale=self.grid_spacing)
-        # Make the central subarray equal to what we want.
-        im_new[im.bounds] = Image(im)
-        # Set the empty bits around the center properly.  There are four strips around the edge, and
-        # 4 corner squares that need to be filled in.  Surely there must be a smarter python-y way
-        # of doing this, but I'm not clever enough to figure it out.  This is basically the grossest
-        # code I've ever written, but it works properly.  Anyone who wants is welcome to fix it.
-        #
-        # Mike suggested a way to optimize it slightly, if we find that speed is an issue later on:
-        # We can make just 4 copies, corresponding to
-        # * Strip along left side.
-        # * Upper left and strip along top can be done together.
-        # * Lower left and strip along bottom can be done together.
-        # * Upper right, strip along right, and lower right can be done together.
-        # The code will also be a bit neater this way.
-        #
-        ## Strip along left-hand side
-        b1 = border-1
-        im_new[BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
-                       im.bounds.ymin, im.bounds.ymax)] = \
-                       Image(im[BoundsI(im.bounds.xmax-b1,im.bounds.xmax,
-                                        im.bounds.ymin, im.bounds.ymax)])
-        ## Strip along right-hand side
-        im_new[BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
-                       im.bounds.ymin, im.bounds.ymax)] = \
-                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
-                                        im.bounds.ymin, im.bounds.ymax)])
-        ## Strip along the bottom
-        im_new[BoundsI(im.bounds.xmin, im.bounds.xmax,
-                       expanded_bounds.ymin, im.bounds.ymin-1)] = \
-                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmax,
-                                        im.bounds.ymax-b1, im.bounds.ymax)])
-        ## Strip along the top
-        im_new[BoundsI(im.bounds.xmin, im.bounds.xmax,
-                       im.bounds.ymax+1, expanded_bounds.ymax)] = \
-                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmax,
-                                        im.bounds.ymin, im.bounds.ymin+b1)])
-        ## Lower-left corner
-        im_new[BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
-                       expanded_bounds.ymin, im.bounds.ymin-1)] = \
-                       Image(im[BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
-                                        im.bounds.ymax-b1, im.bounds.ymax)])
-        ## Upper-right corner
-        im_new[BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
-                       im.bounds.ymax+1, expanded_bounds.ymax)] = \
-                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
-                                        im.bounds.ymin, im.bounds.ymin+b1)])
-        ## Upper-left corner
-        im_new[BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
-                       im.bounds.ymax+1, expanded_bounds.ymax)] = \
-                       Image(im[BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
-                                        im.bounds.ymin, im.bounds.ymin+b1)])
-        ## Lower-right corner
-        im_new[BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
-                       expanded_bounds.ymin, im.bounds.ymin-1)] = \
-                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
-                                        im.bounds.ymax-b1, im.bounds.ymax)])
-        return im_new
-
     def getShear(self, pos, units=arcsec, reduced=True, periodic=False):
         """
         This function can interpolate between grid positions to find the shear values for a given
@@ -927,64 +858,22 @@ class PowerSpectrum(object):
 
         @returns the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)
         """
-        kinterp = Quintic()  # Irrelevant, but required.
-
-        im_g1 = self.im_g1
-        im_g2 = self.im_g2
-        kinterp = Quintic()
+        g1_grid = self.im_g1.array
+        g2_grid = self.im_g2.array
 
         if reduced:
             # get reduced shear (just discard magnification)
-            g1, g2, _ = theoryToObserved(im_g1.array, im_g2.array, self.im_kappa.array)
-            im_g1 = ImageD(g1, scale=self.grid_spacing)
-            im_g2 = ImageD(g2, scale=self.grid_spacing)
+            g1_grid, g2_grid, _ = theoryToObserved(g1_grid, g2_grid, self.im_kappa.array)
 
-        if periodic:
-            # Make an expanded image.  We expand by 7 (default) to be safe, though most
-            # interpolants don't need that much.  Note that we do NOT overwrite the stored data
-            # in the PowerSpectrum instance with anything that is done here, so what's being
-            # done here must be redone in subsequent calls to getShear with periodic
-            # interpolation.
-            im_g1 = self._wrap_image(im_g1)
-            im_g2 = self._wrap_image(im_g2)
+        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid.T,
+                               edge_mode='wrap' if periodic else 'warn',
+                               interpolant=self.interpolant)
+        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid.T,
+                               edge_mode='wrap' if periodic else 'warn',
+                               interpolant=self.interpolant)
 
-        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
-        # However, if we are doing wrapped interpolation then we will want to manually stick the
-        # wrapped grid bits around the edges, because otherwise the interpolant will treat
-        # everything off the edges as zero.
-        ii_g1 = _InterpolatedImage(im_g1, self.interpolant, kinterp) * self.grid_spacing**2
-        ii_g2 = _InterpolatedImage(im_g2, self.interpolant, kinterp) * self.grid_spacing**2
-
-        # interpolate if necessary
-        try:
-            g1g2 = [ self._getSingleShear(x, y, ii_g1, ii_g2, periodic)
-                     for x,y in zip(pos_x, pos_y) ]
-            g1, g2 = zip(*g1g2)
-            return np.array(g1), np.array(g2)
-        except TypeError:
-            return self._getSingleShear(pos_x, pos_y, ii_g1, ii_g2, periodic)
-
-    def _getSingleShear(self, x, y, ii_g1, ii_g2, periodic):
-        """Helper function for _getShear"""
-        # Check that the position is in the bounds of the interpolated image
-        pos = PositionD(x,y)
-        if not self.bounds.includes(pos):
-            if not periodic:
-                # We're not treating this as a periodic box, so issue a warning and set the
-                # shear to zero for positions that are outside the original grid.
-                galsim_warn(
-                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded shear "
-                    "values.  Returning a shear of (0,0) for this point."%(x,y,self.bounds))
-                return 0., 0.
-            else:
-                # Treat this as a periodic box.
-                dx = self.bounds.xmax-self.bounds.xmin
-                dy = self.bounds.ymax-self.bounds.ymin
-                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
-        g1 = ii_g1._xValue(pos-self.center)
-        g2 = ii_g2._xValue(pos-self.center)
-        return g1, g2
+        ret = lut_g1(pos_x, pos_y), lut_g2(pos_x, pos_y)
+        return ret
 
     def getConvergence(self, pos, units=arcsec, periodic=False):
         """
@@ -1038,48 +927,13 @@ class PowerSpectrum(object):
 
         @returns the convergence, kappa (either a scalar or a numpy array)
         """
-        kinterp = Quintic()  # Irrelevant, but required.
+        kappa_grid = self.im_kappa.array
 
-        im_kappa = self.im_kappa
-        kinterp = Quintic()
+        lut_kappa = LookupTable2D(self.x_grid, self.y_grid, kappa_grid.T,
+                                  edge_mode='wrap' if periodic else 'warn',
+                                  interpolant=self.interpolant)
 
-        if periodic:
-            # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
-            # interpolants don't need that much.
-            im_kappa = self._wrap_image(im_kappa)
-
-        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
-        # However, if we are doing wrapped interpolation then we will want to manually stick the
-        # wrapped grid bits around the edges, because otherwise the interpolant will treat
-        # everything off the edges as zero.
-        ii_kappa = _InterpolatedImage(im_kappa, self.interpolant, kinterp) * self.grid_spacing**2
-
-        # interpolate if necessary
-        try:
-            k = [ self._getSingleConvergence(x, y, ii_kappa, periodic)
-                  for x,y in zip(pos_x, pos_y) ]
-            return np.array(k)
-        except TypeError:
-            return self._getSingleConvergence(pos_x, pos_y, ii_kappa, periodic)
-
-    def _getSingleConvergence(self, x, y, ii_kappa, periodic):
-        """Helper function for _getConvergence"""
-        pos = PositionD(x,y)
-        # Check that the position is in the bounds of the interpolated image
-        if not self.bounds.includes(pos):
-            if not periodic:
-                galsim_warn(
-                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
-                    "convergence values. Returning a convergence of 0 for this point."%(
-                    x,y,self.bounds))
-                return 0.
-            else:
-                # Treat this as a periodic box.
-                dx = self.bounds.xmax-self.bounds.xmin
-                dy = self.bounds.ymax-self.bounds.ymin
-                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
-        return ii_kappa._xValue(pos-self.center)
+        return lut_kappa(pos_x, pos_y)
 
     def getMagnification(self, pos, units=arcsec, periodic=False):
         """
@@ -1134,50 +988,12 @@ class PowerSpectrum(object):
 
         @returns the magnification, mu (either a scalar or a numpy array)
         """
-        kinterp = Quintic()  # Irrelevant, but required.
+        _, _, mu_grid = theoryToObserved(self.im_g1.array, self.im_g2.array, self.im_kappa.array)
+        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid.T - 1,
+                               edge_mode='wrap' if periodic else 'warn',
+                               interpolant=self.interpolant)
 
-        # Calculate the magnification based on the convergence and shear
-        _, _, mu = theoryToObserved(self.im_g1.array, self.im_g2.array, self.im_kappa.array)
-        # Interpolate mu-1, so the zero values off the edge are appropriate.
-        im_mu = ImageD(mu-1, scale=self.grid_spacing)
-
-        if periodic:
-            # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
-            # interpolants don't need that much.
-            im_mu = self._wrap_image(im_mu)
-
-        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
-        # However, if we are doing wrapped interpolation then we will want to manually stick the
-        # wrapped grid bits around the edges, because otherwise the interpolant will treat
-        # everything off the edges as zero.
-        ii_mu = _InterpolatedImage(im_mu, self.interpolant, kinterp) * self.grid_spacing**2
-
-        # interpolate if necessary
-        try:
-            mu = [ self._getSingleMagnification(x, y, ii_mu, periodic)
-                   for x,y in zip(pos_x, pos_y) ]
-            return np.array(mu)
-        except TypeError:
-            return self._getSingleMagnification(pos_x, pos_y, ii_mu, periodic)
-
-    def _getSingleMagnification(self, x, y, ii_mu, periodic):
-        """Helper function for _getMagnification"""
-        pos = PositionD(x,y)
-        # Check that the position is in the bounds of the interpolated image
-        if not self.bounds.includes(pos):
-            if not periodic:
-                galsim_warn(
-                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
-                    "convergence values. Returning a magnification of 1 for this point."%(
-                    x,y,self.bounds))
-                return 1.
-            else:
-                # Treat this as a periodic box.
-                dx = self.bounds.xmax-self.bounds.xmin
-                dy = self.bounds.ymax-self.bounds.ymin
-                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
-        return ii_mu._xValue(pos-self.center) + 1.
+        return lut_mu(pos_x, pos_y) + 1
 
     def getLensing(self, pos, units=arcsec, periodic=False):
         """
@@ -1235,59 +1051,20 @@ class PowerSpectrum(object):
         @returns the reduced shear and magnification as a tuple (g1,g2,mu) (either scalars or
                  numpy arrays)
         """
-        kinterp = Quintic()  # Irrelevant, but required.
+        g1_grid, g2_grid, mu_grid = theoryToObserved(
+            self.im_g1.array, self.im_g2.array, self.im_kappa.array)
 
-        # Calculate the magnification based on the convergence and shear
-        g1, g2, mu = theoryToObserved(self.im_g1.array, self.im_g2.array, self.im_kappa.array)
-        im_g1 = ImageD(g1, scale=self.grid_spacing)
-        im_g2 = ImageD(g2, scale=self.grid_spacing)
-        im_mu = ImageD(mu-1, scale=self.grid_spacing)
+        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid.T,
+                               edge_mode='wrap' if periodic else 'warn',
+                               interpolant=self.interpolant)
+        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid.T,
+                               edge_mode='wrap' if periodic else 'warn',
+                               interpolant=self.interpolant)
+        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid.T-1,
+                               edge_mode='wrap' if periodic else 'warn',
+                               interpolant=self.interpolant)
 
-        if periodic:
-            # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
-            # interpolants don't need that much.
-            im_mu = self._wrap_image(im_mu)
-            im_g1 = self._wrap_image(im_g1)
-            im_g2 = self._wrap_image(im_g2)
-
-        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
-        # However, if we are doing wrapped interpolation then we will want to manually stick the
-        # wrapped grid bits around the edges, because otherwise the interpolant will treat
-        # everything off the edges as zero.
-        ii_g1 = _InterpolatedImage(im_g1, self.interpolant, kinterp) * self.grid_spacing**2
-        ii_g2 = _InterpolatedImage(im_g2, self.interpolant, kinterp) * self.grid_spacing**2
-        ii_mu = _InterpolatedImage(im_mu, self.interpolant, kinterp) * self.grid_spacing**2
-
-        # interpolate if necessary
-        try:
-            g1g2mu = [ self._getSingleLensing(x, y, ii_g1, ii_g2, ii_mu, periodic)
-                       for x,y in zip(pos_x, pos_y) ]
-            g1, g2, mu = zip(*g1g2mu)
-            return np.array(g1), np.array(g2), np.array(mu)
-        except TypeError:
-            return self._getSingleLensing(pos_x, pos_y, ii_g1, ii_g2, ii_mu, periodic)
-
-    def _getSingleLensing(self, x, y, ii_g1, ii_g2, ii_mu, periodic):
-        """Helper function for _getLensing"""
-        pos = PositionD(x,y)
-        # Check that the position is in the bounds of the interpolated image
-        if not self.bounds.includes(pos):
-            if not periodic:
-                galsim_warn(
-                    "Warning: position (%f,%f) not within the bounds (%s) of the gridded "
-                    "values. Returning 0 for lensing observables at this point."%(x,y,self.bounds))
-                return 0., 0., 1.
-            else:
-                # Treat this as a periodic box.
-                dx = self.bounds.xmax-self.bounds.xmin
-                dy = self.bounds.ymax-self.bounds.ymin
-                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
-
-        g1 = ii_g1._xValue(pos-self.center)
-        g2 = ii_g2._xValue(pos-self.center)
-        mu = ii_mu._xValue(pos-self.center) + 1.
-        return g1, g2, mu
+        return lut_g1(pos_x, pos_y), lut_g2(pos_x, pos_y), lut_mu(pos_x, pos_y)+1
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.
@@ -1319,7 +1096,7 @@ class PowerSpectrumRealizer(object):
     def __str__(self):
         return "galsim.lensing_ps.PowerSpectrumRealizer(ngrid=%r, pixel_size=%r, p_E=%s, p_B=%s)"%(
                 self.nx, self.pixel_size, self.p_E, self.p_B)
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other): return self is other or repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 

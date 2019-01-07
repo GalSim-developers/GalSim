@@ -295,9 +295,9 @@ namespace galsim {
          * alternative to rejection sampling.  See `OneDimensionalDeviate` documentation.
          *
          * @param[in] photons PhotonArray in which to write the photon information
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @param[in] rng BaseDeviate that will be used to draw photons from distribution.
          */
-        void shoot(PhotonArray& photons, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, BaseDeviate rng) const;
 
         /**
          * @brief Return expectation value of flux in positive photons when shoot() is called

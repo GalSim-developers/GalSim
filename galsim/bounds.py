@@ -355,7 +355,8 @@ class Bounds(object):
             return ()
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self._getinitargs() == other._getinitargs()
+        return (self is other or
+                (isinstance(other, self.__class__) and self._getinitargs() == other._getinitargs()))
 
     def __ne__(self, other):
         return not self.__eq__(other)
