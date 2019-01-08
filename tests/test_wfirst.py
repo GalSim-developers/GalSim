@@ -573,16 +573,6 @@ def test_wfirst_psfs():
     # - fully chromatic PSFs with interpolation, but only interpolating between two wavelengths.
     # - achromatic PSFs without loading the pupil plane image.
 
-    # First test: check getting all SCAs
-    all_SCAs = np.arange(1, galsim.wfirst.n_sca+1, 1)
-    wfirst_psfs = galsim.wfirst.getPSF(all_SCAs, None, approximate_struts=True)
-    assert len(wfirst_psfs) == galsim.wfirst.n_sca
-
-    # Check that if we specify SCAs, then we get the ones we specified.
-    scas = [5, 7, 14]
-    wfirst_psfs = galsim.wfirst.getPSF(scas, None, approximate_struts=True)
-    assert len(wfirst_psfs) == 3
-
     # Providing a wavelength returns achromatic PSFs
     psf_5 = galsim.wfirst.getPSF(SCA=5, bandpass='F184', wavelength=1950.)
     assert isinstance(psf_5, galsim.GSObject)
@@ -622,10 +612,8 @@ def test_wfirst_psfs():
     blue_limit = all_bp['Z087'].blue_limit
     red_limit = all_bp['Z087'].red_limit
     n_waves = 3
-    other_sca = 12
-    psfs_int = galsim.wfirst.getPSF(SCA=[use_sca, other_sca], bandpass='Z087',
-                                    approximate_struts=True, n_waves=n_waves)
-    psf_int = psfs_int[0]
+    psf_int = galsim.wfirst.getPSF(SCA=use_sca, bandpass='Z087',
+                                   approximate_struts=True, n_waves=n_waves)
     # Check that evaluation at a single wavelength is consistent with previous results.
     im_int = im_achrom.copy()
     obj_int = psf_int.evaluateAtWavelength(use_lam)
@@ -658,61 +646,6 @@ def test_wfirst_psfs():
         galsim.wfirst.getPSF(SCA=use_sca, bandpass='Z099', n_waves=2,
                              approximate_struts=True, high_accuracy=False,
                              wavelength='Z099')
-
-    # Check that if we store and reload, what we get back is consistent with what we put in.
-    test_file = 'tmp_store.fits'
-    with open(test_file, 'wb'): pass  # Just make it exist to test clobber feature.
-    bp_list = ['Z087']
-    psf_dict = dict(zip([use_sca, other_sca], psfs_int))
-    galsim.wfirst.storePSFImages(bandpass_list=bp_list, PSF_dict=psf_dict,
-                                 filename=test_file, clobber=True)
-    new_dict = galsim.wfirst.loadPSFImages(test_file)
-    # Check that it contains the right list of bandpasses.
-    np.testing.assert_array_equal(
-        list(new_dict.keys()), bp_list, err_msg='Wrong list of bandpasses in stored file')
-    # Check that when we take the dict for that bandpass, we get the right list of SCAs.
-    np.testing.assert_array_equal(
-        list(new_dict[bp_list[0]].keys()), list(psf_dict.keys()),
-        err_msg='Wrong list of SCAs in stored file')
-    # Now draw an image from the stored object.
-    img_stored = new_dict[bp_list[0]][other_sca].drawImage(scale=1.3*galsim.wfirst.pixel_scale)
-    # Make a comparable image from the original interpolated object.  This requires convolving with
-    # a star that has a flat SED.
-    star = galsim.Gaussian(sigma=1.e-8, flux=1.)
-    star_sed = galsim.SED(lambda x:1,
-                          wave_type='nanometers',
-                          flux_type='flambda').withFlux(1, all_bp[bp_list[0]])
-    obj = galsim.Convolve(psfs_int[1], star*star_sed)
-    test_im = img_stored.copy()
-    test_im = obj.drawImage(all_bp[bp_list[0]],
-                            image=test_im, scale=1.3*galsim.wfirst.pixel_scale)
-    # We have made some approximations here, so we cannot expect it to be great.
-    # Request 1% accuracy.
-    np.testing.assert_array_almost_equal(
-        img_stored.array, test_im.array, decimal=2,
-        err_msg='PSF from stored file and actual PSF object disagree.')
-
-    # Delete test files when done.
-    os.remove(test_file)
-
-    # Now can write to that without clobber.
-    galsim.wfirst.storePSFImages(psf_dict, test_file, bp_list)
-    assert os.path.isfile(test_file)
-    # Then without clobber, raises error, since file exists.
-    with assert_raises(OSError):
-        galsim.wfirst.storePSFImages(psf_dict, test_file, bp_list)
-
-    with assert_raises(galsim.GalSimError):
-        galsim.wfirst.storePSFImages({}, test_file, bp_list, clobber=True)
-    with assert_raises(TypeError):
-        galsim.wfirst.storePSFImages(psf_dict, test_file, [1,2,3], clobber=True)
-    with assert_raises(galsim.GalSimValueError):
-        galsim.wfirst.storePSFImages(psf_dict, test_file, ['g','r','i','z'], clobber=True)
-    # Note: another coverage cheat.  Leaving out bandpass_list does all bands.
-    # It takes a long time to write them all out for real though, so we don't do so here.
-    psf_achrom_dict = {use_sca : psf_achrom}
-    with assert_raises(galsim.GalSimValueError):
-        galsim.wfirst.storePSFImages(psf_achrom_dict, test_file, clobber=True)
 
     # Test the construction of PSFs with high_accuracy and/or not approximate_struts
     # But only if we're running from the command line.
