@@ -292,8 +292,8 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
 def _read_aberrations(SCA):
     """
     This is a helper routine that reads in aberrations for a particular SCA and wavelength (given as
-    galsim.wfirst.wfirst_psfs.zemax_wavelength) from stored files, and return sthem along with the
-    field positions
+    galsim.wfirst.wfirst_psfs.zemax_wavelength) from stored files, and returns them along with the
+    field positions.
 
     @param  SCA      The identifier for the SCA, from 1-18.
     @returns NumPy arrays containing the aberrations, and x and y field positions.
