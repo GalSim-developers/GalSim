@@ -155,16 +155,6 @@ This module also contains the following routines:
 
     getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.
 
-    storePSFImages() - A routine to take outputs of getPSF() and write them to file as a set of
-                       images in a multi-extension FITS file.  This can be used along with the
-                       next routine for faster calculations, as long as the application is one
-                       for which it does not matter if you ignore the variation of the PSF with
-                       wavelength within the passband.
-
-    loadPSFImages() - A routine to read in an image of the PSF stored by storePSFImages(), and
-                      make objects corresponding to each of them for later use.  This routine has
-                      less overhead than getPSF() but also is less flexible.
-
     getWCS() - A routine to get the WCS for each SCA in the focal plane, for a given target RA, dec,
                and orientation angle.
 
@@ -249,7 +239,7 @@ charge_diffusion = 0.1
 
 from .wfirst_bandpass import getBandpasses
 from .wfirst_backgrounds import getSkyLevel
-from .wfirst_psfs import getPSF, storePSFImages, loadPSFImages
+from .wfirst_psfs import getPSF
 from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA, convertCenter
 from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
 
