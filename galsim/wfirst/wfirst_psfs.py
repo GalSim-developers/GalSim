@@ -217,7 +217,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
             pupil_plane_scale = galsim.wfirst.pupil_plane_scale
 
     # Start reading in the aberrations for that SCA
-    if logger: logger.debug('Beginning to get the PSF aberrations.')
+    if logger: logger.debug('Beginning to get the PSF aberrations for SCA %d.'%SCA)
     aberrations, x_pos, y_pos = _read_aberrations(SCA)
     # Do bilinear interpolation, unless we're exactly at the center (default).
     use_aberrations = _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos)
