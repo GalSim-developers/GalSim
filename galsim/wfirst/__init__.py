@@ -35,8 +35,7 @@ inferred based on the capacitance.  To use a common language with that for CCDs,
 to quantities measured in units of e-/pixel, but for some detector non-idealities, it is important
 to keep in mind that it is voltage that is sensed.
 
-Currently, the module includes the following numbers, which were updated in October 2017 in
-preparation for the release of GalSim v1.5:
+Currently, the module includes the following numbers, which were updated as of WFIRST Cycle 7:
 
     gain - The gain for all SCAs (sensor chip assemblies) is expected to be the roughly the same,
            and we currently have no information about how different they will be, so this is a
@@ -218,7 +217,7 @@ pupil_plane_file_shortwave = os.path.join(galsim.meta_data.share_dir,
                                          "WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
 pupil_plane_file = pupil_plane_file_shortwave  # Let the canonical pupil be the shortwave one.
 
-# The pupil plane image has non-zero values with a diameter of 2042 pixels.  The WFirst mirror
+# The pupil plane image has non-zero values with a diameter of 2042 pixels.  The WFIRST mirror
 # is 2.37 meters.  So the scale is 2.37 / 2042 = 0.00116 meters/pixel.
 pupil_plane_scale = diameter / 2042.
 
@@ -248,7 +247,7 @@ def NLfunc(x):
 
 def _parse_SCAs(SCAs):
     # This is a helper routine to parse the input SCAs (single number or iterable) and put it into a
-    # convenient format.  It is used in wfirst_wcs.py and wfirst_psfs.py.
+    # convenient format.  It is used in wfirst_wcs.py.
     #
     # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
     all_SCAs = np.arange(1, n_sca + 1, 1)
