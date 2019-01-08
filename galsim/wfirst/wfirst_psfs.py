@@ -340,19 +340,3 @@ def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
         x_frac*y_frac*upper_x_upper_y_ab
 
     return interp_ab.flatten()
-
-def _expand_list(x, n):
-    """
-    This is a helper routine to manage the inputs to getPSF.
-
-    If x is iterable, it makes sure it has length n.
-    If x is not iterable, it expands it a list of length n (repeating the single unique entry n
-    times).
-    """
-    if hasattr(x, '__iter__'):
-        if not len(x) == n:
-            raise galsim.GalSimValueError("Input lists are mismatched in length. ",
-                                          "Expecting length=%d"%n, x)
-        return x
-    else:
-        return [x] * n
