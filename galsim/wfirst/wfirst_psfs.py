@@ -95,13 +95,24 @@ def getPSF(SCA, bandpass,
 
     The PSFs are always defined assuming the user will specify length scales in arcsec.
 
+    Users may find they do not have to call getPSF() for all objects in their simulations; for a
+    given SCA and position within the SCA, and a given pupil plane configuration and wavelength
+    information, it should be possible to reuse the PSFs.
+
     @param    SCA                  Single value specifying the SCA for which the PSF should be
                                    loaded.
     @param    bandpass             Single string specifying the bandpass to use when defining the
                                    pupil plane configuration and/or interpolation of chromatic PSFs.
                                    If `approximate_struts` is True (which means we do not use a
                                    realistic pupil plane configuration) and `n_waves` is None (no
-                                   interpolation of chromatic PSFs) then 'bandpass' can be None.
+                                   interpolation of chromatic PSFs) then 'bandpass' can be None.  It
+                                   is also possible to pass a string 'long' or 'short' for this
+                                   argument; in that case, the correct pupil plane configuration
+                                   will be used for long- or short-wavelength bands as defined using
+                                   `galsm.wfirst.longwave_bands` and
+                                   `galsim.wfirst.shortwave_bands`, respectively (but no
+                                   interpolation can be used, since it is defined using the extent
+                                   of the chosen bandpass).
     @param    SCA_pos              Single galsim.PositionD indicating the position within the SCA
                                    for which the PSF should be created. If None, the exact center of
                                    the SCA is chosen. [default: None]
@@ -155,25 +166,33 @@ def getPSF(SCA, bandpass,
     # (otherwise just say None).
     pupil_plane_type = None
     if not approximate_struts:
-        if bandpass in galsim.wfirst.longwave_bands:
+        if bandpass in galsim.wfirst.longwave_bands or bandpass=='long':
             pupil_plane_type = 'long'
-        elif bandpass in galsim.wfirst.shortwave_bands:
+        elif bandpass in galsim.wfirst.shortwave_bands or bandpass=='short':
             pupil_plane_type = 'short'
         else:
-            raise galsim.GalSimValueError("Bandpass not a valid WFIRST bandpass.",
+            raise galsim.GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
                                           bandpass, default_bandpass_list)
     else:
         # Sanity checking:
         # If we need to use bandpass info, require that it be one of the defaults.
         # If we do not need to use bandpass info, allow it to be None.
         if n_waves is not None:
-            if bandpass not in default_bandpass_list:
-                raise galsim.GalSimValueError("Bandpass not a valid WFIRST bandpass.",
-                                              bandpass, default_bandpass_list)
+            if bandpass not in default_bandpass_list+['short','long']:
+                raise galsim.GalSimValueError(
+                    "Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+                    bandpass, default_bandpass_list)
         else:
-            if bandpass not in default_bandpass_list and bandpass is not None:
-                raise galsim.GalSimValueError("Bandpass not a valid WFIRST bandpass.",
-                                              bandpass, default_bandpass_list)
+            if bandpass not in default_bandpass_list+['short','long'] and bandpass is not None:
+                raise galsim.GalSimValueError(
+                    "Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+                    bandpass, default_bandpass_list)
+
+    # If bandpass is 'short'/'long', then make sure that interpolation is not called for, since that
+    # requires an actual bandpass.
+    if bandpass in ['short','long'] and n_waves is not None:
+        raise galsim.GalSimValueError("Cannot use bandpass='short'/'long' with interpolation.",
+                                      bandpass)
 
     # Now call _get_single_PSF().
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,

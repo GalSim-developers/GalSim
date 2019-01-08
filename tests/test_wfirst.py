@@ -647,6 +647,15 @@ def test_wfirst_psfs():
                              approximate_struts=True, high_accuracy=False,
                              wavelength='Z099')
 
+    # Make sure we can instantiate a PSF with bandpass='short'/'long' and get an equivalent object
+    # when we're not using interpolation.
+    use_sca = 3
+    bp_type = 'long'
+    bp = galsim.wfirst.longwave_bands[0]
+    psf1 = galsim.wfirst.getPSF(use_sca, bp)
+    psf2 = galsim.wfirst.getPSF(use_sca, 'long')
+    assert psf1==psf2
+
     # Test the construction of PSFs with high_accuracy and/or not approximate_struts
     # But only if we're running from the command line.
     if __name__ == '__main__':
@@ -676,10 +685,11 @@ def test_wfirst_psfs():
     # Check for exceptions if we:
     # (1) Include optional aberrations in an unacceptable form.
     # (2) Invalid SCA numbers.
+    # (3) Invalid kwarg combination.
     assert_raises(ValueError, galsim.wfirst.getPSF, 3, None, extra_aberrations=[0.03, -0.06])
     assert_raises(ValueError, galsim.wfirst.getPSF, 30, None)
     assert_raises(ValueError, galsim.wfirst.getPSF, 0, None)
-
+    assert_raises(ValueError, galsim.wfirst.getPSF, 3, 'short', n_waves=10)
 
 @timer
 def test_wfirst_basic_numbers():
