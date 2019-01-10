@@ -1462,7 +1462,7 @@ class Image(object):
     def calculateFWHM(self, center=None, Imax=0.):
         """Returns the full-width half-maximum (FWHM) of a drawn object.
 
-        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        This method is equivalent to GSObject.calculateFWHM when the object has already
         been drawn onto an image.  Note that the profile should be drawn using a method that
         does not integrate over pixels, so either 'sb' or 'no_pixel'.  Also, if there is a
         significant amount of noise in the image, this method may not work well.
