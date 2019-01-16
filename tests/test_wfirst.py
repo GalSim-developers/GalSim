@@ -591,6 +591,11 @@ def test_wfirst_psfs():
     # Make sure we do the case where we add aberrations
     psf_5_ab = galsim.wfirst.getPSF(SCA=5, bandpass='F184', wavelength=1950.,
                                     extra_aberrations=np.zeros(23)+0.001)
+    # Check that we get the same answer if we specify the center of the focal plane.
+    psf_5_tmp = galsim.wfirst.getPSF(SCA=5, bandpass='F184', wavelength=1950.,
+                                     SCA_pos=galsim.PositionD(galsim.wfirst.n_pix/2,
+                                                              galsim.wfirst.n_pix/2))
+    assert psf_5==psf_5_tmp
 
     # Check that if we specify a particular wavelength, the PSF that is drawn is the same as if we
     # had gotten chromatic PSFs and then used evaluateAtWavelength.  Note that this nominally seems
