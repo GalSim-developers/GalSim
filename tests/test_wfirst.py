@@ -244,6 +244,14 @@ def test_wfirst_wcs():
                 test_fpa_pos = galsim.wfirst.convertCenter(test_sca_pos, int(sca_edge_test),
                                                            PA=pa[i_test]*galsim.radians,
                                                            date=date, PA_is_FPA=True)
+                # Also test that convertCenter checks inputs appropriately.
+                with assert_raises(TypeError):
+                    galsim.wfirst.convertCenter(test_sca_pos, 3.5)
+                with assert_raises(TypeError):
+                    galsim.wfirst.convertCenter(
+                        test_sca_pos, int(sca_edge_test), PA=pa[i_test]*galsim.radians,
+                        date=date, PA_is_FPA=True, tol=1.0)
+
                 delta_arcsec = test_fpa_pos.distanceTo(world_pos) / galsim.arcsec
                 assert delta_arcsec<0.5, "could not round-trip from FPA to SCA to FPA center"
  
@@ -286,6 +294,10 @@ def test_wfirst_wcs():
         galsim.wfirst.getWCS(world_pos=sun_pos, date=test_date)
     with assert_raises(TypeError):
         galsim.wfirst.getWCS(world_pos=pos, PA=33.)
+    with assert_raises(galsim.GalSimRangeError):
+        galsim.wfirst.getWCS(world_pos=pos, SCAs=[-1,1])
+    with assert_raises(galsim.GalSimRangeError):
+        galsim.wfirst.getWCS(world_pos=pos, SCAs=[1,23])
 
     # Check the rather bizarre convention that LONPOLE is always 180 EXCEPT (!!) when
     # observing directly at the south pole.  Apparently, this convention comes from the WFIRST
@@ -576,6 +588,9 @@ def test_wfirst_psfs():
     # Providing a wavelength returns achromatic PSFs
     psf_5 = galsim.wfirst.getPSF(SCA=5, bandpass='F184', wavelength=1950.)
     assert isinstance(psf_5, galsim.GSObject)
+    # Make sure we do the case where we add aberrations
+    psf_5_ab = galsim.wfirst.getPSF(SCA=5, bandpass='F184', wavelength=1950.,
+                                    extra_aberrations=np.zeros(23)+0.001)
 
     # Check that if we specify a particular wavelength, the PSF that is drawn is the same as if we
     # had gotten chromatic PSFs and then used evaluateAtWavelength.  Note that this nominally seems
@@ -646,6 +661,16 @@ def test_wfirst_psfs():
         galsim.wfirst.getPSF(SCA=use_sca, bandpass='Z099', n_waves=2,
                              approximate_struts=True, high_accuracy=False,
                              wavelength='Z099')
+    with assert_raises(ValueError):
+        galsim.wfirst.getPSF(SCA=use_sca, bandpass='Z099', n_waves=2,
+                             approximate_struts=False, high_accuracy=False,
+                             wavelength='Z099')
+    with assert_raises(TypeError):
+        galsim.wfirst.getPSF(SCA=use_sca, bandpass='F184', n_waves=2,
+                             approximate_struts=False, high_accuracy=True,
+                             wavelength='F184')
+    with assert_raises(galsim.GalSimValueError):
+        galsim.wfirst.getPSF(SCA=use_sca, bandpass=3)
 
     # Make sure we can instantiate a PSF with bandpass='short'/'long' and get an equivalent object
     # when we're not using interpolation.
