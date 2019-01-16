@@ -506,6 +506,8 @@ def _det_to_tangplane_positions(x_in, y_in):
     Note that the coefficients given in this routine go in the order {a0, a1, a2, a3}.
 
     """
+    # These numbers come from the "WFIRST Wide-Field Instrument Reference Information" on
+    # https://wfirst.gsfc.nasa.gov/science/WFIRST_Reference_Information.html (cycle 7).
     img_dist_coeff = np.array([-7.1229e-3, -1.6186e-2, 6.9169e-02, -1.4189e-02])
     # The optical distortion model is defined in terms of separations in *degrees*.
     r_sq = (x_in/galsim.degrees)**2 + (y_in/galsim.degrees)**2
