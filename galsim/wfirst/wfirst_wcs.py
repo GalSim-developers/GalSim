@@ -50,9 +50,9 @@ prog_version = "0.5"
 # between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
 # were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
 infile = os.path.join(galsim.meta_data.share_dir, 'sca_positions_7_6_8.txt')
-dat = np.loadtxt(infile).transpose()
-sca_xc_mm = -dat[3,:]
-sca_yc_mm = dat[4,:]
+sca_data = np.loadtxt(infile).transpose()
+sca_xc_mm = -sca_data[3,:]
+sca_yc_mm = sca_data[4,:]
 sca_xc_mm = np.insert(sca_xc_mm, 0, 0)
 sca_yc_mm = np.insert(sca_yc_mm, 0, 0)
 # Nominal center of FPA from the payload axis in this coordinate system, in mm and as an angle
