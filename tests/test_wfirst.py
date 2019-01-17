@@ -671,11 +671,15 @@ def test_wfirst_psfs():
                              approximate_struts=False, high_accuracy=False,
                              wavelength='Z099')
     with assert_raises(TypeError):
+        galsim.wfirst.getPSF(SCA=use_sca, bandpass='Z087', n_waves=2,
+                             approximate_struts=False, high_accuracy=False,
+                             wavelength='Z087')
+    with assert_raises(TypeError):
         galsim.wfirst.getPSF(SCA=use_sca, bandpass='F184', n_waves=2,
                              approximate_struts=False, high_accuracy=True,
                              wavelength='F184')
     with assert_raises(galsim.GalSimValueError):
-        galsim.wfirst.getPSF(SCA=use_sca, bandpass=3)
+        galsim.wfirst.getPSF(SCA=use_sca, bandpass=3, approximate_struts=True)
 
     # Make sure we can instantiate a PSF with bandpass='short'/'long' and get an equivalent object
     # when we're not using interpolation.
