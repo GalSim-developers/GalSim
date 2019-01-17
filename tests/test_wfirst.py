@@ -655,6 +655,10 @@ def test_wfirst_psfs():
     # in getPSF.  The actual test of this functionality comes below, but it is only run for
     # __name__==__main__ runs (i.e. run_all_tests).
     with assert_raises(TypeError):
+        galsim.wfirst.getPSF(SCA=use_sca, bandpass='Z087', n_waves=2,
+                             approximate_struts=True, high_accuracy=True,
+                             wavelength='Z087')
+    with assert_raises(TypeError):
         galsim.wfirst.getPSF(SCA=use_sca, bandpass=None, n_waves=2,
                              approximate_struts=True, high_accuracy=True,
                              wavelength_limits=red_limit)
