@@ -113,7 +113,7 @@ class VonKarman(GSObject):
                 "Either r0 or r0_500 must be specified",
                 r0=r0, r0_500=r0_500)
         if r0_500 is not None:
-            r0 = r0_500 * (lam/500)**1.2
+            r0 = r0_500 * (lam/500.)**1.2
 
         if isinstance(scale_unit, str):
             self._scale_unit = AngleUnit.from_name(scale_unit)
@@ -170,7 +170,7 @@ class VonKarman(GSObject):
 
     @property
     def r0_500(self):
-        return self._r0*(self._lam/500)**(-1.2)
+        return self._r0*(self._lam/500.)**(-1.2)
 
     @property
     def L0(self):
