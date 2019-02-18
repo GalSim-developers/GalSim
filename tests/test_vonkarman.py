@@ -170,12 +170,16 @@ def test_vk_fitting_formulae():
         r0 = r0_500*(lam/500.0)**(6./5)
         kolm = galsim.Kolmogorov(lam=lam, r0=r0)
         vk = galsim.VonKarman(lam=lam, r0=r0, L0=L0)
-        HLR_ratio = vk.calculateHLR() / kolm.calculateHLR()
-        FWHM_ratio = vk.calculateFWHM() / kolm.calculateFWHM()
-        print(HLR_ratio)
-        print(FWHM_ratio)
-        np.testing.assert_allclose(HLR_ratio, predicted_HLR_ratio(r0, L0), rtol=0.015)
-        np.testing.assert_allclose(FWHM_ratio, predicted_FWHM_ratio(r0, L0), rtol=0.015)
+        vk2 = galsim.VonKarman(lam=lam, r0_500=r0_500, L0=L0)
+        np.testing.assert_allclose(vk.r0, vk2.r0)
+        np.testing.assert_allclose(vk.r0_500, vk2.r0_500)
+        for prof in [vk, vk2]:
+            HLR_ratio = prof.calculateHLR() / kolm.calculateHLR()
+            FWHM_ratio = prof.calculateFWHM() / kolm.calculateFWHM()
+            print(HLR_ratio)
+            print(FWHM_ratio)
+            np.testing.assert_allclose(HLR_ratio, predicted_HLR_ratio(r0, L0), rtol=0.015)
+            np.testing.assert_allclose(FWHM_ratio, predicted_FWHM_ratio(r0, L0), rtol=0.015)
 
 
 @timer
@@ -209,6 +213,8 @@ def vk_benchmark():
     t3 = time.time()
     print("Time to photon-shoot 100 more with 50000 photons each: {:6.3f}s".format(t3-t2))  # ~0.9s
 
+
+@timer
 def test_vk_r0():
     """Test a special r0 value that resulted in an error, reported in issue #957.
     """

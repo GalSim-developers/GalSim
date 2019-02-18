@@ -7,8 +7,8 @@ Deprecated Features
 
 New Features
 ------------
+- Added r0_500 argument to VonKarman.
 
 
 Bug Fixes
 ---------
-
