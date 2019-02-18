@@ -64,7 +64,7 @@ class VonKarman(GSObject):
     method='fft'.  If for some reason you want to keep the delta function, though, then you can pass
     the do_delta=True argument to the VonKarman initializer.
 
-    @param lam               Wavelength in nanometers
+    @param lam               Wavelength in nanometers.
     @param r0                Fried parameter at specified wavelength `lam` in meters.  Exactly one
                              of r0 and r0_500 should be specified.
     @param r0_500            Fried parameter at 500 nm in meters.  Exactly one of r0 and r0_500
