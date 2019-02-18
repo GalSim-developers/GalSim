@@ -67,6 +67,11 @@ def test_vk(slow=False):
                         do_shoot(vk, img, "VonKarman")
                         do_kvalue(vk, img, "VonKarman")
 
+    with np.testing.assert_raises(galsim.GalSimIncompatibleValuesError):
+        vk = galsim.VonKarman(lam=500, r0=0.1, r0_500=0.2)
+    with np.testing.assert_raises(galsim.GalSimIncompatibleValuesError):
+        vk = galsim.VonKarman(lam=500)
+
 
 @timer
 def test_vk_delta():

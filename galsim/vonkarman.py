@@ -28,6 +28,7 @@ from .utilities import lazy_property, doc_inherit
 from .position import PositionD
 from .angle import arcsec, AngleUnit
 from .errors import GalSimError, convert_cpp_errors, galsim_warn
+from .errors import GalSimIncompatibleValuesError
 
 
 class VonKarman(GSObject):
