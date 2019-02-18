@@ -12,6 +12,7 @@ API Changes
 
 New Features
 ------------
+- Added r0_500 argument to VonKarman.
 
 - Updated WFIRST WCS and PSF routines to use Cycle 7 specifications for detector configurations,
   pupil planes, and aberrations. In particular, there is now a different
@@ -21,4 +22,3 @@ New Features
 
 Bug Fixes
 ---------
-

@@ -92,7 +92,7 @@ class Kolmogorov(GSObject):
                             of `scale_unit`.
     @param r0_500           The Fried parameter in units of meters at 500 nm.  The Fried parameter
                             at the given wavelength, `lam`, will be computed using the standard
-                            ralation r0 = r0_500 * (lam/500)**1.2.
+                            relation r0 = r0_500 * (lam/500)**1.2.
     @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param scale_unit       Units to use for the sky coordinates when calculating lam/r0 if these
                             are supplied separately.  Note that the results of calling methods like
