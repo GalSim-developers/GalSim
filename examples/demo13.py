@@ -138,9 +138,15 @@ def main(argv):
     logger.info('Doing expensive pre-computation of PSF.')
     t1 = time.time()
     logger.setLevel(logging.DEBUG)
-    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=10, logger=logger)
+    # Need to make a separate PSF for each filter.  We are, however, ignoring the
+    # position-dependence of the PSF within each SCA, just using the PSF at the center of the SCA
+    # (default kwargs).
+    PSFs = {}
+    for filter_name, filter_ in filters.items():
+        logger.info('PSF pre-computation for SCA %d, filter %s.'%(use_SCA, filter_name))
+        PSFs[filter_name] = wfirst.getPSF(use_SCA, filter_name,
+                                          approximate_struts=True, n_waves=10, logger=logger)
     logger.setLevel(logging.INFO)
-    PSF = PSFs[use_SCA]
     t2 = time.time()
     logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
 
@@ -209,7 +215,6 @@ def main(argv):
         if tmp_ind not in rand_indices:
             rand_indices.append(tmp_ind)
     obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric')
-    gal_list = []
     hst_eff_area = 2.4**2 * (1.-0.33**2)
     wfirst_eff_area = galsim.wfirst.diameter**2 * (1.-galsim.wfirst.obscuration**2)
     flux_scaling = (wfirst_eff_area/hst_eff_area) * wfirst.exptime
@@ -222,11 +227,6 @@ def main(argv):
         # randomly drawn one from the catalog.  This is not something that most users would need to
         # do.
         mag_list.append(cat.param_cat['mag_auto'][cat.orig_index[rand_indices[ind]]])
-
-        # Convolve the chromatic galaxy and the chromatic PSF, and rescale flux.
-        final = galsim.Convolve(flux_scaling*obj_list[ind], PSF)
-        logger.debug('Pre-processing for galaxy %d completed.'%ind)
-        gal_list.append(final)
 
     # Calculate the sky level for each filter, and draw the PSF and the galaxies through the
     # filters.
@@ -251,7 +251,7 @@ def main(argv):
         # Use a flat SED here, but could use something else.  A stellar SED for instance.
         # Or a typical galaxy SED.  Depending on your purpose for drawing the PSF.
         star_sed = galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,filter_)  # Give it unit flux in this filter.
-        star = galsim.Convolve(point*star_sed, PSF)
+        star = galsim.Convolve(point*star_sed, PSFs[filter_name])
         img_psf = galsim.ImageF(64,64)
         star.drawImage(bandpass=filter_, image=img_psf, scale=wfirst.pixel_scale)
         img_psf.write(out_filename)
@@ -275,7 +275,10 @@ def main(argv):
             # relatively quick, we are just using the approximate average pixel scale and drawing
             # once.
             stamp = galsim.Image(stamp_size, stamp_size, scale=wfirst.pixel_scale)
-            gal_list[i_gal].drawImage(filter_, image=stamp)
+
+            # Convolve the chromatic galaxy and the chromatic PSF for this bandpass, and rescale flux.
+            final = galsim.Convolve(flux_scaling*obj_list[ind], PSFs[filter_name])
+            final.drawImage(filter_, image=stamp)
 
             # Have to find where to place it:
             for i_gal_use in range(i_gal*n_tot//n_use, (i_gal+1)*n_tot//n_use):

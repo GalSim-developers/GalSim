@@ -35,8 +35,7 @@ inferred based on the capacitance.  To use a common language with that for CCDs,
 to quantities measured in units of e-/pixel, but for some detector non-idealities, it is important
 to keep in mind that it is voltage that is sensed.
 
-Currently, the module includes the following numbers, which were updated in October 2017 in
-preparation for the release of GalSim v1.5:
+Currently, the module includes the following numbers, which were updated as of WFIRST Cycle 7:
 
     gain - The gain for all SCAs (sensor chip assemblies) is expected to be the roughly the same,
            and we currently have no information about how different they will be, so this is a
@@ -155,16 +154,6 @@ This module also contains the following routines:
 
     getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.
 
-    storePSFImages() - A routine to take outputs of getPSF() and write them to file as a set of
-                       images in a multi-extension FITS file.  This can be used along with the
-                       next routine for faster calculations, as long as the application is one
-                       for which it does not matter if you ignore the variation of the PSF with
-                       wavelength within the passband.
-
-    loadPSFImages() - A routine to read in an image of the PSF stored by storePSFImages(), and
-                      make objects corresponding to each of them for later use.  This routine has
-                      less overhead than getPSF() but also is less flexible.
-
     getWCS() - A routine to get the WCS for each SCA in the focal plane, for a given target RA, dec,
                and orientation angle.
 
@@ -218,11 +207,19 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
                        'H158': 0.022,
                        'W149': 0.023}
 
-pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
-                                "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
-# The pupil plane image has non-zero values with a diameter of 1696 pixels.  The WFirst mirror
-# is 2.36 meters.  So the scale is 2.36 / 1696 = 0.00139151 meters/pixel.
-pupil_plane_scale = diameter / 1696.
+# F184, W149
+longwave_bands = ['F184', 'W149']
+pupil_plane_file_longwave = os.path.join(galsim.meta_data.share_dir,
+                                         "WFIRST_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
+# Z087, Y106, J129, H158
+shortwave_bands = ['Z087', 'Y106', 'J129', 'H158']
+pupil_plane_file_shortwave = os.path.join(galsim.meta_data.share_dir,
+                                         "WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
+pupil_plane_file = pupil_plane_file_shortwave  # Let the canonical pupil be the shortwave one.
+
+# The pupil plane image has non-zero values with a diameter of 2042 pixels.  The WFIRST mirror
+# is 2.37 meters.  So the scale is 2.37 / 2042 = 0.00116 meters/pixel.
+pupil_plane_scale = diameter / 2042.
 
 stray_light_fraction = 0.1
 
@@ -241,8 +238,8 @@ charge_diffusion = 0.1
 
 from .wfirst_bandpass import getBandpasses
 from .wfirst_backgrounds import getSkyLevel
-from .wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
+from .wfirst_psfs import getPSF
+from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA, convertCenter
 from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
 
 def NLfunc(x):
@@ -250,7 +247,7 @@ def NLfunc(x):
 
 def _parse_SCAs(SCAs):
     # This is a helper routine to parse the input SCAs (single number or iterable) and put it into a
-    # convenient format.  It is used in wfirst_wcs.py and wfirst_psfs.py.
+    # convenient format.  It is used in wfirst_wcs.py.
     #
     # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
     all_SCAs = np.arange(1, n_sca + 1, 1)
