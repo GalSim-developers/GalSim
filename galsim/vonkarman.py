@@ -99,7 +99,6 @@ class VonKarman(GSObject):
 
     def __init__(self, lam, r0=None, r0_500=None, L0=25.0, flux=1, scale_unit=arcsec,
                  do_delta=False, suppress_warning=False, gsparams=None):
-
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
         if L0 > 1e10:
