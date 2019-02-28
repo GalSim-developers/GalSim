@@ -611,6 +611,7 @@ class LookupTable2D(object):
                 return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
                                               self.f.ctypes.data, len(self.x), len(self.y),
                                               self.interpolant)
+
     def getXArgs(self):
         return self.x
 
@@ -879,3 +880,30 @@ class LookupTable2D(object):
 
     def __setstate__(self, d):
         self.__dict__ = d
+
+
+def _LookupTable2D(x, y, f, interpolant, edge_mode, constant,
+                   dfdx=None, dfdy=None, d2fdxdy=None,
+                   x0=None, y0=None, xperiod=None, yperiod=None):
+    """Make a LookupTable2D but without using any of the sanity checks or array manipulation used
+    in the normal initializer.
+    """
+    ret = LookupTable2D.__new__(LookupTable2D)
+    ret.x = x
+    ret.y = y
+    ret.f = f
+    ret.interpolant = interpolant
+    ret.edge_mode = edge_mode
+    ret.constant = constant
+    ret.dfdx = dfdx
+    ret.dfdy = dfdy
+    ret.d2fdxdy = d2fdxdy
+    ret.x0 = x0
+    ret.y0 = y0
+    ret.xperiod = xperiod
+    ret.yperiod = yperiod
+    if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'spline'):
+        ret._interp2d = None
+    else:
+        ret._interp2d = convert_interpolant(interpolant)
+    return ret
