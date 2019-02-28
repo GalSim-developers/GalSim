@@ -26,7 +26,7 @@ from .table import LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
-from .utilities import LRU_Cache
+from .utilities import LRU_Cache, lazy_property
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
 
 
@@ -163,6 +163,14 @@ class AtmosphericScreen(object):
     @property
     def altitude(self):
         return self._altitude / 1000.  # convert back to km
+
+    @lazy_property
+    def _xs(self):
+        return np.linspace(-0.5, 0.5, self.npix, endpoint=False)*self.screen_size
+
+    @lazy_property
+    def _ys(self):
+        return self._xs
 
     def __str__(self):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
@@ -313,10 +321,8 @@ class AtmosphericScreen(object):
         # Only need to reset/create tab2d if not frozen or doesn't already exist
         if not self.reversible or not hasattr(self, '_tab2d'):
             self._screen = self._random_screen()
-            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
-                                   endpoint=False)
-            self._ys = self._xs
-            self._tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+            self._tab2d = LookupTable2D(
+                self._xs, self._ys, self._screen, edge_mode='wrap')
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
