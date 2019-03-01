@@ -75,19 +75,27 @@ below.
 
 Either of these installation methods should handle most of the required
 dependencies for you if you do not have them already installed on your machine.
-There is one exception, however.  FFTW is not directly pip installable, so if
-the above installation fails, you may need to install it separately. See
-section 2 below for more details about how to do this.
+In particular, all of the python dependencies should be automatically installed
+for you.  See section 2 below if you have trouble with any of these.
 
-The other dependencies should all be installed by pip, but we list them here
-for completeness along with versions that are known to work.  In most cases,
+FFTW is not directly pip installable, so if the above installation fails,
+you may need to install it separately. See section 3 below for more details
+about how to do this.
+
+Fianlly, a version of Eigen can be installed by pip, but you might prefer to
+install this manually.  See section 4 below for more details.
+
+Installing Python Dependencies
+==============================
+
+Normally, all of the python package dependencies will be automatically installed
+by pip.  The following versions are known to work with GalSim 2.1.  In most cases,
 other recent (especially later) versions will also work:
 
-- Eigen (3.2.5)
-- NumPy (1.13.1)
-- Future (0.16.0)
-- Astropy (2.0.1)
-- PyBind11 (2.2.1)
+- NumPy (1.16.1)
+- Future (0.17.1)
+- Astropy (3.0.5)
+- PyBind11 (2.2.3)
 - LSSTDESC.Coord (1.0.5)
 
 There are a few others modules are not technically required, but we let pip
@@ -99,6 +107,26 @@ pip uses to determine what else to install.  But if you install with
 - Starlink (3.10.0)  (Improved WCS functionality)
 - PyYaml (3.12)      (Reads YAML config files)
 - Pandas (0.20)      (Faster reading of ASCII input files)
+
+If you want to install these yourself, the quickest way is to do
+
+    pip install -r requirements.txt
+
+If you want more control about which version you get or otherwise want to install
+each package individually, you can do
+
+    pip install numpy
+    pip install future
+    pip install astropy
+    pip install pybind11
+    pip install LSSTDESC.Coord
+
+    pip install starlink-pyast
+    pip install pyyaml
+    pip install pandas
+
+In all cases, you may need to precede the above commands with `sudo` or
+add `--user` to the end as you normally do when pip installing on your system.
 
 
 Installing FFTW
@@ -382,10 +410,10 @@ Using Conda
 ===========
 
 If you use conda (normally via the Anaconda Python distribution), then all of
-the prerequisites and galsim itself are available from the conda-forge channel, 
+the prerequisites and galsim itself are available from the conda-forge channel,
 so you can use that as follows:
 
-    conda install -c conda-forge galsim 
+    conda install -c conda-forge galsim
 
 Also, if you prefer to use the defaults channel, then (at least as of this
 writing), it had all the items in conda_requirements.txt, except for pybind11.
