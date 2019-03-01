@@ -135,6 +135,56 @@ options to the ./bootstrap.sh installation script (defaults in `[]` brackets):
                            they have to force it to use a specific one because
                            it detected the wrong one]
 
+vi) Python dependencies
+-----------------------
+
+The normal way in which you can install all the required python dependencies
+is with pip:
+
+    pip install -r requirements.txt
+
+If you don't want to use pip, you should make sure the following packages are
+installed using your preferred installation method.  The versions given in
+parentheses are known to work, but usually other recent version (especially
+later) will also work.
+
+- NumPy (1.16.1)
+- Future (0.17.1)
+- Astropy (3.0.5)
+- LSSTDESC.Coord (1.0.5)
+
+If you plan to use PyBind11, rather than Boost, then you should also install
+
+- PyBind11 (2.2.3)
+
+If you plan to use Eigen rather than TMV, then you should also install
+
+- PyBind11 (3.2.8)
+
+There are a few others modules are not technically required, but we include them
+in the requirements.txt file, because they add either useful functionality
+or efficiency to GalSim.
+
+- Starlink (3.10.0)  (Improved WCS functionality)
+- PyYaml (3.12)      (Reads YAML config files)
+- Pandas (0.20)      (Faster reading of ASCII input files)
+
+If you want more control about which version you get or otherwise want to install
+each package individually using pip, you can do
+
+    pip install numpy
+    pip install future
+    pip install astropy
+    pip install pybind11
+    pip install LSSTDESC.Coord
+
+    pip install starlink-pyast
+    pip install pyyaml
+    pip install pandas
+
+In all cases, you may need to precede the above commands with `sudo` or
+add `--user` to the end as you normally do when pip installing on your system.
+
 
 Installing the GalSim Python package
 ====================================
