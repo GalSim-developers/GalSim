@@ -9,7 +9,7 @@ numpy>=1.13
 future>=0.15
 astropy>=2.0
 pybind11>=2.2
-pip==9.0.3  # For now, pybind11 in conjunction with pip version 10.0 is broken.  Use 9.0.3.
+pip>=18.0
 
 # Note: 1.77 was supposed to make this work, but it doesn't include a couple cpp files, so
 # it gives an error on installation.  Once the eigency people merge PR #27 and release another
