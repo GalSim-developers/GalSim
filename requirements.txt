@@ -5,12 +5,17 @@
 #   conda install -c conda-forge --file conda_requirements.txt
 # prior to running pip install -r requirements.txt
 setuptools>=38
-#eigency>=1.78  # 1.77 still doesn't work.  Oops.  (My fault.)
 numpy>=1.13
 future>=0.15
 astropy>=2.0
 pybind11>=2.2
 pip==9.0.3  # For now, pybind11 in conjunction with pip version 10.0 is broken.  Use 9.0.3.
+
+# Note: 1.77 was supposed to make this work, but it doesn't include a couple cpp files, so
+# it gives an error on installation.  Once the eigency people merge PR #27 and release another
+# version with that included, we can switch this back to the regular eigency package.
+# Until then, we can use rmjarvis.eigency, which includes the fix.
+rmjarvis.eigency>=1.77.1
 
 # Not technically required, but useful.
 pyyaml>=3.12  # This one is required to run tests.
