@@ -87,8 +87,7 @@ class VonKarman(GSObject):
                              details. [default: None]
     """
     _req_params = { "lam" : float }
-    _opt_params = { "r0" : float, "r0_500" : float, "L0" : float, "flux" : float,
-                    "scale_unit" : str, "do_delta" : bool }
+    _opt_params = { "L0" : float, "flux" : float, "scale_unit" : str, "do_delta" : bool }
     _single_params = [ { "r0" : float, "r0_500" : float } ]
     _takes_rng = False
 
