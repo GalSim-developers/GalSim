@@ -83,29 +83,56 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
     """
     img.applyIPC(galsim.wfirst.ipc_kernel, edge_treatment=edge_treatment, fill_value=fill_value)
 
-def applyPersistence(img, prev_exposures):
+def applyPersistence(img, prev_exposures, method='fermi'):
     """
+    This method applies two different persistence models: 'linear' and 'fermi'.
+
+    'linear' persistence model:
+    Applies the persistence effect to the Image instance by adding a small fraction of the previous
+    exposures (up to {ncoeff}) supplied as the 'prev_exposures' argument.
+    For more information about persistence, see the docstring for galsim.Image.applyPersistence.
+    Unlike that routine, this one does not need the coefficients to be specified. However, the list
+    of previous eight exposures will have to be supplied. Earlier exposures, if supplied, will be
+    ignored.
+
+    'fermi' persistence model:
     Applies the persistence effect to the Image instance by adding the accumullated persistence dark
-    current of the previous exposures (up to galsim.wfirst.max_exps) supplied as the 
-    galsim.utilities.LinkedList (a dynamic data structure) 'prev_exposures' argument. 
-    Unlike galsim.Image.applyPersistence, this one does not use constant coeffiients but a fermi model 
-    (galsim.wfirst.fermi) for the WFIRST detectors.
+    current of previous exposures (up to galsim.wfirst.max_exps) are supplied by the 
+    galsim.utilities.LinkedList (a dynamic data structure) 'prev_exposures' argument. Unlike 
+    galsim.Image.applyPersistence, this one does not use constant coeffiients but a fermi model 
+    (galsim.wfirst.fermi_linear) with a linear tail below half of saturation for the WFIRST detectors.
 
     @param img               The Image to be transformed.
-    @param prev_exposures    galsim.utilities.LinkedList of up to previous Image instances in the 
-                             order of exposures, with the recent exposure being the first element.
-    """
+    @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with the
+                             recent exposure being the first element,for the 'linear' model  or 
+                             galsim.utilities.LinkedList of up to {max_exps} previous Image instances
+                             for the 'fermi' model. Thegalsim.utilities.LinkedList constructor can take
+                             list or numpy array as input.
+    @param method            The persistence model ('linear' or 'fermi') to be applied.
+                             [default: 'fermi']
+    """.format(ncoeff=len(galsim.wfirst.persistence_coefficients), max_exps=galsim.wfirst.max_exps)
 
-    try:
-        node = pre_exposures.cur_node
-        list_len = pre_exposures.listLen()
-    except AttributeError:
-        raise TypeError("prev_exposures must be a galsim.utilities.LinkedList")
+    if method == 'linear':
+        if not hasattr(prev_exposures,'__iter__'):
+            raise TypeError("In wfirst.applyPersistence, prev_exposures must be a list of Image instances")
+        n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
+        img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
 
-    n_exp = min(galsim.wfirst.max_exps, list_len)
-    for i in xrange(n_exp):
-        img.array += node.data/(1.+ 2*i)
-        node = node.next
+    elif method == 'fermi':
+        prev_exposures = galsim.utilities.LinkedList(prev_exposures)        
+        try:
+            node = prev_exposures.cur_node
+            list_len = len(prev_exposures)
+        except AttributeError:
+            raise TypeError("prev_exposures must be a galsim.utilities.LinkedList")
+
+        n_exp = min(galsim.wfirst.max_exps, list_len)
+        for i in range(n_exp):
+            img += node.data/(1.+ 2*i)
+            node = node.next
+
+    else:
+        raise ValueError("applyPersistence only accepts 'linear' or 'fermi' methods.")
 
 def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime):
     """
@@ -129,7 +156,7 @@ def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime
     @param exptime           The exposure time, in seconds.  If None, then the WFIRST default
                              exposure time will be used.  [default: {exptime}]
 
-    @returns prev_exposures  Updated list of previous exposures containing up to {ncoeff} Image
+    @returns prev_exposures  Updated list of previous exposures containing up to {max_exps} Image
                              instances.
     """.format(max_exps=galsim.wfirst.max_exps, exptime=default_exptime)
 
@@ -154,13 +181,14 @@ def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime
 
     # Persistence (use WFIRST H4RG-lo fermi model)
     prev_exposures = galsim.utilities.LinkedList(prev_exposures)
-    applyPersistence(img,prev_exposures)
+    applyPersistence(img,prev_exposures, method='fermi')
 
     # Update the 'prev_exposures' LinkedList and remove the adundant item.
-    # In the H4RG-lo fermi model, persistence decays linearly in time.
-    # So the average persistence happens at exptime/2. 
-    prev_exposures.addNode(fermi(img.array, galsim.wfirst.exptime/2.)*galsim.wfirst.exptime)
-    if prev_exposuresprev.listLen() > galsim.wfirst.max_exps:
+    # In the H4RG-lo fermi model, persistence decays linearly in time,
+    # so the average persistence happens at exptime/2. 
+    prev_exposures.addNode(galsim.wfirst.fermi_linear(img.array,
+                                              t=galsim.wfirst.exptime/2.)*galsim.wfirst.exptime)
+    if len(prev_exposures) > galsim.wfirst.max_exps:
         prev_exposures.deleteNode(galsim.wfirst.max_exps)
 
     # Nonlinearity (use WFIRST routine).
