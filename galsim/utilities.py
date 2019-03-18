@@ -1642,10 +1642,10 @@ class LinkedList:
     def listPrint(self):
         node = self.cur_node
         while node:
-            print node.data
+            print(node.data)
             node = node.next
 
-    def listLen(self):
+    def __len__(self):
         count = 0 
         node = self.cur_node
         while node:
@@ -1653,13 +1653,13 @@ class LinkedList:
             node = node.next
         return count
 
-    #Remove the node with index {location}. 
+    #Remove the node with specific index. 
     #Eg: a = LinkedList(range(5))
     #    a.deleteNode(3) == [0, 1, 2, 4]
     def deleteNode(self,location):
         if location == 0:
             try:
-                self.cur_node = cur_node.next
+                self.cur_node = self.cur_node.next
             except AttributeError:
                 # The list is empty
                 self.cur_node = None
@@ -1668,7 +1668,7 @@ class LinkedList:
 
         node = self.cur_node        
         try:
-            for _ in xrange(location-1):
+            for _ in range(location-1):
                 node = node.next
         except AttributeError:
             # The list isn't long enough

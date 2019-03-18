@@ -104,9 +104,12 @@ Currently, the module includes the following numbers, which were updated as of W
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC), using
                  galsim.wfirst.applyIPC().
 
-    persistence_fermi_params - The parameters in the persistence fermi model.
+    persistence_coefficients - The retention fraction of the previous eight exposures in a simple,
+                               linear model for persistence.
 
-    max_exps - The number of previous exposures considered in persistence.
+    persistence_fermi_params - The parameters in the fermi persistence model.
+
+    max_exps - The number of previous exposures considered in the fermi persistence model.
 
     n_sca - The number of SCAs in the focal plane.
 
@@ -233,10 +236,13 @@ ipc_kernel = np.array([ [0.001269938, 0.015399776, 0.001199862], \
 ipc_kernel /= np.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
 
-# parameters in the fermi model = [ A, x0, dx, a, r]
+persistence_coefficients = np.array([0.045707683,0.014959818,0.009115737,0.00656769,0.005135571,0.004217028,0.003577534,0.003106601])/100.
+
+# parameters in the fermi model = [ A, x0, dx, a, r, half_well]
 # The following parameters are for H4RG-lo, the conservative model for low x.
-persistence_fermi_params = np.array([0.017, 60000., 50000., 0.045, 1.])
+persistence_fermi_parameters = np.array([0.017, 60000., 50000., 0.045, 1., 50000.])
 max_exps = 8
+
 n_sca = 18
 n_pix_tot = 4096
 n_pix = 4088
@@ -273,9 +279,22 @@ def _parse_SCAs(SCAs):
         SCAs = all_SCAs
     return SCAs
 
-def fermi(x,t):
+def fermi_linear(x,t=exptime/2.):
     """
-    The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (.exp( -(x-x0)/dx ) +1. )
+    The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
+    For influence level below the half well, the persistence is linear in x.
     """
 
-    return galsim.wfirst.persistence_fermi_params[0]* (x/galsim.wfirst.persistence_fermi_params[1])**galsim.wfirst.persistence_fermi_params[3] * (t/1000.)**(-galsim.wfirst.persistence_fermi_params[4]) / ( numpy.exp( -(x-galsim.wfirst.persistence_fermi_params[1])/galsim.wfirst.persistence_fermi_params[2] ) +1. )
+    x = np.asarray(x)
+    y = np.zeros(x.shape)
+
+    para = persistence_fermi_parameters
+    ps    = para[0]* (   x   /para[1])**para[3] * (t/1000.)**(-para[4])/(np.exp( -(x-para[1])/para[2]) +1.)
+    ps_hf = para[0]* (para[5]/para[1])**para[3] * (t/1000.)**(-para[4])/(np.exp( -(x-para[1])/para[2]) +1.)
+
+    y += (x > para[5])*ps
+    y += ((x>0.) & (x <= para[5]))*ps_hf
+
+    ##### convert NaN to 0 (in cases where x<0)
+    y[np.isnan(y)] = 0
+    return y
