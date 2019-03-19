@@ -1259,7 +1259,7 @@ def test_horner2d():
         galsim.utilities.horner2d(x, y[:10], coef)
 
 def test_LinkedList():
-    a = LinkedList([1,2,3])
+    a = galsim.utilities.LinkedList([1,2,3])
     assert len(a) == 3
     a.addNode(0)
     assert len(a) == 4
