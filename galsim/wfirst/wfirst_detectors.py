@@ -139,9 +139,8 @@ def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime
     Image with all sources of signal (background plus astronomical objects), and the Image will be
     modified to include all subsequent steps in the image generation process for WFIRST that are
     implemented in GalSim. However, to include the effect of persistence, the user needs to provide
-    a LinkedList of up to {max_exps} recent exposures (without the readout effects such nonlinearity and
-    interpixel capacitance included) and the routine returns an updated LinkedList of up to {max_exps}
-    recent exposures.
+    a list of up to {max_exps} recent exposures (without the readout effects) and the routine
+    returns an updated list of up to {max_exps} recent exposures.
 
     @param img               The Image to be modified.
     @param prev_exposures    List of up to {max_exps} Image instances in the order of exposures, with
