@@ -93,7 +93,7 @@ def applyPersistence(img, prev_exposures, method='fermi'):
     exposures (up to {ncoeff}) supplied as the 'prev_exposures' argument.
     For more information about persistence, see the docstring for galsim.Image.applyPersistence.
     Unlike that routine, this one does not need the coefficients to be specified. However, the list
-    of previous eight exposures will have to be supplied. Earlier exposures, if supplied, will be
+    of previous {ncoeff} exposures will have to be supplied. Earlier exposures, if supplied, will be
     ignored.
 
     'fermi' persistence model:
