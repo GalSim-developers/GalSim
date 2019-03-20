@@ -295,6 +295,6 @@ def fermi_linear(x,t=exptime/2.):
     y += (x > para[5])*ps
     y += ((x>0.) & (x <= para[5]))*ps_hf
 
-    ##### convert NaN to 0 (in cases where x<0)
+    ##### convert NaN to 0 (in cases where unphysical illumications x<0 happen)
     y[np.isnan(y)] = 0
     return y

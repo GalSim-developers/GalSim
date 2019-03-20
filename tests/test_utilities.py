@@ -1258,18 +1258,6 @@ def test_horner2d():
     with assert_raises(galsim.GalSimIncompatibleValuesError):
         galsim.utilities.horner2d(x, y[:10], coef)
 
-def test_LinkedList():
-    a = galsim.utilities.LinkedList([1,2,3])
-    assert len(a) == 3
-    a.addNode(0)
-    assert len(a) == 4
-    assert a.cur_node.data == 0
-    a.deleteNode(0)
-    assert len(a) == 3
-    assert a.cur_node.data == 1
-    a.deleteNode(2)
-    assert len(a) == 2
-    assert a.cur_node.data == 1
 
 if __name__ == "__main__":
     test_pos()
@@ -1290,4 +1278,3 @@ if __name__ == "__main__":
     test_nCr()
     test_horner()
     test_horner2d()
-    test_LinkedList()
