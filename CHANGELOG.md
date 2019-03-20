@@ -22,7 +22,7 @@ New Features
 - Added ability to use a galsim.Interpolant for LookupTable and LookupTable2D
   interpolants. (#982)
 - Added option for faster grid interpolation of LookupTable2D. (#982)
-- Added wfirst fermi persistence model and utilities.LinkedList. (#992) 
+- Added wfirst fermi persistence model. (#992) 
 
 Bug Fixes
 ---------
