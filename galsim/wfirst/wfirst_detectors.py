@@ -184,8 +184,7 @@ def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime
     applyPersistence(img, prev_exposures, method='fermi')
 
     # Update the 'prev_exposures' queue
-    ncoeff = len(galsim.wfirst.persistence_coefficients)
-    prev_exposures = [img.copy()] + prev_exposures[:ncoeff-1]
+    prev_exposures = [img.copy()] + prev_exposures[:galsim.wfirst.max_exps-1]
 
     # Read noise.
     read_noise = galsim.GaussianNoise(rng, sigma=galsim.wfirst.read_noise)
