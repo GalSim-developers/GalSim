@@ -69,7 +69,7 @@ if "--debug" in sys.argv:
     undef_macros+=['NDEBUG']
 
 copt =  {
-    'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden'],
+    'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11'],
     'clang' : ['-O2','-msse2','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden',
                '-stdlib=libc++'],
@@ -644,7 +644,7 @@ class my_build_ext(build_ext):
         for e in self.extensions:
             e.extra_compile_args = cflags
             for flag in cflags:
-                if 'stdlib' in flag:
+                if 'stdlib' in flag or 'openmp' in flag:
                     e.extra_link_args.append(flag)
 
         # Now run the normal build function.

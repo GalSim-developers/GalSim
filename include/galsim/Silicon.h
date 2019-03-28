@@ -64,7 +64,7 @@ namespace galsim
 
     private:
         Polygon _emptypoly;
-        mutable Polygon _testpoly;
+        mutable std::vector<Polygon> _testpoly;
         std::vector<Polygon> _distortions;
         std::vector<Polygon> _imagepolys;
         int _numVertices, _nx, _ny, _nv, _qDist;
