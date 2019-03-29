@@ -184,7 +184,7 @@ namespace galsim {
         // Now we cycle through the pixels in the target image and update any affected
         // pixel shapes.
         std::vector<bool> changed(_imagepolys.size(), false);
-	//#pragma omp parallel for
+#pragma omp parallel for
         for (int j=j1; j<=j2; ++j) {
 	    const T* ptr = target.getData();
 	    ptr += ((skip + (((i2-i1)+1) * step)) * (j - j1));
@@ -553,16 +553,15 @@ namespace galsim {
 
         const int nphotons = photons.size();
 
-        //GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
+        double addedFlux = 0.;
 
+#if 0
+	// new parallel code. disabled until I test it further
 	std::vector<GaussianDeviate> gd;
 	for (int i = 0; i < numThreads; i++) {
 	  gd.push_back(GaussianDeviate(ud, 0, 1));
 	}
 	
-        double addedFlux = 0.;
-
-	// new parallel code
 	int gi = 0;
 	while (gi < nphotons) {
 #pragma omp parallel
@@ -703,8 +702,12 @@ namespace galsim {
 	    next_recalc = addedFlux + _nrecalc;
 	  }
 	}
+#endif
 
-#if 0
+#if 1
+	// original serial code
+        GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
+
         for (int i=0; i<nphotons; i++) {
             // Update shapes every _nrecalc electrons
 	    if (addedFlux > next_recalc) {

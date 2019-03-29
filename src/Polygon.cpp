@@ -139,7 +139,14 @@ namespace galsim {
     {
         std::vector<Point>::iterator it = _points.begin();
         std::vector<Point>::const_iterator ref = refpoly._points.begin();
-        for (int n=_npoints; n; --n) *it++ += *ref++ * factor;
+        for (int n=_npoints; n; --n) {
+#pragma omp atomic
+	  (*it).x += (*ref).x * factor;
+#pragma omp atomic
+	  (*it).y += (*ref).y * factor;
+	  it++;
+	  ref++;
+	}
     }
 
     void Polygon::updateBounds()
