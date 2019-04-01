@@ -47,7 +47,19 @@ def __calcOptStepK(lam, diam, obscuration, gsparams):
 _calcOptStepK = LRU_Cache(__calcOptStepK)
 
 
-_GSShare = {}
+_GSScreenShare = {}
+
+
+def initWorkerArgs():
+    """Function used to generate worker arguments to pass to multiprocessing.Pool initializer.
+    """
+    return (_GSScreenShare,)
+
+
+def initWorker(share):
+    """Worker initialization function to pass to multiprocessing.Pool initializer.
+    """
+    _GSScreenShare.update(share)
 
 
 class AtmosphericScreen(object):
@@ -166,7 +178,7 @@ class AtmosphericScreen(object):
         self.reversible = self.alpha == 1.0
 
         # Use shared memory for screens.  Allocate it here; fill it in on demand.
-        global _GSShare
+        global _GSScreenShare
         ctx = multiprocessing.get_context(mp_context)
         self._objDict = {
             'f':ctx.RawArray('d', (self.npix+1)*(self.npix+1)),
@@ -185,11 +197,11 @@ class AtmosphericScreen(object):
         # A unique id for this screen, created in the parent process, that can be used to find the
         # correct shared memory object in child processes.
         self._shareKey = id(self)
-        _GSShare[self._shareKey] = self._objDict
+        _GSScreenShare[self._shareKey] = self._objDict
 
     def __setstate__(self, d):
         self.__dict__.update(d)
-        self._objDict = _GSShare[self._shareKey]
+        self._objDict = _GSScreenShare[self._shareKey]
         with self._objDict['lock']:
             self._objDict['refcount'].value += 1
 
@@ -205,7 +217,7 @@ class AtmosphericScreen(object):
         with self._objDict['lock']:
             self._objDict['refcount'].value -= 1
         if self._objDict['refcount'].value == 0:
-            del _GSShare[self._shareKey]
+            del _GSScreenShare[self._shareKey]
 
     @property
     def altitude(self):
@@ -361,10 +373,10 @@ class AtmosphericScreen(object):
         xshare[:] = tab2d.x
         yshare[:] = tab2d.y
         fshare[:] = tab2d.f
-        self._objDict['x0'] = tab2d.x0
-        self._objDict['y0'] = tab2d.y0
-        self._objDict['xperiod'] = tab2d.xperiod
-        self._objDict['yperiod'] = tab2d.yperiod
+        self._objDict['x0'].value = tab2d.x0
+        self._objDict['y0'].value = tab2d.y0
+        self._objDict['xperiod'].value = tab2d.xperiod
+        self._objDict['yperiod'].value = tab2d.yperiod
         self._tab2d = _LookupTable2D(
             xshare, yshare, fshare, tab2d.interpolant, tab2d.edge_mode, tab2d.constant,
             x0=tab2d.x0, y0=tab2d.y0, xperiod=tab2d.xperiod, yperiod=tab2d.yperiod
@@ -380,8 +392,8 @@ class AtmosphericScreen(object):
         fshare = fshare.reshape((self.npix+1, self.npix+1))
         return _LookupTable2D(
             xshare, yshare, fshare, 'linear', 'wrap', 0.0,
-            x0=self._objDict['x0'], y0=self._objDict['y0'],
-            xperiod=self._objDict['xperiod'], yperiod=self._objDict['yperiod']
+            x0=self._objDict['x0'].value, y0=self._objDict['y0'].value,
+            xperiod=self._objDict['xperiod'].value, yperiod=self._objDict['yperiod'].value
         )
 
     def _seek(self, t):
