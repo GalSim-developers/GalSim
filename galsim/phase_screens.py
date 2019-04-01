@@ -152,6 +152,10 @@ class AtmosphericScreen(object):
                 "Setting AtmosphericScreen time_step prohibited when alpha == 1.0.  "
                 "Did you mean to set time_step in makePSF or PhaseScreenPSF?",
                 alpha=alpha, time_step=time_step)
+        if (alpha != 1.0 and mp_context is not None):
+            raise GalSimIncompatibleValuesError(
+                "Shared memory use is not supported for time-evolving screens",
+                alpha=alpha, mp_context=mp_context)
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
