@@ -1089,20 +1089,20 @@ class DummyWork(object):
         rng = galsim.UniformDeviate(i+10)
         theta = (rng()*galsim.degrees, rng()*galsim.degrees)
         psf = atm.makePSF(exptime=1.0, diam=1.1, lam=1000, theta=theta)
-        return psf.drawImage(nx=32, ny=32, scale=0.2, n_photons=10000, method='phot', rng=rng)
+        return psf.drawImage(nx=32, ny=32, scale=0.2, n_photons=1000, method='phot', rng=rng)
 
 
 @timer
 def test_shared_memory():
     """Test that shared memory hooks to AtmosphericScreen work.
     """
+    import multiprocessing as mp
     # Make the atmosphere
     seed = 12345
     r0_500 = 0.15  # m
     L0 = 20.0  # m
     nlayers = 6
     screen_size = 51.2  # m
-    # screen_size = 819.2  # m
     screen_scale = 0.1 # m
     max_speed = 20  # m/s
     rng = galsim.BaseDeviate(seed)
@@ -1124,31 +1124,36 @@ def test_shared_memory():
         dirn.append(u()*360*galsim.degrees)
         r0_500s.append(r0_500*weights[i]**(-3./5))
     rng2 = rng.duplicate()
-    atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts, rng=rng,
-                            screen_size=screen_size, screen_scale=screen_scale)
 
-    workObj = DummyWork()
+    if __name__ == "__main__":
+        ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), mp.get_context("forkserver")]
+    else:
+        ctxs = [None]
 
-    import multiprocessing as mp
-    mp = mp.get_context(None)
-    with mp.Pool(
-        4,
-        initializer=galsim.phase_screens.initWorker,
-        initargs=galsim.phase_screens.initWorkerArgs()
-    ) as pool:
-        resultsParallel = []
-        for i in range(100):
-            resultsParallel.append(pool.apply_async(workObj.work, (i, atm)))
-        for r in resultsParallel:
-            r.wait()
-    resultsParallel = [r.get() for r in resultsParallel]
+    for ctx in ctxs:
+        atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
+                                rng=rng, screen_size=screen_size, screen_scale=screen_scale,
+                                mp_context=ctx)
+        workObj = DummyWork()
+        if ctx is None:
+            ctx = mp.get_context(None)
+        with ctx.Pool(
+            None,
+            initializer=galsim.phase_screens.initWorker,
+            initargs=galsim.phase_screens.initWorkerArgs()
+        ) as pool:
+            resultsParallel = []
+            for i in range(10):
+                resultsParallel.append(pool.apply_async(workObj.work, (i, atm)))
+            for r in resultsParallel:
+                r.wait()
+        resultsParallel = [r.get() for r in resultsParallel]
 
-    # Serial comparison
-    resultsSerial = []
-    for i in range(100):
-        resultsSerial.append(workObj.work(i, atm))
-
-    assert resultsSerial == resultsParallel
+        # Serial comparison
+        resultsSerial = []
+        for i in range(10):
+            resultsSerial.append(workObj.work(i, atm))
+        assert resultsSerial == resultsParallel
 
 
 if __name__ == "__main__":

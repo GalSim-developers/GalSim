@@ -179,7 +179,10 @@ class AtmosphericScreen(object):
 
         # Use shared memory for screens.  Allocate it here; fill it in on demand.
         global _GSScreenShare
-        ctx = multiprocessing.get_context(mp_context)
+        if isinstance(mp_context, multiprocessing.context.BaseContext):
+            ctx = mp_context
+        else:
+            ctx = multiprocessing.get_context(mp_context)
         self._objDict = {
             'f':ctx.RawArray('d', (self.npix+1)*(self.npix+1)),
             'x':ctx.RawArray('d', self.npix+1),
