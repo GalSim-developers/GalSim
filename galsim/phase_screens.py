@@ -18,11 +18,12 @@
 
 from builtins import range, zip
 import numpy as np
+import multiprocessing
 
 from .random import BaseDeviate, GaussianDeviate
 from .image import Image
 from .angle import radians
-from .table import LookupTable2D
+from .table import LookupTable2D, _LookupTable2D
 from . import utilities
 from . import fft
 from . import zernike
@@ -44,6 +45,9 @@ def __calcOptStepK(lam, diam, obscuration, gsparams):
     obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
     return obj.stepk
 _calcOptStepK = LRU_Cache(__calcOptStepK)
+
+
+_GSShare = {}
 
 
 class AtmosphericScreen(object):
@@ -110,6 +114,10 @@ class AtmosphericScreen(object):
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
     @param suppress_warning   Turn off instantiation sanity checking.  (See above)  [default: False]
+    @param mp_context    GalSim uses shared memory for phase screen allocation to better enable
+                         multiprocessing.  Use this keyword to set the launch context for
+                         multiprocessing.  Usually it will be sufficient to leave this at it's
+                         default.  [default: None]
 
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
@@ -121,7 +129,8 @@ class AtmosphericScreen(object):
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
-                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, suppress_warning=False):
+                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, suppress_warning=False,
+                 mp_context=None):
 
         if (alpha != 1.0 and time_step is None):
             raise GalSimIncompatibleValuesError(
@@ -156,9 +165,47 @@ class AtmosphericScreen(object):
         self.dynamic = True
         self.reversible = self.alpha == 1.0
 
-        # These will be None until screens are instantiated.
-        self.kmin = None
-        self.kmax = None
+        # Use shared memory for screens.  Allocate it here; fill it in on demand.
+        global _GSShare
+        ctx = multiprocessing.get_context(mp_context)
+        self._objDict = {
+            'f':ctx.RawArray('d', (self.npix+1)*(self.npix+1)),
+            'x':ctx.RawArray('d', self.npix+1),
+            'y':ctx.RawArray('d', self.npix+1),
+            'kmin':ctx.RawValue('d', -1.0),
+            'kmax':ctx.RawValue('d', -1.0),
+            'x0':ctx.RawValue('d', 0.0),
+            'y0':ctx.RawValue('d', 0.0),
+            'xperiod':ctx.RawValue('d', 0.0),
+            'yperiod':ctx.RawValue('d', 0.0),
+            'instantiated':ctx.RawValue('b', False),
+            'refcount':ctx.RawValue('i', 1),
+            'lock':ctx.RLock()
+        }
+        # A unique id for this screen, created in the parent process, that can be used to find the
+        # correct shared memory object in child processes.
+        self._shareKey = id(self)
+        _GSShare[self._shareKey] = self._objDict
+
+    def __setstate__(self, d):
+        self.__dict__.update(d)
+        self._objDict = _GSShare[self._shareKey]
+        with self._objDict['lock']:
+            self._objDict['refcount'].value += 1
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_objDict')
+        return d
+
+    def __del__(self):
+        if not hasattr(self, '_objDict'):  # for if __init__ raised exception
+            return
+
+        with self._objDict['lock']:
+            self._objDict['refcount'].value -= 1
+        if self._objDict['refcount'].value == 0:
+            del _GSShare[self._shareKey]
 
     @property
     def altitude(self):
@@ -234,14 +281,19 @@ class AtmosphericScreen(object):
                       If `None`, then don't perform a check.  Also, don't perform a check if
                       self.suppress_warning is True.
         """
-        if self.kmax is None:
-            self.kmin = kmin
-            self.kmax = kmax
-            self._init_psi()
-            self._reset()
-            # Free some RAM for frozen-flow screens.
-            if self.reversible:
-                del self._psi, self._screen
+        if not self._objDict['instantiated'].value:
+            with self._objDict['lock']:
+                # Check that another process didn't finish instantiating
+                # while this process was waiting for the lock
+                if not self._objDict['instantiated'].value:
+                    self._objDict['kmin'].value = kmin
+                    self._objDict['kmax'].value = kmax
+                    self._init_psi()
+                    self._reset()
+                    if self.reversible:
+                        del self._psi, self._screen
+                    self._objDict['instantiated'].value = True
+
         if check is not None and not self._suppress_warning:
             if check == 'FFT':
                 if self.kmax != np.inf:
@@ -252,6 +304,13 @@ class AtmosphericScreen(object):
                     galsim_warn("AtmosphericScreen was instantiated for FFT drawing. "
                                 "Drawing now with photon shooting may yield surprising results.")
 
+    @property
+    def kmin(self):
+        return self._objDict['kmin'].value
+
+    @property
+    def kmax(self):
+        return self._objDict['kmax'].value
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
@@ -292,6 +351,39 @@ class AtmosphericScreen(object):
         noise = utilities.rand_arr(self._psi.shape, gd)
         return fft.ifft2(fft.fft2(noise)*self._psi).real
 
+    def _setShare(self):
+        tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+
+        xshare = np.frombuffer(self._objDict['x'], dtype=np.float64)
+        yshare = np.frombuffer(self._objDict['y'], dtype=np.float64)
+        fshare = np.frombuffer(self._objDict['f'], dtype=np.float64)
+        fshare = fshare.reshape((self.npix+1, self.npix+1))
+        xshare[:] = tab2d.x
+        yshare[:] = tab2d.y
+        fshare[:] = tab2d.f
+        self._objDict['x0'] = tab2d.x0
+        self._objDict['y0'] = tab2d.y0
+        self._objDict['xperiod'] = tab2d.xperiod
+        self._objDict['yperiod'] = tab2d.yperiod
+        self._tab2d = _LookupTable2D(
+            xshare, yshare, fshare, tab2d.interpolant, tab2d.edge_mode, tab2d.constant,
+            x0=tab2d.x0, y0=tab2d.y0, xperiod=tab2d.xperiod, yperiod=tab2d.yperiod
+        )
+
+    @lazy_property
+    def _tab2d(self):
+        # If _tab2d hasn't been overwritten in this process, but it's use is requested, then
+        # set it up from shared memory.
+        xshare = np.frombuffer(self._objDict['x'], dtype=np.float64)
+        yshare = np.frombuffer(self._objDict['y'], dtype=np.float64)
+        fshare = np.frombuffer(self._objDict['f'], dtype=np.float64)
+        fshare = fshare.reshape((self.npix+1, self.npix+1))
+        return _LookupTable2D(
+            xshare, yshare, fshare, 'linear', 'wrap', 0.0,
+            x0=self._objDict['x0'], y0=self._objDict['y0'],
+            xperiod=self._objDict['xperiod'], yperiod=self._objDict['yperiod']
+        )
+
     def _seek(self, t):
         """Set layer's internal clock to time t."""
         if t == self._time:
@@ -310,7 +402,9 @@ class AtmosphericScreen(object):
                 for _ in range(n_updates):
                     self._screen *= self.alpha
                     self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
-                self._tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+                # Make a table, copy the x,y,f arrays to shared memory, make a new table that
+                # points to those locations.
+                self._setShare()
         self._time = float(t)
 
     def _reset(self):
@@ -319,10 +413,9 @@ class AtmosphericScreen(object):
         self._time = 0.0
 
         # Only need to reset/create tab2d if not frozen or doesn't already exist
-        if not self.reversible or not hasattr(self, '_tab2d'):
+        if not self.reversible or not self._objDict['instantiated'].value:
             self._screen = self._random_screen()
-            self._tab2d = LookupTable2D(
-                self._xs, self._ys, self._screen, edge_mode='wrap')
+            self._setShare()
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.

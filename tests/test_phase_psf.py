@@ -866,7 +866,6 @@ def test_phase_gradient_shoot():
 @timer
 def test_input():
     """Check that exceptions are raised for invalid input"""
-
     # Specifying only one of alpha and time_step is an error.
     assert_raises(ValueError, galsim.AtmosphericScreen, screen_size=10.0, time_step=0.01)
     assert_raises(ValueError, galsim.AtmosphericScreen, screen_size=10.0, alpha=0.997)
