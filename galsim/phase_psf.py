@@ -827,14 +827,26 @@ class PhaseScreenList(object):
                 pass
         self._update_attrs()
 
-    def instantiate(self, _bar=None, **kwargs):
+    def instantiate(self, pool=None, _bar=None, **kwargs):
+        """Instantiate the screens in this PhaseScreenList.
+
+        @param pool      A multiprocessing.Pool object to use to instantiate screens in parallel.
+        @param **kwargs  Keyword arguments to forward to screen.instantiate().
+        """
         for layer in self:
+            results = []
             try:
-                layer.instantiate(**kwargs)
+                if pool is not None:
+                    results.append(pool.apply_async(layer.instantiate, kwds=kwargs))
+                else:
+                    layer.instantiate(**kwargs)
             except AttributeError:
                 pass
             if _bar:  # pragma: no cover
                 _bar.update()
+        if pool is not None:
+            for r in results:
+                r.wait()
 
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""

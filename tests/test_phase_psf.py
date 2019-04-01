@@ -1088,7 +1088,7 @@ class DummyWork(object):
     def work(i, atm):
         rng = galsim.UniformDeviate(i+10)
         theta = (rng()*galsim.degrees, rng()*galsim.degrees)
-        psf = atm.makePSF(exptime=1.0, diam=1.1, lam=1000, theta=theta)
+        psf = atm.makePSF(exptime=1.0, diam=1.1, lam=1000.0, theta=theta)
         return psf.drawImage(nx=32, ny=32, scale=0.2, n_photons=1000, method='phot', rng=rng)
 
 
@@ -1102,7 +1102,7 @@ def test_shared_memory():
     r0_500 = 0.15  # m
     L0 = 20.0  # m
     nlayers = 6
-    screen_size = 51.2  # m
+    screen_size = 102.4  # m
     screen_scale = 0.1 # m
     max_speed = 20  # m/s
     rng = galsim.BaseDeviate(seed)
@@ -1132,8 +1132,13 @@ def test_shared_memory():
 
     for ctx in ctxs:
         atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
-                                rng=rng, screen_size=screen_size, screen_scale=screen_scale,
+                                rng=rng.duplicate(),
+                                screen_size=screen_size, screen_scale=screen_scale,
                                 mp_context=ctx)
+        # make a dummy PSF so we can get kmax for screen instantiation
+        psf = atm.makePSF(diam=1.1, lam=1000.0)
+        kmax = psf.screen_kmax
+
         workObj = DummyWork()
         if ctx is None:
             ctx = mp.get_context(None)
@@ -1142,6 +1147,9 @@ def test_shared_memory():
             initializer=galsim.phase_screens.initWorker,
             initargs=galsim.phase_screens.initWorkerArgs()
         ) as pool:
+            # Instantiate using the pool:
+            atm.instantiate(pool=pool, kmax=kmax)
+
             resultsParallel = []
             for i in range(10):
                 resultsParallel.append(pool.apply_async(workObj.work, (i, atm)))
@@ -1149,10 +1157,17 @@ def test_shared_memory():
                 r.wait()
         resultsParallel = [r.get() for r in resultsParallel]
 
-        # Serial comparison
+        # Serial comparison, also regenerate the atm here without using the pool
+        atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
+                                rng=rng.duplicate(),
+                                screen_size=screen_size, screen_scale=screen_scale,
+                                mp_context=ctx)
+        atm.instantiate(pool=None, kmax=kmax)
+
         resultsSerial = []
         for i in range(10):
             resultsSerial.append(workObj.work(i, atm))
+
         assert resultsSerial == resultsParallel
 
 
