@@ -420,6 +420,13 @@ def test_phase_psf_batch():
             img1, img2,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
+    import multiprocessing as mp
+    ctx = mp.get_context("spawn")
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        atm = galsim.Atmosphere(
+            screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng, mp_context=ctx
+        )
+
 
 @timer
 def test_opt_indiv_aberrations():
