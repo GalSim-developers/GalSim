@@ -47,17 +47,22 @@ def __calcOptStepK(lam, diam, obscuration, gsparams):
 _calcOptStepK = LRU_Cache(__calcOptStepK)
 
 
+# Global dict of "pointers" (roughly) to shared memory.
 _GSScreenShare = {}
 
 
 def initWorkerArgs():
     """Function used to generate worker arguments to pass to multiprocessing.Pool initializer.
+
+    See AtmosphericScreen docstring for more information.
     """
     return (_GSScreenShare,)
 
 
 def initWorker(share):
     """Worker initialization function to pass to multiprocessing.Pool initializer.
+
+    See AtmosphericScreen docstring for more information.
     """
     _GSScreenShare.update(share)
 
@@ -67,6 +72,9 @@ class AtmosphericScreen(object):
     initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
     defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
     scale beyond which the turbulence power flattens.
+
+    Instantiation
+    -------------
 
     AtmosphericScreen delays the actual instantiation of the phase screen array in memory until it
     is used for either drawing a PSF or querying the wavefront or wavefront gradient.  This is to
@@ -89,6 +97,73 @@ class AtmosphericScreen(object):
 
     Note that once a screen has been instantiated with a particular set of truncation parameters, it
     cannot be re-instantiated with another set of parameters.
+
+    Shared memory
+    -------------
+
+    Instantiated AtmosphericScreen objects can consume a significant amount of memory.  For example,
+    an atmosphere with 6 screens, each extending 819.2 m and with resolution of 10 cm will consume
+    3 GB of memory.  In contexts where both a realistic atmospheric PSF and high throughput via
+    multiprocessing are required, allocating this 3 GB of memory once in a shared memory space
+    accessible to each subprocess (as opposed to once per subprocess) is highly desireable.  We
+    provide a few functions here to enable such usage:
+
+        - The mp_context keyword argument to AtmosphericScreen.
+            This is used to indicate which multiprocessing process launching context will be used.
+            This is important for setting up the shared memory correctly.
+        - The galsim.phase_screens.initWorker() and initWorkerArgs functions.
+            These should be used in a call to multiprocessing.Pool to correctly inform the worker
+            process where to find AtmosphericScreen shared memory.
+
+    A template example might look something like:
+
+        ```
+        import galsim
+        import multiprocessing as mp
+
+        def work(i, atm):
+            args, moreArgs = fn(i)
+            psf = atm.makePSF(*args)
+            return psf.drawImage(*moreArgs)
+
+        ctx = mp.get_context("spawn")  # "spawn" is generally the safest context available
+
+        atm = galsim.Atmosphere(..., mp_context=ctx)  # internally calls AtmosphericScreen ctor
+        nProc = 4  # Note, can set this to None to get a good default
+        with ctx.Pool(
+            nProc,
+            initializer=galsim.phase_screens.initWorker,
+            initargs=galsim.phase_screens.initWorkerArgs()
+        ) as pool:
+            results = []
+            # First submit
+            for i in range(10):
+                results.append(pool.apply_async(work, (i, atm)))
+            # Then wait to finish
+            for r in results:
+                r.wait()
+        # Turn future objects into actual returned images.
+        results = [r.get() for r in results]
+        ```
+
+    It is also possible to manually instantiate each of the AtmosphericScreen objects in a
+    PhaseScreenList in parallel using a process pool.  This requires knowing what k-scale to
+    truncate the screen at:
+
+        ```
+        atm = galsim.Atmosphere(..., mp_context=ctx)
+        with ctx.Pool(
+            nProc,
+            initializer=galsim.phase_screens.initWorker,
+            initargs=galsim.phase_screens.initWorkerArgs()
+        ) as pool:
+            dummyPSF = atm.makePSF(...)
+            kmax = dummyPSF.screen_kmax
+            atm.instantiate(pool=pool, kmax=kmax)
+        ```
+
+    Finally, the above multiprocessing shared memory tricks are only currently supported for
+    non-time-evolving screens (alpha=1).
 
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
@@ -128,7 +203,7 @@ class AtmosphericScreen(object):
     @param suppress_warning   Turn off instantiation sanity checking.  (See above)  [default: False]
     @param mp_context    GalSim uses shared memory for phase screen allocation to better enable
                          multiprocessing.  Use this keyword to set the launch context for
-                         multiprocessing.  Usually it will be sufficient to leave this at it's
+                         multiprocessing.  Usually it will be sufficient to leave this at its
                          default.  [default: None]
 
     Relevant SPIE paper:
