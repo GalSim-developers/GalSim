@@ -352,6 +352,10 @@ def main(argv):
         # First, we include the expected Poisson noise:
         final_image.addNoise(poisson_noise)
 
+        # At this point in the image generation process, an integer number of photons gets
+        # detected, hence we have to round the pixel values to integers:
+        final_image.quantize()
+
         # The subsequent steps account for the non-ideality of the detectors.
 
         # 1) Reciprocity failure:
@@ -381,10 +385,6 @@ def main(argv):
             out_filename = os.path.join(outpath,
                                         'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
             diff.write(out_filename)
-
-        # At this point in the image generation process, an integer number of photons gets
-        # detected, hence we have to round the pixel values to integers:
-        final_image.quantize()
 
         # 2) Adding dark current to the image:
         # Even when the detector is unexposed to any radiation, the electron-hole pairs that
