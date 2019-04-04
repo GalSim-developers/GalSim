@@ -492,7 +492,7 @@ class PowerSpectrum(object):
         grid_spacing *= scale_fac
 
         # The final grid spacing that will be in the computed images is grid_spacing/kmax_factor.
-        self.grid_spacing = grid_spacing // kmax_factor
+        self.grid_spacing = grid_spacing / kmax_factor
         self.center = center
 
         # It is also convenient to store the bounds within which an input position is allowed.
