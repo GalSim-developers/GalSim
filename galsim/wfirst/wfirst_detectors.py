@@ -138,11 +138,11 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     poisson_noise = galsim.PoissonNoise(rng)
     img.addNoise(poisson_noise)
 
+    # Quantize: have an integer number of photons in every pixel after inclusion of sky noise.
+    img.quantize()
+
     # Reciprocity failure (use WFIRST routine, with the supplied exposure time).
     addReciprocityFailure(img, exptime=exptime)
-
-    # Quantize.
-    img.quantize()
 
     # Dark current (use exposure time).
     dark_current = galsim.wfirst.dark_current*exptime
