@@ -447,9 +447,9 @@ def test_wfirst_bandpass():
     for key in ref_zp.keys():
         galsim_zp = bp[key].zeropoint + delta_zp
         # They use slightly different versions of the bandpasses, so we only require agreement to
-        # 0.05 mag.
+        # 0.1 mag.
         print('zp for %s: '%key, galsim_zp, ref_zp[key])
-        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.05,
+        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.1,
                                    err_msg="Wrong zeropoint for bandpass "+key)
 
     # Note: the difference is not due to our default thinning.  This isn't any better.
@@ -457,16 +457,16 @@ def test_wfirst_bandpass():
     for key in ref_zp.keys():
         galsim_zp = nothin_bp[key].zeropoint + delta_zp
         print('nothin zp for %s: '%key, galsim_zp, ref_zp[key])
-        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.05,
+        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.1,
                                    err_msg="Wrong zeropoint for bandpass "+key)
 
-    # Even with fairly extreme thinning, the error is still only 0.07 mag.
+    # Even with fairly extreme thinning, the error is still only 0.15 mag.
     verythin_bp = galsim.wfirst.getBandpasses(AB_zeropoint=True, default_thin_trunc=False,
                                               relative_throughput=0.05, rel_err=0.1)
     for key in ref_zp.keys():
         galsim_zp = verythin_bp[key].zeropoint + delta_zp
         print('verythin zp for %s: '%key, galsim_zp, ref_zp[key])
-        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.07,
+        np.testing.assert_allclose(galsim_zp, ref_zp[key], atol=0.15,
                                    err_msg="Wrong zeropoint for bandpass "+key)
 
     with assert_raises(TypeError):
