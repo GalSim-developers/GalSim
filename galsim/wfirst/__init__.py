@@ -49,11 +49,12 @@ Currently, the module includes the following numbers, which were updated as of W
 
     obscuration - The linear obscuration of the telescope, expressed as a fraction of the diameter.
 
+    collecting_area - The actual collecting area after accounting for obscuration, struts, etc. in
+                      units of cm^2.
+
     exptime - The typical exposure time in units of seconds.  The number that is stored is for a
               single dither.  Each location within the survey will be observed with a total of 5-7
-              dithers across 2 epochs.  For a single dither, there are 32 up-the-ramp samples, each
-              taking 5.423 seconds, but the effective live time is really 31 samples.  This is the
-              source of the 168.1s that is currently stored for exptime.
+              dithers across 2 epochs.
 
     n_dithers - The number of dithers per filter (typically 5-7, so this is currently 6 as a
                 reasonable effective average).
@@ -126,8 +127,9 @@ the detectors are subject to change as further lab tests are done.
 This module also contains the following routines:
 
     getBandpasses() - A utility to get a dictionary containing galsim.Bandpass objects for each of
-                      the WFIRST imaging bandpasses, which by default will have their zero
-                      point set for the WFIRST effective diameter and typical exposure time.
+                      the WFIRST imaging bandpasses, which by default have AB zeropoints given using
+                      the GalSim zeropoint convention (see getBandpasses() docstring for more
+                      details).
 
     getSkyLevel() - A utility to find the expected sky level due to zodiacal light at a given
                     position, in a given band.
@@ -152,7 +154,7 @@ This module also contains the following routines:
                            principle, users can simply use this routine instead of separately using
                            the various routines like applyNonlinearity().
 
-    getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.
+    getPSF() - A routine to get a chromatic representation of the PSF in a single SCA.
 
     getWCS() - A routine to get the WCS for each SCA in the focal plane, for a given target RA, dec,
                and orientation angle.
@@ -193,7 +195,7 @@ gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
 diameter = 2.37  # meters
 obscuration = 0.32
-collecting_area = np.pi * diameter**2 / 4.0 * (1.0 - obscuration**2) * 1e4  # cm^2
+collecting_area = 3.757 * 1.e4 # cm^2, from Cycle 7
 exptime = 140.25  # s
 dark_current = 0.015 # e-/pix/s
 nonlinearity_beta = -6.e-7
