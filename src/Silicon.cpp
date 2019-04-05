@@ -567,7 +567,7 @@ namespace galsim {
 #pragma omp parallel
 	  {
 	    int i = gi + omp_get_thread_num();
-	    if (i < nphotons) {
+	    while ((i < nphotons) && (addedFlux <= next_recalc)) {
 	      // Get the location where the photon strikes the silicon:
 	      double x0 = photons.getX(i); // in pixels
 	      double y0 = photons.getY(i); // in pixels
@@ -689,9 +689,12 @@ namespace galsim {
 		  }
 		}
 	      }
+	      i += numThreads;
+	      //#pragma omp barrier
+	      if (omp_get_thread_num() == 0) gi += numThreads;
 	    }
 	  }
-	  gi += numThreads;
+	  //gi += numThreads;
 
 	  if (addedFlux > next_recalc) {
 	    std::cout << "Updating pixel distortions at photon " << gi << std::endl;
