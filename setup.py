@@ -69,7 +69,7 @@ if "--debug" in sys.argv:
     undef_macros+=['NDEBUG']
 
 copt =  {
-    'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
+    'gcc' : ['-O3','-mavx','-std=c++11','-fvisibility=hidden','-fopenmp','-mfma'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11'],
     'clang' : ['-O2','-msse2','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden',
                '-stdlib=libc++'],

@@ -461,9 +461,13 @@ def test_silicon_area():
     print('+- 1 along row:    ',im2(1,0),im2(-1,0))
     assert im2(0,0) == im2.array.max()
     assert im2(0,1) + im2(0,-1) > im2(1,0) + im2(-1,0)
-    np.testing.assert_almost_equal(im2(0,0), 143352)
-    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59306.5)
-    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59032.0)
+    #np.testing.assert_almost_equal(im2(0,0), 143352)
+    #np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59306.5)
+    #np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59032.0)
+    # JTP: change for making pixel not found case deterministic
+    np.testing.assert_almost_equal(im2(0,0), 143414)
+    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59303.5)
+    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59015.5)
 
     # Repeat with transpose=True to check that things are transposed properly.
     siliconT = galsim.SiliconSensor(rng=rng, transpose=True, diffusion_factor=0.0)
@@ -489,9 +493,13 @@ def test_silicon_area():
     assert im2T(0,0) == im2T.array.max()
     assert im2T(0,1) + im2T(0,-1) < im2T(1,0) + im2T(-1,0)
     # Actual values are different, since rng is in different state. But qualitatively transposed.
-    np.testing.assert_almost_equal(im2T(0,0), 143842)
-    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58895.0)
-    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59243.0)
+    #np.testing.assert_almost_equal(im2T(0,0), 143842)
+    #np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58895.0)
+    #np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59243.0)
+    # JTP: change for making pixel not found case deterministic
+    np.testing.assert_almost_equal(im2T(0,0), 143620)
+    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58578.5)
+    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59499.5)
 
     do_pickle(siliconT)
 
@@ -784,12 +792,19 @@ def test_resume():
     # Use treerings to make sure that aspect of the setup is preserved properly on resume
     treering_func = galsim.SiliconSensor.simple_treerings(0.5, 250.)
     treering_center = galsim.PositionD(-1000,0)
+    #sensor1 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+    #                               treering_func=treering_func, treering_center=treering_center)
+    #sensor2 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+    #                               treering_func=treering_func, treering_center=treering_center)
+    #sensor3 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
+    #                               treering_func=treering_func, treering_center=treering_center)
+    # JTP: turning off diffusion for reproducibility
     sensor1 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
-                                   treering_func=treering_func, treering_center=treering_center)
+                                   treering_func=treering_func, treering_center=treering_center, diffusion_factor=0.0)
     sensor2 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
-                                   treering_func=treering_func, treering_center=treering_center)
+                                   treering_func=treering_func, treering_center=treering_center, diffusion_factor=0.0)
     sensor3 = galsim.SiliconSensor(rng=rng.duplicate(), nrecalc=nrecalc,
-                                   treering_func=treering_func, treering_center=treering_center)
+                                   treering_func=treering_func, treering_center=treering_center, diffusion_factor=0.0)
 
     waves = galsim.WavelengthSampler(sed = galsim.SED('1', 'nm', 'fphotons'),
                                      bandpass = galsim.Bandpass('LSST_r.dat', 'nm'),
@@ -990,12 +1005,12 @@ def test_flat():
     np.testing.assert_allclose(cov02 / counts_total, 0., atol=2*toler)
 
 if __name__ == "__main__":
-    test_simple()
-    test_silicon()
-    test_silicon_fft()
-    test_silicon_area()
-    test_sensor_wavelengths_and_angles()
-    test_bf_slopes()
-    test_treerings()
+    #test_simple()
+    #test_silicon()
+    #test_silicon_fft()
+    #test_silicon_area()
+    #test_sensor_wavelengths_and_angles()
+    #test_bf_slopes()
+    #test_treerings()
     test_resume()
-    test_flat()
+    #test_flat()
