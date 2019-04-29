@@ -833,6 +833,10 @@ class PhaseScreenList(object):
         @param pool      A multiprocessing.Pool object to use to instantiate screens in parallel.
         @param **kwargs  Keyword arguments to forward to screen.instantiate().
         """
+        if pool is not None:
+            import sys
+            assert sys.version_info >= (3,4),
+                "instantiating PhaseScreenList with pool requires python version >= 3.4"
         for layer in self:
             results = []
             try:
