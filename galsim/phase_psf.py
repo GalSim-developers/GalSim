@@ -835,8 +835,8 @@ class PhaseScreenList(object):
         """
         if pool is not None:
             import sys
-            assert sys.version_info >= (3,4),
-                "instantiating PhaseScreenList with pool requires python version >= 3.4"
+            assert_str = "instantiating PhaseScreenList with pool requires python version >= 3.4"
+            assert sys.version_info >= (3,4), assert_str
         for layer in self:
             results = []
             try:

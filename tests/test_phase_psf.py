@@ -21,6 +21,7 @@ import os
 import numpy as np
 
 import galsim
+import unittest
 from galsim_test_helpers import *
 
 
@@ -420,12 +421,14 @@ def test_phase_psf_batch():
             img1, img2,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
-    import multiprocessing as mp
-    ctx = mp.get_context("spawn")
-    with assert_raises(galsim.GalSimIncompatibleValuesError):
-        atm = galsim.Atmosphere(
-            screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng, mp_context=ctx
-        )
+    if sys.version_info >= (3,4):
+        import multiprocessing as mp
+        ctx = mp.get_context("spawn")
+        with assert_raises(galsim.GalSimIncompatibleValuesError):
+            atm = galsim.Atmosphere(
+                screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng,
+                mp_context=ctx
+            )
 
 
 @timer
@@ -1099,6 +1102,7 @@ class DummyWork(object):
         return psf.drawImage(nx=32, ny=32, scale=0.2, n_photons=1000, method='phot', rng=rng)
 
 
+@unittest.skipIf(sys.version_info < (3,4), 'Requires python version >= 3.4')
 @timer
 def test_shared_memory():
     """Test that shared memory hooks to AtmosphericScreen work.
