@@ -287,6 +287,7 @@ class AtmosphericScreen(object):
         else:
             self._kmin = None
             self._kmax = None
+            self._instantiated = False
 
     def __setstate__(self, d):
         self.__dict__.update(d)
@@ -399,13 +400,14 @@ class AtmosphericScreen(object):
                             del self._psi, self._screen
                         self._objDict['instantiated'].value = True
         else:
-            self._kmin = kmin
-            self._kmax = kmax
-            self._init_psi()
-            self._reset()
-            # Free some RAM for frozen-flow screens
-            if self.reversible:
-                del self._psi, self._screen
+            if not self._instantiated:
+                self._kmin = kmin
+                self._kmax = kmax
+                self._init_psi()
+                self._reset()
+                # Free some RAM for frozen-flow screens
+                if self.reversible:
+                    del self._psi, self._screen
 
         if check is not None and not self._suppress_warning:
             if check == 'FFT':
@@ -540,9 +542,10 @@ class AtmosphericScreen(object):
                 self._screen = self._random_screen()
                 self._setShare()
         else:
-            if not self.reversible or not hasattr(self, '_tab2d'):
+            if not self.reversible or not self._instantiated:
                 self._screen = self._random_screen()
                 self._tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+                self._instantiated = True
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
