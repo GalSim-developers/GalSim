@@ -579,6 +579,16 @@ def test_table2d():
     assert_raises(ValueError, galsim.LookupTable2D, x, y, z, dfdx=z, dfdy=z, d2fdxdy=z[::2],
                   interpolant='spline')
 
+    # Check private shortcut instantiation
+    new_tab2d = galsim.table._LookupTable2D(
+        tab2d.x, tab2d.y, tab2d.f,
+        tab2d.interpolant, tab2d.edge_mode,
+        tab2d.constant, tab2d.dfdx, tab2d.dfdy, tab2d.d2fdxdy
+    )
+    assert tab2d == new_tab2d
+    assert tab2d(2.4, 3.6) == new_tab2d(2.4, 3.6)
+
+
 @timer
 def test_table2d_gradient():
     """Check LookupTable2D gradient function

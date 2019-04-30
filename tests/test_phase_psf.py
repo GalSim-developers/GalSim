@@ -1142,6 +1142,8 @@ def test_shared_memory():
         ctxs = [None]
 
     for ctx in ctxs:
+        if ctx is None:
+            ctx = mp.get_context(None)
         atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
                                 rng=rng.duplicate(),
                                 screen_size=screen_size, screen_scale=screen_scale,
@@ -1151,8 +1153,6 @@ def test_shared_memory():
         kmax = psf.screen_kmax
 
         workObj = DummyWork()
-        if ctx is None:
-            ctx = mp.get_context(None)
         with ctx.Pool(
             None,
             initializer=galsim.phase_screens.initWorker,
@@ -1180,6 +1180,27 @@ def test_shared_memory():
             resultsSerial.append(workObj.work(i, atm))
 
         assert resultsSerial == resultsParallel
+
+        # Try to trigger both branches of inner instantiation check (after lock acquisition) by
+        # using several processes at once to instantiate a single layer.  It's a race, and coverage
+        # depends on when the apply_asyncs are actually started, so might not actually hit both
+        # branches
+        atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
+                                rng=rng.duplicate(),
+                                screen_size=screen_size, screen_scale=screen_scale,
+                                mp_context=ctx)
+        psf = atm.makePSF(diam=1.1, lam=1000.0)
+        kmax = psf.screen_kmax
+        with ctx.Pool(
+            None,
+            initializer=galsim.phase_screens.initWorker,
+            initargs=galsim.phase_screens.initWorkerArgs()
+        ) as pool:
+            results = []
+            for _ in range(10):
+                results.append(pool.apply_async(atm[0].instantiate, kwds={'kmax':kmax}))
+            for r in results:
+                r.wait()
 
 
 if __name__ == "__main__":
