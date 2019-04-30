@@ -65,7 +65,7 @@ def initWorker(share):
 
     See AtmosphericScreen docstring for more information.
     """
-    _GSScreenShare.update(share)
+    _GSScreenShare.update(share)  # pragma: no cover  (covered, but in a fork)
 
 
 class AtmosphericScreen(object):
@@ -391,7 +391,8 @@ class AtmosphericScreen(object):
                 with self._objDict['lock']:
                     # Check that another process didn't finish instantiating
                     # while this process was waiting for the lock
-                    if not self._objDict['instantiated'].value:
+                    # Since this is a race, both branches are only covered probabilistically
+                    if not self._objDict['instantiated'].value:  # pragma: no branch
                         self._objDict['kmin'].value = kmin
                         self._objDict['kmax'].value = kmax
                         self._init_psi()
