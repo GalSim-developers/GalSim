@@ -927,8 +927,8 @@ class OpticalScreen(object):
         # strip any trailing zeros.
         if self.aberrations[-1] == 0:
             self.aberrations = np.trim_zeros(self.aberrations, trim='b')
-            if len(self.aberrations) == 0:  # Don't let it be zero length.
-                self.aberrations = np.array([0])
+            if len(self.aberrations) <= 1:  # Don't let it be length zero or one though.
+                self.aberrations = np.array([0, 0])
         self.annular_zernike = annular_zernike
         self.obscuration = obscuration
         self.lam_0 = lam_0

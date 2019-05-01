@@ -428,6 +428,8 @@ class Zernike(object):
     """
     def __init__(self, coef, R_outer=1.0, R_inner=0.0):
         self.coef = np.asarray(coef)
+        if len(self.coef) <= 1:
+            self.coef = np.array([0, 0])
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 
