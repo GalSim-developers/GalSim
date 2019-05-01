@@ -351,10 +351,11 @@ def main(argv):
 
         # First, we include the expected Poisson noise:
         final_image.addNoise(poisson_noise)
-
         # At this point in the image generation process, an integer number of photons gets
-        # detected, hence we have to round the pixel values to integers:
-        final_image.quantize()
+        # detected, unless any of the pre-noise values were > 2^30. That's when our Poisson
+        # implementation switches over to the Gaussian approximation, which won't necessarily
+        # produce integers.  This situation does not arise in practice for this demo, but if it did,
+        # we could use final_image.quantize() to enforce integer pixel values.
 
         # The subsequent steps account for the non-ideality of the detectors.
 
