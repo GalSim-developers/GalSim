@@ -837,20 +837,25 @@ class PhaseScreenList(object):
             import sys
             assert_str = "instantiating PhaseScreenList with pool requires python version >= 3.4"
             assert sys.version_info >= (3,4), assert_str
-        for layer in self:
+
             results = []
-            try:
-                if pool is not None:
+            for layer in self:
+                try:
                     results.append(pool.apply_async(layer.instantiate, kwds=kwargs))
-                else:
-                    layer.instantiate(**kwargs)
-            except AttributeError:
-                pass
-            if _bar:  # pragma: no cover
-                _bar.update()
-        if pool is not None:
+                except AttributeError: # why did I need this?
+                    pass
+                if _bar:  # pragma: no cover
+                    _bar.update()
             for r in results:
                 r.wait()
+        else:
+            for layer in self:
+                try:
+                    layer.instantiate(**kwargs)
+                except AttributeError:
+                    pass
+                if _bar:
+                    _bar.update()
 
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
