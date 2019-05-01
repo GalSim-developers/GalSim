@@ -278,7 +278,7 @@ class AtmosphericScreen(object):
                 'yperiod':ctx.RawValue('d', 0.0),
                 'instantiated':ctx.RawValue('b', False),
                 'refcount':ctx.RawValue('i', 1),
-                'lock':ctx.RLock()
+                'lock':ctx.Lock()
             }
             # A unique id for this screen, created in the parent process, that can be used to find the
             # correct shared memory object in child processes.
@@ -487,10 +487,6 @@ class AtmosphericScreen(object):
         self._objDict['y0'].value = tab2d.y0
         self._objDict['xperiod'].value = tab2d.xperiod
         self._objDict['yperiod'].value = tab2d.yperiod
-        self._tab2d = _LookupTable2D(
-            xshare, yshare, fshare, tab2d.interpolant, tab2d.edge_mode, tab2d.constant,
-            x0=tab2d.x0, y0=tab2d.y0, xperiod=tab2d.xperiod, yperiod=tab2d.yperiod
-        )
 
     @lazy_property
     def _tab2d(self):
