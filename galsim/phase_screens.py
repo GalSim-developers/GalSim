@@ -487,6 +487,12 @@ class AtmosphericScreen(object):
         self._objDict['y0'].value = tab2d.y0
         self._objDict['xperiod'].value = tab2d.xperiod
         self._objDict['yperiod'].value = tab2d.yperiod
+        # Need to reset this here in case we did a boiling update
+        self._tab2d = _LookupTable2D(
+            xshare, yshare, fshare, 'linear', 'wrap', 0.0,
+            x0=self._objDict['x0'].value, y0=self._objDict['y0'].value,
+            xperiod=self._objDict['xperiod'].value, yperiod=self._objDict['yperiod'].value
+        )
 
     @lazy_property
     def _tab2d(self):
