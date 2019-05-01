@@ -842,7 +842,7 @@ class PhaseScreenList(object):
             for layer in self:
                 try:
                     results.append(pool.apply_async(layer.instantiate, kwds=kwargs))
-                except AttributeError: # why did I need this?
+                except AttributeError:  # OpticalScreen has no instantiate method
                     pass
                 if _bar:  # pragma: no cover
                     _bar.update()
