@@ -1148,6 +1148,8 @@ def test_shared_memory():
                                 rng=rng.duplicate(),
                                 screen_size=screen_size, screen_scale=screen_scale,
                                 mp_context=ctx)
+        # Add in an Optical Screen for good measure
+        atm.append(galsim.OpticalScreen(diam=1.1))
         # make a dummy PSF so we can get kmax for screen instantiation
         psf = atm.makePSF(diam=1.1, lam=1000.0)
         kmax = psf.screen_kmax
@@ -1173,6 +1175,7 @@ def test_shared_memory():
                                 rng=rng.duplicate(),
                                 screen_size=screen_size, screen_scale=screen_scale,
                                 mp_context=ctx)
+        atm.append(galsim.OpticalScreen(diam=1.1))
         atm.instantiate(pool=None, kmax=kmax)
 
         resultsSerial = []
