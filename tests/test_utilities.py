@@ -1012,6 +1012,7 @@ def test_dol_to_lod():
     l2 = [1, 2]
     l3 = [1, 2, 3]
     d1 = {1:1}
+    s = "abc"
 
     # Should be able to broadcast scalar elements or lists of length 1.
     dd = dict(i0=i0, l2=l2)
@@ -1035,6 +1036,20 @@ def test_dol_to_lod():
     dd = dict(l2=l2, d1=d1)
     with assert_raises(ValueError):
         list(galsim.utilities.dol_to_lod(dd))
+
+    # Strings can either be interpretted as scalar values or as lists of characters
+    dd = dict(i0=i0, s=s)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd, scalar_string=False)):
+        assert d == dict(i0=i0, s=s[i])
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd, scalar_string=True)):
+        assert d == dict(i0=i0, s=s)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd, 3, scalar_string=True)):
+        assert d == dict(i0=i0, s=s)
+    dd = dict(l3=l3, s=s)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd, scalar_string=True)):
+        assert d == dict(l3=l3[i], s=s)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd, scalar_string=False)):
+        assert d == dict(l3=l3[i], s=s[i])
 
 
 @timer

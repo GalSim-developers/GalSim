@@ -1083,18 +1083,28 @@ def listify(arg):
     return [arg] if not hasattr(arg, '__iter__') else arg
 
 
-def dol_to_lod(dol, N=None):
+def dol_to_lod(dol, N=None, scalar_string=True):
     """Generate list of dicts from dict of lists (with broadcasting).
     Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
     that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
     length-N lists.
     """
     if N is None:
-        N = max(len(v) for v in dol.values() if hasattr(v, '__len__'))
+        if scalar_string:
+            lens = [len(v) for v in dol.values()
+                           if hasattr(v, '__len__')
+                           and not isinstance(v, str)]
+        else:
+            lens = [len(v) for v in dol.values()
+                           if hasattr(v, '__len__')]
+        N = max(lens) if lens != [] else 1
     # Loop through broadcast range
     for i in range(N):
         out = {}
         for k, v in iteritems(dol):
+            if scalar_string and isinstance(v, str):
+                out[k] = v
+                continue
             try:
                 out[k] = v[i]
             except IndexError:  # It's list-like, but too short.
