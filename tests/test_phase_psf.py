@@ -424,7 +424,7 @@ def test_phase_psf_batch():
     if sys.version_info >= (3,4):
         import multiprocessing as mp
         ctx = mp.get_context("spawn")
-        with assert_raises(galsim.GalSimIncompatibleValuesError):
+        with assert_raises(galsim.GalSimNotImplementedError):
             atm = galsim.Atmosphere(
                 screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng,
                 mp_context=ctx
