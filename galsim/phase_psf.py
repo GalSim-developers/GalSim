@@ -65,6 +65,7 @@ Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
 
+import sys
 from past.builtins import basestring
 from itertools import chain
 from builtins import range
@@ -834,7 +835,6 @@ class PhaseScreenList(object):
         @param **kwargs  Keyword arguments to forward to screen.instantiate().
         """
         if pool is not None:
-            import sys
             assert_str = "instantiating PhaseScreenList with pool requires python version >= 3.4"
             assert sys.version_info >= (3,4), assert_str
 
