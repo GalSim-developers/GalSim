@@ -1137,50 +1137,53 @@ def test_shared_memory():
     rng2 = rng.duplicate()
 
     if __name__ == "__main__":
-        ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), mp.get_context("forkserver")]
+        ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
     else:
         ctxs = [None]
 
     for ctx in ctxs:
-        if ctx is None:
-            ctx = mp.get_context(None)
-        atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
-                                rng=rng.duplicate(),
-                                screen_size=screen_size, screen_scale=screen_scale,
-                                mp_context=ctx)
+        atmPar = galsim.Atmosphere(
+            r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
+            rng=rng.duplicate(),
+            screen_size=screen_size, screen_scale=screen_scale,
+            mp_context=ctx)
+        atmSer = galsim.Atmosphere(
+            r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
+            rng=rng.duplicate(),
+            screen_size=screen_size, screen_scale=screen_scale,
+            mp_context=ctx)
         # Add in an Optical Screen for good measure
-        atm.append(galsim.OpticalScreen(diam=1.1))
+        atmPar.append(galsim.OpticalScreen(diam=1.1))
+        atmSer.append(galsim.OpticalScreen(diam=1.1))
         # make a dummy PSF so we can get kmax for screen instantiation
-        psf = atm.makePSF(diam=1.1, lam=1000.0)
+        psf = atmPar.makePSF(diam=1.1, lam=1000.0)
         kmax = psf.screen_kmax
 
         workObj = DummyWork()
+
+        if ctx in (None, "forkserver"):
+            ctx = mp.get_context(ctx)
         with ctx.Pool(
             None,
             initializer=galsim.phase_screens.initWorker,
             initargs=galsim.phase_screens.initWorkerArgs()
         ) as pool:
             # Instantiate using the pool:
-            atm.instantiate(pool=pool, kmax=kmax)
+            atmPar.instantiate(pool=pool, kmax=kmax)
 
             resultsParallel = []
             for i in range(10):
-                resultsParallel.append(pool.apply_async(workObj.work, (i, atm)))
+                resultsParallel.append(pool.apply_async(workObj.work, (i, atmPar)))
             for r in resultsParallel:
                 r.wait()
         resultsParallel = [r.get() for r in resultsParallel]
 
-        # Serial comparison, also regenerate the atm here without using the pool
-        atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
-                                rng=rng.duplicate(),
-                                screen_size=screen_size, screen_scale=screen_scale,
-                                mp_context=ctx)
-        atm.append(galsim.OpticalScreen(diam=1.1))
-        atm.instantiate(pool=None, kmax=kmax)
+        # Serial comparison, also reinstantiate the atm here without using the pool
+        atmSer.instantiate(pool=None, kmax=kmax)
 
         resultsSerial = []
         for i in range(10):
-            resultsSerial.append(workObj.work(i, atm))
+            resultsSerial.append(workObj.work(i, atmSer))
 
         assert resultsSerial == resultsParallel
 

@@ -826,8 +826,9 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
         del kwargs['speed']
         del kwargs['direction']
 
-    # Determine broadcast size
-    nmax = max(len(v) for v in kwargs.values() if hasattr(v, '__len__'))
+    # Determine broadcast size.
+    # Note: treat string as a single scalar value, not a vector of characters
+    nmax = max(len(v) for v in kwargs.values() if hasattr(v, '__len__') and not isinstance(v, str))
 
     # Broadcast r0_500 here, since logical combination of indiv layers' r0s is complex:
     if len(kwargs['r0_500']) == 1:
