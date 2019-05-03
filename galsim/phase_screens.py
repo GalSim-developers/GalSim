@@ -112,7 +112,7 @@ class AtmosphericScreen(object):
         - The mp_context keyword argument to AtmosphericScreen.
             This is used to indicate which multiprocessing process launching context will be used.
             This is important for setting up the shared memory correctly.
-        - The galsim.phase_screens.initWorker() and initWorkerArgs functions.
+        - The galsim.phase_screens.initWorker() and initWorkerArgs() functions.
             These should be used in a call to multiprocessing.Pool to correctly inform the worker
             process where to find AtmosphericScreen shared memory.
 
