@@ -29,7 +29,8 @@ from . import utilities
 from . import fft
 from . import zernike
 from .utilities import LRU_Cache, lazy_property
-from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
+from .errors import (GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn,
+    GalSimNotImplementedError)
 
 
 # Two helper functions to cache the calculation required for _getStepK
@@ -230,9 +231,8 @@ class AtmosphericScreen(object):
                 "Did you mean to set time_step in makePSF or PhaseScreenPSF?",
                 alpha=alpha, time_step=time_step)
         if (alpha != 1.0 and mp_context is not None):
-            raise GalSimIncompatibleValuesError(
-                "Shared memory use is not supported for time-evolving screens",
-                alpha=alpha, mp_context=mp_context)
+            raise GalSimNotImplementedError(
+                "Shared memory use is only supported for frozen-flow screens")
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
