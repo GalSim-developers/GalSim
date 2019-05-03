@@ -309,8 +309,9 @@ class AtmosphericScreen(object):
 
             with self._objDict['lock']:
                 self._objDict['refcount'].value -= 1
-            if self._objDict['refcount'].value == 0:
-                del _GSScreenShare[self._shareKey]
+            with self._objDict['lock']:
+                if self._objDict['refcount'].value == 0:
+                    del _GSScreenShare[self._shareKey]
 
     @property
     def altitude(self):
