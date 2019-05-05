@@ -58,9 +58,21 @@ Bug Fix
 Changes from v2.1.3 to v2.1.4
 =============================
 
-Bug Fix
--------
+Bug Fixes
+---------
 
 - Fixed Convolve and Sum to recognize when objects all have the same gsparams,
   and thus avoid making gratuitous copies of the components.
 - Added some caching for some non-trivial calculations for PhaseScreens.
+
+
+Changes from v2.1.4 to v2.1.5
+=============================
+
+Bug Fixes
+---------
+
+- Switched to yaml.safe_load to avoid PyYAML v5.0 warnings
+- Fixed some cases where numpy objected to subtracting floats from ints.
+- Fixed error in use of non-integer grid_spacing in PowerSpectrum (#1020)
+- Fixed FitsHeader to not unnecessarily read data of fits file. (#1024)
