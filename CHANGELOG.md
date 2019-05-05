@@ -72,6 +72,7 @@ Changes from v2.1.4 to v2.1.5
 Bug Fixes
 ---------
 
+- Fixed error when using non-int integer types as seed of BaseDeviate (#1009)
 - Fixed error in use of non-integer grid_spacing in PowerSpectrum (#1020)
 - Fixed FitsHeader to not unnecessarily read data of fits file. (#1024)
 - Switched to yaml.safe_load to avoid PyYAML v5.0 warnings (#1025)
