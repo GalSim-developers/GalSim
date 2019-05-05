@@ -26,6 +26,7 @@ import weakref
 from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import convert_cpp_errors
+from .utilities import isinteger
 
 class BaseDeviate(object):
     """Base class for all the various random deviates.
@@ -118,12 +119,15 @@ class BaseDeviate(object):
         """
         if isinstance(seed, BaseDeviate):
             self._reset(seed)
-        elif isinstance(seed, (str, int)):
+        elif isinstance(seed, str):
             with convert_cpp_errors():
                 self._rng = self._rng_type(_galsim.BaseDeviateImpl(seed), *self._rng_args)
         elif seed is None:
             with convert_cpp_errors():
                 self._rng = self._rng_type(_galsim.BaseDeviateImpl(0), *self._rng_args)
+        elif isinteger(seed):
+            with convert_cpp_errors():
+                self._rng = self._rng_type(_galsim.BaseDeviateImpl(int(seed)), *self._rng_args)
         else:
             raise TypeError("BaseDeviate must be initialized with either an int or another "
                             "BaseDeviate")

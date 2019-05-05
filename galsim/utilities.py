@@ -31,6 +31,16 @@ from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import galsim_warn
 
 
+def isinteger(value):
+    """Check if a value is an integer type (including np.int64, long, etc.)
+
+    Specifically, it checks whether value == int(value).
+    """
+    try:
+        return value == int(value)
+    except TypeError:
+        return False
+
 def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
