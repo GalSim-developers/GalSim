@@ -169,7 +169,7 @@ def ParseVariables(variables, logger):
         try:
             try:
                 import yaml
-                value = yaml.load(value)
+                value = yaml.safe_load(value)
             except ImportError:
                 # Don't require yaml.  json usually works for these.
                 import json

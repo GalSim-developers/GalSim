@@ -276,7 +276,7 @@ class Dict(object):
         elif file_type == 'YAML':
             import yaml
             with open(self.file_name, 'r') as f:
-                self.dict = yaml.load(f)
+                self.dict = yaml.safe_load(f)
         else:  # JSON
             import json
             with open(self.file_name, 'r') as f:
