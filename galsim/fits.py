@@ -324,14 +324,15 @@ def _add_hdu(hdu_list, data, pyfits_compress):
     return hdu
 
 
-def _check_hdu(hdu, pyfits_compress):
+def _check_hdu(hdu, pyfits_compress, header_only=False):
     """Check that an input `hdu` is valid
     """
     from ._pyfits import pyfits
     # Check for fixable verify errors
     try:
         hdu.header
-        hdu.data
+        if not header_only:
+            hdu.data
     except pyfits.VerifyError:
         hdu.verify('fix')
 
@@ -344,7 +345,7 @@ def _check_hdu(hdu, pyfits_compress):
             raise OSError('Found invalid HDU type reading FITS file (expected an ImageHDU)')
 
 
-def _get_hdu(hdu_list, hdu, pyfits_compress):
+def _get_hdu(hdu_list, hdu, pyfits_compress, header_only=False):
     from ._pyfits import pyfits
     if isinstance(hdu_list, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
@@ -364,7 +365,7 @@ def _get_hdu(hdu_list, hdu, pyfits_compress):
         hdu = hdu_list
     else:
         raise TypeError("Invalid hdu_list: %s",hdu_list)
-    _check_hdu(hdu, pyfits_compress)
+    _check_hdu(hdu, pyfits_compress, header_only)
     return hdu
 
 
@@ -1099,7 +1100,7 @@ class FitsHeader(object):
                 hdu_list, fin = _read_file(file_name, dir, file_compress)
 
         if hdu_list:
-            hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+            hdu = _get_hdu(hdu_list, hdu, pyfits_compress, header_only=True)
             header = hdu.header
 
         if file_name and not text_file:

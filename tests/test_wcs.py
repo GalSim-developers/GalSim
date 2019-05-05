@@ -21,6 +21,7 @@ import numpy as np
 import os
 import sys
 import warnings
+import time
 
 import galsim
 from galsim_test_helpers import *
@@ -2358,6 +2359,34 @@ def test_int_args():
         print('posi_roundtrip = ',posi_roundtrip)
         assert np.isclose(posi_roundtrip.x, posi.x)
         assert np.isclose(posi_roundtrip.y, posi.y)
+
+    # Also check a DES file.
+    # Along the way, check issue #1024 where Erin noticed that reading the WCS from the
+    # header of a compressed file was spending lots of time decompressing the data, which
+    # is unnecessary.
+    dir = 'des_data'
+    file_name = 'DECam_00158414_01.fits.fz'
+    with profile():
+        t0 = time.time()
+        wcs = galsim.FitsWCS(file_name, dir=dir)
+        t1 = time.time()
+    # Before fixing #1024, this took about 0.5 sec.
+    # Now it takes about 0.04 sec.  Testing at 0.2 seems like a reasonable midpoint.
+    print('Time = ',t1-t0)
+    assert t1-t0 < 0.2
+
+    posi = galsim.PositionI(5,6)
+    posd = galsim.PositionD(5,6)
+
+    local_wcs1 = wcs.local(posd)
+    local_wcs2 = wcs.local(posi)
+    assert local_wcs1 == local_wcs2
+
+    wposi = wcs.toWorld(posi)
+    posi_roundtrip = wcs.toImage(wposi)
+    print('posi_roundtrip = ',posi_roundtrip)
+    assert np.isclose(posi_roundtrip.x, posi.x)
+    assert np.isclose(posi_roundtrip.y, posi.y)
 
 
 if __name__ == "__main__":
