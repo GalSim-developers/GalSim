@@ -72,7 +72,7 @@ Changes from v2.1.4 to v2.1.5
 Bug Fixes
 ---------
 
-- Switched to yaml.safe_load to avoid PyYAML v5.0 warnings
-- Fixed some cases where numpy objected to subtracting floats from ints.
 - Fixed error in use of non-integer grid_spacing in PowerSpectrum (#1020)
 - Fixed FitsHeader to not unnecessarily read data of fits file. (#1024)
+- Switched to yaml.safe_load to avoid PyYAML v5.0 warnings (#1025)
+- Fixed some cases where numpy objected to subtracting floats from ints. (#1025)
