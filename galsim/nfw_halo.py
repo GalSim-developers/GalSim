@@ -221,7 +221,7 @@ class NFWHalo(object):
         """
         # convenience: call with single number
         if not isinstance(x, np.ndarray):
-            return self.__kappa(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
+            return self.__kappa(np.array([x], dtype=float), np.array([ks], dtype=float))[0]
         out = np.zeros_like(x, dtype=float)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
@@ -246,7 +246,7 @@ class NFWHalo(object):
         """
         # convenience: call with single number
         if not isinstance(x, np.ndarray):
-            return self.__gamma(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
+            return self.__gamma(np.array([x], dtype=float), np.array([ks], dtype=float))[0]
         out = np.zeros_like(x, dtype=float)
 
         mask = np.where(x > 0.01)[0]
