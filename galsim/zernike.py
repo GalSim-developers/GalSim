@@ -427,7 +427,7 @@ class Zernike(object):
     @param R_inner  Inner radius.  [default: 0.0]
     """
     def __init__(self, coef, R_outer=1.0, R_inner=0.0):
-        self.coef = np.asarray(coef)
+        self.coef = np.asarray(coef, dtype=float)
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 

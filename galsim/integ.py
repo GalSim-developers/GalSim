@@ -68,7 +68,6 @@ def midpt(fvals, x):
 
     @returns midpoint rule approximation of the integral.
     """
-    x = np.array(x)
     dx = [x[1]-x[0]]
     dx.extend(0.5*(x[2:]-x[0:-2]))
     dx.append(x[-1]-x[-2])

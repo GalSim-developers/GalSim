@@ -2297,6 +2297,35 @@ def test_coadd():
     np.testing.assert_almost_equal(mom.moments_centroid.x, 24.5, decimal=2)
     np.testing.assert_almost_equal(mom.moments_centroid.y, 24.5, decimal=2)
 
+def test_int_args():
+    """Test that integer arguments for various things work correctly.
+    """
+    # Some of these used to trigger
+    # TypeError: Cannot cast ufunc subtract output from dtype('float64') to dtype('int64')
+    #            with casting rule 'same_kind'
+    # This started with numpy v1.10.
+
+    test_tags = all_tags
+
+    dir = 'fits_files'
+
+    for tag in test_tags:
+        file_name, ref_list = references[tag]
+        wcs = galsim.FitsWCS(file_name, dir=dir)
+
+        posi = galsim.PositionI(5,6)
+        posd = galsim.PositionD(5,6)
+
+        local_wcs1 = wcs.local(posd)
+        local_wcs2 = wcs.local(posi)
+        assert local_wcs1 == local_wcs2
+
+        wposi = wcs.toWorld(posi)
+        posi_roundtrip = wcs.toImage(wposi)
+        print('posi_roundtrip = ',posi_roundtrip)
+        assert np.isclose(posi_roundtrip.x, posi.x)
+        assert np.isclose(posi_roundtrip.y, posi.y)
+
 
 if __name__ == "__main__":
     test_pixelscale()
@@ -2313,3 +2342,4 @@ if __name__ == "__main__":
     test_scamp()
     test_compateq()
     test_coadd()
+    test_int_args()

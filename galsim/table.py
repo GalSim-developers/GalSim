@@ -200,7 +200,7 @@ class LookupTable(object):
         if self.x_log:
             x = np.log(x)
 
-        x = np.asarray(x)
+        x = np.asarray(x, dtype=float)
         if x.shape == ():
             f = self._tab.interp(float(x))
         else:
@@ -341,7 +341,7 @@ class LookupTable(object):
             x = np.exp(np.linspace(np.log(x_min), np.log(x_max), npoints))
         else:
             x = np.linspace(x_min, x_max, npoints)
-        f = np.array([func(xx) for xx in x])
+        f = np.array([func(xx) for xx in x], dtype=float)
         return cls(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
 
     def __getstate__(self):
