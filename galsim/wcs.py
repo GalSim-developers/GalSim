@@ -839,8 +839,8 @@ class EuclideanWCS(BaseWCS):
         dx = 1
         dy = 1
 
-        xlist = np.array([ x0+dx, x0-dx, x0,    x0    ])
-        ylist = np.array([ y0,    y0,    y0+dy, y0-dy ])
+        xlist = np.array([ x0+dx, x0-dx, x0,    x0    ], dtype=float)
+        ylist = np.array([ y0,    y0,    y0+dy, y0-dy ], dtype=float)
         try :
             # Try using numpy arrays first, since it should be faster if it works.
             u = self._u(xlist,ylist,color)
@@ -1013,8 +1013,8 @@ class CelestialWCS(BaseWCS):
         dx = 1
         dy = 1
 
-        xlist = np.array([ x0, x0+dx, x0-dx, x0,    x0    ])
-        ylist = np.array([ y0, y0,    y0,    y0+dy, y0-dy ])
+        xlist = np.array([ x0, x0+dx, x0-dx, x0,    x0    ], dtype=float)
+        ylist = np.array([ y0, y0,    y0,    y0+dy, y0-dy ], dtype=float)
         try :
             # Try using numpy arrays first, since it should be faster if it works.
             ra, dec = self._radec(xlist,ylist,color)
@@ -1059,8 +1059,8 @@ class CelestialWCS(BaseWCS):
         except Exception:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
             rd = [ self._radec(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ]
-            ra = np.array([ radec[0] for radec in rd ])
-            dec = np.array([ radec[1] for radec in rd ])
+            ra = np.array([ radec[0] for radec in rd ], dtype=float)
+            dec = np.array([ radec[1] for radec in rd ], dtype=float)
         ra = np.reshape(ra, x.shape)
         dec = np.reshape(dec, x.shape)
 
@@ -1459,8 +1459,8 @@ class JacobianWCS(LocalWCS):
                 numpy.array( [[ dudx, dudy ],
                               [ dvdx, dvdy ]] )
         """
-        return np.array( [[ self._dudx, self._dudy ],
-                          [ self._dvdx, self._dvdy ]] )
+        return np.array([[ self._dudx, self._dudy ],
+                         [ self._dvdx, self._dvdy ]], dtype=float)
 
     def getDecomposition(self):
         """Get the equivalent expansion, shear, rotation and possible flip corresponding to

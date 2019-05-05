@@ -460,7 +460,7 @@ class PyAstWCS(CelestialWCS):
         # Need this to look like
         #    [ [ x1, x2, x3... ], [ y1, y2, y3... ] ]
         # if input is either scalar x,y or two arrays.
-        xy = np.array([np.atleast_1d(x), np.atleast_1d(y)])
+        xy = np.array([np.atleast_1d(x), np.atleast_1d(y)], dtype=float)
 
         ra, dec = self.wcsinfo.tran( xy )
         # PyAst returns ra, dec in radians, so we're good.
@@ -476,7 +476,7 @@ class PyAstWCS(CelestialWCS):
         return ra, dec
 
     def _xy(self, ra, dec, color=None):
-        rd = np.array([np.atleast_1d(ra), np.atleast_1d(dec)])
+        rd = np.array([np.atleast_1d(ra), np.atleast_1d(dec)], dtype=float)
         x, y = self.wcsinfo.tran( rd, False )
         return x[0], y[0]
 
@@ -635,7 +635,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         # Need this to look like
         #    [ x1, y1, x2, y2, ... ]
         # if input is either scalar x,y or two arrays.
-        xy = np.array([x, y]).transpose().ravel()
+        xy = np.array([x, y], dtype=float).transpose().ravel()
 
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
@@ -713,7 +713,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
     def _xy(self, ra, dec, color=None):
         import subprocess
-        rd = np.array([ra, dec])
+        rd = np.array([ra, dec], dtype=float)
         rd *= radians / degrees
         for digits in range(10,5,-1):
             rd_strs = [ str(z) for z in rd ]
@@ -1255,8 +1255,8 @@ class GSFitsWCS(CelestialWCS):
         # Most of the work for _radec.  But stop at (u,v).
 
         # Start with (u,v) = the image position
-        x = np.ascontiguousarray(x)
-        y = np.ascontiguousarray(y)
+        x = np.ascontiguousarray(x, dtype=float)
+        y = np.ascontiguousarray(y, dtype=float)
 
         x -= self.crpix[0]
         y -= self.crpix[1]
@@ -1350,7 +1350,7 @@ class GSFitsWCS(CelestialWCS):
         # We also need to keep track of the position along the way, so we have to repeat many
         # of the steps in _radec.
 
-        p1 = np.array( [ image_pos.x, image_pos.y ] )
+        p1 = np.array([image_pos.x, image_pos.y], dtype=float)
 
         # Start with unit jacobian
         jac = np.diag([1,1])
@@ -1543,8 +1543,8 @@ def TanWCS(affine, world_origin, units=arcsec):
     origin = affine.origin
     # The - signs are because the Fits standard is in terms of +u going east, rather than west
     # as we have defined.  So just switch the sign in the CD matrix.
-    cd = np.array( [ [ -dudx, -dudy ], [ dvdx, dvdy ] ] )
-    crpix = np.array( [ origin.x, origin.y ] )
+    cd = np.array([[ -dudx, -dudy ], [ dvdx, dvdy ]], dtype=float)
+    crpix = np.array([ origin.x, origin.y ], dtype=float)
 
     # We also need to absorb the affine world_origin back into crpix, since GSFits is expecting
     # crpix to be the location of the tangent point in image coordinates. i.e. where (u,v) = (0,0)

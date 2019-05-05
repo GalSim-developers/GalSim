@@ -278,8 +278,8 @@ def _convertPositions(pos, units, func):
     # The only other options allow pos[0], so if this is invalid, an exception
     # will be raised:
     elif isinstance(pos[0], Position):
-        pos = [ np.array([p.x for p in pos], dtype='float'),
-                np.array([p.y for p in pos], dtype='float') ]
+        pos = [ np.array([p.x for p in pos], dtype=float),
+                np.array([p.y for p in pos], dtype=float) ]
 
     # Now pos must be a tuple of length 2
     elif len(pos) != 2:
@@ -291,8 +291,8 @@ def _convertPositions(pos, units, func):
             pos = [ float(pos[0]), float(pos[1]) ]
         except TypeError:
             # Only other valid option is ( xlist , ylist )
-            pos = [ np.array(pos[0], dtype='float'),
-                    np.array(pos[1], dtype='float') ]
+            pos = [ np.array(pos[0], dtype=float),
+                    np.array(pos[1], dtype=float) ]
 
     # Check validity of units
     if isinstance(units, str):
@@ -393,8 +393,8 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
 
     split_fn = _lin_approx_split if fast_search else _exact_lin_approx_split
 
-    x = np.array(x)
-    f = np.array(f)
+    x = np.asarray(x, dtype=float)
+    f = np.asarray(f, dtype=float)
 
     # Check for valid inputs
     if len(x) != len(f):
@@ -491,8 +491,8 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
-    x = np.array(x)
-    f = np.array(f)
+    x = np.asarray(x, dtype=float)
+    f = np.asarray(f, dtype=float)
 
     # Check for valid inputs
     if len(x) != len(f):
@@ -598,8 +598,8 @@ def horner(x, coef, dtype=None):
         x = np.ascontiguousarray(x, dtype=float)
         coef = np.ascontiguousarray(coef, dtype=float)
     else:
-        x = np.array(x, copy=False)
-        coef = np.array(coef, copy=False)
+        x = np.array(x, copy=False, dtype=float)
+        coef = np.array(coef, copy=False, dtype=float)
     if len(coef.shape) != 1:
         raise GalSimValueError("coef must be 1-dimensional", coef)
     _horner(x, coef, result)
@@ -642,9 +642,9 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
         y = np.ascontiguousarray(y, dtype=float)
         coefs = np.ascontiguousarray(coefs, dtype=float)
     else:
-        x = np.array(x, copy=False)
-        y = np.array(y, copy=False)
-        coefs = np.array(coefs, copy=False)
+        x = np.array(x, copy=False, dtype=float)
+        y = np.array(y, copy=False, dtype=float)
+        coefs = np.array(coefs, copy=False, dtype=float)
 
     if len(x) != len(y):
         raise GalSimIncompatibleValuesError("x and y are not the same size",

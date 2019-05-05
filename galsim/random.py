@@ -795,8 +795,8 @@ class DistDeviate(BaseDeviate):
             if npoints is None: npoints = 256
             xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
             # Integrate over the range of x in case the function is doing something weird here.
-            pdf = [0] + [integ.int1d(function, xarray[i], xarray[i+1])
-                         for i in range(npoints - 1)]
+            pdf = [0.] + [integ.int1d(function, xarray[i], xarray[i+1])
+                          for i in range(npoints - 1)]
             pdf = np.array(pdf)
 
         # Check that the probability is nonnegative
