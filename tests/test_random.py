@@ -1683,6 +1683,40 @@ def test_ne():
     assert repr(d1) == repr(d2)
     assert d1 != d2
 
+@timer
+def test_int64():
+    # cf. #1009
+    # Check that various possible integer types work as seeds.
+
+    rng1 = galsim.BaseDeviate(int(123))
+    # cf. https://www.numpy.org/devdocs/user/basics.types.html
+    ivalues =[np.int8(123),  # Note this one requires i < 128
+              np.int16(123),
+              np.int32(123),
+              np.int64(123),
+              np.uint8(123),
+              np.uint16(123),
+              np.uint32(123),
+              np.uint64(123),
+              np.short(123),
+              np.ushort(123),
+              np.intc(123),
+              np.uintc(123),
+              np.intp(123),
+              np.uintp(123),
+              np.int_(123),
+              np.longlong(123),
+              np.ulonglong(123),
+              np.array(123).astype(np.int64)]
+
+    if sys.version_info < (3,):
+        ivalues.append(long(123))
+
+    for i in ivalues:
+        rng2 = galsim.BaseDeviate(i)
+        assert rng2 == rng1
+
+
 if __name__ == "__main__":
     test_uniform()
     test_gaussian()
@@ -1698,3 +1732,4 @@ if __name__ == "__main__":
     test_multiprocess()
     test_permute()
     test_ne()
+    test_int64()

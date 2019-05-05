@@ -2404,8 +2404,5 @@ if __name__ == "__main__":
     test_scamp()
     test_compateq()
     test_coadd()
-<<<<<<< HEAD
     test_lowercase()
-=======
     test_int_args()
->>>>>>> 83b074eeb... Cast inputs to float to avoid numpy 'same_kind' TypeError
