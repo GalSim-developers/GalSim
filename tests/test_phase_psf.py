@@ -1132,13 +1132,13 @@ def test_shared_memory():
         r0_500s.append(r0_500*weights[i]**(-3./5))
     rng2 = rng.duplicate()
 
-    if __name__ == "__main__":
-        if sys.version_info >= (3,4):
+    if sys.version_info >= (3,4):
+        if __name__ == "__main__":
             ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
         else:
-            ctxs = [None]
+            ctxs = [None, mp.get_context("fork")]
     else:
-        ctxs = [None]
+        ctxs = [None]  # Only supported ctx on py27
 
     for ctx in ctxs:
         atmPar = galsim.Atmosphere(
