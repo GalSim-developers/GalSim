@@ -835,9 +835,6 @@ class PhaseScreenList(object):
         @param **kwargs  Keyword arguments to forward to screen.instantiate().
         """
         if pool is not None:
-            assert_str = "instantiating PhaseScreenList with pool requires python version >= 3.4"
-            assert sys.version_info >= (3,4), assert_str
-
             results = []
             for layer in self:
                 try:
