@@ -261,57 +261,56 @@ class AtmosphericScreen(object):
         # Use shared memory for screens.  Allocate it here; fill it in on demand.
         # Shared memory implementation depends on python version.
         if sys.version_info >= (3,4):
-            global _GSScreenShare
             if isinstance(mp_context, multiprocessing.context.BaseContext):
                 ctx = mp_context
             else:
                 ctx = multiprocessing.get_context(mp_context)
-            self._objDict = {
-                'f':ctx.RawArray('d', (self.npix+1)*(self.npix+1)),
-                'x':ctx.RawArray('d', self.npix+1),
-                'y':ctx.RawArray('d', self.npix+1),
-                'kmin':ctx.RawValue('d', -1.0),
-                'kmax':ctx.RawValue('d', -1.0),
-                'x0':ctx.RawValue('d', 0.0),
-                'y0':ctx.RawValue('d', 0.0),
-                'xperiod':ctx.RawValue('d', 0.0),
-                'yperiod':ctx.RawValue('d', 0.0),
-                'instantiated':ctx.RawValue('b', False),
-                'refcount':ctx.RawValue('i', 1),
-                'lock':ctx.Lock()
-            }
-            # A unique id for this screen, created in the parent process, that can be used to find the
-            # correct shared memory object in child processes.
-            self._shareKey = id(self)
-            _GSScreenShare[self._shareKey] = self._objDict
+            RawArray = ctx.RawArray
+            RawValue = ctx.RawValue
+            Lock = ctx.Lock
         else:
-            self._kmin = None
-            self._kmax = None
-            self._instantiated = False
+            from multiprocessing.sharedctypes import RawArray, RawValue
+            from multiprocessing import Lock
+        global _GSScreenShare
+        self._objDict = {
+            'f':RawArray('d', (self.npix+1)*(self.npix+1)),
+            'x':RawArray('d', self.npix+1),
+            'y':RawArray('d', self.npix+1),
+            'kmin':RawValue('d', -1.0),
+            'kmax':RawValue('d', -1.0),
+            'x0':RawValue('d', 0.0),
+            'y0':RawValue('d', 0.0),
+            'xperiod':RawValue('d', 0.0),
+            'yperiod':RawValue('d', 0.0),
+            'instantiated':RawValue('b', False),
+            'refcount':RawValue('i', 1),
+            'lock':Lock()
+        }
+        # A unique id for this screen, created in the parent process, that can be used to find the
+        # correct shared memory object in child processes.
+        self._shareKey = id(self)
+        _GSScreenShare[self._shareKey] = self._objDict
 
     def __setstate__(self, d):
         self.__dict__.update(d)
-        if sys.version_info >= (3,4):
-            self._objDict = _GSScreenShare[self._shareKey]
-            with self._objDict['lock']:
-                self._objDict['refcount'].value += 1
+        self._objDict = _GSScreenShare[self._shareKey]
+        with self._objDict['lock']:
+            self._objDict['refcount'].value += 1
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        if sys.version_info >= (3,4):
-            d.pop('_objDict')
+        d.pop('_objDict')
         return d
 
     def __del__(self):
-        if sys.version_info >= (3,4):
-            if not hasattr(self, '_objDict'):  # for if __init__ raised exception
-                return
+        if not hasattr(self, '_objDict'):  # for if __init__ raised exception
+            return
 
-            with self._objDict['lock']:
-                self._objDict['refcount'].value -= 1
-            with self._objDict['lock']:
-                if self._objDict['refcount'].value == 0:
-                    del _GSScreenShare[self._shareKey]
+        with self._objDict['lock']:
+            self._objDict['refcount'].value -= 1
+        with self._objDict['lock']:
+            if self._objDict['refcount'].value == 0:
+                del _GSScreenShare[self._shareKey]
 
     @property
     def altitude(self):
@@ -387,29 +386,19 @@ class AtmosphericScreen(object):
                       If `None`, then don't perform a check.  Also, don't perform a check if
                       self.suppress_warning is True.
         """
-        if sys.version_info >= (3,4):
-            if not self._objDict['instantiated'].value:
-                with self._objDict['lock']:
-                    # Check that another process didn't finish instantiating
-                    # while this process was waiting for the lock
-                    # Since this is a race, both branches are only covered probabilistically
-                    if not self._objDict['instantiated'].value:  # pragma: no branch
-                        self._objDict['kmin'].value = kmin
-                        self._objDict['kmax'].value = kmax
-                        self._init_psi()
-                        self._reset()
-                        if self.reversible:
-                            del self._psi, self._screen
-                        self._objDict['instantiated'].value = True
-        else:
-            if not self._instantiated:
-                self._kmin = kmin
-                self._kmax = kmax
-                self._init_psi()
-                self._reset()
-                # Free some RAM for frozen-flow screens
-                if self.reversible:
-                    del self._psi, self._screen
+        if not self._objDict['instantiated'].value:
+            with self._objDict['lock']:
+                # Check that another process didn't finish instantiating
+                # while this process was waiting for the lock
+                # Since this is a race, both branches are only covered probabilistically
+                if not self._objDict['instantiated'].value:  # pragma: no branch
+                    self._objDict['kmin'].value = kmin
+                    self._objDict['kmax'].value = kmax
+                    self._init_psi()
+                    self._reset()
+                    if self.reversible:
+                        del self._psi, self._screen
+                    self._objDict['instantiated'].value = True
 
         if check is not None and not self._suppress_warning:
             if check == 'FFT':
@@ -423,17 +412,11 @@ class AtmosphericScreen(object):
 
     @property
     def kmin(self):
-        if sys.version_info >= (3,4):
-            return self._objDict['kmin'].value
-        else:
-            return self._kmin
+        return self._objDict['kmin'].value
 
     @property
     def kmax(self):
-        if sys.version_info >= (3,4):
-            return self._objDict['kmax'].value
-        else:
-            return self._kmax
+        return self._objDict['kmax'].value
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
@@ -488,8 +471,7 @@ class AtmosphericScreen(object):
         self._objDict['y0'].value = tab2d.y0
         self._objDict['xperiod'].value = tab2d.xperiod
         self._objDict['yperiod'].value = tab2d.yperiod
-        if hasattr(self, '_tab2d'):
-            del self._tab2d
+        self.__dict__.pop('_tab2d', None)
 
     @lazy_property
     def _tab2d(self):
@@ -525,10 +507,7 @@ class AtmosphericScreen(object):
                     self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
                 # Make a table, copy the x,y,f arrays to shared memory, make a new table that
                 # points to those locations.
-                if sys.version_info >= (3,4):
-                    self._setShare()
-                else:
-                    self._tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+                self._setShare()
         self._time = float(t)
 
     def _reset(self):
@@ -537,15 +516,9 @@ class AtmosphericScreen(object):
         self._time = 0.0
 
         # Only need to reset/create tab2d if not frozen or doesn't already exist
-        if sys.version_info >= (3,4):
-            if not self.reversible or not self._objDict['instantiated'].value:
-                self._screen = self._random_screen()
-                self._setShare()
-        else:
-            if not self.reversible or not self._instantiated:
-                self._screen = self._random_screen()
-                self._tab2d = LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
-                self._instantiated = True
+        if not self.reversible or not self._objDict['instantiated'].value:
+            self._screen = self._random_screen()
+            self._setShare()
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.

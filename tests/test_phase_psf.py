@@ -1092,17 +1092,13 @@ def test_withGSP():
     assert optPSF.drawImage().bounds != optPSF2.drawImage().bounds
 
 
-# Need a non-local picklable function for next test...
-class DummyWork(object):
-    @staticmethod
-    def work(i, atm):
-        rng = galsim.UniformDeviate(i+10)
-        theta = (rng()*galsim.degrees, rng()*galsim.degrees)
-        psf = atm.makePSF(exptime=1.0, diam=1.1, lam=1000.0, theta=theta)
-        return psf.drawImage(nx=32, ny=32, scale=0.2, n_photons=1000, method='phot', rng=rng)
+def dummyWork(i, atm):
+    rng = galsim.UniformDeviate(i+10)
+    theta = (rng()*galsim.degrees, rng()*galsim.degrees)
+    psf = atm.makePSF(exptime=1.0, diam=1.1, lam=1000.0, theta=theta)
+    return psf.drawImage(nx=32, ny=32, scale=0.2, n_photons=1000, method='phot', rng=rng)
 
 
-@unittest.skipIf(sys.version_info < (3,4), 'Requires python version >= 3.4')
 @timer
 def test_shared_memory():
     """Test that shared memory hooks to AtmosphericScreen work.
@@ -1137,7 +1133,10 @@ def test_shared_memory():
     rng2 = rng.duplicate()
 
     if __name__ == "__main__":
-        ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
+        if sys.version_info >= (3,4):
+            ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
+        else:
+            ctxs = [None]
     else:
         ctxs = [None]
 
@@ -1159,31 +1158,36 @@ def test_shared_memory():
         psf = atmPar.makePSF(diam=1.1, lam=1000.0)
         kmax = psf.screen_kmax
 
-        workObj = DummyWork()
-
-        if ctx in (None, "forkserver"):
-            ctx = mp.get_context(ctx)
-        with ctx.Pool(
+        if sys.version_info >= (3,4):
+            if ctx in (None, "forkserver"):
+                Pool = mp.get_context(ctx).Pool
+            else:
+                Pool = ctx.Pool
+        else:
+            from multiprocessing import Pool
+        # Block below would be prettier using Pool context manager, but not available in py2.7
+        pool = Pool(
             None,
             initializer=galsim.phase_screens.initWorker,
             initargs=galsim.phase_screens.initWorkerArgs()
-        ) as pool:
-            # Instantiate using the pool:
-            atmPar.instantiate(pool=pool, kmax=kmax)
+        )
+        # Instantiate using the pool:
+        atmPar.instantiate(pool=pool, kmax=kmax)
 
-            resultsParallel = []
-            for i in range(10):
-                resultsParallel.append(pool.apply_async(workObj.work, (i, atmPar)))
-            for r in resultsParallel:
-                r.wait()
+        resultsParallel = []
+        for i in range(10):
+            resultsParallel.append(pool.apply_async(dummyWork, (i, atmPar)))
+        for r in resultsParallel:
+            r.wait()
         resultsParallel = [r.get() for r in resultsParallel]
+        pool.close()
 
         # Serial comparison, also reinstantiate the atm here without using the pool
         atmSer.instantiate(pool=None, kmax=kmax)
 
         resultsSerial = []
         for i in range(10):
-            resultsSerial.append(workObj.work(i, atmSer))
+            resultsSerial.append(dummyWork(i, atmSer))
 
         assert resultsSerial == resultsParallel
 
@@ -1197,16 +1201,17 @@ def test_shared_memory():
                                 mp_context=ctx)
         psf = atm.makePSF(diam=1.1, lam=1000.0)
         kmax = psf.screen_kmax
-        with ctx.Pool(
+        pool = Pool(
             None,
             initializer=galsim.phase_screens.initWorker,
             initargs=galsim.phase_screens.initWorkerArgs()
-        ) as pool:
-            results = []
-            for _ in range(10):
-                results.append(pool.apply_async(atm[0].instantiate, kwds={'kmax':kmax}))
-            for r in results:
-                r.wait()
+        )
+        results = []
+        for _ in range(10):
+            results.append(pool.apply_async(atm[0].instantiate, kwds={'kmax':kmax}))
+        for r in results:
+            r.wait()
+        pool.close()
 
 
 if __name__ == "__main__":
