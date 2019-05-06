@@ -1710,7 +1710,7 @@ def test_int64():
               np.array(123).astype(np.int64)]
 
     if sys.version_info < (3,):
-        ivalues.append(long(1234))
+        ivalues.append(long(123))
 
     for i in ivalues:
         rng2 = galsim.BaseDeviate(i)
