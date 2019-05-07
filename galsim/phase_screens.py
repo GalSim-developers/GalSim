@@ -58,6 +58,10 @@ def initWorkerArgs():
 
     See AtmosphericScreen docstring for more information.
     """
+    for v in _GSScreenShare.values():
+        if v['alpha'].value != 1.0:
+            raise GalSimNotImplementedError(
+                "Shared memory use is only supported for frozen-flow screens")
     return (_GSScreenShare,)
 
 
@@ -276,6 +280,7 @@ class AtmosphericScreen(object):
             'f':RawArray('d', (self.npix+1)*(self.npix+1)),
             'x':RawArray('d', self.npix+1),
             'y':RawArray('d', self.npix+1),
+            'alpha':RawValue('d', alpha),
             'kmin':RawValue('d', -1.0),
             'kmax':RawValue('d', -1.0),
             'x0':RawValue('d', 0.0),
