@@ -421,15 +421,6 @@ def test_phase_psf_batch():
             img1, img2,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
-    if sys.version_info >= (3,4):
-        import multiprocessing as mp
-        ctx = mp.get_context("spawn")
-        with assert_raises(galsim.GalSimNotImplementedError):
-            atm = galsim.Atmosphere(
-                screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng,
-                mp_context=ctx
-            )
-
 
 @timer
 def test_opt_indiv_aberrations():
@@ -1212,6 +1203,29 @@ def test_shared_memory():
         for r in results:
             r.wait()
         pool.close()
+
+
+    if sys.version_info >= (3,4):
+        ctx = mp.get_context("spawn")
+        with assert_raises(galsim.GalSimNotImplementedError):
+            atm = galsim.Atmosphere(
+                screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng,
+                mp_context=ctx
+            )
+
+    # Atm ctor can't catch alpha != 1.0 error when trying to use shared memory with mp_context=None,
+    # but initWorkerArgs can.
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng)
+    if sys.version_info >= (3,4):
+        Pool = mp.get_context(None).Pool
+    else:
+        from multiprocessing import Pool
+    with assert_raises(galsim.GalSimNotImplementedError):
+        pool = Pool(
+            None,
+            initializer=galsim.phase_screens.initWorker,
+            initargs=galsim.phase_screens.initWorkerArgs()
+        )
 
 
 if __name__ == "__main__":
