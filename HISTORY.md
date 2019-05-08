@@ -33,6 +33,12 @@ Bug Fixes
 - Fixed a seg fault bug when PoissonDeviate is given mean=0. (#996)
 - Fixed the galsim executable to work correctly when installed by SCons.
 - Fixed Convolve and Sum sometimes making unnecessary copies.
+- Fixed error when using non-int integer types as seed of BaseDeviate (#1009)
+- Fixed error in use of non-integer grid_spacing in PowerSpectrum (#1020)
+- Fixed FitsHeader to not unnecessarily read data of fits file. (#1024)
+- Switched to yaml.safe_load to avoid PyYAML v5.0 warnings (#1025)
+- Fixed cases where numpy objected to subtracting floats from ints. (#1025)
+
 
 v2.0
 ====
