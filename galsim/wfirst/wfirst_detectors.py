@@ -27,8 +27,7 @@ import galsim.wfirst
 import numpy as np
 import os
 
-# from . import exptime as default_exptime
-default_exptime = galsim.wfirst.exptime
+from . import exptime as default_exptime
 
 def applyNonlinearity(img):
     """
