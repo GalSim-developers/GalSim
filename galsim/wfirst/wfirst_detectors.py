@@ -27,8 +27,8 @@ import galsim.wfirst
 import numpy as np
 import os
 
-from . import exptime as default_exptime
-
+# from . import exptime as default_exptime
+default_exptime = galsim.wfirst.exptime
 
 def applyNonlinearity(img):
     """
@@ -85,7 +85,7 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
 
 def applyPersistence(img, prev_exposures, method='fermi'):
     """
-    This method applies two different persistence models: 'linear' and 'fermi'.
+    This method applies either of the two different persistence models: 'linear' and 'fermi'.
     Slew between pointings and consecutive resets after illumination are not considered.
 
     'linear' persistence model:
@@ -98,17 +98,17 @@ def applyPersistence(img, prev_exposures, method='fermi'):
 
     'fermi' persistence model:
     Applies the persistence effect to the Image instance by adding the accumullated persistence dark
-    current of previous exposures (up to galsim.wfirst.max_exps) supplied as the
-    'prev_exposures' argument. Unlike galsim.Image.applyPersistence, this one does not use constant
-    coeffiients but a fermi model (galsim.wfirst.fermi_linear) plus a linear tail below half of
-    saturation.
+    current of previous exposures supplied as the 'prev_exposures' argument.
+    Unlike galsim.Image.applyPersistence, this one does not use constant coeffiients but a fermi
+    model (galsim.wfirst.fermi_linear) plus a linear tail below half of saturation.
 
     @param img               The Image to be transformed.
-    @param prev_exposures    List of up to {ncoeff} or {max_exps} Image instances in the order of
-                             exposures, with the recent exposure being the first element
+    @param prev_exposures    List of Image instances in the order of exposures, with the recent
+                             exposure being the first element. In the linear model, the exposures
+                             exceeding the limit ({ncoeff} exposures) will be ignored.
     @param method            The persistence model ('linear' or 'fermi') to be applied.
                              [default: 'fermi']
-    """.format(ncoeff=len(galsim.wfirst.persistence_coefficients), max_exps=galsim.wfirst.max_exps)
+    """.format(ncoeff=len(galsim.wfirst.persistence_coefficients))
 
     if not hasattr(prev_exposures,'__iter__'):
         raise TypeError("In wfirst.applyPersistence, prev_exposures must be a list of Image instances")
@@ -120,16 +120,43 @@ def applyPersistence(img, prev_exposures, method='fermi'):
 
     elif method == 'fermi':
 
-        n_exp = min(len(prev_exposures), galsim.wfirst.max_exps)
+        n_exp = len(prev_exposures)
         for i in range(n_exp):
-            ### The length of time where slews and pixel resets happen should be specified.
+            ### The length of time where slews and pixel resets takes should be specified.
             ### Now it is simply assumed to be 0 until we get more information.
-            img += galsim.wfirst.fermi_linear(prev_exposures[i].array)/(1.+ 2*i)
+            img += fermi_linear(prev_exposures[i].array)/(1.+ 2*i)
 
     else:
-        raise ValueError("applyPersistence only accepts 'linear' or 'fermi' methods.")
+        raise galsim.GalSimValueError("applyPersistence only accepts 'linear' or 'fermi' methods, got", method)
 
-def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime):
+def fermi_linear(x,t=galsim.wfirst.exptime/2.):
+    """
+    The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
+    For influence level below the half well, the persistence is linear in x.
+
+    @param x        Influence level of pixels in unit of electron counts.
+    @param t        Time in seconds after the illumination. Since the persistence signal is
+                    linear in time, we take the midtime of the exposure.
+    @returns        The persistence signal of the input exposure x.
+
+    """
+
+    x = np.asarray(x)
+    y = np.zeros_like(x)
+
+    A, x0, dx, a, r, half_well = galsim.wfirst.persistence_fermi_parameters
+    ps    = A* (    x    /x0)**a * (t/1000.)**(-r)/(np.exp( -(x-x0)/dx) +1.)
+    ps_hf = A* (half_well/x0)**a * (t/1000.)**(-r)/(np.exp( -(x-x0)/dx) +1.)
+
+    mask1 = x > half_well
+    mask2 = (x > 0.) & (x <= half_well)
+
+    y[mask1] += ps[mask1]
+    y[mask2] += ps_hf[mask2]
+
+    return y*galsim.wfirst.exptime #persistence signal = persistence current * exptime
+
+def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime):
     """
     This utility applies all sources of noise and detector effects for WFIRST that are implemented
     in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
@@ -173,18 +200,19 @@ def allDetectorEffects(img, prev_exposures=[], rng=None, exptime=default_exptime
     dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(rng, dark_current))
     img.addNoise(dark_noise)
 
+    # Persistence (use WFIRST H4RG-lo fermi model)
+    prev_exposures = list(prev_exposures)
+    applyPersistence(img, prev_exposures, method='fermi')
+
     # Nonlinearity (use WFIRST routine).
     applyNonlinearity(img)
 
     # IPC (use WFIRST routine).
     applyIPC(img)
 
-    # Persistence (use WFIRST H4RG-lo fermi model)
-    prev_exposures = list(prev_exposures)
-    applyPersistence(img, prev_exposures, method='fermi')
-
-    # Update the 'prev_exposures' queue
-    prev_exposures = [img.copy()] + prev_exposures[:galsim.wfirst.max_exps-1]
+    # Update the 'prev_exposures' queue, and limit the number of exps to 8.
+    max_exps = 8
+    prev_exposures = [img.copy()] + prev_exposures[:max_exps-1]
 
     # Read noise.
     read_noise = galsim.GaussianNoise(rng, sigma=galsim.wfirst.read_noise)

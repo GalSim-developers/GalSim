@@ -109,8 +109,6 @@ Currently, the module includes the following numbers, which were updated as of W
 
     persistence_fermi_params - The parameters in the fermi persistence model.
 
-    max_exps - The number of previous exposures considered in the fermi persistence model.
-
     n_sca - The number of SCAs in the focal plane.
 
     n_pix_tot - Each SCA has n_pix_tot x n_pix_tot pixels.
@@ -241,7 +239,6 @@ persistence_coefficients = np.array([0.045707683,0.014959818,0.009115737,0.00656
 # parameters in the fermi model = [ A, x0, dx, a, r, half_well]
 # The following parameters are for H4RG-lo, the conservative model for low x.
 persistence_fermi_parameters = np.array([0.017, 60000., 50000., 0.045, 1., 50000.])
-max_exps = 8
 
 n_sca = 18
 n_pix_tot = 4096
@@ -278,23 +275,3 @@ def _parse_SCAs(SCAs):
     else:
         SCAs = all_SCAs
     return SCAs
-
-def fermi_linear(x,t=exptime/2.):
-    """
-    The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
-    For influence level below the half well, the persistence is linear in x.
-    """
-
-    x = np.asarray(x)
-    y = np.zeros(x.shape)
-
-    para = persistence_fermi_parameters
-    ps    = para[0]* (   x   /para[1])**para[3] * (t/1000.)**(-para[4])/(np.exp( -(x-para[1])/para[2]) +1.)
-    ps_hf = para[0]* (para[5]/para[1])**para[3] * (t/1000.)**(-para[4])/(np.exp( -(x-para[1])/para[2]) +1.)
-
-    y += (x > para[5])*ps
-    y += ((x>0.) & (x <= para[5]))*ps_hf
-
-    ##### convert NaN to 0 (in cases where unphysical illumications x<0 happen)
-    y[np.isnan(y)] = 0
-    return y

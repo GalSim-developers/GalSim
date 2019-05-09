@@ -254,7 +254,7 @@ def test_wfirst_wcs():
 
                 delta_arcsec = test_fpa_pos.distanceTo(world_pos) / galsim.arcsec
                 assert delta_arcsec<0.5, "could not round-trip from FPA to SCA to FPA center"
- 
+
     # There were few-arcsec offsets in our WCS, so allow some fraction of failures.
     print('n_fail = ',n_fail)
     assert n_fail < 0.2*n_test, 'Failed in SCA-matching against reference: %d %d'%(n_fail,n_test)
@@ -536,15 +536,23 @@ def test_wfirst_detectors():
     im_list = [im0_1,im0_2]*4
 
     im_1.applyPersistence(im_list,galsim.wfirst.persistence_coefficients)
-    galsim.wfirst.applyPersistence(im_2, im_list)
+    galsim.wfirst.applyPersistence(im_2, im_list, method='lnear') #check the linear method
     assert im_2.scale == im_1.scale
     assert im_2.wcs == im_1.wcs
     assert im_2.dtype == im_1.dtype
     assert im_2.bounds == im_1.bounds
-    #np.testing.assert_array_equal(
-    #    im_2.array, im_1.array,
-    #    err_msg='Persistence results depend on function used.')
+    np.testing.assert_array_equal(
+       im_2.array, im_1.array,
+       err_msg='Persistence results depend on function used.')
+
+    im_unit = galsim.Image(np.ones((2,2)), copy=True)
+    im_f = im_unit*0.0
+    im_f_list = [im_unit*1.E3, im_unit*1.E5]
+    galsim.wfirst.applyPersistence(im_f, im_f_list, method='fermi') #check fermi method
+    assert np.allclose( im_f.array, im_unit.array*15.928, atol=1.E-3 ), 'Error in Fermi persistence model'
+
     assert_raises(TypeError, galsim.wfirst.applyPersistence, im_2, im0)
+    assert_raises(galsim.GalSimValueError, galsim.wfirst.applyPersistence, im_2, im_list, method='wrong method')
 
     # Then we do IPC:
     im_1 = im.copy()
