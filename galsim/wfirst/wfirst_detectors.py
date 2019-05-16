@@ -128,7 +128,7 @@ def applyPersistence(img, prev_exposures, method='fermi'):
     else:
         raise galsim.GalSimValueError("applyPersistence only accepts 'linear' or 'fermi' methods, got", method)
 
-def fermi_linear(x,t=galsim.wfirst.exptime/2.):
+def fermi_linear(x, t=default_exptime/2):
     """
     The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
     For influence level below the half well, the persistence is linear in x.
@@ -188,11 +188,11 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     poisson_noise = galsim.PoissonNoise(rng)
     img.addNoise(poisson_noise)
 
-    # Quantize: have an integer number of photons in every pixel after inclusion of sky noise.
-    img.quantize()
-
     # Reciprocity failure (use WFIRST routine, with the supplied exposure time).
     addReciprocityFailure(img, exptime=exptime)
+
+    # Quantize.
+    img.quantize()
 
     # Dark current (use exposure time).
     dark_current = galsim.wfirst.dark_current*exptime
@@ -222,3 +222,4 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     img.quantize()
 
     return prev_exposures
+                                                                               
