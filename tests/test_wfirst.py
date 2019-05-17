@@ -549,6 +549,7 @@ def test_wfirst_detectors():
     im_f = im_unit*0.0
     im_f_list = [im_unit*1.E3, im_unit*1.E5]
     galsim.wfirst.applyPersistence(im_f, im_f_list, method='fermi') #check fermi method
+    #Check the functionality of the fermi method by comparing with pre-calculated values.
     assert np.allclose( im_f.array, np.ones((2,2))*15.928, rtol=1.E-05 ), 'Error in Fermi persistence model'
 
     assert_raises(TypeError, galsim.wfirst.applyPersistence, im_2, im0)
@@ -569,14 +570,12 @@ def test_wfirst_detectors():
 
     # Finally, just check that this runs.
     # (Accuracy of component functionality is all tested elsewhere.)
-    npersist = len(galsim.wfirst.persistence_coefficients)
-    print('ncoeff for persistence: ', npersist)
-    ntest = npersist + 3  # Just need a few more to test that we keep npersist.
+    ntest = 10  # number of exposures for this test
     past_images = []
     for i in range(ntest):
         im = obj.drawImage(scale=galsim.wfirst.pixel_scale)
         past_images = galsim.wfirst.allDetectorEffects(im, past_images, rng=rng)
-    assert len(past_images) == npersist
+    assert len(past_images) == ntest
 
 
 @timer
