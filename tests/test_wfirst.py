@@ -536,7 +536,7 @@ def test_wfirst_detectors():
     im_list = [im0_1,im0_2]*4
 
     im_1.applyPersistence(im_list,galsim.wfirst.persistence_coefficients)
-    galsim.wfirst.applyPersistence(im_2, im_list, method='lnear') #check the linear method
+    galsim.wfirst.applyPersistence(im_2, im_list, method='linear') #check the linear method
     assert im_2.scale == im_1.scale
     assert im_2.wcs == im_1.wcs
     assert im_2.dtype == im_1.dtype
