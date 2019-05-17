@@ -221,5 +221,4 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     # Quantize.
     img.quantize()
 
-    return prev_exposures
-                                                                               
+    return prev_exposures 
