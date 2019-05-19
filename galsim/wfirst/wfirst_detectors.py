@@ -96,10 +96,11 @@ def applyPersistence(img, prev_exposures, method='fermi'):
     ignored.
 
     'fermi' persistence model:
-    Applies the persistence effect to the Image instance by adding the accumullated persistence dark
+    Applies the persistence effect to the Image instance by adding the accumulated persistence dark
     current of previous exposures supplied as the 'prev_exposures' argument.
-    Unlike galsim.Image.applyPersistence, this one does not use constant coeffiients but a fermi
+    Unlike galsim.Image.applyPersistence, this one does not use constant coefficients but a fermi
     model plus a linear tail below half of saturation.
+    See http://www.stsci.edu/hst/wfc3/ins_performance/persistence/ for more info about the fermi model.
 
     @param img               The Image to be transformed.
     @param prev_exposures    List of Image instances in the order of exposures, with the recent
@@ -133,7 +134,7 @@ def fermi_linear(x, t=default_exptime/2):
     The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
     For influence level below the half well, the persistence is linear in x.
 
-    @param x        Array of pxiel influence level in unit of electron counts.
+    @param x        Array of pxiel influence levels in unit of electron counts.
     @param t        Time (in seconds) after the illumination of the exposure. Since the persistence signal
                     is linear in time, we take the midtime of exposures to compute the average persistence.
                     [default: galsim.wfirst.exptime/2.]
@@ -146,13 +147,13 @@ def fermi_linear(x, t=default_exptime/2):
 
     A, x0, dx, a, r, half_well = galsim.wfirst.persistence_fermi_parameters
     ps    = A* (    x    /x0)**a * (t/1000.)**(-r)/(np.exp( -(x-x0)/dx) +1.)
-    ps_hf = A* (half_well/x0)**a * (t/1000.)**(-r)/(np.exp( -(x-x0)/dx) +1.)
+    ps_hf = A* (half_well/x0)**a * (t/1000.)**(-r)/(np.exp( -(half_well-x0)/dx) +1.)
 
     mask1 = x > half_well
     mask2 = (x > 0.) & (x <= half_well)
 
     y[mask1] += ps[mask1]
-    y[mask2] += ps_hf[mask2]
+    y[mask2] += ps_hf[mask2]*x[mask2]/half_well
 
     return y*galsim.wfirst.exptime #persistence signal = avg persistence current * exptime
 
@@ -221,4 +222,4 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     # Quantize.
     img.quantize()
 
-    return prev_exposures 
+    return prev_exposures

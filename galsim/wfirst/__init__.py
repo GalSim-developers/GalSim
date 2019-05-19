@@ -237,7 +237,8 @@ ipc_kernel = galsim.Image(ipc_kernel)
 persistence_coefficients = np.array([0.045707683,0.014959818,0.009115737,0.00656769,0.005135571,0.004217028,0.003577534,0.003106601])/100.
 
 # parameters in the fermi model = [ A, x0, dx, a, r, half_well]
-# The following parameters are for H4RG-lo, the conservative model for low x.
+# The following parameters are for H4RG-lo, the conservative model for low influence level x.
+# The info and implementation can be found in wfirst_detectors.applyPersistence() and wfirst_detectors.fermi_linear().
 persistence_fermi_parameters = np.array([0.017, 60000., 50000., 0.045, 1., 50000.])
 
 n_sca = 18
