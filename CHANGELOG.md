@@ -18,11 +18,7 @@ New Features
   pupil plane image for shorter- and longer-wavelength bands.  (#919)
 - Enabled Zernikes up to 22 (previously 11) in WFIRST PSFs, and added dependence on position
   within the SCA. (#919)
-- Added spline as LookupTable2D interpolant. (#982)
-- Added ability to use a galsim.Interpolant for LookupTable and LookupTable2D
-  interpolants. (#982)
-- Added option for faster grid interpolation of LookupTable2D. (#982)
-- Added wfirst fermi persistence model. (#992) 
+- Added wfirst fermi persistence model. (#992)
 
 Bug Fixes
 ---------

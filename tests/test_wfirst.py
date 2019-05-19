@@ -550,7 +550,7 @@ def test_wfirst_detectors():
     im_f_list = [im_unit*1.E3, im_unit*1.E5]
     galsim.wfirst.applyPersistence(im_f, im_f_list, method='fermi') #check fermi method
     #Check the functionality of the fermi method by comparing with pre-calculated values.
-    assert np.allclose( im_f.array, np.ones((2,2))*15.928, rtol=1.E-05 ), 'Error in Fermi persistence model'
+    assert np.allclose( im_f.array, np.ones((2,2))*8.30515, rtol=1.E-06 ), 'Error in Fermi persistence model'
 
     assert_raises(TypeError, galsim.wfirst.applyPersistence, im_2, im0)
     assert_raises(galsim.GalSimValueError, galsim.wfirst.applyPersistence, im_2, im_list, method='wrong method')
