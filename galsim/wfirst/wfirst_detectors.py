@@ -153,7 +153,7 @@ def fermi_linear(x, t=default_exptime/2):
     mask2 = (x > 0.) & (x <= half_well)
 
     y[mask1] += ps[mask1]
-    y[mask2] += ps_hf[mask2]*x[mask2]/half_well
+    y[mask2] += ps_hf*x[mask2]/half_well
 
     return y*galsim.wfirst.exptime #persistence signal = avg persistence current * exptime
 
