@@ -547,7 +547,7 @@ def test_wfirst_detectors():
 
     im_unit = galsim.Image(np.ones((2,2)), copy=True)
     im_f = im_unit*0.0
-    im_f1 = im_init*0.0
+    im_f1 = im_unit*0.0
     illuminatin_list = [1.E3, 1.E4, 4.E4, 4.99E4, 5.01E4, 1.E5, 1.0E6]
     im_f_list = [x*im_unit for x in illuminatin_list]
 
