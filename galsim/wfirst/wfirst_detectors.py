@@ -122,14 +122,15 @@ def applyPersistence(img, prev_exposures, method='fermi'):
 
         n_exp = len(prev_exposures)
         for i in range(n_exp):
-            ### The length of time where slews and pixel resets takes should be specified.
-            ### Now it is simply assumed to be 0 until we get more information.
-            img += fermi_linear(prev_exposures[i].array)/(1.+ 2*i)
+            ### The slew/settle time and the reset time should be specified.
+            ### Now we simply assume them as 0 and take the persitence current at the mid-time of
+            ### exposures as the average persistence until we get more information about the observation timeline.
+            img.array += fermi_linear(prev_exposures[i].array, 0.5*(1+i)*galsim.wfirst.exptime)*galsim.wfirst.exptime
 
     else:
         raise galsim.GalSimValueError("applyPersistence only accepts 'linear' or 'fermi' methods, got", method)
 
-def fermi_linear(x, t=default_exptime/2):
+def fermi_linear(x, t):
     """
     The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
     For influence level below the half well, the persistence is linear in x.
@@ -137,7 +138,6 @@ def fermi_linear(x, t=default_exptime/2):
     @param x        Array of pxiel influence levels in unit of electron counts.
     @param t        Time (in seconds) after the illumination of the exposure. Since the persistence signal
                     is linear in time, we take the midtime of exposures to compute the average persistence.
-                    [default: galsim.wfirst.exptime/2.]
     @returns        The persistence signal of the input exposure x.
 
     """
@@ -155,7 +155,7 @@ def fermi_linear(x, t=default_exptime/2):
     y[mask1] += ps[mask1]
     y[mask2] += ps_hf*x[mask2]/half_well
 
-    return y*galsim.wfirst.exptime #persistence signal = avg persistence current * exptime
+    return y
 
 def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime):
     """
@@ -189,11 +189,12 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     poisson_noise = galsim.PoissonNoise(rng)
     img.addNoise(poisson_noise)
 
+    # Quantize: have an integer number of photons in every pixel after inclusion of sky noise.
+    img.quantize()
+
     # Reciprocity failure (use WFIRST routine, with the supplied exposure time).
     addReciprocityFailure(img, exptime=exptime)
 
-    # Quantize.
-    img.quantize()
 
     # Dark current (use exposure time).
     dark_current = galsim.wfirst.dark_current*exptime
