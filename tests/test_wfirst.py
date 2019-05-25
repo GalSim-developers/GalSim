@@ -542,15 +542,22 @@ def test_wfirst_detectors():
     assert im_2.dtype == im_1.dtype
     assert im_2.bounds == im_1.bounds
     np.testing.assert_array_equal(
-       im_2.array, im_1.array,
-       err_msg='Persistence results depend on function used.')
+        im_2.array, im_1.array,
+        err_msg='Persistence results depend on function used.')
 
     im_unit = galsim.Image(np.ones((2,2)), copy=True)
     im_f = im_unit*0.0
-    im_f_list = [im_unit*1.E3, im_unit*1.E5]
+    im_f1 = im_init*0.0
+    illuminatin_list = [1.E3, 1.E4, 4.E4, 4.99E4, 5.01E4, 1.E5, 1.0E6]
+    im_f_list = [x*im_unit for x in illuminatin_list]
+
     galsim.wfirst.applyPersistence(im_f, im_f_list, method='fermi') #check fermi method
+    galsim.wfirst.applyPersistence(im_f1, im_f_list)
+
     #Check the functionality of the fermi method by comparing with pre-calculated values.
-    assert np.allclose( im_f.array, np.ones((2,2))*8.30515, rtol=1.E-06 ), 'Error in Fermi persistence model'
+    assert np.allclose( im_f.array, np.ones((2,2))*12.7482, rtol=1.E-06 ), 'Error in Fermi persistence model'
+    np.testing.assert_array_equal(im_f, im_f1,
+        err_msg='The defaulf method of wfirst.applyPersistence is not fermi.')
 
     assert_raises(TypeError, galsim.wfirst.applyPersistence, im_2, im0)
     assert_raises(galsim.GalSimValueError, galsim.wfirst.applyPersistence, im_2, im_list, method='wrong method')
@@ -769,6 +776,8 @@ def test_wfirst_basic_numbers():
     ref_persistence_coefficients = np.array(
         [0.045707683,0.014959818,0.009115737,0.00656769,0.005135571,
          0.004217028,0.003577534,0.003106601])/100.
+    ref_persistence_fermi_parameters = np.array(
+        [0.017, 60000., 50000., 0.045, 1., 50000.])
     ref_n_sca = 18
     ref_n_pix_tot = 4096
     ref_n_pix = 4088
@@ -793,6 +802,8 @@ def test_wfirst_basic_numbers():
     np.testing.assert_array_equal(ref_ipc_kernel, galsim.wfirst.ipc_kernel)
     np.testing.assert_array_equal(ref_persistence_coefficients,
                                   galsim.wfirst.persistence_coefficients)
+    np.testing.assert_array_equal(ref_persistence_fermi_parameters,
+                                  galsim.wfirst.persistence_fermi_parameters)
     assert galsim.wfirst.n_sca==ref_n_sca
     assert galsim.wfirst.n_pix_tot==ref_n_pix_tot
     assert galsim.wfirst.n_pix==ref_n_pix
