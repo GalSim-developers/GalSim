@@ -555,7 +555,7 @@ def test_wfirst_detectors():
     galsim.wfirst.applyPersistence(im_f1, im_f_list)
 
     #Check the functionality of the fermi method by comparing with pre-calculated values.
-    assert np.allclose( im_f.array, np.ones((2,2))*12.7482, rtol=1.E-06 ), 'Error in Fermi persistence model'
+    assert np.allclose( im_f.array, np.ones((2,2))*12.74821, rtol=1.E-06 ), 'Error in Fermi persistence model'
     np.testing.assert_array_equal(im_f, im_f1,
         err_msg='The defaulf method of wfirst.applyPersistence is not fermi.')
 
