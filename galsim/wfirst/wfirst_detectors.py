@@ -125,7 +125,7 @@ def applyPersistence(img, prev_exposures, method='fermi'):
             ### The slew/settle time and the reset time should be specified.
             ### Now we simply assume them as 0 and take the persitence current at the mid-time of
             ### exposures as the average persistence until we get more information about the observation timeline.
-            img._array += fermi_linear(prev_exposures[i].array, 0.5*(1+i)*galsim.wfirst.exptime)*galsim.wfirst.exptime
+            img._array += fermi_linear(prev_exposures[i].array, (0.5+i)*galsim.wfirst.exptime)*galsim.wfirst.exptime
 
     else:
         raise galsim.GalSimValueError("applyPersistence only accepts 'linear' or 'fermi' methods, got", method)
