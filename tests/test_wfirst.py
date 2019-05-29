@@ -554,10 +554,22 @@ def test_wfirst_detectors():
     galsim.wfirst.applyPersistence(im_f, im_f_list, method='fermi') #check fermi method
     galsim.wfirst.applyPersistence(im_f1, im_f_list)
 
-    #Check the functionality of the fermi method by comparing with pre-calculated values.
-    assert np.allclose( im_f.array, np.ones((2,2))*12.74821, rtol=1.E-06 ), 'Error in Fermi persistence model'
+    #Check the functionality of the fermi method.
+    A, x0, dx, a, r, half_well = galsim.wfirst.persistence_fermi_parameters
+    #formula of the fermi model. See the documentation of
+    #galsim.wfirst.wfirst_detectors.applyPersistence for more info.
+    f_fermi = lambda x, t: A* (x/x0)**a * (t/1000.)**(-r)/(np.exp( -(x-x0)/dx)+1.)
+    ps = 0.0
+    for i,x in enumerate(illuminatin_list):
+        t = (0.5+i)*galsim.wfirst.exptime #mid-time of each exposure
+        if x>=0.0 and x<half_well: #linear tail below half well of saturation
+            ps += f_fermi(half_well, t)*x/half_well
+        elif x>= half_well:
+            ps += f_fermi(x,t)
+    ps *= galsim.wfirst.exptime
+    assert np.allclose( im_f.array, np.ones((2,2))*ps, rtol=1.E-06 ), 'Error in Fermi persistence model'
     np.testing.assert_array_equal(im_f, im_f1,
-        err_msg='The defaulf method of wfirst.applyPersistence is not fermi.')
+        err_msg='The default method of wfirst.applyPersistence is not fermi.')
 
     assert_raises(TypeError, galsim.wfirst.applyPersistence, im_2, im0)
     assert_raises(galsim.GalSimValueError, galsim.wfirst.applyPersistence, im_2, im_list, method='wrong method')

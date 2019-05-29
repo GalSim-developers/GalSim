@@ -135,9 +135,8 @@ def fermi_linear(x, t):
     The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
     For influence level below the half well, the persistence is linear in x.
 
-    @param x        Array of pxiel influence levels in unit of electron counts.
-    @param t        Time (in seconds) after the illumination of the exposure. Since the persistence signal
-                    is linear in time, we take the midtime of exposures to compute the average persistence.
+    @param x        Array of pixel influence levels in unit of electron counts.
+    @param t        Time (in seconds) since reset.
     @returns        The persistence signal of the input exposure x.
 
     """

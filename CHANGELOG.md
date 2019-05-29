@@ -18,7 +18,7 @@ New Features
   pupil plane image for shorter- and longer-wavelength bands.  (#919)
 - Enabled Zernikes up to 22 (previously 11) in WFIRST PSFs, and added dependence on position
   within the SCA. (#919)
-- Added wfirst fermi persistence model. (#992)
+- Added WFIRST fermi persistence model. (#992)
 
 Bug Fixes
 ---------
