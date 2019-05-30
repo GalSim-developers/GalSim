@@ -1521,12 +1521,14 @@ def test_radecfunction():
 
     cubic_u = Cubic(2.9e-5, 2000., 'u')
     cubic_v = Cubic(-3.7e-5, 2000., 'v')
-    funcs.append( (cubic_u, cubic_v, 'Cubic object') )
 
     ufunc = lambda x,y: cubic_u(x-x0, y-y0)
     vfunc = lambda x,y: cubic_v(x-x0, y-y0)
-    funcs.append( (cubic_u, cubic_v, 'offset Cubic object') )
+    funcs.append( (ufunc, vfunc, 'offset Cubic object') )
 
+    # The last one needs to not have a lambda, since we use it for the image test, which
+    # requires the function to be picklable.
+    funcs.append( (cubic_u, cubic_v, 'Cubic object') )
 
     # ra, dec of projection centers (in degrees)
     # Note: This won't work directly at a pole, but it should work rather close to the pole.
