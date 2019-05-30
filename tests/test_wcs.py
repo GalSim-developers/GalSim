@@ -388,6 +388,11 @@ def do_wcs_image(wcs, name, approx=False):
         area = wcs.pixelArea(galsim.PositionD(x,y))
         np.testing.assert_almost_equal(val/(area*sky_level), 1., digits,
                                        "SkyImage at %d,%d is wrong"%(x,y))
+    # Check that all values are near the same value.  In particular if ra crosses 0, then this
+    # used to be a problem if the wcs returned ra values that jump from 360 to 0.
+    # Not very stringent test, since we're just checking that we don't have some pixels
+    # that are orders of magnitude different from the average.  So rtol=1 is good.
+    np.testing.assert_allclose(im.array, area*sky_level, rtol=1)
 
 
 def do_local_wcs(wcs, ufunc, vfunc, name):
@@ -2023,6 +2028,7 @@ def test_tanwcs():
     center = galsim.CelestialCoord(0.*galsim.radians, 0.*galsim.radians)
     wcs = galsim.TanWCS(affine, center)
     do_celestial_wcs(wcs, 'TanWCS 1')
+    do_wcs_image(wcs, 'TanWCS 1')
 
     # Next one with a flip and significant rotation and a large (u,v) offset
     dudx = 0.1432
@@ -2035,6 +2041,24 @@ def test_tanwcs():
     center = galsim.CelestialCoord(3.4 * galsim.hours, -17.9 * galsim.degrees)
     wcs = galsim.TanWCS(affine, center)
     do_celestial_wcs(wcs, 'TanWCS 2')
+    do_wcs_image(wcs, 'TanWCS 2')
+
+    # Check crossing ra=0.
+    # Note: this worked properly even before fixing issue #1030, since GSFitsWCS keeps all
+    # the ra values close to the value at the center of the image, so the ra values here
+    # span from below 360 to above 360 without wrapping to 0.
+    # cf. test_razero below for a test with a wcs that does wrap back to 0.
+    dudx = 1.4
+    dudy = 0.2
+    dvdx = -0.3
+    dvdy = 1.5
+    u0 = 0.
+    v0 = 0.
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, world_origin=galsim.PositionD(u0,v0))
+    center = galsim.CelestialCoord(359.99 * galsim.degrees, -37.9 * galsim.degrees)
+    wcs = galsim.TanWCS(affine, center)
+    do_celestial_wcs(wcs, 'TanWCS 3')
+    do_wcs_image(wcs, 'TanWCS 3')
 
     # Finally a really crazy one that isn't remotely regular
     dudx = 0.2342
@@ -2050,7 +2074,8 @@ def test_tanwcs():
     wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=origin, world_origin=world_origin)
     center = galsim.CelestialCoord(-241.4 * galsim.hours, 87.9 * galsim.degrees)
     wcs = galsim.TanWCS(affine, center)
-    do_celestial_wcs(wcs, 'TanWCS 3')
+    do_celestial_wcs(wcs, 'TanWCS 4')
+    do_wcs_image(wcs, 'TanWCS 4')
 
 
 @timer
