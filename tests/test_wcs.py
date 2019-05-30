@@ -2416,6 +2416,52 @@ def test_int_args():
     assert np.isclose(posi_roundtrip.y, posi.y)
 
 
+@timer
+def test_razero():
+    """Test the makeSkyImage function near ra=0.
+    """
+    # This test reproduces the problem Chris Walter found when using the LSST WCS backend
+    # (with imsim) near ra=0.  The WCS radec function would return number slightly less than
+    # 360 and then cross over to just over 0, rather than vary smoothly across the image.
+
+    # Note: GSFitsWCS was never a problem.  It always returns ra values near the value of the
+    # center of the image.  So if the center is just below 360, it will return values > 360
+    # when crossing the ra=0 line.  Or if the center is just above 0, then it will return
+    # negative values when crossing the other way.
+
+    # However, astropy has this "feature" of always wrapping the angles to 0..2pi, so we can
+    # use that to test that our makeSkyImage function works properly for wcs functions that
+    # do this.
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import astropy.wcs
+            import scipy  # AstropyWCS constructor will do this, so check now.
+    except ImportError as e:
+        print('Unable to import astropy.wcs or scipy.  Skipping AstropyWCS tests.')
+        print('Caught ',e)
+        return
+
+
+    dir = 'fits_files'
+    # This file is based in sipsample.fits, but with the CRVAL1 changed to 0.002322805429
+    file_name = 'razero.fits'
+    wcs = galsim.AstropyWCS(file_name, dir=dir)
+
+    print('0,0 -> ',wcs.toWorld(galsim.PositionD(0,0)))
+    # The makeSkyImage test uses an image with bounds (-135,9,127,288)
+    # So these tests just make sure that we'll see the jump in ra values when we test this.
+    print('-135,127 -> ',wcs.toWorld(galsim.PositionD(-135,127)))
+    print('9,127 -> ',wcs.toWorld(galsim.PositionD(9,127)))
+    print('-135,288 -> ',wcs.toWorld(galsim.PositionD(-135,288)))
+    print('9,288 -> ',wcs.toWorld(galsim.PositionD(9,288)))
+    assert 359 < wcs.toWorld(galsim.PositionD(-135,127)).ra / galsim.degrees < 360
+    assert 0 < wcs.toWorld(galsim.PositionD(9,288)).ra / galsim.degrees < 1
+
+    do_celestial_wcs(wcs, 'Astropy file '+file_name)
+    do_wcs_image(wcs, 'Astropy near ra=0')
+
+
 if __name__ == "__main__":
     test_pixelscale()
     test_shearwcs()
