@@ -1064,13 +1064,19 @@ class CelestialWCS(BaseWCS):
         ra = np.reshape(ra, x.shape)
         dec = np.reshape(dec, x.shape)
 
-        # If ra values wrap around from 360 to 0, then put them all close to each other.
-        ra[ra > np.min(ra) + np.pi] -= 2.*np.pi
-
         # Use the finite differences to estimate the derivatives.
         cosdec = np.cos(dec[1:ny-1,1:nx-1])
-        dudx = -0.5 * (ra[1:ny-1,2:nx] - ra[1:ny-1,0:nx-2]) * cosdec
-        dudy = -0.5 * (ra[2:ny,1:nx-1] - ra[0:ny-2,1:nx-1]) * cosdec
+        dudx = -0.5 * (ra[1:ny-1,2:nx] - ra[1:ny-1,0:nx-2])
+        dudy = -0.5 * (ra[2:ny,1:nx-1] - ra[0:ny-2,1:nx-1])
+        # Check for discontinuities in ra.  ra can jump by 2pi, so when it does
+        # add (or subtract) pi to dudx, which is dra/2
+        dudx[dudx > 1] -= np.pi
+        dudx[dudx < -1] += np.pi
+        dudy[dudy > 1] -= np.pi
+        dudy[dudy < -1] += np.pi
+        # Now account for the cosdec factor
+        dudx *= cosdec
+        dudy *= cosdec
         dvdx = 0.5 * (dec[1:ny-1,2:nx] - dec[1:ny-1,0:nx-2])
         dvdy = 0.5 * (dec[2:ny,1:nx-1] - dec[0:ny-2,1:nx-1])
 
