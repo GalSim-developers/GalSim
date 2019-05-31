@@ -2442,7 +2442,6 @@ def test_razero():
         print('Caught ',e)
         return
 
-
     dir = 'fits_files'
     # This file is based in sipsample.fits, but with the CRVAL1 changed to 0.002322805429
     file_name = 'razero.fits'
@@ -2460,6 +2459,31 @@ def test_razero():
 
     do_celestial_wcs(wcs, 'Astropy file '+file_name)
     do_wcs_image(wcs, 'Astropy near ra=0')
+
+    # This file is similar, but adjusted to be located near the south pole.
+    file_name = 'pole.fits'
+    wcs = galsim.AstropyWCS(file_name, dir=dir)
+
+    print('0,0 -> ',wcs.toWorld(galsim.PositionD(0,0)))
+    # This time we get a whole range of ra values going around the perimeter, so a simple
+    # wrapping wouldn't work.
+    print('-135,127 -> ',wcs.toWorld(galsim.PositionD(-135,127)))
+    print('-63,127 -> ',wcs.toWorld(galsim.PositionD(-63,127)))
+    print('9,127 -> ',wcs.toWorld(galsim.PositionD(9,127)))
+    print('9,208 -> ',wcs.toWorld(galsim.PositionD(9,208)))
+    print('9,288 -> ',wcs.toWorld(galsim.PositionD(9,288)))
+    print('-63, 288 -> ',wcs.toWorld(galsim.PositionD(-63,288)))
+    print('-135,288 -> ',wcs.toWorld(galsim.PositionD(-135,288)))
+    print('-135, 208 -> ',wcs.toWorld(galsim.PositionD(-135,208)))
+    # The center is pretty close to the south pole.
+    # If it gets any closer, then the precise test at the center of the image fails at 3 d.p.
+    # I think we just need to accept that at the pole itself, our finite difference calculation
+    # won't be super accurate.  With this, the pole is only a few pixels from the center of the
+    # image, and the center pixel passes our test.
+    print('-63, 208 -> ',wcs.toWorld(galsim.PositionD(-63,208)))
+
+    do_celestial_wcs(wcs, 'Astropy file '+file_name)
+    do_wcs_image(wcs, 'Astropy near pole')
 
 
 if __name__ == "__main__":
