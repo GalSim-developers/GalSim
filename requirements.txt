@@ -22,5 +22,5 @@ pyyaml>=3.12  # This one is required to run tests.
 pandas>=0.20
 
 # This is not in conda.  Let pip install these.
-LSSTDESC.Coord>=1.0.5
+LSSTDESC.Coord>=1.1.2
 starlink-pyast>=3.9.0  # Also not required, but useful.
