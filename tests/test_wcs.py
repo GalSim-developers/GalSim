@@ -187,10 +187,25 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
                 'wcs.toWorld returned wrong world position for '+name)
         np.testing.assert_almost_equal(
                 world_pos.x, world_pos3.x, digits2,
-                'wcs.postoWorld returned wrong world position for '+name)
+                'wcs.posToWorld returned wrong world position for '+name)
         np.testing.assert_almost_equal(
                 world_pos.y, world_pos3.y, digits2,
-                'wcs.postoWorld returned wrong world position for '+name)
+                'wcs.posToWorld returned wrong world position for '+name)
+
+        u1,v1 = wcs.toWorld(x+x0, y+y0, color=color)
+        u2,v2 = wcs.xyToWorld(x+x0, y+y0, color=color)
+        np.testing.assert_almost_equal(
+                u1, u, digits2,
+                'wcs.toWorld(x,y) returned wrong u position for '+name)
+        np.testing.assert_almost_equal(
+                v1, v, digits2,
+                'wcs.toWorld(x,y) returned wrong v position for '+name)
+        np.testing.assert_almost_equal(
+                u2, u, digits2,
+                'wcs.xyToWorld(x,y) returned wrong u position for '+name)
+        np.testing.assert_almost_equal(
+                v2, v, digits2,
+                'wcs.xyToWorld(x,y) returned wrong v position for '+name)
 
         scale = wcs.maxLinearScale(image_pos, color=color)
         try:
@@ -213,6 +228,22 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
         except NotImplementedError:
             assert_raises(NotImplementedError, wcs._x, world_pos.x, world_pos.y, color=color)
             assert_raises(NotImplementedError, wcs._y, world_pos.x, world_pos.y, color=color)
+
+    # Test xyToWorld with arrays
+    u3,v3 = wcs.toWorld(np.array(x_list)+x0, np.array(y_list)+y0, color=color)
+    u4,v4 = wcs.xyToWorld(np.array(x_list)+x0, np.array(y_list)+y0, color=color)
+    np.testing.assert_almost_equal(
+            u3, u_list, digits2,
+            'wcs.toWorld(x,y) with arrays returned wrong u positions for '+name)
+    np.testing.assert_almost_equal(
+            v3, v_list, digits2,
+            'wcs.toWorld(x,y) with arrays returned wrong v positions for '+name)
+    np.testing.assert_almost_equal(
+            u4, u_list, digits2,
+            'wcs.xyToWorld(x,y) with arrays returned wrong u positions for '+name)
+    np.testing.assert_almost_equal(
+            v4, v_list, digits2,
+            'wcs.xyToWorld(x,y) with arrays returned wrong v positions for '+name)
 
     if x0 == 0 and y0 == 0:
         # The last item in list should also work as a PositionI
@@ -756,9 +787,28 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
     # Check picklability
     if test_pickle: do_pickle(wcs)
 
+    near_ra_list = []
+    near_dec_list = []
     for x0,y0 in zip(near_x_list, near_y_list):
         image_pos = galsim.PositionD(x0,y0)
         world_pos = wcs.toWorld(image_pos)
+        near_ra_list.append(world_pos.ra.rad)
+        near_dec_list.append(world_pos.dec.rad)
+
+        # posToWorld is equivalent
+        world_pos2 = wcs.posToWorld(image_pos)
+        assert world_pos2 == world_pos
+
+        # xyToWorld also works
+        ra1, dec1 = wcs.toWorld(x0, y0, units=galsim.radians)
+        ra2, dec2 = wcs.xyToWorld(x0, y0, galsim.degrees)
+        ra3, dec3 = wcs.toWorld(x0, y0, units='arcmin')
+        assert np.isclose(ra1, world_pos.ra.rad)
+        assert np.isclose(dec1, world_pos.dec.rad)
+        assert np.isclose(ra2, world_pos.ra / galsim.degrees)
+        assert np.isclose(dec2, world_pos.dec / galsim.degrees)
+        assert np.isclose(ra3, world_pos.ra / galsim.arcmin)
+        assert np.isclose(dec3, world_pos.dec / galsim.arcmin)
 
         # Check the calculation of the jacobian
         w1 = wcs.toWorld(galsim.PositionD(x0+0.5,y0))
@@ -785,20 +835,26 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
         origin = galsim.PositionD(0,0)
         uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
         uv_pos2 = wcs.local(origin).toWorld(image_pos)
+        uv_pos3 = wcs.posToWorld(image_pos, project_center=wcs.toWorld(origin))
         u3, v3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
         np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-1, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-1, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos3.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos3.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
 
         origin = galsim.PositionD(x0+0.5, y0-0.5)
         uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
         uv_pos2 = wcs.local(origin).toWorld(image_pos - origin)
+        uv_pos3 = wcs.posToWorld(image_pos, project_center=wcs.toWorld(origin))
         u3, v3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
         np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-2, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-2, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos3.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos3.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
 
         # Test drawing the profile on an image with the given wcs
         ix0 = int(x0)
@@ -830,6 +886,21 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
                         'world_profile and image_profile differed when drawn for '+name)
             except NotImplementedError:
                 pass
+
+    # Test xyToWorld with array
+    xar = np.array(near_x_list)
+    yar = np.array(near_y_list)
+    raar = np.array(near_ra_list)
+    decar = np.array(near_dec_list)
+    ra1, dec1 = wcs.toWorld(xar, yar, units=galsim.radians)
+    ra2, dec2 = wcs.xyToWorld(xar, yar, galsim.degrees)
+    ra3, dec3 = wcs.toWorld(xar, yar, units='arcmin')
+    np.testing.assert_allclose(ra1, raar)
+    np.testing.assert_allclose(dec1, decar)
+    np.testing.assert_allclose(ra2, raar * (galsim.radians / galsim.degrees))
+    np.testing.assert_allclose(dec2, decar * (galsim.radians / galsim.degrees))
+    np.testing.assert_allclose(ra3, raar * (galsim.radians / galsim.arcmin))
+    np.testing.assert_allclose(dec3, decar * (galsim.radians / galsim.arcmin))
 
     assert_raises(TypeError, wcs.local)
     assert_raises(TypeError, wcs.local, image_pos=image_pos, world_pos=world_pos)

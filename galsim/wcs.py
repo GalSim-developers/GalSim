@@ -194,10 +194,10 @@ class BaseWCS(object):
             >>> wcs.isCelestial()   # are the world coordinates on the celestial sphere?
             >>> wcs.isPixelScale()  # is this either a PixelScale or an OffsetWCS?
     """
-    def toWorld(self, arg, **kwargs):
+    def toWorld(self, *args, **kwargs):
         """Convert from image coordinates to world coordinates.
 
-        There are essentially two overloaded versions of this function here.
+        There are essentially three overloaded versions of this function here.
 
         1. The first converts a position from image coordinates to world coordinates.
            The argument may be either a PositionD or PositionI argument.  It returns
@@ -206,7 +206,19 @@ class BaseWCS(object):
 
                >>> world_pos = wcs.toWorld(image_pos)
 
-        2. The second converts a surface brightness profile (a GSObject) from image
+           Equivalent to `wcs.posToWorld(image_pos)`.
+
+        2. The second is nearly the same, but takes x and y values directly and returns
+           either u, v or ra, dec, depending on the kind of wcs being used.  For this version,
+           x and y maybe be numpy arrays, in which case the returned values are also numpy
+           arrays.
+
+               >>> u, v = wcs.toWorld(x, y)                 # For EuclideanWCS types
+               >>> ra, dec = wcs.toWorld(x, y, units=units) # For CelestialWCS types
+
+           Equivalent to `wcs.xyToWorld(x, y)`.
+
+        3. The third converts a surface brightness profile (a GSObject) from image
            coordinates to world coordinates, returning the profile in world coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located, so the right
@@ -215,11 +227,18 @@ class BaseWCS(object):
 
                >>> world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None,
                                                flux_ratio=1, offset=(0,0))
+
+           Equivalent to `wcs.profileToWorld(image_profile, ...)`.
         """
-        if isinstance(arg, GSObject):
-            return self.profileToWorld(arg, **kwargs)
+        if len(args) == 1:
+            if isinstance(args[0], GSObject):
+                return self.profileToWorld(*args, **kwargs)
+            else:
+                return self.posToWorld(*args, **kwargs)
+        elif len(args) == 2:
+            return self.xyToWorld(*args, **kwargs)
         else:
-            return self.posToWorld(arg, **kwargs)
+            raise TypeError("toWorld() takes either 1 or 2 positional arguments but 3 were given")
 
     def posToWorld(self, image_pos, color=None, **kwargs):
         """Convert a position from image coordinates to world coordinates.
@@ -233,11 +252,46 @@ class BaseWCS(object):
                                 than returning a CelestialCoord. [default: None]
         @param projection       If project_center != None, the kind of projection to use.  See
                                 CelestialCoord.project for the valid options. [default: 'gnomonic']
+
+        @returns world_pos
         """
         if color is None: color = self._color
         if not isinstance(image_pos, Position):
             raise TypeError("image_pos must be a PositionD or PositionI argument")
         return self._posToWorld(image_pos, color=color, **kwargs)
+
+    def xyToWorld(self, x, y, units=None, color=None):
+        """Convert x,y from image coordinates to world coordinates.
+
+        This is equivalent to `wcs.toWorld(x,y)`.
+
+        It is also equivalent to `wcs.posToWorld(galsim.PositionD(x,y))` when x and y are scalars;
+        however, this routine allows x and y to be numpy arrays, in which case, the calculation
+        will be vectorized, which is often much faster than using a Position instance.
+
+        @param x            The x value(s) in image coordinates
+        @param y            The y value(s) in image coordinates
+        @param units        (Only valid for CelestialWCS, in which case it is required)
+                            The units to use for the returned ra, dec values.
+        @param color        For color-dependent WCS's, the color term to use. [default: None]
+
+        @returns ra, dec
+        """
+        from .angle import AngleUnit
+        if color is None: color = self._color
+        if self.isCelestial():
+            if units is None:
+                raise TypeError("units is required for CelestialWCS types")
+            elif isinstance(units, str):
+                units = AngleUnit.from_name(units)
+            elif not isinstance(units, AngleUnit):
+                raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                                       AngleUnit.valid_names)
+            return self._xyToWorld(x, y, units, color)
+        else:
+            if units is not None:
+                raise TypeError("units is not valid for EuclideanWCS types")
+            return self._xyToWorld(x, y, color=color)
 
     def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None,
                        flux_ratio=1., offset=(0,0)):
@@ -766,6 +820,15 @@ class EuclideanWCS(BaseWCS):
         y = image_pos.y - self.y0
         return PositionD(self._u(x,y,color), self._v(x,y,color)) + self.world_origin
 
+    def _xyToWorld(self, x, y, color):
+        x = x - self.x0  # Not -=, since don't want to modify the input arrays in place.
+        y = y - self.y0
+        u = self._u(x,y,color)
+        v = self._v(x,y,color)
+        u += self.u0
+        v += self.v0
+        return u,v
+
     # Also simple if _x,_y are implemented.  However, they are allowed to raise a
     # NotImplementedError.
     def _posToImage(self, world_pos, color):
@@ -845,14 +908,8 @@ class EuclideanWCS(BaseWCS):
 
         xlist = np.array([ x0+dx, x0-dx, x0,    x0    ], dtype=float)
         ylist = np.array([ y0,    y0,    y0+dy, y0-dy ], dtype=float)
-        try :
-            # Try using numpy arrays first, since it should be faster if it works.
-            u = self._u(xlist,ylist,color)
-            v = self._v(xlist,ylist,color)
-        except TypeError:
-            # Otherwise do them one at a time.
-            u = [ self._u(x,y,color) for (x,y) in zip(xlist,ylist) ]
-            v = [ self._v(x,y,color) for (x,y) in zip(xlist,ylist) ]
+        u = self._u(xlist,ylist,color)
+        v = self._v(xlist,ylist,color)
 
         dudx = 0.5 * (u[0] - u[1]) / dx
         dudy = 0.5 * (u[2] - u[3]) / dy
@@ -876,14 +933,8 @@ class EuclideanWCS(BaseWCS):
                            np.linspace(b.ymin-1,b.ymax+1,ny) )
         x -= self.x0
         y -= self.y0
-        try:
-            # First try to use the _u, _v function with the numpy arrays.
-            u = self._u(x.ravel(),y.ravel(),color)
-            v = self._v(x.ravel(),y.ravel(),color)
-        except TypeError:
-            # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            u = np.array([ self._u(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ])
-            v = np.array([ self._v(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ])
+        u = self._u(x.ravel(),y.ravel(),color)
+        v = self._v(x.ravel(),y.ravel(),color)
         u = np.reshape(u, x.shape)
         v = np.reshape(v, x.shape)
         # Use the finite differences to estimate the derivatives.
@@ -961,6 +1012,9 @@ class LocalWCS(UniformWCS):
         y = image_pos.y
         return PositionD(self._u(x,y),self._v(x,y))
 
+    def _xyToWorld(self, x, y, color):
+        return self._u(x,y), self._v(x,y)
+
     # For LocalWCS, there is no origin to worry about.
     def _posToImage(self, world_pos, color):
         u = world_pos.x
@@ -1019,16 +1073,7 @@ class CelestialWCS(BaseWCS):
 
         xlist = np.array([ x0, x0+dx, x0-dx, x0,    x0    ], dtype=float)
         ylist = np.array([ y0, y0,    y0,    y0+dy, y0-dy ], dtype=float)
-        try :
-            # Try using numpy arrays first, since it should be faster if it works.
-            ra, dec = self._radec(xlist,ylist,color)
-        except KeyboardInterrupt:
-            raise
-        except Exception:
-            # Otherwise do them one at a time.
-            world = [ self._radec(x,y,color) for (x,y) in zip(xlist,ylist) ]
-            ra = [ w[0] for w in world ]
-            dec = [ w[1] for w in world ]
+        ra, dec = self._radec(xlist,ylist,color)
 
         # Note: our convention is that ra increases to the left!
         # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
@@ -1055,16 +1100,7 @@ class CelestialWCS(BaseWCS):
                            np.linspace(b.ymin-1,b.ymax+1,ny) )
         x -= self.x0
         y -= self.y0
-        try:
-            # First try to use the _radec function with the numpy arrays.
-            ra, dec = self._radec(x.ravel(),y.ravel(),color)
-        except KeyboardInterrupt:
-            raise
-        except Exception:
-            # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            rd = [ self._radec(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ]
-            ra = np.array([ radec[0] for radec in rd ], dtype=float)
-            dec = np.array([ radec[1] for radec in rd ], dtype=float)
+        ra, dec = self._radec(x.ravel(),y.ravel(),color)
         ra = np.reshape(ra, x.shape)
         dec = np.reshape(dec, x.shape)
 
@@ -1101,6 +1137,15 @@ class CelestialWCS(BaseWCS):
         else:
             u,v = project_center.project(coord, projection=projection)
             return PositionD(u/arcsec, v/arcsec)
+
+    def _xyToWorld(self, x, y, units, color):
+        from .angle import radians
+        x = x - self.x0  # Not -=, since don't want to modify the input arrays in place.
+        y = y - self.y0
+        ra, dec = self._radec(x,y,color)
+        ra *= radians / units
+        dec *= radians / units
+        return ra, dec
 
     # Also simple if _xy is implemented.  However, it is allowed to raise a NotImplementedError.
     def _posToImage(self, world_pos, color):
@@ -2188,15 +2233,28 @@ class UVFunction(EuclideanWCS):
 
     def _u(self, x, y, color=None):
         if self._uses_color:
-            return self._ufunc(x,y,color)
+            try:
+                return self._ufunc(x,y,color)
+            except TypeError:
+                # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
+                return np.array([self._ufunc(x1,y1,color) for [x1,y1] in zip(x,y)])
         else:
-            return self._ufunc(x,y)
+            try:
+                return self._ufunc(x,y)
+            except TypeError:
+                return np.array([self._ufunc(x1,y1) for [x1,y1] in zip(x,y)])
 
     def _v(self, x, y, color=None):
         if self._uses_color:
-            return self._vfunc(x,y,color)
+            try:
+                return self._vfunc(x,y,color)
+            except TypeError:
+                return np.array([self._vfunc(x1,y1,color) for [x1,y1] in zip(x,y)])
         else:
-            return self._vfunc(x,y)
+            try:
+                return self._vfunc(x,y)
+            except TypeError:
+                return np.array([self._vfunc(x1,y1) for [x1,y1] in zip(x,y)])
 
     def _x(self, u, v, color=None):
         if self._xfunc is None:
@@ -2371,7 +2429,16 @@ class RaDecFunction(CelestialWCS):
     def origin(self): return self._origin
 
     def _radec(self, x, y, color=None):
-        return self._radec_func(x,y)
+        try:
+            return self._radec_func(x,y)
+        except Exception as e:
+            try:
+                world = [ self._radec(x1,y1) for (x1,y1) in zip(x,y) ]
+            except Exception:  # pragma: no cover
+                raise e  # Raise the original one if this fails, since it's probably more relevant.
+            ra = np.array([ w[0] for w in world ])
+            dec = np.array([ w[1] for w in world ])
+            return ra, dec
 
     def _xy(self, ra, dec, color=None):
         raise GalSimNotImplementedError(
