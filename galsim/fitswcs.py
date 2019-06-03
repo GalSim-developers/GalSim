@@ -224,13 +224,19 @@ class AstropyWCS(CelestialWCS):
         return ra, dec
 
     def _xy(self, ra, dec, color=None):
-        import astropy
         factor = radians / degrees
-        rd = np.atleast_2d([ra, dec]) * factor
+
+        r1 = np.atleast_1d(ra) * factor
+        d1 = np.atleast_1d(dec) * factor
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            xy = self.wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
-        x, y = xy
+            x, y = self.wcs.all_world2pix(r1, d1, 1, ra_dec_order=True)
+        try:
+            len(x)
+        except TypeError:
+            x = x[0]
+            y = y[0]
         return x, y
 
     def _newOrigin(self, origin):
@@ -478,7 +484,13 @@ class PyAstWCS(CelestialWCS):
     def _xy(self, ra, dec, color=None):
         rd = np.array([np.atleast_1d(ra), np.atleast_1d(dec)], dtype=float)
         x, y = self.wcsinfo.tran( rd, False )
-        return x[0], y[0]
+
+        try:
+            len(x)
+        except TypeError:
+            x = x[0]
+            y = y[0]
+        return x, y
 
     def _newOrigin(self, origin):
         ret = self.copy()
@@ -632,6 +644,9 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
     def origin(self): return self._origin
 
     def _radec(self, x, y, color=None):
+        import subprocess
+        import os
+
         # Need this to look like
         #    [ x1, y1, x2, y2, ... ]
         # if input is either scalar x,y or two arrays.
@@ -639,7 +654,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
-        import os
         if 'SC_ARG_MAX' in os.sysconf_names:
             arg_max = os.sysconf('SC_ARG_MAX')
         else:
@@ -669,7 +683,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
         for i in range(0,len(xy_strs),nargs):
             xy1 = xy_strs[i:i+nargs]
-            import subprocess
             # We'd like to get the output to 10 digits of accuracy.  This corresponds to
             # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
             # in which case the output will start with *************.  If this happens, just
@@ -713,33 +726,62 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
     def _xy(self, ra, dec, color=None):
         import subprocess
-        rd = np.array([ra, dec], dtype=float)
+        import os
+
+        rd = np.array([ra, dec], dtype=float).transpose().ravel()
         rd *= radians / degrees
-        for digits in range(10,5,-1):
-            rd_strs = [ str(z) for z in rd ]
-            p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name] + rd_strs,
-                                 stdout=subprocess.PIPE)
-            results = p.communicate()[0].decode()
-            p.stdout.close()
-            if len(results) == 0:
-                raise OSError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
-            if results[0] != '*': break
-        if results[0] == '*':
-            raise OSError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
 
-        # The output should looke like:
-        #    ra dec J2000 -> x y
-        # However, if there was an error, the J200 might be missing.
-        vals = results.split()
-        if len(vals) < 6:
-            raise GalSimError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
-        if len(vals) > 6:
-            galsim_warn("wcstools sky2xy indicates that %f,%f is off the image. "
-                        "output is %r"%(ra,dec,results))
-        x = float(vals[4])
-        y = float(vals[5])
+        # The boilerplate here is exactly the same as in _radec.  See that function for an
+        # explanation of how this works.
+        if 'SC_ARG_MAX' in os.sysconf_names:
+            arg_max = os.sysconf('SC_ARG_MAX')
+        else:
+            arg_max = 32768
+        if arg_max <= 0: arg_max = 32768
+        if arg_max < 4096: arg_max = 4096
+        nargs = int(arg_max / 40) * 2
 
-        return x, y
+        rd_strs = [ str(z) for z in rd ]
+        x = []
+        y = []
+
+        for i in range(0,len(rd_strs),nargs):
+            rd1 = rd_strs[i:i+nargs]
+            for digits in range(10,5,-1):
+                p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name] + rd1,
+                                    stdout=subprocess.PIPE)
+                results = p.communicate()[0].decode()
+                p.stdout.close()
+                if len(results) == 0:
+                    raise OSError('wcstools command sky2xy was unable to read '+self._file_name)
+                if results[0] != '*': break
+            if results[0] == '*':
+                raise OSError('wcstools command sky2xy was unable to read '+self._file_name)
+
+            lines = results.splitlines()
+
+            # Each line of output should looke like:
+            #    ra dec J2000 -> x y
+            # However, if there was an error, the J200 might be missing.
+            for line in lines:
+                vals = line.split()
+                if len(vals) < 6:
+                    raise GalSimError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
+                if len(vals) > 6:
+                    galsim_warn("wcstools sky2xy indicates that %f,%f is off the image. "
+                                "output is %r"%(ra,dec,results))
+                x.append(float(vals[4]))
+                y.append(float(vals[5]))
+
+        try:
+            len(ra)
+            # If the inputs were numpy arrays, return the same
+            return np.array(x), np.array(y)
+        except TypeError:
+            # Otherwise return scalars
+            #assert len(ra) == 1
+            #assert len(dec) == 1
+            return x[0], y[0]
 
     def _newOrigin(self, origin):
         ret = self.copy()
@@ -1296,14 +1338,39 @@ class GSFitsWCS(CelestialWCS):
 
     def _invert_pv(self, u, v):
         # Do this in C++ layer for speed.
-        with convert_cpp_errors():
-            return _galsim.InvertPV(u, v, self.pv.ctypes.data)
+        try:
+            len(u)
+        except TypeError:
+            with convert_cpp_errors():
+                return _galsim.InvertPV(u, v, self.pv.ctypes.data)
+        else:
+            invpvu = np.empty(len(u))
+            invpvv = np.empty(len(u))
+            for i in range(len(u)):
+                with convert_cpp_errors():
+                    uu, vv = _galsim.InvertPV(u[i], v[i], self.pv.ctypes.data)
+                invpvu[i] = uu
+                invpvv[i] = vv
+            return invpvu, invpvv
 
     def _invert_ab(self, x, y):
         # Do this in C++ layer for speed.
         abp_data = 0 if self.abp is None else self.abp.ctypes.data
-        with convert_cpp_errors():
-            return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
+        try:
+            len(x)
+        except TypeError:
+            with convert_cpp_errors():
+                return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
+        else:
+            invabx = np.empty(len(x))
+            invaby = np.empty(len(x))
+            for i in range(len(x)):
+                with convert_cpp_errors():
+                    xx, yy = _galsim.InvertAB(len(self.ab[0]), x[i], y[i], self.ab.ctypes.data,
+                                              abp_data)
+                invabx[i] = xx
+                invaby[i] = yy
+            return invabx, invaby
 
     def _xy(self, ra, dec, color=None):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)

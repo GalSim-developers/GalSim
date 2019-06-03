@@ -311,10 +311,10 @@ class BaseWCS(object):
         return self.local(image_pos, world_pos, color=color)._profileToWorld(
                     image_profile, flux_ratio, offset)
 
-    def toImage(self, arg, **kwargs):
+    def toImage(self, *args, **kwargs):
         """Convert from world coordinates to image coordinates
 
-        There are essentially two overloaded versions of this function here.
+        There are essentially three overloaded versions of this function here.
 
         1. The first converts a position from world coordinates to image coordinates.
            If the WCS is a EuclideanWCS, the argument may be either a PositionD or PositionI
@@ -323,7 +323,19 @@ class BaseWCS(object):
 
                >>> image_pos = wcs.toImage(world_pos)
 
-        2. The second converts a surface brightness profile (a GSObject) from world
+           Equivalent to wcs.posToImage(world_pos).
+
+        2. The second is nearly the same, but takes either u and v values or ra and dec values
+           (depending on the kind of wcs being used) directly and returns x and y values.
+           For this version, the inputs maybe be numpy arrays, in which case the returned values
+           are also numpy arrays.
+
+               >>> x, y = wcs.toImage(u, v)                 # For EuclideanWCS types
+               >>> x, y = wcs.toImage(ra, dec, units=units) # For CelestialWCS types
+
+           Equivalent to wcs.uvToImage(u, v) or wcs.radecToImage(ra, dec, units=units).
+
+        3. The third converts a surface brightness profile (a GSObject) from world
            coordinates to image coordinates, returning the profile in image coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located so the right
@@ -332,11 +344,21 @@ class BaseWCS(object):
 
                >>> image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None,
                                                flux_ratio=1, offset=(0,0))
+
+           Equivalent to wcs.profileToImage(world_profile, ...).
         """
-        if isinstance(arg, GSObject):
-            return self.profileToImage(arg, **kwargs)
+        if len(args) == 1:
+            if isinstance(args[0], GSObject):
+                return self.profileToImage(*args, **kwargs)
+            else:
+                return self.posToImage(*args, **kwargs)
+        elif len(args) == 2:
+            if self.isCelestial():
+                return self.radecToImage(*args, **kwargs)
+            else:
+                return self.uvToImage(*args, **kwargs)
         else:
-            return self.posToImage(arg, **kwargs)
+            raise TypeError("toImage() takes either 1 or 2 positional arguments")
 
     def posToImage(self, world_pos, color=None):
         """Convert a position from world coordinates to image coordinates.
@@ -814,6 +836,22 @@ class EuclideanWCS(BaseWCS):
     @property
     def v0(self): return self.world_origin.y
 
+    def uvToImage(self, u, v, color=None):
+        """Convert u,v from world coordinates to image coordinates.
+
+        This is equivalent to `wcs.toWorld(u,v)`.
+
+        It is also equivalent to `wcs.posToImage(galsim.PositionD(u,v))`; however, this routine
+        allows u and v to be numpy arrays, in which case, the calculation will be vectorized,
+        which is often much faster than using the pos interface.
+
+        @param u            The u or ra value(s) in world coordinates
+        @param v            The v or dec value(s) in world coordinates
+        @param color        For color-dependent WCS's, the color term to use. [default: None]
+        """
+        if color is None: color = self._color
+        return self._uvToImage(u, v, color)
+
     # Simple.  Just call _u, _v.
     def _posToWorld(self, image_pos, color):
         x = image_pos.x - self.x0
@@ -835,6 +873,15 @@ class EuclideanWCS(BaseWCS):
         u = world_pos.x - self.u0
         v = world_pos.y - self.v0
         return PositionD(self._x(u,v,color),self._y(u,v,color)) + self.origin
+
+    def _uvToImage(self, u, v, color):
+        u = u - self.u0
+        v = v - self.v0
+        x = self._x(u,v,color)
+        y = self._y(u,v,color)
+        x += self.x0
+        y += self.y0
+        return x, y
 
     # Each subclass has a function _newOrigin, which just calls the constructor with new
     # values for origin and world_origin.  This function figures out what those values
@@ -1021,6 +1068,9 @@ class LocalWCS(UniformWCS):
         v = world_pos.y
         return PositionD(self._x(u,v),self._y(u,v))
 
+    def _uvToImage(self, u, v, color):
+        return self._x(u,v), self._y(u,v)
+
     # For LocalWCS, this is of course trivial.
     def _local(self, image_pos, color):
         return self
@@ -1037,6 +1087,29 @@ class CelestialWCS(BaseWCS):
     def x0(self): return self.origin.x
     @property
     def y0(self): return self.origin.y
+
+    def radecToImage(self, ra, dec, units, color=None):
+        """Convert ra,dec from world coordinates to image coordinates.
+
+        This is equivalent to `wcs.toWorld(ra,dec)`.
+
+        It is also equivalent to `wcs.posToImage(galsim.CelestialCoord(ra * units, dec * units))`;
+        however, this routine allows ra and dec to be numpy arrays, in which case, the calculation
+        will be vectorized, which is often much faster than using the pos interface.
+
+        @param ra           The ra value(s) in world coordinates
+        @param dec          The dec value(s) in world coordinates
+        @param units        The units to use for the returned ra, dec values.
+        @param color        For color-dependent WCS's, the color term to use. [default: None]
+        """
+        from .angle import AngleUnit
+        if color is None: color = self._color
+        if isinstance(units, str):
+            units = AngleUnit.from_name(units)
+        elif not isinstance(units, AngleUnit):
+            raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                                    AngleUnit.valid_names)
+        return self._radecToImage(ra, dec, units, color)
 
     # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
     def _withOrigin(self, origin, world_origin, color):
@@ -1153,6 +1226,15 @@ class CelestialWCS(BaseWCS):
         dec = world_pos.dec.rad
         x, y = self._xy(ra,dec,color)
         return PositionD(x,y) + self.origin
+
+    def _radecToImage(self, ra, dec, units, color):
+        from .angle import radians
+        ra = ra * (units / radians)
+        dec = dec * (units / radians)
+        x, y = self._xy(ra,dec,color)
+        x += self.origin.x
+        y += self.origin.y
+        return x, y
 
     # Each class should define the __eq__ function.  Then __ne__ is obvious.
     def __ne__(self, other): return not self.__eq__(other)
@@ -2262,9 +2344,15 @@ class UVFunction(EuclideanWCS):
                 "World -> Image direction not implemented for this UVFunction")
         else:
             if self._uses_color:
-                return self._xfunc(u,v,color)
+                try:
+                    return self._xfunc(u,v,color)
+                except TypeError:
+                    return np.array([self._xfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
             else:
-                return self._xfunc(u,v)
+                try:
+                    return self._xfunc(u,v)
+                except TypeError:
+                    return np.array([self._xfunc(u1,v1) for [u1,v1] in zip(u,v)])
 
     def _y(self, u, v, color=None):
         if self._yfunc is None:
@@ -2272,9 +2360,15 @@ class UVFunction(EuclideanWCS):
                 "World -> Image direction not implemented for this UVFunction")
         else:
             if self._uses_color:
-                return self._yfunc(u,v,color)
+                try:
+                    return self._yfunc(u,v,color)
+                except TypeError:
+                    return np.array([self._yfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
             else:
-                return self._yfunc(u,v)
+                try:
+                    return self._yfunc(u,v)
+                except TypeError:
+                    return np.array([self._yfunc(u1,v1) for [u1,v1] in zip(u,v)])
 
     def _newOrigin(self, origin, world_origin):
         return UVFunction(self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,

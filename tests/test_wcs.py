@@ -213,6 +213,12 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
             # so guard against NotImplementedError being raised:
             image_pos2 = wcs.toImage(world_pos, color=color)
             image_pos3 = wcs.posToImage(world_pos, color=color)
+            test_reverse = True
+        except NotImplementedError:
+            assert_raises(NotImplementedError, wcs._x, world_pos.x, world_pos.y, color=color)
+            assert_raises(NotImplementedError, wcs._y, world_pos.x, world_pos.y, color=color)
+            test_reverse = False
+        else:
             np.testing.assert_almost_equal(
                     image_pos.x*scale, image_pos2.x*scale, digits2,
                     'wcs.toImage returned wrong image position for '+name)
@@ -225,9 +231,21 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
             np.testing.assert_almost_equal(
                     image_pos.y*scale, image_pos3.y*scale, digits2,
                     'wcs.posToImage returned wrong image position for '+name)
-        except NotImplementedError:
-            assert_raises(NotImplementedError, wcs._x, world_pos.x, world_pos.y, color=color)
-            assert_raises(NotImplementedError, wcs._y, world_pos.x, world_pos.y, color=color)
+
+            x1,y1 = wcs.toImage(u, v, color=color)
+            x2,y2 = wcs.uvToImage(u, v, color=color)
+            np.testing.assert_almost_equal(
+                    x1, x+x0, digits2,
+                    'wcs.toImage(u,v) returned wrong x position for '+name)
+            np.testing.assert_almost_equal(
+                    y1, y+y0, digits2,
+                    'wcs.toImage(u,v) returned wrong y position for '+name)
+            np.testing.assert_almost_equal(
+                    x2, x+x0, digits2,
+                    'wcs.uvToImage(u,v) returned wrong x position for '+name)
+            np.testing.assert_almost_equal(
+                    y2, y+y0, digits2,
+                    'wcs.uvToImage(u,v) returned wrong y position for '+name)
 
     # Test xyToWorld with arrays
     u3,v3 = wcs.toWorld(np.array(x_list)+x0, np.array(y_list)+y0, color=color)
@@ -244,6 +262,23 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
     np.testing.assert_almost_equal(
             v4, v_list, digits2,
             'wcs.xyToWorld(x,y) with arrays returned wrong v positions for '+name)
+
+    if test_reverse:
+        # Test uvToImage with arrays
+        x3,y3 = wcs.toImage(np.array(u_list), np.array(v_list), color=color)
+        x4,y4 = wcs.uvToImage(np.array(u_list), np.array(v_list), color=color)
+        np.testing.assert_almost_equal(
+                x3-x0, x_list, digits2,
+                'wcs.toImage(u,v) with arrays returned wrong x positions for '+name)
+        np.testing.assert_almost_equal(
+                y3-y0, y_list, digits2,
+                'wcs.toImage(u,v) with arrays returned wrong y positions for '+name)
+        np.testing.assert_almost_equal(
+                x4-x0, x_list, digits2,
+                'wcs.uvToImage(u,v) with arrays returned wrong x positions for '+name)
+        np.testing.assert_almost_equal(
+                y4-y0, y_list, digits2,
+                'wcs.uvToImage(u,v) with arrays returned wrong y positions for '+name)
 
     if x0 == 0 and y0 == 0:
         # The last item in list should also work as a PositionI
@@ -750,7 +785,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
     assert_raises(TypeError, wcs.withOrigin, origin=image_pos, world_origin=(3,4), color=color)
 
 
-def do_celestial_wcs(wcs, name, test_pickle=True):
+def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
     # It's a bit harder to test WCS functions that return a CelestialCoord, since
     # (usually) we don't have an exact formula to compare with.  So the tests here
     # are a bit sparer.
@@ -783,6 +818,10 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
         digits2 = 2
     else:
         digits2 = digits
+    if approx:
+        atol = 0.01
+    else:
+        atol = 1.e-6
 
     # Check picklability
     if test_pickle: do_pickle(wcs)
@@ -809,6 +848,20 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
         assert np.isclose(dec2, world_pos.dec / galsim.degrees)
         assert np.isclose(ra3, world_pos.ra / galsim.arcmin)
         assert np.isclose(dec3, world_pos.dec / galsim.arcmin)
+
+        try:
+            # The toImage call is not guaranteed to be implemented for world_pos.
+            # So guard against NotImplementedError.
+            image_pos1 = wcs.toImage(world_pos)
+            image_pos2 = wcs.posToImage(world_pos)
+            test_reverse = True
+        except NotImplementedError:
+            test_reverse = False
+        else:
+            assert np.isclose(image_pos1.x, x0, rtol=1.e-3, atol=atol)
+            assert np.isclose(image_pos1.y, y0, rtol=1.e-3, atol=atol)
+            assert np.isclose(image_pos2.x, x0, rtol=1.e-3, atol=atol)
+            assert np.isclose(image_pos2.y, y0, rtol=1.e-3, atol=atol)
 
         # Check the calculation of the jacobian
         w1 = wcs.toWorld(galsim.PositionD(x0+0.5,y0))
@@ -874,9 +927,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
 
-            try:
-                # The toImage call is not guaranteed to be implemented for world_pos.
-                # So guard against NotImplementedError.
+            if test_reverse:
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
                 world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
@@ -884,8 +935,6 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
                 np.testing.assert_array_almost_equal(
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)
-            except NotImplementedError:
-                pass
 
     # Test xyToWorld with array
     xar = np.array(near_x_list)
@@ -901,6 +950,19 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
     np.testing.assert_allclose(dec2, decar * (galsim.radians / galsim.degrees))
     np.testing.assert_allclose(ra3, raar * (galsim.radians / galsim.arcmin))
     np.testing.assert_allclose(dec3, decar * (galsim.radians / galsim.arcmin))
+
+    if test_reverse:
+        x1, y1 = wcs.toImage(raar, decar, units=galsim.radians)
+        x2, y2 = wcs.radecToImage(raar * (galsim.radians / galsim.degrees),
+                                  decar * (galsim.radians / galsim.degrees), galsim.degrees)
+        x3, y3 = wcs.toImage(raar * (galsim.radians / galsim.arcmin),
+                             decar * (galsim.radians / galsim.arcmin), units='arcmin')
+        np.testing.assert_allclose(x1, xar, rtol=1.e-3, atol=atol)
+        np.testing.assert_allclose(y1, yar, rtol=1.e-3, atol=atol)
+        np.testing.assert_allclose(x2, xar, rtol=1.e-3, atol=atol)
+        np.testing.assert_allclose(y2, yar, rtol=1.e-3, atol=atol)
+        np.testing.assert_allclose(x3, xar, rtol=1.e-3, atol=atol)
+        np.testing.assert_allclose(y3, yar, rtol=1.e-3, atol=atol)
 
     assert_raises(TypeError, wcs.local)
     assert_raises(TypeError, wcs.local, image_pos=image_pos, world_pos=world_pos)
@@ -1940,7 +2002,7 @@ def test_pyastwcs():
             wcs = galsim.PyAstWCS(file_name, dir=dir, compression='none', hdu=0,
                                   origin=galsim.PositionD(3,4))
 
-        do_celestial_wcs(wcs, 'PyAst file '+file_name)
+        do_celestial_wcs(wcs, 'PyAst file '+file_name, approx=approx)
 
         # TAN-FLIP has an error of 4mas after write and read here, which I don't really understand.
         # but it's small enough an error that I don't think it's worth worrying about further.
@@ -2014,7 +2076,7 @@ def test_wcstools():
         im = galsim.fits.read(file_name, dir=dir)
         wcs = wcs.withOrigin(origin = -im.center)
 
-        do_celestial_wcs(wcs, 'WcsToolsWCS '+file_name)
+        do_celestial_wcs(wcs, 'WcsToolsWCS '+file_name, approx=approx)
 
         do_wcs_image(wcs, 'WcsToolsWCS_'+tag)
 
