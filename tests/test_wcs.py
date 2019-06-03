@@ -2503,3 +2503,4 @@ if __name__ == "__main__":
     test_coadd()
     test_lowercase()
     test_int_args()
+    test_razero()
