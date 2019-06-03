@@ -372,7 +372,7 @@ def do_wcs_image(wcs, name, approx=False):
                                    "Image value at center after setCenter is wrong.")
 
     # Test makeSkyImage
-    if __name__ == '__main__':
+    if __name__ != '__main__':
         # Use a smaller image to speed things up.
         im = im[galsim.BoundsI(im.xmin,im.xmin+5,im.ymin,im.ymin+5)]
     new_origin = (-134, 128)
