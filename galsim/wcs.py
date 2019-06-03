@@ -632,6 +632,10 @@ class BaseWCS(object):
         """Make an image of the sky, correctly accounting for the pixel area, which might be
         variable over the image.
 
+        Note: This uses finite differences of the wcs mapping to calculate the area of each
+              pixel in world coordinates.  It is usually pretty accurate everywhere except
+              within a few arcsec of the north or south poles.
+
         @param image        The image onto which the sky values will be put.
         @param sky_level    The sky level in ADU/arcsec^2 (or whatever your world coordinate
                             system units are, if not arcsec).
