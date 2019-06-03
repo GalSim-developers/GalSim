@@ -73,10 +73,8 @@ after_success:
     - coverage combine . ../examples ../examples/great3 ../examples/des
     - coverage xml
 
-    # If we start doing multiple python versions here, then only send the report for one of them.
-    # Otherwise the reported results get weird.
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
-    # Codecov is better at combining the results from different python versions.
+    # Send results to coveralls and codecov
+    - coveralls
     - codecov
 
 before_cache:
