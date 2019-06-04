@@ -1708,11 +1708,13 @@ def test_uvfunction():
                     'UVFunction with color-dependence, string', test_pickle=True, color=1.7)
 
     # 9. A non-trivial color example that fails for arrays
-    ufunc = lambda x,y,c : 0.17 * x * (1. + 1.e-5 * math.sqrt(x**2 + y**2) + c)
-    vfunc = lambda x,y,c : 0.17 * y * (1. + 1.e-5 * math.sqrt(x**2 + y**2) + c)
-    wcs = galsim.UVFunction(ufunc, vfunc, uses_color=True)
-    do_nonlocal_wcs(wcs, lambda x,y: ufunc(x,y,0.3), lambda x,y: vfunc(x,y,0.3),
-                    'UVFunction with math and color-dependence', test_pickle=False, color=0.3)
+    ufunc = lambda x,y,c : math.exp(c * x)
+    vfunc = lambda x,y,c : math.exp(c * y/2)
+    xfunc = lambda u,v,c : math.log(u) / c
+    yfunc = lambda u,v,c : math.log(v) * 2 / c
+    wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, uses_color=True)
+    do_nonlocal_wcs(wcs, lambda x,y: ufunc(x,y,0.01), lambda x,y: vfunc(x,y,0.01),
+                    'UVFunction with math and color-dependence', test_pickle=False, color=0.01)
 
 @timer
 def test_radecfunction():
