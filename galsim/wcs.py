@@ -54,6 +54,7 @@ from .position import Position, PositionI, PositionD
 from .celestial import CelestialCoord
 from .shear import Shear
 from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimNotImplementedError
+from .errors import GalSimValueError
 
 class BaseWCS(object):
     """The base class for all other kinds of WCS transformations.
@@ -238,7 +239,7 @@ class BaseWCS(object):
         elif len(args) == 2:
             return self.xyToWorld(*args, **kwargs)
         else:
-            raise TypeError("toWorld() takes either 1 or 2 positional arguments but 3 were given")
+            raise TypeError("toWorld() takes either 1 or 2 positional arguments")
 
     def posToWorld(self, image_pos, color=None, **kwargs):
         """Convert a position from image coordinates to world coordinates.
