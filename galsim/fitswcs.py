@@ -233,7 +233,7 @@ class AstropyWCS(CelestialWCS):
             warnings.simplefilter("ignore")
             x, y = self.wcs.all_world2pix(r1, d1, 1, ra_dec_order=True)
         try:
-            len(x)
+            len(ra)
         except TypeError:
             x = x[0]
             y = y[0]
@@ -486,7 +486,7 @@ class PyAstWCS(CelestialWCS):
         x, y = self.wcsinfo.tran( rd, False )
 
         try:
-            len(x)
+            len(ra)
         except TypeError:
             x = x[0]
             y = y[0]
