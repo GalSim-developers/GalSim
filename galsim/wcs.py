@@ -211,7 +211,7 @@ class BaseWCS(object):
 
         2. The second is nearly the same, but takes x and y values directly and returns
            either u, v or ra, dec, depending on the kind of wcs being used.  For this version,
-           x and y maybe be numpy arrays, in which case the returned values are also numpy
+           x and y may be numpy arrays, in which case the returned values are also numpy
            arrays.
 
                >>> u, v = wcs.toWorld(x, y)                 # For EuclideanWCS types
@@ -268,7 +268,7 @@ class BaseWCS(object):
 
         It is also equivalent to `wcs.posToWorld(galsim.PositionD(x,y))` when x and y are scalars;
         however, this routine allows x and y to be numpy arrays, in which case, the calculation
-        will be vectorized, which is often much faster than using a Position instance.
+        will be vectorized, which is often much faster than using the pos interface.
 
         @param x            The x value(s) in image coordinates
         @param y            The y value(s) in image coordinates
@@ -328,7 +328,7 @@ class BaseWCS(object):
 
         2. The second is nearly the same, but takes either u and v values or ra and dec values
            (depending on the kind of wcs being used) directly and returns x and y values.
-           For this version, the inputs maybe be numpy arrays, in which case the returned values
+           For this version, the inputs may be numpy arrays, in which case the returned values
            are also numpy arrays.
 
                >>> x, y = wcs.toImage(u, v)                 # For EuclideanWCS types
@@ -842,12 +842,12 @@ class EuclideanWCS(BaseWCS):
 
         This is equivalent to `wcs.toWorld(u,v)`.
 
-        It is also equivalent to `wcs.posToImage(galsim.PositionD(u,v))`; however, this routine
-        allows u and v to be numpy arrays, in which case, the calculation will be vectorized,
-        which is often much faster than using the pos interface.
+        It is also equivalent to `wcs.posToImage(galsim.PositionD(u,v))` when u and v are scalars;
+        however, this routine allows u and v to be numpy arrays, in which case, the calculation
+        will be vectorized, which is often much faster than using the pos interface.
 
-        @param u            The u or ra value(s) in world coordinates
-        @param v            The v or dec value(s) in world coordinates
+        @param u            The u value(s) in world coordinates
+        @param v            The v value(s) in world coordinates
         @param color        For color-dependent WCS's, the color term to use. [default: None]
         """
         if color is None: color = self._color
@@ -1094,13 +1094,14 @@ class CelestialWCS(BaseWCS):
 
         This is equivalent to `wcs.toWorld(ra,dec)`.
 
-        It is also equivalent to `wcs.posToImage(galsim.CelestialCoord(ra * units, dec * units))`;
-        however, this routine allows ra and dec to be numpy arrays, in which case, the calculation
-        will be vectorized, which is often much faster than using the pos interface.
+        It is also equivalent to `wcs.posToImage(galsim.CelestialCoord(ra * units, dec * units))`
+        when ra and dec are scalars; however, this routine allows ra and dec to be numpy arrays,
+        in which case, the calculation will be vectorized, which is often much faster than using
+        the pos interface.
 
         @param ra           The ra value(s) in world coordinates
         @param dec          The dec value(s) in world coordinates
-        @param units        The units to use for the returned ra, dec values.
+        @param units        The units to use for the input ra, dec values.
         @param color        For color-dependent WCS's, the color term to use. [default: None]
         """
         from .angle import AngleUnit
