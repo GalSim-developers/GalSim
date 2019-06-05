@@ -2356,26 +2356,38 @@ class UVFunction(EuclideanWCS):
         if self._uses_color:
             try:
                 return self._ufunc(x,y,color)
-            except TypeError:
+            except Exception as e:
                 # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-                return np.array([self._ufunc(x1,y1,color) for [x1,y1] in zip(x,y)])
+                try:
+                    return np.array([self._ufunc(x1,y1,color) for [x1,y1] in zip(x,y)])
+                except Exception:  # pragma: no cover
+                    raise e  # Raise the original if this fails, since it's probably more relevant.
         else:
             try:
                 return self._ufunc(x,y)
-            except TypeError:
-                return np.array([self._ufunc(x1,y1) for [x1,y1] in zip(x,y)])
+            except Exception as e:
+                try:
+                    return np.array([self._ufunc(x1,y1) for [x1,y1] in zip(x,y)])
+                except Exception:  # pragma: no cover
+                    raise e
 
     def _v(self, x, y, color=None):
         if self._uses_color:
             try:
                 return self._vfunc(x,y,color)
-            except TypeError:
-                return np.array([self._vfunc(x1,y1,color) for [x1,y1] in zip(x,y)])
+            except Exception as e:
+                try:
+                    return np.array([self._vfunc(x1,y1,color) for [x1,y1] in zip(x,y)])
+                except Exception:  # pragma: no cover
+                    raise e
         else:
             try:
                 return self._vfunc(x,y)
-            except TypeError:
-                return np.array([self._vfunc(x1,y1) for [x1,y1] in zip(x,y)])
+            except Exception as e:
+                try:
+                    return np.array([self._vfunc(x1,y1) for [x1,y1] in zip(x,y)])
+                except Exception:  # pragma: no cover
+                    raise e
 
     def _x(self, u, v, color=None):
         if self._xfunc is None:
@@ -2385,13 +2397,19 @@ class UVFunction(EuclideanWCS):
             if self._uses_color:
                 try:
                     return self._xfunc(u,v,color)
-                except TypeError:
-                    return np.array([self._xfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
+                except Exception as e:
+                    try:
+                        return np.array([self._xfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
+                    except Exception:  # pragma: no cover
+                        raise e
             else:
                 try:
                     return self._xfunc(u,v)
-                except TypeError:
-                    return np.array([self._xfunc(u1,v1) for [u1,v1] in zip(u,v)])
+                except Exception as e:
+                    try:
+                        return np.array([self._xfunc(u1,v1) for [u1,v1] in zip(u,v)])
+                    except Exception:  # pragma: no cover
+                        raise e
 
     def _y(self, u, v, color=None):
         if self._yfunc is None:
@@ -2401,13 +2419,19 @@ class UVFunction(EuclideanWCS):
             if self._uses_color:
                 try:
                     return self._yfunc(u,v,color)
-                except TypeError:
-                    return np.array([self._yfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
+                except Exception as e:
+                    try:
+                        return np.array([self._yfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
+                    except Exception:  # pragma: no cover
+                        raise e
             else:
                 try:
                     return self._yfunc(u,v)
-                except TypeError:
-                    return np.array([self._yfunc(u1,v1) for [u1,v1] in zip(u,v)])
+                except Exception as e:
+                    try:
+                        return np.array([self._yfunc(u1,v1) for [u1,v1] in zip(u,v)])
+                    except Exception:  # pragma: no cover
+                        raise e
 
     def _newOrigin(self, origin, world_origin):
         return UVFunction(self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,
