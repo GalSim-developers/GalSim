@@ -217,7 +217,7 @@ class BaseWCS(object):
                >>> u, v = wcs.toWorld(x, y)                 # For EuclideanWCS types
                >>> ra, dec = wcs.toWorld(x, y, units=units) # For CelestialWCS types
 
-           Equivalent to `wcs.xyToWorld(x, y)`.
+           Equivalent to `wcs.xyTouv(x, y)` or `wcs.xyToradec(x, y)`.
 
         3. The third converts a surface brightness profile (a GSObject) from image
            coordinates to world coordinates, returning the profile in world coordinates
@@ -237,7 +237,10 @@ class BaseWCS(object):
             else:
                 return self.posToWorld(*args, **kwargs)
         elif len(args) == 2:
-            return self.xyToWorld(*args, **kwargs)
+            if self.isCelestial():
+                return self.xyToradec(*args, **kwargs)
+            else:
+                return self.xyTouv(*args, **kwargs)
         else:
             raise TypeError("toWorld() takes either 1 or 2 positional arguments")
 
@@ -260,39 +263,6 @@ class BaseWCS(object):
         if not isinstance(image_pos, Position):
             raise TypeError("image_pos must be a PositionD or PositionI argument")
         return self._posToWorld(image_pos, color=color, **kwargs)
-
-    def xyToWorld(self, x, y, units=None, color=None):
-        """Convert x,y from image coordinates to world coordinates.
-
-        This is equivalent to `wcs.toWorld(x,y)`.
-
-        It is also equivalent to `wcs.posToWorld(galsim.PositionD(x,y))` when x and y are scalars;
-        however, this routine allows x and y to be numpy arrays, in which case, the calculation
-        will be vectorized, which is often much faster than using the pos interface.
-
-        @param x            The x value(s) in image coordinates
-        @param y            The y value(s) in image coordinates
-        @param units        (Only valid for CelestialWCS, in which case it is required)
-                            The units to use for the returned ra, dec values.
-        @param color        For color-dependent WCS's, the color term to use. [default: None]
-
-        @returns ra, dec
-        """
-        from .angle import AngleUnit
-        if color is None: color = self._color
-        if self.isCelestial():
-            if units is None:
-                raise TypeError("units is required for CelestialWCS types")
-            elif isinstance(units, str):
-                units = AngleUnit.from_name(units)
-            elif not isinstance(units, AngleUnit):
-                raise GalSimValueError("units must be either an AngleUnit or a string", units,
-                                       AngleUnit.valid_names)
-            return self._xyToWorld(x, y, units, color)
-        else:
-            if units is not None:
-                raise TypeError("units is not valid for EuclideanWCS types")
-            return self._xyToWorld(x, y, color=color)
 
     def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None,
                        flux_ratio=1., offset=(0,0)):
@@ -334,7 +304,7 @@ class BaseWCS(object):
                >>> x, y = wcs.toImage(u, v)                 # For EuclideanWCS types
                >>> x, y = wcs.toImage(ra, dec, units=units) # For CelestialWCS types
 
-           Equivalent to wcs.uvToImage(u, v) or wcs.radecToImage(ra, dec, units=units).
+           Equivalent to wcs.uvToxy(u, v) or wcs.radecToxy(ra, dec, units=units).
 
         3. The third converts a surface brightness profile (a GSObject) from world
            coordinates to image coordinates, returning the profile in image coordinates
@@ -355,9 +325,9 @@ class BaseWCS(object):
                 return self.posToImage(*args, **kwargs)
         elif len(args) == 2:
             if self.isCelestial():
-                return self.radecToImage(*args, **kwargs)
+                return self.radecToxy(*args, **kwargs)
             else:
-                return self.uvToImage(*args, **kwargs)
+                return self.uvToxy(*args, **kwargs)
         else:
             raise TypeError("toImage() takes either 1 or 2 positional arguments")
 
@@ -837,7 +807,40 @@ class EuclideanWCS(BaseWCS):
     @property
     def v0(self): return self.world_origin.y
 
-    def uvToImage(self, u, v, color=None):
+    def xyTouv(self, x, y, units=None, color=None):
+        """Convert x,y from image coordinates to world coordinates.
+
+        This is equivalent to `wcs.toWorld(x,y)`.
+
+        It is also equivalent to `wcs.posToWorld(galsim.PositionD(x,y))` when x and y are scalars;
+        however, this routine allows x and y to be numpy arrays, in which case, the calculation
+        will be vectorized, which is often much faster than using the pos interface.
+
+        @param x            The x value(s) in image coordinates
+        @param y            The y value(s) in image coordinates
+        @param units        (Only valid for CelestialWCS, in which case it is required)
+                            The units to use for the returned ra, dec values.
+        @param color        For color-dependent WCS's, the color term to use. [default: None]
+
+        @returns ra, dec
+        """
+        from .angle import AngleUnit
+        if color is None: color = self._color
+        if self.isCelestial():
+            if units is None:
+                raise TypeError("units is required for CelestialWCS types")
+            elif isinstance(units, str):
+                units = AngleUnit.from_name(units)
+            elif not isinstance(units, AngleUnit):
+                raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                                       AngleUnit.valid_names)
+            return self._xyTouv(x, y, units, color)
+        else:
+            if units is not None:
+                raise TypeError("units is not valid for EuclideanWCS types")
+            return self._xyTouv(x, y, color=color)
+
+    def uvToxy(self, u, v, color=None):
         """Convert u,v from world coordinates to image coordinates.
 
         This is equivalent to `wcs.toWorld(u,v)`.
@@ -851,7 +854,7 @@ class EuclideanWCS(BaseWCS):
         @param color        For color-dependent WCS's, the color term to use. [default: None]
         """
         if color is None: color = self._color
-        return self._uvToImage(u, v, color)
+        return self._uvToxy(u, v, color)
 
     # Simple.  Just call _u, _v.
     def _posToWorld(self, image_pos, color):
@@ -859,7 +862,7 @@ class EuclideanWCS(BaseWCS):
         y = image_pos.y - self.y0
         return PositionD(self._u(x,y,color), self._v(x,y,color)) + self.world_origin
 
-    def _xyToWorld(self, x, y, color):
+    def _xyTouv(self, x, y, color):
         x = x - self.x0  # Not -=, since don't want to modify the input arrays in place.
         y = y - self.y0
         u = self._u(x,y,color)
@@ -875,7 +878,7 @@ class EuclideanWCS(BaseWCS):
         v = world_pos.y - self.v0
         return PositionD(self._x(u,v,color),self._y(u,v,color)) + self.origin
 
-    def _uvToImage(self, u, v, color):
+    def _uvToxy(self, u, v, color):
         u = u - self.u0
         v = v - self.v0
         x = self._x(u,v,color)
@@ -1060,7 +1063,7 @@ class LocalWCS(UniformWCS):
         y = image_pos.y
         return PositionD(self._u(x,y),self._v(x,y))
 
-    def _xyToWorld(self, x, y, color):
+    def _xyTouv(self, x, y, color):
         return self._u(x,y), self._v(x,y)
 
     # For LocalWCS, there is no origin to worry about.
@@ -1069,7 +1072,7 @@ class LocalWCS(UniformWCS):
         v = world_pos.y
         return PositionD(self._x(u,v),self._y(u,v))
 
-    def _uvToImage(self, u, v, color):
+    def _uvToxy(self, u, v, color):
         return self._x(u,v), self._y(u,v)
 
     # For LocalWCS, this is of course trivial.
@@ -1089,10 +1092,44 @@ class CelestialWCS(BaseWCS):
     @property
     def y0(self): return self.origin.y
 
-    def radecToImage(self, ra, dec, units, color=None):
+    def xyToradec(self, x, y, units=None, color=None):
+        """Convert x,y from image coordinates to world coordinates.
+
+        This is equivalent to `wcs.toWorld(x,y, units=units)`.
+
+        It is also equivalent to `wcs.posToWorld(galsim.PositionD(x,y)).rad` when x and y are
+        scalars if units is 'radians'; however, this routine allows x and y to be numpy arrays,
+        in which case, the calculation will be vectorized, which is often much faster than using
+        the pos interface.
+
+        @param x            The x value(s) in image coordinates
+        @param y            The y value(s) in image coordinates
+        @param units        (Only valid for CelestialWCS, in which case it is required)
+                            The units to use for the returned ra, dec values.
+        @param color        For color-dependent WCS's, the color term to use. [default: None]
+
+        @returns ra, dec
+        """
+        from .angle import AngleUnit
+        if color is None: color = self._color
+        if self.isCelestial():
+            if units is None:
+                raise TypeError("units is required for CelestialWCS types")
+            elif isinstance(units, str):
+                units = AngleUnit.from_name(units)
+            elif not isinstance(units, AngleUnit):
+                raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                                       AngleUnit.valid_names)
+            return self._xyToradec(x, y, units, color)
+        else:
+            if units is not None:
+                raise TypeError("units is not valid for EuclideanWCS types")
+            return self._xyToradec(x, y, color=color)
+
+    def radecToxy(self, ra, dec, units, color=None):
         """Convert ra,dec from world coordinates to image coordinates.
 
-        This is equivalent to `wcs.toWorld(ra,dec)`.
+        This is equivalent to `wcs.toWorld(ra,dec, units=units)`.
 
         It is also equivalent to `wcs.posToImage(galsim.CelestialCoord(ra * units, dec * units))`
         when ra and dec are scalars; however, this routine allows ra and dec to be numpy arrays,
@@ -1111,7 +1148,7 @@ class CelestialWCS(BaseWCS):
         elif not isinstance(units, AngleUnit):
             raise GalSimValueError("units must be either an AngleUnit or a string", units,
                                     AngleUnit.valid_names)
-        return self._radecToImage(ra, dec, units, color)
+        return self._radecToxy(ra, dec, units, color)
 
     # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
     def _withOrigin(self, origin, world_origin, color):
@@ -1213,7 +1250,7 @@ class CelestialWCS(BaseWCS):
             u,v = project_center.project(coord, projection=projection)
             return PositionD(u/arcsec, v/arcsec)
 
-    def _xyToWorld(self, x, y, units, color):
+    def _xyToradec(self, x, y, units, color):
         from .angle import radians
         x = x - self.x0  # Not -=, since don't want to modify the input arrays in place.
         y = y - self.y0
@@ -1229,7 +1266,7 @@ class CelestialWCS(BaseWCS):
         x, y = self._xy(ra,dec,color)
         return PositionD(x,y) + self.origin
 
-    def _radecToImage(self, ra, dec, units, color):
+    def _radecToxy(self, ra, dec, units, color):
         from .angle import radians
         ra = ra * (units / radians)
         dec = dec * (units / radians)

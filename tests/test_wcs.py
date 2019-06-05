@@ -193,7 +193,7 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
                 'wcs.posToWorld returned wrong world position for '+name)
 
         u1,v1 = wcs.toWorld(x+x0, y+y0, color=color)
-        u2,v2 = wcs.xyToWorld(x+x0, y+y0, color=color)
+        u2,v2 = wcs.xyTouv(x+x0, y+y0, color=color)
         np.testing.assert_almost_equal(
                 u1, u, digits2,
                 'wcs.toWorld(x,y) returned wrong u position for '+name)
@@ -202,10 +202,10 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
                 'wcs.toWorld(x,y) returned wrong v position for '+name)
         np.testing.assert_almost_equal(
                 u2, u, digits2,
-                'wcs.xyToWorld(x,y) returned wrong u position for '+name)
+                'wcs.xyTouv(x,y) returned wrong u position for '+name)
         np.testing.assert_almost_equal(
                 v2, v, digits2,
-                'wcs.xyToWorld(x,y) returned wrong v position for '+name)
+                'wcs.xyTouv(x,y) returned wrong v position for '+name)
 
         scale = wcs.maxLinearScale(image_pos, color=color)
         try:
@@ -233,7 +233,7 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
                     'wcs.posToImage returned wrong image position for '+name)
 
             x1,y1 = wcs.toImage(u, v, color=color)
-            x2,y2 = wcs.uvToImage(u, v, color=color)
+            x2,y2 = wcs.uvToxy(u, v, color=color)
             np.testing.assert_almost_equal(
                     x1, x+x0, digits2,
                     'wcs.toImage(u,v) returned wrong x position for '+name)
@@ -242,14 +242,14 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
                     'wcs.toImage(u,v) returned wrong y position for '+name)
             np.testing.assert_almost_equal(
                     x2, x+x0, digits2,
-                    'wcs.uvToImage(u,v) returned wrong x position for '+name)
+                    'wcs.uvToxy(u,v) returned wrong x position for '+name)
             np.testing.assert_almost_equal(
                     y2, y+y0, digits2,
-                    'wcs.uvToImage(u,v) returned wrong y position for '+name)
+                    'wcs.uvToxy(u,v) returned wrong y position for '+name)
 
-    # Test xyToWorld with arrays
+    # Test xyTouv with arrays
     u3,v3 = wcs.toWorld(np.array(x_list)+x0, np.array(y_list)+y0, color=color)
-    u4,v4 = wcs.xyToWorld(np.array(x_list)+x0, np.array(y_list)+y0, color=color)
+    u4,v4 = wcs.xyTouv(np.array(x_list)+x0, np.array(y_list)+y0, color=color)
     np.testing.assert_almost_equal(
             u3, u_list, digits2,
             'wcs.toWorld(x,y) with arrays returned wrong u positions for '+name)
@@ -258,15 +258,15 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
             'wcs.toWorld(x,y) with arrays returned wrong v positions for '+name)
     np.testing.assert_almost_equal(
             u4, u_list, digits2,
-            'wcs.xyToWorld(x,y) with arrays returned wrong u positions for '+name)
+            'wcs.xyTouv(x,y) with arrays returned wrong u positions for '+name)
     np.testing.assert_almost_equal(
             v4, v_list, digits2,
-            'wcs.xyToWorld(x,y) with arrays returned wrong v positions for '+name)
+            'wcs.xyTouv(x,y) with arrays returned wrong v positions for '+name)
 
     if test_reverse:
-        # Test uvToImage with arrays
+        # Test uvToxy with arrays
         x3,y3 = wcs.toImage(np.array(u_list), np.array(v_list), color=color)
-        x4,y4 = wcs.uvToImage(np.array(u_list), np.array(v_list), color=color)
+        x4,y4 = wcs.uvToxy(np.array(u_list), np.array(v_list), color=color)
         np.testing.assert_almost_equal(
                 x3-x0, x_list, digits2,
                 'wcs.toImage(u,v) with arrays returned wrong x positions for '+name)
@@ -275,10 +275,10 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
                 'wcs.toImage(u,v) with arrays returned wrong y positions for '+name)
         np.testing.assert_almost_equal(
                 x4-x0, x_list, digits2,
-                'wcs.uvToImage(u,v) with arrays returned wrong x positions for '+name)
+                'wcs.uvToxy(u,v) with arrays returned wrong x positions for '+name)
         np.testing.assert_almost_equal(
                 y4-y0, y_list, digits2,
-                'wcs.uvToImage(u,v) with arrays returned wrong y positions for '+name)
+                'wcs.uvToxy(u,v) with arrays returned wrong y positions for '+name)
 
     if x0 == 0 and y0 == 0:
         # The last item in list should also work as a PositionI
@@ -306,11 +306,11 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
     assert_raises(TypeError, wcs.posToWorld,
                   galsim.CelestialCoord(0*galsim.degrees,0*galsim.degrees))
 
-    assert_raises(TypeError, wcs.xyToWorld)
-    assert_raises(TypeError, wcs.xyToWorld, 3)
-    assert_raises(TypeError, wcs.xyToWorld, 3,4, units=galsim.degrees)
-    assert_raises(TypeError, wcs.xyToWorld, 3,4,5)
-    assert_raises(TypeError, wcs.xyToWorld, galsim.PositionD(3,4))
+    assert_raises(TypeError, wcs.xyTouv)
+    assert_raises(TypeError, wcs.xyTouv, 3)
+    assert_raises(TypeError, wcs.xyTouv, 3,4, units=galsim.degrees)
+    assert_raises(TypeError, wcs.xyTouv, 3,4,5)
+    assert_raises(TypeError, wcs.xyTouv, galsim.PositionD(3,4))
 
     assert_raises(TypeError, wcs.toImage)
     assert_raises(TypeError, wcs.toImage, (3,4))
@@ -326,10 +326,10 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
     assert_raises(TypeError, wcs.posToImage, 3,4)
     assert_raises(TypeError, wcs.posToImage, 3,4,5)
 
-    assert_raises(TypeError, wcs.uvToImage, 3,4, units=galsim.degrees)
-    assert_raises(TypeError, wcs.uvToImage)
-    assert_raises(TypeError, wcs.uvToImage, 3)
-    assert_raises(TypeError, wcs.uvToImage, world_pos)
+    assert_raises(TypeError, wcs.uvToxy, 3,4, units=galsim.degrees)
+    assert_raises(TypeError, wcs.uvToxy)
+    assert_raises(TypeError, wcs.uvToxy, 3)
+    assert_raises(TypeError, wcs.uvToxy, world_pos)
 
 
 def check_world(pos1, pos2, digits, err_msg):
@@ -870,9 +870,9 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
         world_pos2 = wcs.posToWorld(image_pos)
         assert world_pos2 == world_pos
 
-        # xyToWorld also works
+        # xyToradec also works
         ra1, dec1 = wcs.toWorld(x0, y0, units=galsim.radians)
-        ra2, dec2 = wcs.xyToWorld(x0, y0, galsim.degrees)
+        ra2, dec2 = wcs.xyToradec(x0, y0, galsim.degrees)
         ra3, dec3 = wcs.toWorld(x0, y0, units='arcmin')
         assert np.isclose(ra1, world_pos.ra.rad)
         assert np.isclose(dec1, world_pos.dec.rad)
@@ -904,8 +904,8 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
             assert np.isclose(image_pos2.y, y0, rtol=1.e-3, atol=atol)
 
             x1, y1 = wcs.toImage(ra1, dec1, units=galsim.radians)
-            x2, y2 = wcs.radecToImage(ra2, dec2, units='deg')
-            x3, y3 = wcs.radecToImage(ra3, dec3, units=galsim.arcmin)
+            x2, y2 = wcs.radecToxy(ra2, dec2, units='deg')
+            x3, y3 = wcs.radecToxy(ra3, dec3, units=galsim.arcmin)
             assert_raises(TypeError, len, x1)
             assert_raises(TypeError, len, y1)
             assert_raises(TypeError, len, x2)
@@ -992,13 +992,13 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)
 
-    # Test xyToWorld with array
+    # Test xyToradec with array
     xar = np.array(near_x_list)
     yar = np.array(near_y_list)
     raar = np.array(near_ra_list)
     decar = np.array(near_dec_list)
     ra1, dec1 = wcs.toWorld(xar, yar, units=galsim.radians)
-    ra2, dec2 = wcs.xyToWorld(xar, yar, galsim.degrees)
+    ra2, dec2 = wcs.xyToradec(xar, yar, galsim.degrees)
     ra3, dec3 = wcs.toWorld(xar, yar, units='arcmin')
     np.testing.assert_allclose(ra1, raar)
     np.testing.assert_allclose(dec1, decar)
@@ -1009,7 +1009,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
 
     if test_reverse:
         x1, y1 = wcs.toImage(raar, decar, units=galsim.radians)
-        x2, y2 = wcs.radecToImage(raar * (galsim.radians / galsim.degrees),
+        x2, y2 = wcs.radecToxy(raar * (galsim.radians / galsim.degrees),
                                   decar * (galsim.radians / galsim.degrees), galsim.degrees)
         x3, y3 = wcs.toImage(raar * (galsim.radians / galsim.arcmin),
                              decar * (galsim.radians / galsim.arcmin), units='arcmin')
@@ -1033,11 +1033,11 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
     assert_raises(TypeError, wcs.posToWorld,
                   galsim.CelestialCoord(0*galsim.degrees,0*galsim.degrees))
 
-    assert_raises(TypeError, wcs.xyToWorld)
-    assert_raises(TypeError, wcs.xyToWorld, 3)
-    assert_raises(TypeError, wcs.xyToWorld, 3,4) # no units
-    assert_raises(TypeError, wcs.xyToWorld, galsim.PositionD(3,4))
-    assert_raises(ValueError, wcs.xyToWorld, 3,4,5)  # 5 interpreted as a unit
+    assert_raises(TypeError, wcs.xyToradec)
+    assert_raises(TypeError, wcs.xyToradec, 3)
+    assert_raises(TypeError, wcs.xyToradec, 3,4) # no units
+    assert_raises(TypeError, wcs.xyToradec, galsim.PositionD(3,4))
+    assert_raises(ValueError, wcs.xyToradec, 3,4,5)  # 5 interpreted as a unit
 
     assert_raises(TypeError, wcs.toImage)
     assert_raises(TypeError, wcs.toImage, (3,4))
@@ -1051,13 +1051,13 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
     assert_raises(TypeError, wcs.posToImage, 3,4)
     assert_raises(TypeError, wcs.posToImage, 3,4,5)
 
-    assert_raises(TypeError, wcs.radecToImage)
-    assert_raises(TypeError, wcs.radecToImage, 3,4)
-    assert_raises(TypeError, wcs.radecToImage, units=galsim.degrees)
-    assert_raises(TypeError, wcs.radecToImage, 3, units=galsim.degrees)
-    assert_raises(TypeError, wcs.radecToImage, 3,4,5, units=galsim.degrees)
-    assert_raises(TypeError, wcs.radecToImage, world_pos, units=galsim.degrees)
-    assert_raises(ValueError, wcs.radecToImage, 3,4,5)
+    assert_raises(TypeError, wcs.radecToxy)
+    assert_raises(TypeError, wcs.radecToxy, 3,4)
+    assert_raises(TypeError, wcs.radecToxy, units=galsim.degrees)
+    assert_raises(TypeError, wcs.radecToxy, 3, units=galsim.degrees)
+    assert_raises(TypeError, wcs.radecToxy, 3,4,5, units=galsim.degrees)
+    assert_raises(TypeError, wcs.radecToxy, world_pos, units=galsim.degrees)
+    assert_raises(ValueError, wcs.radecToxy, 3,4,5)
 
     assert_raises(TypeError, wcs.local)
     assert_raises(TypeError, wcs.local, image_pos=image_pos, world_pos=world_pos)
