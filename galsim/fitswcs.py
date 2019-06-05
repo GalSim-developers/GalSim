@@ -209,19 +209,16 @@ class AstropyWCS(CelestialWCS):
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
         factor = degrees / radians
-        ra *= factor
-        dec *= factor
 
-        try:
-            # If the inputs were numpy arrays, return the same
-            len(x)
-        except TypeError:
-            # Otherwise, return scalars
-            #assert len(ra) == 1
-            #assert len(dec) == 1
-            ra = ra[0]
-            dec = dec[0]
-        return ra, dec
+        if np.ndim(x) == np.ndim(y) == 0:
+            return ra[0] * factor, dec[0] * factor
+        else:
+            # Sanity checks that the inputs are the same shape.
+            assert np.ndim(x) == np.ndim(y)
+            assert x.shape == y.shape
+            ra *= factor
+            dec *= factor
+            return ra, dec
 
     def _xy(self, ra, dec, color=None):
         factor = radians / degrees
@@ -232,12 +229,14 @@ class AstropyWCS(CelestialWCS):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             x, y = self.wcs.all_world2pix(r1, d1, 1, ra_dec_order=True)
-        try:
-            len(ra)
-        except TypeError:
-            x = x[0]
-            y = y[0]
-        return x, y
+
+        if np.ndim(ra) == np.ndim(dec) == 0:
+            return x[0], y[0]
+        else:
+            # Sanity checks that the inputs are the same shape.
+            assert np.ndim(ra) == np.ndim(dec)
+            assert ra.shape == dec.shape
+            return x, y
 
     def _newOrigin(self, origin):
         ret = self.copy()
@@ -471,26 +470,25 @@ class PyAstWCS(CelestialWCS):
         ra, dec = self.wcsinfo.tran( xy )
         # PyAst returns ra, dec in radians, so we're good.
 
-        try:
-            len(x)
-        except TypeError:
-            # If the inputs weren't numpy arrays, return scalars
-            #assert len(ra) == 1
-            #assert len(dec) == 1
-            ra = ra[0]
-            dec = dec[0]
-        return ra, dec
+        if np.ndim(x) == np.ndim(y) == 0:
+            return ra[0], dec[0]
+        else:
+            # Sanity checks that the inputs are the same shape.
+            assert np.ndim(x) == np.ndim(y)
+            assert x.shape == y.shape
+            return ra, dec
 
     def _xy(self, ra, dec, color=None):
         rd = np.array([np.atleast_1d(ra), np.atleast_1d(dec)], dtype=float)
         x, y = self.wcsinfo.tran( rd, False )
 
-        try:
-            len(ra)
-        except TypeError:
-            x = x[0]
-            y = y[0]
-        return x, y
+        if np.ndim(ra) == np.ndim(dec) == 0:
+            return x[0], y[0]
+        else:
+            # Sanity checks that the inputs are the same shape.
+            assert np.ndim(ra) == np.ndim(dec)
+            assert ra.shape == dec.shape
+            return x, y
 
     def _newOrigin(self, origin):
         ret = self.copy()
@@ -714,15 +712,13 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         # wcstools reports ra, dec in degrees, so convert to radians
         factor = degrees / radians
 
-        try:
-            len(x)
-            # If the inputs were numpy arrays, return the same
-            return np.array(ra)*factor, np.array(dec)*factor
-        except TypeError:
-            # Otherwise return scalars
-            #assert len(ra) == 1
-            #assert len(dec) == 1
+        if np.ndim(x) == np.ndim(y) == 0:
             return ra[0]*factor, dec[0]*factor
+        else:
+            # Sanity checks that the inputs are the same shape.
+            assert np.ndim(x) == np.ndim(y)
+            assert x.shape == y.shape
+            return np.array(ra)*factor, np.array(dec)*factor
 
     def _xy(self, ra, dec, color=None):
         import subprocess
@@ -773,15 +769,13 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
                 x.append(float(vals[4]))
                 y.append(float(vals[5]))
 
-        try:
-            len(ra)
-            # If the inputs were numpy arrays, return the same
-            return np.array(x), np.array(y)
-        except TypeError:
-            # Otherwise return scalars
-            #assert len(ra) == 1
-            #assert len(dec) == 1
+        if np.ndim(ra) == np.ndim(dec) == 0:
             return x[0], y[0]
+        else:
+            # Sanity checks that the inputs are the same shape.
+            assert np.ndim(ra) == np.ndim(dec)
+            assert ra.shape == dec.shape
+            return np.array(x), np.array(y)
 
     def _newOrigin(self, origin):
         ret = self.copy()
@@ -1326,15 +1320,14 @@ class GSFitsWCS(CelestialWCS):
         u, v = self._uv(x, y)
         # Then convert from (u,v) to (ra, dec) using the appropriate projection.
         ra, dec = self.center.deproject_rad(u, v, projection=self.projection)
-        try:
-            len(x)
-            # If the inputs were numpy arrays, return the same
-            return ra, dec
-        except TypeError:
-            # Otherwise return scalars
-            #assert len(ra) == 1
-            #assert len(dec) == 1
+
+        if np.ndim(x) == np.ndim(y) == 0:
             return ra[0], dec[0]
+        else:
+            # Sanity checks that the inputs are the same shape.
+            assert np.ndim(x) == np.ndim(y)
+            assert x.shape == y.shape
+            return ra, dec
 
     def _invert_pv(self, u, v):
         # Do this in C++ layer for speed.
