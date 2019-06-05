@@ -826,19 +826,9 @@ class EuclideanWCS(BaseWCS):
         """
         from .angle import AngleUnit
         if color is None: color = self._color
-        if self.isCelestial():
-            if units is None:
-                raise TypeError("units is required for CelestialWCS types")
-            elif isinstance(units, str):
-                units = AngleUnit.from_name(units)
-            elif not isinstance(units, AngleUnit):
-                raise GalSimValueError("units must be either an AngleUnit or a string", units,
-                                       AngleUnit.valid_names)
-            return self._xyTouv(x, y, units, color)
-        else:
-            if units is not None:
-                raise TypeError("units is not valid for EuclideanWCS types")
-            return self._xyTouv(x, y, color=color)
+        if units is not None:
+            raise TypeError("units is not valid for EuclideanWCS types")
+        return self._xyTouv(x, y, color=color)
 
     def uvToxy(self, u, v, color=None):
         """Convert u,v from world coordinates to image coordinates.
@@ -1112,19 +1102,14 @@ class CelestialWCS(BaseWCS):
         """
         from .angle import AngleUnit
         if color is None: color = self._color
-        if self.isCelestial():
-            if units is None:
-                raise TypeError("units is required for CelestialWCS types")
-            elif isinstance(units, str):
-                units = AngleUnit.from_name(units)
-            elif not isinstance(units, AngleUnit):
-                raise GalSimValueError("units must be either an AngleUnit or a string", units,
-                                       AngleUnit.valid_names)
-            return self._xyToradec(x, y, units, color)
-        else:
-            if units is not None:
-                raise TypeError("units is not valid for EuclideanWCS types")
-            return self._xyToradec(x, y, color=color)
+        if units is None:
+            raise TypeError("units is required for CelestialWCS types")
+        elif isinstance(units, str):
+            units = AngleUnit.from_name(units)
+        elif not isinstance(units, AngleUnit):
+            raise GalSimValueError("units must be either an AngleUnit or a string", units,
+                                    AngleUnit.valid_names)
+        return self._xyToradec(x, y, units, color)
 
     def radecToxy(self, ra, dec, units, color=None):
         """Convert ra,dec from world coordinates to image coordinates.
