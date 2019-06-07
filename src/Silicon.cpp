@@ -488,10 +488,16 @@ namespace galsim {
 	int numThreads = 1;
 #endif
 	// Generate RNGs for each thread.
-	UniformDeviate initialUd(rng);
 	std::vector<UniformDeviate> ud;
-	for (int i = 0; i < numThreads; i++) {
-	   ud.push_back(UniformDeviate(initialUd() * LONG_MAX));
+	if (numThreads == 1) {
+	    // Match the old code in the serial case
+	    ud.push_back(UniformDeviate(rng));
+	}
+	else {
+	    UniformDeviate initialUd(rng);
+	    for (int i = 0; i < numThreads; i++) {
+		ud.push_back(UniformDeviate(initialUd() * LONG_MAX));
+	    }
 	}
 
         Bounds<int> b = target.getBounds();
