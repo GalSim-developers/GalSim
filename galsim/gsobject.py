@@ -2073,8 +2073,8 @@ class GSObject(object):
                             [default: (0,0)]
         @param local_wcs    The local wcs in the original image. [default: None]
 
-        @returns (nphotons, photons) where
-            nphotons is the total flux of photons that landed inside the image bounds, and
+        @returns (added_flux, photons) where
+            added_flux is the total flux of photons that landed inside the image bounds, and
             photons is the PhotonArray that was applied to the image.
         """
         from .sensor import Sensor
