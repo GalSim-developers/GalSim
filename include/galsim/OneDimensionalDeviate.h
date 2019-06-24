@@ -232,6 +232,7 @@ namespace galsim {
          *                         described in class docstring.
          * @param[in] isRadial     Set true for an axisymmetric function on the plane; false
          *                         for linear domain.
+         * @param[in] nominal_flux The expected true integral of the input fluxDensity function.
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         operations, if different from the default.
          */
