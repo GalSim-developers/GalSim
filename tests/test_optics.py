@@ -838,8 +838,8 @@ def test_geometric_shoot():
 
         # Use really good seeing, so that the optics contribution actually matters.
         psf = galsim.Convolve(opt_psf, galsim.Kolmogorov(fwhm=0.4))
-        im_shoot = psf.drawImage(nx=32, ny=32, scale=0.2, method='phot', n_photons=100000, rng=u)
-        im_fft = psf.drawImage(nx=32, ny=32, scale=0.2)
+        im_shoot = psf.drawImage(nx=256, ny=256, scale=0.2, method='phot', n_photons=100000, rng=u)
+        im_fft = psf.drawImage(nx=256, ny=256, scale=0.2)
 
         printval(im_fft, im_shoot)
         shoot_moments = galsim.hsm.FindAdaptiveMom(im_shoot)
@@ -865,6 +865,16 @@ def test_geometric_shoot():
         np.testing.assert_allclose(
             shoot_moments.observed_shape.g2, fft_moments.observed_shape.g2, rtol=0, atol=0.01,
             err_msg="")
+
+        # Check the flux
+        # The Airy part sends a lot of flux off the edge, so this test is a little loose.
+        added_flux = im_shoot.added_flux
+        print('psf.flux = ',psf.flux)
+        print('added_flux = ',added_flux)
+        print('image flux = ',im_shoot.array.sum())
+        assert np.isclose(added_flux, psf.flux, rtol=3.e-4)
+        assert np.isclose(im_shoot.array.sum(), psf.flux, rtol=3.e-4)
+
 
 
 if __name__ == "__main__":

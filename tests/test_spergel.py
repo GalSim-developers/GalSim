@@ -281,6 +281,42 @@ def test_spergel_05():
         np.testing.assert_almost_equal(spergel.xValue(pos), expon.xValue(pos), decimal=5)
         np.testing.assert_almost_equal(spergel.kValue(pos), expon.kValue(pos), decimal=5)
 
+
+@timer
+def test_spergel_shoot():
+    """Test Spergel with photon shooting.  Particularly the flux of the final image.
+    """
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.Spergel(nu=0, half_light_radius=3.5, flux=1.e4)
+    im = galsim.Image(100,100, scale=1)
+    im.setCenter(0,0)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+    obj = galsim.Spergel(nu=3.2, half_light_radius=3.5, flux=1.e4)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+    obj = galsim.Spergel(nu=-0.6, half_light_radius=3.5, flux=1.e4)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
@@ -304,4 +340,5 @@ if __name__ == "__main__":
     test_spergel_radii()
     test_spergel_flux_scaling()
     test_spergel_05()
+    test_spergel_shoot()
     test_ne()

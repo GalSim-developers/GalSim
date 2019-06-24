@@ -743,12 +743,12 @@ def test_phase_gradient_shoot():
     vk = galsim.VonKarman(lam=lam, r0=r0_500*(lam/500)**1.2, L0=L0)
     airy = galsim.Airy(lam=lam, diam=diam)
     obj = galsim.Convolve(vk, airy)
-    vkImg = obj.drawImage(nx=48, ny=48, scale=0.05)
+    vkImg = obj.drawImage(nx=256, ny=256, scale=0.05)
     vkMom = galsim.hsm.FindAdaptiveMom(vkImg)
 
     for psf, psf2 in zip(psfs, psfs2):
-        im_shoot = psf.drawImage(nx=48, ny=48, scale=0.05, method='phot', n_photons=100000, rng=rng)
-        im_fft = psf2.drawImage(nx=48, ny=48, scale=0.05)
+        im_shoot = psf.drawImage(nx=256, ny=256, scale=0.05, method='phot', n_photons=100000, rng=rng)
+        im_fft = psf2.drawImage(nx=256, ny=256, scale=0.05)
 
         # at this point, the atms should be different.
         assert atm != atm2
@@ -810,6 +810,13 @@ def test_phase_gradient_shoot():
 
         shoot_moments.append(shoot_moment)
         fft_moments.append(fft_moment)
+
+        # Check the flux
+        # The Airy part sends a lot of flux off the edge, so this test is pretty loose.
+        added_flux = im_shoot.added_flux
+        print('psf.flux = ',psf.flux, added_flux, im_shoot.array.sum())
+        assert np.isclose(added_flux, psf.flux, rtol=1.e-3)
+        assert np.isclose(im_shoot.array.sum(), psf.flux, rtol=1.e-3)
 
     # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
     # I think they're all fine, but this is admittedly a tad bit backwards.

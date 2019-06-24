@@ -549,7 +549,7 @@ namespace galsim {
         ranges[3] = -1.;
         for (int i=0; i<4; i++)
             ranges[7-i] = -ranges[i];
-        _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
+        _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, 1.0, _gsparams));
     }
 
     std::map<double,shared_ptr<TableBuilder> > Quintic::_cache_tab;

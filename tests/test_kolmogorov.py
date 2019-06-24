@@ -324,6 +324,23 @@ def test_kolmogorov_folding_threshold():
 
 
 @timer
+def test_kolmogorov_shoot():
+    """Test Kolmogorov with photon shooting.  Particularly the flux of the final image.
+    """
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.Kolmogorov(fwhm=1.5, flux=1.e4)
+    im = galsim.Image(500,500, scale=1)
+    im.setCenter(0,0)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+
+@timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
     # Define some universal gsps
@@ -351,4 +368,5 @@ if __name__ == "__main__":
     test_kolmogorov_radii()
     test_kolmogorov_flux_scaling()
     test_kolmogorov_folding_threshold()
+    test_kolmogorov_shoot()
     test_ne()

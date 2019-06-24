@@ -330,6 +330,24 @@ def test_gaussian_flux_scaling():
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
+
+@timer
+def test_gaussian_shoot():
+    """Test Gaussian with photon shooting.  Particularly the flux of the final image.
+    """
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.Gaussian(fwhm=3.5, flux=1.e4)
+    im = galsim.Image(100,100, scale=1)
+    im.setCenter(0,0)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
@@ -355,4 +373,5 @@ if __name__ == "__main__":
     test_gaussian_properties()
     test_gaussian_radii()
     test_gaussian_flux_scaling()
+    test_gaussian_shoot()
     test_ne()

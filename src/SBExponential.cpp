@@ -528,7 +528,7 @@ namespace galsim {
         dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
         range[1] = -std::log(gsparams->shoot_accuracy);
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *gsparams));
+        _sampler.reset(new OneDimensionalDeviate(*_radial, range, true, 2.*M_PI, *gsparams));
         dbg<<"Made sampler"<<std::endl;
 #endif
 

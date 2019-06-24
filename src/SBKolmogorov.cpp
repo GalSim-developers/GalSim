@@ -371,7 +371,7 @@ namespace galsim {
         double sum = 0.;
         double thresh0 = 0.5 / (2.*M_PI*dr);
         double thresh1 = (1.-gsparams->folding_threshold) / (2.*M_PI*dr);
-        double thresh2 = (1.-gsparams->folding_threshold/5.) / (2.*M_PI*dr);
+        double thresh2 = (1.-gsparams->shoot_accuracy) / (2.*M_PI*dr);
         double R = 0., hlr = 0.;
         // Continue until accumulate 0.999 of the flux
         KolmXValue xval_func(*gsparams);
@@ -401,7 +401,7 @@ namespace galsim {
         // Next, set up the sampler for photon shooting
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *gsparams));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, 1.0, *gsparams));
         dbg<<"made sampler\n";
 
 #ifdef SOLVE_FWHM_HLR

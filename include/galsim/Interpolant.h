@@ -200,7 +200,7 @@ namespace galsim {
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, 1.0, _gsparams));
         }
     };
 
