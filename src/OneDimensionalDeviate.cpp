@@ -353,6 +353,11 @@ namespace galsim {
             // There is an edge case to deal with -- SecondKick may give us a function with
             // no flux, which is fine, but don't divide by zero in this case.
             dbg<<"empirical_flux = "<<empirical_flux<<", should be "<<nominal_flux<<std::endl;
+            // Rescale the fluxes according to the expected values of the flux, input as
+            // nominal_flux.  This should be the analytic integral of the input function.
+            // The empirical integral is usually a bit smaller, since the upper limit is finite,
+            // so this corrections means the resulting total photon flux is not too small by
+            // ~gsparams.shoot_accuracy.  cf. Issue #1036.
             _positiveFlux *= nominal_flux / empirical_flux;
             _negativeFlux *= nominal_flux / empirical_flux;
             dbg<<"posFlux => "<<_positiveFlux<<std::endl;
