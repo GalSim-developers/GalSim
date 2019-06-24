@@ -25,4 +25,7 @@ Bug Fixes
 ---------
 
 - Fixed error in `wcs.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
+- Fixed slight error in the realized flux of some profiles when using photon shooting.
+  The bug was most apparent for Kolmogorov and VonKarman, where the realized flux
+  could be too small by about 1.e-3. (#1036)
 - Fixed error in Sersic class when n is very, very close to 0.5. (#1041)
