@@ -251,6 +251,23 @@ def test_sk_scale():
 
 
 @timer
+def test_sk_shoot():
+    """Test SecondKick with photon shooting.  Particularly the flux of the final image.
+    """
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.SecondKick(lam=500, r0=0.2, diam=4, flux=1.e4)
+    im = galsim.Image(500,500, scale=1)
+    im.setCenter(0,0)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+
+@timer
 def test_sk_ne():
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
@@ -283,6 +300,7 @@ if __name__ == '__main__':
     test_limiting_cases()
     test_sk_phase_psf()
     test_sk_scale()
+    test_sk_shoot()
     test_sk_ne()
 
     if args.profile:

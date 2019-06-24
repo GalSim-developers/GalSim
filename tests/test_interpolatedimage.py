@@ -1290,6 +1290,47 @@ def test_multihdu_readin():
 
 
 @timer
+def test_ii_shoot():
+    """Test InterpolatedImage with photon shooting.  Particularly the flux of the final image.
+    """
+    rng = galsim.BaseDeviate(1234)
+    ref_array = np.array([
+        [0.01, 0.08, 0.07, 0.02],
+        [0.13, 0.38, 0.52, 0.06],
+        [0.09, 0.41, 0.44, 0.09],
+        [0.04, 0.11, 0.10, 0.01] ])
+    image_in = galsim.Image(ref_array)
+    interp_list = ['nearest', 'delta', 'linear', 'cubic', 'quintic',
+                   'lanczos3', 'lanczos5', 'lanczos7']
+    im = galsim.Image(100,100, scale=1)
+    im.setCenter(0,0)
+    if __name__ == '__main__':
+        flux = 1.e6
+    else:
+        flux = 1.e4
+    for interp in interp_list:
+        obj = galsim.InterpolatedImage(image_in, x_interpolant=interp, scale=3.3, flux=flux)
+        added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+        print('interp = ',interp)
+        print('obj.flux = ',obj.flux)
+        print('added_flux = ',added_flux)
+        print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+        print('sum = ',photons.flux.sum())
+        print('image flux = ',im.array.sum())
+        if obj.negative_flux > 0:
+            # Where there are negative flux photons, there is an implicit poisson variance of the
+            # flux based on how many end up positive vs how many end up negative.
+            # This gets better as flux increases, but slower of course, so only use 1.e6
+            # when name==main.
+            rtol = (np.sqrt(obj.positive_flux) + np.sqrt(obj.negative_flux)) / obj.flux
+            print('using rtol = ',rtol)
+        else:
+            rtol = 1.e-7
+        assert np.isclose(added_flux, obj.flux, rtol=rtol)
+        assert np.isclose(im.array.sum(), obj.flux, rtol=rtol)
+
+
+@timer
 def test_ne():
     """ Check that inequality works as expected for corner cases where the reprs of two
     unequal InterpolatedImages or InterpolatedKImages may be the same due to truncation.
@@ -1389,4 +1430,5 @@ if __name__ == "__main__":
     test_stepk_maxk()
     test_kroundtrip()
     test_multihdu_readin()
+    test_ii_shoot()
     test_ne()

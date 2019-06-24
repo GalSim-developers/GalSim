@@ -224,12 +224,12 @@ namespace galsim {
     // unitRandom is a random value to use.
     void Interval::drawWithin(double unitRandom, double& x, double& flux) const
     {
-        dbg<<"drawWithin interval\n";
-        dbg<<"_flux = "<<_flux<<std::endl;
+        xdbg<<"drawWithin interval\n";
+        xdbg<<"_flux = "<<_flux<<std::endl;
         x = interpolateFlux(unitRandom);
-        dbg<<"x = "<<x<<std::endl;
+        xdbg<<"x = "<<x<<std::endl;
         flux = _flux < 0 ? -1. : 1.;
-        dbg<<"flux = "<<flux<<std::endl;
+        xdbg<<"flux = "<<flux<<std::endl;
     }
 
     void Interval::checkFlux() const
@@ -269,9 +269,9 @@ namespace galsim {
         double fUpper = (*_fluxDensityPtr)(_xUpper);
 
         std::list<shared_ptr<Interval> > result;
-        dbg<<"  flux = "<<_flux<<std::endl;
-        dbg<<"  min, max density = "<<fLower<<"  "<<fUpper<<std::endl;
-        dbg<<"  x0, x1 = "<<_xLower<<"  "<<_xUpper<<std::endl;
+        xdbg<<"  flux = "<<_flux<<std::endl;
+        xdbg<<"  min, max density = "<<fLower<<"  "<<fUpper<<std::endl;
+        xdbg<<"  x0, x1 = "<<_xLower<<"  "<<_xUpper<<std::endl;
         double linear_flux;
         if (_isRadial) {
             // linear flux would be 2pi int_r0..r1 f0 r + (f1-f0)/(r1-r0) (r-r0) r
@@ -285,7 +285,7 @@ namespace galsim {
             _c = fUpper + fLower;
             linear_flux = 0.5 * _xRange * _c;
         }
-        dbg<<"  If linear, flux = "<<linear_flux<<"  error = "<<linear_flux - _flux<<std::endl;
+        xdbg<<"  If linear, flux = "<<linear_flux<<"  error = "<<linear_flux - _flux<<std::endl;
         if (std::abs(linear_flux - _flux) < toler) {
             // Store a few other combinations that will be used when drawing within interval.
             if (_isRadial) {
@@ -322,7 +322,7 @@ namespace galsim {
 
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity,
                                                  std::vector<double>& range,
-                                                 bool isRadial,
+                                                 bool isRadial, double nominal_flux,
                                                  const GSParams& gsparams) :
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
@@ -348,8 +348,18 @@ namespace galsim {
         }
         dbg<<"posFlux = "<<_positiveFlux<<std::endl;
         dbg<<"negFlux = "<<_negativeFlux<<std::endl;
+        double empirical_flux = _positiveFlux - _negativeFlux;
+        if (empirical_flux > 0) {
+            // There is an edge case to deal with -- SecondKick may give us a function with
+            // no flux, which is fine, but don't divide by zero in this case.
+            dbg<<"empirical_flux = "<<empirical_flux<<", should be "<<nominal_flux<<std::endl;
+            _positiveFlux *= nominal_flux / empirical_flux;
+            _negativeFlux *= nominal_flux / empirical_flux;
+            dbg<<"posFlux => "<<_positiveFlux<<std::endl;
+            dbg<<"negFlux => "<<_negativeFlux<<std::endl;
+        }
         double totalAbsoluteFlux = _positiveFlux + _negativeFlux;
-        dbg<<"totFlux = "<<totalAbsoluteFlux<<std::endl;
+        dbg<<"totAbsFlux = "<<totalAbsoluteFlux<<std::endl;
 
         if (totalAbsoluteFlux == 0.) {
             // The below calculation will crash, so do something trivial that works.

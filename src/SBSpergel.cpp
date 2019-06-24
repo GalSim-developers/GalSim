@@ -704,7 +704,9 @@ namespace galsim {
                 std::vector<double> range(2,0.);
                 range[1] = shoot_rmax;
                 _radial.reset(new SpergelNuPositiveRadialFunction(_nu, _xnorm0));
-                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
+                double nominal_flux = 2.*M_PI*std::pow(2.,_nu)*_gamma_nup1;
+                _sampler.reset(new OneDimensionalDeviate(*_radial, range, true, nominal_flux,
+                                                         *_gsparams));
             } else {
                 // exact s.b. profile diverges at origin, so replace the inner most circle
                 // (defined such that enclosed flux is shoot_acccuracy) with a linear function
@@ -728,7 +730,9 @@ namespace galsim {
                 range[1] = shoot_rmin;
                 range[2] = shoot_rmax;
                 _radial.reset(new SpergelNuNegativeRadialFunction(_nu, shoot_rmin, a, b));
-                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
+                double nominal_flux = 2.*M_PI*std::pow(2.,_nu)*_gamma_nup1;
+                _sampler.reset(new OneDimensionalDeviate(*_radial, range, true, nominal_flux,
+                                                         *_gsparams));
             }
         }
 

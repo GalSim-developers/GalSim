@@ -237,7 +237,7 @@ namespace galsim {
          */
         OneDimensionalDeviate(
             const FluxDensity& fluxDensity, std::vector<double>& range, bool isRadial,
-            const GSParams& gsparams);
+            double nominal_flux, const GSParams& gsparams);
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}

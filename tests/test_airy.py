@@ -223,6 +223,33 @@ def test_airy_flux_scaling():
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
+@timer
+def test_airy_shoot():
+    """Test Airy with photon shooting.  Particularly the flux of the final image.
+    """
+    # Airy patterns have *very* extended wings, so make this really small and the image really
+    # big to make sure we capture all the photons.
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.Airy(lam_over_diam=0.01, flux=1.e4)
+    im = galsim.Image(1000,1000, scale=1)
+    im.setCenter(0,0)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+    obj = galsim.Airy(lam_over_diam=0.01, flux=1.e4, obscuration=0.4)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
 
 @timer
 def test_ne():
@@ -242,8 +269,10 @@ def test_ne():
             galsim.Airy(lam_over_diam=1.0, gsparams=gsp)]
     all_obj_diff(gals)
 
+
 if __name__ == "__main__":
     test_airy()
     test_airy_radii()
     test_airy_flux_scaling()
+    test_airy_shoot()
     test_ne()

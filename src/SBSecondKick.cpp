@@ -317,7 +317,7 @@ namespace galsim {
             range[1] = _radial.argMax();
             dbg<<"range = "<<range[0]<<"  "<<range[1]<<std::endl;
             dbg<<"Make ODD\n";
-            _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *_gsparams));
+            _sampler.reset(new OneDimensionalDeviate(_radial, range, true, 1.0, *_gsparams));
             dbg<<"Made ODD\n";
             return;
         }
@@ -331,7 +331,7 @@ namespace galsim {
         // that encloses (1-folding_threshold) of the flux.
         double thresh0 = (0.5 - _delta) / (2.*M_PI*dr);
         double thresh1 = (1.-_delta-_gsparams->folding_threshold) / (2.*M_PI*dr);
-        double thresh2 = (1.-_delta-_gsparams->folding_threshold/5.) / (2.*M_PI*dr);
+        double thresh2 = (1.-_delta-_gsparams->shoot_accuracy) / (2.*M_PI*dr);
         double R = 0., hlr = 0.;
 
         _radial.addEntry(0., val);
@@ -405,7 +405,7 @@ namespace galsim {
 
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *_gsparams));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, 1.0, *_gsparams));
         dbg<<"made sampler\n";
         //set_verbose(1);
     }

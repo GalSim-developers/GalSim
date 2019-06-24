@@ -280,7 +280,7 @@ namespace galsim {
         // So the relevant thresholds we want are:
         double thresh0 = 0.5 / (2.*M_PI*dlogr);
         double thresh1 = (1.-_gsparams->folding_threshold) / (2.*M_PI*dlogr);
-        double thresh2 = (1.-_gsparams->folding_threshold/5.) / (2.*M_PI*dlogr);
+        double thresh2 = (1.-_gsparams->shoot_accuracy) / (2.*M_PI*dlogr);
         dbg<<"thresh = "<<thresh0<<"  "<<thresh1<<"  "<<thresh2<<std::endl;
         double R = 0.;
         _hlr = 0.;
@@ -317,7 +317,7 @@ namespace galsim {
 
         std::vector<double> range(2, 0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *_gsparams));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, 1.0, *_gsparams));
     }
 
     void VonKarmanInfo::shoot(PhotonArray& photons, UniformDeviate ud) const

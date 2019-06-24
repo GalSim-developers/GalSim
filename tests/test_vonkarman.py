@@ -121,6 +121,43 @@ def test_vk_scale():
 
 
 @timer
+def test_vk_shoot():
+    """Test VonKarman with photon shooting.  Particularly the flux of the final image.
+    """
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.VonKarman(lam=500, r0=0.2, flux=1.e4)
+    im = galsim.Image(100,100, scale=1)
+    im.setCenter(0,0)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+    obj = galsim.VonKarman(lam=500, r0=0.2, L0=10., flux=1.e4)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+    obj = galsim.VonKarman(lam=700, r0=0.02, L0=10., flux=1.e4)
+    im = galsim.Image(500,500, scale=1)
+    im.setCenter(0,0)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    print('obj.flux = ',obj.flux)
+    print('added_flux = ',added_flux)
+    print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
+    print('image flux = ',im.array.sum())
+    assert np.isclose(added_flux, obj.flux)
+    assert np.isclose(im.array.sum(), obj.flux)
+
+
+@timer
 def test_vk_ne():
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
@@ -247,6 +284,7 @@ if __name__ == "__main__":
     test_vk(args.slow)
     test_vk_delta()
     test_vk_scale()
+    test_vk_shoot()
     test_vk_ne()
     test_vk_eq_kolm()
     test_vk_fitting_formulae()

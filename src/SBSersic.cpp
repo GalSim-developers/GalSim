@@ -841,7 +841,9 @@ namespace galsim {
             double shoot_maxr = calculateMissingFluxRadius(_gsparams->shoot_accuracy);
             if (_truncated && _trunc < shoot_maxr) shoot_maxr = _trunc;
             range[1] = shoot_maxr;
-            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
+            double nominal_flux = 2.*M_PI*_n*_gamma2n * _flux;
+            _sampler.reset(new OneDimensionalDeviate(*_radial, range, true, nominal_flux,
+                                                     *_gsparams));
         }
 
         assert(_sampler.get());
