@@ -169,7 +169,7 @@ namespace galsim {
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
         dbg<<"updatePixelDistortions\n";
-       // This updates the pixel distortions in the _imagepolys
+        // This updates the pixel distortions in the _imagepolys
         // pixel list based on the amount of additional charge in each pixel
         // This distortion assumes the electron is created at the
         // top of the silicon.  It mus be scaled based on the conversion depth
@@ -184,7 +184,6 @@ namespace galsim {
         const int j1 = target.getYMin();
         const int j2 = target.getYMax();
         const int ny = j2-j1+1;
-        const int skip = target.getNSkip();
         const int step = target.getStep();
 
         // Now we cycle through the pixels in the target image and update any affected
@@ -192,8 +191,8 @@ namespace galsim {
         std::vector<bool> changed(_imagepolys.size(), false);
 #pragma omp parallel for
         for (int j=j1; j<=j2; ++j) {
-	    const T* ptr = target.getData();
-	    ptr += ((skip + (((i2-i1)+1) * step)) * (j - j1));	    
+            const T* ptr = target.getData();
+            ptr += (j-j1) * target.getStride();
             for (int i=i1; i<=i2; ++i, ptr+=step) {
                 double charge = *ptr;
                 if (charge == 0.0) continue;
@@ -362,16 +361,15 @@ namespace galsim {
     // an electron.
 
     double Silicon::calculateConversionDepth(const PhotonArray& photons, int i,
-                                             BaseDeviate rng) const
+                                             double randomNumber) const
     {
-        UniformDeviate ud(rng);
         // Determine the distance the photon travels into the silicon
         double si_length;
         if (photons.hasAllocatedWavelengths()) {
             double lambda = photons.getWavelength(i); // in nm
             // Lookup the absorption length in the imported table
             double abs_length = _abs_length_table.lookup(lambda); // in microns
-            si_length = -abs_length * log(1.0 - ud()); // in microns
+            si_length = -abs_length * log(1.0 - randomNumber); // in microns
 #ifdef DEBUGLOGGING
             if (i % 1000 == 0) {
                 xdbg<<"lambda = "<<lambda<<std::endl;
@@ -483,22 +481,26 @@ namespace galsim {
                                Position<int> orig_center, bool resume)
     {
 #ifdef _OPENMP
-	int numThreads = omp_get_max_threads();
+        int numThreads = omp_get_max_threads();
 #else
-	int numThreads = 1;
+        int numThreads = 1;
 #endif
-	// Generate RNGs for each thread.
-	std::vector<UniformDeviate> ud;
-	if (numThreads == 1) {
-	    // Match the old code in the serial case
-	    ud.push_back(UniformDeviate(rng));
-	}
-	else {
-	    UniformDeviate initialUd(rng);
-	    for (int i = 0; i < numThreads; i++) {
-		ud.push_back(UniformDeviate(initialUd() * LONG_MAX));
-	    }
-	}
+        const int nphotons = photons.size();
+
+        // Generate random numbers in advance
+        std::vector<double> conversionDepthRandom(nphotons);
+        std::vector<double> pixelNotFoundRandom(nphotons);
+        std::vector<double> diffStepRandom(nphotons * 2);
+
+        UniformDeviate ud(rng);
+        GaussianDeviate gd(ud, 0, 1);
+
+        for (int i = 0; i < nphotons; i++) {
+            diffStepRandom[i*2] = gd();
+            diffStepRandom[i*2+1] = gd();
+            pixelNotFoundRandom[i] = ud();
+            conversionDepthRandom[i] = ud();
+        }
 
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
@@ -571,165 +573,157 @@ namespace galsim {
         const double invPixelSize = 1./_pixelSize; // pixels/micron
         const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
 
-        const int nphotons = photons.size();
-
         double addedFlux = 0.;
-	std::vector<GaussianDeviate> gd;
-	for (int i = 0; i < numThreads; i++) {
-	   gd.push_back(GaussianDeviate(ud[i], 0, 1));
-	}
-
 	int startPhoton = 0;
 
-	while (startPhoton < nphotons) {
-	   // new parallel version of code
+        while (startPhoton < nphotons) {
+            // new parallel version of code
 
-	   // count up how many photos we can use before recalc is needed
-	   int photonsUntilRecalc = startPhoton;
-	   while ((photonsUntilRecalc < nphotons) && (addedFlux <= next_recalc)) {
-	      addedFlux += photons.getFlux(photonsUntilRecalc);
-	      photonsUntilRecalc++;
-	   }
+            // count up how many photos we can use before recalc is needed
+            int photonsUntilRecalc = startPhoton;
+            while ((photonsUntilRecalc < nphotons) && (addedFlux <= next_recalc)) {
+                addedFlux += photons.getFlux(photonsUntilRecalc);
+                photonsUntilRecalc++;
+            }
 
 #pragma omp parallel for
-	   for (int i = startPhoton; i < photonsUntilRecalc; i++) {
+            for (int i = startPhoton; i < photonsUntilRecalc; i++) {
 #ifdef _OPENMP
-	      int t = omp_get_thread_num();
+                int t = omp_get_thread_num();
 #else
-	      int t = 0;
+                int t = 0;
 #endif
-	      // Get the location where the photon strikes the silicon:
-	      double x0 = photons.getX(i); // in pixels
-	      double y0 = photons.getY(i); // in pixels
-	      xdbg<<"x0,y0 = "<<x0<<','<<y0;
+                // Get the location where the photon strikes the silicon:
+                double x0 = photons.getX(i); // in pixels
+                double y0 = photons.getY(i); // in pixels
+                xdbg<<"x0,y0 = "<<x0<<','<<y0;
 
-	      double dz = calculateConversionDepth(photons, i, ud[t]);
-	      if (photons.hasAllocatedAngles()) {
-		 double dxdz = photons.getDXDZ(i);
-		 double dydz = photons.getDYDZ(i);
-		 double dz_pixel = dz * invPixelSize;
-		 x0 += dxdz * dz_pixel; // dx in pixels
-		 y0 += dydz * dz_pixel; // dy in pixels
-	      }
-	      xdbg<<" => "<<x0<<','<<y0;
-	      // This is the reverse of depth. zconv is how far above the substrate the e- converts.
-	      double zconv = _sensorThickness - dz;
-	      if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
-	      // TODO: Do something more realistic if it hits the bottom.
+                double dz = calculateConversionDepth(photons, i, conversionDepthRandom[i]);
+                if (photons.hasAllocatedAngles()) {
+                    double dxdz = photons.getDXDZ(i);
+                    double dydz = photons.getDYDZ(i);
+                    double dz_pixel = dz * invPixelSize;
+                    x0 += dxdz * dz_pixel; // dx in pixels
+                    y0 += dydz * dz_pixel; // dy in pixels
+                }
+                xdbg<<" => "<<x0<<','<<y0;
+                // This is the reverse of depth. zconv is how far above the substrate the e- converts.
+                double zconv = _sensorThickness - dz;
+                if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
+                // TODO: Do something more realistic if it hits the bottom.
 
-	      // Now we add in a displacement due to diffusion
-	      if (_diffStep != 0.) {
-		 double diffStep = std::max(
-					    0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
-		 x0 += diffStep * gd[t]();
-		 y0 += diffStep * gd[t]();
-	      }
-	      xdbg<<" => "<<x0<<','<<y0<<std::endl;
-	      double flux = photons.getFlux(i);
+                // Now we add in a displacement due to diffusion
+                if (_diffStep != 0.) {
+                    double diffStep = std::max(0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
+                    x0 += diffStep * diffStepRandom[i*2];
+                    y0 += diffStep * diffStepRandom[i*2+1];
+                }
+                xdbg<<" => "<<x0<<','<<y0<<std::endl;
+                double flux = photons.getFlux(i);
 
 #ifdef DEBUGLOGGING
-	      if (i % 1000 == 0) {
-		  xdbg<<"diffStep = "<<_diffStep<<std::endl;
-		  xdbg<<"zconv = "<<zconv<<std::endl;
-		  xdbg<<"x0 = "<<x0<<std::endl;
-		  xdbg<<"y0 = "<<y0<<std::endl;
-	      }
+                if (i % 1000 == 0) {
+                    xdbg<<"diffStep = "<<_diffStep<<std::endl;
+                    xdbg<<"zconv = "<<zconv<<std::endl;
+                    xdbg<<"x0 = "<<x0<<std::endl;
+                    xdbg<<"y0 = "<<y0<<std::endl;
+                }
 #endif
 
-	      // Now we find the undistorted pixel
-	      int ix = int(floor(x0 + 0.5));
-	      int iy = int(floor(y0 + 0.5));
-	      
+                // Now we find the undistorted pixel
+                int ix = int(floor(x0 + 0.5));
+                int iy = int(floor(y0 + 0.5));
+
 #ifdef DEBUGLOGGING
-	      int ix0 = ix;
-	      int iy0 = iy;
+                int ix0 = ix;
+                int iy0 = iy;
 #endif
 
-	      double x = x0 - ix + 0.5;
-	      double y = y0 - iy + 0.5;
-	      // (ix,iy) are the undistorted pixel coordinates.
-	      // (x,y) are the coordinates within the pixel, centered at the lower left
-	      
-	      // First check the obvious choice, since this will usually work.
-	      bool off_edge;
-	      bool foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
+                double x = x0 - ix + 0.5;
+                double y = y0 - iy + 0.5;
+                // (ix,iy) are the undistorted pixel coordinates.
+                // (x,y) are the coordinates within the pixel, centered at the lower left
+
+                // First check the obvious choice, since this will usually work.
+                bool off_edge;
+                bool foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
 #ifdef DEBUGLOGGING
-	      if (foundPixel) ++zerocount;
+                if (foundPixel) ++zerocount;
 #endif
 
-	      // If the nominal position is on the edge of the image, off_edge reports whether
-	      // the photon has fallen off the edge of the image. In this case, we won't find it in
-	      // any of the neighbors either.  Just let the photon fall off the edge in this case.
-	      if (!foundPixel && off_edge) continue;
-	      
-	      // Then check neighbors
-	      int step;  // We might need this below, so let searchNeighbors return it.
-	      if (!foundPixel) {
-		  foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
+                // If the nominal position is on the edge of the image, off_edge reports whether
+                // the photon has fallen off the edge of the image. In this case, we won't find it in
+                // any of the neighbors either.  Just let the photon fall off the edge in this case.
+                if (!foundPixel && off_edge) continue;
+
+                // Then check neighbors
+                int step;  // We might need this below, so let searchNeighbors return it.
+                if (!foundPixel) {
+                    foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
 #ifdef DEBUGLOGGING
-		  if (foundPixel) ++neighborcount;
+                    if (foundPixel) ++neighborcount;
 #endif
-	      }
-	      
-	      // Rarely, we won't find it in the undistorted pixel or any of the neighboring pixels.
-	      // If we do arrive here due to roundoff error of the pixel boundary, put the electron
-	      // in the undistorted pixel or the nearest neighbor with equal probability.
-	      if (!foundPixel) {
+                }
+
+                // Rarely, we won't find it in the undistorted pixel or any of the neighboring pixels.
+                // If we do arrive here due to roundoff error of the pixel boundary, put the electron
+                // in the undistorted pixel or the nearest neighbor with equal probability.
+                if (!foundPixel) {
 #ifdef DEBUGLOGGING
-		  dbg<<"Not found in any pixel\n";
-		  dbg<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
-		  dbg<<"b = "<<b<<std::endl;
-		  dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
-		  set_verbose(2);
-		  bool off_edge;
-		  insidePixel(ix, iy, x, y, zconv, target, &off_edge);
-		  searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
-		  set_verbose(1);
-		  ++misscount;
+                    dbg<<"Not found in any pixel\n";
+                    dbg<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
+                    dbg<<"b = "<<b<<std::endl;
+                    dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
+                    set_verbose(2);
+                    bool off_edge;
+                    insidePixel(ix, iy, x, y, zconv, target, &off_edge);
+                    searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
+                    set_verbose(1);
+                    ++misscount;
 #endif
-		  int n = (ud[t]() > 0.5) ? 0 : step;
-		  ix = ix + xoff[n];
-		  iy = iy + yoff[n];
-	      }
+                    int n = (pixelNotFoundRandom[i] > 0.5) ? 0 : step;
+                    ix = ix + xoff[n];
+                    iy = iy + yoff[n];
+                }
 #if 0
-	      // (ix, iy) now give the actual pixel which will receive the charge
-	      if (ix != ix0 || iy != iy0) {
-		  dbg<<"("<<ix0<<","<<iy0<<") -> ("<<ix<<","<<iy<<")\n";
-		  double r0 = std::sqrt((ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5));
-		  double r = std::sqrt((ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5));
-		  dbg<<"r = "<<r0<<" -> "<<r;
-		  if (r < r0) { dbg<<"  *****"; }
-		  dbg<<"\nstep = "<<step<<", n = "<<n<<", m_found = "<<m_found<<std::endl;
-		  dbg<<"flux = "<<photons.getFlux(i)<<std::endl;
-	      }
+                // (ix, iy) now give the actual pixel which will receive the charge
+                if (ix != ix0 || iy != iy0) {
+                    dbg<<"("<<ix0<<","<<iy0<<") -> ("<<ix<<","<<iy<<")\n";
+                    double r0 = std::sqrt((ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5));
+                    double r = std::sqrt((ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5));
+                    dbg<<"r = "<<r0<<" -> "<<r;
+                    if (r < r0) { dbg<<"  *****"; }
+                    dbg<<"\nstep = "<<step<<", n = "<<n<<", m_found = "<<m_found<<std::endl;
+                    dbg<<"flux = "<<photons.getFlux(i)<<std::endl;
+                }
 #endif
-	      
-	      if (b.includes(ix,iy)) {
+
+                if (b.includes(ix,iy)) {
 #ifdef DEBUGLOGGING
-		  double rsq = (ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5);
-		  Irr += flux * rsq;
-		  rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
-		  Irr0 += flux * rsq;
+                    double rsq = (ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5);
+                    Irr += flux * rsq;
+                    rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
+                    Irr0 += flux * rsq;
 #endif
 #pragma omp atomic
-		 _delta(ix,iy) += flux;
+                    _delta(ix,iy) += flux;
 
-		 // no longer need to update addedFlux as it's done before this loop
-	      }
-	   }
+                    // no longer need to update addedFlux as it's done before this loop
+                }
+            }
 
-	   // Update shapes every _nrecalc electrons
-	   if (addedFlux > next_recalc) {
-	      dbg<<"updatePixelDistortions because "<<addedFlux<<" > "<<next_recalc<<std::endl;
-	      updatePixelDistortions(_delta.view());
-	      target += _delta;
-	      _delta.setZero();
-	      next_recalc = addedFlux + _nrecalc;
-	   }
+            // Update shapes every _nrecalc electrons
+            if (addedFlux > next_recalc) {
+                dbg<<"updatePixelDistortions because "<<addedFlux<<" > "<<next_recalc<<std::endl;
+                updatePixelDistortions(_delta.view());
+                target += _delta;
+                _delta.setZero();
+                next_recalc = addedFlux + _nrecalc;
+            }
 
-	   startPhoton = photonsUntilRecalc;
-	}
-		  
+            startPhoton = photonsUntilRecalc;
+        }
+
         // No need to update the distortions again, but we do need to add the delta image.
         target += _delta;
         _resume_next_recalc = next_recalc - addedFlux;
