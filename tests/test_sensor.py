@@ -461,9 +461,9 @@ def test_silicon_area():
     print('+- 1 along row:    ',im2(1,0),im2(-1,0))
     assert im2(0,0) == im2.array.max()
     assert im2(0,1) + im2(0,-1) > im2(1,0) + im2(-1,0)
-    np.testing.assert_almost_equal(im2(0,0), 143352)
-    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59306.5)
-    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59032.0)
+    np.testing.assert_almost_equal(im2(0,0), 143340)
+    np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59307.0)
+    np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59031.0)
 
     # Repeat with transpose=True to check that things are transposed properly.
     siliconT = galsim.SiliconSensor(rng=rng, transpose=True, diffusion_factor=0.0)
@@ -477,7 +477,7 @@ def test_silicon_area():
     np.testing.assert_almost_equal(area_imageT(0,0), 0.8962292034379046)
     np.testing.assert_almost_equal((area_imageT(0,1) + area_imageT(0,-1))/2., 0.9686605382489861)
     np.testing.assert_almost_equal((area_imageT(1,0) + area_imageT(-1,0))/2., 0.9789158236482416)
-    np.testing.assert_almost_equal(area_imageT.array, area_image.array.T, decimal=15)
+    np.testing.assert_almost_equal(area_imageT.array, area_image.array.T, decimal=14)
 
     im2T = obj.drawImage(nx=17, ny=17, scale=0.3, method='phot', sensor=siliconT, rng=rng)
     im2T.setCenter(0,0)
@@ -489,9 +489,9 @@ def test_silicon_area():
     assert im2T(0,0) == im2T.array.max()
     assert im2T(0,1) + im2T(0,-1) < im2T(1,0) + im2T(-1,0)
     # Actual values are different, since rng is in different state. But qualitatively transposed.
-    np.testing.assert_almost_equal(im2T(0,0), 143842)
-    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 58895.0)
-    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59243.0)
+    np.testing.assert_almost_equal(im2T(0,0), 142604)
+    np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 59185.5)
+    np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59375.0)
 
     do_pickle(siliconT)
 

@@ -70,9 +70,9 @@ if "--debug" in sys.argv:
 
 copt =  {
     'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
-    'icc' : ['-O2','-msse2','-vec-report0','-std=c++11'],
+    'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-fopenmp'],
     'clang' : ['-O2','-msse2','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden',
-               '-stdlib=libc++'],
+               '-stdlib=libc++','-fopenmp'],
     'unknown' : [],
 }
 
