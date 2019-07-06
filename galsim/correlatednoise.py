@@ -36,10 +36,12 @@ def whitenNoise(self, noise):
     by the CorrelatedNoise object `noise`.  See CorrelatedNoise.whitenImage() docstring for more
     details of how this method works.
 
-    @param noise        The CorrelatedNoise model to use when figuring out how much noise to add to
-                        make the final noise white.
-    @returns the theoretically calculated variance of the combined noise fields in the
-             updated image.
+    Parameters:
+        noise:      The CorrelatedNoise model to use when figuring out how much noise to add to
+                    make the final noise white.
+
+    Returns:
+        the theoretically calculated variance of the combined noise fields in the updated image.
     """
     return noise.whitenImage(self)
 
@@ -50,13 +52,14 @@ def symmetrizeNoise(self, noise, order=4):
     object `noise`.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this
     method works.
 
-    @param noise        The CorrelatedNoise model to use when figuring out how much noise to add to
-                        make the final noise have symmetry at the desired order.
-    @param order        Desired symmetry order.  Must be an even integer larger than 2.
-                        [default: 4]
+    Parameters:
+        noise:      The CorrelatedNoise model to use when figuring out how much noise to add to
+                    make the final noise have symmetry at the desired order.
+        order:      Desired symmetry order.  Must be an even integer larger than 2.
+                    [default: 4]
 
-    @returns the theoretically calculated variance of the combined noise fields in the
-             updated image.
+    Returns:
+        the theoretically calculated variance of the combined noise fields in the updated image.
     """
     return noise.symmetrizeImage(self, order=order)
 
@@ -143,7 +146,7 @@ class _BaseCorrelatedNoise(object):
         """Returns a copy of the correlated noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if you want with
+        instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> cn_copy = cn.copy(rng=new_rng)
         """
@@ -177,14 +180,12 @@ class _BaseCorrelatedNoise(object):
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.
 
-        Calling
-        -------
-        To add deviates to every element of an image, the syntax
+        To add deviates to every element of an image, the syntax::
 
             >>> image.addNoise(correlated_noise)
 
         is preferred.  However, this is equivalent to calling this instance's applyTo() method as
-        follows
+        follows::
 
             >>> correlated_noise.applyTo(image)
 
@@ -203,7 +204,7 @@ class _BaseCorrelatedNoise(object):
         different direction and/or scale in image coordinates.
 
         If you want to override this behavior, you can view your image with the WCS of the
-        correlation function and apply the noise to that.  For example:
+        correlation function and apply the noise to that.  For example::
 
             >>> image = galsim.Image(nx, ny, wcs=complicated_wcs)
             >>> noise = galsim.getCOSMOSNoise(rng=rng)
@@ -219,7 +220,8 @@ class _BaseCorrelatedNoise(object):
         avoid this property being present in your final `image` you should add the noise to an
         `image` of greater extent than you need, and take a subset.
 
-        @param image The input Image object.
+        Parameters:
+            image:      The input Image object.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
@@ -259,10 +261,8 @@ class _BaseCorrelatedNoise(object):
         a specified CorrelatedNoise instance, designed to whiten any correlated noise that may have
         originally existed in `image`.
 
-        Note: the syntax `image.whitenNoise(noise)` is preferred.
-
-        Calling
-        -------
+        Note: the syntax ``image.whitenNoise(noise)`` is normally preferred, but it is equivalent
+        to::
 
             >>> correlated_noise.whitenImage(image)
 
@@ -281,14 +281,14 @@ class _BaseCorrelatedNoise(object):
         the local uniform approximation at the center of the image will be used.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
-        after whitening, the whitenImage() method in fact returns this variance.  For example:
+        after whitening, the whitenImage() method in fact returns this variance.  For example::
 
             >>> variance = correlated_noise.whitenImage(image)
 
-        Example
-        -------
+        Example:
+
         To see noise whitening in action, let us use a model of the correlated noise in COSMOS
-        as returned by the getCOSMOSNoise() function.  Let's initialize and add noise to an image:
+        as returned by the getCOSMOSNoise() function.  Let's initialize and add noise to an image::
 
             >>> cn = galsim.getCOSMOSNoise()
             >>> image = galsim.ImageD(256, 256, scale=0.03)
@@ -297,17 +297,18 @@ class _BaseCorrelatedNoise(object):
 
         The `image` will then contain a realization of a random noise field with COSMOS-like
         correlation.  Using the whitenImage() method, we can now add more noise to `image`
-        with a power spectrum specifically designed to make the combined noise fields uncorrelated:
+        with a power spectrum specifically designed to make the combined noise fields uncorrelated::
 
             >>> cn.whitenImage(image)
 
         Of course, this whitening comes at the cost of adding further noise to the image, but
         the algorithm is designed to make this additional noise (nearly) as small as possible.
 
-        @param image The input Image object.
+        Parameters:
+            image:      The input Image object.
 
-        @returns the theoretically calculated variance of the combined noise fields in the
-                 updated image.
+        Returns:
+            the theoretically calculated variance of the combined noise fields in the updated image.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
@@ -352,16 +353,14 @@ class _BaseCorrelatedNoise(object):
         4 because this is presumably the minimum required for the anisotropy of noise correlations
         to not affect shear statistics.
 
-        Note: the syntax `image.symmetrizeNoise(noise, order)` is preferred.
+        Note: the syntax `image.symmetrizeNoise(noise, order)` is preferred, but it is equivalent
+        to::
+
+            >>> correlated_noise.symmetrizeImage(image, order=order)
 
         On output the Image instance `image` will have been given additional noise according to a
         specified CorrelatedNoise instance, designed to symmetrize the correlated noise that may
         have originally existed in `image`.
-
-        Calling
-        -------
-
-            >>> correlated_noise.symmetrizeImage(image, order=order)
 
         If the `image` originally contained noise with a correlation function described by the
         `correlated_noise` instance, the combined noise after using the symmetrizeImage() method
@@ -376,7 +375,7 @@ class _BaseCorrelatedNoise(object):
 
         If you are interested in a theoretical calculation of the variance in the final noise field
         after imposing symmetry, the symmetrizeImage() method in fact returns this variance.
-        For example:
+        For example::
 
             >>> variance = correlated_noise.symmetrizeImage(image, order=order)
 
@@ -386,13 +385,14 @@ class _BaseCorrelatedNoise(object):
         whiten the noise.  The usage of symmetrizeImage() is totally analogous to the usage of
         whitenImage().
 
-        @param image The square input Image object.
-        @param order The order at which to require the noise to be symmetric.  All noise fields are
-                     already 2-fold symmetric, so `order` should be an even integer >2.
-                     [default: 4].
+        Parameters:
+            image:      The square input Image object.
+            order:      The order at which to require the noise to be symmetric.  All noise fields
+                        are already 2-fold symmetric, so `order` should be an even integer >2.
+                        [default: 4].
 
-        @returns the theoretically calculated variance of the combined noise fields in the
-                 updated image.
+        Returns:
+            the theoretically calculated variance of the combined noise fields in the updated image.
         """
         # Check that the input has defined bounds
         if not isinstance(image, Image):
@@ -436,9 +436,11 @@ class _BaseCorrelatedNoise(object):
         Scales the linear dimensions of the image by the factor `scale`, e.g.
         `half_light_radius` <-- `half_light_radius * scale`.
 
-        @param scale    The linear rescaling factor to apply.
+        Parameters:
+            scale:      The linear rescaling factor to apply.
 
-        @returns a new CorrelatedNoise object with the specified expansion.
+        Returns:
+            a new CorrelatedNoise object with the specified expansion.
         """
         return _BaseCorrelatedNoise(self.rng, self._profile.expand(scale), self.wcs)
 
@@ -446,9 +448,11 @@ class _BaseCorrelatedNoise(object):
         """Apply the appropriate changes to the scale and variance for when the object has
         an applied dilation.
 
-        @param scale    The linear dilation scale factor.
+        Parameters:
+            scale:  The linear dilation scale factor.
 
-        @returns a new CorrelatedNoise object with the specified dilation.
+        Returns:
+            a new CorrelatedNoise object with the specified dilation.
         """
         # Expansion changes the flux by scale**2, dilate reverses that to conserve flux,
         # so the variance needs to change by scale**-4.
@@ -458,29 +462,35 @@ class _BaseCorrelatedNoise(object):
         """Apply the appropriate changes to the scale and variance for when the object has
         an applied magnification `mu`.
 
-        @param mu       The lensing magnification
+        Parameters:
+            mu:     The lensing magnification
 
-        @returns a new CorrelatedNoise object with the specified magnification.
+        Returns:
+            a new CorrelatedNoise object with the specified magnification.
         """
         return _BaseCorrelatedNoise(self.rng, self._profile.magnify(mu), self.wcs)
 
     def lens(self, g1, g2, mu):
         """Apply the appropriate changes for when the object has an applied shear and magnification.
 
-        @param g1       First component of lensing (reduced) shear to apply to the object.
-        @param g2       Second component of lensing (reduced) shear to apply to the object.
-        @param mu       Lensing magnification to apply to the object.
+        Parameters:
+            g1:     First component of lensing (reduced) shear to apply to the object.
+            g2:     Second component of lensing (reduced) shear to apply to the object.
+            mu:     Lensing magnification to apply to the object.
 
-        @returns a new CorrelatedNoise object with the specified shear and magnification.
+        Returns:
+            a new CorrelatedNoise object with the specified shear and magnification.
         """
         return _BaseCorrelatedNoise(self.rng, self._profile.lens(g1,g2,mu), self.wcs)
 
     def rotate(self, theta):
         """Apply a rotation `theta` to this correlated noise model.
 
-        @param theta    Rotation angle (Angle object, positive means anticlockwise).
+        Parameters:
+            theta:  Rotation angle (Angle object, positive means anticlockwise).
 
-        @returns a new CorrelatedNoise object with the specified rotation.
+        Returns:
+            a new CorrelatedNoise object with the specified rotation.
         """
         return _BaseCorrelatedNoise(self.rng, self._profile.rotate(theta), self.wcs)
 
@@ -491,22 +501,26 @@ class _BaseCorrelatedNoise(object):
         For more details about the allowed keyword arguments, see the documentation for Shear
         (for doxygen documentation, see galsim.Shear).
 
-        @param shear    The shear to be applied. Or, as described above, you may instead supply
-                        parameters do construct a shear directly.  eg. `corr.shear(g1=g1,g2=g2)`.
+        Parameters:
+            shear:  The shear to be applied. Or, as described above, you may instead supply
+                    parameters do construct a shear directly.  eg. `corr.shear(g1=g1,g2=g2)`.
 
-        @returns a new CorrelatedNoise object with the specified shear.
+        Returns:
+            a new CorrelatedNoise object with the specified shear.
         """
         return _BaseCorrelatedNoise(self.rng, self._profile.shear(*args,**kwargs), self.wcs)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply an arbitrary jacobian transformation to this correlated noise model.
 
-        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        Parameters:
+            dudx:   du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+            dudy:   du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+            dvdx:   dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+            dvdy:   dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
 
-        @returns a new CorrelatedNoise object with the specified transformation.
+        Returns:
+            a new CorrelatedNoise object with the specified transformation.
         """
         return _BaseCorrelatedNoise(self.rng, self._profile.transform(dudx,dudy,dvdx,dvdy),
                                     self.wcs)
@@ -543,9 +557,11 @@ class _BaseCorrelatedNoise(object):
         zero distance, to an input `variance`.  The rest of the correlated noise field is scaled
         proportionally.
 
-        @param variance     The desired point variance in the noise.
+        Parameters:
+            variance:   The desired point variance in the noise.
 
-        @returns a CorrelatedNoise object with the new variance.
+        Returns:
+            a CorrelatedNoise object with the new variance.
         """
         if variance <= 0.:
             raise GalSimValueError("variance must be > 0 in withVariance", variance)
@@ -557,11 +573,13 @@ class _BaseCorrelatedNoise(object):
 
         This is equivalent to cn * variance_ratio.
 
-        @param variance_ratio   The factor by which to scale the variance of the correlation
+        Parameters:
+            variance_ratio:     The factor by which to scale the variance of the correlation
                                 function profile.
 
-        @returns a CorrelatedNoise object whose variance and covariances have been scaled up by
-                 the given factor.
+        Returns:
+            a CorrelatedNoise object whose variance and covariances have been scaled up by
+            the given factor.
         """
         return _BaseCorrelatedNoise(self.rng, self._profile * variance_ratio, self.wcs)
 
@@ -579,17 +597,17 @@ class _BaseCorrelatedNoise(object):
         This modifies the representation of the correlation function, but leaves the random number
         generator unchanged.
 
-        Examples
-        --------
+        Examples:
+
         The following command simply applies a Moffat PSF with slope parameter beta=3. and
-        FWHM=0.7:
+        FWHM=0.7::
 
             >>> cn = cn.convolvedWith(galsim.Moffat(beta=3., fwhm=0.7))
 
         Often we will want to convolve with more than one function.  For example, if we wanted to
         simulate how a noise field would look if convolved with a ground-based PSF (such as the
         Moffat above) and then rendered onto a new (typically larger) pixel grid, the following
-        example command demonstrates the syntax:
+        example command demonstrates the syntax::
 
             >>> cn = cn.convolvedWith(
             ...    galsim.Convolve([galsim.Deconvolve(galsim.Pixel(0.03)),
@@ -597,7 +615,7 @@ class _BaseCorrelatedNoise(object):
 
         Note, we also deconvolve by the original pixel, which should be the pixel size of the
         image from which the `correlated_noise` was made.  This command above is functionally
-        equivalent to
+        equivalent to::
 
             >>> cn = cn.convolvedWith(galsim.Deconvolve(galsim.Pixel(0.03)))
             >>> cn = cn.convolvedWith(galsim.Pixel(0.2))
@@ -605,12 +623,14 @@ class _BaseCorrelatedNoise(object):
 
         as is demanded for a linear operation such as convolution.
 
-        @param gsobject     A GSObject or derived class instance representing the function
-                            with which the user wants to convolve the correlated noise model.
-        @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        Parameters:
+            gsobject:   A GSObject or derived class instance representing the function
+                        with which the user wants to convolve the correlated noise model.
+            gsparams:   An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
 
-        @returns the new CorrelatedNoise of the convolved profile.
+        Returns:
+            the new CorrelatedNoise of the convolved profile.
         """
         from .convolve import Convolve, AutoCorrelate
         conv = Convolve([self._profile, AutoCorrelate(gsobject,gsparams=gsparams)],
@@ -627,25 +647,27 @@ class _BaseCorrelatedNoise(object):
         If `scale` and `wcs` are not set, and the `image` has no `wcs` attribute, then this will
         use the wcs of the CorrelatedNoise object.
 
-        @param image        If provided, this will be the image on which to draw the profile.
+        Parameters:
+            image:          If provided, this will be the image on which to draw the profile.
                             If `image` is None, then an automatically-sized Image will be created.
                             If `image` is given, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
-        @param scale        If provided, use this as the pixel scale for the image.  [default: None]
-        @param wcs          If provided, use this as the wcs for the image (possibly overriding any
+            scale:          If provided, use this as the pixel scale for the image.  [default: None]
+            wcs:            If provided, use this as the wcs for the image (possibly overriding any
                             existing `image.wcs`).  At most one of `scale` or `wcs` may be provided.
                             [default: None]  Note: If no WCS is provided either via `scale`, `wcs`
                             or `image.wcs`, then the noise object's wcs will be used.
-        @param dtype        The data type to use for an automatically constructed image.  Only
+            dtype:          The data type to use for an automatically constructed image.  Only
                             valid if `image` is None. [default: None, which means to use
                             numpy.float32]
-        @param add_to_image Whether to add flux to the existing image rather than clear out
+            add_to_image:   Whether to add flux to the existing image rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it have defined
                             bounds. [default: False]
 
-        @returns an Image of the correlation function.
+        Returns:
+            an Image of the correlation function.
         """
         wcs = self._profile._determine_wcs(scale, wcs, image, self.wcs)
 
@@ -665,28 +687,30 @@ class _BaseCorrelatedNoise(object):
         If `scale` is not set, and `image` has no `wcs` attribute, then this will use the
         wcs of the CorrelatedNoise object, which must be a `PixelScale`.
 
-        @param image        If provided, this will be the Image onto which to draw the k-space
+        Parameters:
+            image:          If provided, this will be the Image onto which to draw the k-space
                             image.  If `image` is None, then an automatically-sized image will be
                             created.  If `image` is given, but its bounds are undefined, then it
                             will be resized appropriately based on the profile's size.
                             [default: None]
-        @param nx           If provided and `image` is None, use to set the x-direction size of the
+            nx:             If provided and `image` is None, use to set the x-direction size of the
                             image.  Must be accompanied by `ny`.
-        @param ny           If provided and `image` is None, use to set the y-direction size of the
+            ny:             If provided and `image` is None, use to set the y-direction size of the
                             image.  Must be accompanied by `nx`.
-        @param bounds       If provided and `image` is None, use to set the bounds of the image.
-        @param scale        If provided, use this as the pixel scale, dk, for the images.
+            bounds:         If provided and `image` is None, use to set the bounds of the image.
+            scale:          If provided, use this as the pixel scale, dk, for the images.
                             If `scale` is None and `image` is given, then take the provided
                             images' pixel scale (which must be equal).
                             If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             [default: None]
-        @param add_to_image Whether to add to the existing images rather than clear out
+            add_to_image:   Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it has defined
                             bounds. [default: False]
 
-        @returns the tuple of Image instances, `(re, im)` (created if necessary)
+        Returns:
+            the tuple of Image instances, `(re, im)` (created if necessary)
         """
         return self._profile.drawKImage(
                 image=image, nx=nx, ny=ny, bounds=bounds, scale=scale, add_to_image=add_to_image)
@@ -750,7 +774,8 @@ class _BaseCorrelatedNoise(object):
         """Internal utility function for querying the `rootps_whitening` cache, used by the
         whitenImage() method, and calculate and update it if not present.
 
-        @returns rootps_whitening, variance
+        Returns:
+            rootps_whitening, variance
         """
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
         half_shape = (shape[0], shape[1] // 2 + 1)
@@ -786,7 +811,8 @@ class _BaseCorrelatedNoise(object):
         """Internal utility function for querying the `rootps_symmetrizing` cache, used by the
         symmetrizeImage() method, and calculate and update it if not present.
 
-        @returns rootps_symmetrizing, variance
+        Returns:
+            rootps_symmetrizing, variance
         """
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
         half_shape = (shape[0], shape[1] // 2 + 1)
@@ -898,15 +924,17 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     """Utility function for generating a NumPy array containing a Gaussian random noise field with
     a user-specified power spectrum also supplied as a NumPy array.
 
-    @param rng      BaseDeviate instance to provide the random number generation
-    @param shape    Shape of the output array, needed because of the use of Hermitian symmetry to
+    Parameters:
+        rng:        BaseDeviate instance to provide the random number generation
+        shape:      Shape of the output array, needed because of the use of Hermitian symmetry to
                     increase inverse FFT efficiency using the `np.fft.irfft2` function (gets sent to
                     the kwarg `s=` of `np.fft.irfft2`)
-    @param rootps   NumPy array containing the square root of the discrete Power Spectrum ordered
+        rootps:     NumPy array containing the square root of the discrete Power Spectrum ordered
                     in two dimensions according to the usual DFT pattern for `np.fft.rfft2` output
                     (see also `np.fft.fftfreq`)
 
-    @returns a NumPy array (contiguous) of the requested shape, filled with the noise field.
+    Returns:
+        a NumPy array (contiguous) of the requested shape, filled with the noise field.
     """
     from .random import GaussianDeviate
     # Quickest to create Gaussian rng each time needed, so do that here...
@@ -957,27 +985,25 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     It also allows the combination of multiple correlation functions by addition, and for the
     scaling of the total variance they represent by scalar factors.
 
-    Initialization
-    --------------
-
-    @param image            The image from which to derive the correlated noise profile
-    @param rng              A BaseDeviate instance to use for generating the random numbers.
-    @param scale            If provided, use this as the pixel scale.  Normally, the scale (or wcs)
+    Parameters:
+        image:              The image from which to derive the correlated noise profile
+        rng:                A BaseDeviate instance to use for generating the random numbers.
+        scale:              If provided, use this as the pixel scale.  Normally, the scale (or wcs)
                             is taken from the image.wcs field, but you may override that by
                             providing either scale or wcs.  [default: use image.wcs if defined,
                             else 1.0, unless `wcs` is provided]
-    @param wcs              If provided, use this as the wcs for the image.  At most one of `scale`
+        wcs:                If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
-    @param x_interpolant    The interpolant to use for interpolating the image of the correlation
+        x_interpolant:      The interpolant to use for interpolating the image of the correlation
                             function. (See below.) [default: galsim.Linear()]
-    @param correct_periodicity  Whether to correct for the effects of periodicity.  (See below.)
+        correct_periodicity: Whether to correct for the effects of periodicity.  (See below.)
                             [default: True]
-    @param subtract_mean    Whether to subtract off the mean value from the image before computing
+        subtract_mean:      Whether to subtract off the mean value from the image before computing
                             the correlation function. [default: False]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Basic example:
+    Basic example::
 
         >>> cn = galsim.CorrelatedNoise(image, rng=rng)
 
@@ -986,13 +1012,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     in the input `image`.  The input `rng` must be a BaseDeviate or derived class instance,
     setting the random number generation for the noise.
 
-    Optional Inputs: Interpolant
-    ----------------------------
+    Optional Inputs: Interpolant::
 
         >>> cn = galsim.CorrelatedNoise(image, rng=rng, scale=0.2)
 
     The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale
-    `scale` to set the units of the internal lookup table.
+    `scale` to set the units of the internal lookup table.::
 
         >>> cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5))
 
@@ -1023,11 +1048,10 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     Changing from the default bilinear interpolant is made possible, but not recommended.  For more
     information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
 
-    Optional Inputs: Periodicity Correction
-    ---------------------------------------
+    Optional Inputs: Periodicity Correction:
 
     There is also an option to switch off an internal correction for assumptions made about the
-    periodicity in the input noise image.  If you wish to turn this off you may, e.g.
+    periodicity in the input noise image.  If you wish to turn this off you may, e.g.::
 
         >>> cn = galsim.CorrelatedNoise(image, rng=rng, correct_periodicity=False)
 
@@ -1040,7 +1064,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     generally wish to use the `correct_periodicity=False` option.
 
     By default, the image is not mean subtracted before the correlation function is estimated.  To
-    do an internal mean subtraction, you can set the `subtract_mean` keyword to `True`, e.g.
+    do an internal mean subtraction, you can set the `subtract_mean` keyword to `True`, e.g.::
 
         >>> cn = galsim.CorrelatedNoise(image, rng=rng, subtract_mean=True)
 
@@ -1059,13 +1083,14 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     You may also specify a gsparams argument.  See the docstring for GSParams using
     help(galsim.GSParams) for more information about this option.
 
-    Methods and Use
-    ---------------
-    The main way that a CorrelatedNoise is used is to add correlated noise to an image.  The syntax
+    Methods:
+
+    The main way that a CorrelatedNoise is used is to add correlated noise to an image.
+    The syntax::
 
         >>> image.addNoise(cn)
 
-    is preferred, although
+    is preferred, although::
 
         >>> cn.applyTo(image)
 
@@ -1074,7 +1099,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     of 1 is assumed.
 
     A number of methods familiar from GSObject instances have also been implemented directly as
-    `cn` methods, so that the following commands are all legal:
+    `cn` methods, so that the following commands are all legal::
 
         >>> image = cn.drawImage(im, scale)
         >>> cn = cn.shear(s)
@@ -1085,7 +1110,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     See the individual method docstrings for more details.  The shift() method is not available
     since a correlation function must always be centred and peaked at the origin.
 
-    The methods
+    The methods::
 
         >>> var = cn.getVariance()
         >>> cn1 = cn.withVariance(variance)
@@ -1096,12 +1121,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     internal correlation function so that its point variance matches `variance`.  Similarly,
     `withScaledVariance` scales the entire function by the given factor.
 
-    Arithmetic Operators
-    --------------------
+    Arithmetic Operators:
+
     Addition, multiplication and division operators are defined to work in an intuitive way for
     correlation functions.
 
-    Addition works simply to add the internally-stored correlation functions, so that
+    Addition works simply to add the internally-stored correlation functions, so that::
 
         >>> cn3 = cn2 + cn1
         >>> cn4 += cn5
@@ -1117,7 +1142,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     and used by `cn3`, and `cn4` will retain its random number generator after in-place addition of
     `cn5`.  The random number generator of `cn5` is not affected by the operation.
 
-    The multiplication and division operators, e.g.
+    The multiplication and division operators, e.g.::
 
         >>> cn1 /= 3.
         >>> cn2 = cn1 * 3
@@ -1284,26 +1309,28 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
         /YOUR/REPO/PATH/GalSim/share/acs_I_unrot_sci_20_cf.fits
 
-    @param file_name    If provided, override the usual location of the file with the given
+    Parameters:
+        file_name:      If provided, override the usual location of the file with the given
                         file name.  [default: None]
-    @param rng          If provided, a random number generator to use as the random number
+        rng:            If provided, a random number generator to use as the random number
                         generator of the resulting noise object. (may be any kind of
                         BaseDeviate object) [default: None, in which case, one will be
                         automatically created, using the time as a seed.]
-    @param cosmos_scale COSMOS ACS F814W coadd image pixel scale in the units you are using to
+        cosmos_scale:   COSMOS ACS F814W coadd image pixel scale in the units you are using to
                         describe GSObjects and image scales in GalSim. [default: 0.03 (arcsec),
                         see below for more information.]
-    @param variance     Scales the correlation function so that its point variance, equivalent
+        variance:       Scales the correlation function so that its point variance, equivalent
                         to its value at zero separation distance, matches this value.
                         [default: 0., which means to use the variance in the original COSMOS
                         noise fields.]
-    @param x_interpolant  Forces use of a non-default interpolant for interpolation of the
+        x_interpolant:  Forces use of a non-default interpolant for interpolation of the
                         internal lookup table in real space.  See below for more details.
                         [default: galsim.Linear()]
-    @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
                         details. [default: None]
 
-    @returns a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
+    Returns:
+        a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
     The default `x_interpolant` is a `galsim.Linear()`, which uses bilinear interpolation.
     The use of this interpolant is an approximation that gives good empirical results without
@@ -1333,8 +1360,8 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     You may also specify a gsparams argument.  See the docstring for GSParams using
     help(galsim.GSParams) for more information about this option.
 
-    Important note regarding units
-    ------------------------------
+    .. note::
+
     The ACS coadd images in COSMOS have a pixel scale of 0.03 arcsec, and so the pixel scale
     `cosmos_scale` adopted in the representation of of the correlation function takes a default
     value
@@ -1344,10 +1371,10 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     If you wish to use other units, ensure that the input keyword `cosmos_scale` takes the value
     corresponding to 0.03 arcsec in your chosen system.
 
-    Example usage
-    -------------
+    Example:
+
     The following commands use this function to generate a 300 pixel x 300 pixel image of noise with
-    HST COSMOS correlation properties (substitute in your own file and path for the `filestring`).
+    HST COSMOS correlation properties (substitute in your own file and path for the `filestring`)::
 
         >>> rng = galsim.BaseDeviate(123456)
         >>> noise = galsim.getCOSMOSNoise(rng=rng)
@@ -1358,7 +1385,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     have the correct correlations in world coordinates, which may not be what you wanted if you
     expected the pixel-to-pixel correlations to match the COSMOS noise profile.  However, in
     this case, you would want to view your image with the COSMOS pixel scale when you apply
-    the noise:
+    the noise::
 
         >>> image = galsim.Image(nx, ny, wcs=complicated_wcs)
         >>> noise = galsim.getCOSMOSNoise(rng=rng)
@@ -1411,37 +1438,28 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     uncorrelated.  Subsequent applications of things like shear or convolvedWith will induce
     correlations.
 
-    Initialization
-    --------------
-
     The noise is characterized by a variance in each image pixel and a pixel size and shape.
     The `variance` value refers to the noise variance in each pixel.  If the pixels are square
     (the usual case), you can specify the size using the `scale` parameter.  If not, they
-    are effectively specified using the local wcs function that defines the pixel shape.  i.e.
+    are effectively specified using the local wcs function that defines the pixel shape.  i.e.::
 
         >>> world_pix = wcs.toWorld(Pixel(1.))`
 
     should return the pixel profile in world coordinates.
 
-    @param variance     The noise variance value to model as being uniform and uncorrelated
+    Parameters:
+        variance:       The noise variance value to model as being uniform and uncorrelated
                         over the whole image.
-    @param rng          If provided, a random number generator to use as the random number
+        rng:            If provided, a random number generator to use as the random number
                         generator of the resulting noise object. (may be any kind of
                         BaseDeviate object) [default: None, in which case, one will be
                         automatically created, using the time as a seed.]
-    @param scale        If provided, use this as the pixel scale.  [default: 1.0, unless `wcs` is
+        scale:          If provided, use this as the pixel scale.  [default: 1.0, unless `wcs` is
                         provided]
-    @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
+        wcs:            If provided, use this as the wcs for the image.  At most one of `scale`
                         or `wcs` may be provided. [default: None]
-    @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
                         details. [default: None]
-
-
-    Methods and Use
-    ---------------
-
-    This class is used in the same way as CorrelatedNoise.  See the documentation for that
-    class for more details.
     """
     def __init__(self, variance, rng=None, scale=None, wcs=None, gsparams=None):
         from .wcs import BaseWCS, PixelScale
@@ -1502,10 +1520,11 @@ class CovarianceSpectrum(object):
     different Fourier modes, which are assumed to be uncorrelated.  This structure arises naturally
     for `ChromaticRealGalaxy`s (see devel/modules/CGNotes.pdf for more details).
 
-    @param Sigma   A dictionary whose keys are tuples numerically indicating a pair of ChromaticSum
+    Parameters:
+        Sigma:     A dictionary whose keys are tuples numerically indicating a pair of ChromaticSum
                    components whose Fourier mode amplitude covariances are described by the
                    corresponding GSObject values.
-    @param SEDs    SEDs of associated ChromaticSum components.
+        SEDs:      SEDs of associated ChromaticSum components.
     """
     def __init__(self, Sigma, SEDs):
         self.Sigma = Sigma
@@ -1530,11 +1549,14 @@ class CovarianceSpectrum(object):
         """ Derive the galsim.CorrelatedNoise object for the associated ChromaticSum when convolved
         with `PSF` and drawn through `bandpass` onto pixels with specified `wcs`.
 
-        @param bandpass   galsim.Bandpass object representing filter image is drawn through.
-        @param PSF        output chromatic PSF to convolve by.
-        @param wcs        WCS of output pixel scale.
-        @param rng        Random number generator to forward to resulting CorrelatedNoise object.
-        @returns  CorrelatedNoise object.
+        Parameters:
+            bandpass:     galsim.Bandpass object representing filter image is drawn through.
+            PSF:          output chromatic PSF to convolve by.
+            wcs:          WCS of output pixel scale.
+            rng:          Random number generator to forward to resulting CorrelatedNoise object.
+
+        Returns:
+            CorrelatedNoise object.
         """
         import numpy as np
         from .convolve import Convolve

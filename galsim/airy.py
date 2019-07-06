@@ -33,10 +33,7 @@ class Airy(GSObject):
 
     For more information, refer to
 
-        http://en.wikipedia.org/wiki/Airy_disc
-
-    Initialization
-    --------------
+    http://en.wikipedia.org/wiki/Airy_disc
 
     The Airy profile is defined in terms of the diffraction angle, which is a function of the
     ratio lambda / D, where lambda is the wavelength of the light (say in the middle of the
@@ -45,7 +42,7 @@ class Airy(GSObject):
     The natural units for this value is radians, which is not normally a convenient unit to use for
     other GSObject dimensions.  Assuming that the other sky coordinates you are using are all in
     arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
-    should convert this to arcsec as well:
+    should convert this to arcsec as well::
 
         >>> lam = 700  # nm
         >>> diam = 4.0    # meters
@@ -54,41 +51,41 @@ class Airy(GSObject):
         >>> airy = galsim.Airy(lam_over_diam)
 
     To make this process a bit simpler, we recommend instead providing the wavelength and diameter
-    separately using the parameters `lam` (in nm) and `diam` (in m).  GalSim will then convert this
-    to any of the normal kinds of angular units using the `scale_unit` parameter:
+    separately using the parameters ``lam`` (in nm) and ``diam`` (in m).  GalSim will then convert
+    this to any of the normal kinds of angular units using the ``scale_unit`` parameter::
 
         >>> airy = galsim.Airy(lam=lam, diam=diam, scale_unit=galsim.arcsec)
 
     When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
-    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as ``pixel_scale=0.2``.
 
-    @param lam_over_diam    The parameter that governs the scale size of the profile.
-                            See above for details about calculating it.
-    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
-                            `diam`, and in this case, image scales (`scale`) should be specified in
-                            units of `scale_unit`.
-    @param diam             Telescope diameter in units of meters.  Must be supplied with
-                            `lam`, and in this case, image scales (`scale`) should be specified in
-                            units of `scale_unit`.
-    @param obscuration      The linear dimension of a central obscuration as a fraction of the
-                            pupil dimension.  [default: 0]
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
-                            are supplied separately.  Note that the results of calling methods like
-                            getFWHM() will be returned in units of `scale_unit` as well.  Should be
-                            either a galsim.AngleUnit or a string that can be used to construct one
-                            (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+    Parameters:
+        lam_over_diam:  The parameter that governs the scale size of the profile.
+                        See above for details about calculating it.
+        lam:            Lambda (wavelength) in units of nanometers.  Must be supplied with
+                        ``diam``, and in this case, image scales (``scale``) should be specified
+                        in units of ``scale_unit``.
+        diam:           Telescope diameter in units of meters.  Must be supplied with
+                        ``lam``, and in this case, image scales (``scale``) should be specified
+                        in units of ``scale_unit``.
+        obscuration:    The linear dimension of a central obscuration as a fraction of the
+                        pupil dimension.  [default: 0]
+        flux:           The flux (in photons/cm^2/s) of the profile. [default: 1]
+        scale_unit:     Units to use for the sky coordinates when calculating lam/diam if these
+                        are supplied separately.  Note that the results of calling methods like
+                        getFWHM() will be returned in units of ``scale_unit`` as well.  Should
+                        be either a galsim.AngleUnit or a string that can be used to construct
+                        one (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
+        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
 
-    Methods and Properties
-    ----------------------
+    In addition to the usual GSObject methods and attributes, Airy has the following access
+    properties:
 
-    In addition to the usual GSObject methods, Airy has the following access properties:
-
-        >>> lam_over_diam = airy_obj.lam_over_diam
-        >>> fwhm = airy_obj.fwhm
-        >>> hlr = airy_obj.half_light_radius
+    Attributes:
+        lam_over_diam:      The input lambda / diam value
+        fwhm:               The full-width half-max size
+        half_light_radius:  The half-light radius
 
     The latter two are only available if the obscuration is 0.
     """
@@ -124,7 +121,7 @@ class Airy(GSObject):
         self._gsparams = GSParams.check(gsparams)
 
         # Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.
-        # If the latter, then get lam_over_diam in units of `scale_unit`, as specified in
+        # If the latter, then get lam_over_diam in units of scale_unit, as specified in
         # docstring.
         if lam_over_diam is not None:
             if lam is not None or diam is not None:

@@ -45,14 +45,11 @@ class ChromaticObject(object):
     This class primarily serves as the base class for chromatic subclasses.  See the docstrings for
     subclasses for more details.
 
-    Initialization
-    --------------
-
     A ChromaticObject can be instantiated directly from an existing GSObject.  In this case, the
     newly created ChromaticObject will act in nearly the same way as the original GSObject works,
     except that it has access to the ChromaticObject transformation methods described below (e.g.,
     expand(), dilate(), shift(), withFlux(), ...)  These can all take functions as arguments to
-    describe wavelength-dependent transformations.  E.g.,
+    describe wavelength-dependent transformations.  E.g.,::
 
         >>> gsobj = galsim.Gaussian(fwhm=1)
         >>> chrom_obj = galsim.ChromaticObject(gsobj).dilate(lambda wave: (wave/500.)**(-0.2))
@@ -71,7 +68,7 @@ class ChromaticObject(object):
     Another way to instantiate a ChromaticObject from a GSObject is to multiply by an SED.  This can
     be useful to consistently generate the same galaxy observed through different filters, or, with
     ChromaticSum, to construct multi-component galaxies, each component with a different SED.  For
-    example, a bulge+disk galaxy could be constructed:
+    example, a bulge+disk galaxy could be constructed::
 
         >>> bulge_SED = user_function_to_get_bulge_spectrum()
         >>> disk_SED = user_function_to_get_disk_spectrum()
@@ -89,7 +86,7 @@ class ChromaticObject(object):
     photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely if
     the SED is dimensionless itself (see discussion on ChromaticObject dimensions below).  The
     GSObject `flux` attribute *does* still contribute to the ChromaticObject normalization,
-    though.  For example, the following are equivalent:
+    though.  For example, the following are equivalent::
 
         >>> chrom_obj = (sed * 3.0) * gsobj
         >>> chrom_obj2 = sed * (gsobj * 3.0)
@@ -98,8 +95,7 @@ class ChromaticObject(object):
     Even in this case, however, the underlying implementation always eventually wraps one or more
     GSObjects.
 
-    Dimensions
-    --------------------------
+    Dimensions:
 
     ChromaticObjects can generally be sorted into two distinct types: those that represent galaxies
     or stars and have dimensions of [photons/wavelength-interval/area/time/solid-angle], and those
@@ -115,8 +111,7 @@ class ChromaticObject(object):
     (though note that the new object's SED may not be equal to the SED being multiplied by since the
     original ChromaticObject may not have had unit normalization.)
 
-    Methods
-    -------
+    Methods:
 
     gsobj = chrom_obj.evaluateAtWavelength(wave) returns the monochromatic surface brightness
     profile (as a GSObject) at a given wavelength (in nanometers).
@@ -205,7 +200,8 @@ class ChromaticObject(object):
         """ Resize the cache (default size=10) containing the integral over the product of an SED
         and a Bandpass, which is used by ChromaticObject.drawImage().
 
-        @param maxsize  The new number of products to cache.
+        Parameters:
+            maxsize:    The new number of products to cache.
         """
         ChromaticObject._multiplier_cache.resize(maxsize)
 
@@ -306,7 +302,8 @@ class ChromaticObject(object):
         for each particular application.  The best choice of settings might depend on how strongly
         the parameters of the object depend on wavelength.
 
-        @param waves            The list, tuple, or NumPy array of wavelengths to be used when
+        Parameters:
+            waves:              The list, tuple, or NumPy array of wavelengths to be used when
                                 building up the grid of images for interpolation.  The wavelengths
                                 should be given in nanometers, and they should span the full range
                                 of wavelengths covered by any bandpass to be used for drawing Images
@@ -314,19 +311,20 @@ class ChromaticObject(object):
                                 wavelengths).  They can be spaced any way the user likes, not
                                 necessarily linearly, though interpolation will be linear in
                                 wavelength between the specified wavelengths.
-        @param oversample_fac   Factor by which to oversample the stored profiles compared to the
+            oversample_fac:     Factor by which to oversample the stored profiles compared to the
                                 default, which is to sample them at the Nyquist frequency for
                                 whichever wavelength has the highest Nyquist frequency.
                                 `oversample_fac`>1 results in higher accuracy but costlier
                                 pre-computations (more memory and time). [default: 1]
-        @param use_exact_SED    If true, then rescale the interpolated image for a given wavelength
+            use_exact_SED:      If true, then rescale the interpolated image for a given wavelength
                                 by the ratio of the exact SED at that wavelength to the linearly
                                 interpolated SED at that wavelength.  Thus, the flux of the
                                 interpolated object should be correct, at the possible expense of
                                 other features. [default: True]
 
-        @returns the version of the Chromatic object that uses interpolation
-                 (This will be an InterpolatedChromaticObject instance.)
+        Returns:
+            the version of the Chromatic object that uses interpolation
+            (This will be an InterpolatedChromaticObject instance.)
         """
         return InterpolatedChromaticObject(self, waves, **kwargs)
 
@@ -385,7 +383,7 @@ class ChromaticObject(object):
         By default, the above two integrators will use the trapezoidal rule for integration.  The
         midpoint rule for integration can be specified instead by passing an integrator that has
         been initialized with the `rule=galsim.integ.midptRule` argument.  When creating a
-        ContinuousIntegrator, the number of samples `N` is also an argument.  For example:
+        ContinuousIntegrator, the number of samples `N` is also an argument.  For example::
 
             >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midptRule, N=100)
             >>> image = chromatic_obj.drawImage(bandpass, integrator=integrator)
@@ -397,20 +395,22 @@ class ChromaticObject(object):
         often.  The default cache size is 10, but may be resized using the
         `ChromaticObject.resize_multiplier_cache()` method.
 
-        @param bandpass         A Bandpass object representing the filter against which to
-                                integrate.
-        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
-                                for details.)  [default: None]
-        @param integrator       When doing the exact evaluation of the profile, this argument should
-                                be one of the image integrators from galsim.integ, or a string
-                                'trapezoidal' or 'midpoint', in which case the routine will use a
-                                SampleIntegrator or ContinuousIntegrator depending on whether or not
-                                the object has a `wave_list`.  [default: 'trapezoidal',
-                                which will try to select an appropriate integrator using the
-                                trapezoidal integration rule automatically.]
-        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+        Parameters:
+            bandpass:       A Bandpass object representing the filter against which to
+                            integrate.
+            image:          Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                            for details.)  [default: None]
+            integrator:     When doing the exact evaluation of the profile, this argument should
+                            be one of the image integrators from galsim.integ, or a string
+                            'trapezoidal' or 'midpoint', in which case the routine will use a
+                            SampleIntegrator or ContinuousIntegrator depending on whether or not
+                            the object has a `wave_list`.  [default: 'trapezoidal',
+                            which will try to select an appropriate integrator using the
+                            trapezoidal integration rule automatically.]
+            **kwargs:       For all other kwarg options, see GSObject.drawImage()
 
-        @returns the drawn Image.
+        Returns:
+            the drawn Image.
         """
         from .table import LookupTable
         # Store the last bandpass used and any extra kwargs.
@@ -471,22 +471,24 @@ class ChromaticObject(object):
 
         See drawImage() for details on integration options.
 
-        @param bandpass     A Bandpass object representing the filter against which to integrate.
-        @param image        If provided, this will be the ImageC onto which to draw the k-space
-                            image.  If `image` is None, then an automatically-sized image will be
-                            created.  If `image` is given, but its bounds are undefined, then it
-                            will be resized appropriately based on the profile's size.
-                            [default: None]
-        @param integrator   When doing the exact evaluation of the profile, this argument should be
-                            one of the image integrators from galsim.integ, or a string
-                            'trapezoidal' or 'midpoint', in which case the routine will use a
-                            SampleIntegrator or ContinuousIntegrator depending on whether or not the
-                            object has a `wave_list`.  [default: 'trapezoidal', which will try to
-                            select an appropriate integrator using the trapezoidal integration rule
-                            automatically.]
-        @param **kwargs     For all other kwarg options, see GSObject.drawKImage()
+        Parameters:
+            bandpass:   A Bandpass object representing the filter against which to integrate.
+            image:      If provided, this will be the ImageC onto which to draw the k-space
+                        image.  If `image` is None, then an automatically-sized image will be
+                        created.  If `image` is given, but its bounds are undefined, then it
+                        will be resized appropriately based on the profile's size.
+                        [default: None]
+            integrator: When doing the exact evaluation of the profile, this argument should be
+                        one of the image integrators from galsim.integ, or a string
+                        'trapezoidal' or 'midpoint', in which case the routine will use a
+                        SampleIntegrator or ContinuousIntegrator depending on whether or not the
+                        object has a `wave_list`.  [default: 'trapezoidal', which will try to
+                        select an appropriate integrator using the trapezoidal integration rule
+                        automatically.]
+            **kwargs:   For all other kwarg options, see GSObject.drawKImage()
 
-        @returns an ImageC instance (created if necessary)
+        Returns:
+            an ImageC instance (created if necessary)
         """
         from .table import LookupTable
 
@@ -541,9 +543,11 @@ class ChromaticObject(object):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
 
-        @param wave     Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         if self.__class__ != ChromaticObject:  # pragma: no cover
             raise NotImplementedError(
@@ -565,12 +569,14 @@ class ChromaticObject(object):
         callable function, then the returned object will have .spectral and .dimensionless
         matching self.spectral and self.dimensionless.
 
-        @param flux_ratio   The factor by which to scale the normalization of the object.
+        Parameters:
+            flux_ratio:     The factor by which to scale the normalization of the object.
                             `flux_ratio` may be a float, univariate callable function, in which case
                             the argument should be wavelength in nanometers and return value the
                             flux ratio for that wavelength, or an SED.
 
-        @returns a new object with scaled flux.
+        Returns:
+            a new object with scaled flux.
         """
         return self.withScaledFlux(flux_ratio)
 
@@ -585,12 +591,14 @@ class ChromaticObject(object):
     def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by `flux_ratio`
 
-        @param flux_ratio   The factor by which to scale the normalization of the object.
+        Parameters:
+            flux_ratio:     The factor by which to scale the normalization of the object.
                             `flux_ratio` may be a float, univariate callable function, in which case
                             the argument should be wavelength in nanometers and return value the
                             flux ratio for that wavelength, or an SED.
 
-        @returns a new object with scaled flux.
+        Returns:
+            a new object with scaled flux.
         """
         from .transform import Transform
         return Transform(self, flux_ratio=flux_ratio)
@@ -599,10 +607,12 @@ class ChromaticObject(object):
         """ Return a new ChromaticObject with flux through the Bandpass `bandpass` set to
         `target_flux`.
 
-        @param target_flux  The desired flux normalization of the ChromaticObject.
-        @param bandpass     A Bandpass object defining a filter bandpass.
+        Parameters:
+            target_flux:    The desired flux normalization of the ChromaticObject.
+            bandpass:       A Bandpass object defining a filter bandpass.
 
-        @returns the new normalized ChromaticObject.
+        Returns:
+            the new normalized ChromaticObject.
         """
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
@@ -613,10 +623,12 @@ class ChromaticObject(object):
         `target_magnitude`.  Note that this requires `bandpass` to have been assigned a zeropoint
         using `Bandpass.withZeropoint()`.
 
-        @param target_magnitude  The desired magnitude of the ChromaticObject.
-        @param bandpass          A Bandpass object defining a filter bandpass.
+        Parameters:
+            target_magnitude:   The desired magnitude of the ChromaticObject.
+            bandpass:           A Bandpass object defining a filter bandpass.
 
-        @returns the new normalized ChromaticObject.
+        Returns:
+            the new normalized ChromaticObject.
         """
         if bandpass.zeropoint is None:
             raise GalSimError("Cannot call ChromaticObject.withMagnitude on this bandpass, because"
@@ -629,10 +641,12 @@ class ChromaticObject(object):
         """ Return a new ChromaticObject with flux density set to `target_flux_density` at
         wavelength `wavelength`.
 
-        @param target_flux_density  The target normalization in photons/nm/cm^2/s.
-        @param wavelength           The wavelength, in nm, at which the flux density will be set.
+        Parameters:
+            target_flux_density:    The target normalization in photons/nm/cm^2/s.
+            wavelength:             The wavelength, in nm, at which the flux density will be set.
 
-        @returns the new normalized SED.
+        Returns:
+            the new normalized SED.
         """
         from astropy import units
         _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
@@ -654,9 +668,11 @@ class ChromaticObject(object):
     def calculateCentroid(self, bandpass):
         """ Determine the centroid of the wavelength-integrated surface brightness profile.
 
-        @param bandpass  The bandpass through which the observation is made.
+        Parameters:
+            bandpass:   The bandpass through which the observation is made.
 
-        @returns the centroid of the integrated surface brightness profile, as a PositionD.
+        Returns:
+            the centroid of the integrated surface brightness profile, as a PositionD.
         """
         # if either the Bandpass or self maintain a wave_list, evaluate integrand only at
         # those wavelengths.
@@ -692,13 +708,15 @@ class ChromaticObject(object):
     def calculateFlux(self, bandpass):
         """ Return the flux (photons/cm^2/s) of the ChromaticObject through the bandpass.
 
-        @param bandpass   A Bandpass object representing a filter, or None to compute the bolometric
-                          flux.  For the bolometric flux the integration limits will be set to
-                          (0, infinity) unless overridden by non-`None` SED attributes `blue_limit`
-                          or `red_limit`.  Note that SEDs defined using `LookupTable`s automatically
-                          have `blue_limit` and `red_limit` set.
+        Parameters:
+            bandpass:   A Bandpass object representing a filter, or None to compute the bolometric
+                        flux.  For the bolometric flux the integration limits will be set to
+                        (0, infinity) unless overridden by non-`None` SED attributes `blue_limit`
+                        or `red_limit`.  Note that SEDs defined using `LookupTable`s automatically
+                        have `blue_limit` and `red_limit` set.
 
-        @returns the flux through the bandpass.
+        Returns:
+            the flux through the bandpass.
         """
         if self.SED.dimensionless:
             raise GalSimSEDError("Cannot calculate flux of dimensionless ChromaticObject.",
@@ -709,13 +727,15 @@ class ChromaticObject(object):
         """ Return the ChromaticObject magnitude through a Bandpass `bandpass`.  Note that this
         requires `bandpass` to have been assigned a zeropoint using `Bandpass.withZeropoint()`.
 
-        @param bandpass   A Bandpass object representing a filter, or None to compute the
-                          bolometric magnitude.  For the bolometric magnitude the integration
-                          limits will be set to (0, infinity) unless overridden by non-`None` SED
-                          attributes `blue_limit` or `red_limit`.  Note that SEDs defined using
-                          `LookupTable`s automatically have `blue_limit` and `red_limit` set.
+        Parameters:
+            bandpass:   A Bandpass object representing a filter, or None to compute the
+                        bolometric magnitude.  For the bolometric magnitude the integration
+                        limits will be set to (0, infinity) unless overridden by non-`None` SED
+                        attributes `blue_limit` or `red_limit`.  Note that SEDs defined using
+                        `LookupTable`s automatically have `blue_limit` and `red_limit` set.
 
-        @returns the bandpass magnitude.
+        Returns:
+            the bandpass magnitude.
         """
         if self.SED.dimensionless:
             raise GalSimSEDError("Cannot calculate magnitude of dimensionless ChromaticObject.",
@@ -749,12 +769,14 @@ class ChromaticObject(object):
         See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
-        @param scale    The factor by which to scale the linear dimension of the object.  In
+        Parameters:
+            scale:      The factor by which to scale the linear dimension of the object.  In
                         addition, `scale` may be a callable function, in which case the argument
                         should be wavelength in nanometers and the return value the scale for that
                         wavelength.
 
-        @returns the expanded object
+        Returns:
+            the expanded object
         """
         from .transform import Transform
         if hasattr(scale, '__call__'):
@@ -775,11 +797,13 @@ class ChromaticObject(object):
         See expand() and magnify() for versions that preserve surface brightness, and thus
         change the flux.
 
-        @param scale    The linear rescaling factor to apply.  In addition, `scale` may be a
+        Parameters:
+            scale:      The linear rescaling factor to apply.  In addition, `scale` may be a
                         callable function, in which case the argument should be wavelength in
                         nanometers and the return value the scale for that wavelength.
 
-        @returns the dilated object.
+        Returns:
+            the dilated object.
         """
         if hasattr(scale, '__call__'):
             return self.expand(scale).withScaledFlux(lambda w: 1./scale(w)**2)
@@ -797,11 +821,13 @@ class ChromaticObject(object):
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
 
-        @param mu       The lensing magnification to apply.  In addition, `mu` may be a callable
+        Parameters:
+            mu:         The lensing magnification to apply.  In addition, `mu` may be a callable
                         function, in which case the argument should be wavelength in nanometers
                         and the return value the magnification for that wavelength.
 
-        @returns the magnified object.
+        Returns:
+            the magnified object.
         """
         import math
         if hasattr(mu, '__call__'):
@@ -825,13 +851,15 @@ class ChromaticObject(object):
         intrinsic galaxy shape, telescope dilation, atmospheric PSF shape, etc.  Thus, the
         shear argument is allowed to be a function of wavelength like other transformations.
 
-        @param shear    The shear to be applied. Or, as described above, you may instead supply
+        Parameters:
+            shear:      The shear to be applied. Or, as described above, you may instead supply
                         parameters to construct a Shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
                         In addition, the `shear` parameter may be a callable function, in which
                         case the argument should be wavelength in nanometers and the return value
                         the shear for that wavelength, returned as a galsim.Shear instance.
 
-        @returns the sheared object.
+        Returns:
+            the sheared object.
         """
         from .transform import Transform
         from .shear import Shear
@@ -871,13 +899,15 @@ class ChromaticObject(object):
         objects.  In this case, the functions should take the wavelength in nanometers as the
         argument, and the return values are the corresponding value at that wavelength.
 
-        @param g1       First component of lensing (reduced) shear to apply to the object.
-        @param g2       Second component of lensing (reduced) shear to apply to the object.
-        @param mu       Lensing magnification to apply to the object.  This is the factor by which
+        Parameters:
+            g1:         First component of lensing (reduced) shear to apply to the object.
+            g2:         Second component of lensing (reduced) shear to apply to the object.
+            mu:         Lensing magnification to apply to the object.  This is the factor by which
                         the solid angle subtended by the object is magnified, preserving surface
                         brightness.
 
-        @returns the lensed object.
+        Returns:
+            the lensed object.
         """
         from .shear import Shear
         if any(hasattr(g, '__call__') for g in (g1,g2)):
@@ -894,12 +924,14 @@ class ChromaticObject(object):
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
 
-        @param theta    Rotation angle (Angle object, +ve anticlockwise). In addition, `theta` may
+        Parameters:
+            theta:      Rotation angle (Angle object, +ve anticlockwise). In addition, `theta` may
                         be a callable function, in which case the argument should be wavelength in
                         nanometers and the return value the rotation angle for that wavelength,
                         returned as a galsim.Angle instance.
 
-        @returns the rotated object.
+        Returns:
+            the rotated object.
         """
         from .transform import Transform
         if hasattr(theta, '__call__'):
@@ -925,12 +957,14 @@ class ChromaticObject(object):
         may be callable functions, in which case the argument should be wavelength in nanometers
         and the return value the appropriate value for that wavelength.
 
-        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        Parameters:
+            dudx:       du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+            dudy:       du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+            dvdx:       dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+            dvdy:       dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
 
-        @returns the transformed object.
+        Returns:
+            the transformed object.
         """
         from .transform import Transform
         if any(hasattr(dd, '__call__') for dd in (dudx, dudy, dvdx, dvdy)):
@@ -959,10 +993,12 @@ class ChromaticObject(object):
         which will be interpreted as `dx(wave)` and `dy(wave)`, or a single function of wavelength
         in nanometers that returns either a 2-tuple, PositionD, or PositionI.
 
-        @param dx   Horizontal shift to apply (float or function).
-        @param dy   Vertical shift to apply (float or function).
+        Parameters:
+            dx:     Horizontal shift to apply (float or function).
+            dy:     Vertical shift to apply (float or function).
 
-        @returns the shifted object.
+        Returns:
+            the shifted object.
         """
         from .transform import Transform
         # This follows along the galsim.utilities.pos_args function, but has some
@@ -1027,25 +1063,26 @@ class InterpolatedChromaticObject(ChromaticObject):
     return type from `chrom_obj.interpolate()`.  See the description of that function
     for more details.
 
-    @param original         The ChromaticObject to be interpolated.
-    @param waves            The list, tuple, or NumPy array of wavelengths to be used when
-                            building up the grid of images for interpolation.  The wavelengths
-                            should be given in nanometers, and they should span the full range
-                            of wavelengths covered by any bandpass to be used for drawing Images
-                            (i.e., this class will not extrapolate beyond the given range of
-                            wavelengths).  They can be spaced any way the user likes, not
-                            necessarily linearly, though interpolation will be linear in
-                            wavelength between the specified wavelengths.
-    @param oversample_fac   Factor by which to oversample the stored profiles compared to the
-                            default, which is to sample them at the Nyquist frequency for
-                            whichever wavelength has the highest Nyquist frequency.
-                            `oversample_fac`>1 results in higher accuracy but costlier
-                            pre-computations (more memory and time). [default: 1]
-    @param use_exact_SED    If true, then rescale the interpolated image for a given wavelength by
-                            the ratio of the exact SED at that wavelength to the linearly
-                            interpolated SED at that wavelength.  Thus, the flux of the interpolated
-                            object should be correct, at the possible expense of other features.
-                            [default: True]
+    Parameters:
+        original:       The ChromaticObject to be interpolated.
+        waves:          The list, tuple, or NumPy array of wavelengths to be used when
+                        building up the grid of images for interpolation.  The wavelengths
+                        should be given in nanometers, and they should span the full range
+                        of wavelengths covered by any bandpass to be used for drawing Images
+                        (i.e., this class will not extrapolate beyond the given range of
+                        wavelengths).  They can be spaced any way the user likes, not
+                        necessarily linearly, though interpolation will be linear in
+                        wavelength between the specified wavelengths.
+        oversample_fac: Factor by which to oversample the stored profiles compared to the
+                        default, which is to sample them at the Nyquist frequency for
+                        whichever wavelength has the highest Nyquist frequency.
+                        `oversample_fac`>1 results in higher accuracy but costlier
+                        pre-computations (more memory and time). [default: 1]
+        use_exact_SED:  If true, then rescale the interpolated image for a given wavelength by
+                        the ratio of the exact SED at that wavelength to the linearly
+                        interpolated SED at that wavelength.  Thus, the flux of the interpolated
+                        object should be correct, at the possible expense of other features.
+                        [default: True]
     """
     def __init__(self, original, waves, oversample_fac=1.0, use_exact_SED=True):
 
@@ -1131,9 +1168,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         the originally-stored images.  Also returns values for step_k and max_k, to be used to
         expedite the instantation of InterpolatedImages.
 
-        @param wave     Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns an Image of the object at the given wavelength.
+        Returns:
+            an Image of the object at the given wavelength.
         """
         # First, some wavelength-related sanity checks.
         if wave < np.min(self.waves) or wave > np.max(self.waves):
@@ -1161,9 +1200,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         """
         Evaluate this ChromaticObject at a particular wavelength using interpolation.
 
-        @param wave     Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength, as a GSObject.
+        Returns:
+            the monochromatic object at the given wavelength, as a GSObject.
         """
         from .interpolatedimage import InterpolatedImage
         im, stepk, maxk = self._imageAtWavelength(wave)
@@ -1273,15 +1314,17 @@ class InterpolatedChromaticObject(ChromaticObject):
         This integration will take place using interpolation between stored images that were
         setup when the object was constructed.  (See interpolate() for more details.)
 
-        @param bandpass         A Bandpass object representing the filter against which to
-                                integrate.
-        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
-                                for details.)  [default: None]
-        @param integrator       The integration algorithm to use, given as a string.  Either
-                                'midpoint' or 'trapezoidal' is allowed. [default: 'trapezoidal']
-        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+        Parameters:
+            bandpass:       A Bandpass object representing the filter against which to
+                            integrate.
+            image:          Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                            for details.)  [default: None]
+            integrator:     The integration algorithm to use, given as a string.  Either
+                            'midpoint' or 'trapezoidal' is allowed. [default: 'trapezoidal']
+            **kwargs:       For all other kwarg options, see GSObject.drawImage()
 
-        @returns the drawn Image.
+        Returns:
+            the drawn Image.
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
@@ -1323,32 +1366,33 @@ class ChromaticAtmosphere(ChromaticObject):
     Note that a ChromaticAtmosphere by itself is NOT the correct thing to use to draw an image of a
     star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
     should either multiply the ChromaticAtmosphere object by an SED, or convolve it with a point
-    source multiplied by an SED:
+    source multiplied by an SED::
 
         >>> psf = galsim.ChromaticAtmosphere(...)
         >>> star = galsim.DeltaFunction() * psf_sed
         >>> final_star = galsim.Convolve( [psf, star] )
         >>> final_star.drawImage(bandpass = bp, ...)
 
-    @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
-    @param base_wavelength      Wavelength represented by the fiducial PSF, in nanometers.
-    @param scale_unit           Units used by base_obj for its linear dimensions.
-                                [default: galsim.arcsec]
-    @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
-                                the prediction for Kolmogorov turbulence]
-    @param zenith_angle         Angle from object to zenith, expressed as an Angle
-                                [default: 0]
-    @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
-                                from North through East.  [default: 0]
-    @param obj_coord            Celestial coordinates of the object being drawn as a
-                                CelestialCoord. [default: None]
-    @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
-                                [default: None]
-    @param HA                   Hour angle of the object as an Angle. [default: None]
-    @param latitude             Latitude of the observer as an Angle. [default: None]
-    @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
-    @param temperature          Temperature in Kelvins.  [default: 293.15 K]
-    @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+    Parameters:
+        base_obj:           Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
+        base_wavelength:    Wavelength represented by the fiducial PSF, in nanometers.
+        scale_unit:         Units used by base_obj for its linear dimensions.
+                            [default: galsim.arcsec]
+        alpha:              Power law index for wavelength-dependent seeing.  [default: -0.2,
+                            the prediction for Kolmogorov turbulence]
+        zenith_angle:       Angle from object to zenith, expressed as an Angle
+                            [default: 0]
+        parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured
+                            from North through East.  [default: 0]
+        obj_coord:          Celestial coordinates of the object being drawn as a
+                            CelestialCoord. [default: None]
+        zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                            [default: None]
+        HA:                 Hour angle of the object as an Angle. [default: None]
+        latitude:           Latitude of the observer as an Angle. [default: None]
+        pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]
+        temperature:        Temperature in Kelvins.  [default: 293.15 K]
+        H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
     def __init__(self, base_obj, base_wavelength, scale_unit=None, **kwargs):
         from .angle import Angle, _Angle, AngleUnit, arcsec
@@ -1452,9 +1496,11 @@ class ChromaticAtmosphere(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
 
-        @param wave     Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         return self.build_obj().evaluateAtWavelength(wave)
 
@@ -1463,29 +1509,27 @@ class ChromaticTransformation(ChromaticObject):
     """A class for modeling a wavelength-dependent affine transformation of a ChromaticObject
     instance.
 
-    Initialization
-    --------------
-
     Typically, you do not need to construct a ChromaticTransformation object explicitly.
     This is the type returned by the various transformation methods of ChromaticObject such as
     shear(), rotate(), shift(), transform(), etc.  All the various transformations can be described
     as a combination of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and
     (dx,dy) respectively.
 
-    @param obj              The object to be transformed.
-    @param jac              A list or tuple ( dudx, dudy, dvdx, dvdy ), or a numpy.array object
+    Parameters:
+        obj:                The object to be transformed.
+        jac:                A list or tuple ( dudx, dudy, dvdx, dvdy ), or a numpy.array object
                             [[dudx, dudy], [dvdx, dvdy]] describing the Jacobian to apply.  May
                             also be a function of wavelength returning a numpy array.
                             [default: (1,0,0,1)]
-    @param offset           A galsim.PositionD or list or tuple or numpy array giving the offset by
+        offset:             A galsim.PositionD or list or tuple or numpy array giving the offset by
                             which to shift the profile.  May also be a function of wavelength
                             returning a numpy array.  [default: (0,0)]
-    @param flux_ratio       A factor by which to multiply the flux of the object. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        flux_ratio:         A factor by which to multiply the flux of the object. [default: 1]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, obj, jac=np.identity(2), offset=(0.,0.), flux_ratio=1., gsparams=None,
                  propagate_gsparams=True):
@@ -1665,9 +1709,11 @@ class ChromaticTransformation(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
 
-        @param wave     Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         from .transform import Transformation
         ret = self.original.evaluateAtWavelength(wave)
@@ -1683,23 +1729,25 @@ class ChromaticTransformation(ChromaticObject):
         an InterpolatedChromaticObject, and the transformation is achromatic, then it will still be
         able to use the interpolation.
 
-        @param bandpass         A Bandpass object representing the filter against which to
-                                integrate.
-        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
-                                for details.)  [default: None]
-        @param integrator       When doing the exact evaluation of the profile, this argument should
-                                be one of the image integrators from galsim.integ, or a string
-                                'trapezoidal' or 'midpoint', in which case the routine will use a
-                                SampleIntegrator or ContinuousIntegrator depending on whether or not
-                                the object has a `wave_list`.  [default: 'trapezoidal',
-                                which will try to select an appropriate integrator using the
-                                trapezoidal integration rule automatically.]
-                                If the object being transformed is an InterpolatedChromaticObject,
-                                then `integrator` can only be a string, either 'midpoint' or
-                                'trapezoidal'.
-        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+        Parameters:
+            bandpass:       A Bandpass object representing the filter against which to
+                            integrate.
+            image:          Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                            for details.)  [default: None]
+            integrator:     When doing the exact evaluation of the profile, this argument should
+                            be one of the image integrators from galsim.integ, or a string
+                            'trapezoidal' or 'midpoint', in which case the routine will use a
+                            SampleIntegrator or ContinuousIntegrator depending on whether or not
+                            the object has a `wave_list`.  [default: 'trapezoidal',
+                            which will try to select an appropriate integrator using the
+                            trapezoidal integration rule automatically.]
+                            If the object being transformed is an InterpolatedChromaticObject,
+                            then `integrator` can only be a string, either 'midpoint' or
+                            'trapezoidal'.
+            **kwargs:       For all other kwarg options, see GSObject.drawImage()
 
-        @returns the drawn Image.
+        Returns:
+            the drawn Image.
         """
         from .transform import Transform
         # Store the last bandpass used.
@@ -1752,27 +1800,25 @@ class ChromaticSum(ChromaticObject):
     This is the type returned from `galsim.Add(objects)` if any of the objects are a
     ChromaticObject.
 
-    Initialization
-    --------------
-
     Typically, you do not need to construct a ChromaticSum object explicitly.  Normally, you
-    would just use the + operator, which returns a ChromaticSum when used with chromatic objects:
+    would just use the + operator, which returns a ChromaticSum when used with chromatic objects::
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8) * bulge_sed
         >>> disk = galsim.Exponential(half_light_radius=1.4) * disk_sed
         >>> gal = bulge + disk
 
     You can also use the Add() factory function, which returns a ChromaticSum object if any of
-    the individual objects are chromatic:
+    the individual objects are chromatic::
 
         >>> gal = galsim.Add([bulge,disk])
 
-    @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        args:               Unnamed args should be a list of objects to add.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, *args, **kwargs):
         # Check kwargs first:
@@ -1903,9 +1949,11 @@ class ChromaticSum(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
 
-        @param wave  Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         from .sum import Add
         return Add([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
@@ -1921,20 +1969,22 @@ class ChromaticSum(ChromaticObject):
         sums independently can help with speed by identifying chromatic profiles that are separable
         into spectral and spatial factors.
 
-        @param bandpass         A Bandpass object representing the filter against which to
-                                integrate.
-        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
-                                for details.)  [default: None]
-        @param integrator       When doing the exact evaluation of the profile, this argument should
-                                be one of the image integrators from galsim.integ, or a string
-                                'trapezoidal' or 'midpoint', in which case the routine will use a
-                                SampleIntegrator or ContinuousIntegrator depending on whether or not
-                                the object has a `wave_list`.  [default: 'trapezoidal',
-                                which will try to select an appropriate integrator using the
-                                trapezoidal integration rule automatically.]
-        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+        Parameters:
+            bandpass:       A Bandpass object representing the filter against which to
+                            integrate.
+            image:          Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                            for details.)  [default: None]
+            integrator:     When doing the exact evaluation of the profile, this argument should
+                            be one of the image integrators from galsim.integ, or a string
+                            'trapezoidal' or 'midpoint', in which case the routine will use a
+                            SampleIntegrator or ContinuousIntegrator depending on whether or not
+                            the object has a `wave_list`.  [default: 'trapezoidal',
+                            which will try to select an appropriate integrator using the
+                            trapezoidal integration rule automatically.]
+            **kwargs:       For all other kwarg options, see GSObject.drawImage()
 
-        @returns the drawn Image.
+        Returns:
+            the drawn Image.
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
@@ -1953,9 +2003,11 @@ class ChromaticSum(ChromaticObject):
     def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by `flux_ratio`
 
-        @param flux_ratio   The factor by which to scale the flux.
+        Parameters:
+            flux_ratio:     The factor by which to scale the flux.
 
-        @returns the object with the new flux.
+        Returns:
+            the object with the new flux.
         """
         new_obj = ChromaticSum([ obj.withScaledFlux(flux_ratio) for obj in self.obj_list ])
         if hasattr(self, 'covspec'):
@@ -1971,10 +2023,7 @@ class ChromaticConvolution(ChromaticObject):
     This is the type returned from `galsim.Convolve(objects)` if any of the objects is a
     ChromaticObject.
 
-    Initialization
-    --------------
-
-    The normal way to use this class is to use the Convolve() factory function:
+    The normal way to use this class is to use the Convolve() factory function::
 
         >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file, 'nm', 'flambda')
         >>> psf = galsim.ChromaticAtmosphere(...)
@@ -1984,15 +2033,16 @@ class ChromaticConvolution(ChromaticObject):
     `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
     objects may be provided using either syntax.  (Well, the list has to include at least 1 item.)
 
-    @param args             Unnamed args should be a list of objects to convolve.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        args:               Unnamed args should be a list of objects to convolve.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
@@ -2123,7 +2173,8 @@ class ChromaticConvolution(ChromaticObject):
         of separable profile SEDs, inseparable profiles, and Bandpasses), which are used by
         ChromaticConvolution.drawImage().
 
-        @param maxsize  The new number of effective profiles to cache.
+        Parameters:
+            maxsize:    The new number of effective profiles to cache.
         """
         ChromaticConvolution._effective_prof_cache.resize(maxsize)
 
@@ -2149,9 +2200,11 @@ class ChromaticConvolution(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
 
-        @param wave  Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         from .convolve import Convolve
         return Convolve([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
@@ -2171,22 +2224,24 @@ class ChromaticConvolution(ChromaticObject):
         cache more often.  The default cache size is 10, but may be resized using the
         `ChromaticConvolution.resize_effective_prof_cache()` method.
 
-        @param bandpass         A Bandpass object representing the filter against which to
-                                integrate.
-        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
-                                for details.)  [default: None]
-        @param integrator       When doing the exact evaluation of the profile, this argument should
-                                be one of the image integrators from galsim.integ, or a string
-                                'trapezoidal' or 'midpoint', in which case the routine will use a
-                                SampleIntegrator or ContinuousIntegrator depending on whether or not
-                                the object has a `wave_list`.  [default: 'trapezoidal',
-                                which will try to select an appropriate integrator using the
-                                trapezoidal integration rule automatically.]
-        @param iimult           Oversample any intermediate InterpolatedImages created to hold
-                                effective profiles by this amount. [default: None]
-        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+        Parameters:
+            bandpass:       A Bandpass object representing the filter against which to
+                            integrate.
+            image:          Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                            for details.)  [default: None]
+            integrator:     When doing the exact evaluation of the profile, this argument should
+                            be one of the image integrators from galsim.integ, or a string
+                            'trapezoidal' or 'midpoint', in which case the routine will use a
+                            SampleIntegrator or ContinuousIntegrator depending on whether or not
+                            the object has a `wave_list`.  [default: 'trapezoidal',
+                            which will try to select an appropriate integrator using the
+                            trapezoidal integration rule automatically.]
+            iimult:         Oversample any intermediate InterpolatedImages created to hold
+                            effective profiles by this amount. [default: None]
+            **kwargs:       For all other kwarg options, see GSObject.drawImage()
 
-        @returns the drawn Image.
+        Returns:
+            the drawn Image.
         """
         from .convolve import Convolve
         # Store the last bandpass used.
@@ -2342,15 +2397,13 @@ class ChromaticDeconvolution(ChromaticObject):
     unspecified (or None), then the ChromaticDeconvolution instance inherits the same GSParams as
     the object being deconvolved.
 
-    Initialization
-    --------------
-
-    @param obj              The object to deconvolve.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        obj:                The object to deconvolve.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, obj, gsparams=None, propagate_gsparams=True):
         if not obj.SED.dimensionless:
@@ -2406,9 +2459,11 @@ class ChromaticDeconvolution(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
 
-        @param wave  Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         from .convolve import Deconvolve
         return Deconvolve(self._obj.evaluateAtWavelength(wave), gsparams=self.gsparams,
@@ -2421,18 +2476,16 @@ class ChromaticAutoConvolution(ChromaticObject):
     It is equivalent in functionality to `galsim.Convolve([obj,obj])`, but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
 
-    Initialization
-    --------------
-
-    @param obj              The object to be convolved with itself.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        obj:                The object to be convolved with itself.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
         if not obj.SED.dimensionless:
@@ -2491,9 +2544,11 @@ class ChromaticAutoConvolution(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
 
-        @param wave  Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         from .convolve import AutoConvolve
         return AutoConvolve(self._obj.evaluateAtWavelength(wave), self._real_space, self._gsparams,
@@ -2507,18 +2562,16 @@ class ChromaticAutoCorrelation(ChromaticObject):
         galsim.Convolve([obj,obj.rotate(180.*galsim.degrees)])
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
 
-    Initialization
-    --------------
-
-    @param obj              The object to be convolved with itself.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        obj:                The object to be convolved with itself.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
         if not obj.SED.dimensionless:
@@ -2578,9 +2631,11 @@ class ChromaticAutoCorrelation(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
 
-        @param wave  Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         from .convolve import AutoCorrelate
         return AutoCorrelate(self._obj.evaluateAtWavelength(wave), self._real_space, self.gsparams,
@@ -2598,22 +2653,20 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
     unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams
     as the object being operated on.
 
-    Initialization
-    --------------
-
-    The normal way to use this class is to use the FourierSqrt() factory function:
+    The normal way to use this class is to use the FourierSqrt() factory function::
 
         >>> fourier_sqrt = galsim.FourierSqrt(chromatic_obj)
 
     If `chromatic_obj` is indeed a ChromaticObject, then that function will create a
     ChromaticFourierSqrtProfile object.
 
-    @param obj              The object to compute the Fourier-space square root of.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        obj:                The object to compute the Fourier-space square root of.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, obj, gsparams=None, propagate_gsparams=True):
         import math
@@ -2670,9 +2723,11 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
 
-        @param wave  Wavelength in nanometers.
+        Parameters:
+            wave:   Wavelength in nanometers.
 
-        @returns the monochromatic object at the given wavelength.
+        Returns:
+            the monochromatic object at the given wavelength.
         """
         from .fouriersqrt import FourierSqrt
         return FourierSqrt(self._obj.evaluateAtWavelength(wave), self.gsparams,
@@ -2704,28 +2759,29 @@ class ChromaticOpticalPSF(ChromaticObject):
     Note that a ChromaticOpticalPSF by itself is NOT the correct thing to use to draw an image of a
     star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
     should either multiply the ChromaticOpticalPSF object by an SED, or convolve it with a point
-    source multiplied by an SED:
+    source multiplied by an SED::
 
         >>> psf = galsim.ChromaticOpticalPSF(...)
         >>> star = galsim.DeltaFunction() * psf_sed
         >>> final_star = galsim.Convolve( [psf, star] )
         >>> final_star.drawImage(bandpass = bp, ...)
 
-    @param lam              Fiducial wavelength for which diffraction limit and aberrations are
-                            initially defined, in nanometers.
-    @param diam             Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
-                            specified.
-    @param lam_over_diam    Ratio of (fiducial wavelength) / telescope diameter in units of
-                            `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
-    @param aberrations      An array of aberrations, in units of fiducial wavelength `lam`.  The
-                            size and format of this array is described in the OpticalPSF docstring.
-    @param scale_unit       Units used to define the diffraction limit and draw images.
-                            [default: galsim.arcsec]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-    @param **kwargs         Any other keyword arguments to be passed to OpticalPSF, for example,
-                            related to struts, obscuration, oversampling, etc.  See OpticalPSF
-                            docstring for a complete list of options.
+    Parameters:
+        lam:            Fiducial wavelength for which diffraction limit and aberrations are
+                        initially defined, in nanometers.
+        diam:           Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
+                        specified.
+        lam_over_diam:  Ratio of (fiducial wavelength) / telescope diameter in units of
+                        `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
+        aberrations:    An array of aberrations, in units of fiducial wavelength `lam`.  The
+                        size and format of this array is described in the OpticalPSF docstring.
+        scale_unit:     Units used to define the diffraction limit and draw images.
+                        [default: galsim.arcsec]
+        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
+        **kwargs:       Any other keyword arguments to be passed to OpticalPSF, for example,
+                        related to struts, obscuration, oversampling, etc.  See OpticalPSF
+                        docstring for a complete list of options.
     """
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                  scale_unit=None, gsparams=None, **kwargs):
@@ -2821,7 +2877,8 @@ class ChromaticOpticalPSF(ChromaticObject):
         """
         Method to directly instantiate a monochromatic instance of this object.
 
-        @param  wave   Wavelength in nanometers.
+        Parameters:
+             wave:  Wavelength in nanometers.
         """
         from .phase_psf import OpticalPSF
         # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
@@ -2846,19 +2903,20 @@ class ChromaticAiry(ChromaticObject):
     profile, the ChromaticAiry class is likely to be a less computationally expensive and more
     accurate option.
 
-    @param lam              Fiducial wavelength for which diffraction limit is initially defined, in
-                            nanometers.
-    @param diam             Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
-                            specified.
-    @param lam_over_diam    Ratio of (fiducial wavelength) / telescope diameter in units of
-                            `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
-    @param scale_unit       Units used to define the diffraction limit and draw images.
-                            [default: galsim.arcsec]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-    @param **kwargs         Any other keyword arguments to be passed to Airy: either flux, or
-                            gsparams.  See galsim.Airy docstring for a complete description of these
-                            options.
+    Parameters:
+        lam:            Fiducial wavelength for which diffraction limit is initially defined, in
+                        nanometers.
+        diam:           Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
+                        specified.
+        lam_over_diam:  Ratio of (fiducial wavelength) / telescope diameter in units of
+                        `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
+        scale_unit:     Units used to define the diffraction limit and draw images.
+                        [default: galsim.arcsec]
+        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
+        **kwargs:       Any other keyword arguments to be passed to Airy: either flux, or
+                        gsparams.  See galsim.Airy docstring for a complete description of these
+                        options.
     """
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=None, gsparams=None,
                  **kwargs):
@@ -2935,7 +2993,8 @@ class ChromaticAiry(ChromaticObject):
         """
         Method to directly instantiate a monochromatic instance of this object.
 
-        @param  wave   Wavelength in nanometers.
+        Parameters:
+             wave:  Wavelength in nanometers.
         """
         from .airy import Airy
         # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial

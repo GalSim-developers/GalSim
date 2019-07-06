@@ -36,12 +36,14 @@ def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2
     appropriate for LSST at Cerro Pachon, Chile, but they are broadly reasonable for most
     observatories.
 
-    @param wave           Wavelength array in nanometers
-    @param pressure       Air pressure in kiloPascals.
-    @param temperature    Temperature in Kelvins.
-    @param H2O_pressure   Water vapor pressure in kiloPascals.
+    Parameters:
+        wave:             Wavelength array in nanometers
+        pressure:         Air pressure in kiloPascals.
+        temperature:      Temperature in Kelvins.
+        H2O_pressure:     Water vapor pressure in kiloPascals.
 
-    @returns the refractive index minus 1.
+    Returns:
+        the refractive index minus 1.
     """
     P = pressure * 7.50061683 # kPa -> mmHg
     T = temperature - 273.15 # K -> C
@@ -62,12 +64,14 @@ def get_refraction(wave, zenith_angle, **kwargs):
     change in zenith angle for a photon with a given wavelength.  Output is a positive number of
     radians, even though the apparent zenith angle technically decreases due to this effect.
 
-    @param wave          Wavelength array in nanometers
-    @param zenith_angle  as an Angle
-    @param kwargs        Keyword arguments to pass to air_refractive_index() to override default
+    Parameters:
+        wave:            Wavelength array in nanometers
+        zenith_angle:    as an Angle
+        **kwargs:        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
 
-    @returns the absolute value of change in zenith angle in radians.
+    Returns:
+        the absolute value of change in zenith angle in radians.
     """
     nm1 = air_refractive_index_minus_one(wave, **kwargs)
     # The following line is equivalent to:
@@ -82,14 +86,16 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
     the latitude of the observer.  This is useful for the function ChromaticAtmosphere() in the
     galsim.chromatic module.
 
-    @param obj_coord     A CelestialCoord object for which the zenith and parallactic
+    Parameters:
+        obj_coord:       A CelestialCoord object for which the zenith and parallactic
                          angles will be computed.
-    @param zenith_coord  A CelestialCoord indicating the coordinates of the zenith.
-    @param HA            The hour angle (as an Angle) of the coordinate for which the
+        zenith_coord:    A CelestialCoord indicating the coordinates of the zenith.
+        HA:              The hour angle (as an Angle) of the coordinate for which the
                          zenith and parallactic angles will be computed.
-    @param latitude      The observer's latitude, as an Angle.
+        latitude:        The observer's latitude, as an Angle.
 
-    @returns the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
+    Returns:
+        the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
     """
     from .celestial import CelestialCoord
     from .angle import degrees
@@ -113,20 +119,22 @@ def parse_dcr_angles(**kwargs):
     """Parse the various options for specifying the zenith angle and parallactic angle
     in ChromaticAtmosphere.
 
-    @param zenith_angle         Angle from object to zenith, expressed as an Angle
-                                [default: 0]
-    @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
-                                from North through East.  [default: 0]
-    @param obj_coord            Celestial coordinates of the object being drawn as a
-                                CelestialCoord. [default: None]
-    @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
-                                [default: None]
-    @param HA                   Hour angle of the object as an Angle. [default: None]
-    @param latitude             Latitude of the observer as an Angle. [default: None]
-    @param **kw                 For convenience, any other kwargs are returned back for further
-                                processing.
+    Parameters:
+        zenith_angle:       Angle from object to zenith, expressed as an Angle
+                            [default: 0]
+        parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured
+                            from North through East.  [default: 0]
+        obj_coord:          Celestial coordinates of the object being drawn as a
+                            CelestialCoord. [default: None]
+        zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                            [default: None]
+        HA:                 Hour angle of the object as an Angle. [default: None]
+        latitude:           Latitude of the observer as an Angle. [default: None]
+        **kwargs:           For convenience, any other kwargs are returned back for further
+                            processing.
 
-    @returns zenith_angle, parallactic_angle, kw, where kw is any other kwargs that aren't relevant.
+    Returns:
+        zenith_angle, parallactic_angle, kw, where kw is any other kwargs that aren't relevant.
     """
     from .angle import degrees, Angle
     if 'zenith_angle' in kwargs:

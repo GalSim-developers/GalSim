@@ -38,35 +38,34 @@ class Moffat(GSObject):
 
         http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html
 
-    Initialization
-    --------------
-
     A Moffat can be initialized using one (and only one) of three possible size parameters:
-    `scale_radius`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
+    ``scale_radius``, ``fwhm``, or ``half_light_radius``.  Exactly one of these three is required.
 
-    @param beta             The `beta` parameter of the profile.
-    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius`, `fwhm`, or `half_light_radius` is required.]
-    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius`, `fwhm`, or `half_light_radius` is required.]
-    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
-                            [One of `scale_radius`, `fwhm`, or `half_light_radius` is required.]
-    @param trunc            An optional truncation radius at which the profile is made to drop to
+    Parameters:
+        beta:               The ``beta`` parameter of the profile.
+        scale_radius:       The scale radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius``, ``fwhm``, or ``half_light_radius`` is
+                            required.]
+        half_light_radius:  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius``, ``fwhm``, or ``half_light_radius`` is
+                            required.]
+        fwhm:               The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius``, ``fwhm``, or ``half_light_radius`` is
+                            required.]
+        trunc:              An optional truncation radius at which the profile is made to drop to
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-
-    Methods and Properties
-    ----------------------
 
     In addition to the usual GSObject methods, Moffat has the following access properties:
 
-        >>> beta = moffat_obj.beta
-        >>> rD = moffat_obj.scale_radius
-        >>> fwhm = moffat_obj.fwhm
-        >>> hlr = moffat_obj.half_light_radius
+    Attributes:
+        beta:               The beta parameter
+        scale_radius:       The scale radius
+        fwhm:               The full-width half-max size
+        half_light_radius:  The half-light radius
     """
     _req_params = { "beta" : float }
     _opt_params = { "trunc" : float , "flux" : float }

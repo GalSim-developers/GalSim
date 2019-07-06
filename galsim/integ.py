@@ -29,7 +29,7 @@ from .errors import GalSimError, GalSimRangeError, GalSimValueError, convert_cpp
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
 
-    Example usage:
+    Example usage::
 
         >>> def func(x): return x**2
         >>> galsim.integ.int1d(func, 0, 1)
@@ -39,15 +39,17 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
         >>> galsim.integ.int1d(func, -1, 1)
         0.66666666666666674
 
-    @param func     The function to be integrated.  y = func(x) should be valid.
-    @param min      The lower end of the integration bounds (anything < -1.e10 is treated as
+    Parameters:
+        func:       The function to be integrated.  y = func(x) should be valid.
+        min:        The lower end of the integration bounds (anything < -1.e10 is treated as
                     negative infinity).
-    @param max      The upper end of the integration bounds (anything > 1.e10 is treated as positive
+        max:        The upper end of the integration bounds (anything > 1.e10 is treated as positive
                     infinity).
-    @param rel_err  The desired relative error [default: 1.e-6]
-    @param abs_err  The desired absolute error [default: 1.e-12]
+        rel_err:    The desired relative error [default: 1.e-6]
+        abs_err:    The desired absolute error [default: 1.e-12]
 
-    @returns the value of the integral.
+    Returns:
+        the value of the integral.
     """
     min = float(min)
     max = float(max)
@@ -63,10 +65,12 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
 def midpt(fvals, x):
     """Midpoint rule for integration.
 
-    @param fvals  Samples of the integrand
-    @param x      Locations at which the integrand was sampled.
+    Parameters:
+        fvals:    Samples of the integrand
+        x:        Locations at which the integrand was sampled.
 
-    @returns midpoint rule approximation of the integral.
+    Returns:
+        midpoint rule approximation of the integral.
     """
     dx = [x[1]-x[0]]
     dx.extend(0.5*(x[2:]-x[0:-2]))
@@ -77,7 +81,7 @@ def midpt(fvals, x):
 def trapz(func, min, max, points=10000):
     """Simple wrapper around 'numpy.trapz' to take function and limits as inputs.
 
-    Example usage:
+    Example usage::
 
         >>> def func(x): return x**2
         >>> galsim.integ.trapz(func, 0, 1)
@@ -87,10 +91,11 @@ def trapz(func, min, max, points=10000):
         >>> galsim.integ.trapz(func, 0, 1, np.linspace(0, 1, 1e3))
         0.33333350033383402
 
-    @param func     The function to be integrated.  y = func(x) should be valid.
-    @param min      The lower end of the integration bounds.
-    @param max      The upper end of the integration bounds.
-    @param points   If integer, the number of points to sample the integrand. If array-like, then
+    Parameters:
+        func:       The function to be integrated.  y = func(x) should be valid.
+        min:        The lower end of the integration bounds.
+        max:        The upper end of the integration bounds.
+        points:     If integer, the number of points to sample the integrand. If array-like, then
                     the points to sample the integrand at. [default: 1000].
     """
     if not np.isscalar(points):
@@ -107,10 +112,12 @@ def trapz(func, min, max, points=10000):
 def midptRule(f, xs):
     """Midpoint rule for integration.
 
-    @param f   Function to integrate.
-    @param xs  Locations at which to evaluate f.
+    Parameters:
+        f:      Function to integrate.
+        xs:     Locations at which to evaluate f.
 
-    @returns  Midpoint rule approximation to the integral.
+    Returns:
+        Midpoint rule approximation to the integral.
     """
     if len(xs) < 2:
         raise GalSimValueError("Not enough points for midptRule integration", xs)
@@ -125,10 +132,12 @@ def midptRule(f, xs):
 def trapzRule(f, xs):
     """Trapezoidal rule for integration.
 
-    @param f   Function to integrate.
-    @param xs  Locations at which to evaluate f.
+    Parameters:
+        f:      Function to integrate.
+        xs:     Locations at which to evaluate f.
 
-    @returns  Trapezoidal rule approximation to the integral.
+    Returns:
+        Trapezoidal rule approximation to the integral.
     """
     if len(xs) < 2:
         raise GalSimValueError("Not enough points for trapzRule integration", xs)
@@ -152,15 +161,17 @@ class ImageIntegrator(object):
 
     def __call__(self, evaluateAtWavelength, bandpass, image, drawImageKwargs, doK=False):
         """
-        @param evaluateAtWavelength Function that returns a monochromatic surface brightness
+        Parameters:
+            evaluateAtWavelength:   Function that returns a monochromatic surface brightness
                                     profile as a function of wavelength.
-        @param bandpass             Bandpass object representing the filter being imaged through.
-        @param image                Image used to set size and scale of output
-        @param drawImageKwargs      dict with other kwargs to send to drawImage function.
-        @param doK                  Integrate up results of drawKImage instead of results of
+            bandpass:               Bandpass object representing the filter being imaged through.
+            image:                  Image used to set size and scale of output
+            drawImageKwargs:        dict with other kwargs to send to drawImage function.
+            doK:                    Integrate up results of drawKImage instead of results of
                                     drawImage.  [default: False]
 
-        @returns the result of integral as an Image
+        Returns:
+            the result of integral as an Image
         """
         waves = self.calculateWaves(bandpass)
         self.last_n_eval = len(waves)
@@ -183,10 +194,13 @@ class SampleIntegrator(ImageIntegrator):
     See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
     points equally spaced apart.
 
-    @param rule         Which integration rule to apply to the wavelength and monochromatic surface
-                        brightness samples.  Options include:
-                            galsim.integ.midptRule  --  Use the midpoint integration rule
-                            galsim.integ.trapzRule  --  Use the trapezoidal integration rule
+    Parameters:
+        rule:       Which integration rule to apply to the wavelength and monochromatic surface
+                    brightness samples.  Options include:
+
+                    - galsim.integ.midptRule: Use the midpoint integration rule
+                    - galsim.integ.trapzRule: Use the trapezoidal integration rule
+
     """
     def __init__(self, rule):
         self.rule = rule
@@ -204,13 +218,16 @@ class ContinuousIntegrator(ImageIntegrator):
     SampleIntegrator for an integrator that only evaluates the integrand at the predefined set of
     wavelengths in `bandpass.wave_list`.
 
-    @param rule         Which integration rule to apply to the wavelength and monochromatic
+    Parameters:
+        rule:           Which integration rule to apply to the wavelength and monochromatic
                         surface brightness samples.  Options include:
-                            galsim.integ.midptRule  --  Use the midpoint integration rule
-                            galsim.integ.trapzRule  --  Use the trapezoidal integration rule
-    @param N            Number of equally-wavelength-spaced monochromatic surface brightness
+
+                        - galsim.integ.midptRule: Use the midpoint integration rule
+                        - galsim.integ.trapzRule: Use the trapezoidal integration rule
+
+        N:              Number of equally-wavelength-spaced monochromatic surface brightness
                         samples to evaluate. [default: 250]
-    @param use_endpoints  Whether to sample the endpoints `bandpass.blue_limit` and
+        use_endpoints:  Whether to sample the endpoints `bandpass.blue_limit` and
                         `bandpass.red_limit`.  This should probably be True for a rule like
                         numpy.trapz, which explicitly samples the integration limits.  For a
                         rule like the midpoint rule, however, the integration limits are not

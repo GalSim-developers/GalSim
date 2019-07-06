@@ -50,41 +50,41 @@ class VonKarman(GSObject):
         Martinez et al.  2010  A&A  vol. 516
         Conan  2008  JOSA  vol. 25
 
-    Notes
-    -----
+    .. note::
 
-    If one blindly follows the math for converting the von Karman power spectrum into a PSF, one
-    finds that the PSF contains a delta-function at the origin with fractional flux of
+        If one blindly follows the math for converting the von Karman power spectrum into a PSF, one
+        finds that the PSF contains a delta-function at the origin with fractional flux of::
 
-        exp(-0.5*0.172*(r0/L0)^(-5/3))
+            exp(-0.5*0.172*(r0/L0)^(-5/3))
 
-    In almost all cases of interest this evaluates to something tiny, often on the order of 10^-100
-    or smaller.  By default, GalSim will ignore this delta function entirely since it usually
-    doesn't make any difference, but can complicate some calculations like drawing using
-    method='real_space' or by formally requiring huge Fourier transforms for drawing using
-    method='fft'.  If for some reason you want to keep the delta function, though, then you can pass
-    the do_delta=True argument to the VonKarman initializer.
+        In almost all cases of interest this evaluates to something tiny, often on the order of
+        10^-100 or smaller.  By default, GalSim will ignore this delta function entirely since it
+        usually doesn't make any difference, but can complicate some calculations like drawing
+        using method='real_space' or by formally requiring huge Fourier transforms for drawing
+        using method='fft'.  If for some reason you want to keep the delta function, though, then
+        you can pass the do_delta=True argument to the VonKarman initializer.
 
-    @param lam               Wavelength in nanometers.
-    @param r0                Fried parameter at specified wavelength `lam` in meters.  Exactly one
-                             of r0 and r0_500 should be specified.
-    @param r0_500            Fried parameter at 500 nm in meters.  Exactly one of r0 and r0_500
-                             should be specified.
-    @param L0                Outer scale in meters.  [default: 25.0]
-    @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param scale_unit        Units assumed when drawing this profile or evaluating xValue, kValue,
-                             etc.  Should be a galsim.AngleUnit or a string that can be used to
-                             construct one (e.g., 'arcsec', 'radians', etc.).
-                             [default: galsim.arcsec]
-    @param do_delta          Include delta-function at origin? (not recommended; see above).
-                             [default: False]
-    @param suppress_warning  For some combinations of r0 and L0, it may become impossible to satisfy
-                             the gsparams.maxk_threshold criterion (see above).  In that case, the
-                             code will emit a warning alerting the user that they may have entered a
-                             non-physical regime.  However, this warning can be suppressed with this
-                             keyword.  [default: False]
-    @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
-                             details. [default: None]
+    Parameters:
+        lam:                Wavelength in nanometers.
+        r0:                 Fried parameter at specified wavelength ``lam`` in meters.  Exactly one
+                            of r0 and r0_500 should be specified.
+        r0_500:             Fried parameter at 500 nm in meters.  Exactly one of r0 and r0_500
+                            should be specified.
+        L0:                 Outer scale in meters.  [default: 25.0]
+        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
+        scale_unit:         Units assumed when drawing this profile or evaluating xValue, kValue,
+                            etc.  Should be a galsim.AngleUnit or a string that can be used to
+                            construct one (e.g., 'arcsec', 'radians', etc.).
+                            [default: galsim.arcsec]
+        do_delta:           Include delta-function at origin? (not recommended; see above).
+                            [default: False]
+        suppress_warning:   For some combinations of r0 and L0, it may become impossible to satisfy
+                            the gsparams.maxk_threshold criterion (see above).  In that case, the
+                            code will emit a warning alerting the user that they may have entered a
+                            non-physical regime.  However, this warning can be suppressed with this
+                            keyword.  [default: False]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
     _req_params = { "lam" : float }
     _opt_params = { "L0" : float, "flux" : float, "scale_unit" : str, "do_delta" : bool }

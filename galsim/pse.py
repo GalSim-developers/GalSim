@@ -49,7 +49,7 @@ class PowerSpectrumEstimator(object):
 
     Below is an example of how to use this code (relying on GalSim to provide the arrays of g1 and
     g2, though that is by no means required, and assuming that the user is sitting in the examples/
-    directory):
+    directory)::
 
         >>> grid_size = 10.  # Define the total grid extent, in degrees
         >>> ngrid = 100      # Define the number of grid points in each dimension: (ngrid x ngrid)
@@ -107,9 +107,10 @@ class PowerSpectrumEstimator(object):
         PowerSpectrumEstimator can be used to estimate the power spectrum quickly for many sets of
         shears at gridded positions.
 
-        @param N            The number of pixels along each side of the grid. [default: 100]
-        @param sky_size_deg The total grid width (in one dimension) in degrees. [default: 10]
-        @param nbin         The number of evenly-spaced logarithmic `ell` bins to use for estimating
+        Parameters:
+            N:              The number of pixels along each side of the grid. [default: 100]
+            sky_size_deg:   The total grid width (in one dimension) in degrees. [default: 10]
+            nbin:           The number of evenly-spaced logarithmic `ell` bins to use for estimating
                             the power spectrum. [default: 15]
         """
         # Set up the scales of the sky and pixels
@@ -192,19 +193,20 @@ class PowerSpectrumEstimator(object):
 
         For example usage, see the docstring for the PowerSpectrumEstimator class.
 
-        @param g1               The shear component g1 as a square 2D NumPy array.
-        @param g2               The shear component g2 as a square 2D NumPy array.
-        @param weight_EE        If True, then the E auto-power spectrum is re-computed weighting by
-                                the power within each logarithmically-spaced ell bin. Note that use
-                                of this option requires a usable GalSim installation, unlike the
-                                rest of the PowerSpectrumEstimator functionality.  [default: False]
-        @param weight_BB        If True, then the B auto-power spectrum is re-computed weighting by
-                                the power within each logarithmically-spaced ell bin. Note that use
-                                of this option requires a usable GalSim installation, unlike the
-                                rest of the PowerSpectrumEstimator functionality.  [default: False]
-        @param theory_func      An optional callable function that can be used to get an idealized
-                                value of power at each point on the grid, and then see what results
-                                it gives for our chosen ell binning. [default: None]
+        Parameters:
+            g1:             The shear component g1 as a square 2D NumPy array.
+            g2:             The shear component g2 as a square 2D NumPy array.
+            weight_EE:      If True, then the E auto-power spectrum is re-computed weighting by
+                            the power within each logarithmically-spaced ell bin. Note that use
+                            of this option requires a usable GalSim installation, unlike the
+                            rest of the PowerSpectrumEstimator functionality.  [default: False]
+            weight_BB:      If True, then the B auto-power spectrum is re-computed weighting by
+                            the power within each logarithmically-spaced ell bin. Note that use
+                            of this option requires a usable GalSim installation, unlike the
+                            rest of the PowerSpectrumEstimator functionality.  [default: False]
+            theory_func:    An optional callable function that can be used to get an idealized
+                            value of power at each point on the grid, and then see what results
+                            it gives for our chosen ell binning. [default: None]
         """
         from .table import LookupTable
         # Check for the expected square geometry consistent with the previously-defined grid size.

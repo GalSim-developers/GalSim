@@ -40,21 +40,23 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
     Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
     non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
     only refers to an overall amplitude ratio for the surface brightness profile.  The total
-    flux scaling is actually |det(jac)| * flux_ratio.
+    flux scaling is actually ``|det(jac)| * flux_ratio``.
 
-    @param obj              The object to be transformed.
-    @param jac              A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
+    Parameters:
+        obj:                The object to be transformed.
+        jac:                A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
                             of the transformation. [default: (1,0,0,1)]
-    @param offset           A galsim.PositionD giving the offset by which to shift the profile.
-    @param flux_ratio       A factor by which to multiply the surface brightness of the object.
+        offset:             A galsim.PositionD giving the offset by which to shift the profile.
+        flux_ratio:         A factor by which to multiply the surface brightness of the object.
                             (Technically, not necessarily the flux.  See above.) [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    @returns a Transformation or ChromaticTransformation instance as appropriate.
+    Returns:
+        a Transformation or ChromaticTransformation instance as appropriate.
     """
     from .sum import Sum
     from .convolve import Convolution
@@ -100,9 +102,6 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
 class Transformation(GSObject):
     """A class for modeling an affine transformation of a GSObject instance.
 
-    Initialization
-    --------------
-
     Typically, you do not need to construct a Transformation object explicitly.  This is the type
     returned by the various transformation methods of GSObject such as shear(), rotate(),
     shift(), transform(), etc.  All the various transformations can be described as a combination
@@ -112,30 +111,29 @@ class Transformation(GSObject):
     Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
     non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
     only refers to an overall amplitude ratio for the surface brightness profile.  The total
-    flux scaling is actually |det(jac)| * flux_ratio.
+    flux scaling is actually ``|det(jac)| * flux_ratio``.
 
-    @param obj              The object to be transformed.
-    @param jac              A list, tuple or numpy array ( dudx, dudy, dvdx, dvdy ) describing the
-                            Jacobian of the transformation. [default: (1,0,0,1)]
-    @param offset           A galsim.PositionD giving the offset by which to shift the profile.
-    @param flux_ratio       A factor by which to multiply the surface brightness of the object.
+    Parameters:
+        obj:                The object to be transformed.
+        jac:                A list, tuple or numpy array ( dudx, dudy, dvdx, dvdy ) describing
+                            the Jacobian of the transformation. [default: (1,0,0,1)]
+        offset:             A galsim.PositionD giving the offset by which to shift the profile.
+        flux_ratio:         A factor by which to multiply the surface brightness of the object.
                             (Technically, not necessarily the flux.  See above.) [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    Attributes
-    ----------
+    Attributes:
+        original:       The original object that is being transformed.
+        jac:            The jacobian of the transformation matrix.
+        offset:         The offset being applied.
+        flux_ratio:     The amount by which the overall surface brightness amplitude is multiplied.
+        gsparams:       The usual gsparams attribute that all GSObjects have.
 
-    original        The original object that is being transformed.
-    jac             The jacobian of the transformation matrix.
-    offset          The offset being applied.
-    flux_ratio      The amount by which the overall surface brightness amplitude is multiplied.
-    gsparams        The usual gsparams attribute that all GSObjects have.
-
-    Note: if `gsparams` is unspecified (or None), then the Transformation instance inherits the
+    Note: if ``gsparams`` is unspecified (or None), then the Transformation instance inherits the
     GSParams from obj.  Also, note that parameters related to the Fourier-space calculations must
     be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
     threshold parameters will simply be ignored).
@@ -195,8 +193,14 @@ class Transformation(GSObject):
                                flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
-    @doc_inherit
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        .. note::
+
+            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams
+            of the wrapped component object.
+        """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)

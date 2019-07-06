@@ -79,9 +79,6 @@ class AtmosphericScreen(object):
     defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
     scale beyond which the turbulence power flattens.
 
-    Instantiation
-    -------------
-
     AtmosphericScreen delays the actual instantiation of the phase screen array in memory until it
     is used for either drawing a PSF or querying the wavefront or wavefront gradient.  This is to
     facilitate automatic truncation of the screen power spectrum depending on the use case.  For
@@ -104,8 +101,7 @@ class AtmosphericScreen(object):
     Note that once a screen has been instantiated with a particular set of truncation parameters, it
     cannot be re-instantiated with another set of parameters.
 
-    Shared memory
-    -------------
+    Shared memory:
 
     Instantiated AtmosphericScreen objects can consume a significant amount of memory.  For example,
     an atmosphere with 6 screens, each extending 819.2 m and with resolution of 10 cm will consume
@@ -171,46 +167,51 @@ class AtmosphericScreen(object):
     Finally, the above multiprocessing shared memory tricks are only currently supported for
     non-time-evolving screens (alpha=1).
 
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind speed and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so while the code will
-                         still run with a small screen, this may introduce artifacts into PSFs or
-                         PSF correlation functions.  Also note that screen_size may be tweaked by
-                         the initializer to ensure `screen_size` is a multiple of `screen_scale`.
-    @param screen_scale  Physical pixel scale of phase screen in meters.  An order unity multiple of
-                         the Fried parameter is usually sufficiently small, but users should test
-                         the effects of varying this parameter to ensure robust results.
-                         [default: r0_500]
-    @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [default: 0.0]
-    @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
-                         of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [default: 0.2]
-    @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach a constant at scales larger than L0.  Set to `None` or `np.inf`
-                         for a power spectrum without an outer scale.  [default: 25.0]
-    @param vx            x-component wind velocity in meters/second.  [default: 0.]
-    @param vy            y-component wind velocity in meters/second.  [default: 0.]
-    @param alpha         Square root of fraction of phase that is "remembered" between time_steps
-                         (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
-                         is then the amount of turbulence freshly generated in each step.  Setting
-                         alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
-                         from frozen-flow atmospheres may be significantly faster than computing
-                         PSFs with non-frozen-flow atmospheres.  If `alpha` != 1.0, then it is
-                         required that a `time_step` is also specified.  [default: 1.0]
-    @param time_step     Time interval between phase boiling updates.  Note that this is distinct
-                         from the time interval used to integrate the PSF over time, which is set
-                         by the `time_step` keyword argument to `PhaseScreenPSF` or
-                         `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
-                         that `alpha` is set to something other than 1.0.  [default: None]
-    @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [default: None]
-    @param suppress_warning   Turn off instantiation sanity checking.  (See above)  [default: False]
-    @param mp_context    GalSim uses shared memory for phase screen allocation to better enable
-                         multiprocessing.  Use this keyword to set the launch context for
-                         multiprocessing.  Usually it will be sufficient to leave this at its
-                         default.  [default: None]
+    Parameters:
+        screen_size:        Physical extent of square phase screen in meters.  This should be large
+                            enough to accommodate the desired field-of-view of the telescope as
+                            well as the meta-pupil defined by the wind speed and exposure time.
+                            Note that the screen will have periodic boundary conditions, so while
+                            the code will still run with a small screen, this may introduce
+                            artifacts into PSFs or PSF correlation functions.  Also note that
+                            screen_size may be tweaked by the initializer to ensure `screen_size`
+                            is a multiple of `screen_scale`.
+        screen_scale:       Physical pixel scale of phase screen in meters.  An order unity multiple
+                            of the Fried parameter is usually sufficiently small, but users should
+                            test the effects of varying this parameter to ensure robust results.
+                            [default: r0_500]
+        altitude:           Altitude of phase screen in km.  This is with respect to the telescope,
+                            not sea-level.  [default: 0.0]
+        r0_500:             Fried parameter setting the amplitude of turbulence; contributes to
+                            "size" of the resulting atmospheric PSF.  Specified at wavelength 500
+                            nm, in units of meters.  [default: 0.2]
+        L0:                 Outer scale in meters.  The turbulence power spectrum will smoothly
+                            approach a constant at scales larger than L0.  Set to `None` or `np.inf`
+                            for a power spectrum without an outer scale.  [default: 25.0]
+        vx:                 x-component wind velocity in meters/second.  [default: 0.]
+        vy:                 y-component wind velocity in meters/second.  [default: 0.]
+        alpha:              Square root of fraction of phase that is "remembered" between time_steps
+                            (i.e., alpha**2 is the fraction remembered). The fraction
+                            sqrt(1-alpha**2) is then the amount of turbulence freshly generated in
+                            each step.  Setting alpha=1.0 results in a frozen-flow atmosphere.
+                            Note that computing PSFs from frozen-flow atmospheres may be
+                            significantly faster than computing PSFs with non-frozen-flow
+                            atmospheres.  If `alpha` != 1.0, then it is required that a
+                            ``time_step`` is also specified.  [default: 1.0]
+        time_step:          Time interval between phase boiling updates.  Note that this is distinct
+                            from the time interval used to integrate the PSF over time, which is set
+                            by the `time_step` keyword argument to `PhaseScreenPSF` or
+                            `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is
+                            required that `alpha` is set to something other than 1.0.
+                            [default: None]
+        rng:                Random number generator as a galsim.BaseDeviate().  If None, then use
+                            the clock time or system entropy to seed a new generator.
+                            [default: None]
+        suppress_warning:   Turn off instantiation sanity checking.  (See above)  [default: False]
+        mp_context          GalSim uses shared memory for phase screen allocation to better enable
+                            multiprocessing.  Use this keyword to set the launch context for
+                            multiprocessing.  Usually it will be sufficient to leave this at its
+                            default.  [default: None]
 
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
@@ -378,13 +379,14 @@ class AtmosphericScreen(object):
 
     def instantiate(self, kmin=0., kmax=np.inf, check=None):
         """
-        @param kmin   Minimum k-mode to include when generating phase screens.  Generally this will
+        Parameters:
+            kmin:     Minimum k-mode to include when generating phase screens.  Generally this will
                       only be used when testing the geometric approximation for atmospheric PSFs.
                       [default: 0]
-        @param kmax   Maximum k-mode to include when generating phase screens.  This may be used in
+            kmax:     Maximum k-mode to include when generating phase screens.  This may be used in
                       conjunction with SecondKick to complete the geometric approximation for
                       atmospheric PSFs.  [default: np.inf]
-        @param check  Sanity check indicator.  If equal to 'FFT', then check that phase screen
+            check:    Sanity check indicator.  If equal to 'FFT', then check that phase screen
                       Fourier modes are not being truncated, which is appropriate for full Fourier
                       optics.  If equal to 'phot', then check that phase screen Fourier modes *are*
                       being truncated, which is appropriate for the geometric optics approximation.
@@ -530,10 +532,13 @@ class AtmosphericScreen(object):
     def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this atmospheric layer.
 
-        @param lam         Wavelength in nanometers.
-        @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
+        Parameters:
+            lam:           Wavelength in nanometers.
+            gsparams:      An optional GSParams argument.  See the docstring for GSParams for
                            details. [default: None]
-        @returns  Good pupil scale size in meters.
+
+        Returns:
+            Good pupil scale size in meters.
         """
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
@@ -545,19 +550,22 @@ class AtmosphericScreen(object):
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave.
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or
-                        an iterable.  If None, then the internal time of the phase screens will be
-                        used for all u, v.  If scalar, then the size will be broadcast up to match
-                        that of u and v.  If iterable, then the shape must match the shapes of u and
-                        v.  [default: None]
-        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
-                        permitted.
-        @returns        Array of wavefront lag or lead in nanometers.
+        Parameters:
+            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            t:      Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or
+                    an iterable.  If None, then the internal time of the phase screens will be
+                    used for all u, v.  If scalar, then the size will be broadcast up to match
+                    that of u and v.  If iterable, then the shape must match the shapes of u and
+                    v.  [default: None]
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                    [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                    permitted.
+
+        Returns:
+            Array of wavefront lag or lead in nanometers.
         """
         u = np.array(u, dtype=float, copy=False)
         v = np.array(v, dtype=float, copy=False)
@@ -610,19 +618,22 @@ class AtmosphericScreen(object):
     def wavefront_gradient(self, u, v, t=None, theta=(0.0*radians, 0.0*radians)):
         """ Compute gradient of wavefront due to atmospheric phase screen.
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
-                        scalar or an iterable.  If None, then the internal time of the phase screens
-                        will be used for all u, v.  If scalar, then the size will be broadcast up to
-                        match that of u and v.  If iterable, then the shape must match the shapes of
-                        u and v.  [default: None]
-        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
-                        permitted.
-        @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
+        Parameters:
+            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            t:      Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
+                    scalar or an iterable.  If None, then the internal time of the phase screens
+                    will be used for all u, v.  If scalar, then the size will be broadcast up to
+                    match that of u and v.  If iterable, then the shape must match the shapes of
+                    u and v.  [default: None]
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                    [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                    permitted.
+
+        Returns:
+            Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
         u = np.array(u, dtype=float, copy=False)
         v = np.array(v, dtype=float, copy=False)
@@ -710,7 +721,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
     for their study of atmospheric PSFs for LSST.  Note this code takes about ~2 minutes to run on
     a fast laptop, and will consume about (8192**2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
-    RAM in its final state, and more at intermediate states.
+    RAM in its final state, and more at intermediate states.::
 
         >>> altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
         >>> r0_500 = 0.16  # m
@@ -726,13 +737,13 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
 
     Once the atmosphere is constructed, a 15-sec exposure length, 5ms time step, monochromatic PSF
     at 700nm (using an 8.4 meter aperture, 0.6 fractional obscuration and otherwise default
-    settings) takes about 7 minutes to draw on a fast laptop.
+    settings) takes about 7 minutes to draw on a fast laptop.::
 
         >>> psf = atm.makePSF(lam=700.0, exptime=15.0, time_step=0.005, diam=8.4, obscuration=0.6)
         >>> img1 = psf.drawImage()  # ~7 min
 
     The same psf, if drawn using photon-shooting on the same laptop, will generate photons at a rate
-    of about 1 million per second.
+    of about 1 million per second.::
 
         >>> img2 = psf.drawImage(nx=32, ny=32, scale=0.2, method='phot', n_photons=1e6)  # ~1 sec.
 
@@ -745,43 +756,44 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     vs. non-frozen atmospheric layers, and so on.  We recommend that users try varying these
     settings to find a balance of speed and fidelity.
 
-    @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
-                         of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [default: 0.2]
-    @param r0_weights    Weights for splitting up the contribution of r0_500 between different
-                         layers.  Note that this keyword is only allowed if r0_500 is either a
-                         scalar or a single-element list.  [default: None]
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind speed and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so the code will run
-                         with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlation functions. Note that screen_size may be tweaked by the
-                         initializer to ensure screen_size is a multiple of screen_scale.
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results.
-                         [default: same as each screen's r0_500]
-    @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [default: 0.0]
-    @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach a constant at scales larger than L0.  Set to `None` or `np.inf`
-                         for a power spectrum without an outer scale.  [default: 25.0]
-    @param speed         Wind speed in meters/second.  [default: 0.0]
-    @param direction     Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]
-    @param alpha         Square root of fraction of phase that is "remembered" between time_steps
-                         (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
-                         is then the amount of turbulence freshly generated in each step.  Setting
-                         alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
-                         from frozen-flow atmospheres may be significantly faster than computing
-                         PSFs with non-frozen-flow atmospheres.  [default: 1.0]
-    @param time_step     Time interval between phase boiling updates.  Note that this is distinct
-                         from the time interval used when integrating the PSF over time, which is
-                         set by the `time_step` keyword argument to `PhaseScreenPSF` or
-                         `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
-                         that `alpha` is set to something other than 1.0.  [default: None]
-    @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [default: None]
+    Parameters:
+        r0_500:         Fried parameter setting the amplitude of turbulence; contributes to "size"
+                        of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
+                        of meters.  [default: 0.2]
+        r0_weights:     Weights for splitting up the contribution of r0_500 between different
+                        layers.  Note that this keyword is only allowed if r0_500 is either a
+                        scalar or a single-element list.  [default: None]
+        screen_size:    Physical extent of square phase screen in meters.  This should be large
+                        enough to accommodate the desired field-of-view of the telescope as well as
+                        the meta-pupil defined by the wind speed and exposure time.  Note that
+                        the screen will have periodic boundary conditions, so the code will run
+                        with a smaller sized screen, though this may introduce artifacts into PSFs
+                        or PSF correlation functions. Note that screen_size may be tweaked by the
+                        initializer to ensure screen_size is a multiple of screen_scale.
+        screen_scale:   Physical pixel scale of phase screen in meters.  A fraction of the Fried
+                        parameter is usually sufficiently small, but users should test the effects
+                        of this parameter to ensure robust results.
+                        [default: same as each screen's r0_500]
+        altitude:       Altitude of phase screen in km.  This is with respect to the telescope, not
+                        sea-level.  [default: 0.0]
+        L0:             Outer scale in meters.  The turbulence power spectrum will smoothly
+                        approach a constant at scales larger than L0.  Set to `None` or `np.inf`
+                        for a power spectrum without an outer scale.  [default: 25.0]
+        speed:          Wind speed in meters/second.  [default: 0.0]
+        direction:      Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]
+        alpha:          Square root of fraction of phase that is "remembered" between time_steps
+                        (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
+                        is then the amount of turbulence freshly generated in each step.  Setting
+                        alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
+                        from frozen-flow atmospheres may be significantly faster than computing
+                        PSFs with non-frozen-flow atmospheres.  [default: 1.0]
+        time_step:      Time interval between phase boiling updates.  Note that this is distinct
+                        from the time interval used when integrating the PSF over time, which is
+                        set by the `time_step` keyword argument to `PhaseScreenPSF` or
+                        `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
+                        that `alpha` is set to something other than 1.0.  [default: None]
+        rng:            Random number generator as a galsim.BaseDeviate().  If None, then use the
+                        clock time or system entropy to seed a new generator.  [default: None]
     """
     from .phase_psf import PhaseScreenList
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
@@ -835,36 +847,37 @@ class OpticalScreen(object):
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
-    @param diam             Diameter of pupil in meters.
-    @param tip              Tip aberration in units of reference wavelength.  [default: 0]
-    @param tilt             Tilt aberration in units of reference wavelength.  [default: 0]
-    @param defocus          Defocus in units of reference wavelength. [default: 0]
-    @param astig1           Astigmatism (like e2) in units of reference wavelength.
+    Parameters:
+        diam:               Diameter of pupil in meters.
+        tip:                Tip aberration in units of reference wavelength.  [default: 0]
+        tilt:               Tilt aberration in units of reference wavelength.  [default: 0]
+        defocus:            Defocus in units of reference wavelength. [default: 0]
+        astig1:             Astigmatism (like e2) in units of reference wavelength.
                             [default: 0]
-    @param astig2           Astigmatism (like e1) in units of reference wavelength.
+        astig2:             Astigmatism (like e1) in units of reference wavelength.
                             [default: 0]
-    @param coma1            Coma along y in units of reference wavelength. [default: 0]
-    @param coma2            Coma along x in units of reference wavelength. [default: 0]
-    @param trefoil1         Trefoil (one of the arrows along y) in units of reference wavelength.
+        coma1:              Coma along y in units of reference wavelength. [default: 0]
+        coma2:              Coma along x in units of reference wavelength. [default: 0]
+        trefoil1:           Trefoil (one of the arrows along y) in units of reference wavelength.
                             [default: 0]
-    @param trefoil2         Trefoil (one of the arrows along x) in units of reference wavelength.
+        trefoil2:           Trefoil (one of the arrows along x) in units of reference wavelength.
                             [default: 0]
-    @param spher            Spherical aberration in units of reference wavelength.
+        spher:              Spherical aberration in units of reference wavelength.
                             [default: 0]
-    @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
+        aberrations:        Optional keyword, to pass in a list, tuple, or NumPy array of
                             aberrations in units of reference wavelength (ordered according to
                             the Noll convention), rather than passing in individual values for each
                             individual aberration.  Note that aberrations[1] is piston (and not
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
-    @param annular_zernike  Boolean indicating that aberrations specify the amplitudes of annular
+        annular_zernike:    Boolean indicating that aberrations specify the amplitudes of annular
                             Zernike polynomials instead of circular Zernike polynomials.
                             [default: False]
-    @param obscuration      Linear dimension of central obscuration as fraction of aperture linear
+        obscuration:        Linear dimension of central obscuration as fraction of aperture linear
                             dimension. [0., 1.).  Note it is the user's responsibility to ensure
                             consistency of OpticalScreen obscuration and Aperture obscuration.
                             [default: 0.0]
-    @param lam_0            Reference wavelength in nanometers at which Zernike aberrations are
+        lam_0:              Reference wavelength in nanometers at which Zernike aberrations are
                             being specified.  [default: 500]
     """
     def __init__(self, diam, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0,
@@ -951,12 +964,15 @@ class OpticalScreen(object):
     def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this phase screen.
 
-        @param lam         Wavelength in nanometers.
-        @param diam        Aperture diameter in meters.
-        @param obscuration Fractional linear aperture obscuration. [default: 0.0]
-        @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
-                           details. [default: None]
-        @returns stepk in inverse arcsec.
+        Parameters:
+            lam:            Wavelength in nanometers.
+            diam:           Aperture diameter in meters.
+            obscuration:    Fractional linear aperture obscuration. [default: 0.0]
+            gsparams        An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+        Returns:
+            stepk in inverse arcsec.
         """
         lam = kwargs['lam']
         diam = kwargs['diam']
@@ -970,13 +986,16 @@ class OpticalScreen(object):
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave.
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Ignored for OpticalScreen.
-        @param theta    Ignored for OpticalScreen.
-        @returns        Array of wavefront lag or lead in nanometers.
+        Parameters:
+            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            t:      Ignored for OpticalScreen.
+            theta:  Ignored for OpticalScreen.
+
+        Returns:
+            Array of wavefront lag or lead in nanometers.
         """
         u = np.array(u, dtype=float, copy=False)
         v = np.array(v, dtype=float, copy=False)
@@ -992,13 +1011,16 @@ class OpticalScreen(object):
     def wavefront_gradient(self, u, v, t=None, theta=None):
         """ Compute gradient of wavefront due to optical phase screen.
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-                        be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Ignored for OpticalScreen.
-        @param theta    Ignored for OpticalScreen.
-        @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
+        Parameters:
+            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            t:      Ignored for OpticalScreen.
+            theta:  Ignored for OpticalScreen.
+
+        Returns:
+            Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
         u = np.array(u, dtype=float, copy=False)
         v = np.array(v, dtype=float, copy=False)

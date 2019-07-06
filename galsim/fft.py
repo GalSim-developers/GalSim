@@ -18,11 +18,11 @@
 """@file fft.py
 Functional equivalents of (some of) the np.fft functions, but using FFTW.
 
-These should be drop in replacements for np.fft.* functions.  e.g.
+These should be drop in replacements for np.fft.* functions.  e.g.::
 
     >>> karray = galsim.fft.fft2(xarray)
 
-is functionally equivalent to
+is functionally equivalent to::
 
     >>> karray = np.fft.fft2(xarray)
 
@@ -44,7 +44,7 @@ from .errors import GalSimValueError, convert_cpp_errors
 def fft2(a, shift_in=False, shift_out=False):
     """Compute the 2-dimensional discrete Fourier Transform.
 
-    For valid inputs, the result is equivalent to numpy.fft.fft2(a), but usually faster.
+    For valid inputs, the result is equivalent to numpy.fft.fft2(a), but usually faster.::
 
         >>> ka1 = numpy.fft.fft2(a)
         >>> ka2 = galsim.fft.fft2(a)
@@ -59,23 +59,25 @@ def fft2(a, shift_in=False, shift_out=False):
 
     The returned array will be complex with dtype numpy.complex128.
 
-    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.
+    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::
 
         >>> ka1 = numpy.fft.fft2(numpy.fft.fftshift(a))
         >>> ka2 = galsim.fft.fft2(a, shift_in=True)
 
-    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.
+    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::
 
         >>> ka1 = numpy.fft.fftshift(numpy.fft.fft2(a))
         >>> ka2 = galsim.fft.fft2(a, shift_out=True)
 
-    @param a            The input array to be transformed
-    @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
-                        [default: False]
-    @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
-                        [default: False]
+    Parameters:
+        a:          The input array to be transformed
+        shift_in:   Whether to shift the input array so that the center is moved to (0,0).
+                    [default: False]
+        shift_out:  Whether to shift the output array so that the center is moved to (0,0).
+                    [default: False]
 
-    @returns a complex numpy array
+    Returns:
+        a complex numpy array
     """
     s = a.shape
     if len(s) != 2:
@@ -125,7 +127,7 @@ def fft2(a, shift_in=False, shift_out=False):
 def ifft2(a, shift_in=False, shift_out=False):
     """Compute the 2-dimensional inverse discrete Fourier Transform.
 
-    For valid inputs, the result is equivalent to numpy.fft.ifft2(a), but usually faster.
+    For valid inputs, the result is equivalent to numpy.fft.ifft2(a), but usually faster.::
 
         >>> a1 = numpy.fft.ifft2(ka)
         >>> a2 = galsim.fft.ifft2(ka)
@@ -146,23 +148,25 @@ def ifft2(a, shift_in=False, shift_out=False):
 
     The returned array will be complex with dtype numpy.complex128
 
-    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.
+    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::
 
         >>> a1 = numpy.fft.ifft2(numpy.fft.fftshift(ka))
         >>> a2 = galsim.fft.ifft2(ka, shift_in=True)
 
-    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.
+    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::
 
         >>> a1 = numpy.fft.fftshift(numpy.fft.ifft2(ka))
         >>> a2 = galsim.fft.ifft2(ka, shift_out=True)
 
-    @param a            The input array to be transformed
-    @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
-                        [default: False]
-    @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
-                        [default: False]
+    Parameters:
+        a:          The input array to be transformed
+        shift_in:   Whether to shift the input array so that the center is moved to (0,0).
+                    [default: False]
+        shift_out:  Whether to shift the output array so that the center is moved to (0,0).
+                    [default: False]
 
-    @returns a complex numpy array
+    Returns:
+        a complex numpy array
     """
     s = a.shape
     if len(s) != 2:
@@ -189,7 +193,7 @@ def ifft2(a, shift_in=False, shift_out=False):
 def rfft2(a, shift_in=False, shift_out=False):
     """Compute the one-dimensional discrete Fourier Transform for real input.
 
-    For valid inputs, the result is equivalent to numpy.fft.rfft2(a), but usually faster.
+    For valid inputs, the result is equivalent to numpy.fft.rfft2(a), but usually faster.::
 
         >>> ka1 = numpy.fft.rfft2(a)
         >>> ka2 = galsim.fft.rfft2(a)
@@ -203,23 +207,25 @@ def rfft2(a, shift_in=False, shift_out=False):
 
     The returned array will be complex with dtype numpy.complex128.
 
-    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.
+    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::
 
         >>> ka1 = numpy.fft.rfft2(numpy.fft.fftshift(a))
         >>> ka2 = galsim.fft.rfft2(a, shift_in=True)
 
-    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.
+    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::
 
         >>> ka1 = numpy.fft.fftshift(numpy.fft.rfft2(a),axes=(0,))
         >>> ka2 = galsim.fft.rfft2(a, shift_out=True)
 
-    @param a            The input array to be transformed
-    @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
-                        [default: False]
-    @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
-                        [default: False]
+    Parameters:
+        a:          The input array to be transformed
+        shift_in:   Whether to shift the input array so that the center is moved to (0,0).
+                    [default: False]
+        shift_out:  Whether to shift the output array so that the center is moved to (0,0).
+                    [default: False]
 
-    @returns a complex numpy array
+    Returns:
+        a complex numpy array
     """
     s = a.shape
     if len(s) != 2:
@@ -242,7 +248,7 @@ def rfft2(a, shift_in=False, shift_out=False):
 def irfft2(a, shift_in=False, shift_out=False):
     """Compute the 2-dimensional inverse FFT of a real array.
 
-    For valid inputs, the result is equivalent to numpy.fft.irfft2(a), but usually faster.
+    For valid inputs, the result is equivalent to numpy.fft.irfft2(a), but usually faster.::
 
         >>> a1 = numpy.fft.irfft2(ka)
         >>> a2 = galsim.fft.irfft2(ka)
@@ -256,23 +262,25 @@ def irfft2(a, shift_in=False, shift_out=False):
 
     The returned array will be real with dtype numpy.float64.
 
-    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.
+    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::
 
         >>> a1 = numpy.fft.irfft2(numpy.fft.fftshift(a, axes=(0,)))
         >>> a2 = galsim.fft.irfft2(a, shift_in=True)
 
-    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.
+    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::
 
         >>> a1 = numpy.fft.fftshift(numpy.fft.irfft2(a))
         >>> a2 = galsim.fft.irfft2(a, shift_out=True)
 
-    @param a            The input array to be transformed
-    @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
-                        [default: False]
-    @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
-                        [default: False]
+    Parameters:
+        a:          The input array to be transformed
+        shift_in:   Whether to shift the input array so that the center is moved to (0,0).
+                    [default: False]
+        shift_out:  Whether to shift the output array so that the center is moved to (0,0).
+                    [default: False]
 
-    @returns a real numpy array
+    Returns:
+        a real numpy array
     """
     s = a.shape
     if len(s) != 2:

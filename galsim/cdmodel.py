@@ -60,10 +60,11 @@ class BaseCDModel(object):
         images is different, this can be accounted for with the gain_ratio parameter when calling
         applyForward or applyBackward.
 
-        @param a_l  NumPy array containing matrix of deflection coefficients of left pixel border
-        @param a_r  NumPy array containing matrix of deflection coefficients of right pixel border
-        @param a_b  NumPy array containing matrix of deflection coefficients of bottom pixel border
-        @param a_t  NumPy array containing matrix of deflection coefficients of top pixel border
+        Parameters:
+            a_l:    NumPy array containing matrix of deflection coefficients of left pixel border
+            a_r:    NumPy array containing matrix of deflection coefficients of right pixel border
+            a_b:    NumPy array containing matrix of deflection coefficients of bottom pixel border
+            a_t:    NumPy array containing matrix of deflection coefficients of top pixel border
         """
         # Some basic sanity checking
         if (a_l.shape[0] % 2 != 1):
@@ -89,9 +90,10 @@ class BaseCDModel(object):
         Returns an image with the forward charge deflection transformation applied.  The input image
         is not modified, but its WCS is included in the returned image.
 
-        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from
-                           flat fields; default value is 1., which assumes the common case that your
-                           flat and science images have the same gain value
+        Parameters:
+            gain_ratio: Ratio of gain_image/gain_flat when shift coefficients were derived from
+                        flat fields; default value is 1., which assumes the common case that your
+                        flat and science images have the same gain value
         """
         ret = image.copy()
         with convert_cpp_errors():
@@ -106,9 +108,10 @@ class BaseCDModel(object):
         Returns an image with the backward charge deflection transformation applied.  The input
         image is not modified, but its WCS is included in the returned image.
 
-        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from
-                           flat fields; default value is 1., which assumes the common case that your
-                           flat and science images have the same gain value
+        Parameters:
+            gain_ratio: Ratio of gain_image/gain_flat when shift coefficients were derived from
+                        flat fields; default value is 1., which assumes the common case that your
+                        flat and science images have the same gain value
         """
         retimage = self.applyForward(image, gain_ratio=-gain_ratio)
         return retimage
@@ -198,14 +201,15 @@ class PowerLawCD(BaseCDModel):
         Sign conventions are such that positive `r0`, `t0`, `rx`, `tx`, `r`, `t` correspond to
         physical deflection of equal charges (this is also how the `theta` above is defined).
 
-        @param n      Maximum separation [pix] out to which charges contribute to deflection
-        @param r0     a_l(0,-1)=a_r(0,+1) deflection coefficient along x direction
-        @param t0     a_b(-1,0)=a_t(+1,0) deflection coefficient along y direction
-        @param rx     a_l(-1,-1)=a_r(+1,+1) diagonal contribution to deflection along x direction
-        @param tx     a_b(-1,-1)=a_t(+1,+1) diagonal contribution to deflection along y direction
-        @param r      power-law amplitude for contribution to deflection along x from further away
-        @param t      power-law amplitude for contribution to deflection along y from further away
-        @param alpha  power-law exponent for deflection from further away
+        Parameters:
+            n:      Maximum separation [pix] out to which charges contribute to deflection
+            r0:     a_l(0,-1)=a_r(0,+1) deflection coefficient along x direction
+            t0:     a_b(-1,0)=a_t(+1,0) deflection coefficient along y direction
+            rx:     a_l(-1,-1)=a_r(+1,+1) diagonal contribution to deflection along x direction
+            tx:     a_b(-1,-1)=a_t(+1,+1) diagonal contribution to deflection along y direction
+            r:      Power-law amplitude for contribution to deflection along x from further away
+            t:      Power-law amplitude for contribution to deflection along y from further away
+            alpha:  Power-law exponent for deflection from further away
         """
         n = int(n)
         # First define x and y coordinates in a square grid of ints of shape (2n + 1) * (2n + 1)

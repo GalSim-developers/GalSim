@@ -72,7 +72,7 @@ class COSMOSCatalog(object):
     After getting the catalogs, there is a method makeGalaxy() that can make a GSObject
     corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
     help(galsim.COSMOSCatalog.makeGalaxy) for more information.  As an interesting application and
-    example of the usage of these routines, consider the following code:
+    example of the usage of these routines, consider the following code::
 
         >>> im_size = 64
         >>> pix_scale = 0.05
@@ -98,61 +98,59 @@ class COSMOSCatalog(object):
     lower resolution than in COSMOS, with a real image and its parametric representation for each of
     those objects.
 
-    Initialization
-    --------------
-
-    @param file_name        The file containing the catalog. [default: None, which will look for the
+    Parameters:
+        file_name:          The file containing the catalog. [default: None, which will look for the
                             F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
                             exception if the catalog is not there telling you to run
                             galsim_download_cosmos.]
-    @param sample           A keyword argument that can be used to specify the sample to use, i.e.,
+        sample:             A keyword argument that can be used to specify the sample to use, i.e.,
                             "23.5" or "25.2".  At most one of `file_name` and `sample` should be
                             specified.
                             [default: None, which results in the same default as `file_name=None`.]
-    @param dir              The directory with the catalog file and, if making realistic galaxies,
+        dir:                The directory with the catalog file and, if making realistic galaxies,
                             the image and noise files (or symlinks to them). [default: None, which
                             will look in $PREFIX/share/galsim.]
-    @param preload          Keyword that is only used for real galaxies, not parametric ones, to
+        preload:            Keyword that is only used for real galaxies, not parametric ones, to
                             choose whether to preload the header information.  If `preload=True`,
                             the bulk of the I/O time is in the constructor.  If `preload=False`,
                             there is approximately the same total I/O time (assuming you eventually
                             use most of the image files referenced in the catalog), but it is spread
                             over the calls to makeGalaxy().  [default: False]
-    @param use_real         Enable the use of realistic galaxies?  [default: True]
+        use_real:           Enable the use of realistic galaxies?  [default: True]
                             If this parameter is False, then `makeGalaxy(gal_type='real')` will
                             not be allowed, and there will be a (modest) decrease in RAM and time
                             spent on I/O when initializing the COSMOSCatalog. If the real
                             catalog is not available for some reason, it will still be possible to
                             make parametric images.
-    @param exclusion_level  Level of additional cuts to make on the galaxies based on the quality
+        exclusion_level:    Level of additional cuts to make on the galaxies based on the quality
                             of postage stamp definition and/or parametric fit quality [beyond the
                             minimal cuts imposed when making the catalog - see Mandelbaum et
                             al. (2012, MNRAS, 420, 1518) for details].  Options:
-                            "none": No cuts.
-                            "bad_stamp": Apply cuts to eliminate galaxies that have failures in
-                                         postage stamp definition.  These cuts may also eliminate a
-                                         small subset of the good postage stamps as well.
-                            "bad_fits": Apply cuts to eliminate galaxies that have failures in the
-                                        parametric fits.  These cuts may also eliminate a small
-                                        subset of the good parametric fits as well.
-                            "marginal": Apply the above cuts, plus ones that eliminate some more
-                                        marginal cases.
-                            [default: "marginal"]
-    @param min_hlr          Exclude galaxies whose fitted half-light radius is smaller than this
-                            value (in arcsec).  [default: 0, meaning no limit]
-    @param max_hlr          Exclude galaxies whose fitted half-light radius is larger than this
-                            value (in arcsec).  [default: 0, meaning no limit]
-    @param min_flux         Exclude galaxies whose fitted flux is smaller than this value.
-                            [default: 0, meaning no limit]
-    @param max_flux         Exclude galaxies whose fitted flux is larger than this value.
-                            [default: 0, meaning no limit]
 
-    Attributes
-    ----------
+                            - "none": No cuts.
+                            - "bad_stamp": Apply cuts to eliminate galaxies that have failures in
+                              postage stamp definition.  These cuts may also eliminate a small
+                              subset of the good postage stamps as well.
+                            - "bad_fits": Apply cuts to eliminate galaxies that have failures in the
+                              parametric fits.  These cuts may also eliminate a small
+                              subset of the good parametric fits as well.
+                            - "marginal": Apply the above cuts, plus ones that eliminate some more
+                              marginal cases.
+
+                            [default: "marginal"]
+        min_hlr:            Exclude galaxies whose fitted half-light radius is smaller than this
+                            value (in arcsec).  [default: 0, meaning no limit]
+        max_hlr:            Exclude galaxies whose fitted half-light radius is larger than this
+                            value (in arcsec).  [default: 0, meaning no limit]
+        min_flux:           Exclude galaxies whose fitted flux is smaller than this value.
+                            [default: 0, meaning no limit]
+        max_flux:           Exclude galaxies whose fitted flux is larger than this value.
+                            [default: 0, meaning no limit]
 
     After construction, the following attributes are available:
 
-    nobjects     The number of objects in the catalog
+    Attributes:
+        nobjects:       The number of objects in the catalog
     """
     _req_params = {}
     _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
@@ -387,43 +385,45 @@ class COSMOSCatalog(object):
         are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
         the resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
 
-        @param index            Index of the desired galaxy in the catalog for which a GSObject
-                                should be constructed.  You may also provide a list or array of
-                                indices, in which case a list of objects is returned. If None,
-                                then a random galaxy (or more: see n_random kwarg) is chosen,
-                                correcting for catalog-level selection effects if weights are
-                                available. [default: None]
-        @param gal_type         Either 'real' or 'parametric'.  This determines which kind of
-                                galaxy model is made. [If catalog was loaded with `use_real=False`,
-                                then this defaults to 'parametric', and in fact 'real' is
-                                not allowed.  If catalog was loaded with `use_real=True`, then
-                                this defaults to 'real'.]
-        @param chromatic        Make this a chromatic object, or not?  [default: False]
-        @param noise_pad_size   For realistic galaxies, the size of region to pad with noise,
-                                in arcsec.  [default: 5, an arbitrary, but not completely
-                                ridiculous choice.]
-        @param deep             Modify fluxes and sizes of galaxies from the F814W<23.5 sample in
-                                order to roughly simulate an F814W<25 sample but with higher S/N, as
-                                in GREAT3? [default: False]  Note that this keyword will be ignored
-                                (except for issuing a warning) if the input catalog already
-                                represents the F814W<25.2 sample.
-        @param sersic_prec      The desired precision on the Sersic index n in parametric galaxies.
-                                GalSim is significantly faster if it gets a smallish number of
-                                Sersic values, so it can cache some of the calculations and use
-                                them again the next time it gets a galaxy with the same index.
-                                If `sersic_prec` is 0.0, then use the exact value of index n from
-                                the catalog.  But if it is >0, then round the index to that
-                                precision.  [default: 0.05]
-        @param rng              A random number generator to use for selecting a random galaxy
-                                (may be any kind of BaseDeviate or None) and to use in generating
-                                any noise field when padding.  [default: None]
-        @param n_random         The number of random galaxies to build, if 'index' is None.
-                                [default: 1]
-        @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                                details. [default: None]
+        Parameters:
+            index:          Index of the desired galaxy in the catalog for which a GSObject
+                            should be constructed.  You may also provide a list or array of
+                            indices, in which case a list of objects is returned. If None,
+                            then a random galaxy (or more: see n_random kwarg) is chosen,
+                            correcting for catalog-level selection effects if weights are
+                            available. [default: None]
+            gal_type:       Either 'real' or 'parametric'.  This determines which kind of
+                            galaxy model is made. [If catalog was loaded with `use_real=False`,
+                            then this defaults to 'parametric', and in fact 'real' is
+                            not allowed.  If catalog was loaded with `use_real=True`, then
+                            this defaults to 'real'.]
+            chromatic:      Make this a chromatic object, or not?  [default: False]
+            noise_pad_size: For realistic galaxies, the size of region to pad with noise,
+                            in arcsec.  [default: 5, an arbitrary, but not completely
+                            ridiculous choice.]
+            deep:           Modify fluxes and sizes of galaxies from the F814W<23.5 sample in
+                            order to roughly simulate an F814W<25 sample but with higher S/N, as
+                            in GREAT3? [default: False]  Note that this keyword will be ignored
+                            (except for issuing a warning) if the input catalog already
+                            represents the F814W<25.2 sample.
+            sersic_prec:    The desired precision on the Sersic index n in parametric galaxies.
+                            GalSim is significantly faster if it gets a smallish number of
+                            Sersic values, so it can cache some of the calculations and use
+                            them again the next time it gets a galaxy with the same index.
+                            If `sersic_prec` is 0.0, then use the exact value of index n from
+                            the catalog.  But if it is >0, then round the index to that
+                            precision.  [default: 0.05]
+            rng:            A random number generator to use for selecting a random galaxy
+                            (may be any kind of BaseDeviate or None) and to use in generating
+                            any noise field when padding.  [default: None]
+            n_random:       The number of random galaxies to build, if 'index' is None.
+                            [default: 1]
+            gsparams:       An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
-        @returns    Either a GSObject or a ChromaticObject depending on the value of `chromatic`,
-                    or a list of them if `index` is an iterable.
+        Returns:
+            Either a GSObject or a ChromaticObject depending on the value of `chromatic`,
+            or a list of them if `index` is an iterable.
         """
         return self._makeGalaxy(self, index, gal_type, chromatic, noise_pad_size,
                                 deep, sersic_prec, rng, n_random, gsparams)
@@ -530,11 +530,14 @@ class COSMOSCatalog(object):
         indices).  Weighting uses the weight factors available in the catalog, if any; these weights
         are typically meant to remove any selection effects in the catalog creation process.
 
-        @param n_random     Number of random indices to return. [default: 1]
-        @param rng          A random number generator to use for selecting a random galaxy
-                            (may be any kind of BaseDeviate or None). [default: None]
-        @returns A single index if n_random==1 or a NumPy array containing the randomly-selected
-        indices if n_random>1.
+        Parameters:
+            n_random:   Number of random indices to return. [default: 1]
+            rng:        A random number generator to use for selecting a random galaxy
+                        (may be any kind of BaseDeviate or None). [default: None]
+
+        Returns:
+            A single index if n_random==1 or a NumPy array containing the randomly-selected
+            indices if n_random>1.
         """
         from .random import BaseDeviate
         from . import utilities

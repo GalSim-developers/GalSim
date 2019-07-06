@@ -61,9 +61,10 @@ class Interpolant(object):
         either T or F to represent conserve_dc = True/False (respectively).  Otherwise, the
         default conserve_dc=True is used.
 
-        @param name         The name of the interpolant to create.
-        @param tol          [deprecated]
-        @param gsparams     An optional GSParams instance [default: None]
+        Parameters:
+            name:       The name of the interpolant to create.
+            tol:        [deprecated]
+            gsparams:   An optional GSParams instance [default: None]
         """
         if tol is not None:
             from galsim.deprecated import depr
@@ -200,8 +201,9 @@ class Delta(Interpolant):
     location of samples, and it extends to infinity in the u domain.  But it could be useful for
     photon-shooting, where it is trivially implemented as no displacements.
 
-    @param tol          [deprecated]
-    @param gsparams     An optional GSParams instance.  [default: None]
+    Parameters:
+        tol:        [deprecated]
+        gsparams:   An optional GSParams instance.  [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -243,8 +245,9 @@ class Nearest(Interpolant):
     an image; in that case, the nearest-neighbor interpolant is quite efficient (but not
     necessarily the best choice in terms of accuracy).
 
-    @param tol          [deprecated]
-    @param gsparams     An optional GSParams instance.  [default: None]
+    Parameters:
+        tol:        [deprecated]
+        gsparams:   An optional GSParams instance.  [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -287,8 +290,9 @@ class SincInterpolant(Interpolant):
     used as a k-space interpolant, but is extremely slow.  The usual compromise between sinc
     accuracy vs. speed is the Lanczos interpolant (see its documentation for details).
 
-    @param tol          [deprecated]
-    @param gsparams     An optional GSParams instance.  [default: None]
+    Parameters:
+        tol:        [deprecated]
+        gsparams:   An optional GSParams instance.  [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -330,8 +334,9 @@ class Linear(Interpolant):
     This objection does not apply when shooting photons, in which case the linear interpolant is
     quite efficient (but not necessarily the best choice in terms of accuracy).
 
-    @param tol          [deprecated]
-    @param gsparams     An optional GSParams instance.  [default: None]
+    Parameters:
+        tol:        [deprecated]
+        gsparams:   An optional GSParams instance.  [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -372,8 +377,9 @@ class Cubic(Interpolant):
     Acoustics, Speech, & Signal Proc 29, p 1153, 1981).  It is a reasonable choice for a four-point
     interpolant for interpolated images.  (See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)
 
-    @param tol          [deprecated]
-    @param gsparams     An optional GSParams instance.  [default: None]
+    Parameters:
+        tol:        [deprecated]
+        gsparams:   An optional GSParams instance.  [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -414,8 +420,9 @@ class Quintic(Interpolant):
     Bernstein & Gruen (http://arxiv.org/abs/1401.2636) to give optimal results as a k-space
     interpolant.
 
-    @param tol          [deprecated]
-    @param gsparams     An optional GSParams instance.  [default: None]
+    Parameters:
+        tol:        [deprecated]
+        gsparams:   An optional GSParams instance.  [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -461,11 +468,12 @@ class Lanczos(Interpolant):
     approximately conserves the value of constant (DC) input data (accurate to better than 1.e-5
     when used in two dimensions).
 
-    @param n            The order of the Lanczos function
-    @param conserve_dc  Whether to add the first order correction to flatten out the flux response
+    Parameters:
+        n:              The order of the Lanczos function
+        conserve_dc:    Whether to add the first order correction to flatten out the flux response
                         to a constant input. [default: True, see above]
-    @param tol          [deprecated]
-    @param gsparams     An optional GSParams instance.  [default: None]
+        tol:            [deprecated]
+        gsparams:       An optional GSParams instance.  [default: None]
     """
     def __init__(self, n, conserve_dc=True, tol=None, gsparams=None):
         if tol is not None:

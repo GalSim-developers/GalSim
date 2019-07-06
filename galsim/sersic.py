@@ -30,19 +30,16 @@ class Sersic(GSObject):
     """A class describing a Sersic profile.
 
     The Sersic surface brightness profile is characterized by three properties: its Sersic index
-    `n`, its `flux`, and either the `half_light_radius` or `scale_radius`.  Given these properties,
-    the surface brightness profile scales as I(r) ~ exp[-(r/scale_radius)^{1/n}], or
+    ``n``, its ``flux``, and either the ``half_light_radius`` or ``scale_radius``.  Given these
+    properties, the surface brightness profile scales as I(r) ~ exp[-(r/scale_radius)^{1/n}], or
     I(r) ~ exp[-b*(r/half_light_radius)^{1/n}] (where b is calculated to give the right
     half-light radius).
 
     For more information, refer to
 
-        http://en.wikipedia.org/wiki/Sersic_profile
+    http://en.wikipedia.org/wiki/Sersic_profile
 
-    Initialization
-    --------------
-
-    The allowed range of values for the `n` parameter is 0.3 <= n <= 6.2.  An exception will be
+    The allowed range of values for the ``n`` parameter is 0.3 <= n <= 6.2.  An exception will be
     thrown if you provide a value outside that range.  Below n=0.3, there are severe numerical
     problems.  Above n=6.2, we found that the code begins to be inaccurate when sheared or
     magnified (at the level of upcoming shear surveys), so we do not recommend extending beyond
@@ -57,43 +54,28 @@ class Sersic(GSObject):
     more details, see https://github.com/GalSim-developers/GalSim/issues/566.
 
     Note that if you are building many Sersic profiles using truncation, the code will be more
-    efficient if the truncation is always the same multiple of `scale_radius`, since it caches
-    many calculations that depend on the ratio `trunc/scale_radius`.
+    efficient if the truncation is always the same multiple of ``scale_radius``, since it caches
+    many calculations that depend on the ratio ``trunc/scale_radius``.
 
     A Sersic can be initialized using one (and only one) of two possible size parameters:
-    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+    ``scale_radius`` or ``half_light_radius``.  Exactly one of these two is required.
 
-    @param n                The Sersic index, n.
-    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius` or `half_light_radius` is required.]
-    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius` or `half_light_radius` is required.]
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero, in the same units as the size parameter.
-                            [default: 0, indicating no truncation]
-    @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
-                            untruncated profile? See below for more details. [default: False]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+    Flux of a truncated profile:
 
-    Flux of a truncated profile
-    ---------------------------
-
-    If you are truncating the profile, the optional parameter, `flux_untruncated`, specifies
-    whether the `flux` and `half_light_radius` specifications correspond to the untruncated
-    profile (`True`) or to the truncated profile (`False`, default).  The impact of this parameter
-    is a little subtle, so we'll go through a few examples to show how it works.
+    If you are truncating the profile, the optional parameter, ``flux_untruncated``, specifies
+    whether the ``flux`` and ``half_light_radius`` specifications correspond to the untruncated
+    profile (``True``) or to the truncated profile (``False``, default).  The impact of this
+    parameter is a little subtle, so we'll go through a few examples to show how it works.
 
     First, let's examine the case where we specify the size according to the half-light radius.
-    If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
+    If ``flux_untruncated`` is True (and ``trunc > 0``), then the profile will be identical
     to the version without truncation up to the truncation radius, beyond which it drops to 0.
     In this case, the actual half-light radius will be different from the specified half-light
     radius.  The half_light_radius property will return the true half-light radius.  Similarly,
     the actual flux will not be the same as the specified value; the true flux is also returned
     by the flux property.
 
-    Example:
+    Example::
 
         >>> sersic_obj1 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
         >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.)
@@ -135,16 +117,16 @@ class Sersic(GSObject):
         >>> sersic_obj3.scale_radius
         0.003262738739834598  # the scale radius is still identical to the untruncated case
 
-    When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
-    three cases (untruncated, `flux_untruncated=True` and `flux_untruncated=False`) will be
+    When the truncated Sersic scale is specified with ``scale_radius``, the behavior between the
+    three cases (untruncated, ``flux_untruncated=True`` and ``flux_untruncated=False``) will be
     somewhat different from above.  Since it is the scale radius that is being specified, and since
     truncation does not change the scale radius the way it can change the half-light radius, the
     scale radius will remain unchanged in all cases.  This also results in the half-light radius
     being the same between the two truncated cases (although different from the untruncated case).
-    The flux normalization is the only difference between `flux_untruncated=True` and
-    `flux_untruncated=False` in this case.
+    The flux normalization is the only difference between ``flux_untruncated=True`` and
+    ``flux_untruncated=False`` in this case.
 
-    Example:
+    Example::
 
         >>> sersic_obj1 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40.)
         >>> sersic_obj2 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40., trunc=10.)
@@ -178,15 +160,31 @@ class Sersic(GSObject):
         0.05
         >>> sersic_obj3.scale_radius
         0.05
+        half_light_radius:  The half-light radius
 
-    Methods and Properties
-    ----------------------
+    Parameters:
+        n:                  The Sersic index, n.
+        half_light_radius:  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius`` or ``half_light_radius`` is required.]
+        scale_radius:       The scale radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius`` or ``half_light_radius`` is required.]
+        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
+        trunc:              An optional truncation radius at which the profile is made to drop to
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
+        flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
+                            untruncated profile? See below for more details. [default: False]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
-    In addition to the usual GSObject methods, Sersic has the following access properties:
+    In addition to the usual GSObject methods and attributes, Sersic has the following access
+    properties:
 
-        >>> n = sersic_obj.n
-        >>> r0 = sersic_obj.scale_radius
-        >>> hlr = sersic_obj.half_light_radius
+    Attributes:
+        n:                  The Sersic parameter n
+        scale_raddius:      The scale radius
+        half_light_radius:  The half-light radius
+        trunc:              The truncation radius (if any)
     """
     _req_params = { "n" : float }
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
@@ -363,36 +361,33 @@ class DeVaucouleurs(Sersic):
 
     For more information, refer to
 
-        http://en.wikipedia.org/wiki/De_Vaucouleurs'_law
-
-
-    Initialization
-    --------------
+    http://en.wikipedia.org/wiki/De_Vaucouleurs'_law
 
     A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
-    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+    ``scale_radius`` or ``half_light_radius``.  Exactly one of these two is required.
 
-    @param scale_radius     The value of scale radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius` or `half_light_radius` is required.]
-    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius` or `half_light_radius` is required.]
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param trunc            An optional truncation radius at which the profile is made to drop to
+    Parameters:
+        scale_radius:       The value of scale radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius`` or ``half_light_radius`` is required.]
+        half_light_radius:  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius`` or ``half_light_radius`` is required.]
+        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
+        trunc:              An optional truncation radius at which the profile is made to drop to
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
-    @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
+        flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
                             untruncated profile? See the docstring for Sersic for more details.
                             [default: False]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods and Properties
-    ----------------------
+    In addition to the usual GSObject methods and attributes, DeVaucouleurs has the following
+    access properties:
 
-    In addition to the usual GSObject methods, DeVaucouleurs has the following access properties:
-
-        >>> r0 = devauc_obj.scale_radius
-        >>> hlr = devauc_obj.half_light_radius
+    Attributes:
+        scale_radius:       The scale radius
+        half_light_radius:  The half-light radius
+        trunc:              The truncation radius (if any)
     """
     _req_params = {}
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }

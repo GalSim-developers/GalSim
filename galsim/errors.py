@@ -147,9 +147,8 @@ class GalSimValueError(GalSimError, ValueError):
     """A GalSim-specific exception class indicating that some user-input value is invalid.
 
     Attributes:
-
-        value = the invalid value
-        allowed_values = a list of allowed values if appropriate (may be None)
+        value:          The invalid value
+        allowed_values: A list of allowed values if appropriate (may be None)
     """
     def __init__(self, message, value, allowed_values=None):
         self.message = message
@@ -172,8 +171,7 @@ class GalSimKeyError(GalSimError, KeyError):
     with an invalid key.
 
     Attributes:
-
-        key = the invalid key
+        key:        The invalid key
     """
     def __init__(self, message, key):
         self.message = message
@@ -192,8 +190,7 @@ class GalSimIndexError(GalSimError, IndexError):
     with an invalid index.
 
     Attributes:
-
-        index = the invalid index
+        index:      The invalid index
     """
     def __init__(self, message, index):
         self.message = message
@@ -212,10 +209,9 @@ class GalSimRangeError(GalSimError, ValueError):
     outside of the allowed range of values.
 
     Attributes:
-
-        value = the invalid value
-        min = the minimum allowed value (may be None)
-        max = the maximum allowed value (may be None)
+        value:      The invalid value
+        min:        The minimum allowed value (may be None)
+        max:        The maximum allowed value (may be None)
     """
     def __init__(self, message, value, min, max=None):
         self.message = message
@@ -237,9 +233,8 @@ class GalSimBoundsError(GalSimError, ValueError):
     outside of the allowed bounds.
 
     Attributes:
-
-        pos = the invalid position
-        bounds = the bounds in which it was expected to fall
+        pos:        The invalid position
+        bounds:     The bounds in which it was expected to fall
     """
     def __init__(self, message, pos, bounds):
         self.message = message
@@ -267,8 +262,7 @@ class GalSimImmutableError(GalSimError):
     """A GalSim-specific exception class indicating an attempt to modify an immutable image.
 
     Attributes:
-
-        image = the image that the user attempted to modify
+        image:      The image that the user attempted to modify
     """
     def __init__(self, message, image):
         self.message = message
@@ -288,8 +282,7 @@ class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
     incompatible as given.
 
     Attributes:
-
-        values = a dict of {name : value} giving the values that in combination are invalid.
+        values:     A dict of {name : value} giving the values that in combination are invalid.
     """
     def __init__(self, message, values={}, **kwargs):
         self.message = message
@@ -316,8 +309,7 @@ class GalSimSEDError(GalSimError, TypeError):
     is required (or vice versa).
 
     Attributes:
-
-        sed = the invalid SED
+        sed:        The invalid SED
     """
     def __init__(self, message, sed):
         self.message = message
@@ -344,9 +336,8 @@ class GalSimFFTSizeError(GalSimError):
     maximum_fft_size.
 
     Attributes:
-
-        size = the size that was deemed too large
-        mem = the estimated memory that would be required (in GB) for the FFT.
+        size:       The size that was deemed too large
+        mem:        The estimated memory that would be required (in GB) for the FFT.
     """
     def __init__(self, message, size):
         self.message = message
@@ -375,9 +366,8 @@ class GalSimConfigValueError(GalSimValueError, GalSimConfigError):
     """A GalSim-specific exception class indicating that a config entry has an invalid value.
 
     Attributes:
-
-        value = the invalid value
-        allowed_values = a list of allowed values if appropriate (may be None)
+        value:          The invalid value
+        allowed_values: A list of allowed values if appropriate (may be None)
     """
     def __repr__(self):
         return 'galsim.GalSimConfigValueError(%r,%r,%r)'%(

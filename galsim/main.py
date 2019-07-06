@@ -35,14 +35,14 @@ def parse_args():
 
     # Short description strings common to both parsing mechanisms
     version_str = "GalSim Version %s"%version
-    description = "galsim: configuration file parser for %s.  "%version_str 
+    description = "galsim: configuration file parser for %s.  "%version_str
     description += "See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation "
     description += "for documentation about using this program."
     epilog = "Works with both YAML and JSON markup formats."
-    
+
     try:
         import argparse
-        
+
         # Build the parser and add arguments
         parser = argparse.ArgumentParser(prog='galsim', description=description, add_help=True, epilog=epilog)
         parser.add_argument('config_file', type=str, nargs='?', help='the configuration file')
@@ -62,14 +62,14 @@ def parse_args():
             help='type of config_file: yaml or json are currently supported. '
                  '[default is to automatically determine the type from the extension]')
         parser.add_argument(
-            '-m', '--module', type=str, action='append', default=None, 
+            '-m', '--module', type=str, action='append', default=None,
             help='python module to import before parsing config file')
         parser.add_argument(
             '-p', '--profile', action='store_const', default=False, const=True,
             help='output profiling information at the end of the run')
         parser.add_argument(
-            '-n', '--njobs', type=int, action='store', default=1, 
-            help='set the total number of jobs that this run is a part of. ' + 
+            '-n', '--njobs', type=int, action='store', default=1,
+            help='set the total number of jobs that this run is a part of. ' +
             'Used in conjunction with -j (--job)')
         parser.add_argument(
             '-j', '--job', type=int, action='store', default=1,
@@ -115,14 +115,14 @@ def parse_args():
             help=('type of config_file: yaml or json are currently supported. '
                   '[default is to automatically determine the type from the extension]'))
         parser.add_option(
-            '-m', '--module', type=str, action='append', default=None, 
+            '-m', '--module', type=str, action='append', default=None,
             help='python module to import before parsing config file')
         parser.add_option(
             '-p', '--profile', action='store_const', default=False, const=True,
             help='output profiling information at the end of the run')
         parser.add_option(
-            '-n', '--njobs', type=int, action='store', default=1, 
-            help='set the total number of jobs that this run is a part of. ' + 
+            '-n', '--njobs', type=int, action='store', default=1,
+            help='set the total number of jobs that this run is a part of. ' +
             'Used in conjunction with -j (--job)')
         parser.add_option(
             '-j', '--job', type=int, action='store', default=1,
@@ -138,7 +138,7 @@ def parse_args():
         (args, posargs) = parser.parse_args()
 
         # Remembering to convert to an integer type
-        args.verbosity = int(args.verbosity) 
+        args.verbosity = int(args.verbosity)
 
         # Store the positional arguments in the args object as well:
         if len(posargs) == 0:
@@ -201,7 +201,7 @@ def main():
         raise GalSimRangeError("Invalid job number.  Must be <= njobs",args.job, 1, args.njobs)
 
     # Parse the integer verbosity level from the command line args into a logging_level string
-    logging_levels = { 0: logging.CRITICAL, 
+    logging_levels = { 0: logging.CRITICAL,
                        1: logging.WARNING,
                        2: logging.INFO,
                        3: logging.DEBUG }

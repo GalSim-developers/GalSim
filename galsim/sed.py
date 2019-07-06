@@ -41,7 +41,7 @@ class SED(object):
     wavelength, though SEDs are also used by GalSim to track dimensionless wavelength-dependent
     normalizations, and may thus also return dimensionless values.  By default, the above wavelength
     used by __call__ is nanometers, but it's possible to use other units via the astropy.units
-    module (at least, if the SED keyword argument `fast=False`, see below).  For instance,
+    module (at least, if the SED keyword argument `fast=False`, see below).  For instance,::
 
         >>> sed = galsim.SED(...)
         >>> from astropy import units as u
@@ -103,14 +103,15 @@ class SED(object):
     consequence of using `fast=True` is that __call__ can not accept `astropy.units.Quantity`s in
     this case.
 
-    @param spec          Function defining the z=0 spectrum at each wavelength.  See above for
-                         valid options for this parameter.
-    @param wave_type     String or astropy.unit specifying units for wavelength input to `spec`.
-    @param flux_type     String or astropy.unit specifying what type of spectral density or
-                         dimensionless normalization `spec` represents.  See above for valid options
-                         for this parameter.
-    @param redshift      Optionally shift the spectrum to the given redshift. [default: 0]
-    @param fast          Convert units on initialization instead of on __call__. [default: True]
+    Parameters:
+        spec:        Function defining the z=0 spectrum at each wavelength.  See above for
+                     valid options for this parameter.
+        wave_type:   String or astropy.unit specifying units for wavelength input to `spec`.
+        flux_type:   String or astropy.unit specifying what type of spectral density or
+                     dimensionless normalization `spec` represents.  See above for valid options
+                     for this parameter.
+        redshift:    Optionally shift the spectrum to the given redshift. [default: 0]
+        fast:        Convert units on initialization instead of on __call__. [default: True]
     """
     # We'll use these multiple times below, and they are ridiculously slow to construct,
     # so just make them once at the class level.
@@ -403,8 +404,11 @@ class SED(object):
         Assumes that self._spec has already been transformed to accept correct wavelength units and
         yield correct flux units.
 
-        @param wave  Wavelength in nanometers.
-        @returns     Flux or normalization.
+        Parameters:
+            wave:   Wavelength in nanometers.
+
+        Returns:
+            Flux or normalization.
         """
         self._check_bounds(wave)
         return self._fast_spec(np.asarray(wave) / (1.0 + self.redshift))
@@ -415,9 +419,12 @@ class SED(object):
         Uses self._spec that has not been pre-transformed for desired units, instead does all unit
         conversions inside this method.
 
-        @param wave  Wavelength.  If not an astropy.units.Quantity, then assumed units are
-                     nanometers.
-        @returns     Flux.
+        Parameters:
+            wave:   Wavelength.  If not an astropy.units.Quantity, then assumed units are
+                    nanometers.
+
+        Returns:
+            Flux.
         """
         wave_in = wave
         # Convert wave to nanometers if needed.
@@ -443,11 +450,13 @@ class SED(object):
         attributes, the SED is considered undefined, and this method will raise an exception if a
         wavelength outside the defined range is passed as an argument.
 
-        @param wave     Wavelength in nanometers at which to evaluate the SED. May be a scalar,
-                        a numpy.array, or an astropy.units.Quantity
+        Parameters:
+            wave:   Wavelength in nanometers at which to evaluate the SED. May be a scalar,
+                    a numpy.array, or an astropy.units.Quantity
 
-        @returns photon flux density in units of photons/nm/cm^2/s if self.spectral, or
-                 dimensionless normalization if self.dimensionless.
+        Returns:
+            photon flux density in units of photons/nm/cm^2/s if self.spectral, or
+            dimensionless normalization if self.dimensionless.
         """
         return self._call(wave)
 
@@ -661,10 +670,12 @@ class SED(object):
         `wavelength`.  See ChromaticObject docstring for information about how SED normalization
         affects ChromaticObject normalization.
 
-        @param target_flux_density  The target normalization in photons/nm/cm^2/s.
-        @param wavelength           The wavelength, in nm, at which the flux density will be set.
+        Parameters:
+            target_flux_density:    The target normalization in photons/nm/cm^2/s.
+            wavelength:             The wavelength, in nm, at which the flux density will be set.
 
-        @returns the new normalized SED.
+        Returns:
+            the new normalized SED.
         """
         if self.dimensionless:
             raise GalSimSEDError("Cannot set flux density of dimensionless SED.", self)
@@ -685,10 +696,12 @@ class SED(object):
         ChromaticObject docstring for information about how SED normalization affects
         ChromaticObject normalization.
 
-        @param target_flux  The desired flux normalization of the SED.
-        @param bandpass     A Bandpass object defining a filter bandpass.
+        Parameters:
+            target_flux:    The desired flux normalization of the SED.
+            bandpass:       A Bandpass object defining a filter bandpass.
 
-        @returns the new normalized SED.
+        Returns:
+            the new normalized SED.
         """
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
@@ -700,10 +713,12 @@ class SED(object):
         `Bandpass.withZeropoint()`.  See ChromaticObject docstring for information about how SED
         normalization affects ChromaticObject normalization.
 
-        @param target_magnitude  The desired magnitude of the SED.
-        @param bandpass          A Bandpass object defining a filter bandpass.
+        Parameters:
+            target_magnitude:   The desired magnitude of the SED.
+            bandpass:           A Bandpass object defining a filter bandpass.
 
-        @returns the new normalized SED.
+        Returns:
+            the new normalized SED.
         """
         if bandpass.zeropoint is None:
             raise GalSimError("Cannot call SED.withMagnitude on this bandpass, because it does "
@@ -715,9 +730,11 @@ class SED(object):
     def atRedshift(self, redshift):
         """ Return a new SED with redshifted wavelengths.
 
-        @param redshift
+        Parameters:
+            redshift:   The redshift for the returned SED
 
-        @returns the redshifted SED.
+        Returns:
+            the redshifted SED.
         """
         if redshift <= -1:
             raise GalSimRangeError("Invalid redshift", redshift, -1.)
@@ -732,12 +749,14 @@ class SED(object):
     def calculateFlux(self, bandpass):
         """ Return the flux (photons/cm^2/s) of the SED through the bandpass.
 
-        @param bandpass   A Bandpass object representing a filter, or None to compute the bolometric
+        Parameters:
+            bandpass:     A Bandpass object representing a filter, or None to compute the bolometric
                           flux.  For the bolometric flux the integration limits will be set to
                           (0, infinity), which implies that the SED needs to be evaluable over
                           this entire range.
 
-        @returns the flux through the bandpass.
+        Returns:
+            the flux through the bandpass.
         """
         from . import integ
         if self.dimensionless:
@@ -760,12 +779,14 @@ class SED(object):
         """ Return the SED magnitude through a Bandpass `bandpass`.  Note that this requires
         `bandpass` to have been assigned a zeropoint using `Bandpass.withZeropoint()`.
 
-        @param bandpass   A Bandpass object representing a filter, or None to compute the
+        Parameters:
+            bandpass:     A Bandpass object representing a filter, or None to compute the
                           bolometric magnitude.  For the bolometric magnitude the integration
                           limits will be set to (0, infinity), which implies that the SED needs to
                           be evaluable over this entire range.
 
-        @returns the bandpass magnitude.
+        Returns:
+            the bandpass magnitude.
         """
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate magnitude of dimensionless SED.", self)
@@ -780,26 +801,28 @@ class SED(object):
         LookupTable), then remove tabulated values while keeping the integral over the set of
         tabulated values still accurate to `rel_err`.
 
-        @param rel_err            The relative error allowed in the integral over the SED
-                                  [default: 1.e-4]
-        @param trim_zeros         Remove redundant leading and trailing points where f=0?  (The last
-                                  leading point with f=0 and the first trailing point with f=0 will
-                                  be retained).  Note that if both trim_leading_zeros and
-                                  preserve_range are True, then the only the range of `x` *after*
-                                  zero trimming is preserved.  [default: True]
-        @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
-                                  SED be preserved? (True) Or should the ends be trimmed to
-                                  include only the region where the integral is significant? (False)
-                                  [default: True]
-        @param fast_search        If set to True, then the underlying algorithm will use a
-                                  relatively fast O(N) algorithm to select points to include in the
-                                  thinned approximation.  If set to False, then a slower O(N^2)
-                                  algorithm will be used.  We have found that the slower algorithm
-                                  tends to yield a thinned representation that retains fewer samples
-                                  while still meeting the relative error requirement.
-                                  [default: True]
+        Parameters:
+            rel_err:          The relative error allowed in the integral over the SED
+                              [default: 1.e-4]
+            trim_zeros:       Remove redundant leading and trailing points where f=0?  (The last
+                              leading point with f=0 and the first trailing point with f=0 will
+                              be retained).  Note that if both trim_leading_zeros and
+                              preserve_range are True, then the only the range of `x` *after*
+                              zero trimming is preserved.  [default: True]
+            preserve_range:   Should the original range (`blue_limit` and `red_limit`) of the
+                              SED be preserved? (True) Or should the ends be trimmed to
+                              include only the region where the integral is significant? (False)
+                              [default: True]
+            fast_search:      If set to True, then the underlying algorithm will use a
+                              relatively fast O(N) algorithm to select points to include in the
+                              thinned approximation.  If set to False, then a slower O(N^2)
+                              algorithm will be used.  We have found that the slower algorithm
+                              tends to yield a thinned representation that retains fewer samples
+                              while still meeting the relative error requirement.
+                              [default: True]
 
-        @returns the thinned SED.
+        Returns:
+            the thinned SED.
         """
         if len(self.wave_list) > 0:
             rest_wave_native = self._get_rest_native_waves(self.wave_list)
@@ -821,22 +844,26 @@ class SED(object):
         refraction (DCR).  I.e., equations (1) and (2) from Plazas and Bernstein (2012)
         (http://arxiv.org/abs/1204.1346).
 
-        @param bandpass             Bandpass through which object is being imaged.
-        @param zenith_angle         Angle from object to zenith, expressed as an Angle
-        @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith,
-                                    measured from North through East.  [default: 0]
-        @param obj_coord            Celestial coordinates of the object being drawn as a
-                                    CelestialCoord. [default: None]
-        @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
-                                    [default: None]
-        @param HA                   Hour angle of the object as an Angle. [default: None]
-        @param latitude             Latitude of the observer as an Angle. [default: None]
-        @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
-        @param temperature          Temperature in Kelvins.  [default: 293.15 K]
-        @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+        Parameters:
+            bandpass:           Bandpass through which object is being imaged.
+            zenith_angle:       Angle from object to zenith, expressed as an Angle
+            parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith,
+                                measured from North through East.  [default: 0]
+            obj_coord:          Celestial coordinates of the object being drawn as a
+                                CelestialCoord. [default: None]
+            zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                                [default: None]
+            HA:                 Hour angle of the object as an Angle. [default: None]
+            latitude:           Latitude of the observer as an Angle. [default: None]
+            pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]
+            temperature:        Temperature in Kelvins.  [default: 293.15 K]
+            H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
 
-        @returns a tuple.  The first element is the vector of DCR first moment shifts, and the
-                 second element is the 2x2 matrix of DCR second (central) moment shifts.
+        Returns:
+            a tuple:
+
+            - The first element is the vector of DCR first moment shifts
+            - The second element is the 2x2 matrix of DCR second (central) moment shifts.
         """
         from .dcr import parse_dcr_angles
         if self.dimensionless:
@@ -882,12 +909,15 @@ class SED(object):
         """ Calculates the relative size of a PSF compared to the monochromatic PSF size at
         wavelength `base_wavelength`.
 
-        @param bandpass             Bandpass through which object is being imaged.
-        @param alpha                Power law index for wavelength-dependent seeing.  [default:
-                                    -0.2, the prediction for Kolmogorov turbulence]
-        @param base_wavelength      Reference wavelength in nm from which to compute the relative
-                                    PSF size.  [default: 500]
-        @returns the ratio of the PSF second moments to the second moments of the reference PSF.
+        Parameters:
+            bandpass:           Bandpass through which object is being imaged.
+            alpha:              Power law index for wavelength-dependent seeing.  [default:
+                                -0.2, the prediction for Kolmogorov turbulence]
+            base_wavelength:    Reference wavelength in nm from which to compute the relative
+                                PSF size.  [default: 500]
+
+        Returns:
+            the ratio of the PSF second moments to the second moments of the reference PSF.
         """
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate seeing moment ratio of dimensionless SED.", self)
@@ -911,13 +941,14 @@ class SED(object):
         """ Sample a number of random wavelength values from the SED, possibly as observed through
         a bandpass.
 
-        @param nphotons  Number of samples (photons) to randomly draw.
-        @param bandpass  A Bandpass object representing a filter, or None to sample over the full
+        Parameters:
+            nphotons:    Number of samples (photons) to randomly draw.
+            bandpass:    A Bandpass object representing a filter, or None to sample over the full
                          SED wavelength range.
-        @param rng       If provided, a random number generator that is any kind of BaseDeviate
+            rng:         If provided, a random number generator that is any kind of BaseDeviate
                          object. If `rng` is None, one will be automatically created from the
                          system. [default: None]
-        @param npoints   Number of points DistDeviate should use for its internal interpolation
+            npoints:     Number of points DistDeviate should use for its internal interpolation
                          tables. [default: None, which uses the DistDeviate default]
         """
         from .random import DistDeviate

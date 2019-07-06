@@ -28,7 +28,7 @@ from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValues
 
 def applyNonlinearity(self, NLfunc, *args):
     """
-    Applies the given non-linearity function (`NLfunc`) on the Image instance directly.
+    Applies the given non-linearity function (``NLfunc``) on the Image instance directly.
 
     This routine can transform the image in a non-linear manner specified by the user. However,
     the typical kind of non-linearity one sees in astronomical images is voltage non-linearity,
@@ -40,34 +40,31 @@ def applyNonlinearity(self, NLfunc, *args):
     such as dark current and persistence (not currently included in GalSim) would also occur
     before the inclusion of nonlinearity.
 
-    The argument `NLfunc` is a callable function (for example a lambda function, a
+    The argument ``NLfunc`` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
-    as subsequent arguments to the `applyNonlinearity` function (after the `NLfunc` argument).
-    `NLfunc` should be able to take a 2d NumPy array as input, and return a NumPy array of the same
-    shape.  It should be defined such that it outputs the final image with nonlinearity included
-    (i.e., in the limit that there is no nonlinearity, the function should return the original
-    image, NOT zero). The image should be in units of electrons when this routine is being used
-    to generate classical non-linearity. When used for other purposes, the units can be in
+    as subsequent arguments to the ``applyNonlinearity`` function (after the ``NLfunc`` argument).
+    ``NLfunc`` should be able to take a 2d NumPy array as input, and return a NumPy array of the
+    same shape.  It should be defined such that it outputs the final image with nonlinearity
+    included (i.e., in the limit that there is no nonlinearity, the function should return the
+    original image, NOT zero). The image should be in units of electrons when this routine is being
+    used to generate classical non-linearity. When used for other purposes, the units can be in
     electrons or in ADU, as found appropriate by the user.
 
-    Calling with no parameter:
-    -------------------------
+    Examples::
 
         >>> f = lambda x: x + (1.e-7)*(x**2)
         >>> img.applyNonlinearity(f)
 
-    Calling with 1 or more parameters:
-    ---------------------------------
-
         >>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
         >>> img.applyNonlinearity(f, 1.e-7, 1.e-10)
 
-    On calling the method, the Image instance `img` is transformed by the user-defined function `f`
-    with `beta1` = 1.e-7 and `beta2` = 1.e-10.
+    On calling the method, the Image instance ``img`` is transformed by the user-defined function
+    ``f`` with ``beta1`` = 1.e-7 and ``beta2`` = 1.e-10.
 
-    @param NLfunc    The function that maps the input image pixel values to the output image pixel
-                     values.
-    @param *args     Any subsequent arguments are passed along to the NLfunc function.
+    Parameters:
+        NLfunc:  The function that maps the input image pixel values to the output image pixel
+                 values.
+        *args:   Any subsequent arguments are passed along to the NLfunc function.
 
     """
 
@@ -121,17 +118,13 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     both the signal from the astronomical objects as well as the background level.  The addition of
     nonlinearity should occur after including the effect of reciprocity failure.
 
-    Calling
-    -------
-
-        >>>  img.addReciprocityFailure(exp_time, alpha, base_flux)
-
-    @param exp_time         The exposure time (t) in seconds, which goes into the expression for
-                            reciprocity failure given in the docstring.
-    @param alpha            The alpha parameter in the expression for reciprocity failure, in
-                            units of 'per decade'.
-    @param base_flux        The flux (p'/t') at which the gain is calibrated to have its nominal
-                            value.
+    Parameters:
+        exp_time:   The exposure time (t) in seconds, which goes into the expression for
+                    reciprocity failure given in the docstring.
+        alpha:      The alpha parameter in the expression for reciprocity failure, in
+                    units of 'per decade'.
+        base_flux:  The flux (p'/t') at which the gain is calibrated to have its nominal
+                    value.
     """
 
     if alpha < 0.:
@@ -183,26 +176,19 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
 
     The size of the image array remains unchanged in all three cases.
 
-    Calling
-    -------
-
-        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', fill_value=0,
-            kernel_nonnegativity=True, kernel_normalization=True)
-
-    @param IPC_kernel              A 3x3 Image instance that is convolved with the Image instance
-    @param edge_treatment          Specifies the method of handling edges and should be one of
-                                   'crop', 'extend' or 'wrap'. See above for details.
-                                   [default: 'extend']
-    @param fill_value              Specifies the value (including nan) to fill the edges with when
-                                   edge_treatment is 'crop'. If unspecified or set to 'None', the
-                                   original pixel values are retained at the edges. If
-                                   edge_treatment is not 'crop', then this is ignored.
-    @param kernel_nonnegativity    Specify whether the kernel should have only non-negative
-                                   entries.  [default: True]
-    @param kernel_normalization    Specify whether to check and enforce correct normalization for
-                                   the kernel.  [default: True]
-
-    @returns None
+    Parameters:
+        IPC_kernel:            A 3x3 Image instance that is convolved with the Image instance
+        edge_treatment:        Specifies the method of handling edges and should be one of
+                               'crop', 'extend' or 'wrap'. See above for details.
+                               [default: 'extend']
+        fill_value:            Specifies the value (including nan) to fill the edges with when
+                               edge_treatment is 'crop'. If unspecified or set to 'None', the
+                               original pixel values are retained at the edges. If
+                               edge_treatment is not 'crop', then this is ignored.
+        kernel_nonnegativity:  Specify whether the kernel should have only non-negative
+                               entries.  [default: True]
+        kernel_normalization:  Specify whether to check and enforce correct normalization for
+                               the kernel.  [default: True]
     """
 
     # IPC kernel has to be a 3x3 Image
@@ -292,16 +278,10 @@ def applyPersistence(self,imgs,coeffs):
     and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to be
     added. This usually remains constant in the image generation process.
 
-    Calling
-    -------
-
-        >>> img.applyPersistence(imgs=img_list, coeffs=coeffs_list)
-
-    @param imgs        A list of previous Image instances that still persist.
-    @param coeffs      A list of floats that specifies the retention factors for the corresponding
-                        Image instances listed in 'imgs'.
-
-    @returns None
+    Parameters:
+        imgs:       A list of previous Image instances that still persist.
+        coeffs:     A list of floats that specifies the retention factors for the corresponding
+                    Image instances listed in 'imgs'.
     """
     if not len(imgs)==len(coeffs):
         raise GalSimIncompatibleValuesError("The length of 'imgs' and 'coeffs' must be the same",

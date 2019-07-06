@@ -25,37 +25,33 @@ class Position(object):
     """A class for representing 2D positions on the plane.
 
     Position is a base class for two slightly different kinds of positions:
-    PositionD describes positions with floating point values in `x` and `y`.
-    PositionI described positions with integer values in `x` and `y`.
+    PositionD describes positions with floating point values in ``x`` and ``y``.
+    PositionI described positions with integer values in ``x`` and ``y``.
 
     In the C++ layer, these are templates, but of course no such thing exists in Python,
     so the trailing D or I indicate the type.
 
-    Initialization
-    --------------
+    Initialization:
 
-    For the float-valued position class, example initializations include:
+    For the float-valued position class, example initializations include::
 
         >>> pos = galsim.PositionD(x=0.5, y=-0.5)
         >>> pos = galsim.PositionD(0.5, -0.5)
         >>> pos = galsim.PositionD( (0.5, -0.5) )
 
-    And for the integer-valued position class, example initializations include:
+    And for the integer-valued position class, example initializations include::
 
         >>> pos = galsim.PositionI(x=45, y=13)
         >>> pos = galsim.PositionI(45, 13)
         >>> pos = galsim.PositionD( (45, 15) )
 
-    Attributes
-    ----------
+    Attributes:
+        x:      The x component of the position
+        y:      The y component of the position
 
-    For an instance `pos` as instantiated above, `pos.x` and `pos.y` store the x and y values of
-    the position.
+    Arithmetic:
 
-    Arithmetic
-    ----------
-
-    Most arithmetic that makes sense for a position is allowed:
+    Most arithmetic that makes sense for a position is allowed::
 
         >>> pos1 + pos2
         >>> pos1 - pos2

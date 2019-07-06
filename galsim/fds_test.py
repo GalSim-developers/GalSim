@@ -21,7 +21,7 @@ I've fixed the errors, but I'll leave this module here in case it is useful for 
 down the road.  I lifted the code from the following StackOverflow answers:
 http://stackoverflow.com/questions/4814970/subprocess-check-output-doesnt-seem-to-exist-python-2-6-5
 
-To use it do the following:
+To use it do the following::
 
     >>> import galsim.fds_test as fds
     >>> ...
@@ -34,7 +34,7 @@ To use it do the following:
 
 Of course, you can also do fds.printOpenFiles() elsewhere too for information.
 
-You can also keep track of the number of open files and pipes with:
+You can also keep track of the number of open files and pipes with::
 
     >>> print 'files, pipes = ',fds.openFiles()
 """

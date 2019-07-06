@@ -44,18 +44,18 @@ class PhotonArray(object):
     TODO: fringing, vignetting, and angles are not implemented yet, but we expect them to
     be implemented soon, so the above paragraph is a bit aspirational atm.
 
-    Attributes
-    ----------
-
     A PhotonArray instance has the following attributes, each of which is a numpy array:
 
-    - x,y           the incidence positions at the top of the detector
-    - flux          the flux of the photons
-    - dxdz, dydz    the tangent of the inclination angles in each direction
-    - wavelength    the wavelength of the photons
+    Attributes:
+        x:          The incidence x position at the top of the detector
+        y:          The incidence y position at the top of the detector
+        flux:       The flux of the photons
+        dxdz:       The tangent of the inclination angles in the x direction
+        dydz:       The tangent of the inclination angles in the y direction
+        wavelength  The wavelength of the photons
 
     Unlike most GalSim objects (but like Images), PhotonArrays are mutable.  It is permissible
-    to write values to the above attributes with code like
+    to write values to the above attributes with code like::
 
         >>> photon_array.x += numpy.random.random(1000) * 0.01
         >>> photon_array.flux *= 20.
@@ -64,30 +64,27 @@ class PhotonArray(object):
 
     All of these will update the existing numpy arrays being used by the photon_array instance.
 
-    Note about the flux attribute
-    -----------------------------
+    .. note::
 
-    Normal photons have flux=1, but we allow for "fat" photons that combine the effect of several
-    photons at once for efficiency.  Also, some profiles need to use negative flux photons to
-    properly implement photon shooting (e.g. InterpolateImage, which uses negative flux photons to
-    get the interpolation correct).  Finally, when we "remove" photons, for better efficiency, we
-    actually just set the flux to 0 rather than recreate new numpy arrays.
-
-    Initialization
-    --------------
+        Normal photons have flux=1, but we allow for "fat" photons that combine the effect of
+        several photons at once for efficiency.  Also, some profiles need to use negative flux
+        photons to properly implement photon shooting (e.g. InterpolateImage, which uses negative
+        flux photons to get the interpolation correct).  Finally, when we "remove" photons, for
+        better efficiency, we actually just set the flux to 0 rather than recreate new numpy arrays.
 
     The initialization constructs a PhotonArray to hold N photons, but does not set the values of
     anything yet.  The constructor allocates space for the x,y,flux arrays, since those are always
     needed.  The other arrays are only allocated on demand if the user accesses these attributes.
 
-    @param N            The number of photons to store in this PhotonArray.  This value cannot be
-                        changed.
-    @param x            Optionally, the initial x values. [default: None]
-    @param y            Optionally, the initial y values. [default: None]
-    @param flux         Optionally, the initial flux values. [default: None]
-    @param dxdz         Optionally, the initial dxdz values. [default: None]
-    @param dydz         Optionally, the initial dydz values. [default: None]
-    @param wavelength   Optionally, the initial wavelength values. [default: None]
+    Parameters:
+        N:          The number of photons to store in this PhotonArray.  This value cannot be
+                    changed.
+        x:          Optionally, the initial x values. [default: None]
+        y:          Optionally, the initial y values. [default: None]
+        flux:       Optionally, the initial flux values. [default: None]
+        dxdz:       Optionally, the initial dxdz values. [default: None]
+        dydz:       Optionally, the initial dydz values. [default: None]
+        wavelength: Optionally, the initial wavelength values. [default: None]
     """
     def __init__(self, N, x=None, y=None, flux=None, dxdz=None, dydz=None, wavelength=None):
         # Only x, y, flux are built by default, since these are always required.
@@ -290,9 +287,11 @@ class PhotonArray(object):
         surface brightness, so photons' fluxes are divided by image pixel area.
         Photons past the edges of the image are discarded.
 
-        @param image    the Image to which the photons' flux will be added.
+        Parameters:
+            image:      The Image to which the photons' flux will be added.
 
-        @returns the total flux of photons the landed inside the image bounds.
+        Returns:
+            the total flux of photons the landed inside the image bounds.
         """
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError(
@@ -311,11 +310,13 @@ class PhotonArray(object):
         TODO: This corresponds to the `Nearest` interpolant.  It would be worth figuring out how
               to implement other (presumably better) interpolation options here.
 
-        @param image        The image to turn into a PhotonArray
-        @param max_flux     The maximum flux value to use for any output photon [default: 1]
-        @param rng          A BaseDeviate to use for the random number generation [default: None]
+        Parameters:
+            image:      The image to turn into a PhotonArray
+            max_flux:   The maximum flux value to use for any output photon [default: 1]
+            rng:        A BaseDeviate to use for the random number generation [default: None]
 
-        @returns a PhotonArray
+        Returns:
+            a PhotonArray
         """
         max_flux = float(max_flux)
         if (max_flux <= 0):
@@ -346,12 +347,13 @@ class PhotonArray(object):
         Additionally, the columns 'dxdz', 'dydz', and 'wavelength' will be included if they are
         set for this PhotonArray object.
 
-        The file can be read back in with the classmethod `PhotonArray.read`.
+        The file can be read back in with the classmethod `PhotonArray.read`.::
 
             >>> photons.write('photons.fits')
             >>> photons2 = galsim.PhotonArray.read('photons.fits')
 
-        @param file_name    The file name of the output FITS file.
+        Parameters:
+            file_name:  The file name of the output FITS file.
         """
         from ._pyfits import pyfits
         from . import fits
@@ -381,12 +383,13 @@ class PhotonArray(object):
         """Create a PhotonArray, reading the photon data from a FITS file.
 
         The file being read in is not arbitrary.  It is expected to be a file that was written
-        out with the PhotonArray `write` method.
+        out with the PhotonArray `write` method.::
 
             >>> photons.write('photons.fits')
             >>> photons2 = galsim.PhotonArray.read('photons.fits')
 
-        @param file_name    The file name of the input FITS file.
+        Parameters:
+            file_name:  The file name of the input FITS file.
         """
         from ._pyfits import pyfits
         with pyfits.open(file_name) as fits:
@@ -406,14 +409,15 @@ class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
     array of a PhotonArray.
 
-    @param sed          The SED to use for the objects spectral energy distribution.
-    @param bandpass     A Bandpass object representing a filter, or None to sample over the full
-                        SED wavelength range.
-    @param rng          If provided, a random number generator that is any kind of BaseDeviate
-                        object. If `rng` is None, one will be automatically created, using the
-                        time as a seed. [default: None]
-    @param npoints      Number of points DistDeviate should use for its internal interpolation
-                        tables. [default: None, which uses the DistDeviate default]
+    Parameters:
+        sed:        The SED to use for the objects spectral energy distribution.
+        bandpass:   A Bandpass object representing a filter, or None to sample over the full
+                    SED wavelength range.
+        rng:        If provided, a random number generator that is any kind of BaseDeviate
+                    object. If `rng` is None, one will be automatically created, using the
+                    time as a seed. [default: None]
+        npoints:    Number of points DistDeviate should use for its internal interpolation
+                    tables. [default: None, which uses the DistDeviate default]
     """
     def __init__(self, sed, bandpass, rng=None, npoints=None):
         self.sed = sed
@@ -435,11 +439,12 @@ class FRatioAngles(object):
     by the f/ratio of the telescope.  The angles are expressed in terms of slopes dx/dz
     and dy/dz.
 
-    @param fratio           The f/ratio of the telescope (e.g. 1.2 for LSST)
-    @param obscuration      Linear dimension of central obscuration as fraction of aperture
-                            linear dimension. [0., 1.).  [default: 0.0]
-    @param rng              A random number generator to use or None, in which case an rng
-                            will be automatically constructed for you. [default: None]
+    Parameters:
+        fratio:         The f/ratio of the telescope (e.g. 1.2 for LSST)
+        obscuration:    Linear dimension of central obscuration as fraction of aperture
+                        linear dimension. [0., 1.).  [default: 0.0]
+        rng:            A random number generator to use or None, in which case an rng
+                        will be automatically constructed for you. [default: None]
     """
     def __init__(self, fratio, obscuration=0.0, rng=None):
 
@@ -522,25 +527,26 @@ class PhotonDCR(object):
                not a pure PSF.  As such, the default is alpha=0, not -0.2, which would be
                appropriate for Kolmogorov turbulence.
 
-    @param base_wavelength      Wavelength (in nm) represented by the fiducial photon positions
-    @param scale_unit           Units used for the positions of the photons.  [default:
-                                galsim.arcsec]
-    @param alpha                Power law index for wavelength-dependent seeing.  This should only
-                                be used if doing a star-only simulation.  It is not correct when
-                                drawing galaxies. [default: 0.]
-    @param zenith_angle         Angle from object to zenith, expressed as an Angle
-                                [default: 0]
-    @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
-                                from North through East.  [default: 0]
-    @param obj_coord            Celestial coordinates of the object being drawn as a
-                                CelestialCoord. [default: None]
-    @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
-                                [default: None]
-    @param HA                   Hour angle of the object as an Angle. [default: None]
-    @param latitude             Latitude of the observer as an Angle. [default: None]
-    @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
-    @param temperature          Temperature in Kelvins.  [default: 293.15 K]
-    @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+    Parameters:
+        base_wavelength:    Wavelength (in nm) represented by the fiducial photon positions
+        scale_unit:         Units used for the positions of the photons.  [default:
+                            galsim.arcsec]
+        alpha:              Power law index for wavelength-dependent seeing.  This should only
+                            be used if doing a star-only simulation.  It is not correct when
+                            drawing galaxies. [default: 0.]
+        zenith_angle:       Angle from object to zenith, expressed as an Angle
+                            [default: 0]
+        parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured
+                            from North through East.  [default: 0]
+        obj_coord:          Celestial coordinates of the object being drawn as a
+                            CelestialCoord. [default: None]
+        zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                            [default: None]
+        HA:                 Hour angle of the object as an Angle. [default: None]
+        latitude:           Latitude of the observer as an Angle. [default: None]
+        pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]
+        temperature:        Temperature in Kelvins.  [default: 293.15 K]
+        H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
     def __init__(self, base_wavelength, scale_unit=arcsec, **kwargs):
         from . import dcr

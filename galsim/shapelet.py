@@ -42,10 +42,10 @@ class Shapelet(GSObject):
     information about this kind of decomposition.  For this class, we follow the notation of
     Bernstein & Jarvis.
 
-    The decomposition is described by an overall scale length, `sigma`, and a vector of
-    coefficients, `b`.  The `b` vector is indexed by two values, which can be either (p,q) or (N,m).
-    In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number of
-    quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.
+    The decomposition is described by an overall scale length, ``sigma``, and a vector of
+    coefficients, ``b``.  The ``b`` vector is indexed by two values, which can be either (p,q) or
+    (N,m).  In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number
+    of quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.
 
     The 2D image is given by (in polar coordinates):
 
@@ -61,14 +61,11 @@ class Shapelet(GSObject):
     I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
     This further implies that b_pp (i.e. b_pq with p==q) is real.
 
-    Initialization
-    --------------
-
-    1. Make a blank Shapelet instance with all b_pq = 0.
+    1. Make a blank Shapelet instance with all b_pq = 0.::
 
         >>> shapelet = galsim.Shapelet(sigma, order)
 
-    2. Make a Shapelet instance using a given vector for the b_pq values.
+    2. Make a Shapelet instance using a given vector for the b_pq values.::
 
         >>> order = 2
         >>> bvec = [ 1, 0, 0, 0.2, 0.3, -0.1 ]
@@ -82,38 +79,30 @@ class Shapelet(GSObject):
     m=0 or 1 as appropriate.  And since m=0 is intrinsically real, it only requires one spot
     in the list.
 
-    @param sigma        The scale size in the standard units (usually arcsec).
-    @param order        The order of the shapelet decomposition.  This is the maximum
-                        N=p+q included in the decomposition.
-    @param bvec         The initial vector of coefficients.  [default: None, which means to use
-                        all zeros]
-    @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
-                        details. [default: None]
+    Parameters:
+        sigma:      The scale size in the standard units (usually arcsec).
+        order:      The order of the shapelet decomposition.  This is the maximum
+                    N=p+q included in the decomposition.
+        bvec:       The initial vector of coefficients.  [default: None, which means to use
+                    all zeros]
+        gsparams:   An optional GSParams argument.  See the docstring for GSParams for
+                    details. [default: None]
 
-    Fitting an Image
-    ----------------
+    Attributes:
+        sigma:      The scale size
+        order:      The order of the shapelet decomposition
+        bvec:       The vector of shapelet coefficients
 
-    There is also a factory function that measures the shapelet decomposition of a given
-    image
+    In addition the following access methods are sometimes useful:
 
-        >>> shapelet = galsim.Shapelet.fit(sigma, order, image)
+    Methods:
+        getPQ(p,q):     Get the value of b_pq as a tuple (re, im) (even if p==q)
+        getNM(N,m):     Get the value of b_Nm as a tuple (re, im) (even if m==0)
 
-    Attributes
-    ----------
+    Class Methods:
+        Shapelet.fit(sigma, order, image):  A factory function that measures the shapelet
+                                            decomposition of a given image.
 
-    After construction, the `sigma`, `order`, and `bvec` are available as attributes.
-
-    Methods and Properties
-    ----------------------
-
-    In addition to the usual GSObject methods, Shapelet has the following access methods and
-    properties:
-
-        >>> sigma = shapelet.sigma
-        >>> order = shapelet.order
-        >>> bvec = shapelet.bvec
-        >>> b_pq = shapelet.getPQ(p,q)      # Get b_pq.  Returned as tuple (re, im) (even if p==q).
-        >>> b_Nm = shapelet.getNM(N,m)      # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
     """
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}
@@ -244,9 +233,9 @@ class Shapelet(GSObject):
     def fit(cls, sigma, order, image, center=None, normalization='flux', gsparams=None):
         """Fit for a shapelet decomposition of a given image.
 
-        The optional `normalization` parameter mirrors the parameter of the InterpolatedImage class.
-        The following sequence should produce drawn images that are approximate matches to the
-        original image:
+        The optional ``normalization`` parameter mirrors the parameter of the InterpolatedImage
+        class.  The following sequence should produce drawn images that are approximate matches to
+        the original image::
 
             >>> image = [...]
             >>> shapelet = galsim.FitShapelet(sigma, order, image, normalization='sb')
@@ -254,23 +243,25 @@ class Shapelet(GSObject):
             >>> shapelet = galsim.FitShapelet(sigma, order, image, normalization='flux')
             >>> im3 = shapelet.drawImage(image=im3, scale=image.scale, method='no_pixel')
 
-        Then `im2` and `im3` should be as close as possible to `image` for the given `sigma` and
-        `order`.  Increasing the order can improve the fit, as can having `sigma` match the natural
-        scale size of the image.  However, it should be noted that some images are not well fit by a
-        shapelet for any (reasonable) order.
+        Then ``im2`` and ``im3`` should be as close as possible to ``image`` for the given ``sigma``
+        and ``order``.  Increasing the order can improve the fit, as can having ``sigma`` match the
+        natural scale size of the image.  However, it should be noted that some images are not well
+        fit by a shapelet for any (reasonable) order.
 
-        @param sigma        The scale size in the standard units (usually arcsec).
-        @param order        The order of the shapelet decomposition.  This is the maximum
+        Parameters:
+            sigma:          The scale size in the standard units (usually arcsec).
+            order:          The order of the shapelet decomposition.  This is the maximum
                             N=p+q included in the decomposition.
-        @param image        The Image for which to fit the shapelet decomposition
-        @param center       The position in pixels to use for the center of the decomposition.
+            image:          The Image for which to fit the shapelet decomposition
+            center:         The position in pixels to use for the center of the decomposition.
                             [default: image.true_center]
-        @param normalization  The normalization to assume for the image.
+            normalization:  The normalization to assume for the image.
                             [default: "flux"]
-        @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+            gsparams:       An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-        @returns the fitted Shapelet profile
+        Returns:
+            the fitted Shapelet profile
         """
         if not center:
             center = image.true_center

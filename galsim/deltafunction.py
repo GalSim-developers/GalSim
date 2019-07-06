@@ -31,21 +31,14 @@ class DeltaFunction(GSObject):
     """A class describing a DeltaFunction surface brightness profile.
 
     The DeltaFunction surface brightness profile is characterized by a single property,
-    its `flux'.
-
-    Initialization
-    --------------
+    its ``flux``.
 
     A DeltaFunction can be initialized with a specified flux.
 
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-
-    Methods and Properties
-    ----------------------
-
-    DeltaFunction simply has the usual GSObject methods and properties.
+    Parameters:
+        flux:       The flux (in photons/cm^2/s) of the profile. [default: 1]
+        gsparams:   An optional GSParams argument.  See the docstring for GSParams for
+                    details. [default: None]
     """
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.

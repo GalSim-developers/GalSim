@@ -58,15 +58,17 @@ class Sensor(object):
         The base class implementation simply accumulates the photons above each pixel into that
         pixel.
 
-        @param photons      A PhotonArray instance describing the incident photons.
-        @param image        The image into which the photons should be accumuated.
-        @param orig_center  The position of the image center in the original image coordinates.
+        Parameters:
+            photons:        A PhotonArray instance describing the incident photons.
+            image:          The image into which the photons should be accumuated.
+            orig_center:    The position of the image center in the original image coordinates.
                             [default: (0,0)]
-        @param resume       Resume accumulating on the same image as a previous call to accumulate.
+            resume:         Resume accumulating on the same image as a previous call to accumulate.
                             In the base class, this has no effect, but it can provide an efficiency
                             gain for some derived classes. [default: False]
 
-        @returns the total flux that fell onto the image.
+        Returns:
+            the total flux that fell onto the image.
         """
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Calling accumulate on image with undefined bounds")
@@ -124,31 +126,32 @@ class SiliconSensor(Sensor):
     images being passed to `accumulate`.
 
 
-    @param name             The base name of the files which contains the sensor information,
+    Parameters:
+        name:               The base name of the files which contains the sensor information,
                             presumably calculated from the Poisson_CCD simulator, which may
                             be specified either as an absolute path or as one of the above names
                             that are in the `galsim.meta_data.share_dir/sensors` directory.
                             name.cfg should be the file used to simulate the pixel distortions,
                             and name.dat should containt the distorted pixel information.
                             [default: 'lsst_itl_8']
-    @param strength         Set the strength of the brighter-fatter effect relative to the
+        strength:           Set the strength of the brighter-fatter effect relative to the
                             amount specified by the Poisson simulation results.  [default: 1]
-    @param rng              A BaseDeviate object to use for the random number generation
+        rng:                A BaseDeviate object to use for the random number generation
                             for the stochastic aspects of the electron production and drift.
                             [default: None, in which case one will be made for you]
-    @param diffusion_factor A factor by which to multiply the diffusion.  Use 0.0 to turn off the
+        diffusion_factor:   A factor by which to multiply the diffusion.  Use 0.0 to turn off the
                             effect of diffusion entirely. [default: 1.0]
-    @param qdist            The maximum number of pixels away to calculate the distortion due to
+        qdist:              The maximum number of pixels away to calculate the distortion due to
                             the charge accumulation. A large value will increase accuracy but
                             take more time. If it is increased larger than 4, the size of the
                             Poisson simulation must be increased to match. [default: 3]
-    @param nrecalc          The number of electrons to accumulate before recalculating the
+        nrecalc:            The number of electrons to accumulate before recalculating the
                             distortion of the pixel shapes. [default: 10000]
-    @param treering_func    A galsim.LookupTable giving the tree ring pattern f(r). [default: None]
-    @param treering_center  A PositionD object with the center of the tree ring pattern in pixel
+        treering_func:      A galsim.LookupTable giving the tree ring pattern f(r). [default: None]
+        treering_center:    A PositionD object with the center of the tree ring pattern in pixel
                             coordinates, which may be outside the pixel region. [default: None;
                             required if treering_func is provided]
-    @param transpose        Transpose the meaning of (x,y) so the brighter-fatter effect is
+        transpose:          Transpose the meaning of (x,y) so the brighter-fatter effect is
                             stronger along the x direction. [default: False]
     """
     def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
@@ -261,17 +264,19 @@ class SiliconSensor(Sensor):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
-        @param photons      A PhotonArray instance describing the incident photons
-        @param image        The image into which the photons should be accumuated.
-        @param orig_center  The position of the image center in the original image coordinates.
+        Parameters:
+            photons:        A PhotonArray instance describing the incident photons
+            image:          The image into which the photons should be accumuated.
+            orig_center:    The position of the image center in the original image coordinates.
                             [default: (0,0)]
-        @param resume       Resume accumulating on the same image as a previous call to accumulate.
+            resume:         Resume accumulating on the same image as a previous call to accumulate.
                             This skips an initial (slow) calculation at the start of the
                             accumulation to see what flux is already on the image, which can
                             be more efficient, especially when the number of pixels is large.
                             [default: False]
 
-        @returns the total flux that fell onto the image.
+        Returns:
+            the total flux that fell onto the image.
         """
         if resume and image is not self._last_image:
             if self._last_image is None:
@@ -298,11 +303,13 @@ class SiliconSensor(Sensor):
         Note: The areas here are in units of the nominal pixel area.  This does not account for
         any conversion from pixels to sky units using the image wcs (if any).
 
-        @param image        The image with the current flux values.
-        @param orig_center  The position of the image center in the original image coordinates.
+        Parameters:
+            image:          The image with the current flux values.
+            orig_center:    The position of the image center in the original image coordinates.
                             [default: (0,0)]
 
-        @returns a galsim.Image with the pixel areas
+        Returns:
+            a galsim.Image with the pixel areas
         """
         from .wcs import PixelScale
         area_image = image.copy()
@@ -350,11 +357,11 @@ class SiliconSensor(Sensor):
         PixelSize = self.config['PixelSizeX']
         SensorThickness = self.config['SensorThickness']
         ChannelStopWidth = self.config['ChannelStopWidth']
-        FieldOxideTaper = self.config["FieldOxideTaper"]        
+        FieldOxideTaper = self.config["FieldOxideTaper"]
         Vbb = self.config['Vbb']
         Vparallel_lo = self.config['Vparallel_lo']
         Vparallel_hi = self.config['Vparallel_hi']
-        qfh = self.config["qfh"]        
+        qfh = self.config["qfh"]
         CCDTemperature = self.config['CCDTemperature']
         # This calculates the diffusion step size given the detector
         # parameters.  The diffusion step size is the mean radius of diffusion
@@ -371,12 +378,12 @@ class SiliconSensor(Sensor):
         VBarrier = Vparallel_lo + 15.0 # Estimate from simulation
         ChannelStopRegionWidth = 2.0 * (ChannelStopWidth / 2.0 + FieldOxideTaper)
         ChannelStopRegionArea = ChannelStopRegionWidth * PixelSize
-        CollectArea = (PixelSize - ChannelStopRegionWidth) * PixelSize * CollectingPhases / NumPhases 
-        BarrierArea = (PixelSize - ChannelStopRegionWidth) * PixelSize * (NumPhases - CollectingPhases) / NumPhases 
+        CollectArea = (PixelSize - ChannelStopRegionWidth) * PixelSize * CollectingPhases / NumPhases
+        BarrierArea = (PixelSize - ChannelStopRegionWidth) * PixelSize * (NumPhases - CollectingPhases) / NumPhases
         Vfront = (ChannelStopRegionArea * VChannelStop + CollectArea * VCollect + BarrierArea * VBarrier) / (PixelSize**2)
-        # Then, the total voltage across the silicon 
+        # Then, the total voltage across the silicon
         Vdiff = max(Vfront - Vbb, 1.0) # This just makes sure that Vdiff is always > 1.0V
-        MobilityFactor = 0.27 # This is the factor from Green et.al.        
+        MobilityFactor = 0.27 # This is the factor from Green et.al.
         # 0.026 is kT/q at room temp (298 K)
         diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff / MobilityFactor) * SensorThickness
         return diff_step
@@ -388,12 +395,13 @@ class SiliconSensor(Sensor):
 
         The functional form is f(r) = amplitude * cos(2*pi*r/period)
 
-        @param amplitude    The amplitude of the tree ring pattern distortion.  Typically
-                            this is less than 0.01 pixels. [default: 0.5]
-        @param period       The period of the tree ring distortion pattern, in pixels.
-                            [default: 100.]
-        @param r_max        The maximum value of r to store in the lookup table. [default: 8000]
-        @param dr           The spacing to use for the r values. [default: period/100]
+        Parameters:
+            amplitude:  The amplitude of the tree ring pattern distortion.  Typically
+                        this is less than 0.01 pixels. [default: 0.5]
+            period:     The period of the tree ring distortion pattern, in pixels.
+                        [default: 100.]
+            r_max:      The maximum value of r to store in the lookup table. [default: 8000]
+            dr:         The spacing to use for the r values. [default: period/100]
         """
         k = 2.*np.pi/float(period)
         func = lambda r: amplitude * np.cos(k * r)

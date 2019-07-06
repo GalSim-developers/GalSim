@@ -44,10 +44,12 @@ def isinteger(value):
 def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
-    @param image        The NumPy array to be circular shifted.
-    @param shape        (iroll, jroll) The roll in the i and j dimensions, respectively.
+    Parameters:
+        image:      The NumPy array to be circular shifted.
+        shape:      (iroll, jroll) The roll in the i and j dimensions, respectively.
 
-    @returns the rolled image.
+    Returns:
+        the rolled image.
     """
     (iroll, jroll) = shape
     # The ascontiguousarray bit didn't used to be necessary.  But starting with
@@ -69,7 +71,8 @@ def kxky(array_shape=(256, 256)):
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
 
-    @param array_shape   The NumPy array shape desired for `kx, ky`.
+    Parameters:
+        array_shape:    The NumPy array shape desired for `kx, ky`.
     """
     # Note: numpy shape is y,x
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
@@ -83,10 +86,12 @@ def g1g2_to_e1e2(g1, g2):
     definitions of reduced shear and distortion in terms of axis ratios or other ways of specifying
     ellipses.
 
-    @param g1   First reduced shear component
-    @param g2   Second reduced shear component
+    Parameters:
+        g1:     First reduced shear component
+        g2:     Second reduced shear component
 
-    @returns the corresponding distortions, e1 and e2.
+    Returns:
+        the corresponding distortions, e1 and e2.
     """
     # Conversion:
     # e = (a^2-b^2) / (a^2+b^2)
@@ -108,9 +113,10 @@ def rotate_xy(x, y, theta):
     """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
     origin of the Cartesian coordinate system.
 
-    @param x        NumPy array of input `x` coordinates
-    @param y        NumPy array of input `y` coordinates
-    @param theta    Rotation angle (+ve counter clockwise) as an Angle instance
+    Parameters:
+        x:      NumPy array of input `x` coordinates
+        y:      NumPy array of input `y` coordinates
+        theta:  Rotation angle (+ve counter clockwise) as an Angle instance
 
     @return the rotated coordinates `(x_rot,y_rot)`.
     """
@@ -245,12 +251,14 @@ class AttributeDict(object): # pragma: no cover
 def rand_arr(shape, deviate):
     """Function to make a 2d array of random deviates (of any sort).
 
-    @param shape        A list of length 2, indicating the desired 2d array dimensions
-    @param deviate      Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
-                        etc. to be used to generate random numbers
+    Parameters:
+        shape:      A list of length 2, indicating the desired 2d array dimensions
+        deviate:    Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
+                    etc. to be used to generate random numbers
 
-    @returns a NumPy array of the desired dimensions with random numbers generated using the
-    supplied deviate.
+    Returns:
+        a NumPy array of the desired dimensions with random numbers generated using the
+        supplied deviate.
     """
     from .image import ImageD
     from .noise import DeviateNoise
@@ -378,26 +386,28 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
     to a NumPy array.  The new lists will be output as numpy arrays.
 
-    @param x                The `x` values in the f(x) tabulation.
-    @param f                The `f` values in the f(x) tabulation.
-    @param rel_err          The maximum relative error to allow in the integral from the removal.
-                            [default: 1.e-4]
-    @param trim_zeros       Remove redundant leading and trailing points where f=0?  (The last
-                            leading point with f=0 and the first trailing point with f=0 will be
-                            retained).  Note that if both trim_leading_zeros and preserve_range are
-                            True, then the only the range of `x` *after* zero trimming is preserved.
-                            [default: True]
-    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
-                            be trimmed to include only the region where the integral is
-                            significant? (False)  [default: True]
-    @param fast_search      If set to True, then the underlying algorithm will use a relatively fast
-                            O(N) algorithm to select points to include in the thinned approximation.
-                            If set to False, then a slower O(N^2) algorithm will be used.  We have
-                            found that the slower algorithm tends to yield a thinned representation
-                            that retains fewer samples while still meeting the relative error
-                            requirement.  [default: True]
+    Parameters:
+        x:              The `x` values in the f(x) tabulation.
+        f:              The `f` values in the f(x) tabulation.
+        rel_err:        The maximum relative error to allow in the integral from the removal.
+                        [default: 1.e-4]
+        trim_zeros:     Remove redundant leading and trailing points where f=0?  (The last
+                        leading point with f=0 and the first trailing point with f=0 will be
+                        retained).  Note that if both trim_leading_zeros and preserve_range are
+                        True, then the only the range of `x` *after* zero trimming is preserved.
+                        [default: True]
+        preserve_range: Should the original range of `x` be preserved? (True) Or should the ends
+                        be trimmed to include only the region where the integral is
+                        significant? (False)  [default: True]
+        fast_search:    If set to True, then the underlying algorithm will use a relatively fast
+                        O(N) algorithm to select points to include in the thinned approximation.
+                        If set to False, then a slower O(N^2) algorithm will be used.  We have
+                        found that the slower algorithm tends to yield a thinned representation
+                        that retains fewer samples while still meeting the relative error
+                        requirement.  [default: True]
 
-    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+    Returns:
+        a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
     from heapq import heappush, heappop
 
@@ -491,15 +501,17 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
     The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
     to a NumPy array.  The new lists will be output as python lists.
 
-    @param x                The `x` values in the f(x) tabulation.
-    @param f                The `f` values in the f(x) tabulation.
-    @param rel_err          The maximum relative error to allow in the integral from the removal.
-                            [default: 1.e-4]
-    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
-                            be trimmed to include only the region where the integral is
-                            significant? (False)  [default: False]
+    Parameters:
+        x:              The `x` values in the f(x) tabulation.
+        f:              The `f` values in the f(x) tabulation.
+        rel_err:        The maximum relative error to allow in the integral from the removal.
+                        [default: 1.e-4]
+        preserve_range: Should the original range of `x` be preserved? (True) Or should the ends
+                        be trimmed to include only the region where the integral is
+                        significant? (False)  [default: False]
 
-    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+    Returns:
+        a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
     x = np.asarray(x, dtype=float)
     f = np.asarray(f, dtype=float)
@@ -594,11 +606,13 @@ def horner(x, coef, dtype=None):
     I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as
     A + x(B + x(C + x(D)))
 
-    @param x        A numpy array of values at which to evaluate the polynomial.
-    @param coef     Polynomial coefficients of increasing powers of x.
-    @param dtype    Optionally specify the dtype of the return array. [default: None]
+    Parameters:
+        x:      A numpy array of values at which to evaluate the polynomial.
+        coef:   Polynomial coefficients of increasing powers of x.
+        dtype:  Optionally specify the dtype of the return array. [default: None]
 
-    @returns a numpy array of the evaluated polynomial.  Will be the same shape as x.
+    Returns:
+        a numpy array of the evaluated polynomial.  Will be the same shape as x.
     """
     result = np.empty_like(x, dtype=dtype)
     # Make sure everything is an array
@@ -631,16 +645,18 @@ def _horner(x, coef, result):
 def horner2d(x, y, coefs, dtype=None, triangle=False):
     """Evaluate bivariate polynomial using nested Horner's method.
 
-    @param x        A numpy array of the x values at which to evaluate the polynomial.
-    @param y        A numpy array of the y values at which to evaluate the polynomial.
-    @param coefs    2D array-like of coefficients in increasing powers of x and y.
+    Parameters:
+        x:          A numpy array of the x values at which to evaluate the polynomial.
+        y:          A numpy array of the y values at which to evaluate the polynomial.
+        coefs:      2D array-like of coefficients in increasing powers of x and y.
                     The first axis corresponds to increasing the power of y, and the second to
                     increasing the power of x.
-    @param dtype    Optionally specify the dtype of the return array. [default: None]
-    @param triangle If True, then the coefs are only non-zero in the upper-left triangle
+        dtype:      Optionally specify the dtype of the return array. [default: None]
+        triangle:   If True, then the coefs are only non-zero in the upper-left triangle
                     of the array. [default: False]
 
-    @returns a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
+    Returns:
+        a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
     """
     result = np.empty_like(x, dtype=dtype)
     temp = np.empty_like(x, dtype=dtype)
@@ -711,8 +727,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     Here is an example script using this routine:
 
-    Interleaving four Gaussian images
-    ---------------------------------
+    Example::
 
         >>> n = 2
         >>> gal = galsim.Gaussian(sigma=2.8)
@@ -723,19 +738,21 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
         >>>     im.applyNonlinearity(lambda x: x-0.01*x**2) #detector effects
         >>> img_new = galsim.utilities.interleaveImages(im_list,N=n,offsets)
 
-    @param image             Input image from which lower resolution images are extracted.
-    @param N                 Number of images extracted in either directions. It can be of type
-                             'int' if equal number of images are extracted in both directions or a
-                             list or tuple of two integers, containing the number of images in x
-                             and y directions respectively.
-    @param conserve_flux     Should the routine output images that have, on average, same total
-                             pixel values as the input image (True) or should the pixel values
-                             summed over all the images equal the sum of pixel values of the input
-                             image (False)? [default: False]
-    @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
-                             [default: False]
+    Parameters:
+        image:              Input image from which lower resolution images are extracted.
+        N:                  Number of images extracted in either directions. It can be of type
+                            'int' if equal number of images are extracted in both directions or a
+                            list or tuple of two integers, containing the number of images in x
+                            and y directions respectively.
+        conserve_flux:      Should the routine output images that have, on average, same total
+                            pixel values as the input image (True) or should the pixel values
+                            summed over all the images equal the sum of pixel values of the input
+                            image (False)? [default: False]
+        suppress_warnings:  Suppresses the warnings about the pixel scale of the output, if True.
+                            [default: False]
 
-    @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
+    Returns:
+        a list of images and offsets to reconstruct the input image using 'interleaveImages'.
     """
     from .image import Image
     from .position import PositionD
@@ -831,8 +848,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     Here's an example script using this routine:
 
-    Interleaving two Gaussian images along the x-axis
-    -------------------------------------------------
+    Example::
 
         >>> n = 2
         >>> gal = galsim.Gaussian(sigma=2.8)
@@ -848,25 +864,28 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             ... im_list.append(im)
         >>> img = galsim.utilities.interleaveImages(im_list=im_list,N=(n,1),offsets=offsets)
 
-    @param im_list             A list containing the galsim.Image instances to be interleaved.
-    @param N                   Number of images to interleave in either directions. It can be of
-                               type `int' if equal number of images are interleaved in both
-                               directions or a list or tuple of two integers, containing the number
-                               of images in x and y directions respectively.
-    @param offsets             A list containing the offsets as galsim.PositionD instances
-                               corresponding to every image in `im_list'. The offsets must be spaced
-                               equally and must span an entire pixel area. The offset values must
-                               be symmetric around zero, hence taking positive and negative values,
-                               with upper and lower limits of +0.5 and -0.5 (limit values excluded).
-    @param add_flux            Should the routine add the fluxes of all the images (True) or average
-                               them (False)? [default: True]
-    @param suppress_warnings   Suppresses the warnings about the pixel scale of the output, if True.
-                               [default: False]
-    @param catch_offset_errors Checks for the consistency of `offsets` with `N` and raises Errors
-                               if inconsistencies found (True). Recommended, but could slow down
-                               the routine a little. [default: True]
+    Parameters:
+        im_list:                A list containing the galsim.Image instances to be interleaved.
+        N:                      Number of images to interleave in either directions. It can be of
+                                type `int' if equal number of images are interleaved in both
+                                directions or a list or tuple of two integers, containing the number
+                                of images in x and y directions respectively.
+        offsets:                A list containing the offsets as galsim.PositionD instances
+                                corresponding to every image in `im_list'. The offsets must be
+                                spaced equally and must span an entire pixel area. The offset
+                                values must be symmetric around zero, hence taking positive and
+                                negative values, with upper and lower limits of +0.5 and -0.5
+                                (limit values excluded).
+        add_flux:               Should the routine add the fluxes of all the images (True) or
+                                average them (False)? [default: True]
+        suppress_warnings:      Suppresses the warnings about the pixel scale of the output, if
+                                True.  [default: False]
+        catch_offset_errors:    Checks for the consistency of `offsets` with `N` and raises Errors
+                                if inconsistencies found (True). Recommended, but could slow down
+                                the routine a little. [default: True]
 
-    @returns the interleaved image
+    Returns:
+        the interleaved image
     """
     from .position import PositionD
     from .image import Image
@@ -983,25 +1002,25 @@ class LRU_Cache:
     but added a method for dynamic resizing.  The least recently used cached item is
     overwritten on a cache miss.
 
-    @param user_function   A python function to cache.
-    @param maxsize         Maximum number of inputs to cache.  [Default: 1024]
+    Parameters:
+        user_function:  A python function to cache.
+        maxsize:        Maximum number of inputs to cache.  [Default: 1024]
 
-    Usage
-    -----
-    >>> def slow_function(*args) # A slow-to-evaluate python function
-    >>>    ...
-    >>>
-    >>> v1 = slow_function(*k1)  # Calling function is slow
-    >>> v1 = slow_function(*k1)  # Calling again with same args is still slow
-    >>> cache = galsim.utilities.LRU_Cache(slow_function)
-    >>> v1 = cache(*k1)  # Returns slow_function(*k1), slowly the first time
-    >>> v1 = cache(*k1)  # Returns slow_function(*k1) again, but fast this time.
+    Example::
 
-    Methods
-    -------
-    >>> cache.resize(maxsize) # Resize the cache, either upwards or downwards.  Upwards resizing
-                              # is non-destructive.  Downwards resizing will remove the least
-                              # recently used items first.
+        >>> def slow_function(*args) # A slow-to-evaluate python function
+        >>>    ...
+        >>>
+        >>> v1 = slow_function(*k1)  # Calling function is slow
+        >>> v1 = slow_function(*k1)  # Calling again with same args is still slow
+        >>> cache = galsim.utilities.LRU_Cache(slow_function)
+        >>> v1 = cache(*k1)  # Returns slow_function(*k1), slowly the first time
+        >>> v1 = cache(*k1)  # Returns slow_function(*k1) again, but fast this time.
+
+    Methods:
+        resize:     Resize the cache, either upwards or downwards.  Upwards resizing
+                    is non-destructive.  Downwards resizing will remove the least
+                    recently used items first::
     """
     def __init__(self, user_function, maxsize=1024):
         # Link layout:     [PREV, NEXT, KEY, RESULT]
@@ -1049,7 +1068,8 @@ class LRU_Cache:
         necessarily remove items from the cache if the cache is already filled.  Items are removed
         in least recently used order.
 
-        @param maxsize  The new maximum number of inputs to cache.
+        Parameters:
+            maxsize:    The new maximum number of inputs to cache.
         """
         oldsize = len(self.cache)
         if maxsize == oldsize:
@@ -1143,10 +1163,12 @@ def structure_function(image):
     The image must have its `scale` attribute defined.  It will be used in the calculations to
     set the scale of the radial distances.
 
-    @param image  Image containing random field realization.
+    Parameters:
+        image:  Image containing random field realization.
 
-    @returns      A python callable mapping a separation length r to the estimate of the structure
-                  function D(r).
+    Returns:
+        A python callable mapping a separation length r to the estimate of the structure
+        function D(r).
     """
     from .table import LookupTable2D
     array = image.array
@@ -1173,8 +1195,11 @@ def combine_wave_list(*args):
     """Combine wave_list attributes of all objects in obj_list while respecting blue_limit and
     red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
 
-    @param obj_list  List of SED, Bandpass, or ChromaticObject objects.
-    @returns        wave_list, blue_limit, red_limit
+    Parameters:
+        obj_list:   List of SED, Bandpass, or ChromaticObject objects.
+
+    Returns:
+        wave_list, blue_limit, red_limit
     """
     from .sed import SED
     from .bandpass import Bandpass
@@ -1214,38 +1239,40 @@ def functionize(f):
     okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
     M-variate function arguments.
 
-    As an example:
+    Example::
 
-    >>> def f(x, y):      # Function of two scalars.
-    ...     return x + y
-    >>> decorated = functionize(f)   # Function of two scalars, functions, or a mix.
-    >>> result = f(2, 3)  # 5
-    >>> result = f(2, lambda u: u)  # Generates a TypeError
-    >>> result = decorated(2, 3)  # Scalar args returns a scalar
-    >>> result = decorated(2, lambda u: u)  # Univariate argument leads to a univariate output.
-    >>> print(result(5))  # 7
-    >>> result = decorated(2, lambda u,v: u*v)  # Bivariate argument leads to a bivariate output.
-    >>> print(result(5, 7))  # 2 + (5*7) = 37
+        >>> def f(x, y):      # Function of two scalars.
+        ...     return x + y
+        >>> decorated = functionize(f)   # Function of two scalars, functions, or a mix.
+        >>> result = f(2, 3)  # 5
+        >>> result = f(2, lambda u: u)  # Generates a TypeError
+        >>> result = decorated(2, 3)  # Scalar args returns a scalar
+        >>> result = decorated(2, lambda u: u)  # Univariate argument leads to a univariate output.
+        >>> print(result(5))  # 7
+        >>> result = decorated(2, lambda u,v: u*v)  # Bivariate argument leads to a bivariate output.
+        >>> print(result(5, 7))  # 2 + (5*7) = 37
 
-    We can use arguments that accept keyword arguments too:
+    We can use arguments that accept keyword arguments too::
 
-    >>> def f2(u, v=None):
-    ...    if v is None:
-    ...        v = 6.0
-    ...    return u / v
-    >>> result = decorated(2, f2)
-    >>> print(result(12))  # 2 + (12./6) = 4.0
-    >>> print(result(12, v=4))  # 2 + (12/4) = 5
+        >>> def f2(u, v=None):
+        ...    if v is None:
+        ...        v = 6.0
+        ...    return u / v
+        >>> result = decorated(2, f2)
+        >>> print(result(12))  # 2 + (12./6) = 4.0
+        >>> print(result(12, v=4))  # 2 + (12/4) = 5
 
-    Note that you can also use python's decorator syntax:
+    Note that you can also use python's decorator syntax::
 
-    >>> @functionize
-    >>> def f(x, y):
-    ...     return x + y
+        >>> @functionize
+        >>> def f(x, y):
+        ...     return x + y
 
-    @param f  The function to be decorated.
-    @returns  The decorated function.
+    Parameters:
+        f:      The function to be decorated.
 
+    Returns:
+        The decorated function.
     """
     @functools.wraps(f)
     def ff(*args, **kwargs):
@@ -1269,11 +1296,13 @@ def functionize(f):
 def math_eval(str, other_modules=()):
     """Evaluate a string that may include numpy, np, or math commands.
 
-    @param str              The string to evaluate
-    @param other_modules    Other modules in addition to numpy, np, math to import as well.
-                            Should be given as a list of strings.  [default: None]
+    Parameters:
+        str:            The string to evaluate
+        other_modules.  Other modules in addition to numpy, np, math to import as well.
+                        Should be given as a list of strings.  [default: None]
 
-    @returns Whatever the string evaluates to.
+    Returns:
+        Whatever the string evaluates to.
     """
     # Python 2 and 3 have a different syntax for exec with globals() dict.
     # The exec_ function lets us use the Python 3 syntax even in Python 2.
@@ -1291,21 +1320,24 @@ def math_eval(str, other_modules=()):
 def binomial(a, b, n):
     """Return xy coefficients of (ax + by)^n ordered by descending powers of a.
 
-    For example:
+    Example::
 
-    # (x + y)^3 = 1 x^3 + 3 x^2 y + 3 x y^2 + 1 y^3
-    >>>  print(binomial(1, 1, 3))
-    array([ 1.,  3.,  3.,  1.])
+        # (x + y)^3 = 1 x^3 + 3 x^2 y + 3 x y^2 + 1 y^3
+        >>>  print(binomial(1, 1, 3))
+        array([ 1.,  3.,  3.,  1.])
 
 
-    # (2 x + y)^3 = 8 x^3 + 12 x^2 y + 6 x y^2 + 1 y^3
-    >>>  print(binomial(2, 1, 3))
-    array([ 8.,  12.,  6.,  1.])
+        # (2 x + y)^3 = 8 x^3 + 12 x^2 y + 6 x y^2 + 1 y^3
+        >>>  print(binomial(2, 1, 3))
+        array([ 8.,  12.,  6.,  1.])
 
-    @param a    First scalar in binomial to be expanded.
-    @param b    Second scalar in binomial to be expanded.
-    @param n    Exponent of expansion.
-    @returns    Array of coefficients in expansion.
+    Parameters:
+        a:      First scalar in binomial to be expanded.
+        b:      Second scalar in binomial to be expanded.
+        n:      Exponent of expansion.
+
+    Returns:
+        Array of coefficients in expansion.
     """
     b_over_a = float(b)/float(a)
     def generate():
@@ -1320,10 +1352,13 @@ def unweighted_moments(image, origin=None):
     """Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,
     but ignores any scale or wcs.
 
-    @param image    Image from which to compute moments
-    @param origin   Optional origin in image coordinates used to compute Mx and My
+    Parameters:
+        image:      Image from which to compute moments
+        origin:     Optional origin in image coordinates used to compute Mx and My
                     [default: galsim.PositionD(0, 0)].
-    @returns  Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
+
+    Returns:
+        Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
     """
     from .position import PositionD
     if origin is None:
@@ -1350,8 +1385,11 @@ def unweighted_shape(arg):
         e1 = (Mxx-Myy) / rsqr
         e2 = 2*Mxy / rsqr
 
-    @param arg   Either a galsim.Image or the output of unweighted_moments(image).
-    @returns  Dict with entries for [rsqr, e1, e2]
+    Parameters:
+        arg:    Either a galsim.Image or the output of unweighted_moments(image).
+
+    Returns:
+        Dict with entries for [rsqr, e1, e2]
     """
     from .image import Image
     if isinstance(arg, Image):
@@ -1367,12 +1405,15 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     it should be an array of length `n_choices` that ranges from 0-1, and can be used to make
     weighted choices from the list.
 
-    @param n           Number of random selections to make.
-    @param n_choices   Number of entries from which to choose.
-    @param rng         RNG to use.  Should be a galsim.BaseDeviate.
-    @param weight      Optional list of weight factors to use for weighting the selection of
-                       random indices.
-    @returns a NumPy array of length `n` containing the integer-valued indices that were selected.
+    Parameters:
+        n:          Number of random selections to make.
+        n_choices:  Number of entries from which to choose.
+        rng:        RNG to use.  Should be a galsim.BaseDeviate.
+        weight:     Optional list of weight factors to use for weighting the selection of
+                    random indices.
+
+    Returns:
+        a NumPy array of length `n` containing the integer-valued indices that were selected.
     """
     from .random import BaseDeviate, UniformDeviate
     # Make sure we got a proper RNG.
@@ -1578,14 +1619,16 @@ def find_out_of_bounds_position(x, y, bounds, grid=False):
     position that is out-of-bounds of the given bounds instance, return one
     such PositionD.
 
-    @param x  Array of x values
-    @param y  Array of y values
-    @param bounds  Bounds instance
-    @param grid  Bool indicating whether to check the outer product of x and y
-                 (grid=True), or each sequential pair of x and y (grid=False).
-                 If the latter, then x and y should have the same shape.
+    Parameters:
+        x:          Array of x values
+        y:          Array of y values
+        bounds:     Bounds instance
+        grid:       Bool indicating whether to check the outer product of x and y
+                    (grid=True), or each sequential pair of x and y (grid=False).
+                    If the latter, then x and y should have the same shape.
 
-    @returns a PositionD from x and y that is out-of-bounds of bounds.
+    Returns:
+        a PositionD from x and y that is out-of-bounds of bounds.
     """
     from .position import PositionD
     if grid:

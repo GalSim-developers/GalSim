@@ -25,7 +25,7 @@ can operate directly on "config" files, for those users who prefer not to work
 in python.  The impetus for the software package was a weak lensing community
 data challenge, called GREAT3:
 
-    http://great3challenge.info/
+http://great3challenge.info/
 
 However, the code has numerous additional capabilities beyond those needed for
 the challenge, and has been useful for a number of projects that needed to
@@ -37,17 +37,17 @@ the configuration files to generate simulations, a FAQ for installation issues,
 a link to Doxygen-generated documentation, and other useful references can be
 found on the GalSim wiki,
 
-    https://github.com/GalSim-developers/GalSim/wiki
+https://github.com/GalSim-developers/GalSim/wiki
 
 If you experience any issues with the software, or if you would like to file
 a feature request, please do so on the main github site for GalSim,
 
-    https://github.com/GalSim-developers/GalSim
+https://github.com/GalSim-developers/GalSim
 
 Finally, if you have questions about how to do something in GalSim, you may
 ask a question on StackOverflow,
 
-    http://stackoverflow.com/
+http://stackoverflow.com/
 
 Use the galsim tag to flag it as a question about GalSim.
 

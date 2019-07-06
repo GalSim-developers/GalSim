@@ -32,17 +32,19 @@ def Convolve(*args, **kwargs):
     ChromaticConvolution object is required to represent the convolution of surface
     brightness profiles.
 
-    @param args             Unnamed args should be a list of objects to convolve.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        args:               Unnamed args should be a list of objects to convolve.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    @returns a Convolution or ChromaticConvolution instance as appropriate.
+    Returns:
+        a Convolution or ChromaticConvolution instance as appropriate.
     """
     from .chromatic import ChromaticConvolution
     # First check for number of arguments != 0
@@ -71,44 +73,42 @@ class Convolution(GSObject):
     profiles, multiplying them together, and then transforming back to real space.
 
     There is also an option to do the convolution as integrals in real space.  To do this, use the
-    optional keyword argument `real_space = True`.  Currently, the real-space integration is only
+    optional keyword argument ```real_space = True``.  Currently, the real-space integration is only
     enabled for convolving 2 profiles.  (Aside from the trivial implementaion for 1 profile.)  If
     you try to use it for more than 2 profiles, an exception will be raised.
 
     The real-space convolution is normally slower than the DFT convolution.  The exception is if
     both component profiles have hard edges, e.g. a truncated Moffat or Sersic with a Pixel.  In
-    that case, the highest frequency `maxk` for each component is quite large since the ringing dies
-    off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
+    that case, the highest frequency ``maxk`` for each component is quite large since the ringing
+    dies off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
     real-space convolution tends to be more accurate in this case as well.
 
-    If you do not specify either `real_space = True` or `False` explicitly, then we check if there
-    are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space
-    convolution.  In all other cases, the default is not to use real-space convolution.
+    If you do not specify either ``real_space = True`` or ``False`` explicitly, then we check if
+    there are 2 profiles, both of which have hard edges.  In this case, we automatically use
+    real-space convolution.  In all other cases, the default is not to use real-space convolution.
 
-    Initialization
-    --------------
-
-    The normal way to use this class is to use the Convolve() factory function:
+    The normal way to use this class is to use the Convolve() factory function::
 
         >>> gal = galsim.Sersic(n, half_light_radius)
         >>> psf = galsim.Gaussian(sigma)
         >>> final = galsim.Convolve([gal, psf])
 
     The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
-    `Convolve(psf, gal)`) or as a list (e.g. `Convolve([psf, gal])`).  Any number of objects may
+    ``Convolve(psf, gal)``) or as a list (e.g. ``Convolve([psf, gal])``).  Any number of objects may
     be provided using either syntax.  (Well, the list has to include at least 1 item.)
 
-    @param args             Unnamed args should be a list of objects to convolve.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        args:               Unnamed args should be a list of objects to convolve.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    Note: if `gsparams` is unspecified (or None), then the Convolution instance will use the most
+    Note: if ``gsparams`` is unspecified (or None), then the Convolution instance will use the most
     restrictive combination of parameters from each of the component objects. Normally, this means
     the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
     parameters, the largest numerical value is used.  See GSParams.combine for details.
@@ -118,12 +118,8 @@ class Convolution(GSObject):
     sense to apply stricter-than-normal accuracy or threshold values to one component but not
     another in a Convolution, so this ensures that they all have consistent rendering behavior.
     However, if you want to keep the existing gsparams of the component objects, then you may
-    set `propagate_gsparams=False`.
+    set ``propagate_gsparams=False``.
 
-    Methods
-    -------
-
-    There are no additional methods for Convolution beyond the usual GSObject methods.
     """
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
@@ -247,8 +243,14 @@ class Convolution(GSObject):
                 # else len == 0, so just use _noise directly.
         return _noise
 
-    @doc_inherit
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        .. note::
+
+            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams
+            of each object being convolved.
+        """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
@@ -440,14 +442,16 @@ def Deconvolve(obj, gsparams=None, propagate_gsparams=True):
     ChromaticDeconvolution object is required to represent the deconvolution by a surface
     brightness profile.
 
-    @param obj              The object to deconvolve.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        obj:                The object to deconvolve.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the deconvolved object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the deconvolved object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    @returns a Deconvolution or ChromaticDeconvolution instance as appropriate.
+    Returns:
+        a Deconvolution or ChromaticDeconvolution instance as appropriate.
     """
     from .chromatic import ChromaticDeconvolution
     if isinstance(obj, ChromaticObject):
@@ -465,30 +469,24 @@ class Deconvolution(GSObject):
     or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,
     cannot be photon-shot using the 'phot' method of drawImage() method.
 
-    You may also specify a `gsparams` argument.  See the docstring for GSParams using
-    `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is
+    You may also specify a ``gsparams`` argument.  See the docstring for GSParams using
+    ``help(galsim.GSParams)`` for more information about this option.  Note: if ``gsparams`` is
     unspecified (or None), then the Deconvolution instance inherits the same GSParams as the object
     being deconvolved.
 
-    Initialization
-    --------------
-
-    The normal way to use this class is to use the Deconvolve() factory function:
+    The normal way to use this class is to use the Deconvolve() factory function::
 
         >>> inv_psf = galsim.Deconvolve(psf)
         >>> deconv_gal = galsim.Convolve(inv_psf, gal)
 
-    @param obj              The object to deconvolve.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        obj:                The object to deconvolve.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the deconvolved object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the deconvolved object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    Methods
-    -------
-
-    There are no additional methods for Deconvolution beyond the usual GSObject methods.
     """
     _has_hard_edges = False
     _is_analytic_x = False
@@ -521,8 +519,14 @@ class Deconvolution(GSObject):
             galsim_warn("Unable to propagate noise in galsim.Deconvolution")
         return None
 
-    @doc_inherit
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        .. note::
+
+            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams
+            of the wrapped component object.
+        """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
@@ -634,17 +638,19 @@ def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
     ChromaticAutoConvolution object is required to represent the convolution of a surface
     brightness profile with itself.
 
-    @param obj              The object to be convolved with itself.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        obj:                The object to be convolved with itself.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the auto-convolved object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the auto-convolved object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    @returns a AutoConvolution or ChromaticAutoConvolution instance as appropriate.
+    Returns:
+        a AutoConvolution or ChromaticAutoConvolution instance as appropriate.
     """
     from .chromatic import ChromaticAutoConvolution
     if isinstance(obj, ChromaticObject):
@@ -660,30 +666,24 @@ def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
 class AutoConvolution(Convolution):
     """A special class for convolving a GSObject with itself.
 
-    It is equivalent in functionality to `Convolve([obj,obj])`, but takes advantage of
+    It is equivalent in functionality to ``Convolve([obj,obj])``, but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
 
-    Initialization
-    --------------
-
-    The normal way to use this class is to use the AutoConvolve() factory function:
+    The normal way to use this class is to use the AutoConvolve() factory function::
 
         >>> psf_sq = galsim.AutoConvolve(psf)
 
-    @param obj              The object to be convolved with itself.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        obj:                The object to be convolved with itself.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the auto-convolved object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the auto-convolved object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    Methods
-    -------
-
-    There are no additional methods for AutoConvolution beyond the usual GSObject methods.
     """
     def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
         if not isinstance(obj, GSObject):
@@ -739,8 +739,14 @@ class AutoConvolution(Convolution):
             galsim_warn("Unable to propagate noise in galsim.AutoConvolution")
         return None
 
-    @doc_inherit
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        .. note::
+
+            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams
+            of the wrapped component object.
+        """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
@@ -792,17 +798,19 @@ def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
     ChromaticAutoCorrelation object is required to represent the correlation of a surface
     brightness profile with itself.
 
-    @param obj              The object to be convolved with itself.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        obj:                The object to be convolved with itself.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the auto-convorrelated object.
-                                This is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the auto-convorrelated object.
+                            This is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    @returns an AutoCorrelation or ChromaticAutoCorrelation instance as appropriate.
+    Returns:
+        an AutoCorrelation or ChromaticAutoCorrelation instance as appropriate.
     """
     from .chromatic import ChromaticAutoCorrelation
     if isinstance(obj, ChromaticObject):
@@ -818,34 +826,29 @@ def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
 class AutoCorrelation(Convolution):
     """A special class for correlating a GSObject with itself.
 
-    It is equivalent in functionality to
+    It is equivalent in functionality to::
+
         galsim.Convolve([obj,obj.createRotated(180.*galsim.degrees)])
+
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
 
     This class is primarily targeted for use by the CorrelatedNoise models when convolving
     with a GSObject.
 
-    Initialization
-    --------------
-
-    The normal way to use this class is to use the AutoCorrelate() factory function:
+    The normal way to use this class is to use the AutoCorrelate() factory function::
 
         >>> psf_sq = galsim.AutoCorrelate(psf)
 
-    @param obj              The object to be convolved with itself.
-    @param real_space       Whether to use real space convolution.  [default: None, which means
+    Parameters:
+        obj:                The object to be convolved with itself.
+        real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the auto-convorrelated object.
-                                This is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
-
-    Methods
-    -------
-
-    There are no additional methods for AutoCorrelation beyond the usual GSObject methods.
+        propagate_gsparams: Whether to propagate gsparams to the auto-convorrelated object.
+                            This is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
         if not isinstance(obj, GSObject):
@@ -901,8 +904,14 @@ class AutoCorrelation(Convolution):
             galsim_warn("Unable to propagate noise in galsim.AutoCorrelation")
         return None
 
-    @doc_inherit
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        .. note::
+
+            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams
+            of the wrapped component object.
+        """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)

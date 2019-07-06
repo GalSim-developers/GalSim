@@ -35,9 +35,6 @@ class Kolmogorov(GSObject):
 
         http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence
 
-    Initialization
-    --------------
-
     The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is
     the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
     Fried parameter.  Typical values for the Fried parameter are on the order of 0.1 m for
@@ -47,7 +44,7 @@ class Kolmogorov(GSObject):
     The natural units for this ratio is radians, which is not normally a convenient unit to use for
     other GSObject dimensions.  Assuming that the other sky coordinates you are using are all in
     arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
-    should convert this to arcsec as well:
+    should convert this to arcsec as well::
 
         >>> lam = 700  # nm
         >>> r0 = 0.15 * (lam/500)**1.2  # meters
@@ -56,60 +53,59 @@ class Kolmogorov(GSObject):
         >>> psf = galsim.Kolmogorov(lam_over_r0)
 
     To make this process a bit simpler, we recommend instead providing the wavelength and Fried
-    parameter separately using the parameters `lam` (in nm) and either `r0` or `r0_500` (in m).
-    GalSim will then convert this to any of the normal kinds of angular units using the
-    `scale_unit` parameter:
+    parameter separately using the parameters ``lam`` (in nm) and either ``r0`` or ``r0_500``
+    (in m).  GalSim will then convert this to any of the normal kinds of angular units using the
+    ``scale_unit`` parameter::
 
         >>> psf = galsim.Kolmogorov(lam=lam, r0=r0, scale_unit=galsim.arcsec)
 
-    or
+    or::
 
         >>> psf = galsim.Kolmogorov(lam=lam, r0_500=0.15, scale_unit=galsim.arcsec)
 
     When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
-    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as ``pixel_scale=0.2``.
 
-    A Kolmogorov object may also be initialized using `fwhm` or `half_light_radius`.  Exactly one
-    of these four ways to define the size is required.
+    A Kolmogorov object may also be initialized using ``fwhm`` or ``half_light_radius``.  Exactly
+    one of these four ways to define the size is required.
 
     The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 arcsec (e.g., Racine 1996, PASP 699, 108).
 
-    @param lam_over_r0      The parameter that governs the scale size of the profile.
-                            See above for details about calculating it. [One of `lam_over_r0`,
-                            `fwhm`, `half_light_radius`, or `lam` (along with either `r0` or
-                            `r0_500`) is required.]
-    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
-                            [One of `lam_over_r0`, `fwhm`, `half_light_radius`, or `lam` (along
-                            with either `r0` or `r0_500`) is required.]
-    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
-                            [One of `lam_over_r0`, `fwhm`, `half_light_radius`, or `lam` (along
-                            with either `r0` or `r0_500`) is required.]
-    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
-                            either `r0` or `r0_500`, and in this case, image scales (`scale`)
-                            should be specified in units of `scale_unit`.
-    @param r0               The Fried parameter in units of meters.  Must be supplied with `lam`,
-                            and in this case, image scales (`scale`) should be specified in units
-                            of `scale_unit`.
-    @param r0_500           The Fried parameter in units of meters at 500 nm.  The Fried parameter
-                            at the given wavelength, `lam`, will be computed using the standard
+    Parameters:
+        lam_over_r0:        The parameter that governs the scale size of the profile.
+                            See above for details about calculating it. [One of ``lam_over_r0``,
+                            ``fwhm``, ``half_light_radius``, or ``lam`` (along with either ``r0`` or
+                            ``r0_500``) is required.]
+        fwhm:               The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of ``lam_over_r0``, ``fwhm``, ``half_light_radius``, or ``lam``
+                            (along with either ``r0`` or ``r0_500``) is required.]
+        half_light_radius:  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of ``lam_over_r0``, ``fwhm``, ``half_light_radius``, or ``lam``
+                            (along with either ``r0`` or ``r0_500``) is required.]
+        lam:                Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            either ``r0`` or ``r0_500``, and in this case, image scales (``scale``)
+                            should be specified in units of ``scale_unit``.
+        r0:                 The Fried parameter in units of meters.  Must be supplied with ``lam``,
+                            and in this case, image scales (``scale``) should be specified in units
+                            of ``scale_unit``.
+        r0_500:             The Fried parameter in units of meters at 500 nm.  The Fried parameter
+                            at the given wavelength, ``lam``, will be computed using the standard
                             relation r0 = r0_500 * (lam/500)**1.2.
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param scale_unit       Units to use for the sky coordinates when calculating lam/r0 if these
+        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
+        scale_unit:         Units to use for the sky coordinates when calculating lam/r0 if these
                             are supplied separately.  Note that the results of calling methods like
-                            getFWHM() will be returned in units of `scale_unit` as well.  Should be
-                            either a galsim.AngleUnit or a string that can be used to construct one
-                            (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            getFWHM() will be returned in units of ``scale_unit`` as well.  Should
+                            be either a galsim.AngleUnit or a string that can be used to construct
+                            one (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-
-    Methods and Properties
-    ----------------------
 
     In addition to the usual GSObject methods, Kolmogorov has the following access properties:
 
-        >>> lam_over_r0 = kolm.lam_over_r0
-        >>> fwhm = kolm.fwhm
-        >>> hlr = kolm.half_light_radius
+    Attributes:
+        lam_over_r0:        The input ratio lambda / r0
+        fwhm:               The full-width half-max size
+        half_light_radius:  The half-light radius
     """
     _req_params = {}
     _opt_params = { "flux" : float, "r0" : float, "r0_500" : float, "scale_unit" : str }
