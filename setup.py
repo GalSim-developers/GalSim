@@ -956,7 +956,7 @@ except OSError:
     build_dep += ['cython', 'eigency>=1.77']
 
 
-with open('README.md') as file:
+with open('README.rst') as file:
     long_description = file.read()
 
 # Read in the galsim version from galsim/_version.py

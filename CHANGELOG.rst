@@ -21,14 +21,14 @@ New Features
 - Enabled Zernikes up to 22 (previously 11) in WFIRST PSFs, and added dependence on position
   within the SCA. (#919)
 - Added WFIRST fermi persistence model. (#992)
-- Added `r0_500` argument to VonKarman. (#1005)
-- Added array versions of `wcs.toWorld` and `wcs.toImage`. (#1026)
+- Added ``r0_500`` argument to VonKarman. (#1005)
+- Added array versions of ``wcs.toWorld`` and ``wcs.toImage``. (#1026)
 - Exposed some methods of Interpolants that had only been in the C++ layer. (#1038)
 
 Bug Fixes
 ---------
 
-- Fixed error in `wcs.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
+- Fixed error in ``wcs.makeSkyImage`` when crossing ra=0 line for some WCS classes. (#1030)
 - Fixed slight error in the realized flux of some profiles when using photon shooting.
   The bug was most apparent for Kolmogorov and VonKarman, where the realized flux
   could be too small by about 1.e-3. (#1036)

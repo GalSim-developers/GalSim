@@ -1,23 +1,19 @@
 Below is a summary of the major changes with each new tagged version of GalSim.
 Each version may also include various other minor changes and bug fixes not
-listed here for brevity.  See the CHANGLELOG.md files associated with each
+listed here for brevity.  See the CHANGLELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
-
-
 v2.1
-====
+----
 
-Deprecated Features
--------------------
+*Deprecated Features*
 
 - Deprecated PhaseScreenPSF attributes img and finalized. (#990)
 - Deprecated GSParams items allowed_flux_variation, small_fraction_of_flux,
   and range_division_for_extreama. (#993)
 
-New Features
-------------
+*New Features*
 
 - Added RandomWalk profile option. (#821)
 - Added spline as LookupTable2D interpolant. (#982)
@@ -25,8 +21,7 @@ New Features
 - Added option for faster grid interpolation of LookupTable2D. (#982)
 - Added offset and flux_ratio options to WCS.toWorld and toImage. (#993)
 
-Bug Fixes
----------
+*Bug Fixes*
 
 - Corrected the diffusion functional form in SiliconSensor. (#981)
 - Fixed a bug in the PhaseScreenPSF withGSParams function. (#990)
@@ -41,15 +36,13 @@ Bug Fixes
 
 
 v2.0
-====
+----
 
-Installation Changes
---------------------
+*Installation Changes*
 
 - Now installable via pip or setup.py install. (#809)
 
-Dependency Changes
-------------------
+*Dependency Changes*
 
 - Officially no longer support Python 2.6 or 3.4. (#755)
 - No longer support pre-astropy versions of pyfits or astropy <v1.0 (#755)
@@ -60,8 +53,7 @@ Dependency Changes
 - Added dependency on pybind11 for setup.py installations. (#809)
 - Added dependency on Eigen for setup.py installations. (#809)
 
-API Changes
------------
+*API Changes*
 
 - Changed the default maximum_fft_size to 8192 from 4096. (#755)
 - Changed the order of arguments of galsim.wfirst.allDetectorEffects. (#755)
@@ -71,13 +63,11 @@ API Changes
 - Removed lsst module, which was broken. (#964)
 - Changed how gsparams work for objects that wrap other objects. (#968)
 
-Deprecated Features
--------------------
+*Deprecated Features*
 
 - Removed all features deprecated in 1.x versions.
 
-New Features
-------------
+*New Features*
 
 - Changed errors to raise a GalSimError or a subclass thereof. (#755)
 - Changed the type of warnings raised by GalSim to GalSimWarning. (#755)
@@ -85,17 +75,15 @@ New Features
 
 
 v1.6
-====
+----
 
-API Changes
------------
+*API Changes*
 
 - Delayed AtmosphericScreen instantiation until its first use. (#864)
 - Simplified return values of NFWHalo and PowerSpectrum methods. (#855)
 - Simplified return value of LookupTable, SED and Bandpass access. (#955)
 
-Bug Fixes
----------
+*Bug Fixes*
 
 - Fixed error in amplitude of phase screens created by AtmosphericScreen (#864)
 - Fixed a bug in the DES MEDS writer setting the cutout row/col wrong. (#928)
@@ -104,16 +92,14 @@ Bug Fixes
 - Fixed a few minor bugs in the Silicon code. (#963)
 - Fixed a bug in the SED.thin() rel_err value. (#963)
 
-Deprecated Features
--------------------
+*Deprecated Features*
 
 - Deprecated passing Image arguments to kappaKaiserSquires function. (#855)
 - Deprecated the interpolant argument for PowerSpectrum methods getShear,
   getConvergence, getMagnification, and getLensing. (#855)
 - Deprecated PowerSpectrum.subsampleGrid. (#855)
 
-New Features
-------------
+*New Features*
 
 - Added Zernike submodule. (#832, #951)
 - Updated PhaseScreen to accept None as a valid time argument. (#864)
@@ -127,10 +113,9 @@ New Features
 
 
 v1.5
-====
+----
 
-API Changes
------------
+*API Changes*
 
 - Simplified the return value of galsim.config.ReadConfig. (#580)
 - Changed return type of RealGalaxyCatalog.getGal and getPSF. (#640)
@@ -143,14 +128,12 @@ API Changes
 - Switched galsim.Image(image) to make a copy rather than a view. (#873)
 - Changed the behavior of RealGalaxyCatalog.preload (#884)
 
-Dependency Changes
-------------------
+*Dependency Changes*
 
 - Added astropy as a required dependency for chromatic functionality. (#789)
 - Switched scons tests test runner from nosetests to pytest. (#892)
 
-Bug Fixes
----------
+*Bug Fixes*
 
 - Fixed parity mistake in configuration of WFIRST focal plane. (#675)
 - Fixed an error in the magnification calculated by NFWHalo.getLensing(). (#580)
@@ -160,8 +143,7 @@ Bug Fixes
 - Fixed bug in GSFitsWCS that made toImage sometimes fail to converge. (#880)
 - Fixed bug that could cause Kolmogorov to go into an endless loop. (#952)
 
-Deprecated Features
--------------------
+*Deprecated Features*
 
 - Deprecated simReal function. (#787)
 - Deprecated Chromatic class. (#789)
@@ -208,8 +190,7 @@ Deprecated Features
     - image.trueCenter() -> image.true_center
     - image.origin() -> image.origin
 
-New Features
-------------
+*New Features*
 
 - Added DeltaFunction. (#533)
 - Added ChromaticRealGalaxy. (#640)
@@ -249,8 +230,7 @@ New Features
 - Added recenter option to drawKImage. (#873)
 - Added option to use circular weight function in HSM moments. (#917)
 
-New config features
--------------------
+*New config features*
 
 - Changed galsim.config.CalculateNoiseVar to CalculateNoiseVariance. (#820)
 - Setting config['rng'] is no longer required when manually running commands
@@ -269,22 +249,19 @@ New config features
 
 
 v1.4
-====
+----
 
-API Changes
------------
+*API Changes*
 
 - Changed the galsim.Bandpass and galsim.SED classes to require formerly
   optional keywords wave_type and flux_type. (#745)
 
-Dependency Changes
-------------------
+*Dependency Changes*
 
 - Added future module as a dependency. (#534)
 - Changed PyYAML to a non-optional dependency. (#768)
 
-Bug Fixes
----------
+*Bug Fixes*
 
 - Improved ability of galsim.fits.read to handle invalid FITS headers. (#602)
 - Fixed bug in des module, building meds file with wcs from input images. (#654)
@@ -303,13 +280,11 @@ Bug Fixes
 - Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)
 - Changed an assert in the HSM module to an exception. (#784)
 
-Deprecated Features
--------------------
+*Deprecated Features*
 
 - Deprecated the gal.type=Ring option in the config files. (#698)
 
-New Features
-------------
+*New Features*
 
 - Added OutputCatalog class. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM. (#308)
@@ -338,15 +313,13 @@ New Features
 - Made Bandpass.thin() and truncate() preserve the zeropoint. (#711)
 - Added version information to the compiled C++ library. (#750)
 
-Updates to galsim executable
-----------------------------
+*Updates to galsim executable*
 
 - Dropped default verbosity from 2 to 1. (#691)
 - Added galsim -n njobs -j jobnum to split run into multiple jobs. (#691)
 - Added galsim -p to perform profiling on the run. (#691)
 
-New config features
--------------------
+*New config features*
 
 - Added ability to write truth catalogs using output.truth field. (#301, #691)
 - Improved the extensibility of the config parsing. (#691, #774)
@@ -359,15 +332,13 @@ New config features
 
 
 v1.3
-====
+----
 
-Installation Changes
---------------------
+*Installation Changes*
 
 - Require functionality in TMV 0.72. (#616)
 
-API Changes
------------
+*API Changes*
 
 - Changed the name of the bounds.addBorder() method to withBorder. (#218)
 - Removed (from the python layer) Interpolant2d and InterpolantXY. (#218)
@@ -384,8 +355,7 @@ API Changes
 - Added function to interleave a set of dithered images into a single
   higher-resolution image. (#666)
 
-New Features
-------------
+*New Features*
 
 - Made all GalSim objects picklable unless they use fundamentally unpicklable
   things such as lambda expressions, improved str and repr representations,
@@ -422,8 +392,7 @@ New Features
 - Enabled constructing a FitsHeader object from a list of (key, value) pairs,
   which preserves the order of the items in the header. (#672)
 
-Bug Fixes and Improvements
---------------------------
+*Bug Fixes and Improvements*
 
 - Fixed a bug in the normalization of SEDs that use wave_type='A'. (#218)
 - Switched the sign of the angle returned by CelestialCoord.angleBetween.
@@ -442,8 +411,7 @@ Bug Fixes and Improvements
   ChromaticConvolution.drawImage to speed up the rendering of groups
   of similar (same SED, same Bandpass, same PSF) chromatic profiles. (#670)
 
-Updates to config options
--------------------------
+*Updates to config options*
 
 - Added COSMOSGalaxy type, with corresponding cosmos_catalog input type. (#590)
 - Added Spergel type. (#616)
@@ -452,10 +420,9 @@ Updates to config options
 
 
 v1.2
-====
+----
 
-New Features
-------------
+*New Features*
 
 - Changed name of noise whitening routine from noise.applyWhiteningTo(image)
   to image.whitenNoise(noise). (#529)
@@ -471,8 +438,7 @@ New Features
 - Added nx, ny, and bounds keywords to drawImage() and drawKImage()
   methods. (#603)
 
-Bug Fixes and Improvements
---------------------------
+*Bug Fixes and Improvements*
 
 - Improved efficiency of noise generation by correlated noise models. (#563)
 - Modified BoundsI and PositionI initialization to ensure that integer elements
@@ -492,8 +458,7 @@ Bug Fixes and Improvements
 - Fixed a bug where the dtype of an Image could change when resizing. (#604)
 - Defined a hidden __version__ attribute according to PEP 8 standards. (#610)
 
-Updates to config options
--------------------------
+*Updates to config options*
 
 - Moved noise whitening option from being an attribute of the RealGalaxy class,
   to being a part of the description of the noise. (#529)
@@ -502,10 +467,9 @@ Updates to config options
 
 
 v1.1
-====
+----
 
-Non-backward-compatible API changes
------------------------------------
+*Non-backward-compatible API changes*
 
 - Changed Pixel to take a single scale parameter. (#364)
 - Added new Box class. (#364)
@@ -515,8 +479,7 @@ Non-backward-compatible API changes
 - Merged the GSParams parameters shoot_relerr and shoot_abserr into the
   parameters integration_relerr and integration_abserr. (#535)
 
-Other changes to the API
-------------------------
+*Other changes to the API*
 
 - Changed the name of the dx parameter in various places to scale. (#364)
 - Combined the old Image, ImageView and ConstImageView arrays of class
@@ -531,8 +494,7 @@ Other changes to the API
   with more options about how the profile should be rendered. (#535)
 - Changed the name of drawK to drawKImage. (#535)
 
-New Features
-------------
+*New Features*
 
 - Added new set of WCS classes. (#364)
 - Added CelestialCoord class to represent (ra,dec) coordinates. (#364)
@@ -543,14 +505,12 @@ New Features
 - Modified addNoiseSNR() method to return the added variance. (#526)
 - Added dtype option to drawImage and drawKImage. (#526)
 
-Bug fixes and improvements
---------------------------
+*Bug fixes and improvements*
 
 - Sped up the gzip and bzip2 I/O. (#344)
 - Fixed some bugs in the treatment of correlated noise. (#526, #528)
 
-Updates to config options
--------------------------
+*Updates to config options*
 
 - Added more options for image.wcs field. (#364)
 - Changed the name of sky_pos to world_pos. (#364)
@@ -571,10 +531,9 @@ Updates to config options
 
 
 v1.0
-====
+----
 
-Notable bug fixes and improvements
-----------------------------------
+*Notable bug fixes and improvements*
 
 - Fixed bug in the rendering of shifted images. (#424)
 - Improved the fidelity of the Lanczos conserve_dc=True option. (#442)
@@ -591,8 +550,7 @@ Notable bug fixes and improvements
   invalidated when a new input item should have invalidated them.
 - Fixed a bug in the drawing of a Pixel all by itself. (#497)
 
-New features
-------------
+*New features*
 
 - Added galsim executable (instead of galsim_yaml, galsim_json). (#460)
 - Updated the allowed range for Sersic n to 0.3 -- 6.2. (#325)
@@ -606,8 +564,7 @@ New features
 - Removed des module from default imports of GalSim.  Now need to import
   galsim.des explicitly or load with galsim -m des ... (#460)
 
-Updates to config options
--------------------------
+*Updates to config options*
 
 - Added RealGalaxyOriginal galaxy type. (#389)
 - Added whiten option for RealGalaxy objects. (#430)
@@ -619,10 +576,9 @@ Updates to config options
 
 
 v0.5
-====
+----
 
-New features
-------------
+*New features*
 
 - Added Shapelet class. (#350)
 - Added ability to truncate Sersic profiles. (#388)
@@ -643,15 +599,13 @@ New features
 - Add new function galsim.fits.writeFile. (#417)
 - Added LINKFLAGS SCons option. (#380)
 
-Updates to config
------------------
+*Updates to config*
 
 - Added index_convention option. (#380)
 - Changed the name of the center item for the Scattered image type to
   image_pos, and added a new sky_pos item. (#380)
 
-Bug fixes
----------
+*Bug fixes*
 
 - Fix some errors related to writing to an HDUList. (#417)
 - Fixed ringing when Sersic objectss were drawn with FFTs. (#426)
@@ -662,7 +616,7 @@ Bug fixes
 
 
 v0.4
-====
+----
 
 - Added ability to pad images for InterpolatedImage or RealGalaxy with either
   correlated or uncorrelated noise. (#238)
@@ -680,7 +634,7 @@ v0.4
 
 
 v0.3
-====
+----
 
 - Fixed several bugs in the Sersic class that had been causing ringing.
   (#319, #330)
@@ -699,7 +653,7 @@ v0.3
 
 
 v0.2
-====
+----
 
 - Significant revamping and commenting of demos, including both python and
   config versions (#243, #285, #289).
@@ -713,6 +667,6 @@ v0.2
 
 
 v0.1
-====
+----
 
 Initial version of GalSim with most of the basic functionality.

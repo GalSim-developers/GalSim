@@ -292,7 +292,7 @@ def ErrorExit(*args, **kwargs):
 
     print()
     print('Please fix the above error(s) and rerun scons.')
-    print('Note: you may want to look through the file INSTALL.md for advice.')
+    print('Note: you may want to look through the file INSTALL.rst for advice.')
     print('Also, if you are having trouble, please check the INSTALL FAQ at ')
     print('   https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ')
     print()
