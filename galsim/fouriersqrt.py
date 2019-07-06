@@ -39,14 +39,16 @@ def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
     ChromaticFourierSqrtProfile object is required to represent the operation applied to a surface
     brightness profile.
 
-    @param obj              The object to compute the Fourier-space square root of.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        obj:                The object to compute the Fourier-space square root of.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
+    Returns:
+        a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
     """
     from .chromatic import ChromaticFourierSqrtProfile
     if isinstance(obj, ChromaticObject):
@@ -66,29 +68,22 @@ class FourierSqrtProfile(GSObject):
     FourierSqrtProfile as one of the components cannot be photon-shot using the 'phot' method of
     drawImage() method.
 
-    You may also specify a `gsparams` argument.  See the docstring for GSParams using
-    `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is
+    You may also specify a ``gsparams`` argument.  See the docstring for GSParams using
+    ``help(galsim.GSParams)`` for more information about this option.  Note: if ``gsparams`` is
     unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the
     object being operated on.
 
-    Initialization
-    --------------
-
-    The normal way to use this class is to use the FourierSqrt() factory function:
+    The normal way to use this class is to use the FourierSqrt() factory function::
 
         >>> fourier_sqrt = galsim.FourierSqrt(obj)
 
-    @param obj              The object to compute Fourier-space square root of.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        obj:                The object to compute Fourier-space square root of.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to the transformed object.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
-
-    Methods
-    -------
-
-    There are no additional methods for FourierSqrtProfile beyond the usual GSObject methods.
+        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
     """
     _sqrt2 = 1.4142135623730951
 
@@ -121,8 +116,14 @@ class FourierSqrtProfile(GSObject):
             galsim_warn("Unable to propagate noise in galsim.FourierSqrtProfile")
         return None
 
-    @doc_inherit
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        .. note::
+
+            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams
+            of the wrapped component object.
+        """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)

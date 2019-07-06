@@ -34,7 +34,10 @@ def noll_to_zern(j):
     Convert linear Noll index to tuple of Zernike indices.
     j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
     index.
-    @param [in] j Zernike mode Noll index
+
+    Parameters:
+        j:      Zernike mode Noll index
+
     @return (n, m) tuple of Zernike indices
     @see <https://oeis.org/A176988>.
     """
@@ -87,13 +90,15 @@ def _zern_coef_array(n, m, obscuration, shape):
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
 
-    @param n            Zernike radial coefficient
-    @param m            Zernike azimuthal coefficient
-    @param obscuration  Linear obscuration fraction.
-    @param shape        Output array shape
+    Parameters:
+        n:              Zernike radial coefficient
+        m:              Zernike azimuthal coefficient
+        obscuration:    Linear obscuration fraction.
+        shape:          Output array shape
 
-    @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
-                disk coordinates.
+    Returns:
+        2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+        disk coordinates.
     """
     out = np.zeros(shape, dtype=np.complex128)
     if 0 < obscuration < 1:
@@ -115,11 +120,13 @@ def __noll_coef_array(jmax, obscuration):
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
 
-    @param jmax         Maximum Noll coefficient
-    @param obscuration  Linear obscuration fraction.
+    Parameters:
+        jmax:           Maximum Noll coefficient
+        obscuration:    Linear obscuration fraction.
 
-    @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
-                disk coordinates.
+    Returns:
+        2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+        disk coordinates.
     """
     maxn = noll_to_zern(jmax)[0]
     shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2,  max power of rho, noll index-1)
@@ -231,10 +238,12 @@ def __noll_coef_array_xy(jmax, obscuration):
     """Assemble coefficient array for evaluating Zernike (n, m) as a bivariate polynomial in
     x and y.
 
-    @param jmax         Maximum Noll coefficient
-    @param obscuration  Linear obscuration fraction.
+    Parameters:
+        jmax:           Maximum Noll coefficient
+        obscuration:    Linear obscuration fraction.
 
-    @returns    2D array of coefficients in x and y.
+    Returns:
+        2D array of coefficients in x and y.
     """
     maxn, _ = noll_to_zern(jmax)
     shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index)
@@ -252,10 +261,12 @@ def __noll_coef_array_xy_gradx(jmax, obscuration):
     """Assemble coefficient array for evaluating the x-derivative of Zernike (n, m) as a bivariate
     polynomial in x and y.
 
-    @param jmax         Maximum Noll coefficient
-    @param obscuration  Linear obscuration fraction.
+    Parameters:
+        jmax:           Maximum Noll coefficient
+        obscuration:    Linear obscuration fraction.
 
-    @returns    2D array of coefficients in x and y.
+    Returns:
+        2D array of coefficients in x and y.
     """
     maxn, _ = noll_to_zern(jmax)
     shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index)
@@ -273,10 +284,12 @@ def __noll_coef_array_xy_grady(jmax, obscuration):
     """Assemble coefficient array for evaluating the y-derivative of Zernike (n, m) as a bivariate
     polynomial in x and y.
 
-    @param jmax         Maximum Noll coefficient
-    @param obscuration  Linear obscuration fraction.
+    Parameters:
+        jmax:           Maximum Noll coefficient
+        obscuration:    Linear obscuration fraction.
 
-    @returns    2D array of coefficients in x and y.
+    Returns:
+        2D array of coefficients in x and y.
     """
     maxn = noll_to_zern(jmax)[0]
     shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index-1)
@@ -388,7 +401,7 @@ class Zernike(object):
 
     Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is
     for the normality constant to equal the area of integration, which is pi for the unit circle.
-    I.e.,
+    I.e.,::
 
         \int_{unit circle} Z_i Z_j dA = \pi \delta_{i, j}.
 
@@ -398,7 +411,7 @@ class Zernike(object):
     Annular Zernikes are orthonormal over an annulus instead of a circle (see Mahajan, J. Opt. Soc.
     Am. 71, 1, (1981)).  Similarly, the non-unit-radius polynomials are orthonormal over a region
     with outer radius not equal to 1.  Taken together, these generalizations yield the
-    orthonormality condition:
+    orthonormality condition::
 
         \int_{annulus} Z_i Z_j dA = \pi (R_outer^2 - R_inner^2) \delta_{i, j}
 
@@ -413,18 +426,21 @@ class Zernike(object):
 
     As an example, the first few Zernike polynomials in terms of Cartesian coordinates x and y are
 
-        Noll index  |  polynomial
-        --------------------------
-             1      |      1
-             2      |      2 x
-             3      |      2 y
-             4      |  sqrt(3) (2 (x^2 + y^2) - 1)
+    ==========      ===========================
+    Noll index            Polynomial
+    ==========      ===========================
+         1                  1
+         2                  2 x
+         3                  2 y
+         4          sqrt(3) (2 (x^2 + y^2) - 1)
+    ==========      ===========================
 
-    @param coef     Zernike series coefficients.  Note that coef[i] corresponds to Z_i under the
+    Parameters:
+        coef:       Zernike series coefficients.  Note that coef[i] corresponds to Z_i under the
                     Noll index convention, and coef[0] is ignored.  (I.e., coef[1] is 'piston',
                     coef[4] is 'defocus', ...)
-    @param R_outer  Outer radius.  [default: 1.0]
-    @param R_inner  Inner radius.  [default: 0.0]
+        R_outer:    Outer radius.  [default: 1.0]
+        R_inner:    Inner radius.  [default: 0.0]
     """
     def __init__(self, coef, R_outer=1.0, R_inner=0.0):
         self.coef = np.asarray(coef, dtype=float)
@@ -476,19 +492,25 @@ class Zernike(object):
     def evalCartesian(self, x, y):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
 
-        @param x  x-coordinate of evaluation points.  Can be list-like.
-        @param y  y-coordinate of evaluation points.  Can be list-like.
-        @returns  Series evaluations as numpy array.
+        Parameters:
+            x:    x-coordinate of evaluation points.  Can be list-like.
+            y:    y-coordinate of evaluation points.  Can be list-like.
+
+        Returns:
+            Series evaluations as numpy array.
         """
         return horner2d(x, y, self._coef_array_xy, dtype=float)
 
     def evalPolar(self, rho, theta):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
 
-        @param rho    radial coordinate of evaluation points.  Can be list-like.
-        @param theta  azimuthal coordinate in radians (or as Angle object) of evaluation points.
+        Parameters:
+            rho:      radial coordinate of evaluation points.  Can be list-like.
+            theta:    azimuthal coordinate in radians (or as Angle object) of evaluation points.
                       Can be list-like.
-        @returns  Series evaluations as numpy array.
+
+        Returns:
+            Series evaluations as numpy array.
         """
         x = rho * np.cos(theta)
         y = rho * np.sin(theta)
@@ -498,14 +520,19 @@ class Zernike(object):
         return self.gradX.evalCartesian(x, y), self.gradY.evalCartesian(x, y)
 
     def rotate(self, theta):
-        """Return new Zernike polynomial series rotated by angle theta.  For example:
+        """Return new Zernike polynomial series rotated by angle theta.
+
+        For example::
 
             >>> Z = Zernike(coefs)
             >>> Zrot = Z.rotate(theta)
             >>> Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)
 
-        @param theta  Angle in radians.
-        @returns  A new Zernike object.
+        Parameters:
+            theta:    Angle in radians.
+
+        Returns:
+            A new Zernike object.
         """
 
         M = zernikeRotMatrix(len(self.coef)-1, theta)
@@ -535,7 +562,9 @@ class Zernike(object):
 def zernikeRotMatrix(jmax, theta):
     """Construct Zernike basis rotation matrix.  This matrix can be used to convert a set of Zernike
     polynomial series coefficients expressed in one coordinate system to an equivalent set of
-    coefficients expressed in a rotated coordinate system.  For example:
+    coefficients expressed in a rotated coordinate system.
+
+    For example::
 
         >>> Z = Zernike(coefs)
         >>> R = zernikeRotMatrix(jmax, theta)
@@ -553,9 +582,12 @@ def zernikeRotMatrix(jmax, theta):
     start at 0, we adopt the convention that `coef[0]` is unused, and `coef[i]` corresponds to the
     coefficient multiplying Z_i.  As a result, the size of the returned matrix is [jmax+1, jmax+1].
 
-    @param jmax  Maximum Zernike index (in the Noll convention) over which to construct matrix.
-    @param theta  Angle of rotation in radians.
-    @returns  Matrix of size [jmax+1, jmax+1].
+    Parameters:
+        jmax:   Maximum Zernike index (in the Noll convention) over which to construct matrix.
+        theta:  Angle of rotation in radians.
+
+    Returns:
+        Matrix of size [jmax+1, jmax+1].
     """
     # Use formula from Tatulli (2013) arXiv:1302.7106v1
 
@@ -592,14 +624,16 @@ def zernikeRotMatrix(jmax, theta):
 
 def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     """Construct basis of Zernike polynomial series up to Noll index `jmax`, evaluated at a specific
-    set of points `x` and `y`.  Useful for fitting Zernike polynomials to data, e.g.,
+    set of points `x` and `y`.
+
+    Useful for fitting Zernike polynomials to data, e.g.::
 
         >>> x, y, z = myDataToFit()
         >>> basis = zernikeBasis(11, x, y)
         >>> coefs, _, _, _ = np.linalg.lstsq(basis.T, z)
         >>> resids = Zernike(coefs).evalCartesian(x, y) - z
 
-        or equivalently
+    or equivalently::
 
         >>> resids = basis.T.dot(coefs).T - z
 
@@ -609,13 +643,16 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     dimension with 0s (result[0, ...] == 0) so that it doesn't impact the results of np.linalg.lstsq
     as in the example above.
 
-    @param  jmax     Maximum Noll index to use.
-    @param  x        x-coordinates (can be list-like, congruent to y)
-    @param  y        y-coordinates (can be list-like, congruent to x)
-    @param  R_outer  Outer radius.  [default: 1.0]
-    @param  R_inner  Inner radius.  [default: 0.0]
-    @returns  [jmax+1, x.shape] array.  Slicing over first index gives basis vectors corresponding
-              to individual Zernike polynomials.
+    Parameters:
+         jmax:      Maximum Noll index to use.
+         x:         x-coordinates (can be list-like, congruent to y)
+         y:         y-coordinates (can be list-like, congruent to x)
+         R_outer:   Outer radius.  [default: 1.0]
+         R_inner:   Inner radius.  [default: 0.0]
+
+    Returns:
+        [jmax+1, x.shape] array.  Slicing over first index gives basis vectors corresponding
+        to individual Zernike polynomials.
     """
     R_outer = float(R_outer)
     R_inner = float(R_inner)

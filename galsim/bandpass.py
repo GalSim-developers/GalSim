@@ -89,15 +89,16 @@ class Bandpass(object):
     that the zeropoint attribute does not propagate if you get a new Bandpass by multiplying or
     dividing an old Bandpass.
 
-    @param throughput   Function defining the throughput at each wavelength.  See above for
+    Parameters:
+        throughput:     Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
-    @param wave_type    The units to use for the wavelength argument of the `throughput`
+        wave_type:      The units to use for the wavelength argument of the `throughput`
                         function. See above for details.
-    @param blue_limit   Hard cut off of bandpass on the blue side. [default: None, but required
+        blue_limit:     Hard cut off of bandpass on the blue side. [default: None, but required
                         if throughput is not a LookupTable or file.  See above.]
-    @param red_limit    Hard cut off of bandpass on the red side. [default: None, but required
+        red_limit:      Hard cut off of bandpass on the red side. [default: None, but required
                         if throughput is not a LookupTable or file.  See above.]
-    @param zeropoint    Set the zero-point for this Bandpass.  Here, this can only be a float
+        zeropoint:      Set the zero-point for this Bandpass.  Here, this can only be a float
                         value.  See the method `withZeropoint` for other options for how to
                         set this using a particular spectrum (AB, Vega, etc.) [default: None]
     """
@@ -324,9 +325,11 @@ class Bandpass(object):
         Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
         attributes, the throughput is assumed to be zero.
 
-        @param wave   Wavelength in nanometers. (Either a scalar or a numpy array)
+        Parameters:
+            wave:       Wavelength in nanometers. (Either a scalar or a numpy array)
 
-        @returns the dimensionless throughput.
+        Returns:
+            the dimensionless throughput.
         """
         wave = np.asarray(wave)
         if wave.shape == ():
@@ -349,7 +352,8 @@ class Bandpass(object):
         the effective wavelength as the throughput-weighted average wavelength, which is
         SED-independent.  Units are nanometers.
 
-        @param precise  Optionally use a more precise integration method when the bandpass uses
+        Parameters:
+            precise:    Optionally use a more precise integration method when the bandpass uses
                         a LookupTable rather than the normal trapezoid rule. [default: False]
         """
         if not hasattr(self, '_effective_wavelength') or precise:
@@ -382,9 +386,11 @@ class Bandpass(object):
         4. the string 'Vega'.  Use a Vega zeropoint.
         5. the string 'ST'.  Use a HST STmag zeropoint.
 
-        @param zeropoint            see above for valid input options
+        Parameters:
+            zeropoint:      See above for valid input options
 
-        @returns new Bandpass with zeropoint set.
+        Returns:
+            new Bandpass with zeropoint set.
         """
         # Convert `zeropoint` from str to galsim.SED.
         if isinstance(zeropoint, str):
@@ -442,18 +448,19 @@ class Bandpass(object):
         same zeropoint as the original.  This default behavior is called 'auto'.  The user can also
         give boolean True or False values.
 
-        @param blue_limit           Truncate blue side of bandpass at this wavelength in nm.
+        Parameters:
+            blue_limit:             Truncate blue side of bandpass at this wavelength in nm.
                                     [default: None]
-        @param red_limit            Truncate red side of bandpass at this wavelength in nm.
+            red_limit:              Truncate red side of bandpass at this wavelength in nm.
                                     [default: None]
-        @param relative_throughput  Truncate leading or trailing wavelengths that are below
+            relative_throughput:    Truncate leading or trailing wavelengths that are below
                                     this relative throughput level.  (See above for details.)
                                     Either `blue_limit` and/or `red_limit` should be supplied, or
                                     `relative_throughput` should be supplied -- but
                                     `relative_throughput` should not be combined with one of the
                                     limits.
                                     [default: None]
-        @param preserve_zp          If True, the new truncated Bandpass will be assigned the same
+            preserve_zp:            If True, the new truncated Bandpass will be assigned the same
                                     zeropoint as the original.  If False, the new truncated Bandpass
                                     will have a zeropoint of None. If 'auto', the new truncated
                                     Bandpass will have the same zeropoint as the original when
@@ -461,7 +468,8 @@ class Bandpass(object):
                                     zeropoint of None when truncating using 'blue_limit' and/or
                                    'red_limit'.  [default: 'auto']
 
-        @returns the truncated Bandpass.
+        Returns:
+            the truncated Bandpass.
         """
         # Enforce the choice of a single mode of truncation.
         if relative_throughput is not None:
@@ -534,32 +542,34 @@ class Bandpass(object):
         a lot, and/or want to do extremely precise tests, you can set `preserve_zp=False` and then
         recalculate the zeropoint after thinning.
 
-        @param rel_err            The relative error allowed in the integral over the throughput
-                                  function. [default: 1.e-4]
-        @param trim_zeros         Remove redundant leading and trailing points where f=0?  (The last
-                                  leading point with f=0 and the first trailing point with f=0 will
-                                  be retained).  Note that if both trim_leading_zeros and
-                                  preserve_range are True, then the only the range of `x` *after*
-                                  zero trimming is preserved.  [default: True]
-        @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
-                                  Bandpass be preserved? (True) Or should the ends be trimmed to
-                                  include only the region where the integral is significant? (False)
-                                  [default: True]
-        @param fast_search        If set to True, then the underlying algorithm will use a
-                                  relatively fast O(N) algorithm to select points to include in the
-                                  thinned approximation.  If set to False, then a slower O(N^2)
-                                  algorithm will be used.  We have found that the slower algorithm
-                                  tends to yield a thinned representation that retains fewer samples
-                                  while still meeting the relative error requirement, and may also
-                                  be somewhat more robust when computing SED fluxes through
-                                  Bandpasses when a significant fraction of the integrated flux
-                                  passes through low throughput bandpass light leaks.
-                                  [default: True]
-        @param preserve_zp        If True, the new thinned Bandpass will be assigned the same
-                                  zeropoint as the original.  If False, the new thinned Bandpass
-                                  will have a zeropoint of None. [default: True]
+        Parameters:
+            rel_err:        The relative error allowed in the integral over the throughput
+                            function. [default: 1.e-4]
+            trim_zeros:     Remove redundant leading and trailing points where f=0?  (The last
+                            leading point with f=0 and the first trailing point with f=0 will
+                            be retained).  Note that if both trim_leading_zeros and
+                            preserve_range are True, then the only the range of `x` *after*
+                            zero trimming is preserved.  [default: True]
+            preserve_range: Should the original range (`blue_limit` and `red_limit`) of the
+                            Bandpass be preserved? (True) Or should the ends be trimmed to
+                            include only the region where the integral is significant? (False)
+                            [default: True]
+            fast_search:    If set to True, then the underlying algorithm will use a
+                            relatively fast O(N) algorithm to select points to include in the
+                            thinned approximation.  If set to False, then a slower O(N^2)
+                            algorithm will be used.  We have found that the slower algorithm
+                            tends to yield a thinned representation that retains fewer samples
+                            while still meeting the relative error requirement, and may also
+                            be somewhat more robust when computing SED fluxes through
+                            Bandpasses when a significant fraction of the integrated flux
+                            passes through low throughput bandpass light leaks.
+                            [default: True]
+            preserve_zp:    If True, the new thinned Bandpass will be assigned the same
+                            zeropoint as the original.  If False, the new thinned Bandpass
+                            will have a zeropoint of None. [default: True]
 
-        @returns the thinned Bandpass.
+        Returns:
+            the thinned Bandpass.
         """
         if len(self.wave_list) > 0:
             x = self.wave_list

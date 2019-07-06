@@ -48,48 +48,48 @@ class InterpolatedImage(GSObject):
     convolution for this kind of object.
 
     There are three options for determining the flux of the profile.  First, you can simply
-    specify a `flux` value explicitly.  Or there are two ways to get the flux from the image
-    directly.  If you set `normalization = 'flux'`, the flux will be taken as the sum of the
-    pixel values.  This corresponds to an image that was drawn with `drawImage(method='no_pixel')`.
-    This is the default if flux is not given.  The other option, `normalization = 'sb'` treats
+    specify a ``flux`` value explicitly.  Or there are two ways to get the flux from the image
+    directly.  If you set ``normalization = 'flux'``, the flux will be taken as the sum of the
+    pixel values.  This corresponds to an image that was drawn with ``drawImage(method='no_pixel')``.
+    This is the default if flux is not given.  The other option, ``normalization = 'sb'`` treats
     the pixel values as samples of the surface brightness profile at each location.  This
-    corresponds to an image drawn with `drawImage(method='sb')`.
+    corresponds to an image drawn with ``drawImage(method='sb')``.
 
     You can also use images that were drawn with one of the pixel-integrating methods ('auto',
     'fft', or 'real_space'); however, the resulting profile will not correspond to the one
-    that was used to call `drawImage`.  The integration over the pixel is equivalent to convolving
-    the original profile by a Pixel and then drawing with `method='no_pixel'`.  So if you use
+    that was used to call ``drawImage``.  The integration over the pixel is equivalent to convolving
+    the original profile by a Pixel and then drawing with ``method='no_pixel'``.  So if you use
     such an image with InterpolatedImage, the resulting profile will include the Pixel convolution
     already.  As such, if you use it as a PSF for example, then the final objects convolved by
     this PSF will already include the pixel convolution, so you should draw them using
-    `method='no_pixel'`.
+    ``method='no_pixel'``.
 
-    If the input Image has a `scale` or `wcs` associated with it, then there is no need to specify
-    one as a parameter here.  But if one is provided, that will override any `scale` or `wcs` that
-    is native to the Image.
+    If the input Image has a ``scale`` or ``wcs`` associated with it, then there is no need to
+    specify one as a parameter here.  But if one is provided, that will override any ``scale`` or
+    ``wcs`` that is native to the Image.
 
-    The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
+    The user may optionally specify an interpolant, ``x_interpolant``, for real-space manipulations
     (e.g., shearing, resampling).  If none is specified, then by default, a Quintic interpolant is
     used.  The user may also choose to specify two quantities that can affect the Fourier space
-    convolution: the k-space interpolant (`k_interpolant`) and the amount of padding to include
-    around the original images (`pad_factor`).  The default values for `x_interpolant`,
-    `k_interpolant`, and `pad_factor` were chosen based on the tests of branch #389 to reach good
-    accuracy without being excessively slow.  Users should be particularly wary about changing
-    `k_interpolant` and `pad_factor` from the defaults without careful testing.  The user is given
-    complete freedom to choose interpolants and pad factors, and no warnings are raised when the
-    code is modified to choose some combination that is known to give significant error.  More
+    convolution: the k-space interpolant (``k_interpolant``) and the amount of padding to include
+    around the original images (``pad_factor``).  The default values for ``x_interpolant``,
+    ``k_interpolant``, and ``pad_factor`` were chosen based on the tests of branch #389 to reach
+    good accuracy without being excessively slow.  Users should be particularly wary about changing
+    ``k_interpolant`` and ``pad_factor`` from the defaults without careful testing.  The user is
+    given complete freedom to choose interpolants and pad factors, and no warnings are raised when
+    the code is modified to choose some combination that is known to give significant error.  More
     details can be found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
     https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
     comments.
 
     The user can choose to pad the image with a noise profile if desired.  To do so, specify
-    the target size for the noise padding in `noise_pad_size`, and specify the kind of noise
-    to use in `noise_pad`.  The `noise_pad` option may be a Gaussian random noise of some variance,
-    or a Gaussian but correlated noise field that is specified either as a CorrelatedNoise
+    the target size for the noise padding in ``noise_pad_size``, and specify the kind of noise
+    to use in ``noise_pad``.  The ``noise_pad`` option may be a Gaussian random noise of some
+    variance, or a Gaussian but correlated noise field that is specified either as a CorrelatedNoise
     instance, an Image (from which a correlated noise model is derived), or a string (interpreted
     as a filename containing an image to use for deriving a CorrelatedNoise).  The user can also
     pass in a random number generator to be used for noise generation.  Finally, the user can pass
-    in a `pad_image` for deterministic image padding.
+    in a ``pad_image`` for deterministic image padding.
 
     By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
     use for further manipulations, rather than using the most conservative possibility.  For typical
@@ -98,8 +98,8 @@ class InterpolatedImage(GSObject):
     and may especially wish to do so when using images that do not contain a high S/N object - e.g.,
     images of noise fields.
 
-    Initialization
-    --------------
+
+    Example::
 
         >>> interpolated_image = galsim.InterpolatedImage(
                 image, x_interpolant=None, k_interpolant=None, normalization='flux', scale=None,
@@ -107,11 +107,11 @@ class InterpolatedImage(GSObject):
                 pad_image=None, rng=None, calculate_stepk=True, calculate_maxk=True,
                 use_true_center=True, offset=None, hdu=None)
 
-    Initializes `interpolated_image` as an InterpolatedImage instance.
+    Initializes ``interpolated_image`` as an InterpolatedImage instance.
 
     For comparison of the case of padding with noise or zero when the image itself includes noise,
-    compare `im1` and `im2` from the following code snippet (which can be executed from the
-    examples/ directory):
+    compare ``im1`` and ``im2`` from the following code snippet (which can be executed from the
+    examples/ directory)::
 
         >>> image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
         >>> int_im1 = galsim.InterpolatedImage(image)
@@ -125,122 +125,124 @@ class InterpolatedImage(GSObject):
     similar to the one in the real data leads to a more reasonable appearance for the result when
     re-drawn at a different size.
 
-    @param image            The Image from which to construct the object.
+    Parameters:
+        image:              The Image from which to construct the object.
                             This may be either an Image instance or a string indicating a fits
-                            file from which to read the image.  In the latter case, the `hdu`
+                            file from which to read the image.  In the latter case, the ``hdu``
                             kwarg can be used to specify a particular HDU in that file.
-    @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
+        x_interpolant:      Either an Interpolant instance or a string indicating which real-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use. [default: galsim.Quintic()]
-    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+        k_interpolant:      Either an Interpolant instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use.  We strongly recommend leaving this parameter at its default
                             value; see text above for details.  [default: galsim.Quintic()]
-    @param normalization    Two options for specifying the normalization of the input Image:
-                              "flux" or "f" means that the sum of the pixels is normalized
-                                  to be equal to the total flux.
-                              "surface brightness" or "sb" means that the pixels sample
-                                  the surface brightness distribution at each location.
+        normalization:      Two options for specifying the normalization of the input Image:
+
+                            - "flux" or "f" means that the sum of the pixels is normalized
+                              to be equal to the total flux.
+                            - "surface brightness" or "sb" means that the pixels sample
+                              the surface brightness distribution at each location.
+
                             This is overridden if you specify an explicit flux value.
                             [default: "flux"]
-    @param scale            If provided, use this as the pixel scale for the Image; this will
+        scale:              If provided, use this as the pixel scale for the Image; this will
                             override the pixel scale stored by the provided Image, in any.
-                            If `scale` is `None`, then take the provided image's pixel scale.
+                            If ``scale`` is ``None``, then take the provided image's pixel scale.
                             [default: None]
-    @param wcs              If provided, use this as the wcs for the image.  At most one of `scale`
-                            or `wcs` may be provided. [default: None]
-    @param flux             Optionally specify a total flux for the object, which overrides the
+        wcs:                If provided, use this as the wcs for the image.  At most one of
+                            ``scale`` or ``wcs`` may be provided. [default: None]
+        flux:               Optionally specify a total flux for the object, which overrides the
                             implied flux normalization from the Image itself. [default: None]
-    @param pad_factor       Factor by which to pad the Image with zeros.  We strongly recommend
+        pad_factor:         Factor by which to pad the Image with zeros.  We strongly recommend
                             leaving this parameter at its default value; see text above for
                             details.  [default: 4]
-    @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec) with
-                            the noise specified by `noise_pad`. This is important if you are
+        noise_pad_size:     If provided, the image will be padded out to this size (in arcsec) with
+                            the noise specified by ``noise_pad``. This is important if you are
                             planning to whiten the resulting image.  You want to make sure that the
                             noise-padded image is larger than the postage stamp onto which you are
                             drawing this object.  [default: None]
-    @param noise_pad        Noise properties to use when padding the original image with
+        noise_pad:          Noise properties to use when padding the original image with
                             noise.  This can be specified in several ways:
-                               (a) as a float, which is interpreted as being a variance to use when
-                                   padding with uncorrelated Gaussian noise;
-                               (b) as a galsim.CorrelatedNoise, which contains information about the
-                                   desired noise power spectrum - any random number generator passed
-                                   to the `rng` keyword will take precedence over that carried in an
-                                   input CorrelatedNoise instance;
-                               (c) as an Image of a noise field, which is used to calculate
-                                   the desired noise power spectrum; or
-                               (d) as a string which is interpreted as a filename containing an
-                                   example noise field with the proper noise power spectrum (as an
-                                   Image in the first HDU).
+
+                            - as a float, which is interpreted as being a variance to use when
+                              padding with uncorrelated Gaussian noise;
+                            - as a galsim.CorrelatedNoise, which contains information about the
+                              desired noise power spectrum - any random number generator passed
+                              to the ``rng`` keyword will take precedence over that carried in
+                              an input CorrelatedNoise instance;
+                            - as an Image of a noise field, which is used to calculate
+                              the desired noise power spectrum; or
+                            - as a string which is interpreted as a filename containing an
+                              example noise field with the proper noise power spectrum (as an
+                              Image in the first HDU).
+
                             It is important to keep in mind that the calculation of the correlation
                             function that is internally stored within a CorrelatedNoise object is a
                             non-negligible amount of overhead, so the recommended means of
                             specifying a correlated noise field for padding are (b) or (d).  In the
-                            case of (d), if the same file is used repeatedly, then the `use_cache`
+                            case of (d), if the same file is used repeatedly, then the ``use_cache``
                             keyword (see below) can be used to prevent the need for repeated
                             CorrelatedNoise initializations.
                             [default: 0, i.e., pad with zeros]
-    @param use_cache        Specify whether to cache `noise_pad` read in from a file to save having
-                            to build a CorrelatedNoise object repeatedly from the same image.
+        use_cache:          Specify whether to cache ``noise_pad`` read in from a file to save
+                            having to build a CorrelatedNoise object repeatedly from the same image.
                             [default: True]
-    @param rng              If padding by noise, the user can optionally supply the random noise
-                            generator to use for drawing random numbers as `rng` (may be any kind of
-                            BaseDeviate object).  Such a user-input random number generator
+        rng:                If padding by noise, the user can optionally supply the random noise
+                            generator to use for drawing random numbers as ``rng`` (may be any kind
+                            of BaseDeviate object).  Such a user-input random number generator
                             takes precedence over any stored within a user-input CorrelatedNoise
-                            instance (see the `noise_pad` parameter).
-                            If `rng=None`, one will be automatically created, using the time as a
+                            instance (see the ``noise_pad`` parameter).
+                            If ``rng=None``, one will be automatically created, using the time as a
                             seed. [default: None]
-    @param pad_image        Image to be used for deterministically padding the original image.  This
+        pad_image:          Image to be used for deterministically padding the original image.  This
                             can be specified in two ways:
-                               (a) as an Image; or
-                               (b) as a string which is interpreted as a filename containing an
-                                   image to use (in the first HDU).
-                            The `pad_image` scale or wcs is ignored.  It uses the same scale or
-                            wcs for both the `image` and the `pad_image`.
+
+                            - as an Image; or
+                            - as a string which is interpreted as a filename containing an
+                              image to use (in the first HDU).
+
+                            The ``pad_image`` scale or wcs is ignored.  It uses the same scale or
+                            wcs for both the ``image`` and the ``pad_image``.
                             The user should be careful to ensure that the image used for padding
                             has roughly zero mean.  The purpose of this keyword is to allow for a
                             more flexible representation of some noise field around an object; if
                             the user wishes to represent the sky level around an object, they
                             should do that after they have drawn the final image instead.
                             [default: None]
-    @param calculate_stepk  Specify whether to perform an internal determination of the extent of
+        calculate_stepk:    Specify whether to perform an internal determination of the extent of
                             the object being represented by the InterpolatedImage; often this is
                             useful in choosing an optimal value for the stepsize in the Fourier
                             space lookup table.
-                            If you know a priori an appropriate maximum value for `stepk`, then
+                            If you know a priori an appropriate maximum value for ``stepk``, then
                             you may also supply that here instead of a bool value, in which case
-                            the `stepk` value is still calculated, but will not go above the
+                            the ``stepk`` value is still calculated, but will not go above the
                             provided value.
                             [default: True]
-    @param calculate_maxk   Specify whether to perform an internal determination of the highest
+        calculate_maxk:     Specify whether to perform an internal determination of the highest
                             spatial frequency needed to accurately render the object being
                             represented by the InterpolatedImage; often this is useful in choosing
                             an optimal value for the extent of the Fourier space lookup table.
-                            If you know a priori an appropriate maximum value for `maxk`, then
+                            If you know a priori an appropriate maximum value for ``maxk``, then
                             you may also supply that here instead of a bool value, in which case
-                            the `maxk` value is still calculated, but will not go above the
+                            the ``maxk`` value is still calculated, but will not go above the
                             provided value.
                             [default: True]
-    @param use_true_center  Similar to the same parameter in the GSObject.drawImage() function,
+        use_true_center:    Similar to the same parameter in the GSObject.drawImage() function,
                             this sets whether to use the true center of the provided image as the
-                            center of the profile (if `use_true_center=True`) or the nominal
-                            center given by image.center (if `use_true_center=False`)
+                            center of the profile (if ``use_true_center=True``) or the nominal
+                            center given by image.center (if ``use_true_center=False``)
                             [default: True]
-    @param offset           The location in the input image to use as the center of the profile.
+        offset:             The location in the input image to use as the center of the profile.
                             This should be specified relative to the center of the input image
-                            (either the true center if `use_true_center=True`, or the nominal
-                            center if `use_true_center=False`).  [default: None]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            (either the true center if ``use_true_center=True``, or the nominal
+                            center if ``use_true_center=False``).  [default: None]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param hdu              When reading in an Image from a file, this parameter can be used to
+        hdu:                When reading in an Image from a file, this parameter can be used to
                             select a particular HDU in the file. [default: None]
-
-    Methods
-    -------
-
-    There are no additional methods for InterpolatedImage beyond the usual GSObject methods.
     """
     _req_params = { 'image' : str }
     _opt_params = {
@@ -483,7 +485,8 @@ class InterpolatedImage(GSObject):
         self._pad_factor = pad_factor
 
     def _buildNoisePadImage(self, noise_pad_size, noise_pad, rng, use_cache):
-        """A helper function that builds the `pad_image` from the given `noise_pad` specification.
+        """A helper function that builds the ``pad_image`` from the given ``noise_pad``
+        specification.
         """
         from .random import BaseDeviate
         from .noise import GaussianNoise
@@ -713,18 +716,20 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     3. The flux is just the flux of the image.  It cannot be rescaled to a different flux value.
     4. The input image must have a defined wcs.
 
-    @param image            The Image from which to construct the object.
-    @param x_interpolant    An Interpolant instance for real-space interpolation [default: Quintic]
-    @param k_interpolant    An Interpolant instance for k-space interpolation [default: Quintic]
-    @param use_true_center  Whether to use the true center of the provided image as the center
+    Parameters:
+        image:              The Image from which to construct the object.
+        x_interpolant:      An Interpolant instance for real-space interpolation [default: Quintic]
+        k_interpolant:      An Interpolant instance for k-space interpolation [default: Quintic]
+        use_true_center:    Whether to use the true center of the provided image as the center
                             of the profile. [default: True]
-    @param offset           The location in the input image to use as the center of the profile.
+        offset:             The location in the input image to use as the center of the profile.
                             [default: None]
-    @param gsparams         An optional GSParams argument. [default: None]
-    @param force_stepk      A stepk value to use rather than the default value. [default: 0.]
-    @param force_maxk       A maxk value to use rather than the default value. [default: 0.]
+        gsparams:           An optional GSParams argument. [default: None]
+        force_stepk:        A stepk value to use rather than the default value. [default: 0.]
+        force_maxk:         A maxk value to use rather than the default value. [default: 0.]
 
-    @returns an InterpolatedImage instance
+    Returns:
+        an InterpolatedImage instance
     """
     ret = InterpolatedImage.__new__(InterpolatedImage)
 
@@ -778,22 +783,22 @@ class InterpolatedKImage(GSObject):
     http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
 
     The images required for creating an InterpolatedKImage are precisely those returned by the
-    GSObject `.drawKImage()` method.  The `a` and `b` objects in the following command will produce
-    essentially equivalent images when drawn with the `.drawImage()` method:
+    GSObject ``.drawKImage()`` method.  The ``a`` and ``b`` objects in the following command will
+    produce essentially equivalent images when drawn with the ``.drawImage()`` method::
 
     >>> a = returns_a_GSObject()
     >>> b = galsim.InterpolatedKImage(a.drawKImage())
 
-    The input `kimage` must have dtype=numpy.complex64 or dtype=numpy.complex128, which are also
+    The input ``kimage`` must have dtype=numpy.complex64 or dtype=numpy.complex128, which are also
     known as ImageCF and ImageCD objects respectively.
-    The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case `kimage.scale` is
-    used for the `stepk` value unless overridden by the `stepk` initialization argument.
+    The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case ``kimage.scale`` is
+    used for the ``stepk`` value unless overridden by the ``stepk`` initialization argument.
 
-    Furthermore, the complex-valued Fourier profile given by `kimage` must be Hermitian, since it
+    Furthermore, the complex-valued Fourier profile given by ``kimage`` must be Hermitian, since it
     represents a real-valued real-space profile.  (To see an example of valid input to
-    `InterpolatedKImage`, you can look at the output of `drawKImage`).
+    ``InterpolatedKImage``, you can look at the output of ``drawKImage``).
 
-    The user may optionally specify an interpolant, `k_interpolant`, for Fourier-space
+    The user may optionally specify an interpolant, ``k_interpolant``, for Fourier-space
     manipulations (e.g., shearing, resampling).  If none is specified, then by default, a Quintic
     interpolant is used.  The Quintic interpolant has been found to be a good compromise between
     speed and accuracy for real-and Fourier-space interpolation of objects specified by samples of
@@ -801,42 +806,37 @@ class InterpolatedKImage(GSObject):
     performed for objects specified by samples of their Fourier-space profiles (e.g., this
     class).
 
-    Initialization
-    --------------
+    Example::
 
         >>> interpolated_kimage = galsim.InterpolatedKImage(kimage, k_interpolant=None, stepk=0.,
                                                             gsparams=None)
 
-    Initializes `interpolated_kimage` as an InterpolatedKImage instance.
+    Initializes ``interpolated_kimage`` as an InterpolatedKImage instance.
 
-    @param kimage           The complex Image corresponding to the Fourier-space samples.
-    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
-                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
-                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
-                            to use.  [default: galsim.Quintic()]
-    @param stepk            By default, the stepk value (the sampling frequency in Fourier-space)
-                            of the profile is set by the `scale` attribute of the supplied images.
-                            This keyword allows the user to specify a coarser sampling in Fourier-
-                            space, which may increase efficiency at the expense of decreasing the
-                            separation between neighboring copies of the DFT-rendered real-space
-                            profile.  (See the GSParams docstring for the parameter
-                            `folding_threshold` for more information). [default: kimage.scale]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-    @param real_kimage      Optionally, rather than provide kimage, you may provide the real
-                            and imaginary parts separately.  These separate real-valued images
-                            may be strings, in which case they refer to FITS files from which
-                            to read the images. [default: None]
-    @param imag_kimage      The imaginary image corresponding to real_kimage. [default: None]
-    @param real_hdu         When reading in real_kimage from a file, this parameter can be used to
-                            select a particular HDU in the file. [default: None]
-    @param imag_hdu         When reading in imag_kimage from a file, this parameter can be used to
-                            select a particular HDU in the file. [default: None]
-
-    Methods
-    -------
-
-    There are no additional methods for InterpolatedKImage beyond the usual GSObject methods.
+    Parameters:
+        kimage:         The complex Image corresponding to the Fourier-space samples.
+        k_interpolant:  Either an Interpolant instance or a string indicating which k-space
+                        interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                        'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                        to use.  [default: galsim.Quintic()]
+        stepk:          By default, the stepk value (the sampling frequency in Fourier-space)
+                        of the profile is set by the ``scale`` attribute of the supplied images.
+                        This keyword allows the user to specify a coarser sampling in Fourier-
+                        space, which may increase efficiency at the expense of decreasing the
+                        separation between neighboring copies of the DFT-rendered real-space
+                        profile.  (See the GSParams docstring for the parameter
+                        ``folding_threshold`` for more information). [default: kimage.scale]
+        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
+        real_kimage:    Optionally, rather than provide kimage, you may provide the real
+                        and imaginary parts separately.  These separate real-valued images
+                        may be strings, in which case they refer to FITS files from which
+                        to read the images. [default: None]
+        imag_kimage:    The imaginary image corresponding to real_kimage. [default: None]
+        real_hdu:       When reading in real_kimage from a file, this parameter can be used to
+                        select a particular HDU in the file. [default: None]
+        imag_hdu:       When reading in imag_kimage from a file, this parameter can be used to
+                        select a particular HDU in the file. [default: None]
     """
     _req_params = { 'real_kimage' : str,
                     'imag_kimage' : str }

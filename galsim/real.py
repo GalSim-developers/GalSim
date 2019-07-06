@@ -84,103 +84,102 @@ class RealGalaxy(GSObject):
     data.  Users who wish to draw RealGalaxies that have well-defined flux scalings in various
     passbands, and/or parametric representations, should use the COSMOSGalaxy class.
 
-    Because RealGalaxy involves a Deconvolution, `method = 'phot'` is unavailable for the
+    Because RealGalaxy involves a Deconvolution, ``method = 'phot'`` is unavailable for the
     drawImage() function.
 
-    Initialization
-    --------------
+    Example::
 
         >>> real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False,
         ...                                 rng=None, x_interpolant=None, k_interpolant=None,
         ...                                 flux=None, pad_factor=4, noise_pad_size=0,
         ...                                 gsparams=None)
 
-    This initializes `real_galaxy` with three InterpolatedImage objects (one for the deconvolved
+    This initializes ``real_galaxy`` with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.
 
-    Note that tests suggest that for optimal balance between accuracy and speed, `k_interpolant` and
-    `pad_factor` should be kept at their default values.  The user should be aware that significant
-    inaccuracy can result from using other combinations of these parameters; more details can be
-    found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
+    Note that tests suggest that for optimal balance between accuracy and speed, ``k_interpolant``
+    and ``pad_factor`` should be kept at their default values.  The user should be aware that
+    significant inaccuracy can result from using other combinations of these parameters; more
+    details can be found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
     https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
     comments.
 
     If you don't set a flux, the flux of the returned object will be the flux of the original
-    HST data, scaled to correspond to a 1 second HST exposure (though see the `area_norm`
-    parameter below, and also caveats related to using the `flux` parameter).  If you want a flux
+    HST data, scaled to correspond to a 1 second HST exposure (though see the ``area_norm``
+    parameter below, and also caveats related to using the ``flux`` parameter).  If you want a flux
     appropriate for a longer exposure, or for a telescope with a different collecting area than HST,
-    you can either renormalize the object with the `flux_rescale` parameter, or by using the
-    `exptime` and `area` parameters to `drawImage`.
+    you can either renormalize the object with the ``flux_rescale`` parameter, or by using the
+    ``exptime`` and ``area`` parameters to ``drawImage``.
 
     Note that RealGalaxy objects use arcsec for the units of their linear dimension.  If you
     are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
-    the resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
+    the resulting object with ``gal.dilate(galsim.arcsec / scale_unit)``.
 
-    @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
-                            find the data, etc.
-    @param index            Index of the desired galaxy in the catalog. [One of `index`, `id`, or
-                            `random` is required.]
-    @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
-                            or `random` is required.]
-    @param random           If True, then select a random galaxy from the catalog.  If the catalog
-                            has a 'weight' associated with it to allow for correction of selection
-                            effects in which galaxies were included, the 'weight' factor is used to
-                            remove those selection effects rather than selecting a completely random
-                            object.
-                            [One of `index`, `id`, or `random` is required.]
-    @param rng              A random number generator to use for selecting a random galaxy
-                            (may be any kind of BaseDeviate or None) and to use in generating
-                            any noise field when padding.  This user-input random number
-                            generator takes precedence over any stored within a user-input
-                            CorrelatedNoise instance (see `noise_pad` parameter below).
-                            [default: None]
-    @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
-                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
-                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
-                            to use. [default: galsim.Quintic()]
-    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
-                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
-                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
-                            to use.  We strongly recommend leaving this parameter at its default
-                            value; see text above for details.  [default: galsim.Quintic()]
-    @param flux             Total flux, if None then original flux in image is adopted without
-                            change.  Note that, technically, this parameter sets the flux of the
-                            postage stamp image and not the flux of the contained galaxy.  These two
-                            values will be strongly correlated when the signal-to-noise ratio of the
-                            galaxy is large, but may be considerably different if the flux of the
-                            galaxy is small with respect to the noise variations in the postage
-                            stamp.  To avoid complications with faint galaxies, consider using the
-                            flux_rescale parameter.  [default: None]
-    @param flux_rescale     Flux rescaling factor; if None, then no rescaling is done.  Either
-                            `flux` or `flux_rescale` may be set, but not both. [default: None]
-    @param pad_factor       Factor by which to pad the Image when creating the
-                            InterpolatedImage.  We strongly recommend leaving this parameter
-                            at its default value; see text above for details.  [default: 4]
-    @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec)
-                            with the noise specified in the real galaxy catalog. This is
-                            important if you are planning to whiten the resulting image.  You
-                            should make sure that the padded image is larger than the postage
-                            stamp onto which you are drawing this object.
-                            [default: None]
-    @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
-                            When area_norm=1 (the default), drawing with `drawImage` keywords
-                            exptime=1 and area=1 will simulate an image with the appropriate number
-                            of counts for a 1 second exposure with the original telescope/camera
-                            (e.g., with HST when using the COSMOS catalog).  If you would rather
-                            explicitly specify the collecting area of the telescope when using
-                            `drawImage` with a `RealGalaxy`, then you should set area_norm equal to
-                            the collecting area of the source catalog telescope when creating the
-                            `RealGalaxy` (e.g., area_norm=45238.93416 for HST). [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-    @param logger           A logger object for output of progress statements if the user wants
-                            them.  [default: None]
-
-    Methods
-    -------
-
-    There are no additional methods for RealGalaxy beyond the usual GSObject methods.
+    Parameters:
+        real_galaxy_catalog:    A RealGalaxyCatalog object with basic information about where to
+                                find the data, etc.
+        index:                  Index of the desired galaxy in the catalog. [One of ``index``,
+                                ``id``, or ``random`` is required.]
+        id:                     Object ID for the desired galaxy in the catalog. [One of ``index``,
+                                ``id``, or ``random`` is required.]
+        random:                 If True, then select a random galaxy from the catalog.  If the
+                                catalog has a 'weight' associated with it to allow for correction of
+                                selection effects in which galaxies were included, the 'weight'
+                                factor is used to remove those selection effects rather than
+                                selecting a completely random object.
+                                [One of ``index``, ``id``, or ``random`` is required.]
+        rng:                    A random number generator to use for selecting a random galaxy
+                                (may be any kind of BaseDeviate or None) and to use in generating
+                                any noise field when padding.  This user-input random number
+                                generator takes precedence over any stored within a user-input
+                                CorrelatedNoise instance (see ``noise_pad`` parameter below).
+                                [default: None]
+        x_interpolant:          Either an Interpolant instance or a string indicating which
+                                real-space interpolant should be used.  Options are 'nearest',
+                                'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should
+                                be the integer order to use. [default: galsim.Quintic()]
+        k_interpolant:          Either an Interpolant instance or a string indicating which k-space
+                                interpolant should be used.  Options are 'nearest', 'sinc',
+                                'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
+                                integer order to use.  We strongly recommend leaving this parameter
+                                at its default value; see text above for details.
+                                [default: galsim.Quintic()]
+        flux:                   Total flux, if None then original flux in image is adopted without
+                                change.  Note that, technically, this parameter sets the flux of the
+                                postage stamp image and not the flux of the contained galaxy.
+                                These two values will be strongly correlated when the signal-to-
+                                noise ratio of the galaxy is large, but may be considerably
+                                different if the flux of the galaxy is small with respect to the
+                                noise variations in the postage stamp.  To avoid complications with
+                                faint galaxies, consider using the flux_rescale parameter.
+                                [default: None]
+        flux_rescale:           Flux rescaling factor; if None, then no rescaling is done.  Either
+                                ``flux`` or ``flux_rescale`` may be set, but not both.
+                                [default: None]
+        pad_factor:             Factor by which to pad the Image when creating the
+                                InterpolatedImage.  We strongly recommend leaving this parameter
+                                at its default value; see text above for details.  [default: 4]
+        noise_pad_size:         If provided, the image will be padded out to this size (in arcsec)
+                                with the noise specified in the real galaxy catalog. This is
+                                important if you are planning to whiten the resulting image.  You
+                                should make sure that the padded image is larger than the postage
+                                stamp onto which you are drawing this object.
+                                [default: None]
+        area_norm:              Area in cm^2 by which to normalize the flux of the returned object.
+                                When area_norm=1 (the default), drawing with ``drawImage`` keywords
+                                exptime=1 and area=1 will simulate an image with the appropriate
+                                number of counts for a 1 second exposure with the original
+                                telescope/camera (e.g., with HST when using the COSMOS catalog).
+                                If you would rather explicitly specify the collecting area of the
+                                telescope when using ``drawImage`` with a ``RealGalaxy``, then you
+                                should set area_norm equal to the collecting area of the source
+                                catalog telescope when creating the ``RealGalaxy`` (e.g.,
+                                area_norm=45238.93416 for HST).  [default: 1]
+        gsparams:               An optional GSParams argument.  See the docstring for GSParams for
+                                details. [default: None]
+        logger:                 A logger object for output of progress statements if the user wants
+                                them.  [default: None]
     """
     _req_params = {}
     _opt_params = { "x_interpolant" : str ,
@@ -349,11 +348,12 @@ class RealGalaxy(GSObject):
     def makeFromImage(cls, image, PSF, xi, **kwargs):
         """Create a RealGalaxy directly from image, PSF, and noise description.
 
-        @param image  `Image` of the galaxy you want to simulate.
-        @param PSF    `GSObject` representing the PSF of the galaxy image.  Note that this PSF
-                      should include the response of the pixel convolution.
-        @param xi     `CorrelatedNoise` or `UncorrelatedNoise` object characterizing the noise in
-                      the input image.
+        Parameters:
+            image:  Image of the galaxy you want to simulate.
+            PSF:    GSObject representing the PSF of the galaxy image.  Note that this PSF
+                    should include the response of the pixel convolution.
+            xi:     CorrelatedNoise or UncorrelatedNoise object characterizing the noise in the
+                    input image.
         """
         noise_image = xi.drawImage()
         pixel_scale = noise_image.scale
@@ -491,7 +491,7 @@ class RealGalaxyCatalog(object):
        has 100 galaxies, so it is not terribly useful as a representative galaxy population.
        But for simplistic use cases, it might be sufficient.  We use it for our unit tests and
        in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
-       initialize with
+       initialize with::
 
            >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5_example.fits',
                                               dir='path/to/GalSim/examples/data')
@@ -501,10 +501,10 @@ class RealGalaxyCatalog(object):
        a subset of the latter.) For information about how to download these catalogs, see the
        RealGalaxy Data Download Page on the GalSim Wiki:
 
-           https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
+       https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
        Be warned that the catalogs are quite large.  The larger one is around 11 GB after unpacking
-       the tarball.  To use one of these catalogs, you would initialize with
+       the tarball.  To use one of these catalogs, you would initialize with::
 
            >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5.fits',
                                               dir='path/to/download/directory')
@@ -514,34 +514,35 @@ class RealGalaxyCatalog(object):
        the RealGalaxy Data Download page linked above.
 
     4. Finally, we provide a program that will download the large COSMOS sample for you and
-       put it in the $PREFIX/share/galsim directory of your installation path.  The program is
+       put it in the $PREFIX/share/galsim directory of your installation path.  The program is::
 
            galsim_download_cosmos
 
        which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
-       this program to download the COSMOS catalog, then you can use it with
+       this program to download the COSMOS catalog, then you can use it with::
 
            >>> rgc = galsim.RealGalaxyCatalog()
 
        GalSim knows the location of the installation share directory, so it will automatically
        look for it there.
 
-    @param file_name  The file containing the catalog. [default: None, which will look for the
-                      F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
-                      exception if the catalog is not there telling you to run
-                      galsim_download_cosmos.]
-    @param sample     A keyword argument that can be used to specify the sample to use, i.e.,
-                      "23.5" or "25.2".  At most one of `file_name` and `sample` should be
-                      specified.
-                      [default: None, which results in the same default as `file_name=None`.]
-    @param dir        The directory containing the catalog, image, and noise files, or symlinks to
-                      them. [default: None]
-    @param preload    Whether to preload the header information.  If `preload=True`, the bulk of
-                      the I/O time is in the constructor.  If `preload=False`, there is
-                      approximately the same total I/O time (assuming you eventually use most of
-                      the image files referenced in the catalog), but it is spread over the
-                      various calls to getGalImage() and getPSFImage().  [default: False]
-    @param logger     An optional logger object to log progress. [default: None]
+    Parameters:
+        file_name:  The file containing the catalog. [default: None, which will look for the
+                    F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
+                    exception if the catalog is not there telling you to run
+                    galsim_download_cosmos.]
+        sample:     A keyword argument that can be used to specify the sample to use, i.e.,
+                    "23.5" or "25.2".  At most one of ``file_name`` and ``sample`` should be
+                    specified.
+                    [default: None, which results in the same default as ``file_name=None``.]
+        dir:        The directory containing the catalog, image, and noise files, or symlinks to
+                    them. [default: None]
+        preload:    Whether to preload the header information.  If ``preload=True``, the bulk of
+                    the I/O time is in the constructor.  If ``preload=False``, there is
+                    approximately the same total I/O time (assuming you eventually use most of
+                    the image files referenced in the catalog), but it is spread over the
+                    various calls to getGalImage() and getPSFImage().  [default: False]
+        logger:     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
     _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
@@ -718,7 +719,7 @@ class RealGalaxyCatalog(object):
         return Bandpass(bp[0], wave_type='nm', zeropoint=bp[1])
 
     def getGalImage(self, i):
-        """Returns the galaxy at index `i` as an Image object.
+        """Returns the galaxy at index ``i`` as an Image object.
         """
         from .image import Image
         self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
@@ -734,7 +735,7 @@ class RealGalaxyCatalog(object):
         return im
 
     def getPSFImage(self, i):
-        """Returns the PSF at index `i` as an Image object.
+        """Returns the PSF at index ``i`` as an Image object.
         """
         from .image import Image
         self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
@@ -747,7 +748,7 @@ class RealGalaxyCatalog(object):
         return Image(np.ascontiguousarray(array.astype(np.float64)), scale=self.pixel_scale[i])
 
     def getPSF(self, i, x_interpolant=None, k_interpolant=None, gsparams=None):
-        """Returns the PSF at index `i` as a GSObject.
+        """Returns the PSF at index ``i`` as a GSObject.
         """
         from .interpolatedimage import InterpolatedImage
         psf_image = self.getPSFImage(i)
@@ -756,7 +757,7 @@ class RealGalaxyCatalog(object):
                                  flux=1.0, gsparams=gsparams)
 
     def getNoiseProperties(self, i):
-        """Returns the components needed to make the noise correlation function at index `i`.
+        """Returns the components needed to make the noise correlation function at index ``i``.
            Specifically, the noise image (or None), the pixel_scale, and the noise variance,
            as a tuple (im, scale, var).
         """
@@ -789,7 +790,7 @@ class RealGalaxyCatalog(object):
         return im, self.pixel_scale[i], self.variance[i]
 
     def getNoise(self, i, rng=None, gsparams=None):
-        """Returns the noise correlation function at index `i` as a CorrelatedNoise object.
+        """Returns the noise correlation function at index ``i`` as a CorrelatedNoise object.
            Note: the return value from this function is not picklable, so this cannot be used
            across processes.
         """
@@ -887,23 +888,20 @@ class ChromaticRealGalaxy(ChromaticSum):
     decomposition can be thought of as a constrained chromatic deconvolution of the multi-band
     images by the associated PSFs, similar in spirit to RealGalaxy.
 
-    Because ChromaticRealGalaxy involves an InterpolatedKImage, `method = 'phot'` is unavailable for
-    the drawImage() function.
-
-    Initialization
-    --------------
+    Because ChromaticRealGalaxy involves an InterpolatedKImage, ``method = 'phot'`` is unavailable
+    for the drawImage() function.
 
     Fundamentally, the required inputs for this class are (1) a series of high resolution input
-    `Image`s of a single galaxy in different bands, (2) the `Bandpass`es corresponding to those
-    images, (3) the PSFs of those images as either `GSObject`s or `ChromaticObject`s, and (4) the
-    noise properties of the input images as instances of either `CorrelatedNoise` or
-    `UncorrelatedNoise`.  If you want to specify these inputs directly, that is possible via
-    the `.makeFromImages` factory method of this class:
+    ``Image``s of a single galaxy in different bands, (2) the ``Bandpass``es corresponding to those
+    images, (3) the PSFs of those images as either ``GSObject``s or ``ChromaticObject``s, and (4)
+    the noise properties of the input images as instances of either ``CorrelatedNoise`` or
+    ``UncorrelatedNoise``.  If you want to specify these inputs directly, that is possible via
+    the ``.makeFromImages`` factory method of this class::
 
         >>> crg = galsim.ChromaticRealGalaxy.makeFromImages(imgs, bands, PSFs, xis, ...)
 
-    Alternatively, you may create a ChromaticRealGalaxy via a list of `RealGalaxyCatalog`s that
-    correspond to a set of galaxies observed in different bands:
+    Alternatively, you may create a ChromaticRealGalaxy via a list of ``RealGalaxyCatalog``s that
+    correspond to a set of galaxies observed in different bands::
 
         >>> crg = galsim.ChromaticRealGalaxy(real_galaxy_catalogs, index=0, ...)
 
@@ -914,105 +912,104 @@ class ChromaticRealGalaxy(ChromaticSum):
     objects to make it into the training sample).
 
     The flux normalization of the returned object will by default match the original data, scaled to
-    correspond to a 1 second HST exposure (though see the `area_norm` parameter).  If you want
+    correspond to a 1 second HST exposure (though see the ``area_norm`` parameter).  If you want
     a flux appropriate for a longer exposure or telescope with different collecting area, you can
-    use the `ChromaticObject` method `withScaledFlux` on the returned object, or use the `exptime`
-    and `area` keywords to `drawImage`.  Note that while you can also use the `ChromaticObject`
-    methods `withFlux`, `withMagnitude`, and `withFluxDensity` to set the absolute normalization,
-    these methods technically adjust the flux of the entire postage stamp image (including noise!)
-    and not necessarily the flux of the galaxy itself.  (These two fluxes will be strongly
-    correlated for high signal-to-noise ratio galaxies, but may be considerably different at low
-    signal-to-noise ratio.)
+    use the ``ChromaticObject`` method ``withScaledFlux`` on the returned object, or use the
+    ``exptime`` and ``area`` keywords to ``drawImage``.  Note that while you can also use the
+    ``ChromaticObject`` methods ``withFlux``, ``withMagnitude``, and ``withFluxDensity`` to set the
+    absolute normalization, these methods technically adjust the flux of the entire postage stamp
+    image (including noise!) and not necessarily the flux of the galaxy itself.  (These two fluxes
+    will be strongly correlated for high signal-to-noise ratio galaxies, but may be considerably
+    different at low signal-to-noise ratio.)
 
     Note that ChromaticRealGalaxy objects use arcsec for the units of their linear dimension.  If
     you are using a different unit for other things (the PSF, WCS, etc.), then you should dilate the
-    resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
+    resulting object with ``gal.dilate(galsim.arcsec / scale_unit)``.
 
     Noise from the original images is propagated by this class, though certain restrictions apply
     to when and how that noise is made available.  The propagated noise depends on which Bandpass
     the ChromaticRealGalaxy is being imaged through, so the noise is only available after
-    the `drawImage(bandpass, ...)` method has been called.  Also, since ChromaticRealGalaxy will
+    the ``drawImage(bandpass, ...)`` method has been called.  Also, since ChromaticRealGalaxy will
     only produce reasonable images when convolved with a (suitably wide) PSF, the noise attribute is
-    attached to the `ChromaticConvolution` (or `ChromaticTransformation` of the
-    `ChromaticConvolution`) which holds as one of its convolutants the `ChromaticRealGalaxy`.
+    attached to the ``ChromaticConvolution`` (or ``ChromaticTransformation`` of the
+    ``ChromaticConvolution``) which holds as one of its convolutants the ``ChromaticRealGalaxy``.::
 
-    >>> crg = galsim.ChromaticRealGalaxy(...)
-    >>> psf = ...
-    >>> obj = galsim.Convolve(crg, psf)
-    >>> bandpass = galsim.Bandpass(...)
-    >>> assert not hasattr(obj, 'noise')
-    >>> image = obj.drawImage(bandpass)
-    >>> assert hasattr(obj, 'noise')
-    >>> noise1 = obj.noise
+        >>> crg = galsim.ChromaticRealGalaxy(...)
+        >>> psf = ...
+        >>> obj = galsim.Convolve(crg, psf)
+        >>> bandpass = galsim.Bandpass(...)
+        >>> assert not hasattr(obj, 'noise')
+        >>> image = obj.drawImage(bandpass)
+        >>> assert hasattr(obj, 'noise')
+        >>> noise1 = obj.noise
 
     Note that the noise attribute is only associated with the most recently used bandpass.  If you
     draw another image of the same object using a different bandpass, the noise object will be
-    replaced.
+    replaced.::
 
-    >>> bandpass2 = galsim.Bandpass(...)
-    >>> image2 = obj.drawImage(bandpass2)
-    >>> assert noise1 != obj.noise
+        >>> bandpass2 = galsim.Bandpass(...)
+        >>> image2 = obj.drawImage(bandpass2)
+        >>> assert noise1 != obj.noise
 
-    @param real_galaxy_catalogs  A list of `RealGalaxyCatalog` objects from which to create
-                            `ChromaticRealGalaxy`s.  Each catalog should represent the same set of
-                            galaxies, and in the same order, just imaged through different filters.
-                            Note that the number of catalogs must be equal to or larger than the
-                            number of SEDs.
-    @param index            Index of the desired galaxy in the catalog. [One of `index`, `id`, or
-                            `random` is required.]
-    @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
-                            or `random` is required.]
-    @param random           If True, then just select a completely random galaxy from the catalog.
-                            [One of `index`, `id`, or `random` is required.]
-    @param rng              A random number generator to use for selecting a random galaxy (may be
-                            any kind of BaseDeviate or None) and to use in generating any noise
-                            field when padding.  This user-input random number generator takes
-                            precedence over any stored within a user-input CorrelatedNoise instance
-                            (see `noise_pad` parameter below).  [default: None]
-    @param SEDs             An optional list of `SED`s to use when representing real galaxies as
-                            sums of separable profiles.  By default, len(real_galaxy_catalogs) SEDs
-                            that are polynomials in wavelength will be used.  Note that the number
-                            of SEDs must be equal to or smaller than the number of catalogs.
-                            [default: see above]
-    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
-                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
-                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
-                            to use.  We strongly recommend leaving this parameter at its default
-                            value; see text above for details.  [default: galsim.Quintic()]
-    @param maxk             Optional maxk argument.  If you know you will be convolving the
-                            resulting `ChromaticRealGalaxy` with a "fat" PSF in a subsequent step,
-                            then it can be more efficient to limit the range of Fourier modes used
-                            when solving for the sum of separable profiles below.  [default: None]
-    @param pad_factor       Factor by which to internally oversample the Fourier-space images
-                            that represent the ChromaticRealGalaxy (equivalent to zero-padding the
-                            real-space profiles).  We strongly recommend leaving this parameter
-                            at its default value; see text in Realgalaxy docstring for details.
-                            [default: 4]
-    @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec)
-                            with the noise specified in the real galaxy catalog. This is
-                            important if you are planning to whiten the resulting image.  You
-                            should make sure that the padded image is larger than the postage
-                            stamp onto which you are drawing this object.
-                            [default: None]
-    @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
-                            When area_norm=1 (the default), drawing with `drawImage` keywords
-                            exptime=1 and area=1 will simulate an image with the appropriate number
-                            of counts for a 1 second exposure with the original telescope/camera
-                            (e.g., with HST when using the COSMOS catalog).  If you would rather
-                            explicitly specify the collecting area of the telescope when using
-                            `drawImage` with a `ChromaticRealGalaxy`, then you should set area_norm
-                            equal to the collecting area of the source catalog telescope when
-                            creating the `ChromaticRealGalaxy` (e.g., area_norm=45238.93416 for
-                            HST). [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-    @param logger           A logger object for output of progress statements if the user wants
-                            them.  [default: None]
-    Methods
-    -------
+    Parameters:
+        real_galaxy_catalogs:   A list of ``RealGalaxyCatalog`` objects from which to create
+                                ``ChromaticRealGalaxy``s.  Each catalog should represent the same
+                                set of galaxies, and in the same order, just imaged through
+                                different filters.  Note that the number of catalogs must be equal
+                                to or larger than the number of SEDs.
+        index:                  Index of the desired galaxy in the catalog. [One of ``index``,
+                                ``id``, or ``random`` is required.]
+        id:                     Object ID for the desired galaxy in the catalog. [One of ``index``,
+                                ``id``, or ``random`` is required.]
+        random:                 If True, then just select a completely random galaxy from the
+                                catalog.  [One of ``index``, ``id``, or ``random`` is required.]
+        rng:                    A random number generator to use for selecting a random galaxy (may
+                                be any kind of BaseDeviate or None) and to use in generating any
+                                noise field when padding.  This user-input random number generator
+                                takes precedence over any stored within a user-input CorrelatedNoise
+                                instance (see ``noise_pad`` parameter below).  [default: None]
+        SEDs:                   An optional list of ``SED``s to use when representing real galaxies
+                                as sums of separable profiles. By default, len(real_galaxy_catalogs)
+                                SEDs that are polynomials in wavelength will be used.  Note that the
+                                number of SEDs must be equal to or smaller than the number of
+                                catalogs.  [default: see above]
+        k_interpolant:          Either an Interpolant instance or a string indicating which k-space
+                                interpolant should be used.  Options are 'nearest', 'sinc',
+                                'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
+                                integer order to use.  We strongly recommend leaving this parameter
+                                at its default value; see text above for details.
+                                [default: galsim.Quintic()]
+        maxk:                   Optional maxk argument.  If you know you will be convolving the
+                                resulting ``ChromaticRealGalaxy`` with a "fat" PSF in a subsequent
+                                step, then it can be more efficient to limit the range of Fourier
+                                modes used when solving for the sum of separable profiles below.
+                                [default: None]
+        pad_factor:             Factor by which to internally oversample the Fourier-space images
+                                that represent the ChromaticRealGalaxy (equivalent to zero-padding
+                                the real-space profiles).  We strongly recommend leaving this
+                                parameter at its default value; see text in Realgalaxy docstring
+                                for details.  [default: 4]
+        noise_pad_size:         If provided, the image will be padded out to this size (in arcsec)
+                                with the noise specified in the real galaxy catalog. This is
+                                important if you are planning to whiten the resulting image.  You
+                                should make sure that the padded image is larger than the postage
+                                stamp onto which you are drawing this object.
+                                [default: None]
+        area_norm:              Area in cm^2 by which to normalize the flux of the returned object.
+                                When area_norm=1 (the default), drawing with ``drawImage`` keywords
+                                exptime=1 and area=1 will simulate an image with the appropriate
+                                number of counts for a 1 second exposure with the original
+                                telescope/camera (e.g., with HST when using the COSMOS catalog).
+                                If you would rather explicitly specify the collecting area of the
+                                telescope when using ``drawImage`` with a ``ChromaticRealGalaxy``,
+                                then you should set area_norm equal to the collecting area of the
+                                source catalog telescope when creating the ``ChromaticRealGalaxy``
+                                (e.g., area_norm=45238.93416 for HST). [default: 1]
+        gsparams:               An optional GSParams argument.  See the docstring for GSParams for
+                                details. [default: None]
+        logger:                 A logger object for output of progress statements if the user wants
+                                them.  [default: None]
 
-    There are no additional methods for ChromaticRealGalaxy beyond the usual ChromaticObject
-    methods.
     """
     def __init__(self, real_galaxy_catalogs, index=None, id=None, random=False, rng=None,
                  gsparams=None, logger=None, **kwargs):
@@ -1083,55 +1080,56 @@ class ChromaticRealGalaxy(ChromaticSum):
         """Create a ChromaticRealGalaxy directly from images, bandpasses, PSFs, and noise
         descriptions.  See the ChromaticRealGalaxy docstring for more information.
 
-        @param images           An iterable of high resolution `Images` of a galaxy through
+        Parameters:
+            images:             An iterable of high resolution ``Images`` of a galaxy through
                                 different bandpasses.
-        @param bands            An iterable of `Bandpass`es corresponding to the input images.
-        @param PSFs             Either an iterable of `GSObject`s or `ChromaticObject`s indicating
-                                the PSFs of the different input images, or potentially a single
-                                `GSObject` or `ChromaticObject` that will be used as the PSF for
-                                all images.
-        @param xis              An iterable of either `CorrelatedNoise` or `UncorrelatedNoise`
+            bands:              An iterable of ``Bandpass``es corresponding to the input images.
+            PSFs:               Either an iterable of ``GSObject``s or ``ChromaticObject``s
+                                indicating the PSFs of the different input images, or potentially a
+                                single ``GSObject`` or ``ChromaticObject`` that will be used as the
+                                PSF for all images.
+            xis:                An iterable of either ``CorrelatedNoise`` or ``UncorrelatedNoise``
                                 objects characterizing the noise in the input images.
-        @param SEDs             An optional list of `SED`s to use when representing real galaxies
+            SEDs:               An optional list of ``SED``s to use when representing real galaxies
                                 as sums of separable profiles.  By default, len(images) SEDs that
                                 are polynomials in wavelength will be used.  Note that the number
                                 of SEDs must be equal to or smaller than the number of catalogs.
                                 [default: see above]
-        @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+            k_interpolant:      Either an Interpolant instance or a string indicating which k-space
                                 interpolant should be used.  Options are 'nearest', 'sinc',
                                 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                                 integer order to use.  We strongly recommend leaving this parameter
                                 at its default value; see text above for details.  [default:
                                 galsim.Quintic()]
-        @param maxk             Optional maxk argument.  If you know you will be convolving the
-                                resulting `ChromaticRealGalaxy` with a "fat" PSF in a subsequent
+            maxk:               Optional maxk argument.  If you know you will be convolving the
+                                resulting ``ChromaticRealGalaxy`` with a "fat" PSF in a subsequent
                                 step, then it can be more efficient to limit the range of Fourier
                                 modes used when solving for the sum of separable profiles below.
                                 [default: None]
-        @param pad_factor       Factor by which to internally oversample the Fourier-space images
+            pad_factor:         Factor by which to internally oversample the Fourier-space images
                                 that represent the ChromaticRealGalaxy (equivalent to zero-padding
                                 the real-space profiles).  We strongly recommend leaving this
                                 parameter at its default value; see text in Realgalaxy docstring
                                 for details.  [default: 4]
-        @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec)
+            noise_pad_size:     If provided, the image will be padded out to this size (in arcsec)
                                 with the noise specified in the real galaxy catalog. This is
                                 important if you are planning to whiten the resulting image.  You
                                 should make sure that the padded image is larger than the postage
                                 stamp onto which you are drawing this object.
                                 [default: None]
-        @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
-                                When area_norm=1 (the default), drawing with `drawImage` keywords
+            area_norm:          Area in cm^2 by which to normalize the flux of the returned object.
+                                When area_norm=1 (the default), drawing with ``drawImage`` keywords
                                 exptime=1 and area=1 will simulate an image with the appropriate
                                 number of counts for a 1 second exposure with the original
                                 telescope/camera (e.g., with HST when using the COSMOS catalog).  If
                                 you would rather explicitly specify the collecting area of the
-                                telescope when using `drawImage` with a `ChromaticRealGalaxy`, then
-                                you should set area_norm equal to the collecting area of the source
-                                catalog telescope when creating the `ChromaticRealGalaxy` (e.g.,
-                                area_norm=45238.93416 for HST). [default: 1]
-        @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                                telescope when using ``drawImage`` with a ``ChromaticRealGalaxy``,
+                                then you should set area_norm equal to the collecting area of the
+                                source catalog telescope when creating the ``ChromaticRealGalaxy``
+                                (e.g., area_norm=45238.93416 for HST). [default: 1]
+            gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                                 details. [default: None]
-        @param logger           A logger object for output of progress statements if the user wants
+            logger:             A logger object for output of progress statements if the user wants
                                 them.  [default: None]
 
         """

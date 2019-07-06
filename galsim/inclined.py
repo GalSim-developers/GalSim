@@ -48,42 +48,38 @@ class InclinedExponential(GSObject):
     At present, this profile is not enabled for photon-shooting.
 
     A profile can be initialized using one (and only one) of two possible size parameters:
-    `scale_radius` or `half_light_radius`.  Exactly one of these two is required. Similarly,
-    at most one of `scale_height' and `scale_h_over_r' is required; if neither is given, the
+    ``scale_radius`` or ``half_light_radius``.  Exactly one of these two is required. Similarly,
+    at most one of ``scale_height`` and ``scale_h_over_r`` is required; if neither is given, the
     default of scale_h_over_r = 0.1 will be used. Note that if half_light_radius and
     scale_h_over_r are supplied (or the default value of scale_h_over_r is used),
     scale_h_over_r will be assumed to refer to the scale radius, not the half-light radius.
 
-    Initialization
-    --------------
+    Parameters:
+        inclination:        The inclination angle, which must be a galsim.Angle instance
+        scale_radius:       The scale radius of the exponential disk.  Typically given in
+                            arcsec. This can be compared to the 'scale_radius' parameter of the
+                            galsim.Exponential class, and in the face-on case, the same scale
+                            radius will result in the same 2D light distribution as with that
+                            class.
+        half_light_radius:  The half-light radius of the exponential disk, as an alternative to
+                            the scale radius.
+        scale_height:       The scale height of the exponential disk.  Typically given in arcsec.
+                            [default: None]
+        scale_h_over_r:     In lieu of the scale height, you may also specify the ratio of the
+                            scale height to the scale radius. [default: 0.1]
+        flux:               The flux (in photons) of the profile. [default: 1]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
-    @param inclination          The inclination angle, which must be a galsim.Angle instance
-    @param scale_radius         The scale radius of the exponential disk.  Typically given in
-                                arcsec. This can be compared to the 'scale_radius' parameter of the
-                                galsim.Exponential class, and in the face-on case, the same scale
-                                radius will result in the same 2D light distribution as with that
-                                class.
-    @param half_light_radius    The half-light radius of the exponential disk, as an alternative to
-                                the scale radius.
-    @param scale_height         The scale height of the exponential disk.  Typically given in arcsec.
-                                [default: None]
-    @param scale_h_over_r       In lieu of the scale height, you may also specify the ratio of the
-                                scale height to the scale radius. [default: 0.1]
-    @param flux                 The flux (in photons) of the profile. [default: 1]
-    @param gsparams             An optional GSParams argument.  See the docstring for GSParams for
-                                details. [default: None]
+    In addition to the usual GSObject methods and attributes, InclinedExponential has the following
+    access properties:
 
-    Methods and Properties
-    ----------------------
-
-    In addition to the usual GSObject methods, InclinedExponential has the following access
-    properties:
-
-        >>> inclination = inclined_exponential_obj.inclination
-        >>> r0 = inclined_exponential_obj.scale_radius
-        >>> rh = inclined_exponential_obj.disk_half_light_radius
-        >>> h0 = inclined_exponential_obj.scale_height
-        >>> h0_over_r0 = inclined_exponential_obj.scale_h_over_r
+    Attributes:
+        inclination:            The inclination angle
+        scale_radius:           The scale radius of the exponential disk
+        disk_half_light_radius: The half-light radius of the exponential disk
+        scale_height:           The scale height of the disk
+        scale_h_over_r:         The ratio scale_height / scale_radius
     """
     _req_params = { "inclination" : Angle }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
@@ -223,7 +219,7 @@ class InclinedSersic(GSObject):
     where the inclination angle is zero (face-on), the Sersic class will be slightly more efficient.
 
     The InclinedSersic surface brightness profile is characterized by four properties: its
-    Sersic index `n', its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
+    Sersic index ``n``, its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
     its scale radius, and its scale height. The 3D light distribution function is:
 
         I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp[-b*(R/r_s)^{1/n}]
@@ -238,55 +234,54 @@ class InclinedSersic(GSObject):
 
     At present, this profile is not enabled for photon-shooting.
 
-    The allowed range of values for the `n` parameter is 0.3 <= n <= 6.2.  An exception will be
+    The allowed range of values for the ``n`` parameter is 0.3 <= n <= 6.2.  An exception will be
     thrown if you provide a value outside that range, matching the range of the Sersic profile.
 
     This class shares the caching of Hankel transformations with the Sersic class; see that
     class for documentation on efficiency considerations with regards to caching.
 
     A profile can be initialized using one (and only one) of two possible size parameters:
-    `scale_radius` or `half_light_radius`.  Exactly one of these two is required. Similarly,
-    at most one of `scale_height' and `scale_h_over_r' is required; if neither is given, the
+    ``scale_radius`` or ``half_light_radius``.  Exactly one of these two is required. Similarly,
+    at most one of ``scale_height`` and ``scale_h_over_r`` is required; if neither is given, the
     default of scale_h_over_r = 0.1 will be used. Note that if half_light_radius and
     scale_h_over_r are supplied (or the default value of scale_h_over_r is used),
     scale_h_over_r will be assumed to refer to the scale radius, not the half-light radius.
 
-    Initialization
-    --------------
+    Parameters:
+        n:                  The Sersic index, n.
+        inclination:        The inclination angle, which must be a galsim.Angle instance
+        scale_radius:       The scale radius of the disk.  Typically given in arcsec.
+                            This can be compared to the 'scale_radius' parameter of the
+                            galsim.Sersic class, and in the face-on case, the same scale
+                            radius will result in the same 2D light distribution as with that
+                            class. Exactly one of this and half_light_radius must be provided.
+        half_light_radius:  The half-light radius of disk when seen face-on. Exactly one of this
+                            and scale_radius must be provided.
+        scale_height:       The scale height of the exponential disk.  Typically given in arcsec.
+                            [default: None]
+        scale_h_over_r:     In lieu of the scale height, you may specify the ratio of the
+                            scale height to the scale radius. [default: 0.1]
+        flux:               The flux (in photons) of the profile. [default: 1]
+        trunc:              An optional truncation radius at which the profile is made to drop to
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
+        flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
+                            untruncated profile? See the documentation of the Sersic class for
+                            more details. [default: False]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
-    @param n                  The Sersic index, n.
-    @param inclination        The inclination angle, which must be a galsim.Angle instance
-    @param scale_radius       The scale radius of the disk.  Typically given in arcsec.
-                              This can be compared to the 'scale_radius' parameter of the
-                              galsim.Sersic class, and in the face-on case, the same scale
-                              radius will result in the same 2D light distribution as with that
-                              class. Exactly one of this and half_light_radius must be provided.
-    @param half_light_radius  The half-light radius of disk when seen face-on. Exactly one of this
-                              and scale_radius must be provided.
-    @param scale_height       The scale height of the exponential disk.  Typically given in arcsec.
-                              [default: None]
-    @param scale_h_over_r     In lieu of the scale height, you may specify the ratio of the
-                              scale height to the scale radius. [default: 0.1]
-    @param flux               The flux (in photons) of the profile. [default: 1]
-    @param trunc              An optional truncation radius at which the profile is made to drop to
-                              zero, in the same units as the size parameter.
-                              [default: 0, indicating no truncation]
-    @param flux_untruncated   Should the provided `flux` and `half_light_radius` refer to the
-                              untruncated profile? See the documentation of the Sersic class for
-                              more details. [default: False]
-    @param gsparams           An optional GSParams argument.  See the docstring for GSParams for
-                              details. [default: None]
+    In addition to the usual GSObject methods and attributes, InclinedSersic has the following
+    access properties:
 
-    Methods and Properties
-    ----------------------
-
-    In addition to the usual GSObject methods, InclinedSersic has the following access properties:
-
-        >>> n = inclined_sersic_obj.n
-        >>> inclination = inclined_sersic_obj.inclination
-        >>> r0 = inclined_sersic_obj.scale_radius
-        >>> h0 = inclined_sersic_obj.scale_height
-        >>> hlr = inclined_sersic_obj.disk_half_light_radius
+    Attributes:
+        n                       The Sersic parameter n
+        inclination:            The inclination angle
+        scale_radius:           The scale radius of the exponential disk
+        disk_half_light_radius: The half-light radius of the exponential disk
+        scale_height:           The scale height of the disk
+        scale_h_over_r:         The ratio scale_height / scale_radius
+        trunc:                  The truncation radius (if any)
     """
     _req_params = { "inclination" : Angle, "n" : float }
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float,

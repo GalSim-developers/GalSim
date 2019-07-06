@@ -53,59 +53,45 @@ class RandomWalk(GSObject):
     value.  With a finite number point sources the actual realized hlr will be
     noisy.
 
-    Initialization
-    --------------
-    @param  npoints                 Number of point sources to generate.
-    @param  half_light_radius       Optional half light radius of the
-                                    distribution of points.  This value is used
-                                    for a Gaussian distribution if an explicit
-                                    profile is not sent. This is the mean half
-                                    light radius produced by an infinite number
-                                    of points.  A single instance will be noisy.
-                                    [default None]
-    @param  flux                    Optional total flux in all point sources.
-                                    This value is used for a Gaussian distribution
-                                    if an explicit profile is not sent. Defaults
-                                    to None if profile is sent, otherwise 1.
-                                    [default: 1]
-    @param  profile                 Optional profile to use for drawing points.
-                                    If a profile is sent, the half_light_radius
-                                    and flux keywords are ignored.
-                                    [default: None]
-    @param  rng                     Optional random number generator. Can be
-                                    any galsim.BaseDeviate.  If None, the rng
-                                    is created internally.
-                                    [default: None]
-    @param  gsparams                Optional GSParams for the objects
-                                    representing each point source.
-                                    [default: None]
-
-    Methods
-    -------
+    Parameters:
+         npoints:           Number of point sources to generate.
+         half_light_radius: Optional half light radius of the distribution of points.  This value
+                            is used for a Gaussian distribution if an explicit profile is not sent.
+                            This is the mean half light radius produced by an infinite number of
+                            points.  A single instance will be noisy.  [default None]
+         flux:              Optional total flux in all point sources.  This value is used for a
+                            Gaussian distribution if an explicit profile is not sent. Defaults to
+                            None if profile is sent, otherwise 1.  [default: 1]
+         profile:           Optional profile to use for drawing points.  If a profile is sent, the
+                            half_light_radius and flux keywords are ignored.  [default: None]
+         rng:               Optional random number generator. Can be any galsim.BaseDeviate.  If
+                            None, the rng is created internally.  [default: None]
+         gsparams:          Optional GSParams for the objects representing each point source.
+                            [default: None]
 
     This class inherits from galsim.Sum. Additional methods are
 
-        calculateHLR:
-            Calculate the actual half light radius of the generated points
+    Methods:
+        calculateHLR:   Calculate the actual half light radius of the generated points
 
     There are also "getters",  implemented as read-only properties
 
-        .npoints
-        .input_half_light_radius
-        .flux
-        .points
-            The array of x,y offsets used to create the point sources
+    Attributes:
+        npoints:                    The number of random walk points
+        input_half_light_radius:    The input half_light_radius
+        flux:                       The flux
+        points:                     The array of x,y offsets used to create the point sources
 
-    Notes
-    -----
+    .. note::
 
-    - The algorithm is a modified version of that presented in
+        The algorithm is a modified version of that presented in
+        https://arxiv.org/abs/1312.5514v3
 
-          https://arxiv.org/abs/1312.5514v3
+        Modifications are:
 
-      Modifications are
-        1) there is no outer cutoff to how far a point can wander
-        2) We use the approximation of an infinite number of steps.
+        - There is no outer cutoff to how far a point can wander
+        - We use the approximation of an infinite number of steps.
+
     """
     # these allow use in a galsim configuration context
 

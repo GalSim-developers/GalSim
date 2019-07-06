@@ -38,7 +38,7 @@ class LookupTable(object):
     for which interpolating from a lookup table is sufficiently accurate.
 
     A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of
-    floats/doubles).
+    floats/doubles)::
 
         >>> args = [...]
         >>> vals = []
@@ -47,7 +47,7 @@ class LookupTable(object):
         ...     vals.append(val)
         >>> table = galsim.LookupTable(x=args,f=vals)
 
-    Then you can use this table as a replacement for the slow calculation:
+    Then you can use this table as a replacement for the slow calculation::
 
         >>> other_args = [...]
         >>> for arg in other_args:
@@ -88,19 +88,20 @@ class LookupTable(object):
     power-law-ish for much of the x range) then it might be a good idea to interpolate in log(x) and
     log(f) rather than x and f.
 
-    @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
-                         which get silently converted to floats for the purpose of interpolation).
-    @param f             The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
-                         which get silently converted to floats for the purpose of interpolation).
-    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
-                         'linear', 'spline', or a galsim.Interpolant or string convertible to one.
-                         [default: 'spline']
-    @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
-                         that all inputs / outputs will still be x, it's just a question of how the
-                         interpolation is done. [default: False]
-    @param f_log         Set to True if you wish to interpolate using log(f) rather than f.  Note
-                         that all inputs / outputs will still be f, it's just a question of how the
-                         interpolation is done. [default: False]
+    Parameters:
+        x:              The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
+                        which get silently converted to floats for the purpose of interpolation).
+        f:              The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
+                        which get silently converted to floats for the purpose of interpolation).
+        interpolant:    The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
+                        'linear', 'spline', or a galsim.Interpolant or string convertible to one.
+                        [default: 'spline']
+        x_log:          Set to True if you wish to interpolate using log(x) rather than x.  Note
+                        that all inputs / outputs will still be x, it's just a question of how the
+                        interpolation is done. [default: False]
+        f_log:          Set to True if you wish to interpolate using log(f) rather than f.  Note
+                        that all inputs / outputs will still be f, it's just a question of how the
+                        interpolation is done. [default: False]
     """
     def __init__(self, x, f, interpolant='spline', x_log=False, f_log=False):
         self.x_log = x_log
@@ -187,11 +188,13 @@ class LookupTable(object):
         values is returned; and so on.  Even if interpolation was done using the `x_log` option,
         the user should still provide `x` rather than `log(x)`.
 
-        @param x        The `x` value(s) for which `f(x)` should be calculated via interpolation on
-                        the original `(x,f)` lookup table.  `x` can be a single float/double, or a
-                        tuple, list, or arbitrarily shaped 1- or 2-dimensional NumPy array.
+        Parameters:
+            x:      The `x` value(s) for which `f(x)` should be calculated via interpolation on
+                    the original `(x,f)` lookup table.  `x` can be a single float/double, or a
+                    tuple, list, or arbitrarily shaped 1- or 2-dimensional NumPy array.
 
-        @returns the interpolated `f(x)` value(s).
+        Returns:
+            the interpolated `f(x)` value(s).
         """
         # Check that all x values are in the allowed range
         self._check_range(x)
@@ -284,13 +287,14 @@ class LookupTable(object):
 
         This reads in a file, which should contain two columns with the x and f values.
 
-        @param file_name    A file from which to read the `(x,f)` pairs.
-        @param interpolant  Type of interpolation to use. [default: 'spline']
-        @param x_log        Whether the x values should be uniform in log rather than lienar.
+        Parameters:
+            file_name:      A file from which to read the `(x,f)` pairs.
+            interpolant:    Type of interpolation to use. [default: 'spline']
+            x_log:          Whether the x values should be uniform in log rather than lienar.
                             [default: False]
-        @param f_log        Whether the f values should be interpolated using their logarithms
+            f_log:          Whether the f values should be interpolated using their logarithms
                             rather than their raw values. [default: False]
-        @param amplitude    An optional scaling of the f values relative to the values in the file
+            amplitude:      An optional scaling of the f values relative to the values in the file
                             [default: 1.0]
         """
         # We don't require pandas as a dependency, but if it's available, this is much faster.
@@ -326,16 +330,17 @@ class LookupTable(object):
         This constructs a LookupTable over the given range from x_min and x_max, calculating the
         corresponding f values from the given function (technically any callable object).
 
-        @param func         A callable function.
-        @param x_min        The minimum x value at which to evalue the function and store in the
+        Parameters:
+            func:           A callable function.
+            x_min:          The minimum x value at which to evalue the function and store in the
                             lookup table.
-        @param x_max        The maximum x value at which to evalue the function and store in the
+            x_max:          The maximum x value at which to evalue the function and store in the
                             lookup table.
-        @param npoints      Number of x values at which to evaluate the function. [default: 2000]
-        @param interpolant  Type of interpolation to use. [default: 'spline']
-        @param x_log        Whether the x values should be uniform in log rather than lienar.
+            npoints:        Number of x values at which to evaluate the function. [default: 2000]
+            interpolant:    Type of interpolation to use. [default: 'spline']
+            x_log:          Whether the x values should be uniform in log rather than lienar.
                             [default: False]
-        @param f_log        Whether the f values should be interpolated using their logarithms
+            f_log:          Whether the f values should be interpolated using their logarithms
                             rather than their raw values. [default: False]
         """
         if x_log:
@@ -363,21 +368,21 @@ class LookupTable2D(object):
 
     A LookupTable2D representing the function f(x, y) may be constructed from a list or array of `x`
     values, a list or array of `y` values, and a 2D array of function evaluations at all
-    combinations of x and y values.  For instance:
+    combinations of x and y values.  For instance::
 
         >>> x = np.arange(5)
         >>> y = np.arange(8)
         >>> z = x[:, np.newaxis] + y  # function is x + y, dimensions of z are (5, 8)
         >>> tab2d = galsim.LookupTable2D(x, y, z)
 
-    To evaluate new function values with the lookup table, use the () operator:
+    To evaluate new function values with the lookup table, use the () operator::
 
         >>> print tab2d(2.2, 3.3)
         5.5
 
     The () operator can also accept sequences (lists, tuples, numpy arrays, ...) for the x and y
     arguments at which to evaluate the LookupTable2D.  Normally, the x and y sequences should have
-    the same length, which will also be the length of the output sequence.
+    the same length, which will also be the length of the output sequence::
 
         >>> print tab2d([1, 2], [3, 5])
         array([ 4., 7.])
@@ -385,18 +390,21 @@ class LookupTable2D(object):
     If you add `grid=True` as an additional kwarg, however, then the () operator will generate
     interpolated values at the outer product of x-values and y-values.  So in this case, the x and
     y sequences can have different lengths Nx and Ny, and the result will be a 2D array with
-    dimensions (Nx, Ny).
+    dimensions (Nx, Ny)::
 
         >>> print tab2d([1, 2], [3, 5], grid=True)
         array([[ 4., 6.],
                [ 5., 7.]])
 
     The default interpolation method is linear.  Other choices for the interpolant are:
-      - 'floor'
-      - 'ceil'
-      - 'nearest'
-      - 'spline' (a Catmull-Rom cubic spline).
-      - a galsim.Interpolant or string convertible to one.
+
+        - 'floor'
+        - 'ceil'
+        - 'nearest'
+        - 'spline' (a Catmull-Rom cubic spline).
+        - a galsim.Interpolant or string convertible to one.
+
+    ::
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
         >>> tab2d(2.2, 3.7)
@@ -425,7 +433,7 @@ class LookupTable2D(object):
     len(x)*(x[1]-x[0]) and similarly for y), or the first/last row/column of f must be identical,
     in which case the x-period is inferred as x[-1] - x[0].  (If both conditions are satisfied
     (equally-spaced x and y and identical first/last row/column of f, then the x-period is inferred
-    as len(x)*(x[1]-x[0])).
+    as len(x)*(x[1]-x[0]))::
 
         >>> x = np.arange(5)
         >>> y = np.arange(8)
@@ -442,7 +450,7 @@ class LookupTable2D(object):
 
     We extend the x and y arrays with a uniform spacing, though any monotonic spacing would work.
     Note that the [(0,1), (0,1)] argument in np.pad below extends the z array by 0 rows/columns in
-    the leading direction, and 1 row/column in the trailing direction.
+    the leading direction, and 1 row/column in the trailing direction::
 
         >>> x = np.append(x, x[-1] + (x[-1]-x[-2]))
         >>> y = np.append(y, y[-1] + (y[-1]-y[-2]))
@@ -455,22 +463,23 @@ class LookupTable2D(object):
         >>> tab2d(2.+3*5, 2.+4*8)  # The period is 8 in the y direction
         4.0
 
-    @param x              Strictly increasing array of `x` positions at which to create table.
-    @param y              Strictly increasing array of `y` positions at which to create table.
-    @param f              Nx by Ny input array of function values.
-    @param dfdx           Optional first derivative of f wrt x.  Only used if interpolant='spline'.
-                          [default: None]
-    @param dfdy           Optional first derivative of f wrt y.  Only used if interpolant='spline'.
-                          [default: None]
-    @param d2fdxdy        Optional cross derivative of f wrt x and y.  Only used if
-                          interpolant='spline'.  [default: None]
-    @param interpolant    Interpolant to use.  One of 'floor', 'ceil', 'nearest', 'linear',
-                          'spline', or a galsim.Interpolant or string convertible to one.
-                          [default: 'linear']
-    @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
-                          See above for details.  [default: 'raise']
-    @param constant       A constant to return when extrapolating beyond the input range and
-                          `edge_mode='constant'`.  [default: 0]
+    Parameters:
+        x:              Strictly increasing array of `x` positions at which to create table.
+        y:              Strictly increasing array of `y` positions at which to create table.
+        f:              Nx by Ny input array of function values.
+        dfdx:           Optional first derivative of f wrt x.  Only used if interpolant='spline'.
+                        [default: None]
+        dfdy:           Optional first derivative of f wrt y.  Only used if interpolant='spline'.
+                        [default: None]
+        d2fdxdy:        Optional cross derivative of f wrt x and y.  Only used if
+                        interpolant='spline'.  [default: None]
+        interpolant:    Interpolant to use.  One of 'floor', 'ceil', 'nearest', 'linear',
+                        'spline', or a galsim.Interpolant or string convertible to one.
+                        [default: 'linear']
+        edge_mode:      Keyword controlling how extrapolation beyond the input range is handled.
+                        See above for details.  [default: 'raise']
+        constant:       A constant to return when extrapolating beyond the input range and
+                        `edge_mode='constant'`.  [default: 0]
     """
     def __init__(self, x, y, f, dfdx=None, dfdy=None, d2fdxdy=None,
                  interpolant='linear', edge_mode='raise', constant=0):
@@ -700,13 +709,15 @@ class LookupTable2D(object):
     def __call__(self, x, y, grid=False):
         """Interpolate at an arbitrary point or points.
 
-        @param x        Either a single x value or an array of x values at which to interpolate.
-        @param y        Either a single y value or an array of y values at which to interpolate.
-        @param grid     Optional boolean indicating that output should be a 2D array corresponding
-                        to the outer product of input values.  If False (default), then the output
-                        array will be congruent to x and y.
+        Parameters:
+            x:      Either a single x value or an array of x values at which to interpolate.
+            y:      Either a single y value or an array of y values at which to interpolate.
+            grid:   Optional boolean indicating that output should be a 2D array corresponding
+                    to the outer product of input values.  If False (default), then the output
+                    array will be congruent to x and y.
 
-        @returns  a scalar value if x and y are scalar, or a numpy array if x and y are arrays.
+        Returns:
+            a scalar value if x and y are scalar, or a numpy array if x and y are arrays.
         """
         x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
         y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')
@@ -797,16 +808,18 @@ class LookupTable2D(object):
     def gradient(self, x, y, grid=False):
         """Calculate the gradient of the function at an arbitrary point or points.
 
-        @param x        Either a single x value or an array of x values at which to compute
-                        the gradient.
-        @param y        Either a single y value or an array of y values at which to compute
-                        the gradient.
-        @param grid     Optional boolean indicating that output should be a 2-tuple of 2D arrays
-                        corresponding to the outer product of input values.  If False (default),
-                        then the output arrays will be congruent to x and y.
+        Parameters:
+            x:      Either a single x value or an array of x values at which to compute
+                    the gradient.
+            y:      Either a single y value or an array of y values at which to compute
+                    the gradient.
+            grid:   Optional boolean indicating that output should be a 2-tuple of 2D arrays
+                    corresponding to the outer product of input values.  If False (default),
+                    then the output arrays will be congruent to x and y.
 
-        @returns A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
-        values) or numpy arrays.
+        Returns:
+            A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
+            values) or numpy arrays.
         """
         x1 = np.array(x, dtype=float, copy=self.edge_mode=='wrap')
         y1 = np.array(y, dtype=float, copy=self.edge_mode=='wrap')

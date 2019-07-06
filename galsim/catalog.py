@@ -32,28 +32,23 @@ class Catalog(object):
     Each row corresponds to a different object to be built, and each column stores some item of
     information about that object (e.g. flux or half_light_radius).
 
-    Initialization
-    --------------
-
-    @param file_name    Filename of the input catalog. (Required)
-    @param dir          Optionally a directory name can be provided if `file_name` does not
-                        already include it.
-    @param file_type    Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
-                        [default: None]
-    @param comments     The character used to indicate the start of a comment in an
-                        ASCII catalog.  [default: '#']
-    @param hdu          Which hdu to use for FITS files.  [default: 1]
-
-    Attributes
-    ----------
+    Parameters:
+        file_name:  Filename of the input catalog. (Required)
+        dir:        Optionally a directory name can be provided if `file_name` does not
+                    already include it.
+        file_type:  Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
+                    [default: None]
+        comments:   The character used to indicate the start of a comment in an
+                    ASCII catalog.  [default: '#']
+        hdu:        Which hdu to use for FITS files.  [default: 1]
 
     After construction, the following attributes are available:
 
-        nobjects   The number of objects in the catalog.
-        ncols      The number of columns in the catalog.
-        isfits     Whether the catalog is a fits catalog.
-        names      For a fits catalog, the valid column names.
-
+    Attributes:
+        nobjects:   The number of objects in the catalog.
+        ncols:      The number of columns in the catalog.
+        isfits:     Whether the catalog is a fits catalog.
+        names:      For a fits catalog, the valid column names.
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
@@ -200,20 +195,20 @@ class Dict(object):
 
     After construction, it behaves like a regular python dict, with one exception.
     In order to facilitate getting values in a hierarchy of fields, we allow the '.'
-    character to chain keys together for the get() method.  So,
+    character to chain keys together for the get() method.  So,::
 
         >>> d.get('noise.properties.variance')
 
-    is expanded into
+    is expanded into::
 
         >>> d['noise']['properties']['variance']
 
     Furthermore, if a "key" is really an integer, then it is used as such, which accesses
-    the corresponding element in a list.  e.g.
+    the corresponding element in a list.  e.g.::
 
         >>> d.get('noise_models.2.variance')
 
-    is equivalent to
+    is equivalent to::
 
         >>> d['noise_models'][2]['variance']
 
@@ -224,14 +219,15 @@ class Dict(object):
     to set `key_split` to a different character or string and use that to chain the keys.
 
 
-    @param file_name    Filename storing the dict.
-    @param dir          Optionally a directory name can be provided if `file_name` does not
-                        already include it. [default: None]
-    @param file_type    Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from
-                        `file_name` extension ('.p*', '.y*', '.j*' respectively).
-                        [default: None]
-    @param key_split    The character (or string) to use to split chained keys.  (cf. the
-                        description of this feature above.)  [default: '.']
+    Parameters:
+        file_name:  Filename storing the dict.
+        dir:        Optionally a directory name can be provided if `file_name` does not
+                    already include it. [default: None]
+        file_type:  Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from
+                    `file_name` extension ('.p*', '.y*', '.j*' respectively).
+                    [default: None]
+        key_split:  The character (or string) to use to split chained keys.  (cf. the
+                    description of this feature above.)  [default: '.']
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str, 'key_split' : str }
@@ -360,24 +356,19 @@ class OutputCatalog(object):
     the user to make sure that the values added for each row are compatible with the
     types given here in the `types` parameter.
 
-    Initialization
-    --------------
-
-    @param names    A list of names for the output columns.
-    @param types    A list of types for the output columns. [default: None, which assumes all
+    Parameters:
+        names:      A list of names for the output columns.
+        types:      A list of types for the output columns. [default: None, which assumes all
                     columns are float]
-
-    Attributes
-    ----------
 
     After construction, the following attributes are available:
 
-        nobjects    The number of objects so far in the catalog.
-        ncols       The number of columns in the catalog.
-        names       The names of the columns.
-        types       The types of the columns.
-        rows        The rows of data that have been accumulated so far.
-
+    Attributes:
+        nobjects:       The number of objects so far in the catalog.
+        ncols:          The number of columns in the catalog.
+        names:          The names of the columns.
+        types:          The types of the columns.
+        rows:           The rows of data that have been accumulated so far.
     """
     # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
     # https://pythonconquerstheuniverse.wordpress.com/2012/02/15/mutable-default-arguments/
@@ -410,9 +401,10 @@ class OutputCatalog(object):
         match the column types, you may get an error when writing, or you may lose precision,
         depending on the nature of the mismatch.
 
-        @param row          A list with one item per column in the same order as the names list.
-        @param sort_key     If the rows may be added out of order, you can provide a sort_key,
-                            which will be used at the end to re-sort the rows.
+        Parameters:
+            row:        A list with one item per column in the same order as the names list.
+            sort_key:   If the rows may be added out of order, you can provide a sort_key,
+                        which will be used at the end to re-sort the rows.
         """
         if len(row) != self.ncols:
             raise GalSimValueError("Length of row does not match the number of columns = %d"%(
@@ -426,12 +418,13 @@ class OutputCatalog(object):
     def write(self, file_name, dir=None, file_type=None, prec=8):
         """Write the catalog to a file.
 
-        @param file_name    The name of the file to write to.
-        @param dir          Optionally a directory name can be provided if `file_name` does not
-                            already include it. [default: None]
-        @param file_type    Which kind of file to write to. [default: determine from the file_name
-                            extension]
-        @param prec         Output precision for ASCII. [default: 8]
+        Parameters:
+            file_name:  The name of the file to write to.
+            dir:        Optionally a directory name can be provided if `file_name` does not
+                        already include it. [default: None]
+            file_type:  Which kind of file to write to. [default: determine from the file_name
+                        extension]
+            prec:       Output precision for ASCII. [default: 8]
         """
         if dir is not None:
             import os
@@ -508,8 +501,9 @@ class OutputCatalog(object):
     def writeAscii(self, file_name, prec=8):
         """Write catalog to an ASCII file.
 
-        @param file_name    The name of the file to write to.
-        @param prec         Output precision for floats. [default: 8]
+        Parameters:
+            file_name:  The name of the file to write to.
+            prec:       Output precision for floats. [default: 8]
         """
         data = self.makeData()
 
@@ -540,7 +534,8 @@ class OutputCatalog(object):
     def writeFits(self, file_name):
         """Write catalog to a FITS file.
 
-        @param file_name    The name of the file to write to.
+        Parameters:
+            file_name:  The name of the file to write to.
         """
         from .fits import writeFile
         tbhdu = self.writeFitsHdu()
@@ -549,7 +544,8 @@ class OutputCatalog(object):
     def writeFitsHdu(self):
         """Write catalog to a FITS hdu.
 
-        @returns an HDU with the FITS binary table of the catalog.
+        Returns:
+            an HDU with the FITS binary table of the catalog.
         """
         # Note to developers: Because of problems with pickling in older pyfits versions, this
         # code is duplicated in galsim/config/extra_truth.py, BuildTruthHDU.  If you change

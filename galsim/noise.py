@@ -33,45 +33,55 @@ def addNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
     """Add noise to the image according to a supplied noise model.
 
-    @param noise        The noise (BaseNoise) model to use.
+    Parameters:
+        noise:      The noise (BaseNoise) model to use.
     """
     noise.applyTo(self)
 
+# This will be inserted into the Image class as a method.  So self = image.
 def addNoiseSNR(self, noise, snr, preserve_flux=False):
-    # This will be inserted into the Image class as a method.  So self = image.
     """Adds noise to the image in a way that achieves the specified signal-to-noise ratio.
 
-    The given SNR (`snr`) can be achieved either by scaling the flux of the object while keeping the
-    noise level fixed, or the flux can be preserved and the noise variance changed.  This is set
-    using the parameter `preserve_flux`.
+    The given SNR (``snr``) can be achieved either by scaling the flux of the object while keeping
+    the noise level fixed, or the flux can be preserved and the noise variance changed.  This is set
+    using the parameter ``preserve_flux``.
 
     The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral
-    of the flux:
+    of the flux::
+
         S = sum W(x,y) I(x,y) / sum W(x,y)
         N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-    and assuming that Var(I(x,y)) is constant
+
+    and assuming that Var(I(x,y)) is constant::
+
         Var(I(x,y)) = noise_var
+
     We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things
-    cancel and we find that
+    cancel and we find that::
+
         snr = S/N = sqrt( sum I(x,y)^2 / noise_var )
-    and therefore, for a given I(x,y) and snr,
+
+    and therefore, for a given I(x,y) and snr,::
+
         noise_var = sum I(x,y)^2/snr^2.
 
     Note that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
     is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
-    Thus, the real S/N on the final image will be slightly lower than the target `snr` value,
+    Thus, the real S/N on the final image will be slightly lower than the target ``snr`` value,
     and this effect will be larger for brighter objects.
 
     Also, this function relies on noise.getVariance() to determine how much variance the
     noise model will add.  Thus, it will not work for noise models that do not have a well-
     defined variance, such as VariableGaussianNoise.
 
-    @param noise        The noise (BaseNoise) model to use.
-    @param snr          The desired signal-to-noise after the noise is applied.
-    @param preserve_flux  Whether to preserve the flux of the object (True) or the variance of
+    Parameters:
+        noise:          The noise (BaseNoise) model to use.
+        snr:            The desired signal-to-noise after the noise is applied.
+        preserve_flux:  Whether to preserve the flux of the object (True) or the variance of
                         the noise model (False) to achieve the desired SNR. [default: False]
 
-    @returns the variance of the noise that was applied to the image.
+    Returns:
+        the variance of the noise that was applied to the image.
     """
     noise_var = noise.getVariance()
     sumsq = np.sum(self.array**2, dtype=float)
@@ -104,7 +114,7 @@ class BaseNoise(object):
         VariableGaussianNoise
 
     which define what kind of noise you want to implement.  This base class mostly just serves as
-    a way to check if an object is a valid noise object with
+    a way to check if an object is a valid noise object with::
 
         >>> isinstance(noise, galsim.BaseNoise)
     """
@@ -132,9 +142,11 @@ class BaseNoise(object):
         """Return a new noise object (of the same type as the current one) with the specified
         variance.
 
-        @param variance     The desired variance in the noise.
+        Parameters:
+            variance:   The desired variance in the noise.
 
-        @returns a new Noise object with the given variance.
+        Returns:
+            a new Noise object with the given variance.
         """
         return self._withVariance(variance)
 
@@ -146,10 +158,12 @@ class BaseNoise(object):
 
         This is equivalent to noise * variance_ratio.
 
-        @param variance_ratio   The factor by which to scale the variance of the correlation
-                                function profile.
+        Parameters:
+            variance_ratio: The factor by which to scale the variance of the correlation
+                            function profile.
 
-        @returns a new Noise object whose variance has been scaled by the given amount.
+        Returns:
+            a new Noise object whose variance has been scaled by the given amount.
         """
         return self._withScaledVariance(variance_ratio)
 
@@ -157,12 +171,14 @@ class BaseNoise(object):
         raise NotImplementedError("Cannot call withScaledVariance on a pure BaseNoise object")
 
     def __mul__(self, variance_ratio):
-        """Multiply the variance of the noise by `variance_ratio`.
+        """Multiply the variance of the noise by ``variance_ratio``.
 
-        @param variance_ratio   The factor by which to scale the variance of the correlation
-                                function profile.
+        Parameters:
+            variance_ratio: The factor by which to scale the variance of the correlation
+                            function profile.
 
-        @returns a new Noise object whose variance has been scaled by the given amount.
+        Returns:
+            a new Noise object whose variance has been scaled by the given amount.
         """
         return self.withScaledVariance(variance_ratio)
 
@@ -176,15 +192,14 @@ class BaseNoise(object):
     def applyTo(self, image):
         """Add noise to an input Image.
 
-        Calling
-        -------
+        e.g.::
 
             >>> noise.applyTo(image)
 
-        On output the Image instance `image` will have been given additional noise according
+        On output the Image instance ``image`` will have been given additional noise according
         to the current noise model.
 
-        Note: This is equivalent to the alternate syntax
+        Note: This is equivalent to the alternate syntax::
 
             >>> image.addNoise(noise)
 
@@ -211,24 +226,22 @@ class GaussianNoise(BaseNoise):
     """Class implementing simple Gaussian noise.
 
     This is a simple noise model where each pixel in the image gets Gaussian noise with a
-    given `sigma`.
+    given ``sigma``.
 
-    Initialization
-    --------------
+    Example:
 
-    @param rng          A BaseDeviate instance to use for generating the random numbers.
-    @param sigma        The rms noise on each pixel. [default: 1.]
+    The following will add Gaussian noise to every element of an image::
 
-    Methods
-    -------
+        >>> gaussian_noise = galsim.GaussianNoise(rng, sigma=1.0)
+        >>> image.addNoise(gaussian_noise)
 
-    To add noise to every element of an image, use the syntax `image.addNoise(gaussian_noise)`.
+    Parameters:
+        rng:        A BaseDeviate instance to use for generating the random numbers.
+        sigma:      The rms noise on each pixel. [default: 1.]
 
-    Attributes
-    ----------
-
-        noise.rng           # The internal random number generator (read-only)
-        noise.sigma         # The value of the constructor parameter sigma (read-only)
+    Attributes:
+        rng:        The internal random number generator (read-only)
+        sigma:      The value of the constructor parameter sigma (read-only)
     """
     def __init__(self, rng=None, sigma=1.):
         from .random import GaussianDeviate
@@ -259,7 +272,7 @@ class GaussianNoise(BaseNoise):
         """Returns a copy of the Gaussian noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if you want with
+        instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
         """
@@ -285,27 +298,21 @@ class PoissonNoise(BaseNoise):
     to a level that is taken to be already subtracted from the image, but that originally
     contributed to the addition of Poisson noise.
 
-    Initialization
-    --------------
+    Example:
+
+    The following will add Poisson noise to every element of an image::
 
         >>> poisson_noise = galsim.PoissonNoise(rng, sky_level=0.)
+        >>> image.addNoise(poisson_noise)
 
     Parameters:
+        rng:        A BaseDeviate instance to use for generating the random numbers.
+        sky_level:  The sky level in electrons per pixel that was originally in the input image,
+                    but which is taken to have already been subtracted off. [default: 0.]
 
-    @param rng          A BaseDeviate instance to use for generating the random numbers.
-    @param sky_level    The sky level in electrons per pixel that was originally in the input image,
-                        but which is taken to have already been subtracted off. [default: 0.]
-
-    Methods
-    -------
-
-    To add noise to every element of an image, use the syntax `image.addNoise(poisson_noise)`.
-
-    Attributes
-    ----------
-
-        noise.rng           # The internal random number generator (read-only)
-        noise.sky_level     # The value of the constructor parameter sky_level (read-only)
+    Attributes:
+        rng:        The internal random number generator (read-only)
+        sky_level:  The value of the constructor parameter sky_level (read-only)
     """
     def __init__(self, rng=None, sky_level=0.):
         from .random import PoissonDeviate
@@ -356,7 +363,7 @@ class PoissonNoise(BaseNoise):
         """Returns a copy of the Poisson noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if you want with
+        instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
         """
@@ -397,34 +404,28 @@ class CCDNoise(BaseNoise):
     efficiency into the gain to give units photons/ADU.  Either way is acceptable.  Just make sure
     you give the read noise in photons as well in this case.
 
-    Initialization
-    --------------
+    Example:
+
+    The following will add CCD noise to every element of an image::
 
         >>> ccd_noise = galsim.CCDNoise(rng, sky_level=0., gain=1., read_noise=0.)
+        >>> image.addNoise(ccd_noise)
 
     Parameters:
-
-    @param rng          A BaseDeviate instance to use for generating the random numbers.
-    @param sky_level    The sky level in ADU per pixel that was originally in the input image,
+        rng:            A BaseDeviate instance to use for generating the random numbers.
+        sky_level:      The sky level in ADU per pixel that was originally in the input image,
                         but which is taken to have already been subtracted off. [default: 0.]
-    @param gain         The gain for each pixel in electrons per ADU; setting `gain<=0` will shut
+        gain:           The gain for each pixel in electrons per ADU; setting ``gain<=0`` will shut
                         off the Poisson noise, and the Gaussian rms will take the value
-                        `read_noise` as being in units of ADU rather than electrons. [default: 1.]
-    @param read_noise   The read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.).
-                        Setting `read_noise=0`. will shut off the Gaussian noise. [default: 0.]
+                        ``read_noise`` as being in units of ADU rather than electrons. [default: 1.]
+        read_noise:     The read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.).
+                        Setting ``read_noise=0``. will shut off the Gaussian noise. [default: 0.]
 
-    Methods
-    -------
-
-    To add noise to every element of an image, use the syntax `image.addNoise(ccd_noise)`.
-
-    Attributes
-    ----------
-
-        noise.rng           # The internal random number generator (read-only)
-        noise.sky_level     # The value of the constructor parameter sky_level (read-only)
-        noise.gain          # The value of the constructor parameter gain (read-only)
-        noise.read_noise    # The value of the constructor parameter read_noise (read-only)
+    Attributes:
+        rng:            The internal random number generator (read-only)
+        sky_level:      The value of the constructor parameter sky_level (read-only)
+        gain:           The value of the constructor parameter gain (read-only)
+        read_noise:     The value of the constructor parameter read_noise (read-only)
     """
     def __init__(self, rng=None, sky_level=0., gain=1., read_noise=0.):
         from .random import PoissonDeviate, GaussianDeviate
@@ -503,7 +504,7 @@ class CCDNoise(BaseNoise):
         """Returns a copy of the CCD noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if you want with
+        instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
         """
@@ -525,24 +526,16 @@ class DeviateNoise(BaseNoise):
     The DeviateNoise class provides a way to treat an arbitrary deviate as the noise model for
     each pixel in an image.
 
-    Initialization
-    --------------
+    The following will add noise according to a given random deviate to every element of an image::
 
         >>> dev_noise = galsim.DeviateNoise(dev)
+        >>> image.addNoise(dev_noise)
 
     Parameters:
+        dev:    A BaseDeviate subclass to use as the noise deviate for each pixel.
 
-    @param dev         A BaseDeviate subclass to use as the noise deviate for each pixel.
-
-    Methods
-    -------
-
-    To add noise to every element of an image, use the syntax `image.addNoise(dev_noise)`.
-
-    Attributes
-    ----------
-
-        noise.rng       # The internal random number generator (read-only)
+    Attributes:
+        rng:    The internal random number generator (read-only)
     """
     def __init__(self, dev):
         BaseNoise.__init__(self, dev)
@@ -565,7 +558,7 @@ class DeviateNoise(BaseNoise):
         """Returns a copy of the Deviate noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if you want with
+        instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
         """
@@ -589,26 +582,19 @@ class VariableGaussianNoise(BaseNoise):
     """
     Class implementing Gaussian noise that has a different variance in each pixel.
 
-    Initialization
-    --------------
+    The following will add variable Gaussian noise to every element of an image::
 
         >>> variable_noise = galsim.VariableGaussianNoise(rng, var_image)
+        >>> image.addNoise(variable_noise)
 
     Parameters:
+        rng:        A BaseDeviate instance to use for generating the random numbers.
+        var_image:  The variance of the noise to apply to each pixel.  This image must be the
+                    same shape as the image for which you eventually call addNoise().
 
-    @param rng          A BaseDeviate instance to use for generating the random numbers.
-    @param var_image    The variance of the noise to apply to each pixel.  This image must be the
-                        same shape as the image for which you eventually call addNoise().
-
-    Methods
-    -------
-    To add noise to every element of an image, use the syntax `image.addNoise(variable_noise)`.
-
-    Attributes
-    ----------
-
-        noise.rng           # The internal random number generator (read-only)
-        noise.var_image     # The value of the constructor parameter var_image (read-only)
+    Attributes:
+        rng:        The internal random number generator (read-only)
+        var_image:  The value of the constructor parameter var_image (read-only)
     """
     def __init__(self, rng, var_image):
         from .random import GaussianDeviate
@@ -643,7 +629,7 @@ class VariableGaussianNoise(BaseNoise):
         """Returns a copy of the variable Gaussian noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if you want with
+        instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
         """

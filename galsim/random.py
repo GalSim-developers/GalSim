@@ -33,9 +33,6 @@ class BaseDeviate(object):
 
     This holds the essential random number generator that all the other classes use.
 
-    Initialization
-    --------------
-
     All deviates take an initial `seed` argument that is used to seed the underlying random number
     generator.  It has three different kinds of behavior.
 
@@ -55,12 +52,11 @@ class BaseDeviate(object):
        to any other one you make, they will both be using the same RNG and the series of "random"
        values will be deterministic.
 
-    Usage
-    -----
+    Usage:
 
     There is not much you can do with something that is only known to be a BaseDeviate rather than
     one of the derived classes other than construct it and change the seed, and use it as an
-    argument to pass to other Deviate constructors.
+    argument to pass to other Deviate constructors.::
 
         >>> rng = galsim.BaseDeviate(215324)
         >>> rng()
@@ -74,8 +70,7 @@ class BaseDeviate(object):
         >>> ud2()
         0.58736140513792634
 
-    Methods
-    -------
+    Methods:
 
     There are a few methods that are common to all BaseDeviate classes, so we describe them here.
 
@@ -95,8 +90,9 @@ class BaseDeviate(object):
     def seed(self, seed=0):
         """Seed the pseudo-random number generator with a given integer value.
 
-        @param seed         An int value to be used to seed the random number generator.  Using 0
-                            means to generate a seed from the system. [default: 0]
+        Parameters:
+            seed:       An int value to be used to seed the random number generator.  Using 0
+                        means to generate a seed from the system. [default: 0]
         """
         if seed == int(seed):
             self._seed(int(seed))
@@ -113,9 +109,10 @@ class BaseDeviate(object):
         Providing another BaseDeviate object as the seed connects this deviate with the other
         one, so they will both use the same underlying random number generator.
 
-        @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                            BaseDeviate.  Using None means to generate a seed from the system.
-                            [default: None]
+        Parameters:
+            seed:       Something that can seed a BaseDeviate: an integer seed or another
+                        BaseDeviate.  Using None means to generate a seed from the system.
+                        [default: None]
         """
         if isinstance(seed, BaseDeviate):
             self._reset(seed)
@@ -145,6 +142,7 @@ class BaseDeviate(object):
 
         Example
         _______
+        ::
 
             >>> u = galsim.UniformDeviate(31415926)
             >>> u()
@@ -252,24 +250,20 @@ class BaseDeviate(object):
 class UniformDeviate(BaseDeviate):
     """Pseudo-random number generator with uniform distribution in interval [0.,1.).
 
-    Initialization
-    --------------
-
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
-                        [default: None]
-
-    Calling
-    -------
-
     Successive calls to u() generate pseudo-random values distributed uniformly in the interval
-    [0., 1.).
+    [0., 1.).::
 
         >>> u = galsim.UniformDeviate(31415926)
         >>> u()
         0.17100770119577646
         >>> u()
         0.49095047544687986
+
+    Parameters:
+        seed:       Something that can seed a BaseDeviate: an integer seed or another
+                    BaseDeviate.  Using 0 means to generate a seed from the system.
+                    [default: None]
+
     """
     def __init__(self, seed=None):
         self._rng_type = _galsim.UniformDeviateImpl
@@ -294,26 +288,21 @@ class GaussianDeviate(BaseDeviate):
 
     See http://en.wikipedia.org/wiki/Gaussian_distribution for further details.
 
-    Initialization
-    --------------
-
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
-                        [default: None]
-    @param mean         Mean of Gaussian distribution. [default: 0.]
-    @param sigma        Sigma of Gaussian distribution. [default: 1.; Must be > 0]
-
-    Calling
-    -------
-
     Successive calls to g() generate pseudo-random values distributed according to a Gaussian
-    distribution with the provided `mean`, `sigma`.
+    distribution with the provided `mean`, `sigma`.::
 
         >>> g = galsim.GaussianDeviate(31415926)
         >>> g()
         0.5533754000847082
         >>> g()
         1.0218588970190354
+
+    Parameters:
+        seed:       Something that can seed a BaseDeviate: an integer seed or another
+                    BaseDeviate.  Using 0 means to generate a seed from the system.
+                    [default: None]
+        mean:       Mean of Gaussian distribution. [default: 0.]
+        sigma:      Sigma of Gaussian distribution. [default: 1.; Must be > 0]
     """
     def __init__(self, seed=None, mean=0., sigma=1.):
         if sigma < 0.:
@@ -362,26 +351,21 @@ class BinomialDeviate(BaseDeviate):
     value where 0 <= value <= N gives the number of heads.  See
     http://en.wikipedia.org/wiki/Binomial_distribution for more information.
 
-    Initialization
-    --------------
-
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
-                        [default: None]
-    @param N            The number of 'coin flips' per trial. [default: 1; Must be > 0]
-    @param p            The probability of success per coin flip. [default: 0.5; Must be > 0]
-
-    Calling
-    -------
-
     Successive calls to b() generate pseudo-random integer values distributed according to a
-    binomial distribution with the provided `N`, `p`.
+    binomial distribution with the provided `N`, `p`.::
 
         >>> b = galsim.BinomialDeviate(31415926, N=10, p=0.3)
         >>> b()
         2
         >>> b()
         3
+
+    Parameters:
+        seed:       Something that can seed a BaseDeviate: an integer seed or another
+                    BaseDeviate.  Using 0 means to generate a seed from the system.
+                    [default: None]
+        N:          The number of 'coin flips' per trial. [default: 1; Must be > 0]
+        p:          The probability of success per coin flip. [default: 0.5; Must be > 0]
     """
     def __init__(self, seed=None, N=1, p=0.5):
         self._rng_type = _galsim.BinomialDeviateImpl
@@ -416,25 +400,20 @@ class PoissonDeviate(BaseDeviate):
     this distribution is returned after each call.
     See http://en.wikipedia.org/wiki/Poisson_distribution for more details.
 
-    Initialization
-    --------------
-
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
-                        [default: None]
-    @param mean         Mean of the distribution. [default: 1; Must be > 0]
-
-    Calling
-    -------
-
     Successive calls to p() generate pseudo-random integer values distributed according to a Poisson
-    distribution with the specified `mean`.
+    distribution with the specified `mean`.::
 
         >>> p = galsim.PoissonDeviate(31415926, mean=100)
         >>> p()
         94
         >>> p()
         106
+
+    Parameters:
+        seed:       Something that can seed a BaseDeviate: an integer seed or another
+                    BaseDeviate.  Using 0 means to generate a seed from the system.
+                    [default: None]
+        mean:       Mean of the distribution. [default: 1; Must be > 0]
     """
     def __init__(self, seed=None, mean=1.):
         if mean < 0:
@@ -483,26 +462,21 @@ class WeibullDeviate(BaseDeviate):
     in the Wikipedia article) for more details.  The Weibull distribution is real valued and
     produces deviates >= 0.
 
-    Initialization
-    --------------
-
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
-                        [default: None]
-    @param a            Shape parameter of the distribution. [default: 1; Must be > 0]
-    @param b            Scale parameter of the distribution. [default: 1; Must be > 0]
-
-    Calling
-    -------
-
     Successive calls to p() generate pseudo-random values distributed according to a Weibull
-    distribution with the specified shape and scale parameters `a` and `b`.
+    distribution with the specified shape and scale parameters `a` and `b`.::
 
         >>> w = galsim.WeibullDeviate(31415926, a=1.3, b=4)
         >>> w()
         1.1038481241018219
         >>> w()
         2.957052966368049
+
+    Parameters:
+        seed:       Something that can seed a BaseDeviate: an integer seed or another
+                    BaseDeviate.  Using 0 means to generate a seed from the system.
+                    [default: None]
+        a:          Shape parameter of the distribution. [default: 1; Must be > 0]
+        b:          Scale parameter of the distribution. [default: 1; Must be > 0]
     """
     def __init__(self, seed=None, a=1., b=1.):
         self._rng_type = _galsim.WeibullDeviateImpl
@@ -536,26 +510,21 @@ class GammaDeviate(BaseDeviate):
     (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
     The Gamma distribution is a real valued distribution producing deviates >= 0.
 
-    Initialization
-    --------------
-
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
-                        [default: None]
-    @param k            Shape parameter of the distribution. [default: 1; Must be > 0]
-    @param theta        Scale parameter of the distribution. [default: 1; Must be > 0]
-
-    Calling
-    -------
-
     Successive calls to p() generate pseudo-random values distributed according to a gamma
-    distribution with the specified shape and scale parameters `k` and `theta`.
+    distribution with the specified shape and scale parameters `k` and `theta`.::
 
         >>> gam = galsim.GammaDeviate(31415926, k=1, theta=2)
         >>> gam()
         0.37508882726316
         >>> gam()
         1.3504199388358704
+
+    Parameters:
+        seed:       Something that can seed a BaseDeviate: an integer seed or another
+                    BaseDeviate.  Using 0 means to generate a seed from the system.
+                    [default: None]
+        k:          Shape parameter of the distribution. [default: 1; Must be > 0]
+        theta:      Scale parameter of the distribution. [default: 1; Must be > 0]
     """
     def __init__(self, seed=None, k=1., theta=1.):
         self._rng_type = _galsim.GammaDeviateImpl
@@ -591,26 +560,21 @@ class Chi2Deviate(BaseDeviate):
     adopted in the Boost.Random routine called by this class).  The Chi^2 distribution is a
     real-valued distribution producing deviates >= 0.
 
-    Initialization
-    --------------
-
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
-                        [default: None]
-    @param n            Number of degrees of freedom for the output distribution. [default: 1;
-                        Must be > 0]
-
-    Calling
-    -------
-
     Successive calls to chi2() generate pseudo-random values distributed according to a chi-square
-    distribution with the specified degrees of freedom, `n`.
+    distribution with the specified degrees of freedom, `n`.::
 
         >>> chi2 = galsim.Chi2Deviate(31415926, n=7)
         >>> chi2()
         7.9182211987712385
         >>> chi2()
         6.644121724269535
+
+    Parameters:
+        seed:       Something that can seed a BaseDeviate: an integer seed or another
+                    BaseDeviate.  Using 0 means to generate a seed from the system.
+                    [default: None]
+        n:          Number of degrees of freedom for the output distribution. [default: 1;
+                    Must be > 0]
     """
     def __init__(self, seed=None, n=1.):
         self._rng_type = _galsim.Chi2DeviateImpl
@@ -659,57 +623,54 @@ class DistDeviate(BaseDeviate):
     against the use of splines because they can cause non-monotonic behavior.  Passing the
     `interpolant` keyword next to anything but a table in a file will result in an error.
 
-    Initialization
-    --------------
+    Examples:
 
-    Some sample initialization calls:
+    Some sample initialization calls::
 
-    >>> d = galsim.DistDeviate(function=f, x_min=x_min, x_max=x_max)
+        >>> d = galsim.DistDeviate(function=f, x_min=x_min, x_max=x_max)
 
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
-    `f(x)` from `x=x_min` to `x=x_max` and seeds the PRNG using current time.
+    `f(x)` from `x=x_min` to `x=x_max` and seeds the PRNG using current time.::
 
-    >>> d = galsim.DistDeviate(1062533, function=file_name, interpolant='floor')
+        >>> d = galsim.DistDeviate(1062533, function=file_name, interpolant='floor')
 
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
     `file_name`, which must be a 2-column ASCII table, and seeds the PRNG using the integer
-    seed 1062533. It generates probabilities from `file_name` using the interpolant 'floor'.
+    seed 1062533. It generates probabilities from `file_name` using the interpolant 'floor'.::
 
-    >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
+        >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
 
     Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
     arrays `x` and `p` which are used to make a callable LookupTable, and links the DistDeviate
     PRNG to the already-existing random number generator `rng`.
 
-    @param seed         Something that can seed a BaseDeviate: an integer seed or another
+    Successive calls to d() generate pseudo-random values with the given probability distribution.::
+
+        >>> d = galsim.DistDeviate(31415926, function=lambda x: 1-abs(x), x_min=-1, x_max=1)
+        >>> d()
+        -0.4151921102709466
+        >>> d()
+        -0.00909781188974034
+
+    Parameters:
+        seed:           Something that can seed a BaseDeviate: an integer seed or another
                         BaseDeviate.  Using 0 means to generate a seed from the system.
                         [default: None]
-    @param function     A callable function giving a probability distribution or the name of a
+        function:       A callable function giving a probability distribution or the name of a
                         file containing a probability distribution as a 2-column ASCII table.
                         [required]
-    @param x_min        The minimum desired return value (required for non-LookupTable
+        x_min:          The minimum desired return value (required for non-LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]
-    @param x_min        The maximum desired return value (required for non-LookupTable
+        x_max:          The maximum desired return value (required for non-LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]
-    @param interpolant  Type of interpolation used for interpolating a file (causes an error if
+        interpolant:    Type of interpolation used for interpolating a file (causes an error if
                         passed alongside a callable function).  Options are given in the
                         documentation for LookupTable. [default: 'linear']
-    @param npoints      Number of points DistDeviate should create for its internal interpolation
+        npoints:        Number of points DistDeviate should create for its internal interpolation
                         tables. [default: 256, unless the function is a non-log LookupTable, in
                         which case it uses the table's x values]
-
-    Calling
-    -------
-
-    Successive calls to d() generate pseudo-random values with the given probability distribution.
-
-    >>> d = galsim.DistDeviate(31415926, function=lambda x: 1-abs(x), x_min=-1, x_max=1)
-    >>> d()
-    -0.4151921102709466
-    >>> d()
-    -0.00909781188974034
     """
     def __init__(self, seed=None, function=None, x_min=None,
                  x_max=None, interpolant=None, npoints=None):
@@ -828,9 +789,11 @@ class DistDeviate(BaseDeviate):
         This function is typically called by self.__call__(), which generates a random p
         between 0 and 1 and calls `self.val(p)`.
 
-        @param p    The desired cumulative probabilty p.
+        Parameters:
+            p:      The desired cumulative probabilty p.
 
-        @returns the corresponding x such that p = cdf(x).
+        Returns:
+            the corresponding x such that p = cdf(x).
         """
         if p<0 or p>1:
             raise GalSimRangeError('Invalid cumulative probability for DistDeviate', p, 0., 1.)
@@ -888,8 +851,9 @@ def permute(rng, *args):
     If more than one list is given, then all lists will have the same random permutation
     applied to it.
 
-    @param rng    The random number generator to use. (This will be converted to a UniformDeviate.)
-    @param args   Any number of lists to be permuted.
+    Parameters:
+        rng:    The random number generator to use. (This will be converted to a UniformDeviate.)
+        args:   Any number of lists to be permuted.
     """
     from .random import UniformDeviate
     ud = UniformDeviate(rng)

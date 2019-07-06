@@ -47,7 +47,7 @@ class Shear(object):
     Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is
     g1 + i g2 = g exp(2 i beta).  Likewise for eta or e.  The phase of the complex value is 2 beta.
 
-    The following are all examples of valid calls to initialize a Shear object:
+    The following are all examples of valid calls to initialize a Shear object::
 
         >>> s = galsim.Shear()                    # empty constructor sets ellipticity/shear to zero
         >>> s = galsim.Shear(g1=0.05, g2=0.05)
@@ -68,7 +68,7 @@ class Shear(object):
 
     In addition, for use cases where extreme efficiency is required, you can skip all the
     normal sanity checks and branches in the regular Shear constructor by using a leading
-    underscore with the complex shear (g1 + 1j * g2).
+    underscore with the complex shear (g1 + 1j * g2).::
 
         >>> s = galsim._Shear(0.05 + 0.03j)  # Equivalent to galsim.Shear(g1=0.05, g2=0.03)
 
@@ -323,9 +323,11 @@ def _Shear(g):
     """Equivalent to Shear(shear), but without the overhead of the normal sanity checks and other
     options for how to specify the shear.
 
-    @param g        The complex shear g1 + 1j * g2.
+    Parameters:
+        g:       The complex shear g1 + 1j * g2.
 
-    @returns a galsim.Shear instance
+    Returns:
+        a galsim.Shear instance
     """
     ret = Shear.__new__(Shear)
     ret._g = g

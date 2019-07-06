@@ -32,26 +32,28 @@ def Add(*args, **kwargs):
     ChromaticSum object is required to represent the sum of surface brightness profiles.
 
     Typically, you do not need to call Add() explicitly.  Normally, you would just use the +
-    operator, which returns a Sum:
+    operator, which returns a Sum::
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
         >>> disk = galsim.Exponential(half_light_radius=1.4)
         >>> gal = bulge + disk
         >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
 
-    If one of the items is chromatic, it will return a ChromaticSum
+    If one of the items is chromatic, it will return a ChromaticSum::
 
         >>> disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
         >>> gal = bulge + disk
 
-    @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        args:               Unnamed args should be a list of objects to add.
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    @returns a Sum or ChromaticSum instance as appropriate.
+    Returns:
+        a Sum or ChromaticSum instance as appropriate.
     """
     if len(args) == 0:
         raise TypeError("At least one ChromaticObject or GSObject must be provided.")
@@ -79,11 +81,8 @@ class Sum(GSObject):
     might be used to represent a multiple-component galaxy as the sum of an Exponential and a
     DeVaucouleurs, or to represent a PSF as the sum of multiple Gaussian objects.
 
-    Initialization
-    --------------
-
     Typically, you do not need to construct a Sum object explicitly.  Normally, you would just
-    use the + operator, which returns a Sum:
+    use the + operator, which returns a Sum::
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
         >>> disk = galsim.Exponential(half_light_radius=1.4)
@@ -91,18 +90,19 @@ class Sum(GSObject):
         >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
 
     You can also use the Add() factory function, which returns a Sum object if none of the
-    individual objects are chromatic:
+    individual objects are chromatic::
 
         >>> gal = galsim.Add([bulge,disk])
 
-    @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        args:               Unnamed args should be a list of objects to add.
+        gsparam:            An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param propagate_gsparams   Whether to propagate gsparams to each of the components.  This
-                                is normally a good idea, but there may be use cases where one
-                                would not want to do this. [default: True]
+        propagate_gsparams: Whether to propagate gsparams to each of the components.  This
+                            is normally a good idea, but there may be use cases where one
+                            would not want to do this. [default: True]
 
-    Note: if `gsparams` is unspecified (or None), then the Sum instance will use the most
+    Note: if ``gsparams`` is unspecified (or None), then the Sum instance will use the most
     restrictive combination of parameters from each of the component objects. Normally, this means
     the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
     parameters, the largest numerical value is used.  See GSParams.combine for details.
@@ -113,12 +113,7 @@ class Sum(GSObject):
     another in a Sum, so this ensures that they all have consistent rendering behavior.
     However, if you want to keep the existing gsparams of the component objects (e.g. because
     one object is much fainter and can thus use looser accuracy tolerances), then you may
-    set `propagate_gsparams=False`.
-
-    Methods
-    -------
-
-    There are no additional methods for Sum beyond the usual GSObject methods.
+    set ``propagate_gsparams=False``.
     """
     def __init__(self, *args, **kwargs):
 
@@ -202,8 +197,14 @@ class Sum(GSObject):
                     _noise += obj.noise
         return _noise
 
-    @doc_inherit
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given gsparams
+
+        .. note::
+
+            Unless you set ``propagate_gsparams=False``, this method will also update the gsparams
+            of each object being added.
+        """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)

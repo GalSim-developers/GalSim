@@ -63,13 +63,13 @@ class BaseWCS(object):
     define helper functions to implement each particular WCS definition.  So this base
     class defines the common interface for all WCS classes.
 
-    There are several types of WCS classes that we implement. The basic class hierarchy is:
+    There are several types of WCS classes that we implement. The basic class hierarchy is::
 
-    BaseWCS
-        --- EuclideanWCS
-                --- UniformWCS
-                        --- LocalWCS
-        --- CelestialWCS
+        BaseWCS
+            --- EuclideanWCS
+                    --- UniformWCS
+                            --- LocalWCS
+            --- CelestialWCS
 
     These base classes are not constructible.  They do not have __init__ defined.
 
@@ -79,44 +79,44 @@ class BaseWCS(object):
        at the location of a single galaxy, where it should usually be a good approximation
        to consider the pixel shape to be constant over the size of the galaxy.
 
-       Currently we define the following LocalWCS classes:
+       Currently we define the following LocalWCS classes::
 
-            PixelScale
-            ShearWCS
-            JacobianWCS
+       - PixelScale
+       - ShearWCS
+       - JacobianWCS
 
     2. UniformWCS classes have a constant pixel size and shape, but they have an arbitrary origin
        in both image coordinates and world coordinates.  A LocalWCS class can be turned into a
        non-local UniformWCS class when an image has its bounds changed, e.g. by the commands
        withCenter(), withOrigin() or shift().
 
-       Currently we define the following non-local, UniformWCS classes:
+       Currently we define the following non-local, UniformWCS classes::
 
-            OffsetWCS
-            OffsetShearWCS
-            AffineTransform
+       - OffsetWCS
+       - OffsetShearWCS
+       - AffineTransform
 
     3. EuclideanWCS classes use a regular Euclidean coordinate system for the world coordinates,
        using PositionD for the world positions.  We use the notation (u,v) for the world
        coordinates and (x,y) for the image coordinates.
 
-       Currently we define the following non-uniform, Euclidean WCS class:
+       Currently we define the following non-uniform, Euclidean WCS class::
 
-            UVFunction
+       - UVFunction
 
     4. CelestialWCS classes are defined with their world coordinates on the celestial sphere
        in terms of right ascension (RA) and declination (Dec).  The pixel size and shape are
        always variable.  We use CelestialCoord for the world coordinates, which helps
        facilitate the spherical trigonometry that is sometimes required.
 
-       Currently we define the following celestial WCS classes: (The ones marked with a *
-       are defined in the file fitswcs.py.)
+       Currently we define the following celestial WCS classes: (The ones in italics are defined
+       in the file fitswcs.py.)
 
-            RaDecFunction
-           *AstropyWCS          -- requires astropy.wcs python module to be installed
-           *PyAstWCS            -- requires starlink.Ast python module to be installed
-           *WcsToolsWCS         -- requires wcstools command line functions to be installed
-           *GSFitsWCS           -- native code, but has less functionality than the above
+       - RaDecFunction
+       - *AstropyWCS*          -- requires astropy.wcs python module to be installed
+       - *PyAstWCS*            -- requires starlink.Ast python module to be installed
+       - *WcsToolsWCS*         -- requires wcstools command line functions to be installed
+       - *GSFitsWCS*           -- native code, but has less functionality than the above
 
     There is also a factory function called FitsWCS() (also defined in fitswcs.py), which is
     intended to act like a class initializer.  It tries to read a fits file using one of the
@@ -129,7 +129,7 @@ class BaseWCS(object):
     Some things you can do with a WCS instance:
 
     - Convert positions between image coordinates and world coordinates (sometimes referred
-      to as sky coordinates):
+      to as sky coordinates)::
 
             >>> world_pos = wcs.toWorld(image_pos)
             >>> image_pos = wcs.toImage(world_pos)
@@ -143,17 +143,17 @@ class BaseWCS(object):
       (if `wcs.isCelestial() == True`).  Otherwise, it will be a PositionD as well.
 
     - Convert a GSObject that is defined in world coordinates to the equivalent profile defined
-      in terms of image coordinates (or vice versa):
+      in terms of image coordinates (or vice versa)::
 
             >>> image_profile = wcs.toImage(world_profile)
             >>> world_profile = wcs.toWorld(image_profile)
 
       For non-uniform WCS types (for which `wcs.isUniform() == False`), these need either an
-      `image_pos` or `world_pos` parameter to say where this conversion should happen:
+      `image_pos` or `world_pos` parameter to say where this conversion should happen::
 
             >>> image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-    - Construct a local linear approximation of a WCS at a given location:
+    - Construct a local linear approximation of a WCS at a given location::
 
             >>> local_wcs = wcs.local(image_pos = image_pos)
             >>> local_wcs = wcs.local(world_pos = world_pos)
@@ -164,7 +164,7 @@ class BaseWCS(object):
       The returned `local_wcs` is usually a JacobianWCS instance, but see the doc string for
       local() for more details.
 
-    - Construct a full affine approximation of a WCS at a given location:
+    - Construct a full affine approximation of a WCS at a given location::
 
             >>> affine_wcs = wcs.affine(image_pos = image_pos)
             >>> affine_wcs = wcs.affine(world_pos = world_pos)
@@ -174,7 +174,7 @@ class BaseWCS(object):
 
       The returned `affine_wcs` is always an AffineTransform instance.
 
-    - Get some properties of the pixel size and shape:
+    - Get some properties of the pixel size and shape::
 
             >>> area = local_wcs.pixelArea()
             >>> min_linear_scale = local_wcs.minLinearScale()
@@ -183,12 +183,12 @@ class BaseWCS(object):
             >>> # Use jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
 
       Non-uniform WCS types also have these functions, but for them, you must supply either
-      `image_pos` or `world_pos`.  So the following are equivalent:
+      `image_pos` or `world_pos`.  So the following are equivalent::
 
             >>> area = wcs.pixelArea(image_pos)
             >>> area = wcs.local(image_pos).pixelArea()
 
-    - Query some overall attributes of the WCS transformation:
+    - Query some overall attributes of the WCS transformation::
 
             >>> wcs.isLocal()       # is this a local WCS?
             >>> wcs.isUniform()     # does this WCS have a uniform pixel size/shape?
@@ -203,7 +203,7 @@ class BaseWCS(object):
         1. The first converts a position from image coordinates to world coordinates.
            The argument may be either a PositionD or PositionI argument.  It returns
            the corresponding position in world coordinates as a PositionD if the WCS
-           is a EuclideanWCS, or a CelestialCoord if it is a CelestialWCS.
+           is a EuclideanWCS, or a CelestialCoord if it is a CelestialWCS::
 
                >>> world_pos = wcs.toWorld(image_pos)
 
@@ -212,7 +212,7 @@ class BaseWCS(object):
         2. The second is nearly the same, but takes x and y values directly and returns
            either u, v or ra, dec, depending on the kind of wcs being used.  For this version,
            x and y may be numpy arrays, in which case the returned values are also numpy
-           arrays.
+           arrays::
 
                >>> u, v = wcs.toWorld(x, y)                 # For EuclideanWCS types
                >>> ra, dec = wcs.toWorld(x, y, units=units) # For CelestialWCS types
@@ -224,7 +224,7 @@ class BaseWCS(object):
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located, so the right
            transformation can be performed.  And optionally, you may provide a flux scaling
-           to be performed at the same time.
+           to be performed at the same time::
 
                >>> world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None,
                                                flux_ratio=1, offset=(0,0))
@@ -249,15 +249,17 @@ class BaseWCS(object):
 
         This is equivalent to `wcs.toWorld(image_pos)`.
 
-        @param image_pos        The position in image coordinates
-        @param color            For color-dependent WCS's, the color term to use. [default: None]
-        @param project_center   (Only valid for CelestialWCS) A CelestialCoord to use for
-                                projecting the result onto a tangent plane world system rather
-                                than returning a CelestialCoord. [default: None]
-        @param projection       If project_center != None, the kind of projection to use.  See
-                                CelestialCoord.project for the valid options. [default: 'gnomonic']
+        Parameters:
+            image_pos:      The position in image coordinates
+            color:          For color-dependent WCS's, the color term to use. [default: None]
+            project_center: (Only valid for CelestialWCS) A CelestialCoord to use for
+                            projecting the result onto a tangent plane world system rather
+                            than returning a CelestialCoord. [default: None]
+            projection:     If project_center != None, the kind of projection to use.  See
+                            CelestialCoord.project for the valid options. [default: 'gnomonic']
 
-        @returns world_pos
+        Returns:
+            world_pos
         """
         if color is None: color = self._color
         if not isinstance(image_pos, Position):
@@ -270,13 +272,14 @@ class BaseWCS(object):
 
         This is equivalent to `wcs.toWorld(image_profile, ...)`.
 
-        @param image_profile    The profile in image coordinates to transform.
-        @param image_pos        The image coordinate position (for non-uniform WCS types)
-        @param world_pos        The world coordinate position (for non-uniform WCS types)
-        @param color            For color-dependent WCS's, the color term to use. [default: None]
-        @param flux_ratio       An optional flux scaling to be applied at the same time.
-                                [default: 1]
-        @param offset           An optional offset to be applied at the same time. [default: 0,0]
+        Parameters:
+            image_profile:  The profile in image coordinates to transform.
+            image_pos:      The image coordinate position (for non-uniform WCS types)
+            world_pos:      The world coordinate position (for non-uniform WCS types)
+            color:          For color-dependent WCS's, the color term to use. [default: None]
+            flux_ratio:     An optional flux scaling to be applied at the same time.
+                            [default: 1]
+            offset:         An optional offset to be applied at the same time. [default: 0,0]
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._profileToWorld(
@@ -290,7 +293,7 @@ class BaseWCS(object):
         1. The first converts a position from world coordinates to image coordinates.
            If the WCS is a EuclideanWCS, the argument may be either a PositionD or PositionI
            argument.  If it is a CelestialWCS, then the argument must be a CelestialCoord.
-           It returns the corresponding position in image coordinates as a PositionD.
+           It returns the corresponding position in image coordinates as a PositionD::
 
                >>> image_pos = wcs.toImage(world_pos)
 
@@ -299,7 +302,7 @@ class BaseWCS(object):
         2. The second is nearly the same, but takes either u and v values or ra and dec values
            (depending on the kind of wcs being used) directly and returns x and y values.
            For this version, the inputs may be numpy arrays, in which case the returned values
-           are also numpy arrays.
+           are also numpy arrays::
 
                >>> x, y = wcs.toImage(u, v)                 # For EuclideanWCS types
                >>> x, y = wcs.toImage(ra, dec, units=units) # For CelestialWCS types
@@ -311,7 +314,7 @@ class BaseWCS(object):
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
            `image_pos` or `world_pos` to say where the profile is located so the right
            transformation can be performed.  And optionally, you may provide a flux scaling
-           to be performed at the same time.
+           to be performed at the same time::
 
                >>> image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None,
                                                flux_ratio=1, offset=(0,0))
@@ -336,8 +339,9 @@ class BaseWCS(object):
 
         This is equivalent to `wcs.toImage(world_pos)`.
 
-        @param world_pos    The world coordinate position
-        @param color        For color-dependent WCS's, the color term to use. [default: None]
+        Parameters:
+            world_pos:  The world coordinate position
+            color:      For color-dependent WCS's, the color term to use. [default: None]
         """
         if color is None: color = self._color
         if self.isCelestial() and not isinstance(world_pos, CelestialCoord):
@@ -352,13 +356,14 @@ class BaseWCS(object):
 
         This is equivalent to `wcs.toImage(world_profile, ...)`.
 
-        @param world_profile    The profile in world coordinates to transform.
-        @param image_pos        The image coordinate position (for non-uniform WCS types)
-        @param world_pos        The world coordinate position (for non-uniform WCS types)
-        @param color            For color-dependent WCS's, the color term to use. [default: None]
-        @param flux_ratio       An optional flux scaling to be applied at the same time.
+        Parameters:
+            world_profile:  The profile in world coordinates to transform.
+            image_pos:      The image coordinate position (for non-uniform WCS types)
+            world_pos:      The world coordinate position (for non-uniform WCS types)
+            color:          For color-dependent WCS's, the color term to use. [default: None]
+            flux_ratio:     An optional flux scaling to be applied at the same time.
                                 [default: 1]
-        @param offset           An optional offset to be applied at the same time. [default: 0,0]
+            offset:         An optional offset to be applied at the same time. [default: 0,0]
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._profileToImage(
@@ -371,12 +376,14 @@ class BaseWCS(object):
         For non-uniform WCS transforms, you must provide either `image_pos` or `world_pos`
         to say where the pixel is located.
 
-        @param image_pos    The image coordinate position (for non-uniform WCS types)
-        @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @param color        For color-dependent WCS's, the color term for which to evaluate the
-                            pixel area. [default: None]
+        Parameters:
+            image_pos:  The image coordinate position (for non-uniform WCS types)
+            world_pos:  The world coordinate position (for non-uniform WCS types)
+            color:      For color-dependent WCS's, the color term for which to evaluate the
+                        pixel area. [default: None]
 
-        @returns the pixel area in arcsec**2.
+        Returns:
+            the pixel area in arcsec**2.
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._pixelArea()
@@ -391,12 +398,14 @@ class BaseWCS(object):
         For non-uniform WCS transforms, you must provide either `image_pos` or `world_pos`
         to say where the pixel is located.
 
-        @param image_pos    The image coordinate position (for non-uniform WCS types)
-        @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @param color        For color-dependent WCS's, the color term for which to evaluate the
-                            scale. [default: None]
+        Parameters:
+            image_pos:  The image coordinate position (for non-uniform WCS types)
+            world_pos:  The world coordinate position (for non-uniform WCS types)
+            color:      For color-dependent WCS's, the color term for which to evaluate the
+                        scale. [default: None]
 
-        @returns the minimum pixel area in any direction in arcsec.
+        Returns:
+            the minimum pixel area in any direction in arcsec.
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._minScale()
@@ -411,12 +420,14 @@ class BaseWCS(object):
         For non-uniform WCS transforms, you must provide either `image_pos` or `world_pos`
         to say where the pixel is located.
 
-        @param image_pos    The image coordinate position (for non-uniform WCS types)
-        @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @param color        For color-dependent WCS's, the color term for which to evaluate the
-                            scale. [default: None]
+        Parameters:
+            image_pos:  The image coordinate position (for non-uniform WCS types)
+            world_pos:  The world coordinate position (for non-uniform WCS types)
+            color:      For color-dependent WCS's, the color term for which to evaluate the
+                        scale. [default: None]
 
-        @returns the maximum pixel area in any direction in arcsec.
+        Returns:
+            the maximum pixel area in any direction in arcsec.
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._maxScale()
@@ -458,12 +469,14 @@ class BaseWCS(object):
     def local(self, image_pos=None, world_pos=None, color=None):
         """Return the local linear approximation of the WCS at a given point.
 
-        @param image_pos    The image coordinate position (for non-uniform WCS types)
-        @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @param color        For color-dependent WCS's, the color term for which to evaluate the
-                            local WCS. [default: None]
+        Parameters:
+            image_pos:  The image coordinate position (for non-uniform WCS types)
+            world_pos:  The world coordinate position (for non-uniform WCS types)
+            color:      For color-dependent WCS's, the color term for which to evaluate the
+                        local WCS. [default: None]
 
-        @returns a LocalWCS instance.
+        Returns:
+            a LocalWCS instance.
         """
         if color is None: color = self._color
         if world_pos is not None:
@@ -481,7 +494,7 @@ class BaseWCS(object):
 
         This is basically the same as local(), but the return value is guaranteed to be a
         JacobianWCS, which can be useful in some situations, since you can access the values
-        of the 2x2 Jacobian matrix directly:
+        of the 2x2 Jacobian matrix directly::
 
             >>> jac = wcs.jacobian(image_pos)
             >>> x,y = np.meshgrid(np.arange(0,32,1), np.arange(0,32,1))
@@ -492,12 +505,14 @@ class BaseWCS(object):
         If you do not need the extra functionality, then you should use local()
         instead, since it may be more efficient.
 
-        @param image_pos    The image coordinate position (for non-uniform WCS types)
-        @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @param color        For color-dependent WCS's, the color term for which to evaluate the
-                            local jacobian. [default: None]
+        Parameters:
+            image_pos:  The image coordinate position (for non-uniform WCS types)
+            world_pos:  The world coordinate position (for non-uniform WCS types)
+            color:      For color-dependent WCS's, the color term for which to evaluate the
+                        local jacobian. [default: None]
 
-        @returns a JacobianWCS instance.
+        Returns:
+            a JacobianWCS instance.
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._toJacobian()
@@ -515,18 +530,18 @@ class BaseWCS(object):
 
         For non-celestial coordinate systems, the world origin is taken to be
         `wcs.toWorld(image_pos)`.  In fact, `wcs.affine(image_pos)` is really just
-        shorthand for:
+        shorthand for::
 
             >>> wcs.jacobian(image_pos).withOrigin(image_pos, wcs.toWorld(image_pos))
 
         For celestial coordinate systems, there is no well-defined choice for the
         origin of the Euclidean world coordinate system.  So we just take (u,v) = (0,0)
-        at the given position.  So, `wcs.affine(image_pos)` is equivalent to:
+        at the given position.  So, `wcs.affine(image_pos)` is equivalent to::
 
             >>> wcs.jacobian(image_pos).withOrigin(image_pos)
 
         You can use the returned AffineTransform to access the relevant values of the 2x2
-        Jacobian matrix and the origins directly:
+        Jacobian matrix and the origins directly::
 
             >>> affine = wcs.affine(image_pos)
             >>> x,y = np.meshgrid(np.arange(0,32,1), np.arange(0,32,1))
@@ -537,12 +552,14 @@ class BaseWCS(object):
         As usual, you may provide either `image_pos` or `world_pos` as you prefer to
         specify the location at which to approximate the WCS.
 
-        @param image_pos    The image coordinate position (for non-uniform WCS types)
-        @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @param color        For color-dependent WCS's, the color term for which to evaluate the
-                            local affine transform. [default: None]
+        Parameters:
+            image_pos:  The image coordinate position (for non-uniform WCS types)
+            world_pos:  The world coordinate position (for non-uniform WCS types)
+            color:      For color-dependent WCS's, the color term for which to evaluate the
+                        local affine transform. [default: None]
 
-        @returns an AffineTransform instance
+        Returns:
+            an AffineTransform instance
         """
         if color is None: color = self._color
         jac = self.jacobian(image_pos, world_pos, color=color)
@@ -569,17 +586,17 @@ class BaseWCS(object):
         If the current WCS is a local WCS, this essentially declares where on the image
         you want the origin of the world coordinate system to be.  i.e. where is (u,v) = (0,0).
         So, for example, to set a WCS that has a constant pixel size with the world coordinates
-        centered at the center of an image, you could write:
+        centered at the center of an image, you could write::
 
             >>> wcs = galsim.PixelScale(scale).withOrigin(im.center)
 
-        This is equivalent to the following:
+        This is equivalent to the following::
 
             >>> wcs = galsim.OffsetWCS(scale, origin=im.center)
 
         For non-local WCS types, the origin defines the location in the image coordinate system
         should mean the same thing as (x,y) = (0,0) does for the current WCS.  The following
-        example should work regardless of what kind of WCS this is:
+        example should work regardless of what kind of WCS this is::
 
             >>> world_pos1 = wcs.toWorld(PositionD(0,0))
             >>> wcs2 = wcs.withOrigin(new_origin)
@@ -588,19 +605,21 @@ class BaseWCS(object):
 
         Furthermore, if the current WCS is a EuclideanWCS (wcs.isCelestial() == False) you may
         also provide a `world_origin` argument which defines what (u,v) position you want to
-        correspond to the new origin.  Continuing the previous example:
+        correspond to the new origin.  Continuing the previous example::
 
             >>> wcs3 = wcs.withOrigin(new_origin, new_world_origin)
             >>> world_pos3 = wcs3.toWorld(new_origin)
             >>> # world_pos3 should be equal to new_world_origin
 
-        @param origin           The image coordinate position to use as the origin.
-        @param world_origin     The world coordinate position to use as the origin.  Only valid if
-                                wcs.isCelestial() == False. [default: None]
-        @param color            For color-dependent WCS's, the color term to use in the connection
-                                between the current origin and world_origin. [default: None]
+        Parameters:
+            origin:         The image coordinate position to use as the origin.
+            world_origin:   The world coordinate position to use as the origin.  Only valid if
+                            wcs.isCelestial() == False. [default: None]
+            color:          For color-dependent WCS's, the color term to use in the connection
+                            between the current origin and world_origin. [default: None]
 
-        @returns the new recentered WCS
+        Returns:
+            the new recentered WCS
         """
         if color is None: color = self._color
         if not isinstance(origin, Position):
@@ -613,9 +632,11 @@ class BaseWCS(object):
         This changes a color-dependent WCS into the corresponding color-independent WCS
         for the given color.
 
-        @param color        The value of the color term to use.
+        Parameters:
+            color:      The value of the color term to use.
 
-        @returns the new color-independent WCS
+        Returns:
+            the new color-independent WCS
         """
         ret = self.copy()
         ret._color = color
@@ -647,8 +668,9 @@ class BaseWCS(object):
         5. We haven't thought much about the security implications of this, so beware using
            GalSim to open FITS files from untrusted sources.
 
-        @param header       A FitsHeader (or dict-like) object to write the data to.
-        @param bounds       The bounds of the image.
+        Parameters:
+            header:     A FitsHeader (or dict-like) object to write the data to.
+            bounds:     The bounds of the image.
         """
         from . import fits
         # First write the XMIN, YMIN values
@@ -683,11 +705,12 @@ class BaseWCS(object):
               pixel in world coordinates.  It is usually pretty accurate everywhere except
               within a few arcsec of the north or south poles.
 
-        @param image        The image onto which the sky values will be put.
-        @param sky_level    The sky level in ADU/arcsec^2 (or whatever your world coordinate
-                            system units are, if not arcsec).
-        @param color        For color-dependent WCS's, the color term to use for making the
-                            sky image. [default: None]
+        Parameters:
+            image:      The image onto which the sky values will be put.
+            sky_level:  The sky level in ADU/arcsec^2 (or whatever your world coordinate
+                        system units are, if not arcsec).
+            color:      For color-dependent WCS's, the color term to use for making the
+                        sky image. [default: None]
         """
         if color is None: color = self._color
         self._makeSkyImage(image, sky_level, color)
@@ -745,9 +768,11 @@ def readFromFitsHeader(header):
     is assuming for the image.  If the file was originally written by GalSim, this should
     correspond to the original image origin.  If not, it will default to (1,1).
 
-    @param header           The fits header to write the data to.
+    Parameters:
+        header:     The fits header to write the data to.
 
-    @returns a tuple (wcs, origin) of the wcs from the header and the image origin.
+    Returns:
+        a tuple (wcs, origin) of the wcs from the header and the image origin.
     """
     from . import fits
     from .fitswcs import FitsWCS
@@ -816,13 +841,15 @@ class EuclideanWCS(BaseWCS):
         however, this routine allows x and y to be numpy arrays, in which case, the calculation
         will be vectorized, which is often much faster than using the pos interface.
 
-        @param x            The x value(s) in image coordinates
-        @param y            The y value(s) in image coordinates
-        @param units        (Only valid for CelestialWCS, in which case it is required)
-                            The units to use for the returned ra, dec values.
-        @param color        For color-dependent WCS's, the color term to use. [default: None]
+        Parameters:
+            x:          The x value(s) in image coordinates
+            y:          The y value(s) in image coordinates
+            units:      (Only valid for CelestialWCS, in which case it is required)
+                        The units to use for the returned ra, dec values.
+            color:      For color-dependent WCS's, the color term to use. [default: None]
 
-        @returns ra, dec
+        Returns:
+            ra, dec
         """
         from .angle import AngleUnit
         if color is None: color = self._color
@@ -839,9 +866,10 @@ class EuclideanWCS(BaseWCS):
         however, this routine allows u and v to be numpy arrays, in which case, the calculation
         will be vectorized, which is often much faster than using the pos interface.
 
-        @param u            The u value(s) in world coordinates
-        @param v            The v value(s) in world coordinates
-        @param color        For color-dependent WCS's, the color term to use. [default: None]
+        Parameters:
+            u:          The u value(s) in world coordinates
+            v:          The v value(s) in world coordinates
+            color:      For color-dependent WCS's, the color term to use. [default: None]
         """
         if color is None: color = self._color
         return self._uvToxy(u, v, color)
@@ -1092,13 +1120,15 @@ class CelestialWCS(BaseWCS):
         in which case, the calculation will be vectorized, which is often much faster than using
         the pos interface.
 
-        @param x            The x value(s) in image coordinates
-        @param y            The y value(s) in image coordinates
-        @param units        (Only valid for CelestialWCS, in which case it is required)
-                            The units to use for the returned ra, dec values.
-        @param color        For color-dependent WCS's, the color term to use. [default: None]
+        Parameters:
+            x:          The x value(s) in image coordinates
+            y:          The y value(s) in image coordinates
+            units:      (Only valid for CelestialWCS, in which case it is required)
+                        The units to use for the returned ra, dec values.
+            color:      For color-dependent WCS's, the color term to use. [default: None]
 
-        @returns ra, dec
+        Returns:
+            ra, dec
         """
         from .angle import AngleUnit
         if color is None: color = self._color
@@ -1121,10 +1151,11 @@ class CelestialWCS(BaseWCS):
         in which case, the calculation will be vectorized, which is often much faster than using
         the pos interface.
 
-        @param ra           The ra value(s) in world coordinates
-        @param dec          The dec value(s) in world coordinates
-        @param units        The units to use for the input ra, dec values.
-        @param color        For color-dependent WCS's, the color term to use. [default: None]
+        Parameters:
+            ra:         The ra value(s) in world coordinates
+            dec:        The dec value(s) in world coordinates
+            units:      The units to use for the input ra, dec values.
+            color:      For color-dependent WCS's, the color term to use. [default: None]
         """
         from .angle import AngleUnit
         if color is None: color = self._color
@@ -1307,14 +1338,12 @@ class PixelScale(LocalWCS):
         u = x * scale
         v = y * scale
 
-    Initialization
-    --------------
-
-    A PixelScale is initialized with the command:
+    A PixelScale is initialized with the command::
 
         >>> wcs = galsim.PixelScale(scale)
 
-    @param scale        The pixel scale, typically in units of arcsec/pixel.
+    Parameters:
+        scale:  The pixel scale, typically in units of arcsec/pixel.
     """
     _req_params = { "scale" : float }
     _opt_params = {}
@@ -1409,15 +1438,13 @@ class ShearWCS(LocalWCS):
         u = (x - g1 x - g2 y) * scale / sqrt(1-g1**2-g2**2)
         v = (y + g1 y - g2 x) * scale / sqrt(1-g1**2-g2**2)
 
-    Initialization
-    --------------
-
-    A ShearWCS is initialized with the command:
+    A ShearWCS is initialized with the command::
 
         >>> wcs = galsim.ShearWCS(scale, shear)
 
-    @param scale          The pixel scale, typically in units of arcsec/pixel.
-    @param shear          The shear, which should be a Shear instance.
+    Parameters:
+        scale:      The pixel scale, typically in units of arcsec/pixel.
+        shear:      The shear, which should be a Shear instance.
 
     The Shear transformation conserves object area, so if the input `scale` == 1 then the
     transformation represented by the ShearWCS will conserve object area also.
@@ -1531,28 +1558,26 @@ class JacobianWCS(LocalWCS):
         v = dvdx x + dvdy y
 
     A JacobianWCS has attributes dudx, dudy, dvdx, dvdy that you can access directly if that
-    is convenient.  You can also access these as a NumPy array directly with
+    is convenient.  You can also access these as a NumPy array directly with::
 
         >>> J = jac_wcs.getMatrix()
 
-    Also, JacobianWCS has another method that other WCS classes do not have. The call
+    Also, JacobianWCS has another method that other WCS classes do not have. The call::
 
         >>> scale, shear, theta, flip = jac_wcs.getDecomposition()
 
     will return the equivalent expansion, shear, rotation and possible flip corresponding to
     this transformation.  See the docstring for that method for more information.
 
-    Initialization
-    --------------
-
-    A JacobianWCS is initialized with the command:
+    A JacobianWCS is initialized with the command::
 
         >>> wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
 
-    @param dudx           du/dx
-    @param dudy           du/dy
-    @param dvdx           dv/dx
-    @param dvdy           dv/dy
+    Parameters:
+        dudx:       du/dx
+        dudy:       du/dy
+        dvdx:       dv/dx
+        dvdy:       dv/dy
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
     _opt_params = {}
@@ -1644,11 +1669,11 @@ class JacobianWCS(LocalWCS):
         where F is either the identity matrix, ( 1 0 ), or a flip matrix, ( 0 1 ).
                                                ( 0 1 )                    ( 1 0 )
 
-        If there is no flip, then this means that the effect of
+        If there is no flip, then this means that the effect of::
 
             >>> prof.transform(dudx, dudy, dvdx, dvdy)
 
-        is equivalent to
+        is equivalent to::
 
             >>> prof.rotate(theta).shear(shear).expand(scale)
 
@@ -1797,20 +1822,18 @@ class OffsetWCS(UniformWCS):
         u = (x-x0) * scale + u0
         v = (y-y0) * scale + v0
 
-    Initialization
-    --------------
-
-    An OffsetWCS is initialized with the command:
+    An OffsetWCS is initialized with the command::
 
         >>> wcs = galsim.OffsetWCS(scale, origin=None, world_origin=None)
 
-    @param scale          The pixel scale, typically in units of arcsec/pixel.
-    @param origin         Optional origin position for the image coordinate system.
-                          If provided, it should be a PositionD or PositionI.
-                          [default: PositionD(0., 0.)]
-    @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PositionD.
-                          [default: galsim.PositionD(0., 0.)]
+    Parameters:
+        scale:          The pixel scale, typically in units of arcsec/pixel.
+        origin:         Optional origin position for the image coordinate system.
+                        If provided, it should be a PositionD or PositionI.
+                        [default: PositionD(0., 0.)]
+        world_origin:   Optional origin position for the world coordinate system.
+                        If provided, it should be a PositionD.
+                        [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "scale" : float }
     _opt_params = { "origin" : PositionD, "world_origin": PositionD }
@@ -1875,21 +1898,19 @@ class OffsetShearWCS(UniformWCS):
         u = ( (1-g1) (x-x0) - g2 (y-y0) ) * scale / sqrt(1-g1**2-g2**2) + u0
         v = ( (1+g1) (y-y0) - g2 (x-x0) ) * scale / sqrt(1-g1**2-g2**2) + v0
 
-    Initialization
-    --------------
-
-    An OffsetShearWCS is initialized with the command:
+    An OffsetShearWCS is initialized with the command::
 
         >>> wcs = galsim.OffsetShearWCS(scale, shear, origin=None, world_origin=None)
 
-    @param scale          The pixel scale, typically in units of arcsec/pixel.
-    @param shear          The shear, which should be a Shear instance.
-    @param origin         Optional origin position for the image coordinate system.
-                          If provided, it should be a PositionD or PositionI.
-                          [default: PositionD(0., 0.)]
-    @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PositionD.
-                          [default: PositionD(0., 0.)]
+    Parameters:
+        scale:          The pixel scale, typically in units of arcsec/pixel.
+        shear:          The shear, which should be a Shear instance.
+        origin:         Optional origin position for the image coordinate system.
+                        If provided, it should be a PositionD or PositionI.
+                        [default: PositionD(0., 0.)]
+        world_origin:   Optional origin position for the world coordinate system.
+                        If provided, it should be a PositionD.
+                        [default: PositionD(0., 0.)]
     """
     _req_params = { "scale" : float, "shear" : Shear }
     _opt_params = { "origin" : PositionD, "world_origin": PositionD }
@@ -1963,23 +1984,21 @@ class AffineTransform(UniformWCS):
     An AffineTransform has attributes dudx, dudy, dvdx, dvdy, x0, y0, u0, v0 that you can
     access directly if that is convenient.
 
-    Initialization
-    --------------
-
-    An AffineTransform is initialized with the command:
+    An AffineTransform is initialized with the command::
 
         >>> wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=None, world_origin=None)
 
-    @param dudx           du/dx
-    @param dudy           du/dy
-    @param dvdx           dv/dx
-    @param dvdy           dv/dy
-    @param origin         Optional origin position for the image coordinate system.
-                          If provided, it should be a PositionD or PositionI.
-                          [default: PositionD(0., 0.)]
-    @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PositionD.
-                          [default: PositionD(0., 0.)]
+    Parameters:
+        dudx:           du/dx
+        dudy:           du/dy
+        dvdx:           dv/dx
+        dvdy:           dv/dy
+        origin:         Optional origin position for the image coordinate system.
+                        If provided, it should be a PositionD or PositionI.
+                        [default: PositionD(0., 0.)]
+        world_origin:   Optional origin position for the world coordinate system.
+                        If provided, it should be a PositionD.
+                        [default: PositionD(0., 0.)]
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
     _opt_params = { "origin" : PositionD, "world_origin": PositionD }
@@ -2244,27 +2263,25 @@ class UVFunction(EuclideanWCS):
     function, but it is worth keeping in mind.  For example, if you want to do a sqrt, you
     may be better off using `numpy.sqrt` rather than `math.sqrt`.
 
-    Initialization
-    --------------
-
-    A UVFunction is initialized with the command:
+    A UVFunction is initialized with the command::
 
         >>> wcs = galsim.UVFunction(ufunc, vfunc, origin=None, world_origin=None)
 
-    @param ufunc            The function u(x,y)
-    @param vfunc            The function v(x,y)
-    @param xfunc            The function x(u,v) (optional)
-    @param yfunc            The function y(u,v) (optional)
-    @param origin           Optional origin position for the image coordinate system.
-                            If provided, it should be a PositionD or PositionI.
-                            [default: PositionD(0., 0.)]
-    @param world_origin     Optional origin position for the world coordinate system.
-                            If provided, it should be a PositionD.
-                            [default: PositionD(0., 0.)]
-    @param uses_color       If True, then the functions take three parameters (x,y,c) or (u,v,c)
-                            where the third term is some kind of color value.  (The exact meaning
-                            of "color" here is user-defined. You just need to be consistent with
-                            the color values you use when using the wcs.) [default: False]
+    Parameters:
+        ufunc:          The function u(x,y)
+        vfunc:          The function v(x,y)
+        xfunc:          The function x(u,v) (optional)
+        yfunc:          The function y(u,v) (optional)
+        origin:         Optional origin position for the image coordinate system.
+                        If provided, it should be a PositionD or PositionI.
+                        [default: PositionD(0., 0.)]
+        world_origin    Optional origin position for the world coordinate system.
+                        If provided, it should be a PositionD.
+                        [default: PositionD(0., 0.)]
+        uses_color:     If True, then the functions take three parameters (x,y,c) or (u,v,c)
+                        where the third term is some kind of color value.  (The exact meaning
+                        of "color" here is user-defined. You just need to be consistent with
+                        the color values you use when using the wcs.) [default: False]
     """
     _req_params = { "ufunc" : str, "vfunc" : str }
     _opt_params = { "xfunc" : str, "yfunc" : str,
@@ -2510,23 +2527,19 @@ class RaDecFunction(CelestialWCS):
     will be faster if it does.  If it were expected to return Angles, then it definitely
     couldn't work with arrays.
 
-    Initialization
-    --------------
-
-    An RaDecFunction is initialized with either of the following commands:
+    An RaDecFunction is initialized with either of the following commands::
 
         >>> wcs = galsim.RaDecFunction(radec_func, origin=None)
         >>> wcs = galsim.RaDecFunction(ra_func, dec_func, origin=None)
 
-    @param ra_func      If `dec_func` is also given:
-                            A function ra(x,y) returning ra in radians.
-                        If `dec_func=None`:
-                            A function returning a tuple (ra,dec), both in radians.
-    @param dec_func     Either a function dec(x,y) returning dec in radians, or None (in which
-                        case `ra_func` is expected to return both ra and dec. [default: None]
-    @param origin       Optional origin position for the image coordinate system.
-                        If provided, it should be a PositionD or PositionI.
-                        [default: PositionD(0., 0.)]
+    Parameters:
+        ra_func:    If `dec_func` is also given: A function ra(x,y) returning ra in radians.
+                    If `dec_func=None`: A function returning a tuple (ra,dec), both in radians.
+        dec_func:   Either a function dec(x,y) returning dec in radians, or None (in which
+                    case `ra_func` is expected to return both ra and dec. [default: None]
+        origin:     Optional origin position for the image coordinate system.
+                    If provided, it should be a PositionD or PositionI.
+                    [default: PositionD(0., 0.)]
     """
     _req_params = { "ra_func" : str, "dec_func" : str }
     _opt_params = { "origin" : PositionD }

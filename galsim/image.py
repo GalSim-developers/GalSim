@@ -49,7 +49,7 @@ class Image(object):
     coordinates and world coordinates.  The NumPy array may be constructed by the Image class
     itself, or an existing array can be provided by the user.
 
-    This class creates shallow copies unless a deep copy is explicitly requested using the `copy`
+    This class creates shallow copies unless a deep copy is explicitly requested using the ``copy``
     method.  The main reason for this is that it allows users to work directly with and modify
     subimages of larger images (for example, to successively draw many galaxies into one large
     image).  For other implications of this convention, see the description of initialization
@@ -61,16 +61,13 @@ class Image(object):
     is different from the default convention used by numpy.  In numpy, the access is by
     [row_num,col_num], which means this is really [y,x] in terms of the normal x,y values.
     Users are typically insulated from this concern by the Image API, but if you access the
-    numpy array directly via the `array` attribute, you will need to be careful about this
+    numpy array directly via the ``array`` attribute, you will need to be careful about this
     difference.
 
-    There are 6 data types that the Image can use for the data values.  These are `numpy.uint16`,
-    `numpy.uint16`, `numpy.int16`, `numpy.int32`, `numpy.float32`, and `numpy.float64`.
-    If you are constructing a new Image from scratch, the default is `numpy.float32`, but you
+    There are 6 data types that the Image can use for the data values.  These are ``numpy.uint16``,
+    ``numpy.uint16``, ``numpy.int16``, ``numpy.int32``, ``numpy.float32``, and ``numpy.float64``.
+    If you are constructing a new Image from scratch, the default is ``numpy.float32``, but you
     can specify one of the other data types.
-
-    Initialization
-    --------------
 
     There are several ways to construct an Image:
     (Optional arguments are shown with their default values after the = sign.)
@@ -78,10 +75,10 @@ class Image(object):
         Image(ncol, nrow, dtype=numpy.float32, init_value=0, xmin=1, ymin=1, ...)
 
                 This constructs a new image, allocating memory for the pixel values according to
-                the number of columns and rows.  You can specify the data type as `dtype` if you
-                want.  The default is `numpy.float32` if you don't specify it.  You can also
+                the number of columns and rows.  You can specify the data type as ``dtype`` if you
+                want.  The default is ``numpy.float32`` if you don't specify it.  You can also
                 optionally provide an initial value for the pixels, which defaults to 0.
-                The optional `xmin,ymin` allow you to specify the location of the lower-left
+                The optional ``xmin,ymin`` allow you to specify the location of the lower-left
                 pixel, which defaults to (1,1).  Reminder, with our convention for x,y coordinates
                 described above, ncol is the number of pixels in the x direction, and nrow is the
                 number of pixels in the y direction.
@@ -90,7 +87,7 @@ class Image(object):
 
                 This constructs a new image, allocating memory for the pixel values according to a
                 given bounds object.  The bounds should be a BoundsI instance.  You can specify the
-                data type as `dtype` if you want.  The default is `numpy.float32` if you don't
+                data type as ``dtype`` if you want.  The default is ``numpy.float32`` if you don't
                 specify it.  You can also optionally provide an initial value for the pixels, which
                 defaults to 0.
 
@@ -98,39 +95,39 @@ class Image(object):
 
                 This views an existing NumPy array as an Image, where updates to either the image
                 or the original array will affect the other one.  The dtype is taken from
-                `array.dtype`, which must be one of the allowed types listed above.  You can also
-                optionally set the origin `xmin, ymin` if you want it to be something other than
+                ``array.dtype``, which must be one of the allowed types listed above.  You can also
+                optionally set the origin ``xmin, ymin`` if you want it to be something other than
                 (1,1).
 
-                You can also optionally force the Image to be read-only with `make_const=True`,
-                though if the original NumPy array is modified then the contents of `Image.array`
+                You can also optionally force the Image to be read-only with ``make_const=True``,
+                though if the original NumPy array is modified then the contents of ``Image.array``
                 will change.
 
                 If you want to make a copy of the input array, rather than just view the existing
-                array, you can force a copy with
+                array, you can force a copy with::
 
                     >>> image = galsim.Image(array, copy=True)
 
         Image(image, dtype=image.dtype, copy=True)
 
-                This creates a copy of an Image, possibly changing the type.  e.g.
+                This creates a copy of an Image, possibly changing the type.  e.g.::
 
                     >>> image_float = galsim.Image(64, 64) # default dtype=numpy.float32
                     >>> image_double = galsim.Image(image_float, dtype=numpy.float64)
 
-                You can see a list of valid values for dtype in `galsim.Image.valid_dtypes`.
-                Without the `dtype` argument, this is equivalent to `image.copy()`, which makes
+                You can see a list of valid values for dtype in ``galsim.Image.valid_dtypes``.
+                Without the ``dtype`` argument, this is equivalent to ``image.copy()``, which makes
                 a deep copy.  If you want a copy that shares data with the original, see
                 the image.view() method.
 
                 If you only want to enforce the image to have a given type and not make a copy
-                if the array is already the correct type, you can use, e.g.
+                if the array is already the correct type, you can use, e.g.::
 
                     >>> image_double = galsim.Image(image, dtype=numpy.float64, copy=False)
 
-    You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword
-    argument if you want, or you can pass them as simple arg as shown aboves, and the constructor
-    will figure out what they are.
+    You can specify the ``ncol``, ``nrow``, ``bounds``, ``array``, or ``image``  parameters by
+    keyword argument if you want, or you can pass them as simple arg as shown aboves, and the
+    constructor will figure out what they are.
 
     The other keyword arguments (shown as ... above) relate to the conversion between sky
     coordinates, which is how all the GalSim objects are defined, and the pixel coordinates.
@@ -141,70 +138,64 @@ class Image(object):
                     use different units for the physical scale of your galsim objects, then
                     the same unit would be used here.
         wcs         A WCS object that provides a non-trivial mapping between sky units and
-                    pixel units.  The `scale` parameter is equivalent to `wcs=PixelScale(scale)`.
-                    But there are a number of more complicated options.  See the WCS class
-                    for more details.
+                    pixel units.  The ``scale`` parameter is equivalent to
+                    ``wcs=PixelScale(scale)``.  But there are a number of more complicated options.
+                    See the WCS class for more details.
         None        If you do not provide either of the above, then the conversion is undefined.
                     When drawing onto such an image, a suitable pixel scale will be automatically
                     set according to the Nyquist scale of the object being drawn.
 
-
-    Attributes
-    ----------
-
-    After construction, you can set or change the scale or wcs with
+    After construction, you can set or change the scale or wcs with::
 
         >>> image.scale = new_scale
         >>> image.wcs = new_wcs
 
-    Note that `image.scale` will only work if the WCS is a PixelScale.  Once you set the
-    wcs to be something non-trivial, then you must interact with it via the `wcs` attribute.
-    The `image.scale` syntax will raise an exception.
+    Note that ``image.scale`` will only work if the WCS is a PixelScale.  Once you set the
+    wcs to be something non-trivial, then you must interact with it via the ``wcs`` attribute.
+    The ``image.scale`` syntax will raise an exception.
 
-    There are also two read-only attributes:
+    There are also two read-only attributes::
 
         >>> image.bounds
         >>> image.array
 
-    The `array` attribute is a NumPy array of the Image's pixels.  The individual elements in the
-    array attribute are accessed as `image.array[y,x]`, matching the standard NumPy convention,
-    while the Image class's own accessor uses either `(x,y)` or `[x,y]`.
+    The ``array`` attribute is a NumPy array of the Image's pixels.  The individual elements in the
+    array attribute are accessed as ``image.array[y,x]``, matching the standard NumPy convention,
+    while the Image class's own accessor uses either ``(x,y)`` or ``[x,y]``.
 
-    That is, the following are equivalent:
+    That is, the following are equivalent::
 
         >>> ixy = image(x,y)
         >>> ixy = image[x,y]
         >>> ixy = image.array[y,x]
         >>> ixy = image.getValue(x,y)
 
-    Similarly, for setting individual pixel values, the following are equivalent:
+    Similarly, for setting individual pixel values, the following are equivalent::
 
         >>> image[x,y] = new_ixy
         >>> image.array[y,x] = new_ixy
         >>> image.setValue(x,y,new_ixy)
 
-    Methods
-    -------
+    Methods:
 
-        view        Return a view of the image, possibly giving it a new scale or wcs.
-        subImage    Return a view of a portion of the full image.
-        wrap        Wrap the values in a image onto a given subimage and return the subimage.
-        bin         Bin the image pixels in blocks of nx x ny pixels.
-        subsample   Subdivide the image pixels into nx x ny sub-pixels.
-        shift       Shift the origin of the image by (dx,dy).
-        setCenter   Set a new position for the center of the image.
-        setOrigin   Set a new position for the origin (x,y) = (0,0) of the image.
-        getValue    Get the value of a single pixel.
-        setValue    Set the value of a single pixel.
-        addValue    Add to the value of a single pixel.
-        resize      Resize the image to have a new bounds.
-        fill        Fill the image with the same value in all pixels.
-        setZero     Fill the image with zeros.
-        invertSelf  Convert each value x to 1/x.
-        copy        Return a deep copy of the image.
+        view:        Return a view of the image, possibly giving it a new scale or wcs.
+        subImage:    Return a view of a portion of the full image.
+        wrap:        Wrap the values in a image onto a given subimage and return the subimage.
+        bin:         Bin the image pixels in blocks of nx x ny pixels.
+        subsample:   Subdivide the image pixels into nx x ny sub-pixels.
+        shift:       Shift the origin of the image by (dx,dy).
+        setCenter:   Set a new position for the center of the image.
+        setOrigin:   Set a new position for the origin (x,y) = (0,0) of the image.
+        getValue:    Get the value of a single pixel.
+        setValue:    Set the value of a single pixel.
+        addValue:    Add to the value of a single pixel.
+        resize:      Resize the image to have a new bounds.
+        fill:        Fill the image with the same value in all pixels.
+        setZero:     Fill the image with zeros.
+        invertSelf:  Convert each value x to 1/x.
+        copy:        Return a deep copy of the image.
 
-    See their doc strings for more details.
-
+    See their documentation for more details.
     """
 
     _cpp_type = { np.uint16 : _galsim.ImageViewUS,
@@ -575,12 +566,13 @@ class Image(object):
         """Resize the image to have a new bounds (must be a BoundsI instance)
 
         Note that the resized image will have uninitialized data.  If you want to preserve
-        the existing data values, you should either use `subImage` (if you want a smaller
+        the existing data values, you should either use ``subImage`` (if you want a smaller
         portion of the current Image) or make a new Image and copy over the current values
         into a portion of the new image (if you are resizing to a larger Image).
 
-        @param bounds   The new bounds to resize to.
-        @param wcs      If provided, also update the wcs to the given value. [default: None,
+        Parameters:
+            bounds:     The new bounds to resize to.
+            wcs:        If provided, also update the wcs to the given value. [default: None,
                         which means keep the existing wcs]
         """
         if self.isconst:
@@ -626,7 +618,8 @@ class Image(object):
     def __getitem__(self, *args):
         """Return either a subimage or a single pixel value.
 
-        For example,
+        For example,::
+
             >>> subimage = im[galsim.BoundsI(3,7,3,7)]
             >>> value = im[galsim.PositionI(5,5)]
             >>> value = im[5,5]
@@ -648,7 +641,7 @@ class Image(object):
     def __setitem__(self, *args):
         """Set either a subimage or a single pixel to new values.
 
-        For example,
+        For example,::
 
             >>> im[galsim.BoundsI(3,7,3,7)] = im2
             >>> im[galsim.PositionI(5,5)] = 17.
@@ -679,17 +672,17 @@ class Image(object):
         For complex images of FFTs, one often only stores half the image plane with the
         implicit understanding that the function is Hermitian, so im(-x,-y) == im(x,y).conjugate().
         In this case, the wrapping needs to work slightly differently, so you can specify
-        that your image is implicitly Hermitian with the `hermitian` argument.  Options are:
+        that your image is implicitly Hermitian with the ``hermitian`` argument.  Options are:
 
-            hermitian=False  (default) Normal non-Hermitian image.
-            hermitian='x'    Only x>=0 values are stored with x<0 values being implicitly Hermitian.
-                             In this case im.bounds.xmin and bounds.xmin must be 0.
-            hermitian='y'    Only y>=0 values are stored with y<0 values being implicitly Hermitian.
-                             In this case im.bounds.ymin and bounds.ymin must be 0.
+        - hermitian=False  (default) Normal non-Hermitian image.
+        - hermitian='x'    Only x>=0 values are stored with x<0 values being implicitly Hermitian.
+                           In this case im.bounds.xmin and bounds.xmin must be 0.
+        - hermitian='y'    Only y>=0 values are stored with y<0 values being implicitly Hermitian.
+                           In this case im.bounds.ymin and bounds.ymin must be 0.
 
         Also, in the two Hermitian cases, the direction that is not implicitly Hermitian must be
         symmetric in the image's bounds.  The wrap bounds must be almost symmetric, but missing
-        the most negative value.  For example,
+        the most negative value.  For example,::
 
             >>> N = 100
             >>> im_full = galsim.ImageCD(bounds=galsim.BoundsI(0,N/2,-N/2,N/2), scale=dk)
@@ -702,13 +695,15 @@ class Image(object):
 
         Note that this routine modifies the original image (and not just the subimage onto which
         it is wrapped), so if you want to keep the original pristine, you should call
-        `wrapped_image = image.copy().wrap(bounds)`.
+        ``wrapped_image = image.copy().wrap(bounds)``.
 
-        @param bounds       The bounds of the subimage onto which to wrap the full image.
-        @param hermitian    Whether the image is implicitly Hermitian and if so, whether it is the
+        Parameters:
+            bounds:         The bounds of the subimage onto which to wrap the full image.
+            hermitian:      Whether the image is implicitly Hermitian and if so, whether it is the
                             x or y values that are not stored.  [default: False]
 
-        @returns the subimage, image[bounds], after doing the wrapping.
+        Returns:
+            the subimage, image[bounds], after doing the wrapping.
         """
         if not isinstance(bounds, BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -769,12 +764,14 @@ class Image(object):
         But if the wcs is more complicated, the output wcs would be fairly complicated to figure
         out properly, so we leave it as None.  The user should set it themselves if required.
 
-        @param nx       The number of adjacent pixels in the x direction to add together into each
-                        output pixel.
-        @param ny       The number of adjacent pixels in the y direction to add together into each
-                        output pixel.
+        Parameters:
+            nx:     The number of adjacent pixels in the x direction to add together into each
+                    output pixel.
+            ny:     The number of adjacent pixels in the y direction to add together into each
+                    output pixel.
 
-        @returns a new Image
+        Returns:
+            a new Image
         """
         from .wcs import JacobianWCS
         ncol = self.xmax - self.xmin + 1
@@ -828,12 +825,14 @@ class Image(object):
         But if the wcs is more complicated, the output wcs would be fairly complicated to figure
         out properly, so we leave it as None.  The user should set it themselves if required.
 
-        @param nx       The number of sub-pixels in the x direction for each original pixel.
-        @param ny       The number of sub-pixels in the y direction for each original pixel.
-        @param dtype    Optionally provide a dtype for the return image. [default: None, which
-                        means to use the same dtype as the original image]
+        Parameters:
+            nx:     The number of sub-pixels in the x direction for each original pixel.
+            ny:     The number of sub-pixels in the y direction for each original pixel.
+            dtype:  Optionally provide a dtype for the return image. [default: None, which
+                    means to use the same dtype as the original image]
 
-        @returns a new Image
+        Returns:
+            a new Image
         """
         ncol = self.xmax - self.xmin + 1
         nrow = self.ymax - self.ymin + 1
@@ -877,7 +876,8 @@ class Image(object):
         or ImageCD instance) and its scale will be 2pi / (N dx), where dx is the scale of the input
         image.
 
-        @returns an Image instance with the k-space image.
+        Returns:
+            an Image instance with the k-space image.
         """
         if self.wcs is None:
             raise GalSimError("calculate_fft requires that the scale be set.")
@@ -926,7 +926,8 @@ class Image(object):
         The input image must have a PixelScale wcs.  The output image will be real (an ImageD
         instance) and its scale will be 2pi / (N dk), where dk is the scale of the input image.
 
-        @returns an ImageD instance with the real-space image.
+        Returns:
+            an ImageD instance with the real-space image.
         """
         if self.wcs is None:
             raise GalSimError("calculate_inverse_fft requires that the scale be set.")
@@ -994,16 +995,17 @@ class Image(object):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
 
-        If you do not provide either `scale` or `wcs`, the view will keep the same wcs
+        If you do not provide either ``scale`` or ``wcs``, the view will keep the same wcs
         as the current Image object.
 
-        @param scale        If provided, use this as the pixel scale for the image. [default: None]
-        @param wcs          If provided, use this as the wcs for the image. [default: None]
-        @param origin       If profided, use this as the origin position of the view.
-                            [default: None]
-        @param center       If profided, use this as the center position of the view.
-                            [default: None]
-        @param make_const   Make the view's data array immutable. [default: False]
+        Parameters:
+            scale:      If provided, use this as the pixel scale for the image. [default: None]
+            wcs:        If provided, use this as the wcs for the image. [default: None]
+            origin:     If profided, use this as the origin position of the view.
+                        [default: None]
+            center:     If profided, use this as the center position of the view.
+                        [default: None]
+            make_const: Make the view's data array immutable. [default: False]
         """
         if origin is not None and center is not None:
             raise GalSimIncompatibleValuesError(
@@ -1051,7 +1053,7 @@ class Image(object):
         In terms of columns and rows, dx means a shift in the x value of each column in the
         array, and dy means a shift in the y value of each row.  In other words, the following
         will return the same value for ixy.  The shift function just changes the coordinates (x,y)
-        used for that pixel:
+        used for that pixel::
 
             >>> ixy = im(x,y)
             >>> im.shift(3,9)
@@ -1063,7 +1065,8 @@ class Image(object):
     def _shift(self, delta):
         """Equivalent to im.shift(delta), but without some of the sanity checks and extra options.
 
-        @param delta    The amount to shift.  Must be a galsim.PositionI instance.
+        Parameters:
+            delta:  The amount to shift.  Must be a galsim.PositionI instance.
         """
         # The parse_pos_args function is a bit slow, so go directly to this point when we
         # call shift from setCenter or setOrigin.
@@ -1080,7 +1083,7 @@ class Image(object):
 
         In terms of the rows and columns, xcen is the new x value for the central column, and ycen
         is the new y value of the central row.  For even-sized arrays, there is no central column
-        or row, so the convention we adopt in this case is to round up.  For example:
+        or row, so the convention we adopt in this case is to round up.  For example::
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
             >>> im(1,1)
@@ -1116,7 +1119,7 @@ class Image(object):
         Or you can provide x0, y0 as named kwargs.
 
         In terms of the rows and columns, x0 is the new x value for the first column,
-        and y0 is the new y value of the first row.  For example:
+        and y0 is the new y value of the first row.  For example::
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
             >>> im(1,1)
@@ -1151,7 +1154,7 @@ class Image(object):
 
         In terms of the rows and columns, xcen is the x value for the central column, and ycen
         is the y value of the central row.  For even-sized arrays, there is no central column
-        or row, so the convention we adopt in this case is to round up.  For example:
+        or row, so the convention we adopt in this case is to round up.  For example::
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
             >>> im.center
@@ -1173,7 +1176,7 @@ class Image(object):
         Unline the nominal center returned by im.center, this value may be half-way between
         two pixels if the image has an even number of rows or columns.  It gives the position
         (x,y) at the exact center of the image, regardless of whether this is at the center of
-        a pixel (integer value) or halfway between two (half-integer).  For example:
+        a pixel (integer value) or halfway between two (half-integer).  For example::
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
             >>> im.center
@@ -1190,13 +1193,13 @@ class Image(object):
             galsim.PositionD(x=1.5, y=1.5)
         """
         return self.bounds.true_center
-    
+
     @property
     def origin(self):
         """Return the origin of the image.  i.e. the (x,y) position of the lower-left pixel.
 
         In terms of the rows and columns, this is the (x,y) coordinate of the first column, and
-        first row of the array.  For example:
+        first row of the array.  For example::
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
             >>> im.origin
@@ -1293,7 +1296,7 @@ class Image(object):
         self._array[y-self.ymin, x-self.xmin] += value
 
     def fill(self, value):
-        """Set all pixel values to the given `value`
+        """Set all pixel values to the given ``value``
         """
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
@@ -1340,7 +1343,8 @@ class Image(object):
         Sometimes FFT drawing can result in tiny negative values, which may be undesirable for
         some purposes.  This method replaces those values with 0 or some other value if desired.
 
-        @param replace_value    The value with which to replace any negative pixels. [default: 0]
+        Parameters:
+            replace_value:  The value with which to replace any negative pixels. [default: 0]
         """
         self.array[self.array<0] = replace_value
 
@@ -1353,13 +1357,15 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0.
-                            [default: self.true_center]
-        @param flux         The total flux.  [default: sum(self.array)]
-        @param flux_frac    The fraction of light to be enclosed by the returned radius.
-                            [default: 0.5]
+        Parameters:
+            center:     The position in pixels to use for the center, r=0.
+                        [default: self.true_center]
+            flux:       The total flux.  [default: sum(self.array)]
+            flux_frac:  The fraction of light to be enclosed by the returned radius.
+                        [default: 0.5]
 
-        @returns an estimate of the half-light radius in physical units defined by the pixel scale.
+        Returns:
+            an estimate of the half-light radius in physical units defined by the pixel scale.
         """
         if center is None:
             center = self.true_center
@@ -1408,17 +1414,21 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0.
-                            [default: self.true_center]
-        @param flux         The total flux.  [default: sum(self.array)]
-        @param rtype        There are three options for this parameter:
-                            - 'trace' means return sqrt(T/2)
-                            - 'det' means return det(Q)^1/4
-                            - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
-                            [default: 'det']
+        Parameters:
+            center:     The position in pixels to use for the center, r=0.
+                        [default: self.true_center]
+            flux:       The total flux.  [default: sum(self.array)]
+            rtype:      There are three options for this parameter:
 
-        @returns an estimate of the radius in physical units defined by the pixel scale
-                 (or both estimates if rtype == 'both').
+                        - 'trace' means return sqrt(T/2)
+                        - 'det' means return det(Q)^1/4
+                        - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
+
+                        [default: 'det']
+
+        Returns:
+            an estimate of the radius in physical units defined by the pixel scale
+            (or both estimates if rtype == 'both').
         """
         if rtype not in ('trace', 'det', 'both'):
             raise GalSimValueError("Invalid rtype.", rtype, ('trace', 'det', 'both'))
@@ -1469,14 +1479,15 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0.
-                            [default: self.true_center]
-        @param Imax         The maximum surface brightness.  [default: max(self.array)]
-                            Note: If Imax is provided, and the maximum pixel value is larger than
-                            this value, Imax will be updated to use the larger value.
+        Parameters:
+            center:     The position in pixels to use for the center, r=0.
+                        [default: self.true_center]
+            Imax:       The maximum surface brightness.  [default: max(self.array)]
+                        Note: If Imax is provided, and the maximum pixel value is larger than
+                        this value, Imax will be updated to use the larger value.
 
-        @returns an estimate of the full-width half-maximum in physical units defined by the
-                 pixel scale.
+        Returns:
+            an estimate of the full-width half-maximum in physical units defined by the pixel scale.
         """
         if center is None:
             center = self.true_center

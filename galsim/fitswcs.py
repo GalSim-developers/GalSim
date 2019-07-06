@@ -57,7 +57,7 @@ class AstropyWCS(CelestialWCS):
     """This WCS uses astropy.wcs to read WCS information from a FITS file.
     It requires the astropy.wcs python module to be installed.
 
-    Astropy may be installed using pip, fink, or port:
+    Astropy may be installed using pip, fink, or port::
 
         >>> pip install astropy
         >>> fink install astropy-py27
@@ -67,32 +67,32 @@ class AstropyWCS(CelestialWCS):
 
         http://www.astropy.org/
 
-    Initialization
-    --------------
-    An AstropyWCS is initialized with one of the following commands:
+    An AstropyWCS is initialized with one of the following commands::
 
         >>> wcs = galsim.AstropyWCS(file_name=file_name)  # Open a file on disk
         >>> wcs = galsim.AstropyWCS(header=header)        # Use an existing pyfits header
         >>> wcs = galsim.AstropyWCS(wcs=wcs)              # Use an existing astropy.wcs.WCS instance
 
     Exactly one of the parameters `file_name`, `header` or `wcs` is required.  Also, since the most
-    common usage will probably be the first, you can also give a `file_name` without it being named:
+    common usage will probably be the first, you can also give a `file_name` without it being
+    named::
 
         >>> wcs = galsim.AstropyWCS(file_name)
 
-    @param file_name      The FITS file from which to read the WCS information.  This is probably
+    Parameters:
+        file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-    @param dir            Optional directory to prepend to `file_name`. [default: None]
-    @param hdu            Optionally, the number of the HDU to use if reading from a file.
+        dir:              Optional directory to prepend to `file_name`. [default: None]
+        hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
-    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+        header:           The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
-    @param compression    Which decompression scheme to use (if any). See galsim.fits.read()
+        compression:      Which decompression scheme to use (if any). See galsim.fits.read()
                           for the available options.  [default: 'auto']
-    @param wcs            An existing astropy.wcs.WCS instance [default: None]
-    @param origin         Optional origin position for the image coordinate system.
+        wcs:              An existing astropy.wcs.WCS instance [default: None]
+        origin:           Optional origin position for the image coordinate system.
                           If provided, it should be a PositionD or PositionI.
                           [default: None]
     """
@@ -299,17 +299,15 @@ class PyAstWCS(CelestialWCS):
     """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
     information from a FITS file.  It requires the starlink.Ast python module to be installed.
 
-    Starlink may be installed using pip:
+    Starlink may be installed using pip::
 
         >>> pip install starlink-pyast
 
     For more information, see their website:
 
-        https://pypi.python.org/pypi/starlink-pyast/
+    https://pypi.python.org/pypi/starlink-pyast/
 
-    Initialization
-    --------------
-    A PyAstWCS is initialized with one of the following commands:
+    A PyAstWCS is initialized with one of the following commands::
 
         >>> wcs = galsim.PyAstWCS(file_name=file_name)  # Open a file on disk
         >>> wcs = galsim.PyAstWCS(header=header)        # Use an existing pyfits header
@@ -317,23 +315,24 @@ class PyAstWCS(CelestialWCS):
 
     Exactly one of the parameters `file_name`, `header` or `wcsinfo` is required.  Also, since the
     most common usage will probably be the first, you can also give a file name without it being
-    named:
+    named::
 
         >>> wcs = galsim.PyAstWCS(file_name)
 
-    @param file_name      The FITS file from which to read the WCS information.  This is probably
+    Parameters:
+        file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-    @param dir            Optional directory to prepend to `file_name`. [default: None]
-    @param hdu            Optionally, the number of the HDU to use if reading from a file.
+        dir:              Optional directory to prepend to `file_name`. [default: None]
+        hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
-    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+        header:           The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
-    @param compression    Which decompression scheme to use (if any). See galsim.fits.read()
+        compression:      Which decompression scheme to use (if any). See galsim.fits.read()
                           for the available options.  [default:'auto']
-    @param wcsinfo        An existing starlink.Ast.FrameSet [default: None]
-    @param origin         Optional origin position for the image coordinate system.
+        wcsinfo:          An existing starlink.Ast.FrameSet [default: None]
+        origin:           Optional origin position for the image coordinate system.
                           If provided, it should be a PositionD or PositionI.
                           [default: None]
     """
@@ -591,15 +590,14 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
         http://tdc-www.harvard.edu/software/wcstools/
 
-    Initialization
-    --------------
-    A WcsToolsWCS is initialized with the following command:
+    A WcsToolsWCS is initialized with the following command::
 
         >>> wcs = galsim.WcsToolsWCS(file_name)
 
-    @param file_name      The FITS file from which to read the WCS information.
-    @param dir            Optional directory to prepend to `file_name`. [default: None]
-    @param origin         Optional origin position for the image coordinate system.
+    Parameters:
+        file_name:        The FITS file from which to read the WCS information.
+        dir:              Optional directory to prepend to `file_name`. [default: None]
+        origin:           Optional origin position for the image coordinate system.
                           If provided, it should be a PositionD or PositionI.
                           [default: None]
     """
@@ -840,15 +838,13 @@ class GSFitsWCS(CelestialWCS):
 
     Currrently, it is able to parse the following WCS types: TAN, STG, ZEA, ARC, TPV, TNX
 
-    Initialization
-    --------------
-    A GSFitsWCS is initialized with one of the following commands:
+    A GSFitsWCS is initialized with one of the following commands::
 
         >>> wcs = galsim.GSFitsWCS(file_name=file_name)  # Open a file on disk
         >>> wcs = galsim.GSFitsWCS(header=header)        # Use an existing pyfits header
 
     Also, since the most common usage will probably be the first, you can also give a file name
-    without it being named:
+    without it being named::
 
         >>> wcs = galsim.GSFitsWCS(file_name)
 
@@ -856,18 +852,19 @@ class GSFitsWCS(CelestialWCS):
     a GSFitsWCS object implementing a TAN projection.  See the docstring of TanWCS() for
     more details.
 
-    @param file_name      The FITS file from which to read the WCS information.  This is probably
+    Parameters:
+        file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-    @param dir            Optional directory to prepend to `file_name`. [default: None]
-    @param hdu            Optionally, the number of the HDU to use if reading from a file.
+        dir:              Optional directory to prepend to `file_name`. [default: None]
+        hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
-    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+        header:           The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
-    @param compression    Which decompression scheme to use (if any). See galsim.fits.read()
+        compression:      Which decompression scheme to use (if any). See galsim.fits.read()
                           for the available options.  [default: 'auto']
-    @param origin         Optional origin position for the image coordinate system.
+        origin:           Optional origin position for the image coordinate system.
                           If provided, it should be a PositionD or PositionI.
                           [default: None]
     """
@@ -1586,14 +1583,16 @@ def TanWCS(affine, world_origin, units=arcsec):
     The tangent point will correspond to the location of (u,v) = (0,0) in the intermediate
     coordinate system.
 
-    @param affine        An AffineTransform defining the transformation from image coordinates
+    Parameters:
+        affine:          An AffineTransform defining the transformation from image coordinates
                          to the coordinates on the tangent plane.
-    @param world_origin  A CelestialCoord defining the location on the sphere where the
+        world_origin:    A CelestialCoord defining the location on the sphere where the
                          tangent plane is centered.
-    @param units         The angular units of the (u,v) intermediate coordinate system.
+        units:           The angular units of the (u,v) intermediate coordinate system.
                          [default: galsim.arcsec]
 
-    @returns a GSFitsWCS describing this WCS.
+    Returns:
+        a GSFitsWCS describing this WCS.
     """
     # These will raise the appropriate errors if affine is not the right type.
     dudx = affine.dudx * units / degrees
@@ -1662,22 +1661,23 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     Note: The list of classes this function will try may be edited, e.g. by an external module
     that wants to add an additional WCS type.  The list is `galsim.fitswcs.fits_wcs_types`.
 
-    @param file_name      The FITS file from which to read the WCS information.  This is probably
+    Parameters:
+        file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-    @param dir            Optional directory to prepend to `file_name`. [default: None]
-    @param hdu            Optionally, the number of the HDU to use if reading from a file.
+        dir:              Optional directory to prepend to `file_name`. [default: None]
+        hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
-    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+        header:           The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
-    @param compression    Which decompression scheme to use (if any). See galsim.fits.read()
+        compression:      Which decompression scheme to use (if any). See galsim.fits.read()
                           for the available options.  [default: 'auto']
-    @param text_file      Normally a file is taken to be a fits file, but you can also give it a
+        text_file:        Normally a file is taken to be a fits file, but you can also give it a
                           text file with the header information (like the .head file output from
                           SCamp).  In this case you should set `text_file = True` to tell GalSim
                           to parse the file this way.  [default: False]
-    @param suppress_warning Should a warning be emitted if none of the real FITS WCS classes
+        suppress_warning: Should a warning be emitted if none of the real FITS WCS classes
                           are able to successfully read the file, and we have to reset to
                           an AffineTransform instead?  [default: False]
                           (Note: this is set to True when this function is implicitly called from

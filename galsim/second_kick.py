@@ -55,10 +55,10 @@ class SecondKick(GSObject):
     Fourier optics calculations are many orders of magnitude slower than geometric optics
     calculations for typical flux levels, however, so we implement a scale-splitting algorithm first
     described in Peterson et al. (2015) for the LSST PhoSim package.  Essentially, phase
-    fluctuations below a critical mode in Fourier space, labeled `kcrit`, are handled by the fast
+    fluctuations below a critical mode in Fourier space, labeled ``kcrit``, are handled by the fast
     geometric optics calculations present in PhaseScreenPSF.  Fluctuations for Fourier modes above
-    `kcrit` are then calculated analytically by SecondKick.  Because very many oscillations of these
-    high-k modes both fit within a given telescope aperture and pass by the aperture during a
+    ``kcrit`` are then calculated analytically by SecondKick.  Because very many oscillations of
+    these high-k modes both fit within a given telescope aperture and pass by the aperture during a
     moderate length exposure time, we can use the same analytic expectation value calculation for
     the high-k component of all PSFs across a field of view, thus incurring the somewhat expensive
     calculation for Fourier optics only once.
@@ -75,20 +75,21 @@ class SecondKick(GSObject):
 
         Peterson et al.  2015  ApJSS  vol. 218
 
-    @param lam               Wavelength in nanometers
-    @param r0                Fried parameter in meters.
-    @param diam              Aperture diameter in meters.
-    @param obscuration       Linear dimension of central obscuration as fraction of aperture
-                             linear dimension. [0., 1.).  [default: 0.0]
-    @param kcrit             Critical Fourier mode (in units of 1/r0) below which the turbulence
-                             power spectrum will be truncated.  [default: 0.2]
-    @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param scale_unit        Units assumed when drawing this profile or evaluating xValue, kValue,
-                             etc.  Should be a galsim.AngleUnit or a string that can be used to
-                             construct one (e.g., 'arcsec', 'radians', etc.).
-                             [default: galsim.arcsec]
-    @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
-                             details. [default: None]
+    Parameters:
+        lam:             Wavelength in nanometers
+        r0:              Fried parameter in meters.
+        diam:            Aperture diameter in meters.
+        obscuration:     Linear dimension of central obscuration as fraction of aperture
+                         linear dimension. [0., 1.).  [default: 0.0]
+        kcrit:           Critical Fourier mode (in units of 1/r0) below which the turbulence
+                         power spectrum will be truncated.  [default: 0.2]
+        flux:            The flux (in photons/cm^2/s) of the profile. [default: 1]
+        scale_unit:      Units assumed when drawing this profile or evaluating xValue, kValue,
+                         etc.  Should be a galsim.AngleUnit or a string that can be used to
+                         construct one (e.g., 'arcsec', 'radians', etc.).
+                         [default: galsim.arcsec]
+        gsparams:        An optional GSParams argument.  See the docstring for GSParams for
+                         details. [default: None]
     """
     _req_params = { "lam" : float, "r0" : float, "diam" : float }
     _opt_params = { "obscuration" : float, "kcrit" : float, "flux" : float, "scale_unit" : str }

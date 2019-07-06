@@ -30,34 +30,30 @@ from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 class Gaussian(GSObject):
     """A class describing a 2D Gaussian surface brightness profile.
 
-    The Gaussian surface brightness profile is characterized by two properties, its `flux`
-    and the characteristic size `sigma` where the radial profile of the circular Gaussian
-    drops off as `exp[-r^2 / (2. * sigma^2)]`.
-
-    Initialization
-    --------------
+    The Gaussian surface brightness profile is characterized by two properties, its ``flux``
+    and the characteristic size ``sigma`` where the radial profile of the circular Gaussian
+    drops off as ``exp[-r^2 / (2. * sigma^2)]``.
 
     A Gaussian can be initialized using one (and only one) of three possible size parameters:
-    `sigma`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
+    ``sigma``, ``fwhm``, or ``half_light_radius``.  Exactly one of these three is required.
 
-    @param sigma            The value of sigma of the profile.  Typically given in arcsec.
-                            [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
-    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
-                            [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
-    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
-                            [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        sigma:              The value of sigma of the profile.  Typically given in arcsec.
+                            [One of ``sigma``, ``fwhm``, or ``half_light_radius`` is required.]
+        fwhm:               The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of ``sigma``, ``fwhm``, or ``half_light_radius`` is required.]
+        half_light_radius:  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of ``sigma``, ``fwhm``, or ``half_light_radius`` is required.]
+        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-
-    Methods and Properties
-    ----------------------
 
     In addition to the usual GSObject methods, Gaussian has the following access properties:
 
-        >>> sigma = gauss.sigma
-        >>> fwhm = gauss.fwhm
-        >>> hlr = gauss.half_light_radius
+    Attributes:
+        sigma:              The value of sigma for the profile
+        fwhm:               The full-width half-max size
+        half_light_radius:  The half-light radius of the profile
     """
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.

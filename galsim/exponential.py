@@ -34,27 +34,24 @@ class Exponential(GSObject):
     the Sersic profile, but is given a separate class since the Fourier transform has closed form
     and can be generated without lookup tables.
 
-    Initialization
-    --------------
-
     An Exponential can be initialized using one (and only one) of two possible size parameters:
-    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+    ``scale_radius`` or ``half_light_radius``.  Exactly one of these two is required.
 
-    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius` or `half_light_radius` is required.]
-    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
-                            [One of `scale_radius` or `half_light_radius` is required.]
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+    Parameters:
+        half_light_radius:  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius`` or ``half_light_radius`` is required.]
+        scale_radius:       The scale radius of the profile.  Typically given in arcsec.
+                            [One of ``scale_radius`` or ``half_light_radius`` is required.]
+        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods and Properties
-    ----------------------
+    In addition to the usual GSObject methods and attributes, Exponential has the following access
+    properties:
 
-    In addition to the usual GSObject methods, Exponential has the following access properties:
-
-        >>> r0 = exp_obj.scale_radius
-        >>> hlr = exp_obj.half_light_radius
+    Attributes:
+        scale_radius:       The scale radius of the profile
+        half_light_radius:  The half-light radius of the profile
     """
     _req_params = {}
     _opt_params = { "flux" : float }

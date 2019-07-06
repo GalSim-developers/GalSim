@@ -325,7 +325,7 @@ def _add_hdu(hdu_list, data, pyfits_compress):
 
 
 def _check_hdu(hdu, pyfits_compress, header_only=False):
-    """Check that an input `hdu` is valid
+    """Check that an input ``hdu`` is valid
     """
     from ._pyfits import pyfits
     # Check for fixable verify errors
@@ -372,7 +372,7 @@ def _get_hdu(hdu_list, hdu, pyfits_compress, header_only=False):
 # Unlike the other helpers, this one doesn't start with an underscore, since we make it
 # available to people who use the function ReadFile.
 def closeHDUList(hdu_list, fin):
-    """If necessary, close the file handle that was opened to read in the `hdu_list`"""
+    """If necessary, close the file handle that was opened to read in the ``hdu_list``"""
     hdu_list.close()
     if fin:
         fin.close()
@@ -391,27 +391,29 @@ def closeHDUList(hdu_list, fin):
 def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compression='auto'):
     """Write a single image to a FITS file.
 
-    Write the Image instance `image` to a FITS file, with details depending on the arguments.  This
-    function can be called directly as `galsim.fits.write(image, ...)`, with the image as the first
-    argument, or as an image method: `image.write(...)`.
+    Write the Image instance ``image`` to a FITS file, with details depending on the arguments.
+    This function can be called directly as ``galsim.fits.write(image, ...)``, with the image as the
+    first argument, or as an image method: ``image.write(...)``.
 
-    @param image        The image to write to file.  Per the description of this method, it may be
-                        given explicitly via `galsim.fits.write(image, ...)` or the method may be
-                        called directly as an image method, `image.write(...)`.  Note that if the
+    Parameters:
+        image:          The image to write to file.  Per the description of this method, it may be
+                        given explicitly via ``galsim.fits.write(image, ...)`` or the method may be
+                        called directly as an image method, ``image.write(...)``.  Note that if the
                         image has a 'header' attribute containing a FitsHeader, then the FitsHeader
                         is written to the header in the PrimaryHDU, followed by the WCS as usual.
-    @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is
+        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu_list     A pyfits HDUList.  If this is provided instead of `file_name`, then the
+        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the
                         image is appended to the end of the HDUList as a new HDU. In that case,
-                        the user is responsible for calling either `hdu_list.writeto(...)` or
-                        `galsim.fits.writeFile(...)` afterwards.  [Either `file_name` or `hdu_list`
-                        is required.]
-    @param clobber      Setting `clobber=True` when `file_name` is given will silently overwrite
+                        the user is responsible for calling either ``hdu_list.writeto(...)`` or
+                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
+                        ``hdu_list`` is required.]
+        clobber:        Setting ``clobber=True`` when ``file_name`` is given will silently overwrite
                         existing files. [default: True]
-    @param compression  Which compression scheme to use (if any).  Options are:
+        compression:    Which compression scheme to use (if any).  Options are:
+
                         - None or 'none' = no compression
                         - 'rice' = use rice compression in tiles (preserves header readability)
                         - 'gzip' = use gzip to compress the full file
@@ -420,11 +422,12 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
                         - 'hcompress' = use hcompress in tiles (only valid for 2-d images)
                         - 'plio' = use plio compression in tiles (only valid for pos integer data)
                         - 'auto' = determine the compression from the extension of the file name
-                                   (requires `file_name` to be given):
-                                   '*.fz' => 'rice'
-                                   '*.gz' => 'gzip'
-                                   '*.bz2' => 'bzip2'
-                                   otherwise None
+                                   (requires ``file_name`` to be given):
+                                   - '.fz' => 'rice'
+                                   - '.gz' => 'gzip'
+                                   - '.bz2' => 'bzip2'
+                                   - otherwise None
+
                         [default: 'auto']
     """
     from ._pyfits import pyfits
@@ -464,19 +467,20 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
     The details of how the images are written to file depends on the arguments.
 
-    @param image_list   A Python list of Images.  (For convenience, some items in this list
+    Parameters:
+        image_list:     A Python list of Images.  (For convenience, some items in this list
                         may be HDUs already.  Any Images will be converted into pyfits HDUs.)
-    @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is
+        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu_list     A pyfits HDUList.  If this is provided instead of `file_name`, then the
+        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the
                         image is appended to the end of the HDUList as a new HDU. In that case,
-                        the user is responsible for calling either `hdu_list.writeto(...)` or
-                        `galsim.fits.writeFile(...)` afterwards.  [Either `file_name` or `hdu_list`
-                        is required.]
-    @param clobber      See documentation for this parameter on the galsim.fits.write() method.
-    @param compression  See documentation for this parameter on the galsim.fits.write() method.
+                        the user is responsible for calling either ``hdu_list.writeto(...)`` or
+                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
+                        ``hdu_list`` is required.]
+        clobber:        See documentation for this parameter on the galsim.fits.write() method.
+        compression:    See documentation for this parameter on the galsim.fits.write() method.
     """
     from ._pyfits import pyfits
 
@@ -517,8 +521,8 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     """Write a Python list of images to a FITS file as a data cube.
 
     The details of how the images are written to file depends on the arguments.  Unlike for
-    writeMulti, when writing a data cube it is necessary that each Image in `image_list` has the
-    same size `(nx, ny)`.  No check is made to confirm that all images have the same origin and
+    writeMulti, when writing a data cube it is necessary that each Image in ``image_list`` has the
+    same size ``(nx, ny)``.  No check is made to confirm that all images have the same origin and
     pixel scale (or WCS).
 
     In fact, the WCS of the first image is the one that gets put into the FITS header (since only
@@ -527,22 +531,23 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     standard does not support any way to have the various images in a data cube to have different
     WCS solutions.
 
-    @param image_list   The `image_list` can also be either an array of NumPy arrays or a 3d NumPy
+    Parameters:
+        image_list:     The ``image_list`` can also be either an array of NumPy arrays or a 3d NumPy
                         array, in which case this is written to the fits file directly.  In the
                         former case, no explicit check is made that the NumPy arrays are all the
                         same shape, but a NumPy exception will be raised which we let pass upstream
                         unmolested.
-    @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is
+        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu_list     A pyfits HDUList.  If this is provided instead of `file_name`, then the
+        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the
                         cube is appended to the end of the HDUList as a new HDU. In that case,
-                        the user is responsible for calling either `hdu_list.writeto(...)` or
-                        `galsim.fits.writeFile(...)` afterwards.  [Either `file_name` or `hdu_list`
-                        is required.]
-    @param clobber      See documentation for this parameter on the galsim.fits.write() method.
-    @param compression  See documentation for this parameter on the galsim.fits.write() method.
+                        the user is responsible for calling either ``hdu_list.writeto(...)`` or
+                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
+                        ``hdu_list`` is required.]
+        clobber:        See documentation for this parameter on the galsim.fits.write() method.
+        compression:    See documentation for this parameter on the galsim.fits.write() method.
     """
     from ._pyfits import pyfits
     from .bounds import BoundsI
@@ -619,27 +624,30 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
 def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
     """Write a Pyfits hdu_list to a FITS file, taking care of the GalSim compression options.
 
-    If you have used the write(), writeMulti() or writeCube() functions with the `hdu_list` option
-    rather than writing directly to a file, you may subsequently use the pyfits command
-    `hdu_list.writeto(...)`.  However, it may be more convenient to use this function, writeFile()
+    If you have used the write(), writeMulti() or writeCube() functions with the ``hdu_list``
+    option rather than writing directly to a file, you may subsequently use the pyfits command
+    ``hdu_list.writeto(...)``.  However, it may be more convenient to use this function, writeFile()
     instead, since it treats the compression option consistently with how that option is handled in
     the above functions.
 
-    @param file_name    The name of the file to write to.
-    @param hdu_list     A pyfits HDUList.
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+    Parameters:
+        file_name:      The name of the file to write to.
+        hdu_list:       A pyfits HDUList.
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param clobber      Setting `clobber=True` will silently overwrite existing files.
+        clobber:        Setting ``clobber=True`` will silently overwrite existing files.
                         [default: True]
-    @param compression  Which compression scheme to use (if any).  Options are:
+        compression:    Which compression scheme to use (if any).  Options are:
+
                         - None or 'none' = no compression
                         - 'gzip' = use gzip to compress the full file
                         - 'bzip2' = use bzip2 to compress the full file
                         - 'auto' = determine the compression from the extension of the file name
-                                   (requires `file_name` to be given):
-                                   '*.gz' => 'gzip'
-                                   '*.bz2' => 'bzip2'
+                                   (requires ``file_name`` to be given):
+                                   '.gz' => 'gzip'
+                                   '.bz2' => 'bzip2'
                                    otherwise None
+
                         Note that the other options, such as 'rice', that operate on the image
                         directly are not available at this point.  If you want to use one of them,
                         it must be applied when writing each hdu.
@@ -670,29 +678,31 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     The normal usage for this function is to read a fits file and return the image contained
     therein, automatically decompressing it if necessary.  However, you may also pass it
-    an HDUList, in which case it will select the indicated hdu (with the `hdu` parameter)
+    an HDUList, in which case it will select the indicated hdu (with the ``hdu`` parameter)
     from that.
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations:
-    `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be
-    used to initialize the bounding box and WCS.  If not, the bounding box will have `(xmin,ymin)`
-    at `(1,1)` and the scale will be set to 1.0.
+    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start
+    with ``GS_`` keywords, these will be used to initialize the bounding box and WCS.  If not, the
+    bounding box will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.
 
-    This function is called as `im = galsim.fits.read(...)`
+    This function is called as ``im = galsim.fits.read(...)``
 
-    @param file_name    The name of the file to read in.  [Either `file_name` or `hdu_list` is
+    Parameters:
+        file_name:      The name of the file to read in.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu_list     Either a `pyfits.HDUList`, a `pyfits.PrimaryHDU`, or `pyfits.ImageHDU`.
-                        In the former case, the `hdu` in the list will be selected.  In the latter
-                        two cases, the `hdu` parameter is ignored.  [Either `file_name` or
-                        `hdu_list` is required.]
-    @param hdu          The number of the HDU to return.  [default: None, which means to return
+        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or
+                        ``pyfits.ImageHDU``.  In the former case, the `hdu` in the list will be
+                        selected.  In the latter two cases, the `hdu` parameter is ignored.
+                        [Either `file_name` or ``hdu_list`` is required.]
+        hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
                         compression.  (e.g. for 'rice', the first extension is the one you normally
                         want.)]
-    @param compression  Which decompression scheme to use (if any).  Options are:
+        compression:    Which decompression scheme to use (if any).  Options are:
+
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
                         - 'gzip' = use gzip to decompress the full file
@@ -701,14 +711,16 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires `file_name` to be given).
-                                   '*.fz' => 'rice'
-                                   '*.gz' => 'gzip'
-                                   '*.bz2' => 'bzip2'
-                                   otherwise None
+                                   (requires ``file_name`` to be given).
+                                   - '.fz' => 'rice'
+                                   - '.gz' => 'gzip'
+                                   - '.bz2' => 'bzip2'
+                                   - otherwise None
+
                         [default: 'auto']
 
-    @returns the image as an Image instance.
+    Returns:
+        the image as an Image instance.
     """
     from . import wcs
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -757,20 +769,21 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     it an HDUList, in which case it will build the images from these directly.
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations:
-    `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be
-    used to initialize the bounding box and WCS.  If not, the bounding box will have `(xmin,ymin)`
-    at `(1,1)` and the scale will be set to 1.0.
+    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start
+    with ``GS_``, these will be used to initialize the bounding box and WCS.  If not, the bounding
+    box will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.
 
-    This function is called as `im = galsim.fits.readMulti(...)`
+    This function is called as ``im = galsim.fits.readMulti(...)``
 
-
-    @param file_name    The name of the file to read in.  [Either `file_name` or `hdu_list` is
+    Parameters:
+        file_name:      The name of the file to read in.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu_list     A `pyfits.HDUList` from which to read the images.  [Either `file_name` or
-                        `hdu_list` is required.]
-    @param compression  Which decompression scheme to use (if any).  Options are:
+        hdu_list:       A ``pyfits.HDUList`` from which to read the images.  [Either ``file_name``
+                        or ``hdu_list`` is required.]
+        compression:    Which decompression scheme to use (if any).  Options are:
+
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
                         - 'gzip' = use gzip to decompress the full file
@@ -779,14 +792,16 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires `file_name` to be given).
-                                   '*.fz' => 'rice'
-                                   '*.gz' => 'gzip'
-                                   '*.bz2' => 'bzip2'
-                                   otherwise None
+                                   (requires ``file_name`` to be given).
+                                   - '.fz' => 'rice'
+                                   - '.gz' => 'gzip'
+                                   - '.bz2' => 'bzip2'
+                                   - otherwise None
+
                         [default: 'auto']
 
-    @returns a Python list of Images
+    Returns:
+        a Python list of Images
     """
     from ._pyfits import pyfits
 
@@ -828,25 +843,27 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     """Construct a Python list of Images from a FITS data cube.
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
-    `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be
-    used to initialize the bounding boxes and WCS's.  If not, the bounding boxes will have
-    `(xmin,ymin)` at `(1,1)` and the scale will be set to 1.0.
+    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start
+    with ``GS_``, these will be used to initialize the bounding boxes and WCS's.  If not, the
+    bounding boxes will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.
 
-    This function is called as `image_list = galsim.fits.readCube(...)`
+    This function is called as ``image_list = galsim.fits.readCube(...)``
 
-    @param file_name    The name of the file to read in.  [Either `file_name` or `hdu_list` is
+    Parameters:
+        file_name:      The name of the file to read in.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu_list     Either a `pyfits.HDUList`, a `pyfits.PrimaryHDU`, or `pyfits.ImageHDU`.
-                        In the former case, the `hdu` in the list will be selected.  In the latter
-                        two cases, the `hdu` parameter is ignored.  [Either `file_name` or
-                        `hdu_list` is required.]
-    @param hdu          The number of the HDU to return.  [default: None, which means to return
+        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or
+                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be
+                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.
+                        [Either ``file_name`` or ``hdu_list`` is required.]
+        hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
                         compression.  (e.g. for rice, the first extension is the one you normally
                         want.)]
-    @param compression  Which decompression scheme to use (if any).  Options are:
+        compression:    Which decompression scheme to use (if any).  Options are:
+
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
                         - 'gzip' = use gzip to decompress the full file
@@ -855,14 +872,16 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires `file_name` to be given).
-                                   '*.fz' => 'rice'
-                                   '*.gz' => 'gzip'
-                                   '*.bz2' => 'bzip2'
-                                   otherwise None
+                                   (requires ``file_name`` to be given).
+                                   - '.fz' => 'rice'
+                                   - '.gz' => 'gzip'
+                                   - '.bz2' => 'bzip2'
+                                   - otherwise None
+
                         [default: 'auto']
 
-    @returns a Python list of Images.
+    Returns:
+        a Python list of Images.
     """
     from . import wcs
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -914,25 +933,27 @@ def readFile(file_name, dir=None, hdu=None, compression='auto'):
     functions, you can use this function.  It handles the compression options in the standard
     GalSim way and just returns the hdu (and hdu_list) for you to use as you see fit.
 
-    This function is called as:
+    This function is called as::
 
         >>> hdu, hdu_list, fin = galsim.fits.readFile(...)
 
     The first item in the returned tuple is the specified hdu (or the primary if none was
     specifically requested).  The other two are returned so you can properly close them.
     They are the full HDUList and possibly a file handle.  The appropriate cleanup can be
-    done with:
+    done with::
 
         >>> galsim.fits.closeHDUList(hdu_list, fin)
 
-    @param file_name    The name of the file to read in.
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+    Parameters:
+        file_name:      The name of the file to read in.
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu          The number of the HDU to return.  [default: None, which means to return
+        hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
                         compression.  (e.g. for rice, the first extension is the one you normally
                         want.)]
-    @param compression  Which decompression scheme to use (if any).  Options are:
+        compression:    Which decompression scheme to use (if any).  Options are:
+
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
                         - 'gzip' = use gzip to decompress the full file
@@ -941,14 +962,16 @@ def readFile(file_name, dir=None, hdu=None, compression='auto'):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires `file_name` to be given).
-                                   '*.fz' => 'rice'
-                                   '*.gz' => 'gzip'
-                                   '*.bz2' => 'bzip2'
-                                   otherwise None
+                                   (requires ``file_name`` to be given).
+                                   - '.fz' => 'rice'
+                                   - '.gz' => 'gzip'
+                                   - '.bz2' => 'bzip2'
+                                   - otherwise None
+
                         [default: 'auto']
 
-    @returns a tuple with three items: `(hdu, hdu_list, fin)`.
+    Returns:
+        a tuple with three items: ``(hdu, hdu_list, fin)``.
     """
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
     hdu_list, fin = _read_file(file_name, dir, file_compress)
@@ -969,16 +992,16 @@ class FitsHeader(object):
     This class works a lot like the regular read() function, but rather than returning
     the image part of the FITS file, it gives you access to the header information.
 
-    After construction, you can access a header value by
+    After construction, you can access a header value by::
 
         >>> value = fits_header[key]
 
-    or write to it with
+    or write to it with::
 
         >>> fits_header[key] = value                # If you just want to set a value.
         >>> fits_header[key] = (value, comment)     # If you want to include a comment field.
 
-    In fact, most of the normal functions available for a dict are available:
+    In fact, most of the normal functions available for a dict are available:::
 
         >>> keys = fits_header.keys()
         >>> items = fits_header.items()
@@ -992,40 +1015,41 @@ class FitsHeader(object):
     to write to a fits header, so this class will work regardless of which version of pyfits
     (or astropy.io.fits) is installed.
 
-    The underlying pyfits.Header object is available as a `.header` attribute:
+    The underlying pyfits.Header object is available as a ``.header`` attribute::
 
         >>> pyf_header = fits_header.header
 
     A FitsHeader may be constructed from a file name, an open PyFits (or astropy.io.fits) HDUList
     object, or a PyFits (or astropy.io.fits) Header object.  It can also be constructed with
     no parameters, in which case a blank Header will be constructed with no keywords yet if
-    you want to add the keywords you want by hand.
+    you want to add the keywords you want by hand.::
 
         >>> h1 = galsim.FitsHeader(file_name = file_name)
         >>> h2 = galsim.FitsHeader(header = header)
         >>> h3 = galsim.FitsHeader(hdu_list = hdu_list)
         >>> h4 = galsim.FitsHeader()
 
-    For convenience, the first parameter may be unnamed as either a header or a file_name:
+    For convenience, the first parameter may be unnamed as either a header or a file_name::
 
         >>> h1 = galsim.FitsHeader(file_name)
         >>> h2 = galsim.FitsHeader(header)
 
-    Constructor parameters:
-
-    @param header       A pyfits Header object or in fact any dict-like object or list of
+    Parameters:
+        header:         A pyfits Header object or in fact any dict-like object or list of
                         (key,value) pairs.  [default: None]
-    @param file_name    The name of the file to read in.  [default: None]
-    @param dir          Optionally a directory name can be provided if `file_name` does not
+        file_name:      The name of the file to read in.  [default: None]
+        dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-    @param hdu_list     Either a `pyfits.HDUList`, a `pyfits.PrimaryHDU`, or `pyfits.ImageHDU`.
-                        In the former case, the `hdu` in the list will be selected.  In the latter
-                        two cases, the `hdu` parameter is ignored.  [default: None]
-    @param hdu          The number of the HDU to return.  [default: None, which means to return
+        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or
+                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be
+                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.
+                        [default: None]
+        hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
                         compression.  (e.g. for rice, the first extension is the one you normally
                         want.)]
-    @param compression  Which decompression scheme to use (if any).  Options are:
+        compression:    Which decompression scheme to use (if any).  Options are:
+
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
                         - 'gzip' = use gzip to decompress the full file
@@ -1034,15 +1058,16 @@ class FitsHeader(object):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires `file_name` to be given).
-                                   '*.fz' => 'rice'
-                                   '*.gz' => 'gzip'
-                                   '*.bz2' => 'bzip2'
-                                   otherwise None
+                                   (requires ``file_name`` to be given).
+                                   - '.fz' => 'rice'
+                                   - '.gz' => 'gzip'
+                                   - '.bz2' => 'bzip2'
+                                   - otherwise None
+
                         [default: 'auto']
-    @param text_file    Normally a file is taken to be a fits file, but you can also give it a
+        text_file:      Normally a file is taken to be a fits file, but you can also give it a
                         text file with the header information (like the .head file output from
-                        SCamp).  In this case you should set `text_file = True` to tell GalSim
+                        SCamp).  In this case you should set ``text_file = True`` to tell GalSim
                         to parse the file this way.  [default: False]
     """
     _req_params = { 'file_name' : str }
@@ -1186,9 +1211,10 @@ class FitsHeader(object):
         This breaks convention a bit by treating the header more like a list than a dict,
         but sometimes that is necessary to get the header structured the way you want it.
 
-        @param key          The key of the entry to append
-        @param value        The value of the entry to append
-        @param useblanks    If there are blank entries currently at the end, should they be
+        Parameters:
+            key:            The key of the entry to append
+            value:          The value of the entry to append
+            useblanks:      If there are blank entries currently at the end, should they be
                             overwritten with the new entry? [default: True]
         """
         self._tag = None
