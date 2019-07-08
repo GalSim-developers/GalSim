@@ -2,7 +2,7 @@ Galaxies
 ========
 
 There are a number of profiles that are designed to be used for galaxy profiles.
-Again though, there s nothing restricting these classes to be used only for that purpose
+Again though, there is nothing restricting these classes to be used only for that purpose
 if you have another use case for which one would be relevant.
 
 Exponenatial Profile
