@@ -10,6 +10,15 @@ GalSim: The modular galaxy image simulation toolkit
 
     image
     sb
+    wcs
+    noise
+    chromatic
+    shear
+    utilities
+    config
+    hsm
+    des
+    wfirst
 
     history
 

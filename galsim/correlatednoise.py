@@ -33,7 +33,7 @@ from .errors import GalSimIncompatibleValuesError, galsim_warn
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
     """Whiten the noise in the image assuming that the noise currently in the image can be described
-    by the CorrelatedNoise object `noise`.  See CorrelatedNoise.whitenImage() docstring for more
+    by the CorrelatedNoise object ``noise``.  See CorrelatedNoise.whitenImage() docstring for more
     details of how this method works.
 
     Parameters:
@@ -49,7 +49,7 @@ def symmetrizeNoise(self, noise, order=4):
     # This will be inserted into the Image class as a method.  So self = image.
     """Impose N-fold symmetry (where N=`order` is an even integer >=4) on the noise in a square
     image assuming that the noise currently in the image can be described by the CorrelatedNoise
-    object `noise`.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this
+    object ``noise``.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this
     method works.
 
     Parameters:
