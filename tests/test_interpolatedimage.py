@@ -133,45 +133,130 @@ def test_roundtrip():
             err_msg="Transposed array failed InterpolatedImage roundtrip.")
     check_basic(interp, "InterpolatedImage (Fortran ordering)", approx_maxsb=True)
 
-    # Also check picklability of the Interpolants
+@timer
+def test_interpolant():
+    # Test aspects of using the interpolants directly.
+
+    # Test function for pickle tests
     im = galsim.Gaussian(sigma=4).drawImage()
     test_func = lambda x : (
         galsim.InterpolatedImage(im, x_interpolant=x).drawImage(method='no_pixel'))
 
-    do_pickle(galsim.Delta(), test_func)
+    x = np.linspace(-10, 10, 120)
+
+    # Delta
+    d = galsim.Delta()
+    assert d.tol == 1.e-4  # Default
+    assert d.gsparams == galsim.GSParams()
+    assert d.xrange == 0
+    assert d.ixrange == 0
+    assert np.isclose(d.krange, 2.*np.pi / d.tol)
+    assert np.isclose(d.krange, 2.*np.pi * d._i.urange())
+    assert d.positive_flux == 1
+    assert d.negative_flux == 0
+    do_pickle(d, test_func)
     do_pickle(galsim.Delta(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Delta())
-    do_pickle(galsim.Nearest(), test_func)
+    do_pickle(galsim.Interpolant.from_name('delta'))
+
+    # Nearest
+    n = galsim.Nearest()
+    assert n.tol == 1.e-4  # Default
+    assert n.gsparams == galsim.GSParams()
+    assert n.xrange == 0.5
+    assert n.ixrange == 1
+    assert np.isclose(n.krange, 2. / n.tol)
+    assert np.isclose(n.krange, 2.*np.pi * n._i.urange())
+    assert n.positive_flux == 1
+    assert n.negative_flux == 0
+    do_pickle(n, test_func)
     do_pickle(galsim.Nearest(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Nearest())
+    do_pickle(galsim.Interpolant.from_name('nearest'))
+
+    # SincInterpolant
+    s = galsim.SincInterpolant()
+    assert s.tol == 1.e-4  # Default
+    assert s.gsparams == galsim.GSParams()
+    assert np.isclose(s.xrange, 1./(np.pi * s.tol))
+    assert s.ixrange == np.inf
+    assert np.isclose(s.krange, np.pi)
+    assert np.isclose(s.krange, 2.*np.pi * s._i.urange())
+    assert np.isclose(s.positive_flux, 2.720685366) # Empirical -- this is a regression test
+    assert np.isclose(s.negative_flux, s.positive_flux-1., rtol=1.e-4)
     do_pickle(galsim.SincInterpolant(tol=0.1), test_func)  # Can't really do this with tol=1.e-4
     do_pickle(galsim.SincInterpolant(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.SincInterpolant())
-    do_pickle(galsim.Linear(), test_func)
+    do_pickle(galsim.Interpolant.from_name('sinc'))
+
+    # Linear
+    l = galsim.Linear()
+    assert l.tol == 1.e-4  # Default
+    assert l.gsparams == galsim.GSParams()
+    assert np.isclose(l.xrange, 1. - 0.1*l.tol)
+    assert l.ixrange == 2
+    assert np.isclose(l.krange, 2./l.tol**0.5)
+    assert np.isclose(l.krange, 2.*np.pi * l._i.urange())
+    assert l.positive_flux == 1
+    assert l.negative_flux == 0
+    do_pickle(l, test_func)
     do_pickle(galsim.Linear(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Linear())
-    do_pickle(galsim.Lanczos(3), test_func)
-    do_pickle(galsim.Lanczos(n=7, conserve_dc=False, tol=0.1), lambda x: (x.xrange, x.krange))
-    do_pickle(galsim.Lanczos(3))
-    do_pickle(galsim.Cubic(), test_func)
+    do_pickle(galsim.Interpolant.from_name('linear'))
+
+    # Cubic
+    c = galsim.Cubic()
+    assert c.tol == 1.e-4  # Default
+    assert c.gsparams == galsim.GSParams()
+    assert np.isclose(c.xrange, 2. - 0.1*c.tol)
+    assert c.ixrange == 4
+    assert np.isclose(c.krange, 2. * (3**1.5 / 8 / c.tol)**(1./3.))
+    assert np.isclose(c.krange, 2.*np.pi * c._i.urange())
+    assert np.isclose(c.positive_flux, 13./12.)
+    assert np.isclose(c.negative_flux, 1./12.)
+    do_pickle(c, test_func)
     do_pickle(galsim.Cubic(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Cubic())
-    do_pickle(galsim.Quintic(), test_func)
+    do_pickle(galsim.Interpolant.from_name('cubic'))
+
+    # Quintic
+    q = galsim.Quintic()
+    assert q.tol == 1.e-4  # Default
+    assert q.gsparams == galsim.GSParams()
+    assert np.isclose(q.xrange, 3. - 0.1*q.tol)
+    assert q.ixrange == 6
+    assert np.isclose(q.krange, 2. * (5**2.5 / 108 / q.tol)**(1./3.))
+    assert np.isclose(q.krange, 2.*np.pi * q._i.urange())
+    assert np.isclose(q.positive_flux, (13018561. / 11595672.) + (17267. / 14494590.) * 31**0.5)
+    assert np.isclose(q.negative_flux, q.positive_flux-1.)
+    do_pickle(q, test_func)
     do_pickle(galsim.Quintic(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Quintic())
-    do_pickle(galsim.Interpolant.from_name('nearest'))
-    do_pickle(galsim.Interpolant.from_name('delta'))
-    do_pickle(galsim.Interpolant.from_name('linear'))
-    do_pickle(galsim.Interpolant.from_name('cubic'))
     do_pickle(galsim.Interpolant.from_name('quintic'))
-    do_pickle(galsim.Interpolant.from_name('sinc'))
+
+    # Lanczos
+    l3 = galsim.Lanczos(3)
+    assert l3.tol == 1.e-4  # Default
+    assert l3.gsparams == galsim.GSParams()
+    assert l3.conserve_dc == True
+    assert l3.n == 3
+    assert np.isclose(l3.xrange, l3.n - 0.1*l3.tol)
+    assert l3.ixrange == 2*l3.n
+    assert np.isclose(l3.krange, 2.*np.pi * l3._i.urange())  # No analytic version for this one.
+    print(l3.positive_flux, l3.negative_flux)
+    assert np.isclose(l3.positive_flux, 1.1793639)  # Empirical -- this is a regression test
+    assert np.isclose(l3.negative_flux, l3.positive_flux-1., rtol=1.e-4)
+    do_pickle(l3, test_func)
+    do_pickle(galsim.Lanczos(n=7, conserve_dc=False, tol=0.1), lambda x: (x.xrange, x.krange))
+    do_pickle(galsim.Lanczos(3))
     do_pickle(galsim.Interpolant.from_name('lanczos7'))
     do_pickle(galsim.Interpolant.from_name('lanczos9F'))
     do_pickle(galsim.Interpolant.from_name('lanczos8T'))
-
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczos3A')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczosF')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
+
+    # Base class is invalid.
     assert_raises(NotImplementedError, galsim.Interpolant)
 
 @timer
@@ -1373,6 +1458,7 @@ def test_ne():
 if __name__ == "__main__":
     setup()
     test_roundtrip()
+    test_interpolant()
     test_fluxnorm()
     test_exceptions()
     test_operations_simple()
