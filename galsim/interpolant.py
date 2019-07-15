@@ -21,6 +21,7 @@ Definitions of the various interpolants used by InterpolatedImage and Interpolat
 """
 
 import math
+import numpy as np
 from past.builtins import basestring
 
 from . import _galsim
@@ -100,6 +101,14 @@ class Interpolant(object):
     def gsparams(self):
         return self._gsparams
 
+    @property
+    def positive_flux(self):
+        return self._i.getPositiveFlux();
+
+    @property
+    def negative_flux(self):
+        return self._i.getNegativeFlux();
+
     def withGSParams(self, gsparams):
         """Create a version of the current interpolant with the given gsparams
         """
@@ -157,8 +166,16 @@ class Delta(Interpolant):
         return "galsim.Delta(%s)"%(self._tol)
 
     @property
+    def tol(self):
+        return self._tol
+
+    @property
     def xrange(self):
         return 0.
+
+    @property
+    def ixrange(self):
+        return 0
 
     @property
     def krange(self):
@@ -194,8 +211,16 @@ class Nearest(Interpolant):
         return "galsim.Nearest(%s)"%(self._tol)
 
     @property
+    def tol(self):
+        return self._tol
+
+    @property
     def xrange(self):
         return 0.5
+
+    @property
+    def ixrange(self):
+        return 1
 
     @property
     def krange(self):
@@ -232,9 +257,17 @@ class SincInterpolant(Interpolant):
         return "galsim.SincInterpolant(%s)"%(self._tol)
 
     @property
+    def tol(self):
+        return self._tol
+
+    @property
     def xrange(self):
         # Technically infinity, but truncated by the tolerance.
         return 1./(math.pi * self._tol)
+
+    @property
+    def ixrange(self):
+        return np.inf
 
     @property
     def krange(self):
@@ -269,9 +302,17 @@ class Linear(Interpolant):
         return "galsim.Linear(%s)"%(self._tol)
 
     @property
+    def tol(self):
+        return self._tol
+
+    @property
     def xrange(self):
         # Reduce range slightly so not including points with zero weight.
         return 1. - 0.1*self._tol
+
+    @property
+    def ixrange(self):
+        return 2
 
     @property
     def krange(self):
@@ -304,8 +345,16 @@ class Cubic(Interpolant):
         return "galsim.Cubic(%s)"%(self._tol)
 
     @property
+    def tol(self):
+        return self._tol
+
+    @property
     def xrange(self):
         return 2. - 0.1*self._tol
+
+    @property
+    def ixrange(self):
+        return 4
 
     @property
     def krange(self):
@@ -339,8 +388,16 @@ class Quintic(Interpolant):
         return "galsim.Quintic(%s)"%(self._tol)
 
     @property
+    def tol(self):
+        return self._tol
+
+    @property
     def xrange(self):
         return 3. - 0.1*self._tol
+
+    @property
+    def ixrange(self):
+        return 6
 
     @property
     def krange(self):
@@ -385,8 +442,24 @@ class Lanczos(Interpolant):
         return "galsim.Lanczos(%s, %s)"%(self._n, self._tol)
 
     @property
+    def n(self):
+        return self._n
+
+    @property
+    def conserve_dc(self):
+        return self._conserve_dc
+
+    @property
+    def tol(self):
+        return self._tol
+
+    @property
     def xrange(self):
         return self._n - 0.1*self._tol
+
+    @property
+    def ixrange(self):
+        return 2*self._n
 
     @property
     def krange(self):

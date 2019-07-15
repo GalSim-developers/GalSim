@@ -25,7 +25,10 @@ namespace galsim {
 
     void pyExportInterpolant(PY_MODULE& _galsim)
     {
-        py::class_<Interpolant BP_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT);
+        py::class_<Interpolant BP_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT)
+            .def("getPositiveFlux", &Interpolant::getPositiveFlux)
+            .def("getNegativeFlux", &Interpolant::getNegativeFlux)
+            .def("urange", &Interpolant::urange);
 
         py::class_<Delta, BP_BASES(Interpolant)>(GALSIM_COMMA "Delta" BP_NOINIT)
             .def(py::init<double,GSParams>());
@@ -37,8 +40,7 @@ namespace galsim {
             .def(py::init<double,GSParams>());
 
         py::class_<Lanczos, BP_BASES(Interpolant)>(GALSIM_COMMA "Lanczos" BP_NOINIT)
-            .def(py::init<int,bool,double,GSParams>())
-            .def("urange", &Lanczos::urange);
+            .def(py::init<int,bool,double,GSParams>());
 
         py::class_<Linear, BP_BASES(Interpolant)>(GALSIM_COMMA "Linear" BP_NOINIT)
             .def(py::init<double,GSParams>());
