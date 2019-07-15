@@ -885,13 +885,16 @@ namespace galsim {
 
             // Build utab = table of u values
             _utab.reset(new TableBuilder(Table::spline));
+            // The peak second derivative of the Lanczos kernel if Fourier space empirically
+            // seems to a bit over ~100.  Use 200 to be conservative, so this mean use
+            // h = (kvalue_accuracy/200)**0.25
             const double uStep =
-                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25) / _nd;
+                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/200.,0.25) / _nd;
             _uMax = 0.;
             for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {
                 double uval = uCalc(u);
                 _utab->addEntry(u, uval);
-                if (std::abs(uval) > _tolerance) _uMax = u;
+                if (std::abs(uval) > gsparams.kvalue_accuracy) _uMax = u;
             }
             _utab->finalize();
             // Save these values in the cache.

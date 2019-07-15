@@ -382,6 +382,22 @@ def test_interpolant():
             print('Lanczos(%s,conserve_dc=True) sum = '%n,np.sum(lndc.xval(x)))
             assert np.isclose(np.sum(lndc.xval(x)), 7.0, rtol=1.e-4)
 
+            # The math for kval (at least when conserve_dc=False) is complicated, but tractable.
+            # It uses the Si function, so only test this bit if scipy is available
+            try:
+                from scipy.special import sici
+            except ImportError:
+                continue
+            vp = n * (x/np.pi + 1)
+            vm = n * (x/np.pi - 1)
+            true_kval = ( (vm-1) * sici(np.pi*(vm-1))[0]
+                         -(vm+1) * sici(np.pi*(vm+1))[0]
+                         -(vp-1) * sici(np.pi*(vp-1))[0]
+                         +(vp+1) * sici(np.pi*(vp+1))[0] ) / (2*np.pi)
+            print('tol = ',tol)
+            np.testing.assert_allclose(ln.kval(x), true_kval, rtol=1.e-4, atol=1.e-8)
+            assert np.isclose(ln.kval(x[12]), true_kval[12])
+
 
     # Base class is invalid.
     assert_raises(NotImplementedError, galsim.Interpolant)
