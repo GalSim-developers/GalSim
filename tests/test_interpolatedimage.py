@@ -142,7 +142,7 @@ def test_interpolant():
     test_func = lambda x : (
         galsim.InterpolatedImage(im, x_interpolant=x).drawImage(method='no_pixel'))
 
-    x = np.linspace(-10, 10, 120)
+    x = np.linspace(-10, 10, 141)
 
     # Delta
     d = galsim.Delta()
@@ -195,6 +195,13 @@ def test_interpolant():
         assert np.isclose(n.xval(x[12]), true_xval[12])
         assert np.isclose(n.kval(x[12]), true_kval[12])
 
+        # Conserves dc flux:
+        # Most interpolants (not Delta above) conserve a constant (DC) flux.
+        # This means input points separated by 1 pixel with any subpixel phase
+        # will sum to 1.  The input x array has 7 phases, so the total sum is 7.
+        print('Nearest sum = ',np.sum(n.xval(x)))
+        assert np.isclose(np.sum(n.xval(x)), 7.0)
+
     # SincInterpolant
     s = galsim.SincInterpolant()
     assert s.tol == 1.e-4  # Default
@@ -221,6 +228,12 @@ def test_interpolant():
         assert np.isclose(s.xval(x[12]), true_xval[12])
         assert np.isclose(s.kval(x[12]), true_kval[12])
 
+        # Conserves dc flux:
+        # This one would conserve dc flux, but we don't go out far enough.
+        # At +- 10 pixels, it's only about 6.86
+        print('Sinc sum = ',np.sum(s.xval(x)))
+        assert np.isclose(np.sum(s.xval(x)), 7.0, rtol=0.02)
+
     # Linear
     l = galsim.Linear()
     assert l.tol == 1.e-4  # Default
@@ -246,6 +259,10 @@ def test_interpolant():
         np.testing.assert_allclose(l.kval(x), true_kval)
         assert np.isclose(l.xval(x[12]), true_xval[12])
         assert np.isclose(l.kval(x[12]), true_kval[12])
+
+        # Conserves dc flux:
+        print('Linear sum = ',np.sum(l.xval(x)))
+        assert np.isclose(np.sum(l.xval(x)), 7.0)
 
     # Cubic
     c = galsim.Cubic()
@@ -278,6 +295,10 @@ def test_interpolant():
         np.testing.assert_allclose(c.kval(x), true_kval)
         assert np.isclose(c.xval(x[12]), true_xval[12])
         assert np.isclose(c.kval(x[12]), true_kval[12])
+
+        # Conserves dc flux:
+        print('Cubic sum = ',np.sum(c.xval(x)))
+        assert np.isclose(np.sum(c.xval(x)), 7.0)
 
     # Quintic
     q = galsim.Quintic()
@@ -314,6 +335,10 @@ def test_interpolant():
         assert np.isclose(q.xval(x[12]), true_xval[12])
         assert np.isclose(q.kval(x[12]), true_kval[12])
 
+        # Conserves dc flux:
+        print('Quintic sum = ',np.sum(q.xval(x)))
+        assert np.isclose(np.sum(q.xval(x)), 7.0)
+
     # Lanczos
     l3 = galsim.Lanczos(3)
     assert l3.tol == 1.e-4  # Default
@@ -347,6 +372,16 @@ def test_interpolant():
             true_xval[np.abs(x) < n] = np.sinc(x[np.abs(x)<n]) * np.sinc(x[np.abs(x)<n]/n)
             np.testing.assert_allclose(ln.xval(x), true_xval, rtol=1.e-5, atol=1.e-10)
             assert np.isclose(ln.xval(x[12]), true_xval[12])
+
+            # Lanczos notably does not conserve dc flux
+            print('Lanczos(%s,conserve_dc=False) sum = '%n,np.sum(ln.xval(x)))
+
+            # With conserve_dc=True, it does a bit better, but still only to 1.e-4 accuracy.
+            lndc = galsim.Lanczos(n, tol=tol, conserve_dc=True)
+            np.testing.assert_allclose(lndc.xval(x), true_xval, rtol=0.3, atol=1.e-10)
+            print('Lanczos(%s,conserve_dc=True) sum = '%n,np.sum(lndc.xval(x)))
+            assert np.isclose(np.sum(lndc.xval(x)), 7.0, rtol=1.e-4)
+
 
     # Base class is invalid.
     assert_raises(NotImplementedError, galsim.Interpolant)
