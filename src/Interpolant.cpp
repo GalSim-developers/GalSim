@@ -133,6 +133,19 @@ namespace galsim {
         }
     }
 
+    void Interpolant::xvalMany(double* x, int N) const
+    {
+        // x is both input and output here.
+        // x_i <- xval(x_i)
+        for (; N; --N, ++x) *x = xval(*x);
+    }
+
+    void Interpolant::uvalMany(double* u, int N) const
+    {
+        // u is both input and output here.
+        // u_i <- uval(u_i)
+        for (; N; --N, ++u) *u = uval(*u);
+    }
 
     //
     // Delta

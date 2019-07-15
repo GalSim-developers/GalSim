@@ -159,6 +159,16 @@ def test_interpolant():
     do_pickle(galsim.Delta())
     do_pickle(galsim.Interpolant.from_name('delta'))
 
+    for tol in [1.e-4, 1.e-2, 1.e-10]:
+        d = galsim.Delta(tol=tol)
+        assert d.tol == tol
+        true_xval = np.zeros_like(x)
+        true_xval[np.abs(x) < tol/2] = 1./tol
+        np.testing.assert_allclose(d.xval(x), true_xval)
+        np.testing.assert_allclose(d.kval(x), 1.)
+        assert np.isclose(d.xval(x[12]), true_xval[12])
+        assert np.isclose(d.kval(x[12]), 1.)
+
     # Nearest
     n = galsim.Nearest()
     assert n.tol == 1.e-4  # Default
@@ -173,6 +183,17 @@ def test_interpolant():
     do_pickle(galsim.Nearest(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Nearest())
     do_pickle(galsim.Interpolant.from_name('nearest'))
+
+    for tol in [1.e-4, 1.e-2, 1.e-10]:
+        n = galsim.Nearest(tol=tol)
+        assert n.tol == tol
+        true_xval = np.zeros_like(x)
+        true_xval[np.abs(x) < 0.5] = 1
+        np.testing.assert_allclose(n.xval(x), true_xval)
+        true_kval = np.sinc(x/2/np.pi)
+        np.testing.assert_allclose(n.kval(x), true_kval)
+        assert np.isclose(n.xval(x[12]), true_xval[12])
+        assert np.isclose(n.kval(x[12]), true_kval[12])
 
     # SincInterpolant
     s = galsim.SincInterpolant()
@@ -189,6 +210,17 @@ def test_interpolant():
     do_pickle(galsim.SincInterpolant())
     do_pickle(galsim.Interpolant.from_name('sinc'))
 
+    for tol in [1.e-4, 1.e-2, 1.e-10]:
+        s = galsim.SincInterpolant(tol=tol)
+        assert s.tol == tol
+        true_xval = np.sinc(x)
+        np.testing.assert_allclose(s.xval(x), true_xval)
+        true_kval = np.zeros_like(x)
+        true_kval[np.abs(x) < np.pi] = 1.
+        np.testing.assert_allclose(s.kval(x), true_kval)
+        assert np.isclose(s.xval(x[12]), true_xval[12])
+        assert np.isclose(s.kval(x[12]), true_kval[12])
+
     # Linear
     l = galsim.Linear()
     assert l.tol == 1.e-4  # Default
@@ -203,6 +235,17 @@ def test_interpolant():
     do_pickle(galsim.Linear(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Linear())
     do_pickle(galsim.Interpolant.from_name('linear'))
+
+    for tol in [1.e-4, 1.e-2, 1.e-10]:
+        l = galsim.Linear(tol=tol)
+        assert l.tol == tol
+        true_xval = np.zeros_like(x)
+        true_xval[np.abs(x) < 1] = 1. - np.abs(x[np.abs(x) < 1])
+        np.testing.assert_allclose(l.xval(x), true_xval)
+        true_kval = np.sinc(x/2/np.pi)**2
+        np.testing.assert_allclose(l.kval(x), true_kval)
+        assert np.isclose(l.xval(x[12]), true_xval[12])
+        assert np.isclose(l.kval(x[12]), true_kval[12])
 
     # Cubic
     c = galsim.Cubic()
@@ -219,6 +262,23 @@ def test_interpolant():
     do_pickle(galsim.Cubic())
     do_pickle(galsim.Interpolant.from_name('cubic'))
 
+    for tol in [1.e-4, 1.e-2, 1.e-10]:
+        c = galsim.Cubic(tol=tol)
+        assert c.tol == tol
+        true_xval = np.zeros_like(x)
+        ax = np.abs(x)
+        m = ax < 1
+        true_xval[m] = 1. + ax[m]**2 * (1.5*ax[m]-2.5)
+        m = (1 <= ax) & (ax < 2)
+        true_xval[m] = -0.5 * (ax[m]-1) * (2.-ax[m])**2
+        np.testing.assert_allclose(c.xval(x), true_xval)
+        sx = np.sinc(x/2/np.pi)
+        cx = np.cos(x/2)
+        true_kval = sx**3 * (3*sx - 2*cx)
+        np.testing.assert_allclose(c.kval(x), true_kval)
+        assert np.isclose(c.xval(x[12]), true_xval[12])
+        assert np.isclose(c.kval(x[12]), true_kval[12])
+
     # Quintic
     q = galsim.Quintic()
     assert q.tol == 1.e-4  # Default
@@ -233,6 +293,26 @@ def test_interpolant():
     do_pickle(galsim.Quintic(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Quintic())
     do_pickle(galsim.Interpolant.from_name('quintic'))
+
+    for tol in [1.e-4, 1.e-2, 1.e-10]:
+        q = galsim.Quintic(tol=tol)
+        assert q.tol == tol
+        true_xval = np.zeros_like(x)
+        ax = np.abs(x)
+        m = ax < 1.
+        true_xval[m] = 1. + ax[m]**3 * (-95./12. + 23./2.*ax[m] - 55./12.*ax[m]**2)
+        m = (1 <= ax) & (ax < 2)
+        true_xval[m] = (ax[m]-1) * (2.-ax[m]) * (23./4. - 29./2.*ax[m] + 83./8.*ax[m]**2
+                                                 - 55./24.*ax[m]**3)
+        m = (2 <= ax) & (ax < 3)
+        true_xval[m] = (ax[m]-2) * (3.-ax[m])**2 * (-9./4. + 25./12.*ax[m] - 11./24.*ax[m]**2)
+        np.testing.assert_allclose(q.xval(x), true_xval)
+        sx = np.sinc(x/2/np.pi)
+        cx = np.cos(x/2)
+        true_kval = sx**5 * (sx*(55.-19./4. * x**2) + cx*(x**2/2. - 54.))
+        np.testing.assert_allclose(q.kval(x), true_kval)
+        assert np.isclose(q.xval(x[12]), true_xval[12])
+        assert np.isclose(q.kval(x[12]), true_kval[12])
 
     # Lanczos
     l3 = galsim.Lanczos(3)
@@ -255,6 +335,18 @@ def test_interpolant():
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczos3A')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczosF')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
+
+    for tol in [1.e-4, 1.e-2, 1.e-10]:
+        # Note: 1-7 all have special case code, so check them. 8 uses the generic code.
+        for n in [1, 2, 3, 4, 5, 6, 7, 8]:
+            ln = galsim.Lanczos(n, tol=tol, conserve_dc=False)
+            assert ln.tol == tol
+            assert ln.conserve_dc == False
+            assert ln.n == n
+            true_xval = np.zeros_like(x)
+            true_xval[np.abs(x) < n] = np.sinc(x[np.abs(x)<n]) * np.sinc(x[np.abs(x)<n]/n)
+            np.testing.assert_allclose(ln.xval(x), true_xval, rtol=1.e-5, atol=1.e-10)
+            assert np.isclose(ln.xval(x[12]), true_xval[12])
 
     # Base class is invalid.
     assert_raises(NotImplementedError, galsim.Interpolant)
