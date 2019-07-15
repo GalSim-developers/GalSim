@@ -23,9 +23,25 @@
 
 namespace galsim {
 
+    static void XvalMany(const Interpolant& interp, size_t ivals, int N)
+    {
+        double* vals = reinterpret_cast<double*>(ivals);
+        interp.xvalMany(vals, N);
+    }
+
+    static void UvalMany(const Interpolant& interp, size_t ivals, int N)
+    {
+        double* vals = reinterpret_cast<double*>(ivals);
+        interp.uvalMany(vals, N);
+    }
+
     void pyExportInterpolant(PY_MODULE& _galsim)
     {
         py::class_<Interpolant BP_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT)
+            .def("xval", &Interpolant::xval)
+            .def("uval", &Interpolant::uval)
+            .def("xvalMany", &XvalMany)
+            .def("uvalMany", &UvalMany)
             .def("getPositiveFlux", &Interpolant::getPositiveFlux)
             .def("getNegativeFlux", &Interpolant::getNegativeFlux)
             .def("urange", &Interpolant::urange);

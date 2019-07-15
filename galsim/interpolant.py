@@ -135,6 +135,53 @@ class Interpolant(object):
     def __hash__(self):
         return hash(repr(self))
 
+    def xval(self, x):
+        """Calculate the value of the interpolant kernel at one or more x values
+
+        Parameters
+        ----------
+            x:      The value (as a flost) or values (as a np.array) at which to compute the
+                    amplitude of the Interpolant kernel.
+
+        Returns
+        -------
+            xval:   The value(s) at the x location(s).  If x was an array, then this is also
+                    an array.
+        """
+        xx = np.array(x, dtype=float, copy=True)
+        if xx.shape == ():
+            return self._i.xval(float(xx))
+        else:
+            dimen = len(x.shape)
+            if dimen > 1:
+                raise ValueError("Input x must be 1-dimensional")
+            self._i.xvalMany(xx.ctypes.data, len(xx))
+            return xx
+
+    def kval(self, k):
+        """Calculate the value of the interpolant kernel in Fourier space at one or more k values.
+
+        Parameters
+        ----------
+            k:      The value (as a flost) or values (as a np.array) at which to compute the
+                    amplitude of the Interpolant kernel in Fourier space.
+
+        Returns
+        -------
+            kval:   The k-value(s) at the k location(s).  If k was an array, then this is also
+                    an array.
+        """
+        # Note: the C++ layer uses u = k/2pi rather than k.
+        u = np.array(k, dtype=float, copy=True) / (2.*np.pi)
+        if u.shape == ():
+            return self._i.uval(float(u))
+        else:
+            dimen = len(k.shape)
+            if dimen > 1:
+                raise ValueError("Input k must be 1-dimensional")
+            self._i.uvalMany(u.ctypes.data, len(u))
+            return u
+
     # Sub-classes should define _i property, repr, and str
 
 

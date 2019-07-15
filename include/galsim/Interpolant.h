@@ -113,12 +113,26 @@ namespace galsim {
         virtual double xvalWrapped(double x, int N) const;
 
         /**
+         * @brief Calculate xval for array of input values x
+         * @param[in/out]   Each x[i] is replaces by xval[x[i]]
+         * @param[in]       How many x values to calculate
+         */
+        void xvalMany(double* x, int N) const;
+
+        /**
          * @brief Value of interpolant in frequency space
          * @param[in] u Frequency for evaluation (cycles per pixel)
          * @returns Value of interpolant, normalized so uval(0) = 1 for flux-conserving
          * interpolation.
          */
         virtual double uval(double u) const =0;
+
+        /**
+         * @brief Calculate uval for array of input values u
+         * @param[in/out]   Each u[i] is replaces by uval[u[i]]
+         * @param[in]       How many u values to calculate
+         */
+        void uvalMany(double* u, int N) const;
 
         /**
          * @brief Report whether interpolation will reproduce values at samples
