@@ -146,213 +146,183 @@ def test_interpolant():
 
     # Delta
     d = galsim.Delta()
-    assert d.tol == 1.e-4  # Default
+    print(repr(d.gsparams))
+    print(repr(galsim.GSParams()))
     assert d.gsparams == galsim.GSParams()
     assert d.xrange == 0
     assert d.ixrange == 0
-    assert np.isclose(d.krange, 2.*np.pi / d.tol)
+    assert np.isclose(d.krange, 2.*np.pi / d.gsparams.kvalue_accuracy)
     assert np.isclose(d.krange, 2.*np.pi * d._i.urange())
     assert d.positive_flux == 1
     assert d.negative_flux == 0
+    print(repr(d))
     do_pickle(d, test_func)
-    do_pickle(galsim.Delta(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Delta())
     do_pickle(galsim.Interpolant.from_name('delta'))
 
-    for tol in [1.e-4, 1.e-2, 1.e-10]:
-        d = galsim.Delta(tol=tol)
-        assert d.tol == tol
-        true_xval = np.zeros_like(x)
-        true_xval[np.abs(x) < tol/2] = 1./tol
-        np.testing.assert_allclose(d.xval(x), true_xval)
-        np.testing.assert_allclose(d.kval(x), 1.)
-        assert np.isclose(d.xval(x[12]), true_xval[12])
-        assert np.isclose(d.kval(x[12]), 1.)
+    true_xval = np.zeros_like(x)
+    true_xval[np.abs(x) < d.gsparams.kvalue_accuracy/2] = 1./d.gsparams.kvalue_accuracy
+    np.testing.assert_allclose(d.xval(x), true_xval)
+    np.testing.assert_allclose(d.kval(x), 1.)
+    assert np.isclose(d.xval(x[12]), true_xval[12])
+    assert np.isclose(d.kval(x[12]), 1.)
 
     # Nearest
     n = galsim.Nearest()
-    assert n.tol == 1.e-4  # Default
     assert n.gsparams == galsim.GSParams()
     assert n.xrange == 0.5
     assert n.ixrange == 1
-    assert np.isclose(n.krange, 2. / n.tol)
-    assert np.isclose(n.krange, 2.*np.pi * n._i.urange())
+    assert np.isclose(n.krange, 2. / n.gsparams.kvalue_accuracy)
     assert n.positive_flux == 1
     assert n.negative_flux == 0
     do_pickle(n, test_func)
-    do_pickle(galsim.Nearest(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Nearest())
     do_pickle(galsim.Interpolant.from_name('nearest'))
 
-    for tol in [1.e-4, 1.e-2, 1.e-10]:
-        n = galsim.Nearest(tol=tol)
-        assert n.tol == tol
-        true_xval = np.zeros_like(x)
-        true_xval[np.abs(x) < 0.5] = 1
-        np.testing.assert_allclose(n.xval(x), true_xval)
-        true_kval = np.sinc(x/2/np.pi)
-        np.testing.assert_allclose(n.kval(x), true_kval)
-        assert np.isclose(n.xval(x[12]), true_xval[12])
-        assert np.isclose(n.kval(x[12]), true_kval[12])
+    true_xval = np.zeros_like(x)
+    true_xval[np.abs(x) < 0.5] = 1
+    np.testing.assert_allclose(n.xval(x), true_xval)
+    true_kval = np.sinc(x/2/np.pi)
+    np.testing.assert_allclose(n.kval(x), true_kval)
+    assert np.isclose(n.xval(x[12]), true_xval[12])
+    assert np.isclose(n.kval(x[12]), true_kval[12])
 
-        # Conserves dc flux:
-        # Most interpolants (not Delta above) conserve a constant (DC) flux.
-        # This means input points separated by 1 pixel with any subpixel phase
-        # will sum to 1.  The input x array has 7 phases, so the total sum is 7.
-        print('Nearest sum = ',np.sum(n.xval(x)))
-        assert np.isclose(np.sum(n.xval(x)), 7.0)
+    # Conserves dc flux:
+    # Most interpolants (not Delta above) conserve a constant (DC) flux.
+    # This means input points separated by 1 pixel with any subpixel phase
+    # will sum to 1.  The input x array has 7 phases, so the total sum is 7.
+    print('Nearest sum = ',np.sum(n.xval(x)))
+    assert np.isclose(np.sum(n.xval(x)), 7.0)
 
     # SincInterpolant
     s = galsim.SincInterpolant()
-    assert s.tol == 1.e-4  # Default
     assert s.gsparams == galsim.GSParams()
-    assert np.isclose(s.xrange, 1./(np.pi * s.tol))
+    assert np.isclose(s.xrange, 1./(np.pi * s.gsparams.kvalue_accuracy))
     assert s.ixrange == np.inf
     assert np.isclose(s.krange, np.pi)
     assert np.isclose(s.krange, 2.*np.pi * s._i.urange())
-    assert np.isclose(s.positive_flux, 2.720685366) # Empirical -- this is a regression test
+    assert np.isclose(s.positive_flux, 3.18726437) # Empirical -- this is a regression test
     assert np.isclose(s.negative_flux, s.positive_flux-1., rtol=1.e-4)
-    do_pickle(galsim.SincInterpolant(tol=0.1), test_func)  # Can't really do this with tol=1.e-4
-    do_pickle(galsim.SincInterpolant(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.SincInterpolant())
     do_pickle(galsim.Interpolant.from_name('sinc'))
 
-    for tol in [1.e-4, 1.e-2, 1.e-10]:
-        s = galsim.SincInterpolant(tol=tol)
-        assert s.tol == tol
-        true_xval = np.sinc(x)
-        np.testing.assert_allclose(s.xval(x), true_xval)
-        true_kval = np.zeros_like(x)
-        true_kval[np.abs(x) < np.pi] = 1.
-        np.testing.assert_allclose(s.kval(x), true_kval)
-        assert np.isclose(s.xval(x[12]), true_xval[12])
-        assert np.isclose(s.kval(x[12]), true_kval[12])
+    true_xval = np.sinc(x)
+    np.testing.assert_allclose(s.xval(x), true_xval)
+    true_kval = np.zeros_like(x)
+    true_kval[np.abs(x) < np.pi] = 1.
+    np.testing.assert_allclose(s.kval(x), true_kval)
+    assert np.isclose(s.xval(x[12]), true_xval[12])
+    assert np.isclose(s.kval(x[12]), true_kval[12])
 
-        # Conserves dc flux:
-        # This one would conserve dc flux, but we don't go out far enough.
-        # At +- 10 pixels, it's only about 6.86
-        print('Sinc sum = ',np.sum(s.xval(x)))
-        assert np.isclose(np.sum(s.xval(x)), 7.0, rtol=0.02)
+    # Conserves dc flux:
+    # This one would conserve dc flux, but we don't go out far enough.
+    # At +- 10 pixels, it's only about 6.86
+    print('Sinc sum = ',np.sum(s.xval(x)))
+    assert np.isclose(np.sum(s.xval(x)), 7.0, rtol=0.02)
 
     # Linear
     l = galsim.Linear()
-    assert l.tol == 1.e-4  # Default
     assert l.gsparams == galsim.GSParams()
-    assert np.isclose(l.xrange, 1. - 0.1*l.tol)
+    assert l.xrange == 1.
     assert l.ixrange == 2
-    assert np.isclose(l.krange, 2./l.tol**0.5)
+    assert np.isclose(l.krange, 2./l.gsparams.kvalue_accuracy**0.5)
     assert np.isclose(l.krange, 2.*np.pi * l._i.urange())
     assert l.positive_flux == 1
     assert l.negative_flux == 0
     do_pickle(l, test_func)
-    do_pickle(galsim.Linear(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Linear())
     do_pickle(galsim.Interpolant.from_name('linear'))
 
-    for tol in [1.e-4, 1.e-2, 1.e-10]:
-        l = galsim.Linear(tol=tol)
-        assert l.tol == tol
-        true_xval = np.zeros_like(x)
-        true_xval[np.abs(x) < 1] = 1. - np.abs(x[np.abs(x) < 1])
-        np.testing.assert_allclose(l.xval(x), true_xval)
-        true_kval = np.sinc(x/2/np.pi)**2
-        np.testing.assert_allclose(l.kval(x), true_kval)
-        assert np.isclose(l.xval(x[12]), true_xval[12])
-        assert np.isclose(l.kval(x[12]), true_kval[12])
+    true_xval = np.zeros_like(x)
+    true_xval[np.abs(x) < 1] = 1. - np.abs(x[np.abs(x) < 1])
+    np.testing.assert_allclose(l.xval(x), true_xval)
+    true_kval = np.sinc(x/2/np.pi)**2
+    np.testing.assert_allclose(l.kval(x), true_kval)
+    assert np.isclose(l.xval(x[12]), true_xval[12])
+    assert np.isclose(l.kval(x[12]), true_kval[12])
 
-        # Conserves dc flux:
-        print('Linear sum = ',np.sum(l.xval(x)))
-        assert np.isclose(np.sum(l.xval(x)), 7.0)
+    # Conserves dc flux:
+    print('Linear sum = ',np.sum(l.xval(x)))
+    assert np.isclose(np.sum(l.xval(x)), 7.0)
 
     # Cubic
     c = galsim.Cubic()
-    assert c.tol == 1.e-4  # Default
     assert c.gsparams == galsim.GSParams()
-    assert np.isclose(c.xrange, 2. - 0.1*c.tol)
+    assert c.xrange == 2.
     assert c.ixrange == 4
-    assert np.isclose(c.krange, 2. * (3**1.5 / 8 / c.tol)**(1./3.))
+    assert np.isclose(c.krange, 2. * (3**1.5 / 8 / c.gsparams.kvalue_accuracy)**(1./3.))
     assert np.isclose(c.krange, 2.*np.pi * c._i.urange())
     assert np.isclose(c.positive_flux, 13./12.)
     assert np.isclose(c.negative_flux, 1./12.)
     do_pickle(c, test_func)
-    do_pickle(galsim.Cubic(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Cubic())
     do_pickle(galsim.Interpolant.from_name('cubic'))
 
-    for tol in [1.e-4, 1.e-2, 1.e-10]:
-        c = galsim.Cubic(tol=tol)
-        assert c.tol == tol
-        true_xval = np.zeros_like(x)
-        ax = np.abs(x)
-        m = ax < 1
-        true_xval[m] = 1. + ax[m]**2 * (1.5*ax[m]-2.5)
-        m = (1 <= ax) & (ax < 2)
-        true_xval[m] = -0.5 * (ax[m]-1) * (2.-ax[m])**2
-        np.testing.assert_allclose(c.xval(x), true_xval)
-        sx = np.sinc(x/2/np.pi)
-        cx = np.cos(x/2)
-        true_kval = sx**3 * (3*sx - 2*cx)
-        np.testing.assert_allclose(c.kval(x), true_kval)
-        assert np.isclose(c.xval(x[12]), true_xval[12])
-        assert np.isclose(c.kval(x[12]), true_kval[12])
+    true_xval = np.zeros_like(x)
+    ax = np.abs(x)
+    m = ax < 1
+    true_xval[m] = 1. + ax[m]**2 * (1.5*ax[m]-2.5)
+    m = (1 <= ax) & (ax < 2)
+    true_xval[m] = -0.5 * (ax[m]-1) * (2.-ax[m])**2
+    np.testing.assert_allclose(c.xval(x), true_xval)
+    sx = np.sinc(x/2/np.pi)
+    cx = np.cos(x/2)
+    true_kval = sx**3 * (3*sx - 2*cx)
+    np.testing.assert_allclose(c.kval(x), true_kval)
+    assert np.isclose(c.xval(x[12]), true_xval[12])
+    assert np.isclose(c.kval(x[12]), true_kval[12])
 
-        # Conserves dc flux:
-        print('Cubic sum = ',np.sum(c.xval(x)))
-        assert np.isclose(np.sum(c.xval(x)), 7.0)
+    # Conserves dc flux:
+    print('Cubic sum = ',np.sum(c.xval(x)))
+    assert np.isclose(np.sum(c.xval(x)), 7.0)
 
     # Quintic
     q = galsim.Quintic()
-    assert q.tol == 1.e-4  # Default
     assert q.gsparams == galsim.GSParams()
-    assert np.isclose(q.xrange, 3. - 0.1*q.tol)
+    assert q.xrange == 3.
     assert q.ixrange == 6
-    assert np.isclose(q.krange, 2. * (5**2.5 / 108 / q.tol)**(1./3.))
+    assert np.isclose(q.krange, 2. * (5**2.5 / 108 / q.gsparams.kvalue_accuracy)**(1./3.))
     assert np.isclose(q.krange, 2.*np.pi * q._i.urange())
     assert np.isclose(q.positive_flux, (13018561. / 11595672.) + (17267. / 14494590.) * 31**0.5)
     assert np.isclose(q.negative_flux, q.positive_flux-1.)
     do_pickle(q, test_func)
-    do_pickle(galsim.Quintic(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Quintic())
     do_pickle(galsim.Interpolant.from_name('quintic'))
 
-    for tol in [1.e-4, 1.e-2, 1.e-10]:
-        q = galsim.Quintic(tol=tol)
-        assert q.tol == tol
-        true_xval = np.zeros_like(x)
-        ax = np.abs(x)
-        m = ax < 1.
-        true_xval[m] = 1. + ax[m]**3 * (-95./12. + 23./2.*ax[m] - 55./12.*ax[m]**2)
-        m = (1 <= ax) & (ax < 2)
-        true_xval[m] = (ax[m]-1) * (2.-ax[m]) * (23./4. - 29./2.*ax[m] + 83./8.*ax[m]**2
-                                                 - 55./24.*ax[m]**3)
-        m = (2 <= ax) & (ax < 3)
-        true_xval[m] = (ax[m]-2) * (3.-ax[m])**2 * (-9./4. + 25./12.*ax[m] - 11./24.*ax[m]**2)
-        np.testing.assert_allclose(q.xval(x), true_xval)
-        sx = np.sinc(x/2/np.pi)
-        cx = np.cos(x/2)
-        true_kval = sx**5 * (sx*(55.-19./4. * x**2) + cx*(x**2/2. - 54.))
-        np.testing.assert_allclose(q.kval(x), true_kval)
-        assert np.isclose(q.xval(x[12]), true_xval[12])
-        assert np.isclose(q.kval(x[12]), true_kval[12])
+    true_xval = np.zeros_like(x)
+    ax = np.abs(x)
+    m = ax < 1.
+    true_xval[m] = 1. + ax[m]**3 * (-95./12. + 23./2.*ax[m] - 55./12.*ax[m]**2)
+    m = (1 <= ax) & (ax < 2)
+    true_xval[m] = (ax[m]-1) * (2.-ax[m]) * (23./4. - 29./2.*ax[m] + 83./8.*ax[m]**2
+                                             - 55./24.*ax[m]**3)
+    m = (2 <= ax) & (ax < 3)
+    true_xval[m] = (ax[m]-2) * (3.-ax[m])**2 * (-9./4. + 25./12.*ax[m] - 11./24.*ax[m]**2)
+    np.testing.assert_allclose(q.xval(x), true_xval)
+    sx = np.sinc(x/2/np.pi)
+    cx = np.cos(x/2)
+    true_kval = sx**5 * (sx*(55.-19./4. * x**2) + cx*(x**2/2. - 54.))
+    np.testing.assert_allclose(q.kval(x), true_kval)
+    assert np.isclose(q.xval(x[12]), true_xval[12])
+    assert np.isclose(q.kval(x[12]), true_kval[12])
 
-        # Conserves dc flux:
-        print('Quintic sum = ',np.sum(q.xval(x)))
-        assert np.isclose(np.sum(q.xval(x)), 7.0)
+    # Conserves dc flux:
+    print('Quintic sum = ',np.sum(q.xval(x)))
+    assert np.isclose(np.sum(q.xval(x)), 7.0)
 
     # Lanczos
     l3 = galsim.Lanczos(3)
-    assert l3.tol == 1.e-4  # Default
     assert l3.gsparams == galsim.GSParams()
     assert l3.conserve_dc == True
     assert l3.n == 3
-    assert np.isclose(l3.xrange, l3.n - 0.1*l3.tol)
+    assert l3.xrange == l3.n
     assert l3.ixrange == 2*l3.n
     assert np.isclose(l3.krange, 2.*np.pi * l3._i.urange())  # No analytic version for this one.
     print(l3.positive_flux, l3.negative_flux)
     assert np.isclose(l3.positive_flux, 1.1793639)  # Empirical -- this is a regression test
     assert np.isclose(l3.negative_flux, l3.positive_flux-1., rtol=1.e-4)
     do_pickle(l3, test_func)
-    do_pickle(galsim.Lanczos(n=7, conserve_dc=False, tol=0.1), lambda x: (x.xrange, x.krange))
+    do_pickle(galsim.Lanczos(n=7, conserve_dc=False))
     do_pickle(galsim.Lanczos(3))
     do_pickle(galsim.Interpolant.from_name('lanczos7'))
     do_pickle(galsim.Interpolant.from_name('lanczos9F'))
@@ -361,43 +331,39 @@ def test_interpolant():
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczosF')
     assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
 
-    for tol in [1.e-4, 1.e-2, 1.e-10]:
-        # Note: 1-7 all have special case code, so check them. 8 uses the generic code.
-        for n in [1, 2, 3, 4, 5, 6, 7, 8]:
-            ln = galsim.Lanczos(n, tol=tol, conserve_dc=False)
-            assert ln.tol == tol
-            assert ln.conserve_dc == False
-            assert ln.n == n
-            true_xval = np.zeros_like(x)
-            true_xval[np.abs(x) < n] = np.sinc(x[np.abs(x)<n]) * np.sinc(x[np.abs(x)<n]/n)
-            np.testing.assert_allclose(ln.xval(x), true_xval, rtol=1.e-5, atol=1.e-10)
-            assert np.isclose(ln.xval(x[12]), true_xval[12])
+    # Note: 1-7 all have special case code, so check them. 8 uses the generic code.
+    for n in [1, 2, 3, 4, 5, 6, 7, 8]:
+        ln = galsim.Lanczos(n, conserve_dc=False)
+        assert ln.conserve_dc == False
+        assert ln.n == n
+        true_xval = np.zeros_like(x)
+        true_xval[np.abs(x) < n] = np.sinc(x[np.abs(x)<n]) * np.sinc(x[np.abs(x)<n]/n)
+        np.testing.assert_allclose(ln.xval(x), true_xval, rtol=1.e-5, atol=1.e-10)
+        assert np.isclose(ln.xval(x[12]), true_xval[12])
 
-            # Lanczos notably does not conserve dc flux
-            print('Lanczos(%s,conserve_dc=False) sum = '%n,np.sum(ln.xval(x)))
+        # Lanczos notably does not conserve dc flux
+        print('Lanczos(%s,conserve_dc=False) sum = '%n,np.sum(ln.xval(x)))
 
-            # With conserve_dc=True, it does a bit better, but still only to 1.e-4 accuracy.
-            lndc = galsim.Lanczos(n, tol=tol, conserve_dc=True)
-            np.testing.assert_allclose(lndc.xval(x), true_xval, rtol=0.3, atol=1.e-10)
-            print('Lanczos(%s,conserve_dc=True) sum = '%n,np.sum(lndc.xval(x)))
-            assert np.isclose(np.sum(lndc.xval(x)), 7.0, rtol=1.e-4)
+        # With conserve_dc=True, it does a bit better, but still only to 1.e-4 accuracy.
+        lndc = galsim.Lanczos(n, conserve_dc=True)
+        np.testing.assert_allclose(lndc.xval(x), true_xval, rtol=0.3, atol=1.e-10)
+        print('Lanczos(%s,conserve_dc=True) sum = '%n,np.sum(lndc.xval(x)))
+        assert np.isclose(np.sum(lndc.xval(x)), 7.0, rtol=1.e-4)
 
-            # The math for kval (at least when conserve_dc=False) is complicated, but tractable.
-            # It uses the Si function, so only test this bit if scipy is available
-            try:
-                from scipy.special import sici
-            except ImportError:
-                continue
-            vp = n * (x/np.pi + 1)
-            vm = n * (x/np.pi - 1)
-            true_kval = ( (vm-1) * sici(np.pi*(vm-1))[0]
-                         -(vm+1) * sici(np.pi*(vm+1))[0]
-                         -(vp-1) * sici(np.pi*(vp-1))[0]
-                         +(vp+1) * sici(np.pi*(vp+1))[0] ) / (2*np.pi)
-            print('tol = ',tol)
-            np.testing.assert_allclose(ln.kval(x), true_kval, rtol=1.e-4, atol=1.e-8)
-            assert np.isclose(ln.kval(x[12]), true_kval[12])
-
+        # The math for kval (at least when conserve_dc=False) is complicated, but tractable.
+        # It uses the Si function, so only test this bit if scipy is available
+        try:
+            from scipy.special import sici
+        except ImportError:
+            continue
+        vp = n * (x/np.pi + 1)
+        vm = n * (x/np.pi - 1)
+        true_kval = ( (vm-1) * sici(np.pi*(vm-1))[0]
+                     -(vm+1) * sici(np.pi*(vm+1))[0]
+                     -(vp-1) * sici(np.pi*(vp-1))[0]
+                     +(vp+1) * sici(np.pi*(vp+1))[0] ) / (2*np.pi)
+        np.testing.assert_allclose(ln.kval(x), true_kval, rtol=1.e-4, atol=1.e-8)
+        assert np.isclose(ln.kval(x[12]), true_kval[12])
 
     # Base class is invalid.
     assert_raises(NotImplementedError, galsim.Interpolant)
@@ -1104,7 +1070,7 @@ def test_realspace_conv():
 def test_Cubic_ref():
     """Test use of Cubic interpolant against some reference values
     """
-    interp = galsim.Cubic(tol=1.e-4)
+    interp = galsim.Cubic()
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
@@ -1130,7 +1096,7 @@ def test_Cubic_ref():
 def test_Quintic_ref():
     """Test use of Quintic interpolant against some reference values
     """
-    interp = galsim.Quintic(tol=1.e-4)
+    interp = galsim.Quintic()
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
@@ -1155,7 +1121,7 @@ def test_Quintic_ref():
 def test_Lanczos5_ref():
     """Test use of Lanczos5 interpolant against some reference values
     """
-    interp = galsim.Lanczos(5, conserve_dc=False, tol=1.e-4)
+    interp = galsim.Lanczos(5, conserve_dc=False)
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
@@ -1180,7 +1146,7 @@ def test_Lanczos5_ref():
 def test_Lanczos7_ref():
     """Test use of Lanczos7 interpolant against some reference values
     """
-    interp = galsim.Lanczos(7, conserve_dc=False, tol=1.e-4)
+    interp = galsim.Lanczos(7, conserve_dc=False)
     scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')

@@ -47,25 +47,25 @@ namespace galsim {
             .def("urange", &Interpolant::urange);
 
         py::class_<Delta, BP_BASES(Interpolant)>(GALSIM_COMMA "Delta" BP_NOINIT)
-            .def(py::init<double,GSParams>());
+            .def(py::init<GSParams>());
 
         py::class_<Nearest, BP_BASES(Interpolant)>(GALSIM_COMMA "Nearest" BP_NOINIT)
-            .def(py::init<double,GSParams>());
+            .def(py::init<GSParams>());
 
         py::class_<SincInterpolant, BP_BASES(Interpolant)>(GALSIM_COMMA "SincInterpolant" BP_NOINIT)
-            .def(py::init<double,GSParams>());
+            .def(py::init<GSParams>());
 
         py::class_<Lanczos, BP_BASES(Interpolant)>(GALSIM_COMMA "Lanczos" BP_NOINIT)
-            .def(py::init<int,bool,double,GSParams>());
+            .def(py::init<int,bool,GSParams>());
 
         py::class_<Linear, BP_BASES(Interpolant)>(GALSIM_COMMA "Linear" BP_NOINIT)
-            .def(py::init<double,GSParams>());
+            .def(py::init<GSParams>());
 
         py::class_<Cubic, BP_BASES(Interpolant)>(GALSIM_COMMA "Cubic" BP_NOINIT)
-            .def(py::init<double,GSParams>());
+            .def(py::init<GSParams>());
 
         py::class_<Quintic, BP_BASES(Interpolant)>(GALSIM_COMMA "Quintic" BP_NOINIT)
-            .def(py::init<double,GSParams>());
+            .def(py::init<GSParams>());
     }
 
 } // namespace galsim

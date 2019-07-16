@@ -48,7 +48,28 @@ def test_phase_psf():
     check_dep(galsim.PhaseScreenPSF.__getattribute__, psf, "img")
     check_dep(galsim.PhaseScreenPSF.__getattribute__, psf, "finalized")
 
+@timer
+def test_interpolant():
+    d = check_dep(galsim.Delta, tol=1.e-2)
+    assert d.gsparams.kvalue_accuracy == 1.e-2
+    n = check_dep(galsim.Nearest, tol=1.e-2)
+    assert n.gsparams.kvalue_accuracy == 1.e-2
+    s = check_dep(galsim.SincInterpolant, tol=1.e-2)
+    assert s.gsparams.kvalue_accuracy == 1.e-2
+    l = check_dep(galsim.Linear, tol=1.e-2)
+    assert l.gsparams.kvalue_accuracy == 1.e-2
+    c = check_dep(galsim.Cubic, tol=1.e-2)
+    assert c.gsparams.kvalue_accuracy == 1.e-2
+    q = check_dep(galsim.Quintic, tol=1.e-2)
+    assert q.gsparams.kvalue_accuracy == 1.e-2
+    l3 = check_dep(galsim.Lanczos, 3, tol=1.e-2)
+    assert l3.gsparams.kvalue_accuracy == 1.e-2
+    ldc = check_dep(galsim.Lanczos, 3, False, tol=1.e-2)
+    assert ldc.gsparams.kvalue_accuracy == 1.e-2
+    l8 = check_dep(galsim.Lanczos, 8, tol=1.e-2)
+    assert l8.gsparams.kvalue_accuracy == 1.e-2
 
 if __name__ == "__main__":
     test_gsparams()
     test_phase_psf()
+    test_interpolant()

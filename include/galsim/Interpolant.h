@@ -90,12 +90,6 @@ namespace galsim {
         virtual double urange() const =0;
 
         /**
-         * @brief Report a generic indication of the accuracy to which Interpolant is calculated
-         * @returns Targeted accuracy
-         */
-        virtual double getTolerance() const =0;  // report target accuracy
-
-        /**
          * @brief Value of interpolant in real space
          * @param[in] x Distance from sample (pixels)
          * @returns Value of interpolant
@@ -225,7 +219,6 @@ namespace galsim {
         virtual double xrange() const=0;
         virtual int ixrange() const=0;
         virtual double urange() const=0;
-        virtual double getTolerance() const=0;
 
         virtual double xval(double x, double y) const=0;
         virtual double xvalWrapped(double x, double y, int N) const=0;
@@ -253,7 +246,6 @@ namespace galsim {
         double xrange() const { return _i1d.xrange(); }
         int ixrange() const { return _i1d.ixrange(); }
         double urange() const { return _i1d.urange(); }
-        double getTolerance() const { return _i1d.getTolerance(); }
 
         double xval(double x, double y) const { return _i1d.xval(x)*_i1d.xval(y); }
         double xvalWrapped(double x, double y, int N) const
@@ -292,24 +284,20 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] width    Width of tiny boxcar used to approximate delta function in real
-         *                     space (default=1.e-3).
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Delta(double width, const GSParams& gsparams) :
-            Interpolant(gsparams), _width(width) {}
+        Delta(const GSParams& gsparams) : Interpolant(gsparams) {}
         ~Delta() {}
 
         double xrange() const { return 0.; }
         int ixrange() const { return 0; }
-        double urange() const { return 1./_width; }
-        double getTolerance() const { return _width; }
+        double urange() const { return 1./_gsparams.kvalue_accuracy; }
 
         double xval(double x) const
         {
-            if (std::abs(x)>0.5*_width) return 0.;
-            else return 1./_width;
+            if (std::abs(x)>0.5*_gsparams.kvalue_accuracy) return 0.;
+            else return 1./_gsparams.kvalue_accuracy;
         }
         double uval(double u) const { return 1.; }
 
@@ -319,9 +307,6 @@ namespace galsim {
         void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
-
-    private:
-        double _width;
     };
 
     /**
@@ -340,19 +325,15 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol      Tolerance determines how far onto sinc wiggles the uval will go.
-         *                     Very far, by default!
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Nearest(double tol, const GSParams& gsparams) :
-            Interpolant(gsparams), _tolerance(tol) {}
+        Nearest(const GSParams& gsparams) : Interpolant(gsparams) {}
         ~Nearest() {}
 
         double xrange() const { return 0.5; }
         int ixrange() const { return 1; }
-        double urange() const { return 1./(M_PI*_tolerance); }
-        double getTolerance() const { return _tolerance; }
+        double urange() const { return 1./(M_PI*_gsparams.kvalue_accuracy); }
 
         double xval(double x) const;
         double uval(double u) const;
@@ -363,9 +344,6 @@ namespace galsim {
         void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
-
-    private:
-        double _tolerance;
     };
 
     /**
@@ -383,19 +361,15 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol      Tolerance determines how far onto sinc wiggles the xval will go.
-         *                     Very far, by default!
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        SincInterpolant(double tol, const GSParams& gsparams) :
-            Interpolant(gsparams), _tolerance(tol) {}
+        SincInterpolant(const GSParams& gsparams) : Interpolant(gsparams) {}
         ~SincInterpolant() {}
 
-        double xrange() const { return 1./(M_PI*_tolerance); }
+        double xrange() const { return 1./(M_PI*_gsparams.kvalue_accuracy); }
         int ixrange() const { return 0; }
         double urange() const { return 0.5; }
-        double getTolerance() const { return _tolerance; }
 
         double xval(double x) const;
         double xvalWrapped(double x, int N) const;
@@ -404,9 +378,6 @@ namespace galsim {
         void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
-
-    private:
-        double _tolerance;
     };
 
     /**
@@ -423,19 +394,15 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol      Tolerance determines how far onto sinc^2 wiggles the uval will go.
-         *                     Very far, by default!
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Linear(double tol, const GSParams& gsparams) :
-            Interpolant(gsparams), _tolerance(tol) {}
+        Linear(const GSParams& gsparams) : Interpolant(gsparams) {}
         ~Linear() {}
 
-        double xrange() const { return 1.-0.5*_tolerance; }  // Snip off endpoints near zero
+        double xrange() const { return 1.; }
         int ixrange() const { return 2; }
-        double urange() const { return std::sqrt(1./_tolerance)/M_PI; }
-        double getTolerance() const { return _tolerance; }
+        double urange() const { return std::sqrt(1./_gsparams.kvalue_accuracy)/M_PI; }
 
         double xval(double x) const;
         double uval(double u) const;
@@ -447,9 +414,6 @@ namespace galsim {
         void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
-
-    private:
-        double _tolerance;
     };
 
     /**
@@ -466,17 +430,15 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] tol      Sets accuracy and extent of Fourier transform.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Cubic(double tol, const GSParams& gsparams);
+        Cubic(const GSParams& gsparams);
         ~Cubic() {}
 
         double xrange() const { return _range; }
         int ixrange() const { return 4; }
         double urange() const { return _uMax; }
-        double getTolerance() const { return _tolerance; }
 
         double xval(double x) const;
         double uval(double u) const;
@@ -491,12 +453,11 @@ namespace galsim {
         // x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
         double _range;
 
-        double _tolerance;
         shared_ptr<TableBuilder> _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
-        double uCalc(double u) const;
+        double uCalc(double u, double tolerance) const;
 
         // Store the tables in a map, so repeat constructions are quick.
         static std::map<double,shared_ptr<TableBuilder> > _cache_tab;
@@ -514,17 +475,15 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol      Sets accuracy and extent of Fourier transform.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Quintic(double tol, const GSParams& gsparams);
+        Quintic(const GSParams& gsparams);
         ~Quintic() {}
 
         double xrange() const { return _range; }
         int ixrange() const { return 6; }
         double urange() const { return _uMax; }
-        double getTolerance() const { return _tolerance; }
 
         double xval(double x) const;
         double uval(double u) const;
@@ -544,12 +503,11 @@ namespace galsim {
 
     private:
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
-        double _tolerance;
         shared_ptr<TableBuilder> _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
-        double uCalc(double u) const;
+        double uCalc(double u, double tolerance) const;
 
         // Store the tables in a map, so repeat constructions are quick.
         static std::map<double,shared_ptr<TableBuilder> > _cache_tab;
@@ -562,11 +520,6 @@ namespace galsim {
      * The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
      * at high x.  Order n Lanczos has a range of +/- n pixels.  It typically is a good compromise
      * between kernel size and accuracy.
-     *
-     * The filter has accuracy parameters `xvalue_accuracy` and `kvalue_accuracy` that relate to the
-     * accuracy of building the initial lookup table.  For now, these are fixed in
-     * src/Interpolant.cpp to be 0.1 times the input `tol` value, where `tol` is typically very
-     * small already (default 1e-4).
      *
      * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
      * this constant.  Setting conserve_dc in the constructor tweaks the function so that it
@@ -582,17 +535,15 @@ namespace galsim {
          * @param[in] n              Filter order; must be given on input and cannot be changed.
          * @param[in] conserve_dc    Set true to adjust filter to be more nearly correct for
          *                           constant inputs.
-         * @param[in] tol            Sets accuracy and extent of Fourier transform.
          * @param[in] gsparams       GSParams object storing constants that control the accuracy of
          *                           operations, if different from the default.
          */
-        Lanczos(int n, bool conserve_dc, double tol, const GSParams& gsparams);
+        Lanczos(int n, bool conserve_dc, const GSParams& gsparams);
         ~Lanczos() {}
 
         double xrange() const { return _range; }
         int ixrange() const { return 2*_n; }
         double urange() const { return _uMax; }
-        double getTolerance() const { return _tolerance; }
         int getN() const { return _n; }
         bool conservesDC() const { return _conserve_dc; }
 
@@ -606,7 +557,6 @@ namespace galsim {
         double _nd; // Store n as a double, since that's often how it is used.
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         bool _conserve_dc; // Set to insure conservation of constant (sky) flux
-        double _tolerance;  // u-space accuracy parameter
         double _uMax;  // truncation point for Fourier transform
         std::vector<double> _K; // coefficients for flux correction in xval
         std::vector<double> _C; // coefficients for flux correction in uval
