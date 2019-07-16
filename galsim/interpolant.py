@@ -41,7 +41,7 @@ class Interpolant(object):
             "Use one of the subclasses instead, or use the `from_name` factory function.")
 
     @staticmethod
-    def from_name(name, tol=1.e-4, gsparams=None):
+    def from_name(name, tol=None, gsparams=None):
         """A factory function to create an Interpolant of the correct type according to
         the (string) name of the Interpolant.
 
@@ -62,15 +62,18 @@ class Interpolant(object):
         default conserve_dc=True is used.
 
         @param name         The name of the interpolant to create.
-        @param tol          The requested accuracy tolerance [default: 1.e-4]
+        @param tol          [deprecated]
         @param gsparams     An optional GSParams instance [default: None]
         """
-        tol = float(tol)
         gsparams = GSParams.check(gsparams)
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams._kvalue_accuracy = tol
 
         # Do these in rough order of likelihood (most to least)
         if name.lower() == 'quintic':
-            return Quintic(tol, gsparams)
+            return Quintic(gsparams=gsparams)
         if name.lower().startswith('lanczos'):
             conserve_dc = True
             if name[-1].upper() in ('T', 'F'):
@@ -81,17 +84,17 @@ class Interpolant(object):
             except:
                 raise GalSimValueError("Invalid Lanczos specification. Should look like "
                                        "lanczosN, where N is an integer", name)
-            return Lanczos(n, conserve_dc, tol, gsparams)
+            return Lanczos(n, conserve_dc, gsparams=gsparams)
         elif name.lower() == 'linear':
-            return Linear(tol, gsparams)
+            return Linear(gsparams=gsparams)
         elif name.lower() == 'cubic' :
-            return Cubic(tol, gsparams)
+            return Cubic(gsparams=gsparams)
         elif name.lower() == 'nearest':
-            return Nearest(tol, gsparams)
+            return Nearest(gsparams=gsparams)
         elif name.lower() == 'delta':
-            return Delta(tol, gsparams)
+            return Delta(gsparams=gsparams)
         elif name.lower() == 'sinc':
-            return SincInterpolant(tol, gsparams)
+            return SincInterpolant(gsparams=gsparams)
         else:
             raise GalSimValueError("Invalid Interpolant name %s.",name,
                                    ('linear', 'cubic', 'quintic', 'lanczosN', 'nearest', 'delta',
@@ -193,28 +196,30 @@ class Delta(Interpolant):
     location of samples, and it extends to infinity in the u domain.  But it could be useful for
     photon-shooting, where it is trivially implemented as no displacements.
 
-    @param tol          This defines a crude box approximation to the x-space delta function and to
-                        give a large but finite range in k space. [default: 1.e-4]
+    @param tol          [deprecated]
     @param gsparams     An optional GSParams instance.  [default: None]
     """
-    def __init__(self, tol=1.e-4, gsparams=None):
-        self._tol = float(tol)
+    def __init__(self, tol=None, gsparams=None):
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
     def _i(self):
         with convert_cpp_errors():
-            return _galsim.Delta(self._tol, self._gsparams._gsp)
+            return _galsim.Delta(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Delta(%r, %r)"%(self._tol, self._gsparams)
+        return "galsim.Delta(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
-        return "galsim.Delta(%s)"%(self._tol)
+        return "galsim.Delta()"
 
     @property
     def tol(self):
-        return self._tol
+        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
@@ -226,7 +231,7 @@ class Delta(Interpolant):
 
     @property
     def krange(self):
-        return 2. * math.pi / self._tol
+        return 2. * math.pi / self._gsparams.kvalue_accuracy
 
 
 class Nearest(Interpolant):
@@ -238,28 +243,30 @@ class Nearest(Interpolant):
     an image; in that case, the nearest-neighbor interpolant is quite efficient (but not
     necessarily the best choice in terms of accuracy).
 
-    @param tol          This determines how far onto sinc wiggles the uval will go.  (Very far, by
-                        default!) [default: 1.e-4]
+    @param tol          [deprecated]
     @param gsparams     An optional GSParams instance.  [default: None]
     """
-    def __init__(self, tol=1.e-4, gsparams=None):
-        self._tol = float(tol)
+    def __init__(self, tol=None, gsparams=None):
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
     def _i(self):
         with convert_cpp_errors():
-            return _galsim.Nearest(self._tol, self._gsparams._gsp)
+            return _galsim.Nearest(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Nearest(%r, %r)"%(self._tol, self._gsparams)
+        return "galsim.Nearest(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
-        return "galsim.Nearest(%s)"%(self._tol)
+        return "galsim.Nearest()"
 
     @property
     def tol(self):
-        return self._tol
+        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
@@ -271,7 +278,7 @@ class Nearest(Interpolant):
 
     @property
     def krange(self):
-        return 2. / self._tol
+        return 2. / self._gsparams.kvalue_accuracy
 
 
 class SincInterpolant(Interpolant):
@@ -284,33 +291,35 @@ class SincInterpolant(Interpolant):
     used as a k-space interpolant, but is extremely slow.  The usual compromise between sinc
     accuracy vs. speed is the Lanczos interpolant (see its documentation for details).
 
-    @param tol          This determines how far onto sinc wiggles the xval will go.  (Very far, by
-                        default!) [default 1.e-4]
+    @param tol          [deprecated]
     @param gsparams     An optional GSParams instance.  [default: None]
     """
-    def __init__(self, tol=1.e-4, gsparams=None):
-        self._tol = float(tol)
+    def __init__(self, tol=None, gsparams=None):
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
     def _i(self):
         with convert_cpp_errors():
-            return _galsim.SincInterpolant(self._tol, self._gsparams._gsp)
+            return _galsim.SincInterpolant(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.SincInterpolant(%r, %r)"%(self._tol, self._gsparams)
+        return "galsim.SincInterpolant(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
-        return "galsim.SincInterpolant(%s)"%(self._tol)
+        return "galsim.SincInterpolant()"
 
     @property
     def tol(self):
-        return self._tol
+        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
         # Technically infinity, but truncated by the tolerance.
-        return 1./(math.pi * self._tol)
+        return 1./(math.pi * self._gsparams.kvalue_accuracy)
 
     @property
     def ixrange(self):
@@ -329,33 +338,35 @@ class Linear(Interpolant):
     This objection does not apply when shooting photons, in which case the linear interpolant is
     quite efficient (but not necessarily the best choice in terms of accuracy).
 
-    @param tol          This determines how far onto sinc^2 wiggles the uval will go. (Very far,
-                        by default!) [default 1.e-4]
+    @param tol          [deprecated]
     @param gsparams     An optional GSParams instance.  [default: None]
     """
-    def __init__(self, tol=1.e-4, gsparams=None):
-        self._tol = float(tol)
+    def __init__(self, tol=None, gsparams=None):
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
     def _i(self):
         with convert_cpp_errors():
-            return _galsim.Linear(self._tol, self._gsparams._gsp)
+            return _galsim.Linear(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Linear(%r, %r)"%(self._tol, self._gsparams)
+        return "galsim.Linear(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
-        return "galsim.Linear(%s)"%(self._tol)
+        return "galsim.Linear()"
 
     @property
     def tol(self):
-        return self._tol
+        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
         # Reduce range slightly so not including points with zero weight.
-        return 1. - 0.1*self._tol
+        return 1.
 
     @property
     def ixrange(self):
@@ -363,7 +374,7 @@ class Linear(Interpolant):
 
     @property
     def krange(self):
-        return 2. / self._tol**0.5
+        return 2. / self._gsparams.kvalue_accuracy**0.5
 
 
 class Cubic(Interpolant):
@@ -373,31 +384,34 @@ class Cubic(Interpolant):
     Acoustics, Speech, & Signal Proc 29, p 1153, 1981).  It is a reasonable choice for a four-point
     interpolant for interpolated images.  (See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)
 
-    @param tol          This sets the accuracy and extent of the Fourier transform. [default 1.e-4]
+    @param tol          [deprecated]
     @param gsparams     An optional GSParams instance.  [default: None]
     """
-    def __init__(self, tol=1.e-4, gsparams=None):
-        self._tol = float(tol)
+    def __init__(self, tol=None, gsparams=None):
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
     def _i(self):
         with convert_cpp_errors():
-            return _galsim.Cubic(self._tol, self._gsparams._gsp)
+            return _galsim.Cubic(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Cubic(%r, %r)"%(self._tol, self._gsparams)
+        return "galsim.Cubic(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
-        return "galsim.Cubic(%s)"%(self._tol)
+        return "galsim.Cubic()"
 
     @property
     def tol(self):
-        return self._tol
+        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
-        return 2. - 0.1*self._tol
+        return 2.
 
     @property
     def ixrange(self):
@@ -406,7 +420,7 @@ class Cubic(Interpolant):
     @property
     def krange(self):
         # kmax = 2 * (3sqrt(3)/8 tol)^1/3
-        return 1.7320508075688774 / self._tol**(1./3.)
+        return 1.7320508075688774 / self._gsparams.kvalue_accuracy**(1./3.)
 
 
 class Quintic(Interpolant):
@@ -416,31 +430,34 @@ class Quintic(Interpolant):
     Bernstein & Gruen (http://arxiv.org/abs/1401.2636) to give optimal results as a k-space
     interpolant.
 
-    @param tol          This sets the accuracy and extent of the Fourier transform. [default 1.e-4]
+    @param tol          [deprecated]
     @param gsparams     An optional GSParams instance.  [default: None]
     """
-    def __init__(self, tol=1.e-4, gsparams=None):
-        self._tol = float(tol)
+    def __init__(self, tol=None, gsparams=None):
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams = GSParams(kvalue_accuracy=tol)
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
     def _i(self):
         with convert_cpp_errors():
-            return _galsim.Quintic(self._tol, self._gsparams._gsp)
+            return _galsim.Quintic(self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Quintic(%r, %r)"%(self._tol, self._gsparams)
+        return "galsim.Quintic(gsparams=%r)"%(self._gsparams)
 
     def __str__(self):
-        return "galsim.Quintic(%s)"%(self._tol)
+        return "galsim.Quintic()"
 
     @property
     def tol(self):
-        return self._tol
+        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
-        return 3. - 0.1*self._tol
+        return 3.
 
     @property
     def ixrange(self):
@@ -449,7 +466,7 @@ class Quintic(Interpolant):
     @property
     def krange(self):
         # kmax = 2 * (25sqrt(5)/108 tol)^1/3
-        return 1.6058208066649935 / self._tol**(1./3.)
+        return 1.6058208066649935 / self._gsparams.kvalue_accuracy**(1./3.)
 
 
 class Lanczos(Interpolant):
@@ -467,26 +484,28 @@ class Lanczos(Interpolant):
     @param n            The order of the Lanczos function
     @param conserve_dc  Whether to add the first order correction to flatten out the flux response
                         to a constant input. [default: True, see above]
-    @param tol          This sets the accuracy and extent of the Fourier transform. [default 1.e-4]
+    @param tol          [deprecated]
     @param gsparams     An optional GSParams instance.  [default: None]
     """
-    def __init__(self, n, conserve_dc=True, tol=1.e-4, gsparams=None):
+    def __init__(self, n, conserve_dc=True, tol=None, gsparams=None):
+        if tol is not None:
+            from galsim.deprecated import depr
+            depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
+            gsparams = GSParams(kvalue_accuracy=tol)
         self._n = int(n)
         self._conserve_dc = bool(conserve_dc)
-        self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
 
     @lazy_property
     def _i(self):
         with convert_cpp_errors():
-            return _galsim.Lanczos(self._n, self._conserve_dc, self._tol, self._gsparams._gsp)
+            return _galsim.Lanczos(self._n, self._conserve_dc, self._gsparams._gsp)
 
     def __repr__(self):
-        return "galsim.Lanczos(%r, %r, %r, %r)"%(self._n, self._conserve_dc, self._tol,
-                                                 self._gsparams)
+        return "galsim.Lanczos(%r, %r, gsparams=%r)"%(self._n, self._conserve_dc, self._gsparams)
 
     def __str__(self):
-        return "galsim.Lanczos(%s, %s)"%(self._n, self._tol)
+        return "galsim.Lanczos(%s)"%(self._n)
 
     @property
     def n(self):
@@ -498,11 +517,11 @@ class Lanczos(Interpolant):
 
     @property
     def tol(self):
-        return self._tol
+        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
-        return self._n - 0.1*self._tol
+        return self._n
 
     @property
     def ixrange(self):

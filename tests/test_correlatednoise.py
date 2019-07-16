@@ -1007,7 +1007,7 @@ def test_convolve_cosmos():
     # Now start the test...
     # First we generate a COSMOS noise field (cosimage), read it into an InterpolatedImage and
     # then convolve it with psf, making sure we pad the edges
-    interp=galsim.Linear(tol=1.e-4) # interpolation kernel to use in making convimages
+    interp=galsim.Linear() # interpolation kernel to use in making convimages
     # Number of tests needs to be a little larger to beat down noise here, but see the script
     # in devel/external/test_cf/test_cf_convolution_detailed.py
     cosimage_padded = galsim.ImageD(

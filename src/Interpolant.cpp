@@ -167,7 +167,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.Delta("<<_width<<", ";
+        oss << "galsim._galsim.Delta(";
         oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
@@ -200,7 +200,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.Nearest("<<_tolerance<<", ";
+        oss << "galsim._galsim.Nearest(";
         oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
@@ -241,7 +241,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SincInterpolant("<<_tolerance<<", ";
+        oss << "galsim._galsim.SincInterpolant(";
         oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
@@ -280,7 +280,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.Linear("<<_tolerance<<", ";
+        oss << "galsim._galsim.Linear(";
         oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
@@ -321,22 +321,20 @@ namespace galsim {
         const Cubic& _c;
     };
 
-    double Cubic::uCalc(double u) const
+    double Cubic::uCalc(double u, double tolerance) const
     {
         CubicIntegrand ci(u, *this);
-        return 2.*( integ::int1d(ci, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
-                    + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
+        return 2.*( integ::int1d(ci, 0., 1., 0.1*tolerance, 0.1*tolerance)
+                    + integ::int1d(ci, 1., 2., 0.1*tolerance, 0.1*tolerance));
     }
 
-    Cubic::Cubic(double tol, const GSParams& gsparams) :
-        Interpolant(gsparams), _tolerance(tol)
+    Cubic::Cubic(const GSParams& gsparams) : Interpolant(gsparams)
     {
-        dbg<<"Start Cubic:  tol = "<<tol<<std::endl;
-        // Reduce range slightly from n so we're not including points with zero weight in
-        // interpolations:
-        _range = 2.-0.1*_tolerance;
+        dbg<<"Start Cubic\n";
+        _range = 2.;
 
 #ifdef USE_TABLES
+        double tol = gsparams.kvalue_accuracy;
         // Strangely, not all compilers correctly setup an empty map when it is a
         // static variable, so you can get seg faults using it.
         // Doing an explicit clear fixes the problem.
@@ -361,14 +359,14 @@ namespace galsim {
                 dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<"  diff = "<<ft-ft2<<std::endl;
 #endif
                 _tab->addEntry(u, ft);
-                if (std::abs(ft) > _tolerance) _uMax = u;
+                if (std::abs(ft) > tol) _uMax = u;
             }
             _tab->finalize();
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
             dbg<<"umax = "<<_uMax<<", alt umax = "<<
-                std::pow((3.*sqrt(3.)/8.)/_tolerance, 1./3.) / M_PI <<std::endl;
+                std::pow((3.*sqrt(3.)/8.)/tol, 1./3.) / M_PI <<std::endl;
         }
 #else
         // uMax is the value where |ft| <= tolerance
@@ -376,7 +374,7 @@ namespace galsim {
         // |ft| < 2 max[sin(x)^3 cos(x)] / (pi u)^3
         //      = 2 (3sqrt(3)/16) / (pi u)^3
         // umax = (3sqrt(3)/8 tol)^1/3 / pi
-        _uMax = std::pow((3.*sqrt(3.)/8.)/_tolerance, 1./3.) / M_PI;
+        _uMax = std::pow((3.*sqrt(3.)/8.)/gsparams.kvalue_accuracy, 1./3.) / M_PI;
 #endif
     }
 
@@ -387,7 +385,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.Cubic("<<_tolerance<<", ";
+        oss << "galsim._galsim.Cubic(";
         oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
@@ -472,23 +470,21 @@ namespace galsim {
         const Quintic& _q;
     };
 
-    double Quintic::uCalc(double u) const
+    double Quintic::uCalc(double u, double tolerance) const
     {
         QuinticIntegrand qi(u, *this);
-        return 2.*( integ::int1d(qi, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
-                    + integ::int1d(qi, 1., 2., 0.1*_tolerance, 0.1*_tolerance)
-                    + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
+        return 2.*( integ::int1d(qi, 0., 1., 0.1*tolerance, 0.1*tolerance)
+                    + integ::int1d(qi, 1., 2., 0.1*tolerance, 0.1*tolerance)
+                    + integ::int1d(qi, 2., 3., 0.1*tolerance, 0.1*tolerance));
     }
 
-    Quintic::Quintic(double tol, const GSParams& gsparams) :
-        Interpolant(gsparams), _tolerance(tol)
+    Quintic::Quintic(const GSParams& gsparams) : Interpolant(gsparams)
     {
-        dbg<<"Start Quintic:  tol = "<<tol<<std::endl;
-        // Reduce range slightly from n so we're not including points with zero weight in
-        // interpolations:
-        _range = 3.-0.1*_tolerance;
+        dbg<<"Start Quintic\n";
+        _range = 3.;
 
 #ifdef USE_TABLES
+        double tol = gsparams.kvalue_accuracy;
         // Strangely, not all compilers correctly setup an empty map when it is a
         // static variable, so you can get seg faults using it.
         // Doing an explicit clear fixes the problem.
@@ -521,14 +517,14 @@ namespace galsim {
 #endif
                 dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<"  diff = "<<ft-ft2<<std::endl;
 #endif
-                if (std::abs(ft) > _tolerance) _uMax = u;
+                if (std::abs(ft) > tol) _uMax = u;
             }
             _tab->finalize();
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
             dbg<<"umax = "<<_uMax<<", alt umax = "<<
-                std::pow((25.*sqrt(5.)/108.)/_tolerance, 1./3.) / M_PI <<std::endl;
+                std::pow((25.*sqrt(5.)/108.)/tol, 1./3.) / M_PI <<std::endl;
         }
 #else
         // uMax is the value where |ft| <= tolerance
@@ -537,7 +533,7 @@ namespace galsim {
         // |ft| < 2 max[sin(x)^5 cos(x))] / (pi u)^3
         //      = 2 (25sqrt(5)/216) / (pi u)^3
         // umax = (25sqrt(5)/108 tol)^1/3 / pi
-        _uMax = std::pow((25.*sqrt(5.)/108.)/_tolerance, 1./3.) / M_PI;
+        _uMax = std::pow((25.*sqrt(5.)/108.)/gsparams.kvalue_accuracy, 1./3.) / M_PI;
 #endif
     }
 
@@ -563,7 +559,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.Quintic("<<_tolerance<<", ";
+        oss << "galsim._galsim.Quintic(";
         oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
@@ -797,13 +793,14 @@ namespace galsim {
         return retval;
     }
 
-    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParams& gsparams) :
-        Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
+    Lanczos::Lanczos(int n, bool conserve_dc, const GSParams& gsparams) :
+        Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        _range = _nd*(1-0.1*std::sqrt(_tolerance));
+        _range = _nd;
+        double tol = gsparams.kvalue_accuracy;
 
         for(double u=0.;u<=10.;u+=0.1) dbg<<"F("<<u<<") = "<<uCalcRaw(u)<<std::endl;
 
@@ -937,7 +934,6 @@ namespace galsim {
         oss << "galsim._galsim.Lanczos("<<_n<<", ";
         if (_conserve_dc) oss << "True, ";
         else oss << "False, ";
-        oss <<_tolerance<<", ";
         oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }

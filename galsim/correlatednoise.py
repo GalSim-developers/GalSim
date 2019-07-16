@@ -969,7 +969,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     @param wcs              If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
     @param x_interpolant    The interpolant to use for interpolating the image of the correlation
-                            function. (See below.) [default: galsim.Linear(tol=1.e-4)]
+                            function. (See below.) [default: galsim.Linear()]
     @param correct_periodicity  Whether to correct for the effects of periodicity.  (See below.)
                             [default: True]
     @param subtract_mean    Whether to subtract off the mean value from the image before computing
@@ -994,12 +994,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale
     `scale` to set the units of the internal lookup table.
 
-        >>> cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5, tol=1.e-4))
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5))
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
     for interpolation of the internal lookup table in real space.
 
-    The default `x_interpolant` is `galsim.Linear(tol=1.e-4)`, which uses bilinear interpolation.
+    The default `x_interpolant` is `galsim.Linear()`, which uses bilinear interpolation.
     The use of this interpolant is an approximation that gives good empirical results without
     requiring internal convolution of the correlation function profile by a Pixel object when
     applying correlated noise to images: such an internal convolution has been found to be
@@ -1211,7 +1211,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # If x_interpolant not specified on input, use bilinear
         if x_interpolant is None:
-            x_interpolant = Linear(tol=1.e-4)
+            x_interpolant = Linear()
         else:
             x_interpolant = utilities.convert_interpolant(x_interpolant)
 
@@ -1299,13 +1299,13 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
                         noise fields.]
     @param x_interpolant  Forces use of a non-default interpolant for interpolation of the
                         internal lookup table in real space.  See below for more details.
-                        [default: galsim.Linear(tol=1.e-4)]
+                        [default: galsim.Linear()]
     @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
                         details. [default: None]
 
     @returns a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
-    The default `x_interpolant` is a `galsim.Linear(tol=1.e-4)`, which uses bilinear interpolation.
+    The default `x_interpolant` is a `galsim.Linear()`, which uses bilinear interpolation.
     The use of this interpolant is an approximation that gives good empirical results without
     requiring internal convolution of the correlation function profile by a Pixel object when
     applying correlated noise to images: such an internal convolution has been found to be
@@ -1389,7 +1389,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     # If x_interpolant not specified on input, use bilinear
     if x_interpolant is None:
-        x_interpolant = Linear(tol=1.e-4)
+        x_interpolant = Linear()
     else:
         x_interpolant = utilities.convert_interpolant(x_interpolant)
 

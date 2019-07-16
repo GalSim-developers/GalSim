@@ -306,11 +306,11 @@ class InterpolatedImage(GSObject):
         # Set up the interpolants if none was provided by user, or check that the user-provided ones
         # are of a valid type
         if x_interpolant is None:
-            self._x_interpolant = Quintic(tol=1e-4, gsparams=self._gsparams)
+            self._x_interpolant = Quintic(gsparams=self._gsparams)
         else:
             self._x_interpolant = convert_interpolant(x_interpolant).withGSParams(self._gsparams)
         if k_interpolant is None:
-            self._k_interpolant = Quintic(tol=1e-4, gsparams=self._gsparams)
+            self._k_interpolant = Quintic(gsparams=self._gsparams)
         else:
             self._k_interpolant = convert_interpolant(k_interpolant).withGSParams(self._gsparams)
 
@@ -931,7 +931,7 @@ class InterpolatedKImage(GSObject):
         # set up k_interpolant if none was provided by user, or check that the user-provided one
         # is of a valid type
         if k_interpolant is None:
-            self._k_interpolant = Quintic(tol=1e-4, gsparams=self._gsparams)
+            self._k_interpolant = Quintic(gsparams=self._gsparams)
         else:
             self._k_interpolant = convert_interpolant(k_interpolant).withGSParams(self._gsparams)
 

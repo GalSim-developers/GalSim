@@ -1164,7 +1164,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         self.SEDs = SEDs
 
         if k_interpolant is None:
-            k_interpolant = Quintic(tol=1e-4)
+            k_interpolant = Quintic()
         else:
             k_interpolant = convert_interpolant(k_interpolant)
 
