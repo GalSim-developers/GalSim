@@ -73,16 +73,16 @@ class AstropyWCS(CelestialWCS):
         >>> wcs = galsim.AstropyWCS(header=header)        # Use an existing pyfits header
         >>> wcs = galsim.AstropyWCS(wcs=wcs)              # Use an existing astropy.wcs.WCS instance
 
-    Exactly one of the parameters `file_name`, `header` or `wcs` is required.  Also, since the most
-    common usage will probably be the first, you can also give a `file_name` without it being
-    named::
+    Exactly one of the parameters ``file_name``, ``header`` or ``wcs`` is required.  Also, since
+    the most common usage will probably be the first, you can also give a ``file_name`` without it
+    being named::
 
         >>> wcs = galsim.AstropyWCS(file_name)
 
     Parameters:
         file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-        dir:              Optional directory to prepend to `file_name`. [default: None]
+        dir:              Optional directory to prepend to ``file_name``. [default: None]
         hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
@@ -313,16 +313,16 @@ class PyAstWCS(CelestialWCS):
         >>> wcs = galsim.PyAstWCS(header=header)        # Use an existing pyfits header
         >>> wcs = galsim.PyAstWCS(wcsinfo=wcsinfo)      # Use an existing starlink.Ast.FrameSet
 
-    Exactly one of the parameters `file_name`, `header` or `wcsinfo` is required.  Also, since the
-    most common usage will probably be the first, you can also give a file name without it being
-    named::
+    Exactly one of the parameters ``file_name``, ``header`` or ``wcsinfo`` is required.  Also,
+    since the most common usage will probably be the first, you can also give a file name without
+    it being named::
 
         >>> wcs = galsim.PyAstWCS(file_name)
 
     Parameters:
         file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-        dir:              Optional directory to prepend to `file_name`. [default: None]
+        dir:              Optional directory to prepend to ``file_name``. [default: None]
         hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
@@ -596,7 +596,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
     Parameters:
         file_name:        The FITS file from which to read the WCS information.
-        dir:              Optional directory to prepend to `file_name`. [default: None]
+        dir:              Optional directory to prepend to ``file_name``. [default: None]
         origin:           Optional origin position for the image coordinate system.
                           If provided, it should be a PositionD or PositionI.
                           [default: None]
@@ -855,7 +855,7 @@ class GSFitsWCS(CelestialWCS):
     Parameters:
         file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-        dir:              Optional directory to prepend to `file_name`. [default: None]
+        dir:              Optional directory to prepend to ``file_name``. [default: None]
         hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
@@ -1632,11 +1632,11 @@ fits_wcs_types = [
                     # TAN projection, and also TPV, which is used by SCamp.  If it does work, it
                     # is a good choice, since it is easily the fastest of any of these.
 
-    PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
+    PyAstWCS,       # This requires ``import starlink.Ast`` to succeed.  This handles the largest
                     # number of WCS types of any of these.  In fact, it worked for every one
                     # we tried in our unit tests (which was not exhaustive).
 
-    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  It doesn't support quite as
+    AstropyWCS,     # This requires ``import astropy.wcs`` to succeed.  It doesn't support quite as
                     # many WCS types as PyAst.  It's also usually a little slower, so we prefer
                     # PyAstWCS when it is available.
 
@@ -1655,16 +1655,16 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using
     reasonable defaults if even these are missing.  If you think that you have the right software
     for one of the WCS types, but FitsWCS still defaults to AffineTransform, it may be helpful to
-    update your installation of PyFITS/astropy and the relevant WCS software (if you don't already
-    have the latest version).
+    update your installation of astropy and/or starlink (if you don't already have the latest
+    version).
 
     Note: The list of classes this function will try may be edited, e.g. by an external module
-    that wants to add an additional WCS type.  The list is `galsim.fitswcs.fits_wcs_types`.
+    that wants to add an additional WCS type.  The list is ``galsim.fitswcs.fits_wcs_types``.
 
     Parameters:
         file_name:        The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
-        dir:              Optional directory to prepend to `file_name`. [default: None]
+        dir:              Optional directory to prepend to ``file_name``. [default: None]
         hdu:              Optionally, the number of the HDU to use if reading from a file.
                           The default is to use either the primary or first extension as
                           appropriate for the given compression.  (e.g. for rice, the first
@@ -1675,7 +1675,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                           for the available options.  [default: 'auto']
         text_file:        Normally a file is taken to be a fits file, but you can also give it a
                           text file with the header information (like the .head file output from
-                          SCamp).  In this case you should set `text_file = True` to tell GalSim
+                          SCamp).  In this case you should set ``text_file = True`` to tell GalSim
                           to parse the file this way.  [default: False]
         suppress_warning: Should a warning be emitted if none of the real FITS WCS classes
                           are able to successfully read the file, and we have to reset to
