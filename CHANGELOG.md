@@ -4,6 +4,9 @@ Changes from v2.1 to v2.2
 Deprecated Features
 -------------------
 
+- Deprecated the `tol` parameter of the various Interpolant classes.  Users should use the
+  `kvalue_accuracy` parameter of `gsparams` instead. (#1038)
+
 API Changes
 -----------
 
@@ -20,6 +23,7 @@ New Features
 - Added WFIRST fermi persistence model. (#992)
 - Added `r0_500` argument to VonKarman. (#1005)
 - Added array versions of `wcs.toWorld` and `wcs.toImage`. (#1026)
+- Exposed some methods of Interpolants that had only been in the C++ layer. (#1038)
 
 Bug Fixes
 ---------
