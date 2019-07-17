@@ -511,6 +511,22 @@ def test_ne():
             galsim.DeVaucouleurs(half_light_radius=1.0, gsparams=gsp)]
     all_obj_diff(gals)
 
+@timer
+def test_near_05():
+    """Test from issue #1041, where some values of n near but not exactly equal to 0.5 would
+    fail to converge in bracketUpper()
+    """
+    ser1 = galsim.Sersic(n=0.5, half_light_radius=1)
+    ser2 = galsim.Sersic(n=0.499999999999, half_light_radius=1)
+    ser3 = galsim.Sersic(n=0.500000000001, half_light_radius=1)
+
+    im1 = ser1.drawImage()
+    im2 = ser2.drawImage()
+    im3 = ser3.drawImage()
+
+    np.testing.assert_allclose(im2.array, im1.array, atol=1.e-12)
+    np.testing.assert_allclose(im3.array, im1.array, atol=1.e-12)
+
 
 if __name__ == "__main__":
     test_sersic()
@@ -519,3 +535,4 @@ if __name__ == "__main__":
     test_sersic_05()
     test_sersic_1()
     test_ne()
+    test_near_05()
