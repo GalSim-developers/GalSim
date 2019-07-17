@@ -640,6 +640,10 @@ namespace galsim {
             z = 4.*(_n+1.);  // A decent starting guess for a range of n.
             double twonm1 = 2.*_n-1.;
             double z2 = z1 + twonm1 * std::log(z) + twonm1/z + twonm1*(2.*_n-3.)/(2.*z*z);
+            // If n is very, very close to 0.5, this might not be very different.
+            // Make sure the gap is not super tiny.
+            if (z2 > z1 && z2-z1 < 0.01) z2 = z1 + 0.01;
+            else if (z2 < z1 && z2-z1 > -0.01) z2 = z1 - 0.01;
             dbg<<"Initial z from asymptotic expansion: z => "<<z2<<std::endl;
 
             // For larger n, z1 can be negative, which is bad.
