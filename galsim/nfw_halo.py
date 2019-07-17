@@ -198,7 +198,7 @@ class NFWHalo(object):
     def __farcth (self, x):
         """Numerical implementation of integral functions of a spherical NFW profile.
 
-        All expressions are a function of `x`, which is the radius r in units of the NFW scale
+        All expressions are a function of ``x``, which is the radius r in units of the NFW scale
         radius, r_s.  For the derivation of these functions, see for example Wright & Brainerd
         (2000, ApJ, 534, 34).
         """
@@ -222,7 +222,7 @@ class NFWHalo(object):
         """Calculate convergence of halo.
 
         Parameters:
-            x:      Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
+            x:      Radial coordinate in units of rs (scale radius of halo), i.e., ``x=r/rs``.
             ks:     Lensing strength prefactor.
         """
         # convenience: call with single number
@@ -248,7 +248,7 @@ class NFWHalo(object):
         """Calculate tangential shear of halo.
 
         Parameters:
-            x:      Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
+            x:      Radial coordinate in units of rs (scale radius of halo), i.e., ``x=r/rs``.
             ks:     Lensing strength prefactor.
         """
         # convenience: call with single number
@@ -303,8 +303,8 @@ class NFWHalo(object):
         Returns:
             the (possibly reduced) shears as a tuple (g1,g2)
 
-        If the input `pos` is given a single position, (g1,g2) are the two shear components.
-        If the input `pos` is given a list/array of positions, they are NumPy arrays.
+        If the input ``pos`` is given a single position, (g1,g2) are the two shear components.
+        If the input ``pos`` is given a list/array of positions, they are NumPy arrays.
         """
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getShear')
         return self._getShear(pos_x, pos_y, z_s, reduced)
@@ -364,8 +364,8 @@ class NFWHalo(object):
         Returns:
             the convergence, kappa
 
-        If the input `pos` is given a single position, kappa is the convergence value.
-        If the input `pos` is given a list/array of positions, kappa is a NumPy array.
+        If the input ``pos`` is given a single position, kappa is the convergence value.
+        If the input ``pos`` is given a list/array of positions, kappa is a NumPy array.
         """
 
         # Convert to numpy arrays for internal usage:
@@ -410,8 +410,8 @@ class NFWHalo(object):
         Returns:
             the magnification mu
 
-        If the input `pos` is given a single position, mu is the magnification value.
-        If the input `pos` is given a list/array of positions, mu is a NumPy array.
+        If the input ``pos`` is given a single position, mu is the magnification value.
+        If the input ``pos`` is given a list/array of positions, mu is a NumPy array.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getMagnification')
@@ -458,9 +458,9 @@ class NFWHalo(object):
         Returns:
             the reduced shears and magnifications as a tuple (g1,g2,mu)
 
-        If the input `pos` is given a single position, the return values are the shear and
+        If the input ``pos`` is given a single position, the return values are the shear and
         magnification values at that position.
-        If the input `pos` is given a list/array of positions, they are NumPy arrays.
+        If the input ``pos`` is given a list/array of positions, they are NumPy arrays.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getLensing')

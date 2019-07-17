@@ -31,18 +31,24 @@ class Shear(object):
     distortions.  A shear is an operation that transforms a circle into an ellipse with
     minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see
     below for a discussion of the implications of this choice).  Given the multiple definitions of
-    ellipticity, we have multiple definitions of shear:
+    ellipticity, we have multiple definitions of shear::
 
-    reduced shear |g| = (a - b)/(a + b)
-    distortion |e| = (a^2 - b^2)/(a^2 + b^2)
-    conformal shear eta, with a/b = exp(eta)
-    minor-to-major axis ratio q = b/a
+        reduced shear
+            :math:`|g| = (a - b)/(a + b)`
+        distortion
+            :math:`|e| = (a^2 - b^2)/(a^2 + b^2)`
+        conformal shear
+            :math:`\eta = log(b/a)`
+        minor-to-major axis ratio
+            :math:`q = b/a`
 
     These can be thought of as a magnitude and a real-space position angle beta, or as two
-    components, e.g., g1 and g2, with
+    components, e.g., g1 and g2, with:
 
-    g1 = |g| cos(2*beta)
-    g2 = |g| sin(2*beta)
+    .. math::
+
+        g1 = |g| cos(2*beta)
+        g2 = |g| sin(2*beta)
 
     Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is
     g1 + i g2 = g exp(2 i beta).  Likewise for eta or e.  The phase of the complex value is 2 beta.
@@ -60,29 +66,29 @@ class Shear(object):
         >>> s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
         >>> s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
 
-    There can be no mixing and matching, e.g., specifying `g1` and `e2`.  It is permissible to only
-    specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`,
-    `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible
-    to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e.
-    galsim.Shear().
+    There can be no mixing and matching, e.g., specifying ``g1`` and ``e2``.  It is permissible to
+    only specify one of two components, with the other assumed to be zero.  If a magnitude such as
+    ``e``, ``g``, ``eta``, or ``q`` is specified, then ``beta`` is also required to be specified.
+    It is possible to initialize a Shear with zero reduced shear by specifying no args or kwargs,
+    i.e. ``galsim.Shear()``.
 
     In addition, for use cases where extreme efficiency is required, you can skip all the
     normal sanity checks and branches in the regular Shear constructor by using a leading
-    underscore with the complex shear (g1 + 1j * g2).::
+    underscore with the complex shear (g1 + 1j * g2)::
 
         >>> s = galsim._Shear(0.05 + 0.03j)  # Equivalent to galsim.Shear(g1=0.05, g2=0.03)
 
     Since we have defined a Shear as a transformation that preserves area, this means that it is not
     a precise description of what happens during the process of weak lensing.  The coordinate
     transformation that occurs during the actual weak lensing process is such that if a galaxy is
-    sheared by some `(gamma_1, gamma_2)`, and then sheared by `(-gamma_1, -gamma_2)`, it will in the
-    end return to its original shape, but will have changed in area due to the magnification, `mu =
-    1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2))`, which is not equal to one for non-zero shear
-    even for convergence `kappa=0`.  Application of a Shear using the GSObject.shear() method does
-    not include this area change.  To properly incorporate the effective change in area due to
-    shear, it is necessary to either (a) define the Shear object, use the shear() method, and
-    separately use the magnify() method, or (b) use the lens() method that simultaneously magnifies
-    and shears.
+    sheared by some ``(gamma_1, gamma_2)``, and then sheared by ``(-gamma_1, -gamma_2)``, it will
+    in the end return to its original shape, but will have changed in area due to the magnification,
+    ``mu = 1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2))``, which is not equal to one for non-zero
+    shear even for convergence ``kappa=0``.  Application of a Shear using the `GSObject.shear`
+    method does not include this area change.  To properly incorporate the effective change in
+    area due to shear, it is necessary to either (a) define the Shear object, use the
+    `GSObject.shear` method, and separately use the `GSObject.magnify` method, or (b) use the
+    `GSObject.lens` method that simultaneously magnifies and shears.
     """
     def __init__(self, *args, **kwargs):
 
