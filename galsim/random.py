@@ -33,7 +33,7 @@ class BaseDeviate(object):
 
     This holds the essential random number generator that all the other classes use.
 
-    All deviates take an initial `seed` argument that is used to seed the underlying random number
+    All deviates take an initial ``seed`` argument that is used to seed the underlying random number
     generator.  It has three different kinds of behavior.
 
     1. An integer value can be provided to explicitly seed the random number generator with a
@@ -70,9 +70,9 @@ class BaseDeviate(object):
         >>> ud2()
         0.58736140513792634
 
-    Methods:
-
     There are a few methods that are common to all BaseDeviate classes, so we describe them here.
+
+    Methods:
 
         dev.seed(seed)      Set a new (integer) seed value for the underlying RNG.
         dev.reset(seed)     Sever the connection to the current RNG and seed a new one (either
@@ -289,7 +289,7 @@ class GaussianDeviate(BaseDeviate):
     See http://en.wikipedia.org/wiki/Gaussian_distribution for further details.
 
     Successive calls to g() generate pseudo-random values distributed according to a Gaussian
-    distribution with the provided `mean`, `sigma`.::
+    distribution with the provided ``mean``, ``sigma``.::
 
         >>> g = galsim.GaussianDeviate(31415926)
         >>> g()
@@ -345,14 +345,14 @@ class GaussianDeviate(BaseDeviate):
 
 
 class BinomialDeviate(BaseDeviate):
-    """Pseudo-random Binomial deviate for `N` trials each of probability `p`.
+    """Pseudo-random Binomial deviate for ``N`` trials each of probability ``p``.
 
-    `N` is number of 'coin flips,' `p` is probability of 'heads,' and each call returns an integer
+    ``N`` is number of 'coin flips,' ``p`` is probability of 'heads,' and each call returns an integer
     value where 0 <= value <= N gives the number of heads.  See
     http://en.wikipedia.org/wiki/Binomial_distribution for more information.
 
     Successive calls to b() generate pseudo-random integer values distributed according to a
-    binomial distribution with the provided `N`, `p`.::
+    binomial distribution with the provided ``N``, ``p``.::
 
         >>> b = galsim.BinomialDeviate(31415926, N=10, p=0.3)
         >>> b()
@@ -394,14 +394,14 @@ class BinomialDeviate(BaseDeviate):
 
 
 class PoissonDeviate(BaseDeviate):
-    """Pseudo-random Poisson deviate with specified `mean`.
+    """Pseudo-random Poisson deviate with specified ``mean``.
 
-    The input `mean` sets the mean and variance of the Poisson deviate.  An integer deviate with
+    The input ``mean`` sets the mean and variance of the Poisson deviate.  An integer deviate with
     this distribution is returned after each call.
     See http://en.wikipedia.org/wiki/Poisson_distribution for more details.
 
     Successive calls to p() generate pseudo-random integer values distributed according to a Poisson
-    distribution with the specified `mean`.::
+    distribution with the specified ``mean``.::
 
         >>> p = galsim.PoissonDeviate(31415926, mean=100)
         >>> p()
@@ -453,7 +453,7 @@ class PoissonDeviate(BaseDeviate):
 
 
 class WeibullDeviate(BaseDeviate):
-    """Pseudo-random Weibull-distributed deviate for shape parameter `a` and scale parameter `b`.
+    """Pseudo-random Weibull-distributed deviate for shape parameter ``a`` and scale parameter ``b``.
 
     The Weibull distribution is related to a number of other probability distributions; in
     particular, it interpolates between the exponential distribution (a=1) and the Rayleigh
@@ -463,7 +463,7 @@ class WeibullDeviate(BaseDeviate):
     produces deviates >= 0.
 
     Successive calls to p() generate pseudo-random values distributed according to a Weibull
-    distribution with the specified shape and scale parameters `a` and `b`.::
+    distribution with the specified shape and scale parameters ``a`` and ``b``.::
 
         >>> w = galsim.WeibullDeviate(31415926, a=1.3, b=4)
         >>> w()
@@ -505,13 +505,13 @@ class WeibullDeviate(BaseDeviate):
 
 
 class GammaDeviate(BaseDeviate):
-    """A Gamma-distributed deviate with shape parameter `k` and scale parameter `theta`.
+    """A Gamma-distributed deviate with shape parameter ``k`` and scale parameter ``theta``.
     See http://en.wikipedia.org/wiki/Gamma_distribution.
     (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
     The Gamma distribution is a real valued distribution producing deviates >= 0.
 
     Successive calls to p() generate pseudo-random values distributed according to a gamma
-    distribution with the specified shape and scale parameters `k` and `theta`.::
+    distribution with the specified shape and scale parameters ``k`` and ``theta``.::
 
         >>> gam = galsim.GammaDeviate(31415926, k=1, theta=2)
         >>> gam()
@@ -554,14 +554,14 @@ class GammaDeviate(BaseDeviate):
 
 
 class Chi2Deviate(BaseDeviate):
-    """Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter `n`.
+    """Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter ``n``.
 
     See http://en.wikipedia.org/wiki/Chi-squared_distribution (note that k=n in the notation
     adopted in the Boost.Random routine called by this class).  The Chi^2 distribution is a
     real-valued distribution producing deviates >= 0.
 
     Successive calls to chi2() generate pseudo-random values distributed according to a chi-square
-    distribution with the specified degrees of freedom, `n`.::
+    distribution with the specified degrees of freedom, ``n``.::
 
         >>> chi2 = galsim.Chi2Deviate(31415926, n=7)
         >>> chi2()
@@ -608,20 +608,20 @@ class DistDeviate(BaseDeviate):
 
     Once given a probability, DistDeviate creates a table of the cumulative probability and draws
     from it using a UniformDeviate.  The precision of its outputs can be controlled with the
-    keyword `npoints`, which sets the number of points DistDeviate creates for its internal table
+    keyword ``npoints``, which sets the number of points DistDeviate creates for its internal table
     of CDF(x).  To prevent errors due to non-monotonicity, the interpolant for this internal table
     is always linear.
 
-    Two keywords, `x_min` and `x_max`, define the support of the function.  They must be passed if
+    Two keywords, ``x_min`` and ``x_max``, define the support of the function.  They must be passed if
     a callable function is given to DistDeviate, unless the function is a LookupTable, which has its
     own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use of
-    `x_min` or `x_max` will result in an error.
+    ``x_min`` or ``x_max`` will result in an error.
 
     If given a table in a file, DistDeviate will construct an interpolated LookupTable to obtain
     more finely gridded probabilities for generating the cumulative probability table.  The default
-    `interpolant` is linear, but any interpolant understood by LookupTable may be used.  We caution
+    ``interpolant`` is linear, but any interpolant understood by LookupTable may be used.  We caution
     against the use of splines because they can cause non-monotonic behavior.  Passing the
-    `interpolant` keyword next to anything but a table in a file will result in an error.
+    ``interpolant`` keyword next to anything but a table in a file will result in an error.
 
     Examples:
 
@@ -630,19 +630,19 @@ class DistDeviate(BaseDeviate):
         >>> d = galsim.DistDeviate(function=f, x_min=x_min, x_max=x_max)
 
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
-    `f(x)` from `x=x_min` to `x=x_max` and seeds the PRNG using current time.::
+    ``f(x)`` from ``x=x_min`` to ``x=x_max`` and seeds the PRNG using current time.::
 
         >>> d = galsim.DistDeviate(1062533, function=file_name, interpolant='floor')
 
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
-    `file_name`, which must be a 2-column ASCII table, and seeds the PRNG using the integer
-    seed 1062533. It generates probabilities from `file_name` using the interpolant 'floor'.::
+    ``file_name``, which must be a 2-column ASCII table, and seeds the PRNG using the integer
+    seed 1062533. It generates probabilities from ``file_name`` using the interpolant 'floor'.::
 
         >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
 
     Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
-    arrays `x` and `p` which are used to make a callable LookupTable, and links the DistDeviate
-    PRNG to the already-existing random number generator `rng`.
+    arrays ``x`` and ``p`` which are used to make a callable LookupTable, and links the DistDeviate
+    PRNG to the already-existing random number generator ``rng``.
 
     Successive calls to d() generate pseudo-random values with the given probability distribution.::
 
@@ -781,13 +781,13 @@ class DistDeviate(BaseDeviate):
 
     def val(self, p):
         """
-        Return the value `x` of the input function to DistDeviate such that `p` = cdf(x),
+        Return the value ``x`` of the input function to DistDeviate such that ``p`` = cdf(x),
         where cdf is the cumulattive probability distribution function:
 
             cdf(x) = int(pdf(t), t=0..x)
 
         This function is typically called by self.__call__(), which generates a random p
-        between 0 and 1 and calls `self.val(p)`.
+        between 0 and 1 and calls ``self.val(p)``.
 
         Parameters:
             p:      The desired cumulative probabilty p.

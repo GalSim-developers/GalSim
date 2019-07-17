@@ -395,8 +395,8 @@ class CCDNoise(BaseNoise):
 
     - sky_level is normally measured from the image itself, so it is normally quoted in ADU/pixel.
     - gain is a property of the detector and is normally measured in the laboratory.  The units
-    are normally e-/ADU.  This is backwards what might be more intuitive, ADU/e-, but that's
-    how astronomers use the term gain, so we follow suit here.
+      are normally e-/ADU.  This is backwards what might be more intuitive, ADU/e-, but that's
+      how astronomers use the term gain, so we follow suit here.
     - read_noise is also a property of the detector and is usually quoted in e-/pixel.
 
     If you are manually applying the quantum efficiency of the detector (e-/photon), then this
