@@ -72,9 +72,3 @@ Correlated Noise Generators
 
 .. autofunction:: galsim.getCOSMOSNoise
 
-Spectral Correlated Noise
--------------------------
-
-.. autoclass:: galsim.CovarianceSpectrum
-    :members:
-

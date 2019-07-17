@@ -712,7 +712,7 @@ class ChromaticObject(object):
             bandpass:   A Bandpass object representing a filter, or None to compute the bolometric
                         flux.  For the bolometric flux the integration limits will be set to
                         (0, infinity) unless overridden by non-``None`` SED attributes ``blue_limit``
-                        or ``red_limit``.  Note that SEDs defined using `LookupTable`s automatically
+                        or ``red_limit``.  Note that SEDs defined using `LookupTable` automatically
                         have ``blue_limit`` and ``red_limit`` set.
 
         Returns:
@@ -732,7 +732,7 @@ class ChromaticObject(object):
                         bolometric magnitude.  For the bolometric magnitude the integration
                         limits will be set to (0, infinity) unless overridden by non-``None`` SED
                         attributes ``blue_limit`` or ``red_limit``.  Note that SEDs defined using
-                        `LookupTable`s automatically have ``blue_limit`` and ``red_limit`` set.
+                        `LookupTable` automatically have ``blue_limit`` and ``red_limit`` set.
 
         Returns:
             the bandpass magnitude.
@@ -1349,6 +1349,7 @@ class ChromaticAtmosphere(ChromaticObject):
     Since DCR depends on the zenith angle and the parallactic angle (which is the position angle of
     the zenith measured from North through East) of the object being drawn, these must be specified
     via keywords.  There are four ways to specify these values:
+
       1) explicitly provide ``zenith_angle = ...`` as a keyword of type Angle, and
          ``parallactic_angle`` will be assumed to be 0 by default.
       2) explicitly provide both ``zenith_angle = ...`` and ``parallactic_angle = ...`` as
@@ -2558,8 +2559,10 @@ class ChromaticAutoConvolution(ChromaticObject):
 class ChromaticAutoCorrelation(ChromaticObject):
     """A special class for correlating a ChromaticObject with itself.
 
-    It is equivalent in functionality to
+    It is equivalent in functionality to::
+
         galsim.Convolve([obj,obj.rotate(180.*galsim.degrees)])
+
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
 
     Parameters:
