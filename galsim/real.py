@@ -892,15 +892,15 @@ class ChromaticRealGalaxy(ChromaticSum):
     for the drawImage() function.
 
     Fundamentally, the required inputs for this class are (1) a series of high resolution input
-    ``Image``s of a single galaxy in different bands, (2) the ``Bandpass``es corresponding to those
-    images, (3) the PSFs of those images as either ``GSObject``s or ``ChromaticObject``s, and (4)
+    Images of a single galaxy in different bands, (2) the Bandpasses corresponding to those
+    images, (3) the PSFs of those images as either GSObjects or ChromaticObjects, and (4)
     the noise properties of the input images as instances of either ``CorrelatedNoise`` or
     ``UncorrelatedNoise``.  If you want to specify these inputs directly, that is possible via
     the ``.makeFromImages`` factory method of this class::
 
         >>> crg = galsim.ChromaticRealGalaxy.makeFromImages(imgs, bands, PSFs, xis, ...)
 
-    Alternatively, you may create a ChromaticRealGalaxy via a list of ``RealGalaxyCatalog``s that
+    Alternatively, you may create a ChromaticRealGalaxy via a list of RealGalaxyCatalogs that
     correspond to a set of galaxies observed in different bands::
 
         >>> crg = galsim.ChromaticRealGalaxy(real_galaxy_catalogs, index=0, ...)
@@ -953,8 +953,8 @@ class ChromaticRealGalaxy(ChromaticSum):
 
     Parameters:
         real_galaxy_catalogs:   A list of ``RealGalaxyCatalog`` objects from which to create
-                                ``ChromaticRealGalaxy``s.  Each catalog should represent the same
-                                set of galaxies, and in the same order, just imaged through
+                                ``ChromaticRealGalaxy`` objects.  Each catalog should represent the
+                                same set of galaxies, and in the same order, just imaged through
                                 different filters.  Note that the number of catalogs must be equal
                                 to or larger than the number of SEDs.
         index:                  Index of the desired galaxy in the catalog. [One of ``index``,
@@ -968,7 +968,7 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 noise field when padding.  This user-input random number generator
                                 takes precedence over any stored within a user-input CorrelatedNoise
                                 instance (see ``noise_pad`` parameter below).  [default: None]
-        SEDs:                   An optional list of ``SED``s to use when representing real galaxies
+        SEDs:                   An optional list of ``SED`` to use when representing real galaxies
                                 as sums of separable profiles. By default, len(real_galaxy_catalogs)
                                 SEDs that are polynomials in wavelength will be used.  Note that the
                                 number of SEDs must be equal to or smaller than the number of
@@ -1084,13 +1084,13 @@ class ChromaticRealGalaxy(ChromaticSum):
             images:             An iterable of high resolution ``Images`` of a galaxy through
                                 different bandpasses.
             bands:              An iterable of ``Bandpass``es corresponding to the input images.
-            PSFs:               Either an iterable of ``GSObject``s or ``ChromaticObject``s
+            PSFs:               Either an iterable of ``GSObject`` or ``ChromaticObject``
                                 indicating the PSFs of the different input images, or potentially a
                                 single ``GSObject`` or ``ChromaticObject`` that will be used as the
                                 PSF for all images.
             xis:                An iterable of either ``CorrelatedNoise`` or ``UncorrelatedNoise``
                                 objects characterizing the noise in the input images.
-            SEDs:               An optional list of ``SED``s to use when representing real galaxies
+            SEDs:               An optional list of ``SED`` to use when representing real galaxies
                                 as sums of separable profiles.  By default, len(images) SEDs that
                                 are polynomials in wavelength will be used.  Note that the number
                                 of SEDs must be equal to or smaller than the number of catalogs.
