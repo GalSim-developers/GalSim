@@ -25,3 +25,4 @@ Bug Fixes
 ---------
 
 - Fixed error in `wcs.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
+- Fixed error in Sersic class when n is very, very close to 0.5. (#1041)
