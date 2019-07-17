@@ -41,7 +41,7 @@ class SED(object):
     wavelength, though SEDs are also used by GalSim to track dimensionless wavelength-dependent
     normalizations, and may thus also return dimensionless values.  By default, the above wavelength
     used by __call__ is nanometers, but it's possible to use other units via the astropy.units
-    module (at least, if the SED keyword argument `fast=False`, see below).  For instance,::
+    module (at least, if the SED keyword argument ``fast=False``, see below).  For instance,::
 
         >>> sed = galsim.SED(...)
         >>> from astropy import units as u
@@ -55,60 +55,63 @@ class SED(object):
     SEDs are immutable; all transformative SED methods return *new* SEDs, and leave their
     originating SEDs unaltered.
 
-    SEDs have `blue_limit` and `red_limit` attributes, which indicate the range over which the SED
+    SEDs have ``blue_limit`` and ``red_limit`` attributes, which indicate the range over which the SED
     is defined.  An exception will be raised if the flux density or normalization is requested
-    outside of this range.  Note that `blue_limit` and `red_limit` are always in nanometers and in
-    the observed frame when `redshift != 0`.
+    outside of this range.  Note that ``blue_limit`` and ``red_limit`` are always in nanometers and in
+    the observed frame when ``redshift != 0``.
 
     SEDs may be multiplied by scalars or scalar functions of wavelength.  In particular, an SED
     multiplied by a `Bandpass` will yield the appropriately filtered SED.  Two SEDs may be
     multiplied together if at least one of them represents a dimensionless normalization.
 
     SEDs may be added together if they are at the same redshift.  The resulting SED will only be
-    defined on the wavelength region where both of the operand SEDs are defined. `blue_limit` and
-    `red_limit` will be reset accordingly.
+    defined on the wavelength region where both of the operand SEDs are defined. ``blue_limit`` and
+    ``red_limit`` will be reset accordingly.
 
-    The input parameter, `spec`, may be one of several possible forms:
+    The input parameter, ``spec``, may be one of several possible forms:
+
     1. a regular python function (or an object that acts like a function)
     2. a LookupTable
     3. a file from which a LookupTable can be read in
-    4. a string which can be evaluated into a function of `wave` via eval('lambda wave : '+spec),
+    4. a string which can be evaluated into a function of ``wave`` via eval('lambda wave : '+spec),
        e.g., spec = '0.8 + 0.2 * (wave-800)'
     5. a python scalar (only possible for dimensionless SEDs)
 
-    The argument of `spec` should be the wavelength in units specified by `wave_type`, which should
-    be an instance of `astropy.units.Unit` of equivalency class `astropy.units.spectral`, or one of
+    The argument of ``spec`` should be the wavelength in units specified by ``wave_type``, which should
+    be an instance of ``astropy.units.Unit`` of equivalency class ``astropy.units.spectral``, or one of
     the case-insensitive aliases 'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or
-    'Angstroms'.  Note that `astropy.units.spectral` includes not only units with dimensions of
+    'Angstroms'.  Note that ``astropy.units.spectral`` includes not only units with dimensions of
     length, but also frequency, energy, or wavenumber.
 
-    The return value of `spec` should be a spectral density with units specified by `flux_type`,
-    which should be an instance of `astropy.units.Unit` of equivalency class
-    `astropy.units.spectral_density`, or one of the case-insensitive aliases:
-        1. 'flambda':  erg/wave_type/cm^2/s, where wave_type is as above.
-        2. 'fnu':      erg/Hz/cm^2/s
-        3. 'fphotons': photons/wave_type/cm^2/s, where wave_type is as above.
-        4. '1':        dimensionless
-    Note that the `astropy.units.spectral_density` class includes units with dimensions of
+    The return value of ``spec`` should be a spectral density with units specified by ``flux_type``,
+    which should be an instance of ``astropy.units.Unit`` of equivalency class
+    ``astropy.units.spectral_density``, or one of the case-insensitive aliases:
+
+    1. 'flambda':  erg/wave_type/cm^2/s, where wave_type is as above.
+    2. 'fnu':      erg/Hz/cm^2/s
+    3. 'fphotons': photons/wave_type/cm^2/s, where wave_type is as above.
+    4. '1':        dimensionless
+
+    Note that the ``astropy.units.spectral_density`` class includes units with dimensions of
     [energy/time/area/unit-wavelength], [energy/time/area/unit-frequency],
     [photons/time/area/unit-wavelength], and so on.
 
-    Finally, the optional `fast` keyword option is used to specify when unit and dimension changes
-    are executed, particularly for SEDs specified by a LookupTable.  If `fast=True`, the default,
+    Finally, the optional ``fast`` keyword option is used to specify when unit and dimension changes
+    are executed, particularly for SEDs specified by a LookupTable.  If ``fast=True``, the default,
     then the input units/dimensions may be converted to an internal working unit before
-    interpolation in wavelength is performed.  Alternatively, `fast=False` implies that
-    interpolation should take place in the native units of the input `spec`, and subsequently flux
+    interpolation in wavelength is performed.  Alternatively, ``fast=False`` implies that
+    interpolation should take place in the native units of the input ``spec``, and subsequently flux
     density converted to photons/cm^2/s/nm afterwards.  Generally, the former option is faster, but
     may be less accurate since interpolation and dimensionality conversion do not commute.  One
-    consequence of using `fast=True` is that __call__ can not accept `astropy.units.Quantity`s in
-    this case.
+    consequence of using ``fast=True`` is that __call__ can not accept an ``astropy.units.Quantity``
+    in this case.
 
     Parameters:
         spec:        Function defining the z=0 spectrum at each wavelength.  See above for
                      valid options for this parameter.
-        wave_type:   String or astropy.unit specifying units for wavelength input to `spec`.
+        wave_type:   String or astropy.unit specifying units for wavelength input to ``spec``.
         flux_type:   String or astropy.unit specifying what type of spectral density or
-                     dimensionless normalization `spec` represents.  See above for valid options
+                     dimensionless normalization ``spec`` represents.  See above for valid options
                      for this parameter.
         redshift:    Optionally shift the spectrum to the given redshift. [default: 0]
         fast:        Convert units on initialization instead of on __call__. [default: True]
@@ -444,9 +447,9 @@ class SED(object):
         return out
 
     def __call__(self, wave):
-        """ Return photon flux density or dimensionless normalization at wavelength `wave`.
+        """ Return photon flux density or dimensionless normalization at wavelength ``wave``.
 
-        Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
+        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``
         attributes, the SED is considered undefined, and this method will raise an exception if a
         wavelength outside the defined range is passed as an argument.
 
@@ -666,8 +669,8 @@ class SED(object):
         return self.__add__(-1.0 * other)
 
     def withFluxDensity(self, target_flux_density, wavelength):
-        """ Return a new SED with flux density set to `target_flux_density` at wavelength
-        `wavelength`.  See ChromaticObject docstring for information about how SED normalization
+        """ Return a new SED with flux density set to ``target_flux_density`` at wavelength
+        ``wavelength``.  See ChromaticObject docstring for information about how SED normalization
         affects ChromaticObject normalization.
 
         Parameters:
@@ -692,7 +695,7 @@ class SED(object):
         return self * factor
 
     def withFlux(self, target_flux, bandpass):
-        """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`.  See
+        """ Return a new SED with flux through the Bandpass ``bandpass`` set to ``target_flux``.  See
         ChromaticObject docstring for information about how SED normalization affects
         ChromaticObject normalization.
 
@@ -708,9 +711,9 @@ class SED(object):
         return self * norm
 
     def withMagnitude(self, target_magnitude, bandpass):
-        """ Return a new SED with magnitude through `bandpass` set to `target_magnitude`.  Note
-        that this requires `bandpass` to have been assigned a zeropoint using
-        `Bandpass.withZeropoint()`.  See ChromaticObject docstring for information about how SED
+        """ Return a new SED with magnitude through ``bandpass`` set to ``target_magnitude``.  Note
+        that this requires ``bandpass`` to have been assigned a zeropoint using
+        `Bandpass.withZeropoint`.  See ChromaticObject docstring for information about how SED
         normalization affects ChromaticObject normalization.
 
         Parameters:
@@ -776,8 +779,8 @@ class SED(object):
                                bandpass.blue_limit, bandpass.red_limit)
 
     def calculateMagnitude(self, bandpass):
-        """ Return the SED magnitude through a Bandpass `bandpass`.  Note that this requires
-        `bandpass` to have been assigned a zeropoint using `Bandpass.withZeropoint()`.
+        """ Return the SED magnitude through a Bandpass ``bandpass``.  Note that this requires
+        ``bandpass`` to have been assigned a zeropoint using `Bandpass.withZeropoint`.
 
         Parameters:
             bandpass:     A Bandpass object representing a filter, or None to compute the
@@ -799,7 +802,7 @@ class SED(object):
     def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
         """ If the SED was initialized with a LookupTable or from a file (which internally creates a
         LookupTable), then remove tabulated values while keeping the integral over the set of
-        tabulated values still accurate to `rel_err`.
+        tabulated values still accurate to ``rel_err``.
 
         Parameters:
             rel_err:          The relative error allowed in the integral over the SED
@@ -807,9 +810,9 @@ class SED(object):
             trim_zeros:       Remove redundant leading and trailing points where f=0?  (The last
                               leading point with f=0 and the first trailing point with f=0 will
                               be retained).  Note that if both trim_leading_zeros and
-                              preserve_range are True, then the only the range of `x` *after*
+                              preserve_range are True, then the only the range of ``x`` *after*
                               zero trimming is preserved.  [default: True]
-            preserve_range:   Should the original range (`blue_limit` and `red_limit`) of the
+            preserve_range:   Should the original range (``blue_limit`` and ``red_limit``) of the
                               SED be preserved? (True) Or should the ends be trimmed to
                               include only the region where the integral is significant? (False)
                               [default: True]
@@ -907,7 +910,7 @@ class SED(object):
 
     def calculateSeeingMomentRatio(self, bandpass, alpha=-0.2, base_wavelength=500):
         """ Calculates the relative size of a PSF compared to the monochromatic PSF size at
-        wavelength `base_wavelength`.
+        wavelength ``base_wavelength``.
 
         Parameters:
             bandpass:           Bandpass through which object is being imaged.
@@ -946,7 +949,7 @@ class SED(object):
             bandpass:    A Bandpass object representing a filter, or None to sample over the full
                          SED wavelength range.
             rng:         If provided, a random number generator that is any kind of BaseDeviate
-                         object. If `rng` is None, one will be automatically created from the
+                         object. If ``rng`` is None, one will be automatically created from the
                          system. [default: None]
             npoints:     Number of points DistDeviate should use for its internal interpolation
                          tables. [default: None, which uses the DistDeviate default]

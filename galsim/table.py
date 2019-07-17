@@ -56,7 +56,7 @@ class LookupTable(object):
 
 
     The default interpolation method is a natural cubic spline.  This is usually the best choice,
-    but we also provide other options, which can be specified by the `interpolant` kwarg.  The
+    but we also provide other options, which can be specified by the ``interpolant`` kwarg.  The
     choices include 'floor', 'ceil', 'linear', 'spline', or a galsim.Interpolant object:
 
     - 'floor' takes the value from the previous argument in the table.
@@ -72,7 +72,7 @@ class LookupTable(object):
     interpolant instead of galsim.Nearest or galsim.Linear, though the latter options can still be
     used by passing an Interpolant object instead of a string.  Also note that to use a
     galsim.Interpolant in a LookupTable, the input data must be equally spaced, or logarithmically
-    spaced if `x_log` is set to True (see below).  Finally, although natural cubic spline used when
+    spaced if ``x_log`` is set to True (see below).  Finally, although natural cubic spline used when
     interpolant='spline' and the cubic convolution interpolant used when interpolant=galsim.Cubic
     both produce piecewise cubic polynomial interpolations, their treatments of the continuity of
     derivatives are different (the natural spline is smoother).
@@ -89,9 +89,9 @@ class LookupTable(object):
     log(f) rather than x and f.
 
     Parameters:
-        x:              The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
+        x:              The list, tuple, or NumPy array of ``x`` values (floats, doubles, or ints,
                         which get silently converted to floats for the purpose of interpolation).
-        f:              The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
+        f:              The list, tuple, or NumPy array of ``f(x)`` values (floats, doubles, or ints,
                         which get silently converted to floats for the purpose of interpolation).
         interpolant:    The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
                         'linear', 'spline', or a galsim.Interpolant or string convertible to one.
@@ -178,23 +178,23 @@ class LookupTable(object):
     def __len__(self): return len(self.x)
 
     def __call__(self, x):
-        """Interpolate the LookupTable to get `f(x)` at some `x` value(s).
+        """Interpolate the LookupTable to get ``f(x)`` at some ``x`` value(s).
 
         When the LookupTable object is called with a single argument, it returns the value at that
-        argument.  An exception will be thrown automatically by the _LookupTable class if the `x`
+        argument.  An exception will be thrown automatically by the _LookupTable class if the ``x``
         value is outside the range of the original tabulated values.  The value that is returned is
-        the same type as that provided as an argument, e.g., if a single value `x` is provided then
-        a single value of `f` is returned; if a tuple of `x` values is provided then a tuple of `f`
-        values is returned; and so on.  Even if interpolation was done using the `x_log` option,
-        the user should still provide `x` rather than `log(x)`.
+        the same type as that provided as an argument, e.g., if a single value ``x`` is provided then
+        a single value of ``f`` is returned; if a tuple of ``x`` values is provided then a tuple of ``f``
+        values is returned; and so on.  Even if interpolation was done using the ``x_log`` option,
+        the user should still provide ``x`` rather than ``log(x)``.
 
         Parameters:
-            x:      The `x` value(s) for which `f(x)` should be calculated via interpolation on
-                    the original `(x,f)` lookup table.  `x` can be a single float/double, or a
+            x:      The ``x`` value(s) for which ``f(x)`` should be calculated via interpolation on
+                    the original ``(x,f)`` lookup table.  ``x`` can be a single float/double, or a
                     tuple, list, or arbitrarily shaped 1- or 2-dimensional NumPy array.
 
         Returns:
-            the interpolated `f(x)` value(s).
+            the interpolated ``f(x)`` value(s).
         """
         # Check that all x values are in the allowed range
         self._check_range(x)
@@ -288,7 +288,7 @@ class LookupTable(object):
         This reads in a file, which should contain two columns with the x and f values.
 
         Parameters:
-            file_name:      A file from which to read the `(x,f)` pairs.
+            file_name:      A file from which to read the ``(x,f)`` pairs.
             interpolant:    Type of interpolation to use. [default: 'spline']
             x_log:          Whether the x values should be uniform in log rather than lienar.
                             [default: False]
@@ -366,8 +366,8 @@ class LookupTable2D(object):
     LookupTable2D is also useful for evaluating periodic 2-d functions given samples from a single
     period.
 
-    A LookupTable2D representing the function f(x, y) may be constructed from a list or array of `x`
-    values, a list or array of `y` values, and a 2D array of function evaluations at all
+    A LookupTable2D representing the function f(x, y) may be constructed from a list or array of ``x``
+    values, a list or array of ``y`` values, and a 2D array of function evaluations at all
     combinations of x and y values.  For instance::
 
         >>> x = np.arange(5)
@@ -387,7 +387,7 @@ class LookupTable2D(object):
         >>> print tab2d([1, 2], [3, 5])
         array([ 4., 7.])
 
-    If you add `grid=True` as an additional kwarg, however, then the () operator will generate
+    If you add ``grid=True`` as an additional kwarg, however, then the () operator will generate
     interpolated values at the outer product of x-values and y-values.  So in this case, the x and
     y sequences can have different lengths Nx and Ny, and the result will be a 2D array with
     dimensions (Nx, Ny)::
@@ -422,12 +422,14 @@ class LookupTable2D(object):
     interpolation (these derivatives will be estimated from finite differences if they're not
     provided).
 
-    The `edge_mode` keyword describes how to handle extrapolation beyond the initial input range.
+    The ``edge_mode`` keyword describes how to handle extrapolation beyond the initial input range.
     Possibilities include:
+
       - 'raise': raise an exception.  (This is the default.)
       - 'warn': issues a warning, then falls back to edge_mode='constant'.
-      - 'constant': Return a constant specified by the `constant` keyword.
+      - 'constant': Return a constant specified by the ``constant`` keyword.
       - 'wrap': infinitely wrap the initial range in both directions.
+
     In order for LookupTable2D to determine the wrapping period when edge_mode='wrap', either the
     x and y grid points need to be equally spaced (in which case the x-period is inferred as
     len(x)*(x[1]-x[0]) and similarly for y), or the first/last row/column of f must be identical,
@@ -464,8 +466,8 @@ class LookupTable2D(object):
         4.0
 
     Parameters:
-        x:              Strictly increasing array of `x` positions at which to create table.
-        y:              Strictly increasing array of `y` positions at which to create table.
+        x:              Strictly increasing array of ``x`` positions at which to create table.
+        y:              Strictly increasing array of ``y`` positions at which to create table.
         f:              Nx by Ny input array of function values.
         dfdx:           Optional first derivative of f wrt x.  Only used if interpolant='spline'.
                         [default: None]
@@ -479,7 +481,7 @@ class LookupTable2D(object):
         edge_mode:      Keyword controlling how extrapolation beyond the input range is handled.
                         See above for details.  [default: 'raise']
         constant:       A constant to return when extrapolating beyond the input range and
-                        `edge_mode='constant'`.  [default: 0]
+                        ``edge_mode='constant'``.  [default: 0]
     """
     def __init__(self, x, y, f, dfdx=None, dfdy=None, d2fdxdy=None,
                  interpolant='linear', edge_mode='raise', constant=0):

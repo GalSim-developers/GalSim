@@ -35,7 +35,7 @@ class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
     function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and
     refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.
-    Bandpasses representing individual components may be combined through the `*` operator to form
+    Bandpasses representing individual components may be combined through the ``*`` operator to form
     a new Bandpass object representing the composite optical path.
 
     Bandpasses are callable, returning dimensionless throughput as a function of wavelength in nm.
@@ -43,48 +43,51 @@ class Bandpass(object):
     Bandpasses are immutable; all transformative methods return *new* Bandpasses, and leave their
     originating Bandpasses unaltered.
 
-    Bandpasses require `blue_limit` and `red_limit` attributes, which may either be explicitly set
+    Bandpasses require ``blue_limit`` and ``red_limit`` attributes, which may either be explicitly set
     at initialization, or are inferred from the initializing galsim.LookupTable or 2-column file.
 
-    Outside of the wavelength interval between `blue_limit` and `red_limit`, the throughput is
-    returned as zero, regardless of the `throughput` input parameter.
+    Outside of the wavelength interval between ``blue_limit`` and ``red_limit``, the throughput is
+    returned as zero, regardless of the ``throughput`` input parameter.
 
     Bandpasses may be multiplied by other Bandpasses, functions, scalars, or SEDs.  The product of a
     Bandpass with an SED is a new SED.
 
-    The Bandpass effective wavelength is stored in the python property `effective_wavelength`. We
+    The Bandpass effective wavelength is stored in the python property ``effective_wavelength``. We
     use throughput-weighted average wavelength (which is independent of any SED) as our definition
     for effective wavelength.
 
-    For Bandpasses defined using a LookupTable, a numpy.array of wavelengths, `wave_list`, defining
+    For Bandpasses defined using a LookupTable, a numpy.array of wavelengths, ``wave_list``, defining
     the table is maintained.  Bandpasses defined as products of two other Bandpasses will define
-    their `wave_list` as the union of multiplicand `wave_list`s, although limited to the range
-    between the new product `blue_limit` and `red_limit`.  (This implementation detail may affect
-    the choice of integrator used to draw ChromaticObjects.)
+    their ``wave_list`` as the union of multiplicand ``wave_list`` values, although limited to the
+    range between the new product ``blue_limit`` and ``red_limit``.  (This implementation detail
+    may affect the choice of integrator used to draw ChromaticObjects.)
 
     The input parameter, throughput, may be one of several possible forms:
+
     1. a regular python function (or an object that acts like a function)
     2. a galsim.LookupTable
     3. a file from which a LookupTable can be read in
-    4. a string which can be evaluated into a function of `wave`
-       via `eval('lambda wave : '+throughput)`
+    4. a string which can be evaluated into a function of ``wave``
+       via ``eval('lambda wave : '+throughput)``
        e.g. throughput = '0.8 + 0.2 * (wave-800)'
 
-    The argument of `throughput` will be the wavelength in units specified by `wave_type`. (See
+    The argument of ``throughput`` will be the wavelength in units specified by ``wave_type``. (See
     below.) The output should be the dimensionless throughput at that wavelength.  (Note we use
-    `wave` rather than `lambda`, since `lambda` is a python reserved word.)
+    ``wave`` rather than ``lambda``, since ``lambda`` is a python reserved word.)
 
-    The argument `wave_type` specifies the units to assume for wavelength and must be one of
+    The argument ``wave_type`` specifies the units to assume for wavelength and must be one of
     'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms', or an astropy
     distance unit.  (For the string values, case is unimportant.)  If given, blue_limit and
     red_limit are taken to be in these units as well.
 
-    Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
+    Note that the ``wave_type`` parameter does not propagate into other methods of `Bandpass`.
     For instance, Bandpass.__call__ assumes its input argument is in nanometers.
 
     Finally, a Bandpass may have zeropoint attribute, which is a float used to convert flux
-    (in photons/s/cm^2) to magnitudes:
+    (in photons/s/cm^2) to magnitudes::
+
         mag = -2.5*log10(flux) + zeropoint
+
     You can either set the zeropoint at initialization, or via the `withZeropoint` method.  Note
     that the zeropoint attribute does not propagate if you get a new Bandpass by multiplying or
     dividing an old Bandpass.
@@ -92,7 +95,7 @@ class Bandpass(object):
     Parameters:
         throughput:     Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
-        wave_type:      The units to use for the wavelength argument of the `throughput`
+        wave_type:      The units to use for the wavelength argument of the ``throughput``
                         function. See above for details.
         blue_limit:     Hard cut off of bandpass on the blue side. [default: None, but required
                         if throughput is not a LookupTable or file.  See above.]
@@ -322,7 +325,7 @@ class Bandpass(object):
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
 
-        Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
+        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``
         attributes, the throughput is assumed to be zero.
 
         Parameters:
@@ -373,12 +376,15 @@ class Bandpass(object):
     def withZeropoint(self, zeropoint):
         """ Assign a zeropoint to this Bandpass.
 
-        A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes:
+        A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes::
+
             mag = -2.5*log10(flux) + zeropoint
+
         Note that the zeropoint attribute does not propagate if you get a new Bandpass by
         multiplying or dividing an old Bandpass.
 
-        The `zeropoint` argument can take a variety of possible forms:
+        The ``zeropoint`` argument can take a variety of possible forms:
+
         1. a number, which will be the zeropoint
         2. a galsim.SED.  In this case, the zeropoint is set such that the magnitude of the supplied
            SED through the bandpass is 0.0
@@ -428,9 +434,9 @@ class Bandpass(object):
                  preserve_zp='auto'):
         """Return a bandpass with its wavelength range truncated.
 
-        This function truncate the range of the bandpass either explicitly (with `blue_limit` or
-        `red_limit` or both) or automatically, just trimming off leading and trailing wavelength
-        ranges where the relative throughput is less than some amount (`relative_throughput`).
+        This function truncate the range of the bandpass either explicitly (with ``blue_limit`` or
+        ``red_limit`` or both) or automatically, just trimming off leading and trailing wavelength
+        ranges where the relative throughput is less than some amount (``relative_throughput``).
 
         This second option using relative_throughput is only available for bandpasses initialized
         with a LookupTable or from a file, not when using a regular python function or a string
@@ -443,7 +449,7 @@ class Bandpass(object):
         possibilities for what should happen to the new (returned) bandpass by default.  If red
         and/or blue limits are given, then the new bandpass will have no assigned zeropoint because
         it is difficult to predict what should happen if the bandpass is being arbitrarily
-        truncated.  If `relative_throughput` is given, often corresponding to low-level truncation
+        truncated.  If ``relative_throughput`` is given, often corresponding to low-level truncation
         that results in little change in observed quantities, then the new bandpass is assigned the
         same zeropoint as the original.  This default behavior is called 'auto'.  The user can also
         give boolean True or False values.
@@ -455,18 +461,18 @@ class Bandpass(object):
                                     [default: None]
             relative_throughput:    Truncate leading or trailing wavelengths that are below
                                     this relative throughput level.  (See above for details.)
-                                    Either `blue_limit` and/or `red_limit` should be supplied, or
-                                    `relative_throughput` should be supplied -- but
-                                    `relative_throughput` should not be combined with one of the
+                                    Either ``blue_limit`` and/or ``red_limit`` should be supplied,
+                                    or ``relative_throughput`` should be supplied -- but
+                                    ``relative_throughput`` should not be combined with one of the
                                     limits.
                                     [default: None]
             preserve_zp:            If True, the new truncated Bandpass will be assigned the same
                                     zeropoint as the original.  If False, the new truncated Bandpass
                                     will have a zeropoint of None. If 'auto', the new truncated
                                     Bandpass will have the same zeropoint as the original when
-                                    truncating using `relative_throughput`, but will have a
+                                    truncating using ``relative_throughput``, but will have a
                                     zeropoint of None when truncating using 'blue_limit' and/or
-                                   'red_limit'.  [default: 'auto']
+                                    'red_limit'.  [default: 'auto']
 
         Returns:
             the truncated Bandpass.
@@ -530,16 +536,16 @@ class Bandpass(object):
         over the set of tabulated values still accurate to the given relative error.
 
         That is, the integral of the bandpass function is preserved to a relative precision
-        of `rel_err`, while eliminating as many internal wavelength values as possible.  This
+        of ``rel_err``, while eliminating as many internal wavelength values as possible.  This
         process will usually help speed up integrations using this bandpass.  You should weigh
         the speed improvements against your fidelity requirements for your particular use
         case.
 
         By default, this routine will preserve the zeropoint of the original bandpass by assigning
         it to the new thinned bandpass.  The justification for this choice is that when using an AB
-        zeropoint, a typical optical bandpass, and the default thinning `rel_err` value, the
+        zeropoint, a typical optical bandpass, and the default thinning ``rel_err`` value, the
         zeropoint for the new and thinned bandpasses changes by 10^-6.  However, if you are thinning
-        a lot, and/or want to do extremely precise tests, you can set `preserve_zp=False` and then
+        a lot, and/or want to do extremely precise tests, you can set ``preserve_zp=False`` and then
         recalculate the zeropoint after thinning.
 
         Parameters:
@@ -548,9 +554,9 @@ class Bandpass(object):
             trim_zeros:     Remove redundant leading and trailing points where f=0?  (The last
                             leading point with f=0 and the first trailing point with f=0 will
                             be retained).  Note that if both trim_leading_zeros and
-                            preserve_range are True, then the only the range of `x` *after*
+                            preserve_range are True, then the only the range of ``x`` *after*
                             zero trimming is preserved.  [default: True]
-            preserve_range: Should the original range (`blue_limit` and `red_limit`) of the
+            preserve_range: Should the original range (``blue_limit`` and ``red_limit``) of the
                             Bandpass be preserved? (True) Or should the ends be trimmed to
                             include only the region where the integral is significant? (False)
                             [default: True]

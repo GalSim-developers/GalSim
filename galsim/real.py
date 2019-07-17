@@ -1083,7 +1083,8 @@ class ChromaticRealGalaxy(ChromaticSum):
         Parameters:
             images:             An iterable of high resolution ``Images`` of a galaxy through
                                 different bandpasses.
-            bands:              An iterable of ``Bandpass``es corresponding to the input images.
+            bands:              An iterable of ``Bandpass`` objects corresponding to the  input
+                                images.
             PSFs:               Either an iterable of ``GSObject`` or ``ChromaticObject``
                                 indicating the PSFs of the different input images, or potentially a
                                 single ``GSObject`` or ``ChromaticObject`` that will be used as the
