@@ -52,19 +52,19 @@ chromatic PSFs.  For example, a diffraction limited PSF might look like::
 
 
 Spectral Energy Distributions
------------------------------
+=============================
 
 .. autoclass:: galsim.SED
     :members:
 
 Bandpass Filters
-----------------
+================
 
 .. autoclass:: galsim.Bandpass
     :members:
 
 Chromatic Profiles
-------------------
+==================
 
 .. autoclass:: galsim.ChromaticObject
     :members:
@@ -106,7 +106,7 @@ Chromatic Profiles
     :members:
 
 Spectral Correlated Noise
--------------------------
+=========================
 
 .. autoclass:: galsim.CovarianceSpectrum
     :members:

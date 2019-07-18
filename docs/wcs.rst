@@ -23,8 +23,8 @@ There are two kinds of world coordinates that we use here:
 The classes in this file provide a mapping from image coordinates (in pixels) to one of these
 two kinds of world coordinates.  We use the labels ``(x,y)`` for the image coordinates.
 
-Base Classes
-------------
+WCS Base Classes
+================
 
 .. autoclass:: galsim.BaseWCS
     :members:
@@ -42,7 +42,7 @@ Base Classes
     :members:
 
 Euclidean WCS's
----------------
+===============
 
 .. autoclass:: galsim.PixelScale
     :members:
@@ -67,7 +67,7 @@ Euclidean WCS's
 
 
 Celestial WCS's
----------------
+===============
 
 .. autoclass:: galsim.RaDecFunction
     :members:
@@ -90,7 +90,7 @@ Celestial WCS's
 
 
 WCS Utilities
--------------
+=============
 
 .. autofunction:: galsim.wcs.readFromFitsHeader
 
