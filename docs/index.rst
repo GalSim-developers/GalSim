@@ -14,6 +14,7 @@ GalSim: The modular galaxy image simulation toolkit
     noise
     chromatic
     shear
+    coord
     utilities
     config
     hsm

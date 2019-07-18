@@ -3,7 +3,7 @@ Weak Lensing Shear
 ##################
 
 The Shear class
----------------
+===============
 
 .. autoclass:: galsim.Shear
     :members:
@@ -12,13 +12,13 @@ The Shear class
 
 
 Power Spectrum Shears
----------------------
+=====================
 
 .. autoclass:: galsim.PowerSpectrum
     :members:
 
 NFW Halo Shears
----------------
+===============
 
 .. autoclass:: galsim.NFWHalo
     :members:

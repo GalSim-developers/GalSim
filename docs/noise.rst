@@ -8,7 +8,7 @@ way.  GalSim has a number of classes to help inject these kinds of randomness in
 simulations.
 
 Random Variates
----------------
+===============
 
 .. autoclass:: galsim.BaseDeviate
     :members:
@@ -38,7 +38,7 @@ Random Variates
     :members:
 
 Noise Generators
-----------------
+================
 
 .. autoclass:: galsim.BaseNoise
     :members:
@@ -59,7 +59,7 @@ Noise Generators
     :members:
 
 Correlated Noise Generators
----------------------------
+===========================
 
 .. autoclass:: galsim.correlatednoise._BaseCorrelatedNoise
     :members:
