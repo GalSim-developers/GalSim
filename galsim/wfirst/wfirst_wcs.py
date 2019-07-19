@@ -81,39 +81,44 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     This routine returns a dict containing a WCS for each of the WFIRST SCAs (Sensor Chip Array, the
     equivalent of a chip in an optical CCD).  The WFIRST SCAs are labeled 1-18, so these numbers are
     used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the
-    `SCAs` option.  The basic instrument parameters used to create the WCS correspond to those in
+    ``SCAs`` option.  The basic instrument parameters used to create the WCS correspond to those in
     Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of
     the focal plane axes relative to the payload axes, and two rows of SCAs are swapped.
 
     The user must specify a position for observation, at which the center of the focal plane array
-    will point.  This must be supplied as a CelestialCoord `world_pos`.  In general, only certain
+    will point.  This must be supplied as a CelestialCoord ``world_pos``.  In general, only certain
     positions are observable on certain dates, and for a given position there is an optimal position
     angle for the observatory (with the solar panels pointed as directly towards the sun as
     possible).  Users who are knowledgable about these details may choose to supply a position angle
-    as `PA`, either for the observatory or for the focal plane (using `PA_is_FPA` to indicate this).
-    But otherwise, the routine will simply choose the optimal position angle for a given date.
+    as ``PA``, either for the observatory or for the focal plane (using ``PA_is_FPA`` to indicate
+    this).  But otherwise, the routine will simply choose the optimal position angle for a given
+    date.
 
     To fully understand all possible inputs and outputs to this routine, users may wish to consult
     the diagram on the GalSim wiki,
     https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams
 
-    @param world_pos A galsim.CelestialCoord indicating the position to observe at the center of the
-                     focal plane array (FPA).  Note that if the given position is not observable on
-                     the given date, then the routine will raise an exception.
-    @param PA        galsim.Angle representing the position angle of the observatory +Y axis, unless
-                     `PA_is_FPA=True`, in which case it's the position angle of the FPA.  For users
-                     to do not care about this, then leaving this as None will result in the routine
-                     using the supplied `date` and `world_pos` to select the optimal orientation for
-                     the observatory.  Note that if a user supplies a `PA` value, the routine does
-                     not check whether this orientation is actually allowed.  [default: None]
-    @param date      The date of the observation, as a python datetime object.  If None, then the
-                     vernal equinox in 2025 will be used.  [default: None]
-    @param PA_is_FPA If True, then the position angle that was provided was the PA of the focal
-                     plane array, not the observatory. [default: False]
-    @param SCAs      A single number or iterable giving the SCAs for which the WCS should be
-                     obtained.  If None, then the WCS is calculated for all SCAs.
-                     [default: None]
-    @returns a dict of WCS objects for each SCA.
+    Parameters:
+        world_pos:      A `galsim.CelestialCoord` indicating the position to observe at the center
+                        of the focal plane array (FPA).  Note that if the given position is not
+                        observable on the given date, then the routine will raise an exception.
+        PA:             A `galsim.Angle` representing the position angle of the observatory +Y
+                        axis, unless ``PA_is_FPA=True``, in which case it's the position angle of
+                        the FPA.  For users to do not care about this, then leaving this as None
+                        will result in the routine using the supplied ``date`` and ``world_pos`` to
+                        select the optimal orientation for the observatory.  Note that if a user
+                        supplies a ``PA`` value, the routine does not check whether this orientation
+                        is actually allowed.  [default: None]
+        date:           The date of the observation, as a python datetime object.  If None, then the
+                        vernal equinox in 2025 will be used.  [default: None]
+        PA_is_FPA:      If True, then the position angle that was provided was the PA of the focal
+                        plane array, not the observatory. [default: False]
+        SCAs:           A single number or iterable giving the SCAs for which the WCS should be
+                        obtained.  If None, then the WCS is calculated for all SCAs.
+                        [default: None]
+
+    Returns:
+        A dict of WCS objects for each SCA.
     """
     # First just parse the input quantities.
     date, SCAs, pa_fpa, pa_obsy = _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs)
@@ -251,7 +256,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
 
 def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*galsim.arcsec):
     """
-    This is a simple helper routine that takes an input position `world_pos` that is meant to
+    This is a simple helper routine that takes an input position ``world_pos`` that is meant to
     correspond to the position of the center of an SCA, and tells where the center of the focal
     plane array should be.  The goal is to provide a position that can be used as an input to
     getWCS(), which wants the center of the focal plane array.
@@ -261,31 +266,35 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*g
     does.
 
     Because of distortions varying across the focal plane, this routine has to iteratively correct
-    its initial result based on empirical tests.  The `tol` kwarg can be used to adjust how careful
-    it will be, but it always does at least one iteration.
+    its initial result based on empirical tests.  The ``tol`` kwarg can be used to adjust how
+    careful it will be, but it always does at least one iteration.
 
     To fully understand all possible inputs and outputs to this routine, users may wish to consult
     the diagram on the GalSim wiki,
     https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams
 
-    @param world_pos A galsim.CelestialCoord indicating the position to observe at the center of the
-                     given SCA.  Note that if the given position is not observable on
-                     the given date, then the routine will raise an exception.
-    @param SCA       A single number giving the SCA for which the center should be located at
-                     `world_pos`.
-    @param PA        galsim.Angle representing the position angle of the observatory +Y axis, unless
-                     `PA_is_FPA=True`, in which case it's the position angle of the FPA.  For users
-                     to do not care about this, then leaving this as None will result in the routine
-                     using the supplied `date` and `world_pos` to select the optimal orientation for
-                     the observatory.  Note that if a user supplies a `PA` value, the routine does
-                     not check whether this orientation is actually allowed.  [default: None]
-    @param date      The date of the observation, as a python datetime object.  If None, then the
-                     vernal equinox in 2025 will be used.  [default: None]
-    @param PA_is_FPA If True, then the position angle that was provided was the PA of the focal
-                     plane array, not the observatory. [default: False]
-    @param tol       Tolerance for errors due to distortions, as a galsim.Angle. 
-                     [default: 0.5*galsim.arcsec]
-    @returns a CelestialCoord object indicating the center of the focal plane array.
+    Parameters:
+        world_pos:  A galsim.CelestialCoord indicating the position to observe at the center of the
+                    given SCA.  Note that if the given position is not observable on
+                    the given date, then the routine will raise an exception.
+        SCA:        A single number giving the SCA for which the center should be located at
+                    ``world_pos``.
+        PA:         galsim.Angle representing the position angle of the observatory +Y axis, unless
+                    ``PA_is_FPA=True``, in which case it's the position angle of the FPA.  For
+                    users to do not care about this, then leaving this as None will result in the
+                    routine using the supplied ``date`` and ``world_pos`` to select the optimal
+                    orientation for the observatory.  Note that if a user supplies a ``PA`` value,
+                    the routine does not check whether this orientation is actually allowed.
+                    [default: None]
+        date:       The date of the observation, as a python datetime object.  If None, then the
+                    vernal equinox in 2025 will be used.  [default: None]
+        PA_is_FPA:  If True, then the position angle that was provided was the PA of the focal
+                    plane array, not the observatory. [default: False]
+        tol:        Tolerance for errors due to distortions, as a galsim.Angle. 
+                    [default: 0.5*galsim.arcsec]
+
+    Returns:
+        A CelestialCoord object indicating the center of the focal plane array.
     """
     if not isinstance(SCA, int):
         raise TypeError("Must pass in an int corresponding to the SCA")
@@ -317,26 +326,29 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*g
 def findSCA(wcs_dict, world_pos, include_border=False):
     """
     This is a subroutine to take a dict of WCS (one per SCA) from galsim.wfirst.getWCS() and query
-    which SCA a particular real-world coordinate would be located on.  The position (`world_pos`)
+    which SCA a particular real-world coordinate would be located on.  The position (``world_pos``)
     should be specified as a galsim.CelestialCoord.  If the position is not located on any of the
-    SCAs, the result will be None.  Note that if `wcs_dict` does not include all SCAs in it, then
+    SCAs, the result will be None.  Note that if ``wcs_dict`` does not include all SCAs in it, then
     it's possible the position might lie on one of the SCAs that was not included.
 
     Depending on what the user wants to do with the results, they may wish to use the
-    `include_border` keyword.  This keyword determines whether or not to include an additional
+    ``include_border`` keyword.  This keyword determines whether or not to include an additional
     border corresponding to half of the gaps between SCAs.  For example, if a user is drawing a
     single image they may wish to only know whether a given position falls onto an SCA, and if so,
     which one (ignoring everything in the gaps).  In contrast, a user who plans to make a sequence
     of dithered images might find it most useful to know whether the position is either on an SCA or
     close enough that in a small dither sequence it might appear on the SCA at some point.  Use of
-    `include_border` switches between these scenarios.
+    ``include_border`` switches between these scenarios.
 
-    @param wcs_dict         The dict of WCS's output from galsim.wfirst.getWCS().
-    @param world_pos        A galsim.CelestialCoord indicating the sky position of interest.
-    @param include_border   If True, then include the half-border around SCA to cover the gap
+    Parameters:
+        wcs_dict         The dict of WCS's output from galsim.wfirst.getWCS().
+        world_pos        A galsim.CelestialCoord indicating the sky position of interest.
+        include_border   If True, then include the half-border around SCA to cover the gap
                             between each sensor. [default: False]
-    @returns an integer value of the SCA on which the position falls, or None if the position is not
-             on any SCA.
+
+    Returns:
+        an integer value of the SCA on which the position falls, or None if the position is not
+        on any SCA.
 
     """
     # Sanity check args.
@@ -368,10 +380,13 @@ def _calculate_minmax_pix(include_border=False):
     considered within an SCA, possibly including the complexities of including 1/2 of the gap
     between SCAs.  In that case it depends on the detailed geometry of the WFIRST focal plane.
 
-    @param include_border   A boolean value that determines whether to include 1/2 of the gap
+    Parameters:
+        include_border      A boolean value that determines whether to include 1/2 of the gap
                             between SCAs as part of the SCA itself.  [default: False]
-    @returns a tuple of NumPy arrays for the minimum x pixel value, maximum x pixel value, minimum y
-             pixel value, and maximum y pixel value for each SCA.
+
+    Returns:
+        a tuple of NumPy arrays for the minimum x pixel value, maximum x pixel value, minimum y
+        pixel value, and maximum y pixel value for each SCA.
     """
     # First, set up the default (no border).
     # The minimum and maximum pixel values are (1, n_pix).
@@ -518,8 +533,8 @@ def _det_to_tangplane_positions(x_in, y_in):
 
 def _get_sca_center_pos(i_sca, world_pos, pa_fpa):
     """
-    This helper routine calculates the center position for a given SCA `sca` given the position of
-    the center of the focal plane array `world_pos` and an orientation angle for the observation.
+    This helper routine calculates the center position for a given SCA ``sca`` given the position of
+    the center of the focal plane array ``world_pos`` and an orientation angle for the observation.
     It is used by getWCS() and other routines.
     """
     # Set the position of center of this SCA in focal plane angular coordinates.
@@ -592,7 +607,7 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
 def allowedPos(world_pos, date):
     """
     This routine can be used to check whether WFIRST would be allowed to look at a particular
-    position (`world_pos`) on a given `date`.   This is determined by the angle of this position
+    position (``world_pos``) on a given ``date``.   This is determined by the angle of this position
     relative to the Sun.
 
     In general, WFIRST can point at angles relative to the Sun in the range 90+/-36 degrees.
@@ -603,11 +618,13 @@ def allowedPos(world_pos, date):
     always optimal for the observatory to be pointing at an angle of 90 degrees relative to the
     Sun.  It is also permitted to look within 36 degrees of that optimal position.
 
-    @param world_pos      A galsim.CelestialCoord indicating the position at which the observer
-                          wishes to look.
-    @param date           A python datetime object indicating the desired date of observation.
-    @returns True or False, indicating whether it is permitted to look at this position on this
-             date.
+    Parameters:
+        world_pos:      A galsim.CelestialCoord indicating the position at which the observer
+                        wishes to look.
+        date:           A python datetime object indicating the desired date of observation.
+
+    Returns:
+        True or False, indicating whether it is permitted to look at this position on this date.
     """
     # Find the Sun's location on the sky on this date.
     lam = coord.util.sun_position_ecliptic(date)
@@ -628,14 +645,17 @@ def bestPA(world_pos, date):
 
     The best/optimal position angle is determined by the fact that the solar panels are at 90
     degrees to the position being observed, and it is best to have those facing the Sun as directly
-    as possible.  Note that if a given `world_pos` is not actually observable on the given `date`,
-    then this routine will return None.
+    as possible.  Note that if a given ``world_pos`` is not actually observable on the given
+    ``date``, then this routine will return None.
 
-    @param world_pos      A galsim.CelestialCoord indicating the position at which the observer
-                          wishes to look.
-    @param date           A python datetime object indicating the desired date of observation.
-    @returns the best position angle for the observatory, as a galsim.Angle, or None if the position
-             is not observable.
+    Parameters:
+        world_pos:      A galsim.CelestialCoord indicating the position at which the observer
+                        wishes to look.
+        date:           A python datetime object indicating the desired date of observation.
+
+    Returns:
+        the best position angle for the observatory, as a galsim.Angle, or None if the position
+        is not observable.
     """
     # First check for observability.
     if not allowedPos(world_pos, date):

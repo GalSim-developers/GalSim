@@ -31,33 +31,36 @@ from . import exptime as default_exptime
 
 def applyNonlinearity(img):
     """
-    Applies the WFIRST nonlinearity function to the supplied image `im`.
+    Applies the WFIRST nonlinearity function to the supplied image ``im``.
 
     For more information about nonlinearity, see the docstring for galsim.Image.applyNonlinearity.
     Unlike that routine, this one does not require any arguments, since it uses the nonlinearity
     function defined within the WFIRST module.
 
-    After calling this method, the Image instance `img` is transformed to include the nonlinearity.
+    After calling this method, the Image instance ``img`` is transformed to include the
+    nonlinearity.
 
-    @param img              The Image to be transformed.
+    Parameters:
+        img             The Image to be transformed.
     """
     img.applyNonlinearity(NLfunc=galsim.wfirst.NLfunc)
 
 def addReciprocityFailure(img, exptime=default_exptime):
     """
     Accounts for the reciprocity failure for the WFIRST directors and includes it in the original
-    Image `img` directly.
+    Image ``img`` directly.
 
     For more information about reciprocity failure, see the docstring for
     galsim.Image.addReciprocityFailure.  Unlike that routine, this one does not need the parameters
     for reciprocity failure to be provided, though it still takes exposure time as an optional
     argument.
 
-    @param img              The Image to be transformed.
-    @param exptime          The exposure time (t) in seconds, which goes into the expression for
-                            reciprocity failure given in the docstring.  If None, then the routine
-                            will use the default WFIRST exposure time in galsim.wfirst.exptime.
-                            [default: {exptime}]
+    Parameters:
+        img:            The Image to be transformed.
+        exptime:        The exposure time (t) in seconds, which goes into the expression for
+                        reciprocity failure given in the docstring.  If None, then the routine
+                        will use the default WFIRST exposure time in galsim.wfirst.exptime.
+                        [default: {exptime}]
     """.format(exptime=default_exptime)
     img.addReciprocityFailure(exp_time=exptime, alpha=galsim.wfirst.reciprocity_alpha,
                               base_flux=1.0)
@@ -70,15 +73,16 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
     routine, this one does not need the IPC kernel to be specified, since it uses the IPC kernel
     defined within the WFIRST module.
 
-    @param img                     The Image to be transformed.
-    @param edge_treatment          Specifies the method of handling edges and should be one of
-                                   'crop', 'extend' or 'wrap'. See galsim.Image.applyIPC docstring
-                                   for more information.
-                                   [default: 'extend']
-    @param fill_value              Specifies the value (including nan) to fill the edges with when
-                                   edge_treatment is 'crop'. If unspecified or set to 'None', the
-                                   original pixel values are retained at the edges. If
-                                   edge_treatment is not 'crop', then this is ignored.
+    Parameters:
+        img:                The Image to be transformed.
+        edge_treatment:     Specifies the method of handling edges and should be one of
+                            'crop', 'extend' or 'wrap'. See galsim.Image.applyIPC docstring
+                            for more information.
+                            [default: 'extend']
+        fill_value:         Specifies the value (including nan) to fill the edges with when
+                            edge_treatment is 'crop'. If unspecified or set to 'None', the
+                            original pixel values are retained at the edges. If
+                            edge_treatment is not 'crop', then this is ignored.
     """
     img.applyIPC(galsim.wfirst.ipc_kernel, edge_treatment=edge_treatment, fill_value=fill_value)
 
@@ -87,27 +91,29 @@ def applyPersistence(img, prev_exposures, method='fermi'):
     This method applies either of the two different persistence models: 'linear' and 'fermi'.
     Slew between pointings and consecutive resets after illumination are not considered.
 
-    'linear' persistence model:
-    Applies the persistence effect to the Image instance by adding a small fraction of the previous
-    exposures (up to {ncoeff}) supplied as the 'prev_exposures' argument.
-    For more information about persistence, see the docstring for galsim.Image.applyPersistence.
-    Unlike that routine, this one does not need the coefficients to be specified. However, the list
-    of previous {ncoeff} exposures will have to be supplied. Earlier exposures, if supplied, will be
-    ignored.
+    'linear' persistence model
+        Applies the persistence effect to the Image instance by adding a small fraction of the
+        previous exposures (up to {ncoeff}) supplied as the 'prev_exposures' argument.
+        For more information about persistence, see `galsim.Image.applyPersistence`.
+        Unlike that routine, this one does not need the coefficients to be specified. However,
+        the list of previous {ncoeff} exposures will have to be supplied. Earlier exposures, if
+        supplied, will be ignored.
 
-    'fermi' persistence model:
-    Applies the persistence effect to the Image instance by adding the accumulated persistence dark
-    current of previous exposures supplied as the 'prev_exposures' argument.
-    Unlike galsim.Image.applyPersistence, this one does not use constant coefficients but a fermi
-    model plus a linear tail below half of saturation.
-    See http://www.stsci.edu/hst/wfc3/ins_performance/persistence/ for more info about the fermi model.
+    'fermi' persistence model
+        Applies the persistence effect to the Image instance by adding the accumulated persistence
+        dark current of previous exposures supplied as the 'prev_exposures' argument.
+        Unlike galsim.Image.applyPersistence, this one does not use constant coefficients but a
+        fermi model plus a linear tail below half of saturation.
+        See `http://www.stsci.edu/hst/wfc3/ins_performance/persistence/`_ for more info about the
+        fermi model.
 
-    @param img               The Image to be transformed.
-    @param prev_exposures    List of Image instances in the order of exposures, with the recent
-                             exposure being the first element. In the linear model, the exposures
-                             exceeding the limit ({ncoeff} exposures) will be ignored.
-    @param method            The persistence model ('linear' or 'fermi') to be applied.
-                             [default: 'fermi']
+    Parameters:
+        img:                The Image to be transformed.
+        prev_exposures:     List of Image instances in the order of exposures, with the recent
+                            exposure being the first element. In the linear model, the exposures
+                            exceeding the limit ({ncoeff} exposures) will be ignored.
+        method:             The persistence model ('linear' or 'fermi') to be applied.
+                            [default: 'fermi']
     """.format(ncoeff=len(galsim.wfirst.persistence_coefficients))
 
     if not hasattr(prev_exposures,'__iter__'):
@@ -135,10 +141,12 @@ def fermi_linear(x, t):
     The fermi model for persistence: A* (x/x0)**a * (t/1000.)**(-r) / (exp( -(x-x0)/dx ) +1. )
     For influence level below the half well, the persistence is linear in x.
 
-    @param x        Array of pixel influence levels in unit of electron counts.
-    @param t        Time (in seconds) since reset.
-    @returns        The persistence signal of the input exposure x.
+    Parameters:
+        x:      Array of pixel influence levels in unit of electron counts.
+        t:      Time (in seconds) since reset.
 
+    Returns:
+        The persistence signal of the input exposure x.
     """
 
     x = np.asarray(x)
@@ -169,15 +177,17 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=default_exptime
     a list of recent exposures (without the readout effects) and the routine
     returns an updated list of recent exposures.
 
-    @param img               The Image to be modified.
-    @param prev_exposures    List of Image instances in the order of exposures, with
-                             the recent exposure being the first element. [default: ()]
-    @param rng               An optional galsim.BaseDeviate to use for the addition of noise.  If
-                             None, a new one will be initialized.  [default: None]
-    @param exptime           The exposure time, in seconds.  If None, then the WFIRST default
-                             exposure time will be used.  [default: {exptime}]
+    Parameters:
+        img:            The Image to be modified.
+        prev_exposures: List of Image instances in the order of exposures, with
+                        the recent exposure being the first element. [default: ()]
+        rng:            An optional galsim.BaseDeviate to use for the addition of noise.  If
+                        None, a new one will be initialized.  [default: None]
+        exptime:        The exposure time, in seconds.  If None, then the WFIRST default
+                        exposure time will be used.  [default: {exptime}]
 
-    @returns prev_exposures  Updated list of previous exposures Image instances.
+    Returns:
+        prev_exposures: Updated list of previous exposures Image instances.
     """.format(exptime=default_exptime)
 
     # Make sure we don't have any negative values.

@@ -57,22 +57,22 @@ def roll2d(image, shape):
     return np.ascontiguousarray(np.roll(np.roll(image, jroll, axis=1), iroll, axis=0))
 
 def kxky(array_shape=(256, 256)):
-    """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
-    shape.
+    """Return the tuple ``(kx, ky)`` corresponding to the DFT of a unit integer-sampled array of
+    input shape.
 
-    Uses the SBProfile conventions for Fourier space, so `k` varies in approximate range (-pi, pi].
-    Uses the most common DFT element ordering conventions (and those of FFTW), so that `(0, 0)`
-    array element corresponds to `(kx, ky) = (0, 0)`.
+    Uses the SBProfile conventions for Fourier space, so ``k`` varies in approximate range
+    (-pi, pi].  Uses the most common DFT element ordering conventions (and those of FFTW), so that
+    ``(0, 0)`` array element corresponds to ``(kx, ky) = (0, 0)``.
 
     See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
     but misses a factor of pi.
 
-    Adopts NumPy array index ordering so that the trailing axis corresponds to `kx`, rather than the
-    leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
-    uses this convention.
+    Adopts NumPy array index ordering so that the trailing axis corresponds to ``kx``, rather than
+    the leading axis as would be expected in IDL/Fortran.  See docstring for ``numpy.meshgrid``
+    which also uses this convention.
 
     Parameters:
-        array_shape:    The NumPy array shape desired for `kx, ky`.
+        array_shape:    The NumPy array shape desired for ``kx, ky``.
     """
     # Note: numpy shape is y,x
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
@@ -80,11 +80,11 @@ def kxky(array_shape=(256, 256)):
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def g1g2_to_e1e2(g1, g2):
-    """Convenience function for going from `(g1, g2)` -> `(e1, e2)`.
+    """Convenience function for going from ``(g1, g2)`` -> ``(e1, e2)``.
 
-    Here `g1` and `g2` are reduced shears, and `e1` and `e2` are distortions - see shear.py for
-    definitions of reduced shear and distortion in terms of axis ratios or other ways of specifying
-    ellipses.
+    Here ``g1`` and ``g2`` are reduced shears, and ``e1`` and ``e2`` are distortions - see `Shear`
+    for definitions of reduced shear and distortion in terms of axis ratios or other ways of
+    specifying ellipses.
 
     Parameters:
         g1:     First reduced shear component
@@ -110,15 +110,15 @@ def g1g2_to_e1e2(g1, g2):
         return e1, e2
 
 def rotate_xy(x, y, theta):
-    """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
-    origin of the Cartesian coordinate system.
+    """Rotates points in the xy-Cartesian plane counter-clockwise through an angle ``theta`` about
+    the origin of the Cartesian coordinate system.
 
     Parameters:
-        x:      NumPy array of input `x` coordinates
-        y:      NumPy array of input `y` coordinates
+        x:      NumPy array of input ``x`` coordinates
+        y:      NumPy array of input ``y`` coordinates
         theta:  Rotation angle (+ve counter clockwise) as an Angle instance
 
-    @return the rotated coordinates `(x_rot,y_rot)`.
+    @return the rotated coordinates ``(x_rot,y_rot)``.
     """
     sint, cost = theta.sincos()
     x_rot = x * cost - y * sint
@@ -135,9 +135,9 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         f( (x,y) )  (or any indexable thing)
         f(name1=x, name2=y)
 
-    If the inputs must be integers, set `integer=True`.
+    If the inputs must be integers, set ``integer=True``.
     If there are other args/kwargs to parse after these, then their names should be
-    be given as the parameter `others`, which are passed back in a tuple after the position.
+    be given as the parameter ``others``, which are passed back in a tuple after the position.
     """
     from .position import PositionD, PositionI
     def canindex(arg):
@@ -278,7 +278,7 @@ def convert_interpolant(interpolant):
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
-    """Convert `pos` from the valid ways to input positions to two NumPy arrays
+    """Convert ``pos`` from the valid ways to input positions to two NumPy arrays
 
        This is used by the functions getShear(), getConvergence(), getMagnification(), and
        getLensing() for both PowerSpectrum and NFWHalo.
@@ -383,20 +383,20 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
 
-    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
+    The input ``x,f`` values can be lists, NumPy arrays, or really anything that can be converted
     to a NumPy array.  The new lists will be output as numpy arrays.
 
     Parameters:
-        x:              The `x` values in the f(x) tabulation.
-        f:              The `f` values in the f(x) tabulation.
+        x:              The ``x`` values in the f(x) tabulation.
+        f:              The ``f`` values in the f(x) tabulation.
         rel_err:        The maximum relative error to allow in the integral from the removal.
                         [default: 1.e-4]
         trim_zeros:     Remove redundant leading and trailing points where f=0?  (The last
                         leading point with f=0 and the first trailing point with f=0 will be
                         retained).  Note that if both trim_leading_zeros and preserve_range are
-                        True, then the only the range of `x` *after* zero trimming is preserved.
+                        True, then the only the range of ``x`` *after* zero trimming is preserved.
                         [default: True]
-        preserve_range: Should the original range of `x` be preserved? (True) Or should the ends
+        preserve_range: Should the original range of ``x`` be preserved? (True) Or should the ends
                         be trimmed to include only the region where the integral is
                         significant? (False)  [default: True]
         fast_search:    If set to True, then the underlying algorithm will use a relatively fast
@@ -407,7 +407,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
                         requirement.  [default: True]
 
     Returns:
-        a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+        a tuple of lists ``(x_new, y_new)`` with the thinned tabulation.
     """
     from heapq import heappush, heappop
 
@@ -498,20 +498,20 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
 
-    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
+    The input ``x,f`` values can be lists, NumPy arrays, or really anything that can be converted
     to a NumPy array.  The new lists will be output as python lists.
 
     Parameters:
-        x:              The `x` values in the f(x) tabulation.
-        f:              The `f` values in the f(x) tabulation.
+        x:              The ``x`` values in the f(x) tabulation.
+        f:              The ``f`` values in the f(x) tabulation.
         rel_err:        The maximum relative error to allow in the integral from the removal.
                         [default: 1.e-4]
-        preserve_range: Should the original range of `x` be preserved? (True) Or should the ends
+        preserve_range: Should the original range of ``x`` be preserved? (True) Or should the ends
                         be trimmed to include only the region where the integral is
                         significant? (False)  [default: False]
 
     Returns:
-        a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+        a tuple of lists ``(x_new, y_new)`` with the thinned tabulation.
     """
     x = np.asarray(x, dtype=float)
     f = np.asarray(f, dtype=float)
@@ -722,8 +722,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     high resolution image of the same profile, even if the total number of pixels is the same. A
     uniformly offset dither sequence can be extracted from a well-resolved image that is drawn by
     convolving the surface brightness profile explicitly with the native pixel response and setting
-    a lower sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
-    routine and setting the `method' parameter to `no_pixel'.
+    a lower sampling scale (or higher sampling rate) using the ``pixel_scale`` argument in
+    `GSObject.drawImage` routine and setting the ``method`` parameter to 'no_pixel'.
 
     Here is an example script using this routine:
 
@@ -828,8 +828,8 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     Such an image can be obtained in a fairly simple manner in simulations of surface brightness
     profiles by convolving them explicitly with the native pixel response and setting a lower
-    sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
-    routine and setting the `method' parameter to `no_pixel'.
+    sampling scale (or higher sampling rate) using the ``pixel_scale`` argument in 
+    `GSObject.drawImage` routine and setting the ``method`` parameter to 'no_pixel'.
 
     However, pixel level detector effects can be included only on images drawn at the native pixel
     scale, which happen to be undersampled in most cases. Nyquist-sampled images that also include
@@ -867,11 +867,11 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     Parameters:
         im_list:                A list containing the galsim.Image instances to be interleaved.
         N:                      Number of images to interleave in either directions. It can be of
-                                type `int' if equal number of images are interleaved in both
+                                type ``int`` if equal number of images are interleaved in both
                                 directions or a list or tuple of two integers, containing the number
                                 of images in x and y directions respectively.
         offsets:                A list containing the offsets as galsim.PositionD instances
-                                corresponding to every image in `im_list'. The offsets must be
+                                corresponding to every image in ``im_list``. The offsets must be
                                 spaced equally and must span an entire pixel area. The offset
                                 values must be symmetric around zero, hence taking positive and
                                 negative values, with upper and lower limits of +0.5 and -0.5
@@ -880,9 +880,9 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
                                 average them (False)? [default: True]
         suppress_warnings:      Suppresses the warnings about the pixel scale of the output, if
                                 True.  [default: False]
-        catch_offset_errors:    Checks for the consistency of `offsets` with `N` and raises Errors
-                                if inconsistencies found (True). Recommended, but could slow down
-                                the routine a little. [default: True]
+        catch_offset_errors:    Checks for the consistency of ``offsets`` with ``N`` and raises
+                                errors if inconsistencies found (True). Recommended, but could slow
+                                down the routine a little. [default: True]
 
     Returns:
         the interleaved image
@@ -990,7 +990,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     img.setOrigin(orig)
     for im in im_list[1:]:
         if not im.origin==orig:  # pragma: no cover
-            galsim_warn("Images in `im_list' have multiple values for origin. Assigning the "
+            galsim_warn("Images in `im_list` have multiple values for origin. Assigning the "
                         "origin of the first Image instance in 'im_list' to the interleaved image.")
             break
 
@@ -1160,7 +1160,7 @@ def structure_function(image):
 
     where the x and r on the RHS are 2D vectors, but the |r| on the LHS is just a scalar length.
 
-    The image must have its `scale` attribute defined.  It will be used in the calculations to
+    The image must have its ``scale`` attribute defined.  It will be used in the calculations to
     set the scale of the radial distances.
 
     Parameters:
@@ -1233,7 +1233,7 @@ def combine_wave_list(*args):
     return wave_list, blue_limit, red_limit
 
 def functionize(f):
-    """ Decorate a function `f` which accepts scalar positional or keyword arguments, to accept
+    """ Decorate a function ``f`` which accepts scalar positional or keyword arguments, to accept
     arguments that can be either scalars or _functions_.  If the arguments include univariate
     (N-variate) functions, then the output will be a univariate (N-variate) function.  While it's
     okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
@@ -1400,9 +1400,9 @@ def unweighted_shape(arg):
 def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     """Select some number of random choices from a list, with replacement, using a supplied RNG.
 
-    `n` random choices with replacement are made assuming that those choices should range from 0 to
-    `n_choices`-1, so they can be used as indices in a list/array.  If `weight` is supplied, then
-    it should be an array of length `n_choices` that ranges from 0-1, and can be used to make
+    ``n`` random choices with replacement are made assuming that those choices should range from 0
+    to ``n_choices-1``, so they can be used as indices in a list/array.  If `weight` is supplied,
+    then it should be an array of length `n_choices` that ranges from 0-1, and can be used to make
     weighted choices from the list.
 
     Parameters:
@@ -1413,7 +1413,7 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
                     random indices.
 
     Returns:
-        a NumPy array of length `n` containing the integer-valued indices that were selected.
+        a NumPy array of length ``n`` containing the integer-valued indices that were selected.
     """
     from .random import BaseDeviate, UniformDeviate
     # Make sure we got a proper RNG.
@@ -1566,7 +1566,7 @@ class OrderedWeakRef(weakref.ref):
 
 
 def nCr(n, r):
-    """Combinations.  I.e., the number of ways to choose `r` distiguishable things from `n`
+    """Combinations.  I.e., the number of ways to choose ``r`` distiguishable things from ``n``
     distinguishable things.
     """
     from math import factorial

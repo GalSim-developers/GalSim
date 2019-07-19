@@ -49,15 +49,15 @@ def getPSF(SCA, bandpass,
     The default is to do the calculations using the full specification of the WFIRST pupil plane,
     which is a costly calculation in terms of memory.  For this, we use the provided pupil plane for
     long- and short-wavelength bands for Cycle 7 (the list of bands associated with each pupil plane
-    is stored in `galsim.wfirst.longwave_bands` and `galsim.wfirst.shortwave_bands`). 
+    is stored in ``galsim.wfirst.longwave_bands`` and ``galsim.wfirst.shortwave_bands``).
 
     To avoid using the full pupil plane configuration, use the optional keyword
-    `approximate_struts`.  In this case, the pupil plane will have the correct obscuration and
+    ``approximate_struts``.  In this case, the pupil plane will have the correct obscuration and
     number of struts, but the struts will be purely radial and evenly spaced instead of the true
     configuration.  The simplicity of this arrangement leads to a much faster calculation, and
     somewhat simplifies the configuration of the diffraction spikes.  Also note that currently the
     orientation of the struts is fixed, rather than rotating depending on the orientation of the
-    focal plane.  Rotation of the PSF can easily be affected by the user via
+    focal plane.  Rotation of the PSF can easily be affected by the user via::
 
        psf = galsim.wfirst.getPSF(...).rotate(angle)
 
@@ -68,26 +68,28 @@ def getPSF(SCA, bandpass,
     provide aberrations as a function of wavelength, but the deviation from the expected chromatic
     dependence is sub-percent so we neglect it here.)  For reference, the script used to parse the
     Zernikes given on the webpage and create the files in the GalSim repository can be found in
-    `devel/external/parse_wfirst_zernikes_1217.py`.  The resulting chromatic object can be used to
+    ``devel/external/parse_wfirst_zernikes_1217.py``.  The resulting chromatic object can be used to
     draw into any of the WFIRST bandpasses, though the pupil plane configuration will only be
     correct for those bands in the same range (i.e., long- or short-wavelength bands).
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
-    aliasing, the `high_accuracy` option can be set to True.  When using this option, the MTF has a
-    value below 1e-4 for all wavenumbers above the band limit when using `approximate_struts=True`,
-    or below 3e-4 when using `approximate_struts=False`.  In contrast, when `high_accuracy=False`
-    (the default), there are some bumps in the MTF above the band limit that reach an amplitude of
-    ~1e-2.
+    aliasing, the ``high_accuracy`` option can be set to True.  When using this option, the MTF has
+    a value below 1e-4 for all wavenumbers above the band limit when using
+    ``approximate_struts=True``, or below 3e-4 when using ``approximate_struts=False``.  In
+    contrast, when ``high_accuracy=False`` (the default), there are some bumps in the MTF above the
+    band limit that reach an amplitude of ~1e-2.
 
     By default, no additional aberrations are included above the basic design.  However, users can
-    provide an optional keyword `extra_aberrations` that will be included on top of those that are
+    provide an optional keyword ``extra_aberrations`` that will be included on top of those that are
     part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
     with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
     22 (Noll convention) are simulated.  For WFIRST, the current tolerance for additional
     aberrations is a total of 90 nanometers RMS:
+
     http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf
+
     distributed largely among coma, astigmatism, trefoil, and spherical aberrations (NOT defocus).
-    This information might serve as a guide for reasonable `extra_aberrations` inputs.
+    This information might serve as a guide for reasonable ``extra_aberrations`` inputs.
 
     Jitter and charge diffusion are, by default, not included.  Users who wish to include these can
     find some guidelines for typical length scales of the Gaussians that can represent these
@@ -95,65 +97,67 @@ def getPSF(SCA, bandpass,
 
     The PSFs are always defined assuming the user will specify length scales in arcsec.
 
-    Users may find they do not have to call getPSF() for all objects in their simulations; for a
+    Users may find they do not have to call `getPSF` for all objects in their simulations; for a
     given SCA and position within the SCA, and a given pupil plane configuration and wavelength
     information, it should be possible to reuse the PSFs.
 
-    @param    SCA                  Single value specifying the SCA for which the PSF should be
-                                   loaded.
-    @param    bandpass             Single string specifying the bandpass to use when defining the
-                                   pupil plane configuration and/or interpolation of chromatic PSFs.
-                                   If `approximate_struts` is True (which means we do not use a
-                                   realistic pupil plane configuration) and `n_waves` is None (no
-                                   interpolation of chromatic PSFs) then 'bandpass' can be None.  It
-                                   is also possible to pass a string 'long' or 'short' for this
-                                   argument; in that case, the correct pupil plane configuration
-                                   will be used for long- or short-wavelength bands as defined using
-                                   `galsm.wfirst.longwave_bands` and
-                                   `galsim.wfirst.shortwave_bands`, respectively (but no
-                                   interpolation can be used, since it is defined using the extent
-                                   of the chosen bandpass).
-    @param    SCA_pos              Single galsim.PositionD indicating the position within the SCA
-                                   for which the PSF should be created. If None, the exact center of
-                                   the SCA is chosen. [default: None]
-    @param    approximate_struts   Should the routine use an approximate representation of the pupil
-                                   plane, with 6 equally-spaced radial struts, instead of the exact
-                                   representation of the pupil plane?  Setting this parameter to
-                                   True will lead to faster calculations, with a slightly less
-                                   realistic PSFs.  [default: False]
-    @param    n_waves              Number of wavelengths to use for setting up interpolation of the
-                                   chromatic PSF objects, which can lead to much faster image
-                                   rendering.  If None, then no interpolation is used. Note that
-                                   users who want to interpolate can always set up the interpolation
-                                   later on even if they do not do so when calling getPSF().
-                                   [default: None]
-    @param    extra_aberrations    Array of extra aberrations to include in the PSF model, on top of
-                                   those that are part of the WFIRST design.  These should be
-                                   provided in units of waves at the fiducial wavelength of 1293 nm,
-                                   as an array of length 23 with entries 4 through 22 corresponding
-                                   to defocus through the 22nd Zernike in the Noll convention.
-                                   [default: None]
-    @param    logger               A logger object for output of progress statements if the user
-                                   wants them.  [default: None]
-    @param    wavelength           An option to get an achromatic PSF for a single wavelength, for
-                                   users who do not care about chromaticity of the PSF.  If None,
-                                   then the fully chromatic PSF is returned.  Alternatively the user
-                                   should supply either (a) a wavelength in nanometers, and they
-                                   will get achromatic OpticalPSF objects for that wavelength, or
-                                   (b) a bandpass object, in which case they will get achromatic
-                                   OpticalPSF objects defined at the effective wavelength of that
-                                   bandpass.
-                                   [default: False]
-    @param    high_accuracy        If True, make higher-fidelity representations of the PSF in
-                                   Fourier space, to minimize aliasing (see plots on
-                                   https://github.com/GalSim-developers/GalSim/issues/661 for more
-                                   details).  This setting is more expensive in terms of time and
-                                   RAM, and may not be necessary for many applications.
-                                   [default: False]
-    @param    gsparams             An optional GSParams argument.  See the docstring for GSParams
-                                   for details. [default: None]
-    @returns  A single PSF object (either a ChromaticOpticalPSF or an OpticalPSF depending on the
-              inputs).
+    Parameters:
+        SCA:                Single value specifying the SCA for which the PSF should be
+                            loaded.
+        bandpass:           Single string specifying the bandpass to use when defining the
+                            pupil plane configuration and/or interpolation of chromatic PSFs.
+                            If ``approximate_struts`` is True (which means we do not use a
+                            realistic pupil plane configuration) and ``n_waves`` is None (no
+                            interpolation of chromatic PSFs) then 'bandpass' can be None.  It
+                            is also possible to pass a string 'long' or 'short' for this
+                            argument; in that case, the correct pupil plane configuration
+                            will be used for long- or short-wavelength bands as defined using
+                            ``galsm.wfirst.longwave_bands`` and
+                            ``galsim.wfirst.shortwave_bands``, respectively (but no
+                            interpolation can be used, since it is defined using the extent
+                            of the chosen bandpass).
+        SCA_pos:            Single galsim.PositionD indicating the position within the SCA
+                            for which the PSF should be created. If None, the exact center of
+                            the SCA is chosen. [default: None]
+        approximate_struts: Should the routine use an approximate representation of the pupil
+                            plane, with 6 equally-spaced radial struts, instead of the exact
+                            representation of the pupil plane?  Setting this parameter to
+                            True will lead to faster calculations, with a slightly less
+                            realistic PSFs.  [default: False]
+        n_waves:            Number of wavelengths to use for setting up interpolation of the
+                            chromatic PSF objects, which can lead to much faster image
+                            rendering.  If None, then no interpolation is used. Note that
+                            users who want to interpolate can always set up the interpolation
+                            later on even if they do not do so when calling `getPSF`.
+                            [default: None]
+        extra_aberrations:  Array of extra aberrations to include in the PSF model, on top of
+                            those that are part of the WFIRST design.  These should be
+                            provided in units of waves at the fiducial wavelength of 1293 nm,
+                            as an array of length 23 with entries 4 through 22 corresponding
+                            to defocus through the 22nd Zernike in the Noll convention.
+                            [default: None]
+        logger:             A logger object for output of progress statements if the user
+                            wants them.  [default: None]
+        wavelength:         An option to get an achromatic PSF for a single wavelength, for
+                            users who do not care about chromaticity of the PSF.  If None,
+                            then the fully chromatic PSF is returned.  Alternatively the user
+                            should supply either (a) a wavelength in nanometers, and they
+                            will get achromatic OpticalPSF objects for that wavelength, or
+                            (b) a bandpass object, in which case they will get achromatic
+                            OpticalPSF objects defined at the effective wavelength of that
+                            bandpass.  [default: False]
+        high_accuracy:      If True, make higher-fidelity representations of the PSF in
+                            Fourier space, to minimize aliasing (see plots on
+                            https://github.com/GalSim-developers/GalSim/issues/661 for more
+                            details).  This setting is more expensive in terms of time and
+                            RAM, and may not be necessary for many applications.
+                            [default: False]
+        gsparams:           An optional GSParams argument.  See the docstring for GSParams
+                            for details. [default: None]
+
+    Returns:
+        A single PSF object (either a ChromaticOpticalPSF or an OpticalPSF depending on the
+        inputs).
 
     """
     # Deal with inputs:
@@ -199,11 +203,11 @@ def getPSF(SCA, bandpass,
                           n_waves, extra_aberrations, logger, wavelength,
                           high_accuracy, pupil_plane_type, gsparams)
     return psf
-    
+
 def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
                     n_waves, extra_aberrations, logger, wavelength,
                     high_accuracy, pupil_plane_type, gsparams):
-    """Routine for making a single PSF.  This gets called by getPSF() after it parses all the
+    """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
     # Deal with some accuracy settings.
@@ -295,8 +299,11 @@ def _read_aberrations(SCA):
     galsim.wfirst.wfirst_psfs.zemax_wavelength) from stored files, and returns them along with the
     field positions.
 
-    @param  SCA      The identifier for the SCA, from 1-18.
-    @returns NumPy arrays containing the aberrations, and x and y field positions.
+    Parameters:
+        SCA:        The identifier for the SCA, from 1-18.
+
+    Returns:
+        NumPy arrays containing the aberrations, and x and y field positions.
     """
     # Construct filename.
     sca_str = '_%02d'%SCA
