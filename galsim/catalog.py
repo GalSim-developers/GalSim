@@ -34,9 +34,9 @@ class Catalog(object):
 
     Parameters:
         file_name:  Filename of the input catalog. (Required)
-        dir:        Optionally a directory name can be provided if `file_name` does not
+        dir:        Optionally a directory name can be provided if ``file_name`` does not
                     already include it.
-        file_type:  Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
+        file_type:  Either 'ASCII' or 'FITS'.  If None, infer from ``file_name`` ending.
                     [default: None]
         comments:   The character used to indicate the start of a comment in an
                     ASCII catalog.  [default: '#']
@@ -138,10 +138,10 @@ class Catalog(object):
         self.isfits = True
 
     def get(self, index, col):
-        """Return the data for the given `index` and `col` in its native type.
+        """Return the data for the given ``index`` and ``col`` in its native type.
 
-        For ASCII catalogs, `col` is the column number.
-        For FITS catalogs, `col` is a string giving the name of the column in the FITS table.
+        For ASCII catalogs, ``col`` is the column number.
+        For FITS catalogs, ``col`` is a string giving the name of the column in the FITS table.
 
         Also, for ASCII catalogs, the "native type" is always str.  For FITS catalogs, it is
         whatever type is specified for each field in the binary table.
@@ -167,12 +167,12 @@ class Catalog(object):
             return self.data[index, col]
 
     def getFloat(self, index, col):
-        """Return the data for the given `index` and `col` as a float if possible
+        """Return the data for the given ``index`` and ``col`` as a float if possible
         """
         return float(self.get(index,col))
 
     def getInt(self, index, col):
-        """Return the data for the given `index` and `col` as an int if possible
+        """Return the data for the given ``index`` and ``col`` as an int if possible
         """
         return int(self.get(index,col))
 
@@ -216,15 +216,15 @@ class Dict(object):
 
     Caveat: The above prescription means that an element whose key really has a '.' in it
     won't be accessed correctly.  This is probably a rare occurrence, but the workaround is
-    to set `key_split` to a different character or string and use that to chain the keys.
+    to set ``key_split`` to a different character or string and use that to chain the keys.
 
 
     Parameters:
         file_name:  Filename storing the dict.
-        dir:        Optionally a directory name can be provided if `file_name` does not
+        dir:        Optionally a directory name can be provided if ``file_name`` does not
                     already include it. [default: None]
         file_type:  Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from
-                    `file_name` extension ('.p*', '.y*', '.j*' respectively).
+                    ``file_name`` extension ('.p*', '.y*', '.j*' respectively).
                     [default: None]
         key_split:  The character (or string) to use to split chained keys.  (cf. the
                     description of this feature above.)  [default: '.']
@@ -354,7 +354,7 @@ class OutputCatalog(object):
 
     Note: no type checking is done when the data are added in addRow().  It is up to
     the user to make sure that the values added for each row are compatible with the
-    types given here in the `types` parameter.
+    types given here in the ``types`` parameter.
 
     Parameters:
         names:      A list of names for the output columns.
@@ -420,7 +420,7 @@ class OutputCatalog(object):
 
         Parameters:
             file_name:  The name of the file to write to.
-            dir:        Optionally a directory name can be provided if `file_name` does not
+            dir:        Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
             file_type:  Which kind of file to write to. [default: determine from the file_name
                         extension]

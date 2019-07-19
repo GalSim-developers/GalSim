@@ -464,7 +464,7 @@ class Lanczos(Interpolant):
     between kernel size and accuracy.
 
     Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
-    this constant.  Setting `conserve_dc` in the constructor tweaks the function so that it
+    this constant.  Setting ``conserve_dc`` in the constructor tweaks the function so that it
     approximately conserves the value of constant (DC) input data (accurate to better than 1.e-5
     when used in two dimensions).
 

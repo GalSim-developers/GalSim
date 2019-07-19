@@ -93,7 +93,7 @@ class AtmosphericScreen(object):
     This class will normally attempt to sanity check that the screen has been appropriately
     instantiated depending on the use case, i.e., depending on whether it's being used to draw with
     Fourier optics or geometric optics.  If you want to turn this warning off, however, you can
-    use the `suppress_warning` keyword argument.
+    use the ``suppress_warning`` keyword argument.
 
     If you wish to override the automatic truncation determination, then you can directly
     instantiate the phase screen array using the AtmosphericScreen.instantiate() method.
@@ -117,9 +117,8 @@ class AtmosphericScreen(object):
             These should be used in a call to multiprocessing.Pool to correctly inform the worker
             process where to find AtmosphericScreen shared memory.
 
-    A template example might look something like:
+    A template example might look something like::
 
-        ```
         import galsim
         import multiprocessing as mp
 
@@ -146,13 +145,11 @@ class AtmosphericScreen(object):
                 r.wait()
         # Turn future objects into actual returned images.
         results = [r.get() for r in results]
-        ```
 
     It is also possible to manually instantiate each of the AtmosphericScreen objects in a
     PhaseScreenList in parallel using a process pool.  This requires knowing what k-scale to
-    truncate the screen at:
+    truncate the screen at::
 
-        ```
         atm = galsim.Atmosphere(..., mp_context=ctx)
         with ctx.Pool(
             nProc,
@@ -162,7 +159,6 @@ class AtmosphericScreen(object):
             dummyPSF = atm.makePSF(...)
             kmax = dummyPSF.screen_kmax
             atm.instantiate(pool=pool, kmax=kmax)
-        ```
 
     Finally, the above multiprocessing shared memory tricks are only currently supported for
     non-time-evolving screens (alpha=1).
@@ -174,8 +170,8 @@ class AtmosphericScreen(object):
                             Note that the screen will have periodic boundary conditions, so while
                             the code will still run with a small screen, this may introduce
                             artifacts into PSFs or PSF correlation functions.  Also note that
-                            screen_size may be tweaked by the initializer to ensure `screen_size`
-                            is a multiple of `screen_scale`.
+                            screen_size may be tweaked by the initializer to ensure ``screen_size``
+                            is a multiple of ``screen_scale``.
         screen_scale:       Physical pixel scale of phase screen in meters.  An order unity multiple
                             of the Fried parameter is usually sufficiently small, but users should
                             test the effects of varying this parameter to ensure robust results.
@@ -186,8 +182,8 @@ class AtmosphericScreen(object):
                             "size" of the resulting atmospheric PSF.  Specified at wavelength 500
                             nm, in units of meters.  [default: 0.2]
         L0:                 Outer scale in meters.  The turbulence power spectrum will smoothly
-                            approach a constant at scales larger than L0.  Set to `None` or `np.inf`
-                            for a power spectrum without an outer scale.  [default: 25.0]
+                            approach a constant at scales larger than L0.  Set to ``None`` or
+                            ``np.inf`` for a power spectrum without an outer scale.  [default: 25.0]
         vx:                 x-component wind velocity in meters/second.  [default: 0.]
         vy:                 y-component wind velocity in meters/second.  [default: 0.]
         alpha:              Square root of fraction of phase that is "remembered" between time_steps
@@ -196,13 +192,13 @@ class AtmosphericScreen(object):
                             each step.  Setting alpha=1.0 results in a frozen-flow atmosphere.
                             Note that computing PSFs from frozen-flow atmospheres may be
                             significantly faster than computing PSFs with non-frozen-flow
-                            atmospheres.  If `alpha` != 1.0, then it is required that a
+                            atmospheres.  If ``alpha`` != 1.0, then it is required that a
                             ``time_step`` is also specified.  [default: 1.0]
         time_step:          Time interval between phase boiling updates.  Note that this is distinct
                             from the time interval used to integrate the PSF over time, which is set
-                            by the `time_step` keyword argument to `PhaseScreenPSF` or
-                            `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is
-                            required that `alpha` is set to something other than 1.0.
+                            by the ``time_step`` keyword argument to `PhaseScreenPSF` or
+                            :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then
+                            it is required that ``alpha`` is set to something other than 1.0.
                             [default: None]
         rng:                Random number generator as a galsim.BaseDeviate().  If None, then use
                             the clock time or system entropy to seed a new generator.
@@ -390,7 +386,7 @@ class AtmosphericScreen(object):
                       Fourier modes are not being truncated, which is appropriate for full Fourier
                       optics.  If equal to 'phot', then check that phase screen Fourier modes *are*
                       being truncated, which is appropriate for the geometric optics approximation.
-                      If `None`, then don't perform a check.  Also, don't perform a check if
+                      If ``None``, then don't perform a check.  Also, don't perform a check if
                       self.suppress_warning is True.
         """
         if not self._objDict['instantiated'].value:
@@ -560,9 +556,9 @@ class AtmosphericScreen(object):
                     used for all u, v.  If scalar, then the size will be broadcast up to match
                     that of u and v.  If iterable, then the shape must match the shapes of u and
                     v.  [default: None]
-            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                    [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
-                    permitted.
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`
+                    instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single
+                    theta is permitted.
 
         Returns:
             Array of wavefront lag or lead in nanometers.
@@ -628,9 +624,9 @@ class AtmosphericScreen(object):
                     will be used for all u, v.  If scalar, then the size will be broadcast up to
                     match that of u and v.  If iterable, then the shape must match the shapes of
                     u and v.  [default: None]
-            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                    [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
-                    permitted.
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`
+                    instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single
+                    theta is permitted.
 
         Returns:
             Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
@@ -706,17 +702,17 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     the 10s of meters and does not vary with wavelength.
 
     To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
-    (works for all arguments except `rng`).  If, for any of these keyword arguments, you want to use
-    the same value for each layer, then you can just specify the argument as a scalar and the
+    (works for all arguments except ``rng``).  If, for any of these keyword arguments, you want to
+    use the same value for each layer, then you can just specify the argument as a scalar and the
     function will automatically broadcast it into a list with length equal to the longest found
     keyword argument list.  Note that it is an error to specify keywords with lists of different
     lengths (unless only one of them has length > 1).
 
-    The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
-    of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
-    Providing `r0_500` as a scalar or single-element list will result in broadcasting such that the
-    effective Fried parameter for the whole set of layers equals the input argument.  You can weight
-    the contribution of each layer with the `r0_weights` keyword.
+    The one exception to the above is the keyword ``r0_500``.  The effective Fried parameter for a
+    set of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
+    Providing ``r0_500`` as a scalar or single-element list will result in broadcasting such that
+    the effective Fried parameter for the whole set of layers equals the input argument.  You can
+    weight the contribution of each layer with the ``r0_weights`` keyword.
 
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
     for their study of atmospheric PSFs for LSST.  Note this code takes about ~2 minutes to run on
@@ -777,7 +773,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
         altitude:       Altitude of phase screen in km.  This is with respect to the telescope, not
                         sea-level.  [default: 0.0]
         L0:             Outer scale in meters.  The turbulence power spectrum will smoothly
-                        approach a constant at scales larger than L0.  Set to `None` or `np.inf`
+                        approach a constant at scales larger than L0.  Set to ``None`` or ``np.inf``
                         for a power spectrum without an outer scale.  [default: 25.0]
         speed:          Wind speed in meters/second.  [default: 0.0]
         direction:      Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]
@@ -789,9 +785,9 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
                         PSFs with non-frozen-flow atmospheres.  [default: 1.0]
         time_step:      Time interval between phase boiling updates.  Note that this is distinct
                         from the time interval used when integrating the PSF over time, which is
-                        set by the `time_step` keyword argument to `PhaseScreenPSF` or
-                        `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
-                        that `alpha` is set to something other than 1.0.  [default: None]
+                        set by the ``time_step`` keyword argument to `PhaseScreenPSF` or
+                        :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then it is
+                        required that ``alpha`` is set to something other than 1.0.  [default: None]
         rng:            Random number generator as a galsim.BaseDeviate().  If None, then use the
                         clock time or system entropy to seed a new generator.  [default: None]
     """

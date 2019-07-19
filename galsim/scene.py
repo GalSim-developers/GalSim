@@ -40,7 +40,7 @@ class COSMOSCatalog(object):
     (default for GalSim v1.4), or alternatively the entire sample with F814W<23.5 (which was the
     default for GalSim v1.3).
 
-    Depending on the keyword arguments, particularly `use_real`, the catalog will either have
+    Depending on the keyword arguments, particularly ``use_real``, the catalog will either have
     information about real galaxies, and/or parametric ones.  To use this with either type of
     galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see
 
@@ -66,7 +66,7 @@ class COSMOSCatalog(object):
     look for it there.
 
     In addition to the option of specifying catalog names, this class also accepts a keyword
-    argument `sample` that can be used to switch between the samples with limiting magnitudes of
+    argument ``sample`` that can be used to switch between the samples with limiting magnitudes of
     23.5 and 25.2.
 
     After getting the catalogs, there is a method makeGalaxy() that can make a GSObject
@@ -104,20 +104,20 @@ class COSMOSCatalog(object):
                             exception if the catalog is not there telling you to run
                             galsim_download_cosmos.]
         sample:             A keyword argument that can be used to specify the sample to use, i.e.,
-                            "23.5" or "25.2".  At most one of `file_name` and `sample` should be
-                            specified.
-                            [default: None, which results in the same default as `file_name=None`.]
+                            "23.5" or "25.2".  At most one of ``file_name`` and ``sample`` should be
+                            specified.  [default: None, which results in the same default as
+                            ``file_name=None``.]
         dir:                The directory with the catalog file and, if making realistic galaxies,
                             the image and noise files (or symlinks to them). [default: None, which
                             will look in $PREFIX/share/galsim.]
         preload:            Keyword that is only used for real galaxies, not parametric ones, to
-                            choose whether to preload the header information.  If `preload=True`,
-                            the bulk of the I/O time is in the constructor.  If `preload=False`,
+                            choose whether to preload the header information.  If ``preload=True``,
+                            the bulk of the I/O time is in the constructor.  If ``preload=False``,
                             there is approximately the same total I/O time (assuming you eventually
                             use most of the image files referenced in the catalog), but it is spread
                             over the calls to makeGalaxy().  [default: False]
         use_real:           Enable the use of realistic galaxies?  [default: True]
-                            If this parameter is False, then `makeGalaxy(gal_type='real')` will
+                            If this parameter is False, then ``makeGalaxy(gal_type='real')`` will
                             not be allowed, and there will be a (modest) decrease in RAM and time
                             spent on I/O when initializing the COSMOSCatalog. If the real
                             catalog is not available for some reason, it will still be possible to
@@ -366,7 +366,7 @@ class COSMOSCatalog(object):
         of 1 second, which is why there is no need to rescale to account for the COSMOS exposure
         time.
 
-        There is an option to make chromatic objects (`chromatic=True`); however, it is important
+        There is an option to make chromatic objects (``chromatic=True``); however, it is important
         to bear in mind that we do not actually have spatially-resolved color information for these
         galaxies, so this keyword can only be True if we are using parametric galaxies.  Even then,
         we simply do the most arbitrary thing possible, which is to assign bulges an elliptical
@@ -383,7 +383,7 @@ class COSMOSCatalog(object):
 
         Note that the returned objects use arcsec for the units of their linear dimension.  If you
         are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
-        the resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
+        the resulting object with ``gal.dilate(galsim.arcsec / scale_unit)``.
 
         Parameters:
             index:          Index of the desired galaxy in the catalog for which a GSObject
@@ -393,9 +393,9 @@ class COSMOSCatalog(object):
                             correcting for catalog-level selection effects if weights are
                             available. [default: None]
             gal_type:       Either 'real' or 'parametric'.  This determines which kind of
-                            galaxy model is made. [If catalog was loaded with `use_real=False`,
+                            galaxy model is made. [If catalog was loaded with ``use_real=False``,
                             then this defaults to 'parametric', and in fact 'real' is
-                            not allowed.  If catalog was loaded with `use_real=True`, then
+                            not allowed.  If catalog was loaded with ``use_real=True``, then
                             this defaults to 'real'.]
             chromatic:      Make this a chromatic object, or not?  [default: False]
             noise_pad_size: For realistic galaxies, the size of region to pad with noise,
@@ -410,7 +410,7 @@ class COSMOSCatalog(object):
                             GalSim is significantly faster if it gets a smallish number of
                             Sersic values, so it can cache some of the calculations and use
                             them again the next time it gets a galaxy with the same index.
-                            If `sersic_prec` is 0.0, then use the exact value of index n from
+                            If ``sersic_prec`` is 0.0, then use the exact value of index n from
                             the catalog.  But if it is >0, then round the index to that
                             precision.  [default: 0.05]
             rng:            A random number generator to use for selecting a random galaxy
@@ -422,8 +422,8 @@ class COSMOSCatalog(object):
                             details. [default: None]
 
         Returns:
-            Either a GSObject or a ChromaticObject depending on the value of `chromatic`,
-            or a list of them if `index` is an iterable.
+            Either a GSObject or a ChromaticObject depending on the value of ``chromatic``,
+            or a list of them if ``index`` is an iterable.
         """
         return self._makeGalaxy(self, index, gal_type, chromatic, noise_pad_size,
                                 deep, sersic_prec, rng, n_random, gsparams)

@@ -25,3 +25,8 @@ NFW Halo Shears
 
 .. autoclass:: galsim.Cosmology
     :members:
+
+Power Spectrum Estimation
+=========================
+
+.. autoclass:: galsim.pse.PowerSpectrumEstimator

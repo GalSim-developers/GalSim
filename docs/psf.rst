@@ -42,10 +42,4 @@ Optical PSF
 .. autoclass:: galsim.OpticalPSF
     :members:
 
-Phase-screen PSF
-----------------
-
-.. autoclass:: galsim.PhaseScreenPSF
-    :members:
-
 

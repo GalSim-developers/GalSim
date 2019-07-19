@@ -22,6 +22,7 @@ the classes you would actually use when building the profile for an  astronomica
 
     gsobject
     psf
+    phase_psf
     gal
     simple
     arbitrary

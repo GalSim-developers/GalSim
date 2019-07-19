@@ -694,9 +694,9 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
         hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or
-                        ``pyfits.ImageHDU``.  In the former case, the `hdu` in the list will be
-                        selected.  In the latter two cases, the `hdu` parameter is ignored.
-                        [Either `file_name` or ``hdu_list`` is required.]
+                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be
+                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.
+                        [Either ``file_name`` or ``hdu_list`` is required.]
         hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
                         compression.  (e.g. for 'rice', the first extension is the one you normally
