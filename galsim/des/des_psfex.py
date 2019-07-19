@@ -35,23 +35,23 @@ import galsim.config
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
-    of the PSF.  These are usually stored as *_psfcat.psf files.
+    of the PSF.  These are usually stored as ``*_psfcat.psf`` files.
 
     PSFEx is software written by Emmanuel Bertin.  If you want more detail about it, please
     check out the web site:
 
-        http://www.astromatic.net/software/psfex
+        `<http://www.astromatic.net/software/psfex>`_
 
     It builds PSF objects from images of stars in a given exposure, finds a reasonable basis
     set to describe those images, and then fits the coefficient of these bases as a function
-    of the (x,y) position on the image.
+    of the ``(x,y)`` position on the image.
 
     Note that while the interpolation is done in image coordinates, GalSim usually deals with
     object profiles in world coordinates.  However, PSFEx does not consider the WCS of the
     image when building its bases.  The bases are built in image coordinates.  So there are
     two options to get GalSim to handle this difference.
 
-    1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
+    1. Ignore the WCS of the original image.  In this case, the \*.psf files have all the
        information you need:
 
            >>> des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
@@ -60,13 +60,13 @@ class DES_PSFEx(object):
            >>> psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
 
        The psf profile that is returned will be in image coordinates.  Therefore, it should be
-       drawn onto an image with no wcs.  (Or equivalently, one with `scale = 1`.)  If you want
+       drawn onto an image with no wcs.  (Or equivalently, one with ``scale = 1``.)  If you want
        to use this to convolve a galaxy profile, you would want to either project the galaxy
        (typically constructed in world coordinates) to the correct image coordinates or project
        the PSF up into world coordinates.
 
     2. Build the PSF in world coordinates directly.  The DES_PSFEx constructor can take an
-       extra argument, either `image_file_name` or `wcs`, to tell GalSim what WCS to use for
+       extra argument, either ``image_file_name`` or ``wcs``, to tell GalSim what WCS to use for
        the coversion between image and world coordinates.  The former option is the name of
        the file from which to read the WCS, which will often be more convenient, but you can
        also just pass in a WCS object directly.
@@ -79,27 +79,28 @@ class DES_PSFEx(object):
        This time the psf profile that is returned will already be in world coordinates as
        GalSim normally expects, so you can use it in the normal ways.  If you want to draw it
        (or a convolved object) onto an image with the original WCS at that location, you can use
-       `des_psfex.getLocalWCS(image_pos)` for the local wcs at the location of the PSF.
+       ``des_psfex.getLocalWCS(image_pos)`` for the local wcs at the location of the PSF.
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
     (nor integrate over the pixel).  This would effectively include the pixel twice!  
     
-    In GalSim, you should always pass `method='no_pixel` when drawing images of objects
+    In GalSim, you should always pass ``method='no_pixel'`` when drawing images of objects
     convolved with PSFs produced with this class.  Other drawing methods, such as photon shooting
-    (`method='phot'`) or an FFT (`method='fft'`), will result in convolving the pixel twice.
+    (``method='phot'``) or an FFT (``method='fft'``), will result in convolving the pixel twice.
 
-    @param file_name       The file name to be read in, or a pyfits HDU in which case it is used
-                           directly instead of being opened.
-    @param image_file_name The name of the fits file of the original image (needed for the
-                           WCS information in the header).  If unavailable, you may omit this
-                           (or use None), but then the returned profiles will be in image
-                           coordinates, not world coordinates.  (Default `image_file_name = None`)
-    @param wcs             Optional way to provide the WCS if you already have it loaded from the
-                           image file. (Default `wcs = None`)
-    @param dir             Optionally a directory name can be provided if the file_name does not
-                           already include it.  (The image file is assumed to be in the same
-                           directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
+    Parameters:
+       file_name (string):       The file name to be read in, or a pyfits HDU in which case it is used
+                                 directly instead of being opened.
+       image_file_name (string): The name of the fits file of the original image (needed for the
+                                 WCS information in the header).  If unavailable, you may omit this
+                                 (or use None), but then the returned profiles will be in image
+                                 coordinates, not world coordinates.  (Default ``image_file_name = None``)
+       wcs (object):             Optional way to provide the WCS if you already have it loaded from the
+                                 image file. (Default ``wcs = None``)
+       dir (string):             Optionally a directory name can be provided if the file_name does not
+                                 already include it.  (The image file is assumed to be in the same
+                                 directory.) (Default ``dir = None``).  Cannot pass an HDU with this option.
     """
     # For config, image_file_name is required, since that always works in world coordinates.
     _req_params = { 'file_name' : str }
