@@ -49,7 +49,7 @@ class Image(object):
     coordinates and world coordinates.  The NumPy array may be constructed by the Image class
     itself, or an existing array can be provided by the user.
 
-    This class creates shallow copies unless a deep copy is explicitly requested using the ``copy``
+    This class creates shallow copies unless a deep copy is explicitly requested using the `copy`
     method.  The main reason for this is that it allows users to work directly with and modify
     subimages of larger images (for example, to successively draw many galaxies into one large
     image).  For other implications of this convention, see the description of initialization
@@ -65,14 +65,14 @@ class Image(object):
     difference.
 
     There are 6 data types that the Image can use for the data values.  These are ``numpy.uint16``,
-    ``numpy.uint16``, ``numpy.int16``, ``numpy.int32``, ``numpy.float32``, and ``numpy.float64``.
+    ``numpy.uint32``, ``numpy.int16``, ``numpy.int32``, ``numpy.float32``, and ``numpy.float64``.
     If you are constructing a new Image from scratch, the default is ``numpy.float32``, but you
     can specify one of the other data types.
 
     There are several ways to construct an Image:
     (Optional arguments are shown with their default values after the = sign.)
 
-        Image(ncol, nrow, dtype=numpy.float32, init_value=0, xmin=1, ymin=1, ...)
+        ``Image(ncol, nrow, dtype=numpy.float32, init_value=0, xmin=1, ymin=1, ...)``
 
                 This constructs a new image, allocating memory for the pixel values according to
                 the number of columns and rows.  You can specify the data type as ``dtype`` if you
@@ -83,18 +83,18 @@ class Image(object):
                 described above, ncol is the number of pixels in the x direction, and nrow is the
                 number of pixels in the y direction.
 
-        Image(bounds, dtype=numpy.float32, init_value=0, ...)
+        ``Image(bounds, dtype=numpy.float32, init_value=0, ...)``
 
                 This constructs a new image, allocating memory for the pixel values according to a
-                given bounds object.  The bounds should be a BoundsI instance.  You can specify the
-                data type as ``dtype`` if you want.  The default is ``numpy.float32`` if you don't
-                specify it.  You can also optionally provide an initial value for the pixels, which
-                defaults to 0.
+                given `Bounds` object.  Particularly, the bounds should be a `BoundsI` instance.
+                You can specify the data type as ``dtype`` if you want.  The default is
+                ``numpy.float32`` if you don't specify it.  You can also optionally provide an
+                initial value for the pixels, which defaults to 0.
 
-        Image(array, xmin=1, ymin=1, make_const=False, copy=False ...)
+        ``Image(array, xmin=1, ymin=1, make_const=False, copy=False ...)``
 
                 This views an existing NumPy array as an Image, where updates to either the image
-                or the original array will affect the other one.  The dtype is taken from
+                or the original array will affect the other one.  The data type is taken from
                 ``array.dtype``, which must be one of the allowed types listed above.  You can also
                 optionally set the origin ``xmin, ymin`` if you want it to be something other than
                 (1,1).
@@ -108,7 +108,7 @@ class Image(object):
 
                     >>> image = galsim.Image(array, copy=True)
 
-        Image(image, dtype=image.dtype, copy=True)
+        ``Image(image, dtype=image.dtype, copy=True)``
 
                 This creates a copy of an Image, possibly changing the type.  e.g.::
 
@@ -133,15 +133,18 @@ class Image(object):
     coordinates, which is how all the GalSim objects are defined, and the pixel coordinates.
     There are three options for this:
 
-        scale       You can optionally specify a pixel scale to use.  This would normally have
+        scale       
+                    You can optionally specify a pixel scale to use.  This would normally have
                     units arcsec/pixel, but it doesn't have to be arcsec.  If you want to
                     use different units for the physical scale of your galsim objects, then
                     the same unit would be used here.
-        wcs         A WCS object that provides a non-trivial mapping between sky units and
+        wcs         
+                    A WCS object that provides a non-trivial mapping between sky units and
                     pixel units.  The ``scale`` parameter is equivalent to
                     ``wcs=PixelScale(scale)``.  But there are a number of more complicated options.
                     See the WCS class for more details.
-        None        If you do not provide either of the above, then the conversion is undefined.
+        None        
+                    If you do not provide either of the above, then the conversion is undefined.
                     When drawing onto such an image, a suitable pixel scale will be automatically
                     set according to the Nyquist scale of the object being drawn.
 
@@ -150,7 +153,7 @@ class Image(object):
         >>> image.scale = new_scale
         >>> image.wcs = new_wcs
 
-    Note that ``image.scale`` will only work if the WCS is a PixelScale.  Once you set the
+    Note that ``image.scale`` will only work if the WCS is a `PixelScale`.  Once you set the
     wcs to be something non-trivial, then you must interact with it via the ``wcs`` attribute.
     The ``image.scale`` syntax will raise an exception.
 
@@ -178,7 +181,7 @@ class Image(object):
 
     Methods:
 
-        view:        Return a view of the image, possibly giving it a new scale or wcs.
+        `view`:        Return a view of the image, possibly giving it a new scale or wcs.
         subImage:    Return a view of a portion of the full image.
         wrap:        Wrap the values in a image onto a given subimage and return the subimage.
         bin:         Bin the image pixels in blocks of nx x ny pixels.

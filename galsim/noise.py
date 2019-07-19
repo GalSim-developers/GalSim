@@ -34,51 +34,52 @@ def addNoise(self, noise):
     """Add noise to the image according to a supplied noise model.
 
     Parameters:
-        noise:      The noise (BaseNoise) model to use.
+        noise:      The noise (`BaseNoise`) model to use.
     """
     noise.applyTo(self)
 
 # This will be inserted into the Image class as a method.  So self = image.
 def addNoiseSNR(self, noise, snr, preserve_flux=False):
-    """Adds noise to the image in a way that achieves the specified signal-to-noise ratio.
+    r"""Adds noise to the image in a way that achieves the specified signal-to-noise ratio.
 
     The given SNR (``snr``) can be achieved either by scaling the flux of the object while keeping
     the noise level fixed, or the flux can be preserved and the noise variance changed.  This is set
     using the parameter ``preserve_flux``.
 
     The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral
-    of the flux::
+    of the flux
 
-        S = sum W(x,y) I(x,y) / sum W(x,y)
-        N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+        .. math::
+           S &= \frac{\sum W(x,y) I(x,y)}{\sum W(x,y)} \\
+           N^2 = Var(S) &= \frac{\sum W(x,y)^2 Var(I(x,y))}{(\sum W(x,y))^2}
 
-    and assuming that Var(I(x,y)) is constant::
+    and assuming that Var(I(x,y)) is constant
 
-        Var(I(x,y)) = noise_var
+        .. math:: Var(I(x,y)) = noise\_var
 
     We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things
-    cancel and we find that::
+    cancel and we find that
 
-        snr = S/N = sqrt( sum I(x,y)^2 / noise_var )
+        .. math:: snr = S/N = \sqrt{\frac{\sum I(x,y)^2}{noise\_var}}
 
-    and therefore, for a given I(x,y) and snr,::
+    and therefore, for a given I(x,y) and snr,
 
-        noise_var = sum I(x,y)^2/snr^2.
+        .. math:: noise\_var = \frac{\sum I(x,y)^2}{snr^2}
 
     Note that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
     is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
     Thus, the real S/N on the final image will be slightly lower than the target ``snr`` value,
     and this effect will be larger for brighter objects.
 
-    Also, this function relies on noise.getVariance() to determine how much variance the
+    Also, this function relies on `noise.getVariance()` to determine how much variance the
     noise model will add.  Thus, it will not work for noise models that do not have a well-
-    defined variance, such as VariableGaussianNoise.
+    defined variance, such as `VariableGaussianNoise`.
 
     Parameters:
-        noise:          The noise (BaseNoise) model to use.
+        noise:          The noise (`BaseNoise`) model to use.
         snr:            The desired signal-to-noise after the noise is applied.
-        preserve_flux:  Whether to preserve the flux of the object (True) or the variance of
-                        the noise model (False) to achieve the desired SNR. [default: False]
+        preserve_flux:  Whether to preserve the flux of the object (``True``) or the variance of
+                        the noise model (``False``) to achieve the desired SNR. [default: False]
 
     Returns:
         the variance of the noise that was applied to the image.
