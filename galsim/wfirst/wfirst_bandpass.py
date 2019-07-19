@@ -40,11 +40,11 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     The bandpasses can be either truncated or thinned before setting the zero points, by passing in
     the keyword arguments that need to get propagated through to the Bandpass.thin() and/or
     Bandpass.truncate() routines.  Or, if the user wishes to thin and truncate using the defaults
-    for those two routines, they can use `default_thin_trunc=True`.  This option is the default,
+    for those two routines, they can use ``default_thin_trunc=True``.  This option is the default,
     because the stored 'official' versions of the bandpasses cover a wide wavelength range.  So even
     if thinning is not desired, truncation is recommended.
 
-    By default, the routine will set an AB zeropoint (unless `AB_zeropoint=False`).  The
+    By default, the routine will set an AB zeropoint (unless ``AB_zeropoint=False``).  The
     zeropoint in GalSim is defined such that the flux is 1 photon/cm^2/sec through the
     bandpass. This differs from an instrumental bandpass, which is typically defined such that the
     flux is 1 photon/sec for that instrument.  The difference between the two can be calculated as
@@ -54,10 +54,10 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
             area_eff = galsim.wfirst.collecting_area
             delta_zp = 2.5 * np.log10(area_eff)
 
-    `delta_zp` will be a positive number that should be added to the GalSim zeropoints to compare with
-    externally calculated instrumental zeropoints.  When using the GalSim zeropoints for
-    normalization of fluxes, the `area` kwarg to drawImage can be used to get the right
-    normalization (giving it the quantity `area_eff` calculated using the lines of code above).
+    ``delta_zp`` will be a positive number that should be added to the GalSim zeropoints to compare
+    with externally calculated instrumental zeropoints.  When using the GalSim zeropoints for
+    normalization of fluxes, the ``area`` kwarg to drawImage can be used to get the right
+    normalization (giving it the quantity ``area_eff`` calculated using the lines of code above).
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
@@ -67,21 +67,21 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     angle at some level.  This is more important for the grism than for the imaging, so currently
     this effect is not included in the WFIRST bandpasses in GalSim.
 
-    Example usage
-    -------------
+    Example::
 
         >>> wfirst_bandpasses = galsim.wfirst.getBandpasses()
         >>> f184_bp = wfirst_bandpasses['F184']
 
-    @param AB_zeropoint       Should the routine set an AB zeropoint before returning the bandpass?
-                              If False, then it is up to the user to set a zero point.  [default:
-                              True]
-    @param default_thin_trunc Use the default thinning and truncation options?  Users who wish to
-                              use no thinning and truncation of bandpasses, or who want control over
-                              the level of thinning and truncation, should have this be False.
-                              [default: True]
-    @param **kwargs           Other kwargs are passed to either `bandpass.thin()` or
-                              `bandpass.truncate()` as appropriate.
+    Parameters:
+        AB_zeropoint:       Should the routine set an AB zeropoint before returning the bandpass?
+                            If False, then it is up to the user to set a zero point.  [default:
+                            True]
+        default_thin_trunc: Use the default thinning and truncation options?  Users who wish to
+                            use no thinning and truncation of bandpasses, or who want control over
+                            the level of thinning and truncation, should have this be False.
+                            [default: True]
+        **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
+                            `Bandpass.truncate` as appropriate.
 
     @returns A dictionary containing bandpasses for all WFIRST imaging filters.
     """

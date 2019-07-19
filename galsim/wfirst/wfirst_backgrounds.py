@@ -36,7 +36,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     sky for that bandpass.  This routine then interpolates between the values in those tables to
     arbitrary positions on the sky.
 
-    The numbers that are stored in the Bandpass object `bandpass` are background level in units of
+    The numbers that are stored in the Bandpass object ``bandpass`` are background level in units of
     e-/m^2/s/arcsec^2.  To get rid of the m^2, this routine multiplies by the total effective
     collecting area in m^2.  Multiplying by the exposure time gives a result in e-/arcsec^2.  The
     result can either be multiplied by the approximate pixel area to get e-/pix, or the result can
@@ -53,27 +53,29 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     general results will depend on the adopted model for zodiacal light, and these are uncertain at
     the ~10% level.
 
-    Positions should be specified with the `world_pos` keyword, which must be a CelestialCoord
-    object.  If no `world_pos` is supplied, then the routine will use a default position that looks
-    sensibly away from the sun.
+    Positions should be specified with the ``world_pos`` keyword, which must be a CelestialCoord
+    object.  If no ``world_pos`` is supplied, then the routine will use a default position that
+    looks sensibly away from the sun.
 
-    @param bandpass     A Bandpass object.
-    @param world_pos    A position, given as a CelestialCoord object.  If None, then the routine
-                        will use an ecliptic longitude of 90 degrees with respect to the sun
-                        position (as a fair compromise between 0 and 180), and an ecliptic latitude
-                        of 30 degrees with respect to the sun position (decently out of the plane
-                        of the Earth-sun orbit). [default: None]
-    @param exptime      Exposure time in seconds.  If None, use the default WFIRST exposure time.
-                        [default: None]
-    @param epoch        The epoch to be used for estimating the obliquity of the ecliptic when
-                        converting `world_pos` to ecliptic coordinates.  This keyword is only used
-                        if `date` is None, otherwise `date` is used to determine the `epoch`.
-                        [default: 2025]
-    @param date         The date of the observation, provided as a python datetime object.  If None,
-                        then the conversion to ecliptic coordinates assumes the sun is at ecliptic
-                        coordinates of (0,0), as it is at the vernal equinox. [default: None]
+    Parameters:
+        bandpass:   A Bandpass object.
+        world_pos:  A position, given as a CelestialCoord object.  If None, then the routine
+                    will use an ecliptic longitude of 90 degrees with respect to the sun
+                    position (as a fair compromise between 0 and 180), and an ecliptic latitude
+                    of 30 degrees with respect to the sun position (decently out of the plane
+                    of the Earth-sun orbit). [default: None]
+        exptime:    Exposure time in seconds.  If None, use the default WFIRST exposure time.
+                    [default: None]
+        epoch:      The epoch to be used for estimating the obliquity of the ecliptic when
+                    converting ``world_pos`` to ecliptic coordinates.  This keyword is only used
+                    if ``date`` is None, otherwise ``date`` is used to determine the ``epoch``.
+                    [default: 2025]
+        date:       The date of the observation, provided as a python datetime object.  If None,
+                    then the conversion to ecliptic coordinates assumes the sun is at ecliptic
+                    coordinates of (0,0), as it is at the vernal equinox. [default: None]
 
-    @returns the expected sky level in e-/arcsec^2.
+    Returns:
+        the expected sky level in e-/arcsec^2.
     """
     # Check for cached sky level information for this filter.  If not, raise exception
     if not hasattr(bandpass, '_sky_level'):
