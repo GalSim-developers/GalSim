@@ -68,73 +68,72 @@ from .errors import convert_cpp_errors
 
 
 class ShapeData(object):
-    """A class to contain the outputs of using the HSM shape and moments measurement routines.
+    """A class to contain the outputs of the HSM shape and moments measurement routines.
 
-    At the C++ level, we have a container for the outputs of the HSM shape measurement routines.
-    The ShapeData class is the analogous object at the python level.  It contains the following
-    information about moment measurement (from either EstimateShear() or FindAdaptiveMom()):
+    The ShapeData class contains the following information about moment measurement (from either
+    `EstimateShear` or `FindAdaptiveMom`:
 
-    - image_bounds: a BoundsI object describing the image.
+    - ``image_bounds``: a `BoundsI` object describing the image.
 
-    - moments_status: the status flag resulting from moments measurement; -1 indicates no attempt to
-      measure, 0 indicates success.
+    - ``moments_status``: the status flag resulting from moments measurement; -1 indicates no
+      attempt to measure, 0 indicates success.
 
-    - observed_shape: a Shear object representing the observed shape based on adaptive
+    - ``observed_shape``: a `Shear` object representing the observed shape based on adaptive
       moments.
 
-    - moments_sigma: size sigma=(det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
-      not measured.
+    - ``moments_sigma``: size ``sigma=(det M)^(1/4)`` from the adaptive moments, in units of pixels;
+      -1 if not measured.
 
-    - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.
+    - ``moments_amp``: total image intensity for best-fit elliptical Gaussian from adaptive moments.
       Normally, this field is simply equal to the image flux (for objects that follow a Gaussian
       light distribution, otherwise it is something approximating the flux).  However, if the image
       was drawn using ``drawImage(method='sb')`` then moments_amp relates to the flux via
-      flux=(moments_amp)*(pixel scale)^2.
+      ``flux=(moments_amp)*(pixel scale)^2``.
 
-    - moments_centroid: a PositionD object representing the centroid based on adaptive moments, in
-      units of pixels.  The indexing convention is defined with respect to the BoundsI object
-      defining the bounds of the input Image, i.e., the center of the lower left pixel is
+    - ``moments_centroid``: a `PositionD` object representing the centroid based on adaptive
+      moments, in units of pixels.  The indexing convention is defined with respect to the `BoundsI`
+      object defining the bounds of the input `Image`, i.e., the center of the lower left pixel is
       ``(image.xmin, image.ymin)``.  An object drawn at the center of the image should generally
-      have moments_centroid equal to image.true_center.
+      have moments_centroid equal to ``image.true_center``.
 
-    - moments_rho4: the weighted radial fourth moment of the image.
+    - ``moments_rho4``: the weighted radial fourth moment of the image.
 
-    - moments_n_iter: number of iterations needed to get adaptive moments, or 0 if not measured.
+    - ``moments_n_iter``: number of iterations needed to get adaptive moments, or 0 if not measured.
 
-    If EstimateShear() was used, then the following fields related to PSF-corrected shape will also
+    If `EstimateShear` was used, then the following fields related to PSF-corrected shape will also
     be populated:
 
-    - correction_status: the status flag resulting from PSF correction; -1 indicates no attempt to
-      measure, 0 indicates success.
+    - ``correction_status``: the status flag resulting from PSF correction; -1 indicates no attempt
+      to measure, 0 indicates success.
 
-    - corrected_e1, corrected_e2, corrected_g1, corrected_g2: floats representing the estimated
-      shear after removing the effects of the PSF.  Either e1/e2 or g1/g2 will differ from the
-      default values of -10, with the choice of shape to use determined by the correction method
-      (since the correction method determines what quantity is estimated, either the shear or the
-      distortion).  After a measurement is made, the type of shape measurement is stored in the
+    - ``corrected_e1``, ``corrected_e2``, ``corrected_g1``, ``corrected_g2``: floats representing
+      the estimated shear after removing the effects of the PSF.  Either e1/e2 or g1/g2 will differ
+      from the default values of -10, with the choice of shape to use determined by the correction
+      method (since the correction method determines what quantity is estimated, either the shear or
+      the distortion).  After a measurement is made, the type of shape measurement is stored in the
       ShapeData structure as 'meas_type' (a string that equals either 'e' or 'g').
 
-    - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.  The estimate of
-      the uncertainty will only be non-zero if an estimate of the sky variance was passed to
-      EstimateShear().
+    - ``corrected_shape_err``: shape measurement uncertainty sigma_gamma per component.  The
+      estimate of the uncertainty will only be non-zero if an estimate of the sky variance was
+      passed to `EstimateShear`.
 
-    - correction_method: a string indicating the method of PSF correction (will be "None" if
+    - ``correction_method``: a string indicating the method of PSF correction (will be "None" if
       PSF-correction was not carried out).
 
-    - resolution_factor: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1
+    - ``resolution_factor``: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1
       indicates perfect resolution.
 
-    - psf_sigma: size sigma=(det M)^(1/4) of the PSF from the adaptive moments, in units of pixels;
-      -1 if not measured.
+    - ``psf_sigma``: size ``sigma=(det M)^(1/4)`` of the PSF from the adaptive moments, in units of
+      pixels; -1 if not measured.
 
-    - psf_shape: a Shear object representing the observed PSF shape based on adaptive moments.
+    - ``psf_shape``: a `Shear` object representing the observed PSF shape based on adaptive moments.
 
-    - error_message: a string containing any error messages from the attempt to carry out
+    - ``error_message``: a string containing any error messages from the attempt to carry out
       PSF-correction.
 
-    The ShapeData object can be initialized completely empty, or can be returned from the
-    routines that measure object moments (FindAdaptiveMom()) and carry out PSF correction
-    (EstimateShear()).
+    The `ShapeData` object can be initialized completely empty, or can be returned from the
+    routines that measure object moments (`FindAdaptiveMom`) and carry out PSF correction
+    (`EstimateShear`).
     """
     def __init__(self, image_bounds=BoundsI(), moments_status=-1,
                  observed_shape=Shear(), moments_sigma=-1.0, moments_amp=-1.0,
@@ -270,82 +269,99 @@ class HSMParams(object):
     HSMParams stores a set of numbers that determine how the moments/shape estimation
     routines make speed/accuracy tradeoff decisions and/or store their results.
 
-    The parameters, along with their default values, are as follows:
+    Parameters:
+        nsig_rg:                A parameter used to optimize convolutions by cutting off the galaxy
+                                profile.  In the first step of the re-Gaussianization method of PSF
+                                correction, a Gaussian approximation to the pre-seeing galaxy is
+                                calculated. If ``nsig_rg > 0``, then this approximation is cut off
+                                at ``nsig_rg`` sigma to save computation time in convolutions.
+                                [default: 3.0]
 
-    nsig_rg             A parameter used to optimize convolutions by cutting off the galaxy
-                        profile.  In the first step of the re-Gaussianization method of PSF
-                        correction, a Gaussian approximation to the pre-seeing galaxy is
-                        calculated. If nsig_rg > 0, then this approximation is cut off at
-                        nsig_rg sigma to save computation time in convolutions. [default: 3.0]
-    nsig_rg2            A parameter used to optimize convolutions by cutting off the PSF
-                        residual profile.  In the re-Gaussianization method of PSF correction,
-                        a 'PSF residual' (the difference between the true PSF and its best-fit
-                        Gaussian approximation) is constructed. If nsig_rg2 > 0, then this PSF
-                        residual is cut off at nsig_rg2 sigma to save computation time in
-                        convolutions. [default: 3.6]
-    max_moment_nsig2    A parameter for optimizing calculations of adaptive moments by
-                        cutting off profiles. This parameter is used to decide how many
-                        sigma^2 into the Gaussian adaptive moment to extend the moment
-                        calculation, with the weight being defined as 0 beyond this point.
-                        i.e., if max_moment_nsig2 is set to 25, then the Gaussian is
-                        extended to (r^2/sigma^2)=25, with proper accounting for elliptical
-                        geometry.  If this parameter is set to some very large number, then
-                        the weight is never set to zero and the exponential function is
-                        always called. Note: GalSim script devel/modules/test_mom_timing.py
-                        was used to choose a value of 25 as being optimal, in that for the
-                        cases that were tested, the speedups were typically factors of
-                        several, but the results of moments and shear estimation were
-                        changed by <10^-5.  Not all possible cases were checked, and so for
-                        use of this code for unusual cases, we recommend that users check
-                        that this value does not affect accuracy, and/or set it to some
-                        large value to completely disable this optimization. [default: 25.0]
-    regauss_too_small   A parameter for how strictly the re-Gaussianization code treats
-                        small galaxies. If this parameter is 1, then the re-Gaussianization
-                        code does not impose a cut on the apparent resolution before trying
-                        to measure the PSF-corrected shape of the galaxy; if 0, then it is
-                        stricter.  Using the default value of 1 prevents the
-                        re-Gaussianization PSF correction from completely failing at the
-                        beginning, before trying to do PSF correction, due to the crudest
-                        possible PSF correction (Gaussian approximation) suggesting that
-                        the galaxy is very small.  This could happen for some usable
-                        galaxies particularly when they have very non-Gaussian surface
-                        brightness profiles -- for example, if there's a prominent bulge
-                        that the adaptive moments attempt to fit, ignoring a more
-                        extended disk.  Setting a value of 1 is useful for keeping galaxies
-                        that would have failed for that reason.  If they later turn out to
-                        be too small to really use, this will be reflected in the final
-                        estimate of the resolution factor, and they can be rejected after
-                        the fact. [default: 1]
-    adapt_order         The order to which circular adaptive moments should be calculated
-                        for KSB method. This parameter only affects calculations using the
-                        KSB method of PSF correction.  Warning: deviating from default
-                        value of 2 results in code running more slowly, and results have
-                        not been significantly tested. [default: 2]
-    convergence_threshold  Accuracy (in x0, y0, and sigma, each as a fraction of sigma)
-                        when calculating adaptive moments. [default: 1.e-6]
-    max_mom2_iter       Maximum number of iterations to use when calculating adaptive
-                        moments.  This should be sufficient in nearly all situations, with
-                        the possible exception being very flattened profiles. [default: 400]
-    num_iter_default    Number of iterations to report in the output ShapeData structure
-                        when code fails to converge within max_mom2_iter iterations. [default: -1]
-    bound_correct_wt    Maximum shift in centroids and sigma between iterations for
-                        adaptive moments. [default: 0.25]
-    max_amoment         Maximum value for adaptive second moments before throwing
-                        exception.  Very large objects might require this value to be
-                        increased. [default: 8000]
-    max_ashift          Maximum allowed x / y centroid shift (units: pixels) between
-                        successive iterations for adaptive moments before throwing
-                        exception. [default: 15]
-    ksb_moments_max     Use moments up to ksb_moments_max order for KSB method of PSF
-                        correction. [default: 4]
-    ksb_sig_weight      The width of the weight function (in pixels) to use for the KSB
-                        method.  Normally, this is derived from the measured moments of the
-                        galaxy image; this keyword overrides this calculation.  Can be
-                        combined with ksb_sig_factor. [default: 0.0]
-    ksb_sig_factor      Factor by which to multiply the weight function width for the KSB
-                        method (default: 1.0).  Can be combined with ksb_sig_weight. [default: 1.0]
-    failed_moments      Value to report for ellipticities and resolution factor if shape
-                        measurement fails. [default: -1000.]
+        nsig_rg2:               A parameter used to optimize convolutions by cutting off the PSF
+                                residual profile.  In the re-Gaussianization method of PSF
+                                correction, a 'PSF residual' (the difference between the true PSF
+                                and its best-fit Gaussian approximation) is constructed. If
+                                ``nsig_rg2 > 0``, then this PSF residual is cut off at ``nsig_rg2``
+                                sigma to save computation time in convolutions. [default: 3.6]
+
+        max_moment_nsig2:       A parameter for optimizing calculations of adaptive moments by
+                                cutting off profiles. This parameter is used to decide how many
+                                sigma^2 into the Gaussian adaptive moment to extend the moment
+                                calculation, with the weight being defined as 0 beyond this point.
+                                i.e., if max_moment_nsig2 is set to 25, then the Gaussian is
+                                extended to ``(r^2/sigma^2)=25``, with proper accounting for
+                                elliptical geometry.  If this parameter is set to some very large
+                                number, then the weight is never set to zero and the exponential
+                                function is always called. Note: GalSim script
+                                devel/modules/test_mom_timing.py was used to choose a value of 25 as
+                                being optimal, in that for the cases that were tested, the speedups
+                                were typically factors of several, but the results of moments and
+                                shear estimation were changed by <10^-5.  Not all possible cases
+                                were checked, and so for use of this code for unusual cases, we
+                                recommend that users check that this value does not affect accuracy,
+                                and/or set it to some large value to completely disable this
+                                optimization. [default: 25.0]
+
+        regauss_too_small:      A parameter for how strictly the re-Gaussianization code treats
+                                small galaxies. If this parameter is 1, then the re-Gaussianization
+                                code does not impose a cut on the apparent resolution before trying
+                                to measure the PSF-corrected shape of the galaxy; if 0, then it is
+                                stricter.  Using the default value of 1 prevents the
+                                re-Gaussianization PSF correction from completely failing at the
+                                beginning, before trying to do PSF correction, due to the crudest
+                                possible PSF correction (Gaussian approximation) suggesting that
+                                the galaxy is very small.  This could happen for some usable
+                                galaxies particularly when they have very non-Gaussian surface
+                                brightness profiles -- for example, if there's a prominent bulge
+                                that the adaptive moments attempt to fit, ignoring a more
+                                extended disk.  Setting a value of 1 is useful for keeping galaxies
+                                that would have failed for that reason.  If they later turn out to
+                                be too small to really use, this will be reflected in the final
+                                estimate of the resolution factor, and they can be rejected after
+                                the fact. [default: 1]
+
+        adapt_order:            The order to which circular adaptive moments should be calculated
+                                for KSB method. This parameter only affects calculations using the
+                                KSB method of PSF correction.  Warning: deviating from default
+                                value of 2 results in code running more slowly, and results have
+                                not been significantly tested. [default: 2]
+
+        convergence_threshold:  Accuracy (in x0, y0, and sigma, each as a fraction of sigma)
+                                when calculating adaptive moments. [default: 1.e-6]
+
+        max_mom2_iter:          Maximum number of iterations to use when calculating adaptive
+                                moments.  This should be sufficient in nearly all situations, with
+                                the possible exception being very flattened profiles. [default: 400]
+
+        num_iter_default:       Number of iterations to report in the output ShapeData structure
+                                when code fails to converge within max_mom2_iter iterations.
+                                [default: -1]
+
+        bound_correct_wt:       Maximum shift in centroids and sigma between iterations for
+                                adaptive moments. [default: 0.25]
+
+        max_amoment:            Maximum value for adaptive second moments before throwing
+                                exception.  Very large objects might require this value to be
+                                increased. [default: 8000]
+
+        max_ashift:             Maximum allowed x / y centroid shift (units: pixels) between
+                                successive iterations for adaptive moments before throwing
+                                exception. [default: 15]
+
+        ksb_moments_max:        Use moments up to ksb_moments_max order for KSB method of PSF
+                                correction. [default: 4]
+
+        ksb_sig_weight:         The width of the weight function (in pixels) to use for the KSB
+                                method.  Normally, this is derived from the measured moments of the
+                                galaxy image; this keyword overrides this calculation.  Can be
+                                combined with ksb_sig_factor. [default: 0.0]
+
+        ksb_sig_factor:         Factor by which to multiply the weight function width for the KSB
+                                method (default: 1.0).  Can be combined with ksb_sig_weight.
+                                [default: 1.0]
+
+        failed_moments:         Value to report for ellipticities and resolution factor if shape
+                                measurement fails. [default: -1000.]
     """
     def __init__(self, nsig_rg=3.0, nsig_rg2=3.6, max_moment_nsig2=25.0, regauss_too_small=1,
                  adapt_order=2, convergence_threshold=1.e-6, max_mom2_iter=400,
@@ -527,13 +543,13 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     docstring for file hsm.py) to estimate galaxy shears, correcting for the convolution by the
     PSF.
 
-    This method works from Image inputs rather than GSObject inputs, which provides
+    This method works from `Image` inputs rather than `GSObject` inputs, which provides
     additional flexibility (e.g., it is possible to work from an Image that was read from file and
     corresponds to no particular GSObject), but this also means that users who wish to apply it to
     simple combinations of GSObjects (e.g., a Convolve) must take the additional step of drawing
     their GSObjects into Images.
 
-    This routine assumes that (at least locally) the WCS can be approximated as a PixelScale, with
+    This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with
     no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.
 
     Note that the method will fail if the PSF or galaxy are too point-like to easily fit an
@@ -574,47 +590,59 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         >>> print "Number of failures: ", n_fail
 
     Parameters:
-        gal_image:      The Image of the galaxy being measured.
-        PSF_image:      The Image for the PSF.
+        gal_image:      The `Image` of the galaxy being measured.
+
+        PSF_image:      The `Image` for the PSF.
+
         weight:         The optional weight image for the galaxy being measured.  Can be an int
                         or a float array.  Currently, GalSim does not account for the variation
                         in non-zero weights, i.e., a weight map is converted to an image with 0
                         and 1 for pixels that are not and are used.  Full use of spatial
                         variation in non-zero weights will be included in a future version of
                         the code.
+
         badpix:         The optional bad pixel mask for the image being used.  Zero should be
                         used for pixels that are good, and any nonzero value indicates a bad
                         pixel.
+
         sky_var:        The variance of the sky level, used for estimating uncertainty on the
                         measured shape. [default: 0.]
+
         shear_est:      A string indicating the desired method of PSF correction: 'REGAUSS',
                         'LINEAR', 'BJ', or 'KSB'. The first three options return an e-type
                         distortion, whereas the last option returns a g-type shear.  [default:
                         'REGAUSS']
+
         recompute_flux: A string indicating whether to recompute the object flux, which
                         should be 'NONE' (for no recomputation), 'SUM' (for recomputation via
                         an unweighted sum over unmasked pixels), or 'FIT' (for
                         recomputation using the Gaussian + quartic fit). [default: 'FIT']
+
         guess_sig_gal:  Optional argument with an initial guess for the Gaussian sigma of the
                         galaxy (in pixels). [default: 5.]
+
         guess_sig_PSF:  Optional argument with an initial guess for the Gaussian sigma of the
                         PSF (in pixels). [default: 3.]
+
         precision:      The convergence criterion for the moments. [default: 1e-6]
+
         guess_centroid: An initial guess for the object centroid (useful in
                         case it is not located at the center, which is used if this keyword is
                         not set).  The convention for centroids is such that the center of
                         the lower-left pixel is (image.xmin, image.ymin).
                         [default: gal_image.true_center]
+
         strict:         Whether to require success. If ``strict=True``, then there will be a
                         ``GalSimHSMError`` exception if shear estimation fails.  If set to
                         ``False``, then information about failures will be silently stored in
                         the output ShapeData object. [default: True]
+
         hsmparams:      The hsmparams keyword can be used to change the settings used by
-                        EstimateShear() when estimating shears; see HSMParams documentation
-                        using help(galsim.hsm.HSMParams) for more information. [default: None]
+                        EstimateShear() when estimating shears; see `HSMParams` documentation
+                        for more information. [default: None]
 
     Returns:
-        a ShapeData object containing the results of shape measurement.
+        a `ShapeData` object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     gal_image = _convertImage(gal_image)
@@ -647,14 +675,14 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     by initially guessing a circular Gaussian that is used as a weight function, computing the
     weighted moments, recomputing the moments using the result of the previous step as the weight
     function, and so on until the moments that are measured are the same as those used for the
-    weight function.  FindAdaptiveMom() can be used either as a free function, or as a method of the
-    Image class.
+    weight function.  `FindAdaptiveMom` can be used either as a free function, or as a method of the
+    `Image` class.
 
-    This routine assumes that (at least locally) the WCS can be approximated as a PixelScale, with
+    This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with
     no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.
 
-    Like EstimateShear(), FindAdaptiveMom() works on Image inputs, and fails if the object is small
-    compared to the pixel scale.  For more details, see EstimateShear().
+    Like `EstimateShear`, `FindAdaptiveMom` works on `Image` inputs, and fails if the object is
+    small compared to the pixel scale.  For more details, see `EstimateShear`.
 
     Example::
 
@@ -667,12 +695,12 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
     Assuming a successful measurement, the most relevant pieces of information are
-    ``my_moments.moments_sigma``, which is ``|det(M)|^(1/4)`` [=``sigma`` for a circular Gaussian]
-    and ``my_moments.observed_shape``, which is a Shear.  In this case, ``my_moments.moments_sigma``
-    is precisely 5.0 (in units of pixels), and ``my_moments.observed_shape`` is consistent with
-    zero.
+    ``my_moments.moments_sigma``, which is ``|det(M)|^(1/4)`` (= ``sigma`` for a circular Gaussian)
+    and ``my_moments.observed_shape``, which is a `Shear`.  In this case,
+    ``my_moments.moments_sigma`` is precisely 5.0 (in units of pixels), and
+    ``my_moments.observed_shape`` is consistent with zero.
 
-    Methods of the Shear class can be used to get the distortion ``e``, the shear ``g``, the
+    Methods of the `Shear` class can be used to get the distortion ``e``, the shear ``g``, the
     conformal shear ``eta``, and so on.
 
     As an example of how to use the optional ``hsmparams`` argument, consider cases where the input
@@ -687,9 +715,9 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
 
         >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
-    then the result will be a GalSimHSMError due to moment measurement failing because the object is
-    so large.  While the list of all possible settings that can be changed is accessible in the
-    docstring of the HSMParams class, in this case we need to modify ``max_amoment`` which
+    then the result will be a ``GalSimHSMError`` due to moment measurement failing because the
+    object is so large.  While the list of all possible settings that can be changed is accessible
+    in the docstring of the `HSMParams` class, in this case we need to modify ``max_amoment`` which
     is the maximum value of the moments in units of pixel^2.  The following measurement, using the
     default values for every parameter except for ``max_amoment``, will be
     successful::
@@ -698,36 +726,44 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams=new_params)
 
     Parameters:
-        object_image     The Image for the object being measured.
-        weight           The optional weight image for the object being measured.  Can be an int
+        object_image:       The `Image` for the object being measured.
+
+        weight:             The optional weight image for the object being measured.  Can be an int
                             or a float array.  Currently, GalSim does not account for the variation
                             in non-zero weights, i.e., a weight map is converted to an image with 0
                             and 1 for pixels that are not and are used.  Full use of spatial
                             variation in non-zero weights will be included in a future version of
                             the code. [default: None]
-        badpix           The optional bad pixel mask for the image being used.  Zero should be
+
+        badpix:             The optional bad pixel mask for the image being used.  Zero should be
                             used for pixels that are good, and any nonzero value indicates a bad
                             pixel. [default: None]
-        guess_sig        Optional argument with an initial guess for the Gaussian sigma of the
+
+        guess_sig:          Optional argument with an initial guess for the Gaussian sigma of the
                             object (in pixels). [default: 5.0]
-        precision        The convergence criterion for the moments. [default: 1e-6]
-        guess_centroid   An initial guess for the object centroid (useful in case it is not
+
+        precision:          The convergence criterion for the moments. [default: 1e-6]
+
+        guess_centroid:     An initial guess for the object centroid (useful in case it is not
                             located at the center, which is used if this keyword is not set).  The
                             convention for centroids is such that the center of the lower-left pixel
                             is (image.xmin, image.ymin).
                             [default: object_image.true_center]
-        strict           Whether to require success. If ``strict=True``, then there will be a
+
+        strict:             Whether to require success. If ``strict=True``, then there will be a
                             ``GalSimHSMError`` exception if shear estimation fails.  If set to
                             ``False``, then information about failures will be silently stored in
                             the output ShapeData object. [default: True]
-        round_moments    Use a circular weight function instead of elliptical.
+
+        round_moments:      Use a circular weight function instead of elliptical.
                             [default: False]
-        hsmparams        The hsmparams keyword can be used to change the settings used by
-                            FindAdaptiveMom when estimating moments; see HSMParams documentation
-                            using help(galsim.hsm.HSMParams) for more information. [default: None]
+
+        hsmparams:          The hsmparams keyword can be used to change the settings used by
+                            FindAdaptiveMom when estimating moments; see `HSMParams` documentation
+                            for more information. [default: None]
 
     Returns:
-        a ShapeData object containing the results of moment measurement.
+        a `ShapeData` object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     object_image = _convertImage(object_image)
