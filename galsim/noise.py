@@ -71,7 +71,7 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
     Thus, the real S/N on the final image will be slightly lower than the target ``snr`` value,
     and this effect will be larger for brighter objects.
 
-    Also, this function relies on `noise.getVariance()` to determine how much variance the
+    Also, this function relies on `BaseNoise.getVariance` to determine how much variance the
     noise model will add.  Thus, it will not work for noise models that do not have a well-
     defined variance, such as `VariableGaussianNoise`.
 
