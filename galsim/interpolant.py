@@ -49,17 +49,17 @@ class Interpolant(object):
 
         Valid names are:
 
-            'delta' = Delta()
-            'nearest' = Nearest()
-            'sinc' = SincInterpolant()
-            'linear' = Linear()
-            'cubic' = Cubic()
-            'quintic' = Quintic()
-            'lanczosN' = Lanczos(N)  (where N is an integer)
+            - 'delta' = Delta()
+            - 'nearest' = Nearest()
+            - 'sinc' = SincInterpolant()
+            - 'linear' = Linear()
+            - 'cubic' = Cubic()
+            - 'quintic' = Quintic()
+            - 'lanczosN' = Lanczos(N)  (where N is an integer)
 
         In addition, if you want to specify the conserve_dc option for Lanczos, you can append
-        either T or F to represent conserve_dc = True/False (respectively).  Otherwise, the
-        default conserve_dc=True is used.
+        either T or F to represent ``conserve_dc = True/False`` (respectively).  Otherwise, the
+        default ``conserve_dc=True`` is used.
 
         Parameters:
             name:       The name of the interpolant to create.
@@ -286,9 +286,9 @@ class SincInterpolant(Interpolant):
     The Sinc interpolant (K(x) = sin(pi x)/(pi x)) is mathematically perfect for band-limited
     data, introducing no spurious frequency content beyond kmax = pi/dx for input data with pixel
     scale dx.  However, it is formally infinite in extent and, even with reasonable trunction, is
-    still quite large.  It will give exact results in SBInterpolatedImage::kValue() when it is
+    still quite large.  It will give exact results in ``SBInterpolatedImage::kValue()`` when it is
     used as a k-space interpolant, but is extremely slow.  The usual compromise between sinc
-    accuracy vs. speed is the Lanczos interpolant (see its documentation for details).
+    accuracy vs. speed is the `Lanczos` interpolant (see its documentation for details).
 
     Parameters:
         tol:        [deprecated]
