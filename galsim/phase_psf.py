@@ -159,6 +159,7 @@ class Aperture(object):
     the ``aper.pupil_plane_size`` and ``aper.pupil_plane_scale`` attributes.) The pixel scale of
     the pupil plane can be specified in one of three ways.  In descending order of priority, these
     are:
+
       1.  The ``pupil_plane_scale`` keyword argument (units are meters).
       2.  The ``pupil_plane_im.scale`` attribute (units are meters).
       3.  If (1) and (2) are both None, then the scale will be inferred by assuming that the
@@ -920,13 +921,12 @@ class PhaseScreenList(object):
                     be a scalar or an iterable.  The shapes of u and v must match.
             v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                     be a scalar or an iterable.  The shapes of u and v must match.
-            t:      Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or
-                    an iterable.  If None, then the internal time of the phase screens will be
-                    used for all u, v.  If scalar, then the size will be broadcast up to match
-                    that of u and v.  If iterable, then the shape must match the shapes of u and
-                    v.
-            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of
-                    ``galsim.Angle``s.  [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+            t:      Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or an
+                    iterable.  If None, then the internal time of the phase screens will be used
+                    for all u, v.  If scalar, then the size will be broadcast up to match that of
+                    u and v.  If iterable, then the shape must match the shapes of u and v.
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of ``galsim.Angle``
+                    instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
                     Only a single theta is permitted.
 
         Returns:
@@ -950,8 +950,8 @@ class PhaseScreenList(object):
                     will be used for all u, v.  If scalar, then the size will be broadcast up to
                     match that of u and v.  If iterable, then the shape must match the shapes of
                     u and v.
-            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of
-                    ``galsim.Angle``s.  [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of ``galsim.Angle``
+                    instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
                     Only a single theta is permitted.
 
         Returns:

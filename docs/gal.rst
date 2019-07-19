@@ -47,6 +47,12 @@ Spergel Profile
 .. autoclass:: galsim.RealGalaxy
     :members:
 
+.. autoclass:: galsim.RealGalaxyCatalog
+    :members:
+
+.. autoclass:: galsim.COSMOSCatalog
+    :members:
+
 Knots defined by a "random walk"
 --------------------------------
 

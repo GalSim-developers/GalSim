@@ -190,7 +190,7 @@ class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
     wavelength using a Bandpass as a weight function.
 
-    This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
+    This integrator will evaluate the integrand only at the wavelengths in ``bandpass.wave_list``.
     See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
     points equally spaced apart.
 
@@ -213,10 +213,10 @@ class ContinuousIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
     wavelength using a Bandpass as a weight function.
 
-    This integrator will evaluate the integrand at a given number `N` of equally spaced
+    This integrator will evaluate the integrand at a given number ``N`` of equally spaced
     wavelengths over the interval defined by bandpass.blue_limit and bandpass.red_limit.  See
     SampleIntegrator for an integrator that only evaluates the integrand at the predefined set of
-    wavelengths in `bandpass.wave_list`.
+    wavelengths in ``bandpass.wave_list``.
 
     Parameters:
         rule:           Which integration rule to apply to the wavelength and monochromatic
@@ -227,12 +227,12 @@ class ContinuousIntegrator(ImageIntegrator):
 
         N:              Number of equally-wavelength-spaced monochromatic surface brightness
                         samples to evaluate. [default: 250]
-        use_endpoints:  Whether to sample the endpoints `bandpass.blue_limit` and
-                        `bandpass.red_limit`.  This should probably be True for a rule like
+        use_endpoints:  Whether to sample the endpoints ``bandpass.blue_limit`` and
+                        ``bandpass.red_limit``.  This should probably be True for a rule like
                         numpy.trapz, which explicitly samples the integration limits.  For a
                         rule like the midpoint rule, however, the integration limits are not
                         generally sampled, (only the midpoint between each integration limit and
-                        its nearest interior point is sampled), thus `use_endpoints` should be
+                        its nearest interior point is sampled), thus ``use_endpoints`` should be
                         set to False in this case.  [default: True]
     """
     def __init__(self, rule, N=250, use_endpoints=True):

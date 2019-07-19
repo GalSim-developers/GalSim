@@ -420,8 +420,8 @@ class Zernike(object):
 
     The indexing convention for i and j above is that from Noll, J. Opt. Soc. Am. 66, 207-211(1976).
     Note that the Noll indices begin at 1; there is no Z_0.  Because of this, the series
-    coefficients argument `coef` effectively begins with `coef[1]` (`coef[0]` is ignored).  This
-    convention is used consistently throughout GalSim, e.g., `OpticalPSF`, `OpticalScreen`,
+    coefficients argument ``coef`` effectively begins with ``coef[1]`` (``coef[0]`` is ignored).
+    This convention is used consistently throughout GalSim, e.g., `OpticalPSF`, `OpticalScreen`,
     `zernikeRotMatrix`, and `zernikeBasis`.
 
     As an example, the first few Zernike polynomials in terms of Cartesian coordinates x and y are
@@ -572,15 +572,16 @@ def zernikeRotMatrix(jmax, theta):
         >>> Zrot = Zernike(rotCoefs)
         >>> Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)
 
-    Note that not all values of `jmax` are allowed.  For example, jmax=2 raises an Exception, since
-    a non-zero Z_2 coefficient will in general rotate into a combination of Z_2 and Z_3
+    Note that not all values of ``jmax`` are allowed.  For example, jmax=2 raises an Exception,
+    since a non-zero Z_2 coefficient will in general rotate into a combination of Z_2 and Z_3
     coefficients, and therefore the needed rotation matrix requires jmax=3.  If you run into this
     kind of Exception, raising jmax by 1 will eliminate it.
 
     Also note that the returned matrix is intended to multiply a vector of Zernike coefficients
-    `coef` indexed following the Noll (1976) convention, which starts at 1.  Since python sequences
-    start at 0, we adopt the convention that `coef[0]` is unused, and `coef[i]` corresponds to the
-    coefficient multiplying Z_i.  As a result, the size of the returned matrix is [jmax+1, jmax+1].
+    ``coef`` indexed following the Noll (1976) convention, which starts at 1.  Since python
+    sequences start at 0, we adopt the convention that ``coef[0]`` is unused, and ``coef[i]``
+    corresponds to the coefficient multiplying Z_i.  As a result, the size of the returned matrix
+    is [jmax+1, jmax+1].
 
     Parameters:
         jmax:   Maximum Zernike index (in the Noll convention) over which to construct matrix.
@@ -623,8 +624,8 @@ def zernikeRotMatrix(jmax, theta):
 
 
 def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
-    """Construct basis of Zernike polynomial series up to Noll index `jmax`, evaluated at a specific
-    set of points `x` and `y`.
+    """Construct basis of Zernike polynomial series up to Noll index ``jmax``, evaluated at a
+    specific set of points ``x`` and ``y``.
 
     Useful for fitting Zernike polynomials to data, e.g.::
 
@@ -639,9 +640,9 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
 
     Note that since we follow the Noll indexing scheme for Zernike polynomials, which begins at 1,
     but python sequences are indexed from 0, the length of the leading dimension in the result is
-    `jmax+1` instead of `jmax`.  We somewhat arbitrarily fill the 0th slice along the first
-    dimension with 0s (result[0, ...] == 0) so that it doesn't impact the results of np.linalg.lstsq
-    as in the example above.
+    ``jmax+1`` instead of ``jmax``.  We somewhat arbitrarily fill the 0th slice along the first
+    dimension with 0s (result[0, ...] == 0) so that it doesn't impact the results of
+    ``np.linalg.lstsq`` as in the example above.
 
     Parameters:
          jmax:      Maximum Noll index to use.

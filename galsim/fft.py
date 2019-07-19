@@ -139,21 +139,23 @@ def ifft2(a, shift_in=False, shift_out=False):
           not required.)
         - The array is assumed to be Hermitian, which means the k values with kx<0 are assumed
           to be equal to the conjuate of their inverse.  This will always be the case if
-          a is an output of fft2 (with a real input array).
-          i.e. for kx >= N/2, ky > 0: a[ky, kx] == a[N-ky, N-kx].conjugate()
-               for kx >= N/2, ky = 0: a[0, kx] == a[0, N-kx].conjugate()
+          a is an output of fft2 (with a real input array).  i.e.
+
+          - for kx >= N/2, ky > 0: a[ky, kx] == a[N-ky, N-kx].conjugate()
+          - for kx >= N/2, ky = 0: a[0, kx] == a[0, N-kx].conjugate()
+
           Only the elements a[:,0:N/2+1] are accessed by this function.
         - If it has a real dtype, it will be coerced to numpy.float64.
         - If it has a complex dtype, it will be coerced to numpy.complex128.
 
-    The returned array will be complex with dtype numpy.complex128
+    The returned array will be complex with dtype numpy.complex128.
 
-    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.::
+    If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input::
 
         >>> a1 = numpy.fft.ifft2(numpy.fft.fftshift(ka))
         >>> a2 = galsim.fft.ifft2(ka, shift_in=True)
 
-    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output.::
+    If shift_out is True, then this is equivalent to applying numpy.fft.fftshift to the output::
 
         >>> a1 = numpy.fft.fftshift(numpy.fft.ifft2(ka))
         >>> a2 = galsim.fft.ifft2(ka, shift_out=True)
