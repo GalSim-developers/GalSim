@@ -3,7 +3,11 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+# The DYLD... below is for users who use the LSST stack for GalSim dependencies.
+# We think it doesn't break anything for non-LSST-stack users, but if you find
+# you have problems building the documentation, try replacing this line with just
+# SPHINXBUILD = sphinx-build
+SPHINXBUILD   = DYLD_LIBRARY_PATH=$$LSST_LIBRARY_PATH sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 
