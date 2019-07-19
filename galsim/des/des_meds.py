@@ -49,26 +49,24 @@ class MultiExposureObject(object):
     """
     A class containing exposures for single object, along with other information.
 
-    Initialization
-    --------------
-
-    @param images       List of images of the object.
-    @param weight       List of weight images. [default: None]
-    @param badpix       List of bad pixel masks. [default: None]
-    @param seg          List of segmentation maps. [default: None]
-    @param psf          List of psf images. [default: None]
-    @param wcs          List of WCS transformations. [default: None]
-    @param id           Galaxy id. [default: 0]
+    Parameters:
+       images:       List of images of the object.
+       weight:       List of weight images. [default: None]
+       badpix:       List of bad pixel masks. [default: None]
+       seg:          List of segmentation maps. [default: None]
+       psf:          List of psf images. [default: None]
+       wcs:          List of WCS transformations. [default: None]
+       id:            Galaxy id. [default: 0]
 
     Attributes
     ----------
-    self.images         List of images of the object.
-    self.weight         List of weight maps.
-    self.seg            List of segmentation maps.
-    self.psf            List of psf images.
-    self.wcs            List of WCS transformations.
-    self.n_cutouts      Number of exposures.
-    self.box_size       Size of each exposure image.
+    self.images:         List of images of the object.
+    self.weight:         List of weight maps.
+    self.seg:            List of segmentation maps.
+    self.psf:            List of psf images.
+    self.wcs:            List of WCS transformations.
+    self.n_cutouts:      Number of exposures.
+    self.box_size:       Size of each exposure image.
     """
 
     def __init__(self, images, weight=None, badpix=None, seg=None, psf=None,
@@ -187,12 +185,10 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     """
     Writes a MEDS file from a list of MultiExposureObjects.
 
-    Arguments:
-    ----------
-    @param obj_list:     List of MultiExposureObjects
-    @param file_name:    Name of meds file to be written
-    @param clobber       Setting `clobber=True` when `file_name` is given will silently overwrite
-                         existing files. (Default `clobber = True`.)
+    Parameters:
+       obj_list (list):     List of MultiExposureObjects test
+       file_name (string):    Name of meds file to be written
+       clobber (bool):      Setting ``clobber=True`` when ``file_name`` is given will silently overwrite existing files. (Default ``clobber = True``.)
     """
 
     from galsim._pyfits import pyfits
@@ -446,16 +442,18 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         """
         Build a meds file as specified in config.
 
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
-        @param file_num         The current file_num.
-        @param image_num        The current image_num.
-        @param obj_num          The current obj_num.
-        @param ignore           A list of parameters that are allowed to be in config that we can
-                                ignore here.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+           config (dict):           The configuration dict for the output field.
+           base (dict):             The base configuration dict.
+           file_num (int):          The current file_num.
+           image_num (int):         The current image_num.
+           obj_num (int):           The current obj_num.
+           ignore (list):           A list of parameters that are allowed to be in config that we can ignore here.
+           logger (object):         If given, a logger object to log progress.
 
-        @returns obj_list
+        Returns:
+           A list of MultiExposureObjects.
+
         """
         import time
         t1 = time.time()
@@ -512,6 +510,8 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         return obj_list
 
     def writeFile(self, data, file_name, config, base, logger):
+        """Wrapper for `WriteMEDS`.
+        """
         WriteMEDS(data, file_name)
 
     def getNImages(self, config, base, file_num):
