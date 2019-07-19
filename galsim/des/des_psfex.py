@@ -245,6 +245,12 @@ class DES_PSFEx(object):
     def getLocalWCS(self, image_pos):
         """If the original image was provided to the constructor, this will return the local
         WCS at a given location in that original image.  If not, this will return None.
+
+        Args:
+           image_pos (object): position in pixels in the image.
+
+        Returns:
+           Local WCS.
         """
         if self.wcs:
             return self.wcs.local(image_pos)
@@ -252,12 +258,14 @@ class DES_PSFEx(object):
             return None
 
     def getPSF(self, image_pos, gsparams=None):
-        """Returns the PSF at position image_pos
+        """Returns the PSF at position ``image_pos``.
 
-        @param image_pos    The position in image coordinates at which to build the PSF.
-        @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
+        Args:
+           image_pos (object):    The position in image coordinates at which to build the PSF.
+           gsparams (object):     A ``GSParams`` instance to pass to the constructed GSObject. [Defualt is None].
 
-        @returns the PSF as a GSObject
+        Returns:
+           the PSF as a `GSObject`
         """
         # Build an image version of the numpy array
         im = galsim.Image(self.getPSFArray(image_pos))
