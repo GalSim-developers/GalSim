@@ -194,7 +194,7 @@ namespace galsim {
 
             T delta = uBound-lBound;
             for (int j=1; j<maxSteps; j++) {
-                if (fupper*flower < 0.0) return;
+                if (fupper*flower <= 0.0) return;
                 if (std::abs(flower) < std::abs(fupper)) {
                     uBound = lBound;
                     fupper = flower;
@@ -219,7 +219,7 @@ namespace galsim {
             const T factor=2.0;
             T delta = b-a;
             for (int j=1; j<maxSteps; j++) {
-                if (fa*fb < 0.0) return true;
+                if (fa*fb <= 0.0) return true;
                 a = b;
                 fa = fb;
                 delta *= factor;
@@ -308,7 +308,7 @@ namespace galsim {
             xdbg<<"a,b,c = "<<a<<','<<b<<','<<c<<std::endl;
             xdbg<<"fa,fb = "<<fa<<','<<fb<<std::endl;
             for (int j=1; j<maxSteps; j++) {
-                if (fa*fb < 0.0) return true;
+                if (fa*fb <= 0.0) return true;
                 T bma = b-a; // Do this before overwriting a!
                 T cmb = c-b;
                 a = b;
@@ -381,7 +381,7 @@ namespace galsim {
             f=flower;
             fmid=fupper;
 
-            if (f*fmid >= 0.0)
+            if (f*fmid > 0.0)
                 FormatAndThrow<SolveError> () << "Root is not bracketed: " << lBound
                     << " " << uBound;
             rtb = f < 0.0 ? (dx=uBound-lBound,lBound) : (dx=lBound-uBound,uBound);
