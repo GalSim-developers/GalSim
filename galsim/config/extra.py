@@ -381,10 +381,11 @@ class ExtraOutputBuilder(object):
         Remember, these stamps may be processed out of order.  Saving data to the scratch dict
         is safe, even if multiprocessing is being used.
 
-        @param obj_num      The object number
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+           obj_num (int):      The object number
+           config (dict):      The configuration field for this output object.
+           base (dict):        The base configuration dict.
+           logger (object):    If given, a logger object to log progress. [default: None]
         """
         pass  # pragma: no cover  (all our ExtraBuilders override this function.)
 
@@ -448,12 +449,14 @@ class ExtraOutputBuilder(object):
         self.data, but depending on the meaning of the output object, something else might be
         more appropriate.
 
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param main_data    The main file data in case it is needed.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+           config (dict):              The configuration field for this output object.
+           base (dict):         The base configuration dict.
+           main_data (object):           The main file data in case it is needed.
+           logger (object):       If given, a logger object to log progress. [default: None]
 
-        @returns the final version of the object.
+        Returns:
+           The final version of the object.
         """
         return self.data
 

@@ -539,7 +539,7 @@ class MEDSBuilder(galsim.config.OutputBuilder):
 # This extra output type simply saves the values of the image offsets when an
 # object is drawn into the stamp.
 class OffsetBuilder(galsim.config.ExtraOutputBuilder):
-    """This saves the stamp offset values for later use"""
+    """This saves the stamp offset values for later use. Subclass of ``ExtraOutputBuilder``."""
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):
         offset = base['stamp_offset']
