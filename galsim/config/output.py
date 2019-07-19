@@ -481,15 +481,17 @@ class OutputBuilder(object):
             return 1
 
     def getNImages(self, config, base, file_num):
-        """Returns the number of images to be built for a given file_num.
+        """Returns the number of images to be built for a given ``file_num``.
 
         In the base class, we only build a single image, so it returns 1.
 
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
-        @param file_num         The current file number.
+        Parameters:
+           config (dict):           The configuration dict for the output field.
+           base (dict):             The base configuration dict.
+           file_num (int):          The current file number.
 
-        @returns the number of images to build.
+        Returns:
+           the number of images to build.
         """
         return 1
 
