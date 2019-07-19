@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Interpolants &mdash; GalSim 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Interfacing with FITS Files" href="fits.html" />
+    <link rel="prev" title="Catalogs and Input Dictionaries" href="catalog.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GalSim
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Interpolants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html">Interfacing with FITS Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html">Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="utilities.html">Helper Functions and Classes</a> &raquo;</li>
+        
+      <li>Interpolants</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/interpolant.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="interpolants">
+<h1>Interpolants<a class="headerlink" href="#interpolants" title="Permalink to this headline">¶</a></h1>
+<p>These classes are principally used by <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>.  They define how the surface
+brightness between pixel centers is defined from the values at the centers.</p>
+<dl class="class">
+<dt id="galsim.Interpolant">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Interpolant</code><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class that defines how interpolation should be done.</p>
+<p>An Interpolant is needed for an InterpolatedImage to define how interpolation should be done
+an locations in between the integer pixel centers.</p>
+<dl class="method">
+<dt id="galsim.Interpolant.from_name">
+<em class="property">static </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.from_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A factory function to create an Interpolant of the correct type according to
+the (string) name of the Interpolant.</p>
+<p>This is mostly used to simplify how config files specify the Interpolant to use.</p>
+<p>Valid names are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘delta’ = Delta()</p></li>
+<li><p>‘nearest’ = Nearest()</p></li>
+<li><p>‘sinc’ = SincInterpolant()</p></li>
+<li><p>‘linear’ = Linear()</p></li>
+<li><p>‘cubic’ = Cubic()</p></li>
+<li><p>‘quintic’ = Quintic()</p></li>
+<li><p>‘lanczosN’ = Lanczos(N)  (where N is an integer)</p></li>
+</ul>
+</div></blockquote>
+<p>In addition, if you want to specify the conserve_dc option for Lanczos, you can append
+either T or F to represent <code class="docutils literal notranslate"><span class="pre">conserve_dc</span> <span class="pre">=</span> <span class="pre">True/False</span></code> (respectively).  Otherwise, the
+default <code class="docutils literal notranslate"><span class="pre">conserve_dc=True</span></code> is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the interpolant to create.</p></li>
+<li><p><strong>tol</strong> – The requested accuracy tolerance [default: 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Interpolant.withGSParams">
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.withGSParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current interpolant with the given gsparams</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.Delta">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Delta</code><span class="sig-paren">(</span><em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delta-function interpolation.</p>
+<p>The interpolant for when you do not want to interpolate between samples.  It is not really
+intended to be used for any analytic drawing because it is infinite in the x domain at the
+location of samples, and it extends to infinity in the u domain.  But it could be useful for
+photon-shooting, where it is trivially implemented as no displacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – This defines a crude box approximation to the x-space delta function and to
+give a large but finite range in k space. [default: 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.Nearest">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Nearest</code><span class="sig-paren">(</span><em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Nearest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nearest-neighbor interpolation (boxcar).</p>
+<p>The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for
+interpolated images.  (See paper by “Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.)
+The objection to its use in Fourier space does not apply when shooting photons to generate
+an image; in that case, the nearest-neighbor interpolant is quite efficient (but not
+necessarily the best choice in terms of accuracy).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – This determines how far onto sinc wiggles the uval will go.  (Very far, by
+default!) [default: 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.Linear">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Linear</code><span class="sig-paren">(</span><em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear interpolation</p>
+<p>The linear interpolant is a poor choice for FFT-based operations on interpolated images, as
+it rings to high frequencies.  (See Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.)
+This objection does not apply when shooting photons, in which case the linear interpolant is
+quite efficient (but not necessarily the best choice in terms of accuracy).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – This determines how far onto sinc^2 wiggles the uval will go. (Very far,
+by default!) [default 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.Cubic">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Cubic</code><span class="sig-paren">(</span><em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cubic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cubic interpolation</p>
+<p>The cubic interpolant is exact to 3rd order Taylor expansion (from R. G. Keys, IEEE Trans.
+Acoustics, Speech, &amp; Signal Proc 29, p 1153, 1981).  It is a reasonable choice for a four-point
+interpolant for interpolated images.  (See Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – This sets the accuracy and extent of the Fourier transform. [default 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.Quintic">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Quintic</code><span class="sig-paren">(</span><em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Quintic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Quintic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fifth order interpolation</p>
+<p>The quintic interpolant is exact to 5th order in the Taylor expansion and was found by
+Bernstein &amp; Gruen (<a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>) to give optimal results as a k-space
+interpolant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – This sets the accuracy and extent of the Fourier transform. [default 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.SincInterpolant">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SincInterpolant</code><span class="sig-paren">(</span><em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SincInterpolant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sinc interpolation (inverse of nearest-neighbor).</p>
+<p>The Sinc interpolant (K(x) = sin(pi x)/(pi x)) is mathematically perfect for band-limited
+data, introducing no spurious frequency content beyond kmax = pi/dx for input data with pixel
+scale dx.  However, it is formally infinite in extent and, even with reasonable trunction, is
+still quite large.  It will give exact results in <code class="docutils literal notranslate"><span class="pre">SBInterpolatedImage::kValue()</span></code> when it is
+used as a k-space interpolant, but is extremely slow.  The usual compromise between sinc
+accuracy vs. speed is the <a class="reference internal" href="#galsim.Lanczos" title="galsim.Lanczos"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Lanczos</span></code></a> interpolant (see its documentation for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – This determines how far onto sinc wiggles the xval will go.  (Very far, by
+default!) [default 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.Lanczos">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Lanczos</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">conserve_dc=True</em>, <em class="sig-param">tol=0.0001</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Lanczos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Lanczos" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n)</p>
+<p>The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
+at high x.  Order n Lanczos has a range of +/- n pixels.  It typically is a good compromise
+between kernel size and accuracy.</p>
+<p>Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
+this constant.  Setting <code class="docutils literal notranslate"><span class="pre">conserve_dc</span></code> in the constructor tweaks the function so that it
+approximately conserves the value of constant (DC) input data (accurate to better than 1.e-5
+when used in two dimensions).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> – The order of the Lanczos function</p></li>
+<li><p><strong>conserve_dc</strong> – Whether to add the first order correction to flatten out the flux response
+to a constant input. [default: True, see above]</p></li>
+<li><p><strong>tol</strong> – This sets the accuracy and extent of the Fourier transform. [default 1.e-4]</p></li>
+<li><p><strong>gsparams</strong> – An optional GSParams instance.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="fits.html" class="btn btn-neutral float-right" title="Interfacing with FITS Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="catalog.html" class="btn btn-neutral float-left" title="Catalogs and Input Dictionaries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, GalSim-developers
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
