@@ -157,12 +157,6 @@ This module also contains the following routines:
     A utility to find the expected sky level due to zodiacal light at a given
     position, in a given band.
 
-`galsim.wfirst.NLfunc`
-    A function to take an input image and simulate detector nonlinearity.  This will
-    ordinarily be used as an input to GalSim routines for applying nonlinearity, though
-    it is not needed for users of `galsim.wfirst.applyNonlinearity` (which is what we
-    actually recommmend).
-
 `galsim.wfirst.applyNonlinearity`
     A routine to apply detector nonlinearity of the type expected for WFIRST.
 
@@ -233,8 +227,6 @@ combining them using `galsim.utilities.interleaveImages`.
 .. autofunction:: galsim.wfirst.bestPA
 
 .. autofunction:: galsim.wfirst.convertCenter
-
-.. autofunction:: galsim.wfirst.NLfunc
 
 .. autofunction:: galsim.wfirst.applyNonlinearity
 

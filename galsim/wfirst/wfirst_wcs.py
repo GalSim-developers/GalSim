@@ -22,16 +22,17 @@ Part of the WFIRST module.  This file includes any routines needed to define and
 Current version is consistent with WFIRST wide-field channel optical design version 7.6.8, generated
 during Phase A and presented at the WFIRST System Requirements Review and Mission Definition Review.
 """
-import galsim
-import galsim.wfirst
 import numpy as np
 import os
 import coord
 
+from . import n_sca
+from .. import meta_data
+
 # Basic WFIRST reference info, with lengths in mm.
 pixel_size_mm = 0.01
 focal_length = 18727.2
-pix_scale = (pixel_size_mm/focal_length)*galsim.radians
+pix_scale = (pixel_size_mm/focal_length)*coord.radians
 n_sip = 5 # Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension
 
 # Version-related information, for reference back to material provided by Jeff Kruk.
@@ -49,7 +50,7 @@ prog_version = "0.5"
 # SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped
 # between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
 # were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
-infile = os.path.join(galsim.meta_data.share_dir, 'sca_positions_7_6_8.txt')
+infile = os.path.join(meta_data.share_dir, 'sca_positions_7_6_8.txt')
 sca_data = np.loadtxt(infile).transpose()
 sca_xc_mm = -sca_data[3,:]
 sca_yc_mm = sca_data[4,:]
@@ -59,8 +60,8 @@ sca_yc_mm = np.insert(sca_yc_mm, 0, 0)
 # (neglecting distortions - to be included later).
 fpa_xc_mm = 0.0
 fpa_yc_mm = 160.484
-xc_fpa = np.arctan(fpa_xc_mm/focal_length)*galsim.radians
-yc_fpa = np.arctan(fpa_yc_mm/focal_length)*galsim.radians
+xc_fpa = np.arctan(fpa_xc_mm/focal_length)*coord.radians
+yc_fpa = np.arctan(fpa_yc_mm/focal_length)*coord.radians
 
 # The next array contains rotation offsets of individual SCA Y axis relative to FPA f2 axis. Same
 # sign convention as theta_fpa. These represent mechanical installation deviations from perfect
@@ -71,10 +72,10 @@ sca_rot = np.zeros_like(sca_xc_mm)
 # Rotation of focal plane axes relative to payload axes: this is expressed as a CCW rotation of the
 # f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In cycle 5, this was around +30 degrees,
 # but in cycle 6 there is a ~90 degree CCW rotation with respect to that.
-theta_fpa = -60.0*galsim.degrees
+theta_fpa = -60.0*coord.degrees
 
 # File with SIP coefficients.
-sip_filename = os.path.join(galsim.meta_data.share_dir, 'sip_7_6_8.txt')
+sip_filename = os.path.join(meta_data.share_dir, 'sip_7_6_8.txt')
 
 def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     """
@@ -120,6 +121,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     Returns:
         A dict of WCS objects for each SCA.
     """
+    from .. import GSFitsWCS, FitsHeader
+
     # First just parse the input quantities.
     date, SCAs, pa_fpa, pa_obsy = _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs)
 
@@ -172,12 +175,12 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         # And populate some things that just depend on the overall locations or other input, not on
         # the SCA.
         header.extend([
-            ('RA_TARG', world_pos.ra / galsim.degrees,
+            ('RA_TARG', world_pos.ra / coord.degrees,
                         "right ascension of the target (deg) (J2000)"),
-            ('DEC_TARG', world_pos.dec / galsim.degrees,
+            ('DEC_TARG', world_pos.dec / coord.degrees,
                          "declination of the target (deg) (J2000)"),
-            ('PA_OBSY', pa_obsy / galsim.degrees, "position angle of observatory Y axis (deg)"),
-            ('PA_FPA', pa_fpa / galsim.degrees, "position angle of FPA Y axis (deg)"),
+            ('PA_OBSY', pa_obsy / coord.degrees, "position angle of observatory Y axis (deg)"),
+            ('PA_FPA', pa_fpa / coord.degrees, "position angle of FPA Y axis (deg)"),
             ('SCA_NUM', i_sca, "SCA number (1 - 18)"),
         ])
 
@@ -187,10 +190,10 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         # axis.  Note that this quantity is not used in any calculations at all, but for consistency
         # with the WCS code that comes from the WFIRST project office, we calculate this quantity
         # and put it in the FITS header.
-        if world_pos.dec / galsim.degrees > -90.:
-            phi_p = np.pi*galsim.radians
+        if world_pos.dec / coord.degrees > -90.:
+            phi_p = np.pi*coord.radians
         else:
-            phi_p = 0.*galsim.radians
+            phi_p = 0.*coord.radians
 
         # Get position of SCA center given the center of the FPA and the orientation angle of the
         # focal plane.
@@ -199,12 +202,12 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         # Compute the position angle of the local pixel Y axis.
         # This requires projecting local North onto the detector axes.
         # Start by adding any SCA-unique rotation relative to FPA axes:
-        sca_tp_rot = pa_fpa + sca_rot[i_sca]*galsim.degrees
+        sca_tp_rot = pa_fpa + sca_rot[i_sca]*coord.degrees
 
         # Go some reasonable distance from crval in the +y direction.  Say, 1 degree.
-        plus_y = world_pos.deproject(u, v + 1*galsim.degrees, projection='gnomonic')
+        plus_y = world_pos.deproject(u, v + 1*coord.degrees, projection='gnomonic')
         # Find the angle between this point, crval and due north.
-        north = galsim.CelestialCoord(0.*galsim.degrees, 90.*galsim.degrees)
+        north = coord.CelestialCoord(0.*coord.degrees, 90.*coord.degrees)
         pa_sca = sca_tp_rot - crval.angleBetween(plus_y, north)
 
         # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
@@ -224,8 +227,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         sin_pa_sca = np.sin(pa_sca)
 
         header.extend([
-            ('CRVAL1', crval.ra / galsim.degrees, "first axis value at reference pixel"),
-            ('CRVAL2', crval.dec / galsim.degrees, "second axis value at reference pixel"),
+            ('CRVAL1', crval.ra / coord.degrees, "first axis value at reference pixel"),
+            ('CRVAL2', crval.dec / coord.degrees, "second axis value at reference pixel"),
             ('CD1_1', cos_pa_sca * a10 + sin_pa_sca * b10,
                       "partial of first axis coordinate w.r.t. x"),
             ('CD1_2', cos_pa_sca * a11 + sin_pa_sca * b11,
@@ -234,8 +237,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
                       "partial of second axis coordinate w.r.t. x"),
             ('CD2_2', -sin_pa_sca * a11 + cos_pa_sca * b11,
                       "partial of second axis coordinate w.r.t. y"),
-            ('ORIENTAT', pa_sca / galsim.degrees, "position angle of image y axis (deg. e of n)"),
-            ('LONPOLE', phi_p / galsim.degrees, "Native longitude of celestial pole"),
+            ('ORIENTAT', pa_sca / coord.degrees, "position angle of image y axis (deg. e of n)"),
+            ('LONPOLE', phi_p / coord.degrees, "Native longitude of celestial pole"),
         ])
         for i in range(n_sip):
             for j in range(n_sip):
@@ -245,8 +248,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
                     sipstr = "B_%d_%d"%(i,j)
                     header.append( (sipstr,  b_sip[i_sca,i,j]) )
 
-        header = galsim.FitsHeader(header)
-        wcs = galsim.GSFitsWCS(header=header)
+        header = FitsHeader(header)
+        wcs = GSFitsWCS(header=header)
         # Store the original header as an attribute of the WCS.  This ensures that we have all the
         # extra keywords for whenever an image with this WCS is written to file.
         wcs.header = header
@@ -254,7 +257,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
 
     return wcs_dict
 
-def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*galsim.arcsec):
+def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*coord.arcsec):
     """
     This is a simple helper routine that takes an input position ``world_pos`` that is meant to
     correspond to the position of the center of an SCA, and tells where the center of the focal
@@ -296,9 +299,12 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*g
     Returns:
         A CelestialCoord object indicating the center of the focal plane array.
     """
+    from .. import PositionD
+    from . import n_pix
+
     if not isinstance(SCA, int):
         raise TypeError("Must pass in an int corresponding to the SCA")
-    if not isinstance(tol, galsim.Angle):
+    if not isinstance(tol, coord.Angle):
         raise TypeError("tol must be a galsim.Angle")
     use_SCA = SCA
     # Parse inputs appropriately.
@@ -312,14 +318,14 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*g
     # the FPA, because of distortions etc.  We can do an iterative correction.
     # For the default value of 'tol', typically just 1-2 iterations are needed.
     shift_val = 1000.0 # arcsec
-    while shift_val > tol/galsim.arcsec:
+    while shift_val > tol/coord.arcsec:
         test_wcs = getWCS(fpa_cent, PA, date, use_SCA, PA_is_FPA)[use_SCA]
-        im_cent_pos = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix/2)
+        im_cent_pos = PositionD(n_pix/2, n_pix/2)
         test_sca_pos = test_wcs.toWorld(im_cent_pos)
         delta_ra = np.cos(world_pos.dec)*(world_pos.ra-test_sca_pos.ra)
         delta_dec = world_pos.dec-test_sca_pos.dec
-        shift_val = np.abs(world_pos.distanceTo(test_sca_pos)/galsim.arcsec)
-        fpa_cent = galsim.CelestialCoord(fpa_cent.ra + delta_ra, fpa_cent.dec + delta_dec)
+        shift_val = np.abs(world_pos.distanceTo(test_sca_pos)/coord.arcsec)
+        fpa_cent = coord.CelestialCoord(fpa_cent.ra + delta_ra, fpa_cent.dec + delta_dec)
 
     return fpa_cent
 
@@ -341,28 +347,30 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     ``include_border`` switches between these scenarios.
 
     Parameters:
-        wcs_dict         The dict of WCS's output from galsim.wfirst.getWCS().
-        world_pos        A galsim.CelestialCoord indicating the sky position of interest.
-        include_border   If True, then include the half-border around SCA to cover the gap
-                            between each sensor. [default: False]
+        wcs_dict:        The dict of WCS's output from galsim.wfirst.getWCS().
+        world_pos:       A galsim.CelestialCoord indicating the sky position of interest.
+        include_border:  If True, then include the half-border around SCA to cover the gap
+                         between each sensor. [default: False]
 
     Returns:
         an integer value of the SCA on which the position falls, or None if the position is not
         on any SCA.
 
     """
+    from .. import BoundsI
+
     # Sanity check args.
     if not isinstance(wcs_dict, dict):
         raise TypeError("wcs_dict should be a dict containing WCS output by galsim.wfirst.getWCS.")
 
-    if not isinstance(world_pos, galsim.CelestialCoord):
+    if not isinstance(world_pos, coord.CelestialCoord):
         raise TypeError("Position on the sky must be given as a galsim.CelestialCoord.")
 
     # Set up the minimum and maximum pixel values, depending on whether or not to include the
     # border.  We put it immediately into a galsim.BoundsI(), since the routine returns xmin, xmax,
     # ymin, ymax:
     xmin, xmax, ymin, ymax = _calculate_minmax_pix(include_border)
-    bounds_list = [ galsim.BoundsI(x1,x2,y1,y2) for x1,x2,y1,y2 in zip(xmin,xmax,ymin,ymax) ]
+    bounds_list = [ BoundsI(x1,x2,y1,y2) for x1,x2,y1,y2 in zip(xmin,xmax,ymin,ymax) ]
 
     sca = None
     for i_sca in wcs_dict:
@@ -381,17 +389,19 @@ def _calculate_minmax_pix(include_border=False):
     between SCAs.  In that case it depends on the detailed geometry of the WFIRST focal plane.
 
     Parameters:
-        include_border      A boolean value that determines whether to include 1/2 of the gap
+        include_border:     A boolean value that determines whether to include 1/2 of the gap
                             between SCAs as part of the SCA itself.  [default: False]
 
     Returns:
         a tuple of NumPy arrays for the minimum x pixel value, maximum x pixel value, minimum y
         pixel value, and maximum y pixel value for each SCA.
     """
+    from . import n_pix
+
     # First, set up the default (no border).
     # The minimum and maximum pixel values are (1, n_pix).
-    min_x_pix = np.ones(galsim.wfirst.n_sca+1).astype(int)
-    max_x_pix = min_x_pix + galsim.wfirst.n_pix - 1
+    min_x_pix = np.ones(n_sca+1).astype(int)
+    max_x_pix = min_x_pix + n_pix - 1
     min_y_pix = min_x_pix.copy()
     max_y_pix = max_x_pix.copy()
 
@@ -402,13 +412,13 @@ def _calculate_minmax_pix(include_border=False):
         # group together those that are forced to be the same.
         #
         # Positive side of 1/2/3, same as negative side of 10/11/12
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-galsim.wfirst.n_pix*pixel_size_mm
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         max_x_pix[1:4] += half_border_pix
         min_x_pix[10:13] -= half_border_pix
 
         # Negative side of 1/2/3 and 13/14/15, same as positive side of 10/11/12, 4/5/6
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-galsim.wfirst.n_pix*pixel_size_mm
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         min_x_pix[1:4] -= half_border_pix
         min_x_pix[13:16] -= half_border_pix
@@ -417,7 +427,7 @@ def _calculate_minmax_pix(include_border=False):
 
         # Negative side of 4/5/6, 16/17/18, same as positive side of 13/14/15, 7/8/9
         # Also add this same chip gap to the outside chips.  Neg side of 7/8/9, pos 16/17/18.
-        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-galsim.wfirst.n_pix*pixel_size_mm
+        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         min_x_pix[4:10] -= half_border_pix
         min_x_pix[16:19] -= half_border_pix
@@ -432,7 +442,7 @@ def _calculate_minmax_pix(include_border=False):
 
         # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16.
         # Also use this for top of top row: 1/4/7/10/13/16.
-        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-galsim.wfirst.n_pix*pixel_size_mm
+        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         list_1 = np.arange(1,18,3)
         list_2 = list_1 + 1
@@ -443,7 +453,7 @@ def _calculate_minmax_pix(include_border=False):
 
         # Top of 3/6/9/12/15/18, same as bottom of 2/5/8/11/14/17.
         # Also use this for bottom of bottom row: 3/6/9/12/15/18.
-        border_mm = abs(sca_yc_mm[2]-sca_yc_mm[3])-galsim.wfirst.n_pix*pixel_size_mm
+        border_mm = abs(sca_yc_mm[2]-sca_yc_mm[3])-n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         max_y_pix[list_3] += half_border_pix
         min_y_pix[list_2] -= half_border_pix
@@ -456,14 +466,16 @@ def _populate_required_fields(header):
     Utility routine to do populate some of the basic fields for the WCS headers for WFIRST that
     don't require any interesting calculation.
     """
+    from . import n_pix
+
     header.extend([
         ('EQUINOX', 2000.0, "equinox of celestial coordinate system"),
         ('WCSAXES', 2, "number of World Coordinate System axes"),
         ('A_ORDER', 4),
         ('B_ORDER', 4),
         ('WCSNAME', 'wfiwcs_'+optics_design_ver+'_'+prog_version),
-        ('CRPIX1', galsim.wfirst.n_pix/2, "x-coordinate of reference pixel"),
-        ('CRPIX2', galsim.wfirst.n_pix/2, "y-coordinate of reference pixel"),
+        ('CRPIX1', n_pix/2, "x-coordinate of reference pixel"),
+        ('CRPIX2', n_pix/2, "y-coordinate of reference pixel"),
         ('CTYPE1', "RA---TAN-SIP", "coordinate type for the first axis"),
         ('CTYPE2', "DEC--TAN-SIP", "coordinate type for the second axis"),
         ('SIMPLE', 'True'),
@@ -487,9 +499,9 @@ def _parse_sip_file(file):  # pragma: no cover
     # Parse the file, which comes from wfi_wcs_sip_gen_0.1.c provided by Jeff Kruk.
     data = np.loadtxt(file, usecols=[0, 3, 4, 5, 6, 7]).transpose()
 
-    a_sip = np.zeros((galsim.wfirst.n_sca+1, n_sip, n_sip))
-    b_sip = np.zeros((galsim.wfirst.n_sca+1, n_sip, n_sip))
-    for i_sca in range(1, galsim.wfirst.n_sca+1):
+    a_sip = np.zeros((n_sca+1, n_sip, n_sip))
+    b_sip = np.zeros((n_sca+1, n_sip, n_sip))
+    for i_sca in range(1, n_sca+1):
         i_sca_m1 = i_sca - 1
         # Take the data for this SCA
         use_data = data[:, data[0,:]==i_sca_m1]
@@ -525,7 +537,7 @@ def _det_to_tangplane_positions(x_in, y_in):
     # https://wfirst.gsfc.nasa.gov/science/WFIRST_Reference_Information.html (cycle 7).
     img_dist_coeff = np.array([-7.1229e-3, -1.6186e-2, 6.9169e-02, -1.4189e-02])
     # The optical distortion model is defined in terms of separations in *degrees*.
-    r_sq = (x_in/galsim.degrees)**2 + (y_in/galsim.degrees)**2
+    r_sq = (x_in/coord.degrees)**2 + (y_in/coord.degrees)**2
     r = np.sqrt(r_sq)
     dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq \
         + img_dist_coeff[3]*r*r_sq
@@ -540,8 +552,8 @@ def _get_sca_center_pos(i_sca, world_pos, pa_fpa):
     # Set the position of center of this SCA in focal plane angular coordinates.
     # In Jeff Kruk's code that is used for a comparison, these are also called sca_xc_parax and
     # likewise for yc.
-    sca_xc_fpa = np.arctan(sca_xc_mm[i_sca]/focal_length)*galsim.radians
-    sca_yc_fpa = np.arctan(sca_yc_mm[i_sca]/focal_length)*galsim.radians
+    sca_xc_fpa = np.arctan(sca_xc_mm[i_sca]/focal_length)*coord.radians
+    sca_yc_fpa = np.arctan(sca_yc_mm[i_sca]/focal_length)*coord.radians
 
     # Figure out tangent plane positions after distortion, and subtract off those for FPA center
     # (calculated in header).
@@ -563,13 +575,38 @@ def _get_sca_center_pos(i_sca, world_pos, pa_fpa):
     crval = world_pos.deproject(u, v, projection='gnomonic')
     return crval, u, v
 
+def _parse_SCAs(SCAs):
+    from .. import GalSimRangeError
+
+    # This is a helper routine to parse the input SCAs (single number or iterable) and put it into a
+    # convenient format.  It is used in wfirst_wcs.py.
+    #
+    # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
+    all_SCAs = np.arange(1, n_sca + 1, 1)
+    # Later we will use the list of selected SCAs to decide which ones we're actually going to do
+    # the calculations for.  For now, just check for invalid numbers.
+    if SCAs is not None:
+        # Make sure SCAs is iterable.
+        if not hasattr(SCAs, '__iter__'):
+            SCAs = [SCAs]
+        # Then check for reasonable values.
+        if min(SCAs) <= 0 or max(SCAs) > n_sca:
+            raise GalSimRangeError("Invalid SCA.", SCAs, 1, n_sca)
+        # Check for uniqueness.  If not unique, make it unique.
+        SCAs = list(set(SCAs))
+    else:
+        SCAs = all_SCAs
+    return SCAs
+
 def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
     """
     This routine parses the various input options to getWCS() and returns what the routine needs to
     do its job.  The reason to pull this out is so other helper routines can use it.
     """
+    from .. import GalSimError
+
     # Parse input position
-    if not isinstance(world_pos, galsim.CelestialCoord):
+    if not isinstance(world_pos, coord.CelestialCoord):
         raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
 
     # Get the date. (Vernal equinox in 2025, taken from
@@ -580,7 +617,7 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
 
     # Are we allowed to look here?
     if not allowedPos(world_pos, date):
-        raise galsim.GalSimError("Error, WFIRST cannot look at this position on this date!")
+        raise GalSimError("Error, WFIRST cannot look at this position on this date!")
 
     # If position angle was not given, then get the optimal one:
     if PA is None:
@@ -588,19 +625,19 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
         PA = bestPA(world_pos, date)
     else:
         # Just enforce type
-        if not isinstance(PA, galsim.Angle):
+        if not isinstance(PA, coord.Angle):
             raise TypeError("Position angle must be a galsim.Angle!")
 
     # Check which SCAs are to be done using a helper routine in the galsim.wfirst module.
-    SCAs = galsim.wfirst._parse_SCAs(SCAs)
+    SCAs = _parse_SCAs(SCAs)
 
     # Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.
     if PA_is_FPA:
         pa_fpa = PA
-        pa_obsy = PA - 90.*galsim.degrees - theta_fpa
+        pa_obsy = PA - 90.*coord.degrees - theta_fpa
     else:
         pa_obsy = PA
-        pa_fpa = PA + 90.*galsim.degrees + theta_fpa
+        pa_fpa = PA + 90.*coord.degrees + theta_fpa
 
     return date, SCAs, pa_fpa, pa_obsy
 
@@ -628,10 +665,10 @@ def allowedPos(world_pos, date):
     """
     # Find the Sun's location on the sky on this date.
     lam = coord.util.sun_position_ecliptic(date)
-    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
+    sun = coord.CelestialCoord.from_ecliptic(lam, 0*coord.radians, date.year)
 
     # Find the angle between that and the supplied position
-    angle_deg = abs(world_pos.distanceTo(sun)/galsim.degrees)
+    angle_deg = abs(world_pos.distanceTo(sun)/coord.degrees)
 
     # Check if it's within tolerance.
     min_ang = 90. - 36.
@@ -664,7 +701,7 @@ def bestPA(world_pos, date):
     # Find the location of the sun on this date.  +X_observatory points out into the sky, towards
     # world_pos, while +Z is in the plane of the sky pointing towards the sun as much as possible.
     lam = coord.util.sun_position_ecliptic(date)
-    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
+    sun = coord.CelestialCoord.from_ecliptic(lam, 0*coord.radians, date.year)
     # Now we do a projection onto the sky centered at world_pos to find the (u, v) for the Sun.
     sun_tp_x, sun_tp_y = world_pos.project(sun, 'gnomonic')
 
@@ -675,6 +712,6 @@ def bestPA(world_pos, date):
 
     # Finally the observatory position angle is defined by the angle between +Y_observatory and the
     # celestial north pole.  It is defined as position angle east of north.
-    north = galsim.CelestialCoord(y_obs.ra, 90.*galsim.degrees)
+    north = coord.CelestialCoord(y_obs.ra, 90.*coord.degrees)
     obs_pa = world_pos.angleBetween(y_obs, north)
     return obs_pa

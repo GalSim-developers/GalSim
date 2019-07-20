@@ -2280,7 +2280,7 @@ class UVFunction(EuclideanWCS):
 
     def _initialize_funcs(self):
         import galsim
-        global galsim  # Because if a user's function used galsim, it's probably at global scoe.
+        global galsim  # Because if a user's function used galsim, it's probably at global scope.
         from . import utilities
         if isinstance(self._orig_ufunc, str):
             if self._uses_color:
@@ -2533,7 +2533,7 @@ class RaDecFunction(CelestialWCS):
 
     def _initialize_funcs(self):
         import galsim
-        global galsim  # Because if a user's function used galsim, it's probably at global scoe.
+        global galsim  # Because if a user's function used galsim, it's probably at global scope.
         from . import utilities
         if self._orig_dec_func is None:
             if isinstance(self._orig_ra_func, str):

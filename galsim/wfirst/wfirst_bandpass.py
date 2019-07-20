@@ -21,7 +21,6 @@
 Part of the WFIRST module.  This file includes any routines needed to define the WFIRST bandpasses.
 """
 
-import galsim
 import numpy as np
 import os
 
@@ -85,14 +84,18 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
 
     @returns A dictionary containing bandpasses for all WFIRST imaging filters.
     """
+    from .. import meta_data
+    from ..errors import galsim_warn
+    from .. import Bandpass, LookupTable
+
     # Begin by reading in the file containing the info.
-    datafile = os.path.join(galsim.meta_data.share_dir, "afta_throughput.txt")
+    datafile = os.path.join(meta_data.share_dir, "afta_throughput.txt")
     # One line with the column headings, and the rest as a NumPy array.
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
 
     # Read in and manipulate the sky background info.
-    sky_file = os.path.join(galsim.meta_data.share_dir, "wfirst_sky_backgrounds.txt")
+    sky_file = os.path.join(meta_data.share_dir, "wfirst_sky_backgrounds.txt")
     sky_data = np.loadtxt(sky_file).transpose()
     ecliptic_lat = sky_data[0, :]
     ecliptic_lon = sky_data[1, :]
@@ -104,10 +107,9 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     tmp_thin_dict = {}
     if default_thin_trunc:
         if len(kwargs) > 0:
-            import warnings
-            warnings.warn('default_thin_trunc is true, but other arguments have been passed'
-                          ' to getBandpasses().  Using the other arguments and ignoring'
-                          ' default_thin_trunc.', galsim.GalSimWarning)
+            galsim_warn('default_thin_trunc is true, but other arguments have been passed'
+                        ' to getBandpasses().  Using the other arguments and ignoring'
+                        ' default_thin_trunc.')
             default_thin_trunc = False
     if len(kwargs) > 0:
         for key in list(kwargs.keys()):
@@ -127,7 +129,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
             continue
 
         # Initialize the bandpass object.
-        bp = galsim.Bandpass(galsim.LookupTable(wave, data[bp_name]), wave_type='nm')
+        bp = Bandpass(LookupTable(wave, data[bp_name]), wave_type='nm')
 
         # Use any arguments related to truncation, thinning, etc.
         if len(tmp_truncate_dict) > 0 or default_thin_trunc:
