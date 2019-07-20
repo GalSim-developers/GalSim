@@ -241,7 +241,6 @@ class PowerSpectrumEstimator(object):
             C_theory = self._bin_power(C_theory_ell)
 
         if weight_EE or weight_BB:
-            import galsim
             # Need to interpolate C_EE to values of self.l_abs.  A bit of kludginess as we go off
             # the end of our final ell grid...
             new_ell = np.zeros(len(self.ell)+2)

@@ -17,8 +17,6 @@
 #
 
 from past.builtins import basestring
-import galsim
-import galsim.wfirst
 import numpy as np
 import os
 
@@ -160,43 +158,44 @@ def getPSF(SCA, bandpass,
         inputs).
 
     """
+    from .. import PositionD
+    from .. import GalSimValueError
+    from . import n_pix, longwave_bands, shortwave_bands
+
     # Deal with inputs:
 
     # SCA_pos: if None, then all should just be center of the SCA.
     if SCA_pos is None:
-        SCA_pos = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix/2)
+        SCA_pos = PositionD(n_pix/2, n_pix/2)
 
     # Parse the bandpasses to see which pupil plane image is needed, if approximate_struts is False
     # (otherwise just say None).
     pupil_plane_type = None
     if not approximate_struts:
-        if bandpass in galsim.wfirst.longwave_bands or bandpass=='long':
+        if bandpass in longwave_bands or bandpass=='long':
             pupil_plane_type = 'long'
-        elif bandpass in galsim.wfirst.shortwave_bands or bandpass=='short':
+        elif bandpass in shortwave_bands or bandpass=='short':
             pupil_plane_type = 'short'
         else:
-            raise galsim.GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
-                                          bandpass, default_bandpass_list)
+            raise GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+                                   bandpass, default_bandpass_list)
     else:
         # Sanity checking:
         # If we need to use bandpass info, require that it be one of the defaults.
         # If we do not need to use bandpass info, allow it to be None.
         if n_waves is not None:
             if bandpass not in default_bandpass_list+['short','long']:
-                raise galsim.GalSimValueError(
-                    "Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
-                    bandpass, default_bandpass_list)
+                raise GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+                                       bandpass, default_bandpass_list)
         else:
             if bandpass not in default_bandpass_list+['short','long'] and bandpass is not None:
-                raise galsim.GalSimValueError(
-                    "Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
-                    bandpass, default_bandpass_list)
+                raise GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+                                       bandpass, default_bandpass_list)
 
     # If bandpass is 'short'/'long', then make sure that interpolation is not called for, since that
     # requires an actual bandpass.
     if bandpass in ['short','long'] and n_waves is not None:
-        raise galsim.GalSimValueError("Cannot use bandpass='short'/'long' with interpolation.",
-                                      bandpass)
+        raise GalSimValueError("Cannot use bandpass='short'/'long' with interpolation.", bandpass)
 
     # Now call _get_single_PSF().
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
@@ -210,6 +209,12 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
+    from .. import fits
+    from .. import Image, OpticalPSF, ChromaticOpticalPSF
+    from . import pupil_plane_file_longwave, pupil_plane_file_shortwave, pupil_plane_scale
+    from . import diameter, obscuration
+    from .wfirst_bandpass import getBandpasses
+
     # Deal with some accuracy settings.
     if high_accuracy:
         if approximate_struts:
@@ -220,24 +225,24 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
             # In this case, we need to pad the edges of the pupil plane image, so we cannot just use
             # the stored file.
             if pupil_plane_type == 'long':
-                tmp_pupil_plane_im = galsim.fits.read(galsim.wfirst.pupil_plane_file_longwave)
+                tmp_pupil_plane_im = fits.read(pupil_plane_file_longwave)
             else:
-                tmp_pupil_plane_im = galsim.fits.read(galsim.wfirst.pupil_plane_file_shortwave)
+                tmp_pupil_plane_im = fits.read(pupil_plane_file_shortwave)
             old_bounds = tmp_pupil_plane_im.bounds
             new_bounds = old_bounds.withBorder((old_bounds.xmax+1-old_bounds.xmin)/2)
-            pupil_plane_im = galsim.Image(bounds=new_bounds)
+            pupil_plane_im = Image(bounds=new_bounds)
             pupil_plane_im[old_bounds] = tmp_pupil_plane_im
-            pupil_plane_scale = galsim.wfirst.pupil_plane_scale
+            pupil_plane_scale = pupil_plane_scale
     else:
         if approximate_struts:
             oversampling = 1.5
         else:
             oversampling = 1.2
             if pupil_plane_type == 'long':
-                pupil_plane_im = galsim.wfirst.pupil_plane_file_longwave
+                pupil_plane_im = pupil_plane_file_longwave
             else:
-                pupil_plane_im = galsim.wfirst.pupil_plane_file_shortwave
-            pupil_plane_scale = galsim.wfirst.pupil_plane_scale
+                pupil_plane_im = pupil_plane_file_shortwave
+            pupil_plane_scale = pupil_plane_scale
 
     # Start reading in the aberrations for that SCA
     if logger: logger.debug('Beginning to get the PSF aberrations for SCA %d.'%SCA)
@@ -255,22 +260,20 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     # Now set up the PSF, including the option to simplify the pupil plane.
     if wavelength is None:
         if approximate_struts:
-            PSF = galsim.ChromaticOpticalPSF(
-                lam=zemax_wavelength,
-                diam=galsim.wfirst.diameter, aberrations=use_aberrations,
-                obscuration=galsim.wfirst.obscuration, nstruts=6,
-                oversampling=oversampling, gsparams=gsparams)
+            PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
+                                      diam=diameter, aberrations=use_aberrations,
+                                      obscuration=obscuration, nstruts=6,
+                                      oversampling=oversampling, gsparams=gsparams)
         else:
-            PSF = galsim.ChromaticOpticalPSF(
-                lam=zemax_wavelength,
-                diam=galsim.wfirst.diameter, aberrations=use_aberrations,
-                obscuration=galsim.wfirst.obscuration,
-                pupil_plane_im=pupil_plane_im,
-                pupil_plane_scale=pupil_plane_scale,
-                oversampling=oversampling, pad_factor=2., gsparams=gsparams)
+            PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
+                                      diam=diameter, aberrations=use_aberrations,
+                                      obscuration=obscuration,
+                                      pupil_plane_im=pupil_plane_im,
+                                      pupil_plane_scale=pupil_plane_scale,
+                                      oversampling=oversampling, pad_factor=2., gsparams=gsparams)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
-            bp_dict = galsim.wfirst.getBandpasses()
+            bp_dict = getBandpasses()
             bp = bp_dict[bandpass]
             PSF = PSF.interpolate(waves=np.linspace(bp.blue_limit, bp.red_limit, n_waves),
                                   oversample_fac=1.5)
@@ -279,17 +282,17 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
             raise TypeError("wavelength should either be a Bandpass, float, or None.")
         tmp_aberrations = use_aberrations * zemax_wavelength / wavelength
         if approximate_struts:
-            PSF = galsim.OpticalPSF(lam=wavelength, diam=galsim.wfirst.diameter,
-                                    aberrations=tmp_aberrations,
-                                    obscuration=galsim.wfirst.obscuration, nstruts=6,
-                                    oversampling=oversampling, gsparams=gsparams)
+            PSF = OpticalPSF(lam=wavelength, diam=diameter,
+                             aberrations=tmp_aberrations,
+                             obscuration=obscuration, nstruts=6,
+                             oversampling=oversampling, gsparams=gsparams)
         else:
-            PSF = galsim.OpticalPSF(lam=wavelength, diam=galsim.wfirst.diameter,
-                                    aberrations=tmp_aberrations,
-                                    obscuration=galsim.wfirst.obscuration,
-                                    pupil_plane_im=pupil_plane_im,
-                                    pupil_plane_scale=pupil_plane_scale,
-                                    oversampling=oversampling, pad_factor=2., gsparams=gsparams)
+            PSF = OpticalPSF(lam=wavelength, diam=diameter,
+                             aberrations=tmp_aberrations,
+                             obscuration=obscuration,
+                             pupil_plane_im=pupil_plane_im,
+                             pupil_plane_scale=pupil_plane_scale,
+                             oversampling=oversampling, pad_factor=2., gsparams=gsparams)
 
     return PSF
 
@@ -305,9 +308,12 @@ def _read_aberrations(SCA):
     Returns:
         NumPy arrays containing the aberrations, and x and y field positions.
     """
+    from .. import meta_data
+    from . import pixel_scale, n_pix
+
     # Construct filename.
     sca_str = '_%02d'%SCA
-    infile = os.path.join(galsim.meta_data.share_dir,
+    infile = os.path.join(meta_data.share_dir,
                           zemax_filepref + sca_str + zemax_filesuff)
 
     # Read in data.
@@ -320,8 +326,8 @@ def _read_aberrations(SCA):
     aberrations[:,1:] = dat[:,5:]
     # Also get the field position.  The file gives it in arcsec with respect to the center, but we
     # want it in pixels with respect to the corner.
-    x_sca_pos = dat[:,1]/galsim.wfirst.pixel_scale + galsim.wfirst.n_pix/2
-    y_sca_pos = dat[:,2]/galsim.wfirst.pixel_scale + galsim.wfirst.n_pix/2
+    x_sca_pos = dat[:,1]/pixel_scale + n_pix/2
+    y_sca_pos = dat[:,2]/pixel_scale + n_pix/2
     return aberrations, x_sca_pos, y_sca_pos
 
 def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):

@@ -22,9 +22,9 @@ Part of the WFIRST module.  This file includes any routines needed to define the
 for which the main contribution is zodiacal light.
 """
 
-import galsim
 import numpy as np
 import os
+
 
 def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     """
@@ -77,18 +77,25 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     Returns:
         the expected sky level in e-/arcsec^2.
     """
+    from .. import degrees, radians, CelestialCoord
+    from .. import GalSimValueError
+    from . import diameter, obscuration
+
+    if exptime is None:
+        from . import exptime
+
     # Check for cached sky level information for this filter.  If not, raise exception
     if not hasattr(bandpass, '_sky_level'):
-        raise galsim.GalSimError("Only bandpasses returned from galsim.wfirst.getBandpasses() are "
-                                 "allowed here!")
+        raise GalSimValueError("Only bandpasses returned from galsim.wfirst.getBandpasses() are "
+                               "allowed here!", bandpass)
 
     # Check for proper type for position, and extract the ecliptic coordinates.
     if world_pos is None:
         # Use our defaults for the case of unspecified position.
-        ecliptic_lat = 30.*galsim.degrees
-        ecliptic_lon = 90.*galsim.degrees
+        ecliptic_lat = 30.*degrees
+        ecliptic_lon = 90.*degrees
     else:
-        if not isinstance(world_pos, galsim.CelestialCoord):
+        if not isinstance(world_pos, CelestialCoord):
             raise TypeError("world_pos must be supplied as a CelestialCoord.")
         if date is not None:
             epoch = date.year
@@ -102,8 +109,8 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     # negative longitude in the range[-180, 0] should have the same sky level as at the positive
     # value of longitude (given that the Sun is at 0).
     ecliptic_lon = ecliptic_lon.wrap()
-    ecliptic_lon = abs(ecliptic_lon.rad)*galsim.radians
-    ecliptic_lat = abs(ecliptic_lat.rad)*galsim.radians
+    ecliptic_lon = abs(ecliptic_lon.rad)*radians
+    ecliptic_lat = abs(ecliptic_lat.rad)*radians
     sin_ecliptic_lat = np.sin(ecliptic_lat)
 
     # Take the lookup table, and turn negative numbers (indicating failure because of proximity to
@@ -115,7 +122,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     # Interpolate in 2d on the table.
     s = sky_level.reshape(46,42).transpose()
     xlat = sin_ecliptic_lat*41
-    xlon = abs(ecliptic_lon.wrap() / galsim.degrees)/4.
+    xlon = abs(ecliptic_lon.wrap() / degrees)/4.
     ilat = int(xlat)
     ilon = int(xlon)
     xlat -= ilat
@@ -127,16 +134,13 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
 
     # If the result is too large, then raise an exception: we should not look at this position!
     if sky_val > max_sky:
-        raise galsim.GalSimValueError("world_pos is too close to sun. Would not observe here.",
-                                      world_pos)
+        raise GalSimValueError("world_pos is too close to sun. Would not observe here.", world_pos)
 
     # Now, convert to the right units, and return.  (See docstring for explanation.)
     # First, multiply by the effective collecting area in m^2.
-    eff_area = 0.25 * np.pi * galsim.wfirst.diameter**2 * (1. - galsim.wfirst.obscuration**2)
+    eff_area = 0.25 * np.pi * diameter**2 * (1. - obscuration**2)
     sky_val *= eff_area
     # Multiply by exposure time.
-    if exptime is None:
-        exptime = galsim.wfirst.exptime
     sky_val *= exptime
 
     # The result is now the sky level in e-/arcsec^2.

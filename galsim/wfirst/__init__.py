@@ -20,8 +20,8 @@ The galsim.wfirst module, containing information GalSim needs to simulate images
 project.
 """
 import os
-import galsim
 import numpy as np
+from .. import meta_data, Image
 
 gain = 1.0
 pixel_scale = 0.11  # arcsec / pixel
@@ -43,12 +43,12 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
 
 # F184, W149
 longwave_bands = ['F184', 'W149']
-pupil_plane_file_longwave = os.path.join(galsim.meta_data.share_dir,
-                                         "WFIRST_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
+pupil_plane_file_longwave = os.path.join(meta_data.share_dir,
+        "WFIRST_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
 # Z087, Y106, J129, H158
 shortwave_bands = ['Z087', 'Y106', 'J129', 'H158']
-pupil_plane_file_shortwave = os.path.join(galsim.meta_data.share_dir,
-                                         "WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
+pupil_plane_file_shortwave = os.path.join(meta_data.share_dir,
+        "WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
 pupil_plane_file = pupil_plane_file_shortwave  # Let the canonical pupil be the shortwave one.
 
 # The pupil plane image has non-zero values with a diameter of 2042 pixels.  The WFIRST mirror
@@ -62,7 +62,7 @@ ipc_kernel = np.array([ [0.001269938, 0.015399776, 0.001199862], \
                         [0.013800177, 1.0, 0.015600367], \
                         [0.001270391, 0.016129619, 0.001200137] ])
 ipc_kernel /= np.sum(ipc_kernel)
-ipc_kernel = galsim.Image(ipc_kernel)
+ipc_kernel = Image(ipc_kernel)
 
 persistence_coefficients = np.array([0.045707683,0.014959818,0.009115737,0.00656769,0.005135571,0.004217028,0.003577534,0.003106601])/100.
 
@@ -81,28 +81,6 @@ from .wfirst_bandpass import getBandpasses
 from .wfirst_backgrounds import getSkyLevel
 from .wfirst_psfs import getPSF
 from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA, convertCenter
-from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
+from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects, NLfunc
 
-def NLfunc(x):
-    return x + nonlinearity_beta*(x**2)
 
-def _parse_SCAs(SCAs):
-    # This is a helper routine to parse the input SCAs (single number or iterable) and put it into a
-    # convenient format.  It is used in wfirst_wcs.py.
-    #
-    # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
-    all_SCAs = np.arange(1, n_sca + 1, 1)
-    # Later we will use the list of selected SCAs to decide which ones we're actually going to do
-    # the calculations for.  For now, just check for invalid numbers.
-    if SCAs is not None:
-        # Make sure SCAs is iterable.
-        if not hasattr(SCAs, '__iter__'):
-            SCAs = [SCAs]
-        # Then check for reasonable values.
-        if min(SCAs) <= 0 or max(SCAs) > galsim.wfirst.n_sca:
-            raise galsim.GalSimRangeError("Invalid SCA.", SCAs, 1, galsim.wfirst.n_sca)
-        # Check for uniqueness.  If not unique, make it unique.
-        SCAs = list(set(SCAs))
-    else:
-        SCAs = all_SCAs
-    return SCAs
