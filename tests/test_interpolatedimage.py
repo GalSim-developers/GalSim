@@ -368,6 +368,14 @@ def test_interpolant():
     # Base class is invalid.
     assert_raises(NotImplementedError, galsim.Interpolant)
 
+    # 2d arrays are invalid.
+    x2d = np.ones((5,5))
+    with assert_raises(galsim.GalSimValueError):
+        q.xval(x2d)
+    with assert_raises(galsim.GalSimValueError):
+        q.kval(x2d)
+
+
 @timer
 def test_fluxnorm():
     """Test that InterpolatedImage class responds properly to instructions about flux normalization.
