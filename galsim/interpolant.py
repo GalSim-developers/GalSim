@@ -65,11 +65,11 @@ class Interpolant(object):
         @param tol          [deprecated]
         @param gsparams     An optional GSParams instance [default: None]
         """
-        gsparams = GSParams.check(gsparams)
         if tol is not None:
             from galsim.deprecated import depr
             depr('tol', 2.2, 'gsparams=GSParams(kvalue_accuracy=tol)')
-            gsparams._kvalue_accuracy = tol
+            gsparams = GSParams(kvalue_accuracy=tol)
+        gsparams = GSParams.check(gsparams)
 
         # Do these in rough order of likelihood (most to least)
         if name.lower() == 'quintic':
