@@ -157,7 +157,7 @@ class Interpolant(object):
         else:
             dimen = len(x.shape)
             if dimen > 1:
-                raise ValueError("Input x must be 1-dimensional")
+                raise GalSimValueError("Input x must be 1-dimensional", x)
             self._i.xvalMany(xx.ctypes.data, len(xx))
             return xx
 
@@ -181,7 +181,7 @@ class Interpolant(object):
         else:
             dimen = len(k.shape)
             if dimen > 1:
-                raise ValueError("Input k must be 1-dimensional")
+                raise GalSimValueError("Input k must be 1-dimensional", k)
             self._i.uvalMany(u.ctypes.data, len(u))
             return u
 
