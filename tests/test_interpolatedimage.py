@@ -451,7 +451,10 @@ def test_exceptions():
 
     # Can't shoot II with SincInterpolant
     ii = galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=1.),
-                                  x_interpolant='sinc')
+                                  x_interpolant='sinc',
+                                  # Use larger than normal kvalue_accuracy to avoid image being
+                                  # really huge for SincInterpolant before exception is raised.
+                                  gsparams=galsim.GSParams(kvalue_accuracy=1.e-3))
     with assert_raises(galsim.GalSimError):
         ii.drawImage(method='phot')
     with assert_raises(galsim.GalSimError):
