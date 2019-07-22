@@ -358,8 +358,9 @@ namespace galsim {
             // The empirical integral is usually a bit smaller, since the upper limit is finite,
             // so this corrections means the resulting total photon flux is not too small by
             // ~gsparams.shoot_accuracy.  cf. Issue #1036.
-            _positiveFlux *= nominal_flux / empirical_flux;
-            _negativeFlux *= nominal_flux / empirical_flux;
+            double factor = nominal_flux / empirical_flux;
+            _positiveFlux *= factor;
+            _negativeFlux *= factor;
             dbg<<"posFlux => "<<_positiveFlux<<std::endl;
             dbg<<"negFlux => "<<_negativeFlux<<std::endl;
         }
