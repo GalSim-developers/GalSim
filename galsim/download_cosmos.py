@@ -394,7 +394,7 @@ def main():
         target_dir = share_dir
         link = False
 
-    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_%s_training_sample.tar.gz"%(
+    url = "https://zenodo.org/record/3242143/files/COSMOS_%s_training_sample.tar.gz"%(
             args.sample)
     file_name = os.path.basename(url)
     target = os.path.join(target_dir, file_name)
