@@ -64,7 +64,7 @@ class Position(object):
         >>> pos -= x
 
     Note though that the types generally need to match.  For example, you cannot multiply
-    a PositionI by a float or add a PositionI to a PositionD.
+    a PositionI by a float add a PositionD to a PositionI in place.
     """
     def __init__(self):
         raise NotImplementedError("Cannot instantiate the base class.  "
