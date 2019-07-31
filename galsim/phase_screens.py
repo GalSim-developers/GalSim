@@ -529,9 +529,8 @@ class AtmosphericScreen(object):
         """Return an appropriate stepk for this atmospheric layer.
 
         Parameters:
-            lam:           Wavelength in nanometers.
-            gsparams:      An optional GSParams argument.  See the docstring for GSParams for
-                           details. [default: None]
+            lam:            Wavelength in nanometers.
+            gsparams:       An optional `GSParams` argument. [default: None]
 
         Returns:
             Good pupil scale size in meters.
@@ -964,8 +963,7 @@ class OpticalScreen(object):
             lam:            Wavelength in nanometers.
             diam:           Aperture diameter in meters.
             obscuration:    Fractional linear aperture obscuration. [default: 0.0]
-            gsparams        An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+            gsparams:       An optional `GSParams` argument. [default: None]
 
         Returns:
             stepk in inverse arcsec.

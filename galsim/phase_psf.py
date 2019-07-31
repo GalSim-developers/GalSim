@@ -206,8 +206,7 @@ class Aperture(object):
                             a good idea to leave this as None, in which case GalSim will attempt
                             to find a good value automatically.  See also ``oversampling`` for
                             adjusting the pupil size.  [default: None]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
     """
     def __init__(self, diam, lam=None, circular_pupil=True, obscuration=0.0,
                  nstruts=0, strut_thick=0.05, strut_angle=0.0*radians,
@@ -1016,8 +1015,7 @@ class PhaseScreenList(object):
                                 optics and then shoot from the derived InterpolatedImage.
                                 [default: True]
             aper:               Aperture to use to compute PSF(s).  [default: None]
-            gsparams:           An optional GSParams argument.  See the docstring for GSParams
-                                for details.  [default: None]
+            gsparams:           An optional `GSParams` argument. [default: None]
 
         The following are optional keywords to use to setup the aperture if ``aper`` is not
         provided.
@@ -1200,8 +1198,7 @@ class PhaseScreenPSF(GSObject):
                             produce similar results, we caution the user to compare the affected
                             geometric PSFs against Fourier optics PSFs carefully before changing
                             this value.  [default: 0.2]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     The following are optional keywords to use to setup the aperture if ``aper`` is not provided:
 
@@ -1766,8 +1763,7 @@ class OpticalPSF(GSObject):
                             are supplied separately.  Should be either a galsim.AngleUnit or a
                             string that can be used to construct one (e.g., 'arcsec', 'radians',
                             etc.).  [default: galsim.arcsec]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
     """
     _req_params = {}
     _opt_params = {

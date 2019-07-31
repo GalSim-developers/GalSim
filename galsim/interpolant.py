@@ -64,7 +64,7 @@ class Interpolant(object):
         Parameters:
             name:       The name of the interpolant to create.
             tol:        [deprecated]
-            gsparams:   An optional GSParams instance [default: None]
+            gsparams:   An optional `GSParams` argument. [default: None]
         """
         if tol is not None:
             from galsim.deprecated import depr
@@ -203,7 +203,7 @@ class Delta(Interpolant):
 
     Parameters:
         tol:        [deprecated]
-        gsparams:   An optional GSParams instance.  [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -247,7 +247,7 @@ class Nearest(Interpolant):
 
     Parameters:
         tol:        [deprecated]
-        gsparams:   An optional GSParams instance.  [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -292,7 +292,7 @@ class SincInterpolant(Interpolant):
 
     Parameters:
         tol:        [deprecated]
-        gsparams:   An optional GSParams instance.  [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -336,7 +336,7 @@ class Linear(Interpolant):
 
     Parameters:
         tol:        [deprecated]
-        gsparams:   An optional GSParams instance.  [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -379,7 +379,7 @@ class Cubic(Interpolant):
 
     Parameters:
         tol:        [deprecated]
-        gsparams:   An optional GSParams instance.  [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -422,7 +422,7 @@ class Quintic(Interpolant):
 
     Parameters:
         tol:        [deprecated]
-        gsparams:   An optional GSParams instance.  [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
     """
     def __init__(self, tol=None, gsparams=None):
         if tol is not None:
@@ -473,7 +473,7 @@ class Lanczos(Interpolant):
         conserve_dc:    Whether to add the first order correction to flatten out the flux response
                         to a constant input. [default: True, see above]
         tol:            [deprecated]
-        gsparams:       An optional GSParams instance.  [default: None]
+        gsparams:       An optional `GSParams` argument. [default: None]
     """
     def __init__(self, n, conserve_dc=True, tol=None, gsparams=None):
         if tol is not None:

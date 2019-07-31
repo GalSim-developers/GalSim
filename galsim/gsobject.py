@@ -90,7 +90,7 @@ class GSObject(object):
     galaxies and PSFs in terms of radians and then use ``pixel_scale=0.2/206265`` when you draw
     them.
 
-    Transforming methods:
+    **Transforming methods**:
 
     The GSObject class uses an "immutable" design[1], so all methods that would potentially modify
     the object actually return a new object instead.  This uses pointers and such behind the
@@ -110,7 +110,7 @@ class GSObject(object):
         >>> obj = obj.withFlux(flux)    # Set a new flux value.
         >>> obj = obj * ratio           # Scale the surface brightness profile by some factor.
 
-    Access Methods:
+    **Access Methods**:
 
     There are some access methods and properties that are available for all GSObjects.
     Again, see the docstrings for each method for more details.::
@@ -144,7 +144,7 @@ class GSObject(object):
     No matter how many transformations are performed, the ``original`` attribute will contain the
     _original_ object (not necessarily the most recent ancestor).
 
-    Drawing Methods:
+    **Drawing Methods**:
 
     The main thing to do with a GSObject once you have built it is to draw it onto an image.
     There are two methods that do this.  In both cases, there are lots of optional parameters.
@@ -166,7 +166,7 @@ class GSObject(object):
                     have one. The typical use for this attribute is to use it to whiten the noise in
                     the image after drawing.  See CorrelatedNoise for more details.
 
-    GSParams:
+    **GSParams**:
 
     All GSObject classes take an optional ``gsparams`` argument, so we document that feature here.
     For all documentation about the specific derived classes, please see the docstring for each
@@ -174,12 +174,12 @@ class GSObject(object):
 
     The ``gsparams`` argument can be used to specify various numbers that govern the tradeoff
     between accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
-    encapsulated in a class called GSParams, and the user should make careful choices whenever they
-    opt to deviate from the defaults.  For more details about the parameters and their default
-    values, please see the docstring of the GSParams class (e.g. type ``help(galsim.GSParams)``).
+    encapsulated in a class called `GSParams`, and the user should make careful choices whenever
+    they opt to deviate from the defaults.  For more details about the parameters and their default
+    values, please see the docstring of the `GSParams` class.
 
     For example, let's say you want to do something that requires an FFT larger than 4096 x 4096
-    (and you have enough memory to handle it!).  Then you can create a new GSParams object with a
+    (and you have enough memory to handle it!).  Then you can create a new `GSParams` object with a
     larger ``maximum_fft_size`` and pass that to your GSObject on construction::
 
         >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
@@ -203,12 +203,13 @@ class GSObject(object):
         >>> im = conv.drawImage(image=im)                   # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
 
-    Note that for compound objects such as Convolution or Sum, not all GSParams can be
+    Note that for compound objects such as `Convolution` or `Sum`, not all `GSParams` can be
     changed when the compound object is created.  In the example given here, it is possible to
     change parameters related to the drawing, but not the Fourier space parameters for the
-    components that go into the Convolution.  To get better sampling in Fourier space, for example,
-    the ``gal`` and/or ``psf`` should be created with ``gsparams`` that have a non-default value of
-    ``folding_threshold``.  This statement applies to the threshold and accuracy parameters.
+    components that go into the `Convolution`.  To get better sampling in Fourier space,
+    for example, the ``gal`` and/or ``psf`` should be created with ``gsparams`` that have a
+    non-default value of ``folding_threshold``.  This statement applies to the threshold and
+    accuracy parameters.
     """
     _gsparams_opt = { 'minimum_fft_size' : int,
                       'maximum_fft_size' : int,
@@ -284,7 +285,7 @@ class GSObject(object):
 
     @property
     def gsparams(self):
-        "A GSParams object that sets various parameters relevant for speed/accuracy trade-offs"
+        "A `GSParams` object that sets various parameters relevant for speed/accuracy trade-offs"
         return self._gsparams
 
     @property
@@ -1252,68 +1253,68 @@ class GSObject(object):
         based on the size of the object being drawn.  Basically, it will try to use an area large
         enough to include at least 99.5% of the flux.  (Note: the value 0.995 is really ``1 -
         folding_threshold``.  You can change the value of ``folding_threshold`` for any object via
-        GSParams.  See ``help(GSParams)`` for more details.)  You can set the pixel scale of the
-        constructed image with the ``scale`` parameter, or set a WCS function with ``wcs``.  If you
-        do not provide either ``scale`` or ``wcs``, then drawImage() will default to using the
-        Nyquist scale for the current object.  You can also set the data type used in the new Image
-        with the ``dtype`` parameter that has the same options as for the Image constructor.
+        `GSParams`.)  You can set the pixel scale of the constructed image with the ``scale``
+        parameter, or set a WCS function with ``wcs``.  If you do not provide either ``scale`` or
+        ``wcs``, then drawImage() will default to using the Nyquist scale for the current object.
+        You can also set the data type used in the new Image with the ``dtype`` parameter that has
+        the same options as for the Image constructor.
 
-        The drawing "method":
+        **The drawing "method"**:
 
         There are several different possible methods drawImage() can use for rendering the image.
         This is set by the ``method`` parameter.  The options are:
 
-        - auto
-                        This is the default, which will normally be equivalent to 'fft'.  However,
-                        if the object being rendered is simple (no convolution) and has hard edges
-                        (e.g. a Box or a truncated Moffat or Sersic), then it will switch to
-                        'real_space', since that is often both faster and more accurate in these
-                        cases (due to ringing in Fourier space).
-        - fft
-                        The integration of the light within each pixel is mathematically equivalent
-                        to convolving by the pixel profile (a Pixel object) and sampling the result
-                        at the centers of the pixels.  This method will do that convolution using
-                        a discrete Fourier transform.  Furthermore, if the object (or any component
-                        of it) has been transformed via shear(), dilate(), etc., then these
-                        transformations are done in Fourier space as well.
-        - real_space
-                        This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)
-                        in real space for the integration over the pixel response.  It is usually
-                        slower than the 'fft' method, but if the profile has hard edges that cause
-                        ringing in Fourier space, it can be faster and/or more accurate.  If you
-                        use 'real_space' with something that is already a Convolution, then this
-                        will revert to 'fft', since the double convolution that is required to also
-                        handle the pixel response is far too slow to be practical using real-space
-                        integrals.
-        - phot
-                        This uses a technique called photon shooting to render the image.
-                        Essentially, the object profile is taken as a probability distribution
-                        from which a finite number of photons are "shot" onto the image.  Each
-                        photon's flux gets added to whichever pixel the photon hits.  This process
-                        automatically accounts for the integration of the light over the pixel
-                        area, since all photons that hit any part of the pixel are counted.
-                        Convolutions and transformations are simple geometric processes in this
-                        framework.  However, there are two caveats with this method: (1) the
-                        resulting image will have Poisson noise from the finite number of photons,
-                        and (2) it is not available for all object types (notably anything that
-                        includes a Deconvolution).
-        - no_pixel
-                        Instead of integrating over the pixels, this method will sample the profile
-                        at the centers of the pixels and multiply by the pixel area.  If there is
-                        a convolution involved, the choice of whether this will use an FFT or
-                        real-space calculation is governed by the ``real_space`` parameter of the
-                        Convolution class.  This method is the appropriate choice if you are using
-                        a PSF that already includes a convolution by the pixel response.  For
-                        example, if you are using a PSF from an observed image of a star, then it
-                        has already been convolved by the pixel, so you would not want to do so
-                        again.  Note: The multiplication by the pixel area gets the flux
-                        normalization right for the above use case.  cf. ``method = 'sb'``.
-        - sb
-                        This is a lot like 'no_pixel', except that the image values will simply be
-                        the sampled object profile's surface brightness, not multiplied by the
-                        pixel area.  This does not correspond to any real observing scenario, but
-                        it could be useful if you want to view the surface brightness profile of an
-                        object directly, without including the pixel integration.
+        auto
+            This is the default, which will normally be equivalent to 'fft'.  However,
+            if the object being rendered is simple (no convolution) and has hard edges
+            (e.g. a Box or a truncated Moffat or Sersic), then it will switch to
+            'real_space', since that is often both faster and more accurate in these
+            cases (due to ringing in Fourier space).
+        fft
+            The integration of the light within each pixel is mathematically equivalent
+            to convolving by the pixel profile (a Pixel object) and sampling the result
+            at the centers of the pixels.  This method will do that convolution using
+            a discrete Fourier transform.  Furthermore, if the object (or any component
+            of it) has been transformed via shear(), dilate(), etc., then these
+            transformations are done in Fourier space as well.
+        real_space
+            This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)
+            in real space for the integration over the pixel response.  It is usually
+            slower than the 'fft' method, but if the profile has hard edges that cause
+            ringing in Fourier space, it can be faster and/or more accurate.  If you
+            use 'real_space' with something that is already a Convolution, then this
+            will revert to 'fft', since the double convolution that is required to also
+            handle the pixel response is far too slow to be practical using real-space
+            integrals.
+        phot
+            This uses a technique called photon shooting to render the image.
+            Essentially, the object profile is taken as a probability distribution
+            from which a finite number of photons are "shot" onto the image.  Each
+            photon's flux gets added to whichever pixel the photon hits.  This process
+            automatically accounts for the integration of the light over the pixel
+            area, since all photons that hit any part of the pixel are counted.
+            Convolutions and transformations are simple geometric processes in this
+            framework.  However, there are two caveats with this method: (1) the
+            resulting image will have Poisson noise from the finite number of photons,
+            and (2) it is not available for all object types (notably anything that
+            includes a Deconvolution).
+        no_pixel
+            Instead of integrating over the pixels, this method will sample the profile
+            at the centers of the pixels and multiply by the pixel area.  If there is
+            a convolution involved, the choice of whether this will use an FFT or
+            real-space calculation is governed by the ``real_space`` parameter of the
+            Convolution class.  This method is the appropriate choice if you are using
+            a PSF that already includes a convolution by the pixel response.  For
+            example, if you are using a PSF from an observed image of a star, then it
+            has already been convolved by the pixel, so you would not want to do so
+            again.  Note: The multiplication by the pixel area gets the flux
+            normalization right for the above use case.  cf. ``method = 'sb'``.
+        sb
+            This is a lot like 'no_pixel', except that the image values will simply be
+            the sampled object profile's surface brightness, not multiplied by the
+            pixel area.  This does not correspond to any real observing scenario, but
+            it could be useful if you want to view the surface brightness profile of an
+            object directly, without including the pixel integration.
 
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
         number of photons to shoot is normally calculated from the object's flux.  This flux is
@@ -1332,9 +1333,9 @@ class GSObject(object):
 
         Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
         to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
-        the nature of the radial profile). See ``help(galsim.GSParams)`` for parameters that you can
-        use to reduce the level of these artifacts, in particular ``folding_threshold`` may be
-        helpful if you see such artifacts in your images.
+        the nature of the radial profile). See `GSParams` for parameters that you can use to reduce
+        the level of these artifacts, in particular ``folding_threshold`` may be helpful if you see
+        such artifacts in your images.
 
         Setting the offset:
 

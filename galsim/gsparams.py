@@ -194,7 +194,7 @@ class GSParams(object):
 
     @staticmethod
     def combine(gsp_list):
-        """Combine a list of GSParams instances using the most restrictive parameter from each.
+        """Combine a list of `GSParams` instances using the most restrictive parameter from each.
 
         Uses the minimum value for most parameters. For the following parameters, it uses the
         maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr.

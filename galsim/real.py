@@ -176,8 +176,7 @@ class RealGalaxy(GSObject):
                                 should set area_norm equal to the collecting area of the source
                                 catalog telescope when creating the ``RealGalaxy`` (e.g.,
                                 area_norm=45238.93416 for HST).  [default: 1]
-        gsparams:               An optional GSParams argument.  See the docstring for GSParams for
-                                details. [default: None]
+        gsparams:               An optional `GSParams` argument. [default: None]
         logger:                 A logger object for output of progress statements if the user wants
                                 them.  [default: None]
     """
@@ -1005,8 +1004,7 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 then you should set area_norm equal to the collecting area of the
                                 source catalog telescope when creating the ``ChromaticRealGalaxy``
                                 (e.g., area_norm=45238.93416 for HST). [default: 1]
-        gsparams:               An optional GSParams argument.  See the docstring for GSParams for
-                                details. [default: None]
+        gsparams:               An optional `GSParams` argument. [default: None]
         logger:                 A logger object for output of progress statements if the user wants
                                 them.  [default: None]
 
@@ -1128,8 +1126,7 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 then you should set area_norm equal to the collecting area of the
                                 source catalog telescope when creating the ``ChromaticRealGalaxy``
                                 (e.g., area_norm=45238.93416 for HST). [default: 1]
-            gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                                details. [default: None]
+            gsparams:           An optional `GSParams` argument. [default: None]
             logger:             A logger object for output of progress statements if the user wants
                                 them.  [default: None]
 

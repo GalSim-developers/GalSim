@@ -626,8 +626,7 @@ class _BaseCorrelatedNoise(object):
         Parameters:
             gsobject:   A GSObject or derived class instance representing the function
                         with which the user wants to convolve the correlated noise model.
-            gsparams:   An optional GSParams argument.  See the docstring for GSParams for
-                        details. [default: None]
+            gsparams:   An optional `GSParams` argument. [default: None]
 
         Returns:
             the new CorrelatedNoise of the convolved profile.
@@ -1000,8 +999,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
                             [default: True]
         subtract_mean:      Whether to subtract off the mean value from the image before computing
                             the correlation function. [default: False]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     Basic example::
 
@@ -1080,8 +1078,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     from an imperfectly-estimated sample mean subtraction.  If this is not possible, just be aware
     that ``subtract_mean=True`` will bias the correlation function low to some level.
 
-    You may also specify a gsparams argument.  See the docstring for GSParams using
-    help(galsim.GSParams) for more information about this option.
+    You may also specify a gsparams argument.  See the docstring for `GSParams` for more
+    information about this option.
 
     Methods:
 
@@ -1328,11 +1326,10 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         x_interpolant:  Forces use of a non-default interpolant for interpolation of the
                         internal lookup table in real space.  See below for more details.
                         [default: galsim.Linear()]
-        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
-                        details. [default: None]
+        gsparams:       An optional `GSParams` argument. [default: None]
 
     Returns:
-        a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
+        a `_BaseCorrelatedNoise` instance representing correlated noise in F814W COSMOS images.
 
     The default ``x_interpolant`` is a ``galsim.Linear()``, which uses bilinear interpolation.
     The use of this interpolant is an approximation that gives good empirical results without
@@ -1359,8 +1356,8 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     Changing from the default bilinear interpolant is made possible, but not recommended.  For more
     information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
 
-    You may also specify a gsparams argument.  See the docstring for GSParams using
-    help(galsim.GSParams) for more information about this option.
+    You may also specify a gsparams argument.  See the docstring for `GSParams` for more
+    information about this option.
 
     .. note::
 
@@ -1458,8 +1455,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
                         provided]
         wcs:            If provided, use this as the wcs for the image.  At most one of ``scale``
                         or ``wcs`` may be provided. [default: None]
-        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
-                        details. [default: None]
+        gsparams:       An optional `GSParams` argument. [default: None]
     """
     def __init__(self, variance, rng=None, scale=None, wcs=None, gsparams=None):
         from .wcs import BaseWCS, PixelScale

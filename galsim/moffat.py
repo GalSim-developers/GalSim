@@ -56,8 +56,7 @@ class Moffat(GSObject):
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     In addition to the usual GSObject methods, Moffat has the following access properties:
 

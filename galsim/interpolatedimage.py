@@ -239,8 +239,7 @@ class InterpolatedImage(GSObject):
                             This should be specified relative to the center of the input image
                             (either the true center if ``use_true_center=True``, or the nominal
                             center if ``use_true_center=False``).  [default: None]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         hdu:                When reading in an Image from a file, this parameter can be used to
                             select a particular HDU in the file. [default: None]
     """
@@ -724,7 +723,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
                             of the profile. [default: True]
         offset:             The location in the input image to use as the center of the profile.
                             [default: None]
-        gsparams:           An optional GSParams argument. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         force_stepk:        A stepk value to use rather than the default value. [default: 0.]
         force_maxk:         A maxk value to use rather than the default value. [default: 0.]
 
@@ -824,10 +823,9 @@ class InterpolatedKImage(GSObject):
                         This keyword allows the user to specify a coarser sampling in Fourier-
                         space, which may increase efficiency at the expense of decreasing the
                         separation between neighboring copies of the DFT-rendered real-space
-                        profile.  (See the GSParams docstring for the parameter
+                        profile.  (See the `GSParams` docstring for the parameter
                         ``folding_threshold`` for more information). [default: kimage.scale]
-        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
-                        details. [default: None]
+        gsparams:       An optional `GSParams` argument. [default: None]
         real_kimage:    Optionally, rather than provide kimage, you may provide the real
                         and imaginary parts separately.  These separate real-valued images
                         may be strings, in which case they refer to FITS files from which

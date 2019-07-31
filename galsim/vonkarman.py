@@ -83,8 +83,7 @@ class VonKarman(GSObject):
                             code will emit a warning alerting the user that they may have entered a
                             non-physical regime.  However, this warning can be suppressed with this
                             keyword.  [default: False]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
     """
     _req_params = { "lam" : float }
     _opt_params = { "L0" : float, "flux" : float, "scale_unit" : str, "do_delta" : bool }

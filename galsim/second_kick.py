@@ -76,20 +76,19 @@ class SecondKick(GSObject):
         Peterson et al.  2015  ApJSS  vol. 218
 
     Parameters:
-        lam:             Wavelength in nanometers
-        r0:              Fried parameter in meters.
-        diam:            Aperture diameter in meters.
-        obscuration:     Linear dimension of central obscuration as fraction of aperture
-                         linear dimension. [0., 1.).  [default: 0.0]
-        kcrit:           Critical Fourier mode (in units of 1/r0) below which the turbulence
-                         power spectrum will be truncated.  [default: 0.2]
-        flux:            The flux (in photons/cm^2/s) of the profile. [default: 1]
-        scale_unit:      Units assumed when drawing this profile or evaluating xValue, kValue,
-                         etc.  Should be a galsim.AngleUnit or a string that can be used to
-                         construct one (e.g., 'arcsec', 'radians', etc.).
-                         [default: galsim.arcsec]
-        gsparams:        An optional GSParams argument.  See the docstring for GSParams for
-                         details. [default: None]
+        lam:            Wavelength in nanometers
+        r0:             Fried parameter in meters.
+        diam:           Aperture diameter in meters.
+        obscuration:    Linear dimension of central obscuration as fraction of aperture
+                        linear dimension. [0., 1.).  [default: 0.0]
+        kcrit:          Critical Fourier mode (in units of 1/r0) below which the turbulence
+                        power spectrum will be truncated.  [default: 0.2]
+        flux:           The flux (in photons/cm^2/s) of the profile. [default: 1]
+        scale_unit:     Units assumed when drawing this profile or evaluating xValue, kValue,
+                        etc.  Should be a galsim.AngleUnit or a string that can be used to
+                        construct one (e.g., 'arcsec', 'radians', etc.).
+                        [default: galsim.arcsec]
+        gsparams:       An optional `GSParams` argument. [default: None]
     """
     _req_params = { "lam" : float, "r0" : float, "diam" : float }
     _opt_params = { "obscuration" : float, "kcrit" : float, "flux" : float, "scale_unit" : str }

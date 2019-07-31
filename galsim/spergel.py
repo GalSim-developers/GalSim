@@ -79,8 +79,7 @@ class Spergel(GSObject):
         scale_radius:       The scale radius of the profile.  Typically given in arcsec.
                             [One of ``scale_radius`` or ``half_light_radius`` is required.]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     In addition to the usual GSObject methods and attributes, the Spergel profile has the following
     access properties:
