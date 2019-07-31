@@ -5,11 +5,16 @@ Prior to version 2.0, GalSim installation used SCons.  This installation
 mode is still supported, but is not recommended unless you have difficulties
 with the pip or conda installation methods.
 
-Note: Two options that are available with the SCons installation method,
-but not the other methods, are (1) using TMV instead of Eigen for the linear
-algebra back end, and (2) using Boost.Python instead of PyBind11 for the
-wrapping the C++ code to be called from Python.  If you need either of these
-options, then you should use the SCons installation.
+.. note::
+
+    Two options that are available with the SCons installation method,
+    but not the other methods, are:
+    
+    (1) using TMV instead of Eigen for the linear algebra back end, and
+    (2) using Boost.Python instead of PyBind11 for the wrapping the C++ code
+        to be called from Python.
+    
+    If you need either of these options, then you should use the SCons installation.
 
 
 Software required before building GalSim
@@ -371,12 +376,6 @@ plugins discoverable.  If you want to run the python tests without these
 plugins (serially!), you can still do this via::
 
     scons tests -j1
-
-Note: if your system does not have ``pytest`` installed, and you do not want to
-install it, you can run all the Python tests with the script run_all_tests in
-the ``tests`` directory. If this finishes without an error, then all the tests
-have passed.
-
 
 
 Platform-specific notes
