@@ -28,4 +28,5 @@ Celestial Coordinates
 =====================
 
 .. autoclass:: galsim.CelestialCoord
+    :members:
 
