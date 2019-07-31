@@ -418,8 +418,7 @@ class COSMOSCatalog(object):
                             any noise field when padding.  [default: None]
             n_random:       The number of random galaxies to build, if 'index' is None.
                             [default: 1]
-            gsparams:       An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+            gsparams:       An optional `GSParams` argument. [default: None]
 
         Returns:
             Either a GSObject or a ChromaticObject depending on the value of ``chromatic``,

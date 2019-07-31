@@ -76,8 +76,7 @@ class Airy(GSObject):
                         getFWHM() will be returned in units of ``scale_unit`` as well.  Should
                         be either a galsim.AngleUnit or a string that can be used to construct
                         one (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
-        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
-                        details. [default: None]
+        gsparams:       An optional `GSParams` argument. [default: None]
 
     In addition to the usual GSObject methods and attributes, Airy has the following access
     properties:

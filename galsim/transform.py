@@ -49,8 +49,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
         offset:             A galsim.PositionD giving the offset by which to shift the profile.
         flux_ratio:         A factor by which to multiply the surface brightness of the object.
                             (Technically, not necessarily the flux.  See above.) [default: 1]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -120,8 +119,7 @@ class Transformation(GSObject):
         offset:             A galsim.PositionD giving the offset by which to shift the profile.
         flux_ratio:         A factor by which to multiply the surface brightness of the object.
                             (Technically, not necessarily the flux.  See above.) [default: 1]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -134,7 +132,7 @@ class Transformation(GSObject):
         gsparams:       The usual gsparams attribute that all GSObjects have.
 
     Note: if ``gsparams`` is unspecified (or None), then the Transformation instance inherits the
-    GSParams from obj.  Also, note that parameters related to the Fourier-space calculations must
+    `GSParams` from obj.  Also, note that parameters related to the Fourier-space calculations must
     be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
     threshold parameters will simply be ignored).
     """

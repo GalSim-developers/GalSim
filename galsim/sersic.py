@@ -174,8 +174,7 @@ class Sersic(GSObject):
                             [default: 0, indicating no truncation]
         flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
                             untruncated profile? See below for more details. [default: False]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     In addition to the usual GSObject methods and attributes, Sersic has the following access
     properties:
@@ -378,8 +377,7 @@ class DeVaucouleurs(Sersic):
         flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
                             untruncated profile? See the docstring for Sersic for more details.
                             [default: False]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     In addition to the usual GSObject methods and attributes, DeVaucouleurs has the following
     access properties:

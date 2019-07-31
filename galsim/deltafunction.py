@@ -37,8 +37,7 @@ class DeltaFunction(GSObject):
 
     Parameters:
         flux:       The flux (in photons/cm^2/s) of the profile. [default: 1]
-        gsparams:   An optional GSParams argument.  See the docstring for GSParams for
-                    details. [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
     """
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.

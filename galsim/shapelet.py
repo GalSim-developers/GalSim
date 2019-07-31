@@ -85,8 +85,7 @@ class Shapelet(GSObject):
                     N=p+q included in the decomposition.
         bvec:       The initial vector of coefficients.  [default: None, which means to use
                     all zeros]
-        gsparams:   An optional GSParams argument.  See the docstring for GSParams for
-                    details. [default: None]
+        gsparams:   An optional `GSParams` argument. [default: None]
 
     Attributes:
         sigma:      The scale size
@@ -257,8 +256,7 @@ class Shapelet(GSObject):
                             [default: image.true_center]
             normalization:  The normalization to assume for the image.
                             [default: "flux"]
-            gsparams:       An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+            gsparams:       An optional `GSParams` argument. [default: None]
 
         Returns:
             the fitted Shapelet profile

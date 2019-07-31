@@ -41,8 +41,7 @@ def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
 
     Parameters:
         obj:                The object to compute the Fourier-space square root of.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -68,19 +67,17 @@ class FourierSqrtProfile(GSObject):
     FourierSqrtProfile as one of the components cannot be photon-shot using the 'phot' method of
     drawImage() method.
 
-    You may also specify a ``gsparams`` argument.  See the docstring for GSParams using
-    ``help(galsim.GSParams)`` for more information about this option.  Note: if ``gsparams`` is
-    unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the
-    object being operated on.
+    You may also specify a ``gsparams`` argument.  See the docstring for `GSParams` for more
+    information about this option.  Note: if ``gsparams`` is unspecified (or None), then the
+    FourierSqrtProfile instance inherits the same `GSParams` as the object being operated on.
 
-    The normal way to use this class is to use the FourierSqrt() factory function::
+    The normal way to use this class is to use the `FourierSqrt` factory function::
 
         >>> fourier_sqrt = galsim.FourierSqrt(obj)
 
     Parameters:
         obj:                The object to compute Fourier-space square root of.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the transformed object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]

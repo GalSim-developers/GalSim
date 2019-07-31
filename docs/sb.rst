@@ -28,4 +28,4 @@ the classes you would actually use when building the profile for an  astronomica
     arbitrary
     composite
     transform
-
+    gsparams

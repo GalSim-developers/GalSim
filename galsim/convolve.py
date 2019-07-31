@@ -37,8 +37,7 @@ def Convolve(*args, **kwargs):
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -102,8 +101,7 @@ class Convolution(GSObject):
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -111,7 +109,7 @@ class Convolution(GSObject):
     Note: if ``gsparams`` is unspecified (or None), then the Convolution instance will use the most
     restrictive combination of parameters from each of the component objects. Normally, this means
     the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
-    parameters, the largest numerical value is used.  See GSParams.combine for details.
+    parameters, the largest numerical value is used.  See `GSParams.combine` for details.
 
     Furthermore, the gsparams used for the Convolution (either given explicitly or derived from the
     components) will normally be applied to each of the components.  It doesn't usually make much
@@ -444,8 +442,7 @@ def Deconvolve(obj, gsparams=None, propagate_gsparams=True):
 
     Parameters:
         obj:                The object to deconvolve.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the deconvolved object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -469,10 +466,9 @@ class Deconvolution(GSObject):
     or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,
     cannot be photon-shot using the 'phot' method of drawImage() method.
 
-    You may also specify a ``gsparams`` argument.  See the docstring for GSParams using
-    ``help(galsim.GSParams)`` for more information about this option.  Note: if ``gsparams`` is
-    unspecified (or None), then the Deconvolution instance inherits the same GSParams as the object
-    being deconvolved.
+    You may also specify a ``gsparams`` argument.  See the docstring for `GSParams` for more
+    information about this option.  Note: if ``gsparams`` is unspecified (or None), then the
+    Deconvolution instance inherits the same `GSParams` as the object being deconvolved.
 
     The normal way to use this class is to use the Deconvolve() factory function::
 
@@ -481,8 +477,7 @@ class Deconvolution(GSObject):
 
     Parameters:
         obj:                The object to deconvolve.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the deconvolved object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -643,8 +638,7 @@ def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the auto-convolved object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -678,8 +672,7 @@ class AutoConvolution(Convolution):
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the auto-convolved object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -803,8 +796,7 @@ def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the auto-convorrelated object.
                             This is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -844,8 +836,7 @@ class AutoCorrelation(Convolution):
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to the auto-convorrelated object.
                             This is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]

@@ -46,8 +46,7 @@ def Add(*args, **kwargs):
 
     Parameters:
         args:               Unnamed args should be a list of objects to add.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -96,8 +95,7 @@ class Sum(GSObject):
 
     Parameters:
         args:               Unnamed args should be a list of objects to add.
-        gsparam:            An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
@@ -105,7 +103,7 @@ class Sum(GSObject):
     Note: if ``gsparams`` is unspecified (or None), then the Sum instance will use the most
     restrictive combination of parameters from each of the component objects. Normally, this means
     the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
-    parameters, the largest numerical value is used.  See GSParams.combine for details.
+    parameters, the largest numerical value is used.  See `GSParams.combine` for details.
 
     Furthermore, the gsparams used for the Sum (either given explicitly or derived from the
     components) will normally be applied to each of the components.  It doesn't usually make much

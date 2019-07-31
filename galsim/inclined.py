@@ -68,8 +68,7 @@ class InclinedExponential(GSObject):
         scale_h_over_r:     In lieu of the scale height, you may also specify the ratio of the
                             scale height to the scale radius. [default: 0.1]
         flux:               The flux (in photons) of the profile. [default: 1]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     In addition to the usual GSObject methods and attributes, InclinedExponential has the following
     access properties:
@@ -268,8 +267,7 @@ class InclinedSersic(GSObject):
         flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
                             untruncated profile? See the documentation of the Sersic class for
                             more details. [default: False]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+        gsparams:           An optional `GSParams` argument. [default: None]
 
     In addition to the usual GSObject methods and attributes, InclinedSersic has the following
     access properties:
