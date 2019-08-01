@@ -15,10 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file random.py
-Addition of docstrings to the Random deviate classes at the Python layer and definition of the
-DistDeviate class.
-"""
 
 import numpy as np
 import weakref
@@ -46,17 +42,17 @@ class BaseDeviate(object):
        If that doesn't work, then it creates a seed from the current time.  You can also get this
        behavior by omitting the seed argument entirely.  (i.e. the default is None.)
 
-    3. Providing another BaseDeviate object as the seed will make the new Deviate share the same
-       underlying random number generator as the other Deviate.  So you can make one Deviate (of
-       any type), and seed it with a particular deterministic value.  Then if you pass that Deviate
-       to any other one you make, they will both be using the same RNG and the series of "random"
-       values will be deterministic.
+    3. Providing another BaseDeviate object as the seed will make the new BaseDeviate share the
+       same underlying random number generator as the other BaseDeviate.  So you can make one
+       BaseDeviate (of any type), and seed it with a particular deterministic value.  Then if you
+       pass that BaseDeviate to any other one you make, they will both be using the same RNG and
+       the series of "random" values will be deterministic.
 
-    Usage:
+    **Usage**:
 
     There is not much you can do with something that is only known to be a BaseDeviate rather than
     one of the derived classes other than construct it and change the seed, and use it as an
-    argument to pass to other Deviate constructors.::
+    argument to pass to other BaseDeviate constructors.::
 
         >>> rng = galsim.BaseDeviate(215324)
         >>> rng()
@@ -69,18 +65,6 @@ class BaseDeviate(object):
         >>> ud2 = galsim.UniformDeviate(215324)
         >>> ud2()
         0.58736140513792634
-
-    There are a few methods that are common to all BaseDeviate classes, so we describe them here.
-
-    Methods:
-
-        dev.seed(seed)      Set a new (integer) seed value for the underlying RNG.
-        dev.reset(seed)     Sever the connection to the current RNG and seed a new one (either
-                            creating a new RNG if seed is an integer or connecting to an existing
-                            RNG if seed is a BaseDeviate instance)
-        dev.clearCache()    Clear the internal cache of the Deviate, if there is any.
-        dev.duplicate()     Create a duplicate of the current Deviate, which will produce an
-                            identical series of values as the original.
     """
     def __init__(self, seed=None):
         self._rng_type = _galsim.BaseDeviateImpl
@@ -106,12 +90,12 @@ class BaseDeviate(object):
 
     def reset(self, seed=None):
         """Reset the pseudo-random number generator, severing connections to any other deviates.
-        Providing another BaseDeviate object as the seed connects this deviate with the other
+        Providing another `BaseDeviate` object as the seed connects this deviate with the other
         one, so they will both use the same underlying random number generator.
 
         Parameters:
-            seed:       Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using None means to generate a seed from the system.
+            seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                        `BaseDeviate`.  Using None means to generate a seed from the system.
                         [default: None]
         """
         if isinstance(seed, BaseDeviate):
@@ -130,15 +114,15 @@ class BaseDeviate(object):
                             "BaseDeviate")
 
     def _reset(self, rng):
-        """Equivalent to self.reset(rng), but rng must be a BaseDeviate (not an int), and there
+        """Equivalent to self.reset(rng), but rng must be a `BaseDeviate` (not an int), and there
         is no type checking.
         """
         with convert_cpp_errors():
             self._rng = self._rng_type(rng._rng, *self._rng_args)
 
     def duplicate(self):
-        """Create a duplicate of the current Deviate object.  The subsequent series from each copy
-        of the Deviate will produce identical values.
+        """Create a duplicate of the current `BaseDeviate` object.  The subsequent series from each
+        copy of the `BaseDeviate` will produce identical values.
 
         Example
         _______
@@ -184,9 +168,9 @@ class BaseDeviate(object):
             self._rng = self._rng_type(rng, *self._rng_args)
 
     def clearCache(self):
-        """Clear the internal cache of the Deviate, if any.  This is currently only relevant for
-        GaussianDeviate, since it generates two values at a time, saving the second one to use for
-        the next output value.
+        """Clear the internal cache of the `BaseDeviate`, if any.  This is currently only relevant
+        for `GaussianDeviate`, since it generates two values at a time, saving the second one to
+        use for the next output value.
         """
         self._rng.clearCache()
 
@@ -260,8 +244,8 @@ class UniformDeviate(BaseDeviate):
         0.49095047544687986
 
     Parameters:
-        seed:       Something that can seed a BaseDeviate: an integer seed or another
-                    BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                    `BaseDeviate`.  Using 0 means to generate a seed from the system.
                     [default: None]
 
     """
@@ -298,8 +282,8 @@ class GaussianDeviate(BaseDeviate):
         1.0218588970190354
 
     Parameters:
-        seed:       Something that can seed a BaseDeviate: an integer seed or another
-                    BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                    `BaseDeviate`.  Using 0 means to generate a seed from the system.
                     [default: None]
         mean:       Mean of Gaussian distribution. [default: 0.]
         sigma:      Sigma of Gaussian distribution. [default: 1.; Must be > 0]
@@ -347,8 +331,8 @@ class GaussianDeviate(BaseDeviate):
 class BinomialDeviate(BaseDeviate):
     """Pseudo-random Binomial deviate for ``N`` trials each of probability ``p``.
 
-    ``N`` is number of 'coin flips,' ``p`` is probability of 'heads,' and each call returns an integer
-    value where 0 <= value <= N gives the number of heads.  See
+    ``N`` is number of 'coin flips,' ``p`` is probability of 'heads,' and each call returns an
+    integer value where 0 <= value <= N gives the number of heads.  See
     http://en.wikipedia.org/wiki/Binomial_distribution for more information.
 
     Successive calls to b() generate pseudo-random integer values distributed according to a
@@ -361,8 +345,8 @@ class BinomialDeviate(BaseDeviate):
         3
 
     Parameters:
-        seed:       Something that can seed a BaseDeviate: an integer seed or another
-                    BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                    `BaseDeviate`.  Using 0 means to generate a seed from the system.
                     [default: None]
         N:          The number of 'coin flips' per trial. [default: 1; Must be > 0]
         p:          The probability of success per coin flip. [default: 0.5; Must be > 0]
@@ -410,8 +394,8 @@ class PoissonDeviate(BaseDeviate):
         106
 
     Parameters:
-        seed:       Something that can seed a BaseDeviate: an integer seed or another
-                    BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                    `BaseDeviate`.  Using 0 means to generate a seed from the system.
                     [default: None]
         mean:       Mean of the distribution. [default: 1; Must be > 0]
     """
@@ -472,8 +456,8 @@ class WeibullDeviate(BaseDeviate):
         2.957052966368049
 
     Parameters:
-        seed:       Something that can seed a BaseDeviate: an integer seed or another
-                    BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                    `BaseDeviate`.  Using 0 means to generate a seed from the system.
                     [default: None]
         a:          Shape parameter of the distribution. [default: 1; Must be > 0]
         b:          Scale parameter of the distribution. [default: 1; Must be > 0]
@@ -520,8 +504,8 @@ class GammaDeviate(BaseDeviate):
         1.3504199388358704
 
     Parameters:
-        seed:       Something that can seed a BaseDeviate: an integer seed or another
-                    BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                    `BaseDeviate`.  Using 0 means to generate a seed from the system.
                     [default: None]
         k:          Shape parameter of the distribution. [default: 1; Must be > 0]
         theta:      Scale parameter of the distribution. [default: 1; Must be > 0]
@@ -570,8 +554,8 @@ class Chi2Deviate(BaseDeviate):
         6.644121724269535
 
     Parameters:
-        seed:       Something that can seed a BaseDeviate: an integer seed or another
-                    BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:       Something that can seed a `BaseDeviate`: an integer seed or another
+                    `BaseDeviate`.  Using 0 means to generate a seed from the system.
                     [default: None]
         n:          Number of degrees of freedom for the output distribution. [default: 1;
                     Must be > 0]
@@ -601,26 +585,26 @@ class Chi2Deviate(BaseDeviate):
 class DistDeviate(BaseDeviate):
     """A class to draw random numbers from a user-defined probability distribution.
 
-    DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
+    DistDeviate is a `BaseDeviate` class that can be used to draw from an arbitrary probability
     distribution.  The probability distribution passed to DistDeviate can be given one of three
     ways: as the name of a file containing a 2d ASCII array of x and P(x), as a LookupTable mapping
     x to P(x), or as a callable function.
 
     Once given a probability, DistDeviate creates a table of the cumulative probability and draws
-    from it using a UniformDeviate.  The precision of its outputs can be controlled with the
+    from it using a `UniformDeviate`.  The precision of its outputs can be controlled with the
     keyword ``npoints``, which sets the number of points DistDeviate creates for its internal table
     of CDF(x).  To prevent errors due to non-monotonicity, the interpolant for this internal table
     is always linear.
 
-    Two keywords, ``x_min`` and ``x_max``, define the support of the function.  They must be passed if
-    a callable function is given to DistDeviate, unless the function is a LookupTable, which has its
-    own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use of
-    ``x_min`` or ``x_max`` will result in an error.
+    Two keywords, ``x_min`` and ``x_max``, define the support of the function.  They must be passed
+    if a callable function is given to DistDeviate, unless the function is a `LookupTable`, which
+    has its own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use
+    of ``x_min`` or ``x_max`` will result in an error.
 
     If given a table in a file, DistDeviate will construct an interpolated LookupTable to obtain
     more finely gridded probabilities for generating the cumulative probability table.  The default
-    ``interpolant`` is linear, but any interpolant understood by LookupTable may be used.  We caution
-    against the use of splines because they can cause non-monotonic behavior.  Passing the
+    ``interpolant`` is linear, but any interpolant understood by LookupTable may be used.  We
+    caution against the use of splines because they can cause non-monotonic behavior.  Passing the
     ``interpolant`` keyword next to anything but a table in a file will result in an error.
 
     Examples:
@@ -653,8 +637,8 @@ class DistDeviate(BaseDeviate):
         -0.00909781188974034
 
     Parameters:
-        seed:           Something that can seed a BaseDeviate: an integer seed or another
-                        BaseDeviate.  Using 0 means to generate a seed from the system.
+        seed:           Something that can seed a `BaseDeviate`: an integer seed or another
+                        `BaseDeviate`.  Using 0 means to generate a seed from the system.
                         [default: None]
         function:       A callable function giving a probability distribution or the name of a
                         file containing a probability distribution as a 2-column ASCII table.
@@ -780,20 +764,22 @@ class DistDeviate(BaseDeviate):
         self.x_max = x_max
 
     def val(self, p):
-        """
-        Return the value ``x`` of the input function to DistDeviate such that ``p`` = cdf(x),
-        where cdf is the cumulattive probability distribution function:
+        r"""
+        Return the value :math:`x` of the input function to `DistDeviate` such that ``p`` =
+        :math:`F(x)`, where :math:`F` is the cumulattive probability distribution function:
 
-            cdf(x) = int(pdf(t), t=0..x)
+        .. math::
 
-        This function is typically called by self.__call__(), which generates a random p
+            F(x) = \int_{-\infty}^x \mathrm{pdf}(t) dt
+
+        This function is typically called by `__call__`, which generates a random p
         between 0 and 1 and calls ``self.val(p)``.
 
         Parameters:
             p:      The desired cumulative probabilty p.
 
         Returns:
-            the corresponding x such that p = cdf(x).
+            the corresponding x such that :math:`p = F(x)`.
         """
         if p<0 or p>1:
             raise GalSimRangeError('Invalid cumulative probability for DistDeviate', p, 0., 1.)
@@ -852,7 +838,7 @@ def permute(rng, *args):
     applied to it.
 
     Parameters:
-        rng:    The random number generator to use. (This will be converted to a UniformDeviate.)
+        rng:    The random number generator to use. (This will be converted to a `UniformDeviate`.)
         args:   Any number of lists to be permuted.
     """
     from .random import UniformDeviate

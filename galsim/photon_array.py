@@ -313,7 +313,7 @@ class PhotonArray(object):
         Parameters:
             image:      The image to turn into a PhotonArray
             max_flux:   The maximum flux value to use for any output photon [default: 1]
-            rng:        A BaseDeviate to use for the random number generation [default: None]
+            rng:        A `BaseDeviate` to use for the random number generation [default: None]
 
         Returns:
             a PhotonArray
@@ -413,11 +413,11 @@ class WavelengthSampler(object):
         sed:        The `SED` to use for the objects spectral energy distribution.
         bandpass:   A `Bandpass` object representing a filter, or None to sample over the full
                     `SED` wavelength range.
-        rng:        If provided, a random number generator that is any kind of BaseDeviate
+        rng:        If provided, a random number generator that is any kind of `BaseDeviate`
                     object. If `rng` is None, one will be automatically created, using the
                     time as a seed. [default: None]
-        npoints:    Number of points DistDeviate should use for its internal interpolation
-                    tables. [default: None, which uses the DistDeviate default]
+        npoints:    Number of points `DistDeviate` should use for its internal interpolation
+                    tables. [default: None, which uses the `DistDeviate` default]
     """
     def __init__(self, sed, bandpass, rng=None, npoints=None):
         self.sed = sed

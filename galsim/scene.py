@@ -414,7 +414,7 @@ class COSMOSCatalog(object):
                             the catalog.  But if it is >0, then round the index to that
                             precision.  [default: 0.05]
             rng:            A random number generator to use for selecting a random galaxy
-                            (may be any kind of BaseDeviate or None) and to use in generating
+                            (may be any kind of `BaseDeviate` or None) and to use in generating
                             any noise field when padding.  [default: None]
             n_random:       The number of random galaxies to build, if 'index' is None.
                             [default: 1]
@@ -532,7 +532,7 @@ class COSMOSCatalog(object):
         Parameters:
             n_random:   Number of random indices to return. [default: 1]
             rng:        A random number generator to use for selecting a random galaxy
-                        (may be any kind of BaseDeviate or None). [default: None]
+                        (may be any kind of `BaseDeviate` or None). [default: None]
 
         Returns:
             A single index if n_random==1 or a NumPy array containing the randomly-selected

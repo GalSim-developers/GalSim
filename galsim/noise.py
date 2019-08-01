@@ -15,11 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file noise.py
-Noise classes for adding various kinds of noise to an image.
-Also includes the addNoise() and addNoiseSNR() methods of the Image classes at the Python
-layer.
-"""
 
 import numpy as np
 import math
@@ -42,44 +37,45 @@ def addNoise(self, noise):
 def addNoiseSNR(self, noise, snr, preserve_flux=False):
     r"""Adds noise to the image in a way that achieves the specified signal-to-noise ratio.
 
-    The given SNR (``snr``) can be achieved either by scaling the flux of the object while keeping
-    the noise level fixed, or the flux can be preserved and the noise variance changed.  This is set
-    using the parameter ``preserve_flux``.
+    The specified ``snr`` (signal-to-noise ratio, or :math:`S/N`) can be achieved either by scaling
+    the flux of the object while keeping the noise level fixed, or the flux can be preserved and
+    the noise variance changed.  This choice is specified using the parameter ``preserve_flux``,
+    where False means the former and True means the latter.
 
-    The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral
-    of the flux
+    The definition of :math:`S/N` is equivalent to the one used by Great08.  We take the signal to
+    be a weighted sum of the pixel values:
 
-        .. math::
-           S &= \frac{\sum W(x,y) I(x,y)}{\sum W(x,y)} \\
-           N^2 = Var(S) &= \frac{\sum W(x,y)^2 Var(I(x,y))}{(\sum W(x,y))^2}
+    .. math::
+        S &= \frac{\sum W(x,y) I(x,y)}{\sum W(x,y)} \\
+        N^2 = Var(S) &= \frac{\sum W(x,y)^2 Var(I(x,y))}{(\sum W(x,y))^2}
 
-    and assuming that Var(I(x,y)) is constant
+    and assume that :math:`Var(I(x,y))` is constant, :math:`V \equiv Var(I(x,y))`.
+    We then assume that we are using a matched filter for :math:`W`, so :math:`W(x,y) = I(x,y)`.
+    Then a few things cancel and we find that
 
-        .. math:: Var(I(x,y)) = noise\_var
+    .. math::
+        (S/N)^2 = \frac{\sum I(x,y)^2}{V}
 
-    We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things
-    cancel and we find that
+    and therefore, for a given :math:`I(x,y)` and :math:`S/N` (aka ``snr``)
 
-        .. math:: snr = S/N = \sqrt{\frac{\sum I(x,y)^2}{noise\_var}}
+    .. math::
+        V = \frac{\sum I(x,y)^2}{(S/N)^2}
 
-    and therefore, for a given I(x,y) and snr,
+    .. note::
+        For noise models such as `PoissonNoise` and `CCDNoise`, the assumption of constant
+        :math:`Var(I(x,y))` is only approximate, since the flux of the object adds to the Poisson
+        noise in those pixels.  Thus, the real :math:`S/N` on the final image will be slightly
+        lower than the target ``snr`` value, and this effect will be larger for brighter objects.
 
-        .. math:: noise\_var = \frac{\sum I(x,y)^2}{snr^2}
-
-    Note that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
-    is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
-    Thus, the real S/N on the final image will be slightly lower than the target ``snr`` value,
-    and this effect will be larger for brighter objects.
-
-    Also, this function relies on `BaseNoise.getVariance` to determine how much variance the
-    noise model will add.  Thus, it will not work for noise models that do not have a well-
-    defined variance, such as `VariableGaussianNoise`.
+    This function relies on `BaseNoise.getVariance` to determine how much variance the noise model
+    will add.  Thus, it will not work for noise models that do not have a well-defined variance,
+    such as `VariableGaussianNoise`.
 
     Parameters:
         noise:          The noise (`BaseNoise`) model to use.
         snr:            The desired signal-to-noise after the noise is applied.
         preserve_flux:  Whether to preserve the flux of the object (``True``) or the variance of
-                        the noise model (``False``) to achieve the desired SNR. [default: False]
+                        the noise model (``False``) to achieve the desired snr. [default: False]
 
     Returns:
         the variance of the noise that was applied to the image.
@@ -108,11 +104,11 @@ class BaseNoise(object):
     This class should not be constructed directly.  Rather, you should instantiate one of the
     subclasses:
 
-        GaussianNoise
-        PoissonNoise
-        CCDNoise
-        DeviateNoise
-        VariableGaussianNoise
+    * `GaussianNoise`
+    * `PoissonNoise`
+    * `CCDNoise`
+    * `VariableGaussianNoise`
+    * `DeviateNoise`
 
     which define what kind of noise you want to implement.  This base class mostly just serves as
     a way to check if an object is a valid noise object with::
@@ -237,7 +233,7 @@ class GaussianNoise(BaseNoise):
         >>> image.addNoise(gaussian_noise)
 
     Parameters:
-        rng:        A BaseDeviate instance to use for generating the random numbers.
+        rng:        A `BaseDeviate` instance to use for generating the random numbers.
         sigma:      The rms noise on each pixel. [default: 1.]
 
     Attributes:
@@ -272,7 +268,7 @@ class GaussianNoise(BaseNoise):
     def copy(self, rng=None):
         """Returns a copy of the Gaussian noise model.
 
-        By default, the copy will share the BaseDeviate random number generator with the parent
+        By default, the copy will share the `BaseDeviate` random number generator with the parent
         instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
@@ -307,7 +303,7 @@ class PoissonNoise(BaseNoise):
         >>> image.addNoise(poisson_noise)
 
     Parameters:
-        rng:        A BaseDeviate instance to use for generating the random numbers.
+        rng:        A `BaseDeviate` instance to use for generating the random numbers.
         sky_level:  The sky level in electrons per pixel that was originally in the input image,
                     but which is taken to have already been subtracted off. [default: 0.]
 
@@ -363,7 +359,7 @@ class PoissonNoise(BaseNoise):
     def copy(self, rng=None):
         """Returns a copy of the Poisson noise model.
 
-        By default, the copy will share the BaseDeviate random number generator with the parent
+        By default, the copy will share the `BaseDeviate` random number generator with the parent
         instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
@@ -413,7 +409,7 @@ class CCDNoise(BaseNoise):
         >>> image.addNoise(ccd_noise)
 
     Parameters:
-        rng:            A BaseDeviate instance to use for generating the random numbers.
+        rng:            A `BaseDeviate` instance to use for generating the random numbers.
         sky_level:      The sky level in ADU per pixel that was originally in the input image,
                         but which is taken to have already been subtracted off. [default: 0.]
         gain:           The gain for each pixel in electrons per ADU; setting ``gain<=0`` will shut
@@ -504,7 +500,7 @@ class CCDNoise(BaseNoise):
     def copy(self, rng=None):
         """Returns a copy of the CCD noise model.
 
-        By default, the copy will share the BaseDeviate random number generator with the parent
+        By default, the copy will share the `BaseDeviate` random number generator with the parent
         instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
@@ -522,7 +518,7 @@ class CCDNoise(BaseNoise):
 
 
 class DeviateNoise(BaseNoise):
-    """Class implementing noise with an arbitrary BaseDeviate object.
+    """Class implementing noise with an arbitrary `BaseDeviate` object.
 
     The DeviateNoise class provides a way to treat an arbitrary deviate as the noise model for
     each pixel in an image.
@@ -533,7 +529,7 @@ class DeviateNoise(BaseNoise):
         >>> image.addNoise(dev_noise)
 
     Parameters:
-        dev:    A BaseDeviate subclass to use as the noise deviate for each pixel.
+        dev:    A `BaseDeviate` subclass to use as the noise deviate for each pixel.
 
     Attributes:
         rng:    The internal random number generator (read-only)
@@ -556,9 +552,9 @@ class DeviateNoise(BaseNoise):
         raise GalSimError("Changing the variance is not allowed for DeviateNoise")
 
     def copy(self, rng=None):
-        """Returns a copy of the Deviate noise model.
+        """Returns a copy of the `DeviateNoise` instance.
 
-        By default, the copy will share the BaseDeviate random number generator with the parent
+        By default, the copy will share the `BaseDeviate` random number generator with the parent
         instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)
@@ -589,7 +585,7 @@ class VariableGaussianNoise(BaseNoise):
         >>> image.addNoise(variable_noise)
 
     Parameters:
-        rng:        A BaseDeviate instance to use for generating the random numbers.
+        rng:        A `BaseDeviate` instance to use for generating the random numbers.
         var_image:  The variance of the noise to apply to each pixel.  This image must be the
                     same shape as the image for which you eventually call addNoise().
 
@@ -629,7 +625,7 @@ class VariableGaussianNoise(BaseNoise):
     def copy(self, rng=None):
         """Returns a copy of the variable Gaussian noise model.
 
-        By default, the copy will share the BaseDeviate random number generator with the parent
+        By default, the copy will share the `BaseDeviate` random number generator with the parent
         instance.  However, you can provide a new rng to use in the copy if you want with::
 
             >>> noise_copy = noise.copy(rng=new_rng)

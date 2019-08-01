@@ -85,11 +85,11 @@ class InterpolatedImage(GSObject):
     The user can choose to pad the image with a noise profile if desired.  To do so, specify
     the target size for the noise padding in ``noise_pad_size``, and specify the kind of noise
     to use in ``noise_pad``.  The ``noise_pad`` option may be a Gaussian random noise of some
-    variance, or a Gaussian but correlated noise field that is specified either as a CorrelatedNoise
-    instance, an Image (from which a correlated noise model is derived), or a string (interpreted
-    as a filename containing an image to use for deriving a CorrelatedNoise).  The user can also
-    pass in a random number generator to be used for noise generation.  Finally, the user can pass
-    in a ``pad_image`` for deterministic image padding.
+    variance, or a Gaussian but correlated noise field that is specified either as a
+    `BaseCorrelatedNoise` instance, an `Image` (from which a correlated noise model is derived), or
+    a string (interpreted as a filename of an image to use for deriving a `CorrelatedNoise`).
+    The user can also pass in a random number generator to be used for noise generation.  Finally,
+    the user can pass in a ``pad_image`` for deterministic image padding.
 
     By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
     use for further manipulations, rather than using the most conservative possibility.  For typical
@@ -167,34 +167,34 @@ class InterpolatedImage(GSObject):
         noise_pad:          Noise properties to use when padding the original image with
                             noise.  This can be specified in several ways:
 
-                            - as a float, which is interpreted as being a variance to use when
-                              padding with uncorrelated Gaussian noise;
-                            - as a galsim.CorrelatedNoise, which contains information about the
-                              desired noise power spectrum - any random number generator passed
-                              to the ``rng`` keyword will take precedence over that carried in
-                              an input CorrelatedNoise instance;
-                            - as an Image of a noise field, which is used to calculate
-                              the desired noise power spectrum; or
-                            - as a string which is interpreted as a filename containing an
-                              example noise field with the proper noise power spectrum (as an
-                              Image in the first HDU).
+                            a) as a float, which is interpreted as being a variance to use when
+                               padding with uncorrelated Gaussian noise;
+                            b) as a `galsim.BaseCorrelatedNoise`, which contains information about
+                               the desired noise power spectrum - any random number generator passed
+                               to the ``rng`` keyword will take precedence over that carried in
+                               an input `BaseCorrelatedNoise` instance;
+                            c) as an `Image` of a noise field, which is used to calculate
+                               the desired noise power spectrum; or
+                            d) as a string which is interpreted as a filename containing an
+                               example noise field with the proper noise power spectrum (as an
+                               `Image` in the first HDU).
 
                             It is important to keep in mind that the calculation of the correlation
-                            function that is internally stored within a CorrelatedNoise object is a
-                            non-negligible amount of overhead, so the recommended means of
-                            specifying a correlated noise field for padding are (b) or (d).  In the
-                            case of (d), if the same file is used repeatedly, then the ``use_cache``
-                            keyword (see below) can be used to prevent the need for repeated
-                            CorrelatedNoise initializations.
-                            [default: 0, i.e., pad with zeros]
+                            function that is internally stored within a `BaseCorrelatedNoise`
+                            object is a non-negligible amount of overhead, so the recommended means
+                            of specifying a correlated noise field for padding are (b) or (d).  In
+                            the case of (d), if the same file is used repeatedly, then the
+                            ``use_cache`` keyword (see below) can be used to prevent the need for
+                            repeated `CorrelatedNoise` initializations.  [default: 0, i.e., pad
+                            with zeros]
         use_cache:          Specify whether to cache ``noise_pad`` read in from a file to save
                             having to build a CorrelatedNoise object repeatedly from the same image.
                             [default: True]
         rng:                If padding by noise, the user can optionally supply the random noise
                             generator to use for drawing random numbers as ``rng`` (may be any kind
-                            of BaseDeviate object).  Such a user-input random number generator
-                            takes precedence over any stored within a user-input CorrelatedNoise
-                            instance (see the ``noise_pad`` parameter).
+                            of `BaseDeviate` object).  Such a user-input random number generator
+                            takes precedence over any stored within a user-input
+                            `BaseCorrelatedNoise` instance (see the ``noise_pad`` parameter).
                             If ``rng=None``, one will be automatically created, using the time as a
                             seed. [default: None]
         pad_image:          Image to be used for deterministically padding the original image.  This

@@ -824,10 +824,10 @@ class AutoCorrelation(Convolution):
 
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
 
-    This class is primarily targeted for use by the CorrelatedNoise models when convolving
-    with a GSObject.
+    This class is primarily targeted for use by the `BaseCorrelatedNoise` models when convolving
+    with a `GSObject`.
 
-    The normal way to use this class is to use the AutoCorrelate() factory function::
+    The normal way to use this class is to use the `AutoCorrelate` factory function::
 
         >>> psf_sq = galsim.AutoCorrelate(psf)
 

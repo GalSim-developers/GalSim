@@ -164,7 +164,7 @@ class GSObject(object):
                     methods, as well as convolutions and flux rescalings.  Note that the ``noise``
                     attribute can be set directly by users even for GSObjects that do not naturally
                     have one. The typical use for this attribute is to use it to whiten the noise in
-                    the image after drawing.  See CorrelatedNoise for more details.
+                    the image after drawing.  See `BaseCorrelatedNoise` for more details.
 
     **GSParams**:
 
@@ -1503,7 +1503,7 @@ class GSObject(object):
                             (usually due to interpolants).
                             [default: 0]
             rng:            If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If ``rng`` is None, one
+                            which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
             max_extra_noise: If provided, the allowed extra noise in each pixel when photon
@@ -2086,7 +2086,7 @@ class GSObject(object):
                             more than this because some of the shot photons are negative
                             (usually due to interpolants).  [default: 0]
             rng:            If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If ``rng`` is None, one
+                            which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
             max_extra_noise: If provided, the allowed extra noise in each pixel when photon
@@ -2205,7 +2205,7 @@ class GSObject(object):
         Parameters:
             n_photons:  The number of photons to use for photon shooting.
             rng:        If provided, a random number generator to use for photon shooting,
-                        which may be any kind of BaseDeviate object.  If ``rng`` is None, one
+                        which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one
                         will be automatically created, using the time as a seed.
                         [default: None]
 
@@ -2229,8 +2229,8 @@ class GSObject(object):
         """Shoot photons into the given PhotonArray
 
         Parameters:
-            photons:    A PhotonArray instance into which the photons should be placed.
-            rng:        A BaseDeviate instance to use for the photon shooting,
+            photons:    A `PhotonArray` instance into which the photons should be placed.
+            rng:        A `BaseDeviate` instance to use for the photon shooting,
         """
         raise NotImplementedError("%s does not implement shoot"%self.__class__.__name__)
 

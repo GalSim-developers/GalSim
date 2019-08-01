@@ -130,11 +130,8 @@ class RealGalaxy(GSObject):
                                 selecting a completely random object.
                                 [One of ``index``, ``id``, or ``random`` is required.]
         rng:                    A random number generator to use for selecting a random galaxy
-                                (may be any kind of BaseDeviate or None) and to use in generating
-                                any noise field when padding.  This user-input random number
-                                generator takes precedence over any stored within a user-input
-                                CorrelatedNoise instance (see ``noise_pad`` parameter below).
-                                [default: None]
+                                (may be any kind of `BaseDeviate` or None) and to use in generating
+                                any noise field when padding. [default: None]
         x_interpolant:          Either an Interpolant instance or a string indicating which
                                 real-space interpolant should be used.  Options are 'nearest',
                                 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should
@@ -349,11 +346,11 @@ class RealGalaxy(GSObject):
         """Create a RealGalaxy directly from image, PSF, and noise description.
 
         Parameters:
-            image:  Image of the galaxy you want to simulate.
-            PSF:    GSObject representing the PSF of the galaxy image.  Note that this PSF
+            image:  `Image` of the galaxy you want to simulate.
+            PSF:    `GSObject` representing the PSF of the galaxy image.  Note that this PSF
                     should include the response of the pixel convolution.
-            xi:     CorrelatedNoise or UncorrelatedNoise object characterizing the noise in the
-                    input image.
+            xi:     `BaseCorrelatedNoise` object characterizing the noise correlations in the input
+                    image.
         """
         noise_image = xi.drawImage()
         pixel_scale = noise_image.scale
@@ -790,9 +787,7 @@ class RealGalaxyCatalog(object):
         return im, self.pixel_scale[i], self.variance[i]
 
     def getNoise(self, i, rng=None, gsparams=None):
-        """Returns the noise correlation function at index ``i`` as a CorrelatedNoise object.
-           Note: the return value from this function is not picklable, so this cannot be used
-           across processes.
+        """Returns the noise correlation function at index ``i`` as a `BaseCorrelatedNoise` object.
         """
         from .correlatednoise import UncorrelatedNoise, BaseCorrelatedNoise
         from .interpolatedimage import InterpolatedImage
@@ -896,8 +891,7 @@ class ChromaticRealGalaxy(ChromaticSum):
     (1) a series of high resolution input Images of a single galaxy in different bands,
     (2) a list of `Bandpass` corresponding to those images,
     (3) the PSFs of those images as either `GSObject` or `ChromaticObject` instances, and
-    (4) the noise properties of the input images as instances of either `CorrelatedNoise` or
-        `UncorrelatedNoise`.
+    (4) the noise properties of the input images as `BaseCorrelatedNoise` instances.
 
     If you want to specify these inputs directly, that is possible via the `makeFromImages` factory
     method of this class::
@@ -969,10 +963,8 @@ class ChromaticRealGalaxy(ChromaticSum):
         random:                 If True, then just select a completely random galaxy from the
                                 catalog.  [One of ``index``, ``id``, or ``random`` is required.]
         rng:                    A random number generator to use for selecting a random galaxy (may
-                                be any kind of BaseDeviate or None) and to use in generating any
-                                noise field when padding.  This user-input random number generator
-                                takes precedence over any stored within a user-input CorrelatedNoise
-                                instance (see ``noise_pad`` parameter below).  [default: None]
+                                be any kind of `BaseDeviate` or None) and to use in generating any
+                                noise field when padding.
         SEDs:                   An optional list of `SED` instances to use when representing real
                                 galaxies as sums of separable profiles.  By default, it will use
                                 ``len(real_galaxy_catalogs)`` SEDs that are polynomials in
@@ -1095,8 +1087,8 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 the PSFs of the different input images, or potentially a single
                                 `GSObject` or `ChromaticObject` that will be used as the PSF for
                                 all images.
-            xis:                An iterable of either `CorrelatedNoise` or `UncorrelatedNoise`
-                                objects characterizing the noise in the input images.
+            xis:                An iterable of `BaseCorrelatedNoise` objects characterizing the
+                                noise in the input images.
             SEDs:               An optional list of `SED` instances to use when representing real
                                 galaxies as sums of separable profiles.  By default, it will use
                                 ``len(images)`` SEDs that are polynomials in wavelength.  Note that
