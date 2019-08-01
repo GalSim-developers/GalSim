@@ -202,7 +202,7 @@ class RealGalaxy(GSObject):
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
                  pad_factor=4, noise_pad_size=0, area_norm=1.0, gsparams=None, logger=None):
         from .random import BaseDeviate, UniformDeviate
-        from .correlatednoise import UncorrelatedNoise, _BaseCorrelatedNoise
+        from .correlatednoise import UncorrelatedNoise, BaseCorrelatedNoise
         from .interpolatedimage import InterpolatedImage
         from .convolve import Convolve, Deconvolve
         from .config import LoggerWrapper
@@ -282,7 +282,7 @@ class RealGalaxy(GSObject):
             ii = InterpolatedImage(noise_image, normalization="sb",
                                    calculate_stepk=False, calculate_maxk=False,
                                    x_interpolant='linear', gsparams=self._gsparams)
-            self._gal_noise = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
+            self._gal_noise = BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
             self._gal_noise = self._gal_noise.withVariance(var)
         logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
@@ -794,7 +794,7 @@ class RealGalaxyCatalog(object):
            Note: the return value from this function is not picklable, so this cannot be used
            across processes.
         """
-        from .correlatednoise import UncorrelatedNoise, _BaseCorrelatedNoise
+        from .correlatednoise import UncorrelatedNoise, BaseCorrelatedNoise
         from .interpolatedimage import InterpolatedImage
         im, scale, var = self.getNoiseProperties(i)
         if im is None:
@@ -803,7 +803,7 @@ class RealGalaxyCatalog(object):
             ii = InterpolatedImage(im, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
-            cf = _BaseCorrelatedNoise(rng, ii, im.wcs)
+            cf = BaseCorrelatedNoise(rng, ii, im.wcs)
             cf = cf.withVariance(var)
         return cf
 
@@ -1022,7 +1022,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         from .random import BaseDeviate, UniformDeviate
         from .bounds import BoundsI
         from .interpolatedimage import InterpolatedImage
-        from .correlatednoise import _BaseCorrelatedNoise
+        from .correlatednoise import BaseCorrelatedNoise
         from .config import LoggerWrapper
 
         if rng is None:
@@ -1073,7 +1073,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             ii = InterpolatedImage(noise_image, normalization='sb',
                                    calculate_stepk=False, calculate_maxk=False,
                                    x_interpolant='linear', gsparams=gsparams)
-            xi = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
+            xi = BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
             xi = xi.withVariance(var)
             xis.append(xi)
         logger.debug('ChromaticRealGalaxy %d: Got noise_image',use_index)

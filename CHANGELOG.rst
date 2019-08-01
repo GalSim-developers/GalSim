@@ -4,8 +4,10 @@ Changes from v2.1 to v2.2
 Deprecated Features
 -------------------
 
-- Deprecated the `tol` parameter of the various Interpolant classes.  Users should use the
-  `kvalue_accuracy` parameter of `gsparams` instead. (#1038)
+- Deprecated the nominally private class galsim.correlatednoise._BaseCorrelatedNoise.  If you
+  were using it for any purpose, you should now use galsim.BaseCorrelatedNoise. (#160)
+- Deprecated the ``tol`` parameter of the various Interpolant classes.  Users should use the
+  ``kvalue_accuracy`` parameter of ``gsparams`` instead. (#1038)
 
 API Changes
 -----------

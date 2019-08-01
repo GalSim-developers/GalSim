@@ -30,6 +30,8 @@ from . import utilities
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, galsim_warn
 
+from .deprecated.correlatednoise import _BaseCorrelatedNoise
+
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
     """Whiten the noise in the image assuming that the noise currently in the image can be described
@@ -67,17 +69,17 @@ def symmetrizeNoise(self, noise, order=4):
 Image.whitenNoise = whitenNoise
 Image.symmetrizeNoise = symmetrizeNoise
 
-class _BaseCorrelatedNoise(object):
+class BaseCorrelatedNoise(object):
     """A Base Class describing 2D correlated Gaussian random noise fields.
 
-    A _BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
-    current ``_BaseCorrelatedNoise.__init__`` interface does not provide any guarantee that the input
+    A BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
+    current ``BaseCorrelatedNoise.__init__`` interface does not provide any guarantee that the input
     GSObject represents a physical correlation function, e.g. a profile that is an even function
     (two-fold rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern
     is that users instead instantiate derived classes, such as the CorrelatedNoise, which are able
     to guarantee the above.
 
-    The _BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes
+    The BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes
     (currently only CorrelatedNoise and UncorrelatedNoise) store the random deviate, noise
     correlation function profile and allow operations with it, generate images containing noise with
     these correlation properties, and generate covariance matrices according to the correlation
@@ -118,7 +120,7 @@ class _BaseCorrelatedNoise(object):
 
     def withGSParams(self, gsparams):
         if gsparams == self.gsparams: return self
-        return _BaseCorrelatedNoise(self.rng, self._profile.withGSParams(gsparams), self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.withGSParams(gsparams), self.wcs)
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
@@ -127,14 +129,14 @@ class _BaseCorrelatedNoise(object):
         if not wcs.compatible(self.wcs, other.wcs):
             galsim_warn("Adding two CorrelatedNoise objects with incompatible WCS. "
                         "The result will have the WCS of the first object.")
-        return _BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
         from . import wcs
         if not wcs.compatible(self.wcs, other.wcs):
             galsim_warn("Subtracting two CorrelatedNoise objects with incompatible WCS. "
                         "The result will have the WCS of the first object.")
-        return _BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
 
     def __mul__(self, variance_ratio):
         return self.withScaledVariance(variance_ratio)
@@ -152,14 +154,14 @@ class _BaseCorrelatedNoise(object):
         """
         if rng is None:
             rng = self.rng
-        return _BaseCorrelatedNoise(rng, self._profile, self.wcs)
+        return BaseCorrelatedNoise(rng, self._profile, self.wcs)
 
     def __repr__(self):
-        return "galsim.correlatednoise._BaseCorrelatedNoise(%r,%r,%r)"%(
+        return "galsim.BaseCorrelatedNoise(%r,%r,%r)"%(
                 self.rng, self._profile, self.wcs)
 
     def __str__(self):
-        return "galsim.correlatednoise._BaseCorrelatedNoise(%s,%s)"%(self._profile, self.wcs)
+        return "galsim.BaseCorrelatedNoise(%s,%s)"%(self._profile, self.wcs)
 
     # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return self is other or repr(self) == repr(other)
@@ -442,7 +444,7 @@ class _BaseCorrelatedNoise(object):
         Returns:
             a new CorrelatedNoise object with the specified expansion.
         """
-        return _BaseCorrelatedNoise(self.rng, self._profile.expand(scale), self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.expand(scale), self.wcs)
 
     def dilate(self, scale):
         """Apply the appropriate changes to the scale and variance for when the object has
@@ -456,7 +458,7 @@ class _BaseCorrelatedNoise(object):
         """
         # Expansion changes the flux by scale**2, dilate reverses that to conserve flux,
         # so the variance needs to change by scale**-4.
-        return _BaseCorrelatedNoise(self.rng, self._profile.expand(scale) / scale**4, self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.expand(scale) / scale**4, self.wcs)
 
     def magnify(self, mu):
         """Apply the appropriate changes to the scale and variance for when the object has
@@ -468,7 +470,7 @@ class _BaseCorrelatedNoise(object):
         Returns:
             a new CorrelatedNoise object with the specified magnification.
         """
-        return _BaseCorrelatedNoise(self.rng, self._profile.magnify(mu), self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.magnify(mu), self.wcs)
 
     def lens(self, g1, g2, mu):
         """Apply the appropriate changes for when the object has an applied shear and magnification.
@@ -481,7 +483,7 @@ class _BaseCorrelatedNoise(object):
         Returns:
             a new CorrelatedNoise object with the specified shear and magnification.
         """
-        return _BaseCorrelatedNoise(self.rng, self._profile.lens(g1,g2,mu), self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.lens(g1,g2,mu), self.wcs)
 
     def rotate(self, theta):
         """Apply a rotation ``theta`` to this correlated noise model.
@@ -492,7 +494,7 @@ class _BaseCorrelatedNoise(object):
         Returns:
             a new CorrelatedNoise object with the specified rotation.
         """
-        return _BaseCorrelatedNoise(self.rng, self._profile.rotate(theta), self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.rotate(theta), self.wcs)
 
     def shear(self, *args, **kwargs):
         """Apply a shear to this correlated noise model, where arguments are either a `Shear`,
@@ -507,7 +509,7 @@ class _BaseCorrelatedNoise(object):
         Returns:
             a new CorrelatedNoise object with the specified shear.
         """
-        return _BaseCorrelatedNoise(self.rng, self._profile.shear(*args,**kwargs), self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.shear(*args,**kwargs), self.wcs)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply an arbitrary jacobian transformation to this correlated noise model.
@@ -521,8 +523,8 @@ class _BaseCorrelatedNoise(object):
         Returns:
             a new CorrelatedNoise object with the specified transformation.
         """
-        return _BaseCorrelatedNoise(self.rng, self._profile.transform(dudx,dudy,dvdx,dvdy),
-                                    self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile.transform(dudx,dudy,dvdx,dvdy),
+                                   self.wcs)
 
     def getVariance(self):
         """Return the point variance of this noise field, equal to its correlation function value at
@@ -580,7 +582,7 @@ class _BaseCorrelatedNoise(object):
             a CorrelatedNoise object whose variance and covariances have been scaled up by
             the given factor.
         """
-        return _BaseCorrelatedNoise(self.rng, self._profile * variance_ratio, self.wcs)
+        return BaseCorrelatedNoise(self.rng, self._profile * variance_ratio, self.wcs)
 
     def convolvedWith(self, gsobject, gsparams=None):
         """Convolve the correlated noise model with an input GSObject.
@@ -633,7 +635,7 @@ class _BaseCorrelatedNoise(object):
         from .convolve import Convolve, AutoCorrelate
         conv = Convolve([self._profile, AutoCorrelate(gsobject,gsparams=gsparams)],
                         gsparams=gsparams)
-        return _BaseCorrelatedNoise(self.rng, conv, self.wcs)
+        return BaseCorrelatedNoise(self.rng, conv, self.wcs)
 
     def drawImage(self, image=None, scale=None, wcs=None, dtype=None, add_to_image=False):
         """A method for drawing profiles storing correlation functions.
@@ -964,12 +966,11 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     # Finally generate and return noise using the irfft
     return np.fft.irfft2(gvec * rootps, s=shape)
 
-
 ###
 # Then we define the CorrelatedNoise, which generates a correlation function by estimating it
 # directly from images:
 #
-class CorrelatedNoise(_BaseCorrelatedNoise):
+class CorrelatedNoise(BaseCorrelatedNoise):
     """A class that represents 2D correlated noise fields calculated from an input Image.
 
     This class stores an internal representation of a 2D, discrete correlation function, and allows
@@ -1115,9 +1116,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     can be used to get and set the point variance of the correlated noise, equivalent to the zero
     separation distance correlation function value.
-    The :py:meth:`galsim.correlatednoise._BaseCorrelatedNoise.withVariance` method scales
+    The :py:meth:`galsim.BaseCorrelatedNoise.withVariance` method scales
     the whole internal correlation function so that its point variance matches ``variance``.
-    Similarly, :py:meth:`galsim.correlatednoise._BaseCorrelatedNoise.withScaledVariance`
+    Similarly, :py:meth:`galsim.correlatednoise.BaseCorrelatedNoise.withScaledVariance`
     scales the entire function by the given factor.
 
     Arithmetic Operators:
@@ -1245,7 +1246,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             calculate_stepk=False, calculate_maxk=False, #<-these internal calculations do not seem
             gsparams=gsparams)                           #  to do very well with often sharp-peaked
                                                          #  correlation function images...
-        _BaseCorrelatedNoise.__init__(self, rng, cf_object, cf_image.wcs)
+        BaseCorrelatedNoise.__init__(self, rng, cf_object, cf_image.wcs)
 
         if store_rootps:
             # If it corresponds to the CF above, store in the cache
@@ -1328,7 +1329,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         gsparams:       An optional `GSParams` argument. [default: None]
 
     Returns:
-        a `_BaseCorrelatedNoise` instance representing correlated noise in F814W COSMOS images.
+        a `BaseCorrelatedNoise` instance representing correlated noise in F814W COSMOS images.
 
     The default ``x_interpolant`` is a ``galsim.Linear()``, which uses bilinear interpolation.
     The use of this interpolant is an approximation that gives good empirical results without
@@ -1422,14 +1423,14 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     ii = InterpolatedImage(cfimage, scale=cosmos_scale, normalization="sb",
                            calculate_stepk=False, calculate_maxk=False,
                            x_interpolant=x_interpolant, gsparams=gsparams)
-    ret = _BaseCorrelatedNoise(rng, ii, PixelScale(cosmos_scale))
+    ret = BaseCorrelatedNoise(rng, ii, PixelScale(cosmos_scale))
     # If the input keyword variance is non-zero, scale the correlation function to have this
     # variance
     if variance > 0.:
         ret = ret.withVariance(variance)
     return ret
 
-class UncorrelatedNoise(_BaseCorrelatedNoise):
+class UncorrelatedNoise(BaseCorrelatedNoise):
     """A class that represents 2D correlated noise fields that are actually (at least initially)
     uncorrelated.  Subsequent applications of things like shear or convolvedWith will induce
     correlations.
@@ -1490,7 +1491,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         world_cf = wcs.profileToWorld(cf)
         # This gets the shape right, but not the amplitude.  Need to rescale by the pixel area
         world_cf *= wcs.pixelArea()
-        _BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
+        BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
 
     def withGSParams(self, gsparams):
         if gsparams == self.gsparams: return self
@@ -1580,7 +1581,7 @@ class CovarianceSpectrum(object):
         pk = Image(pkout + 0j, scale=stepk, dtype=complex)  # imag part should be zero
         iki = InterpolatedKImage(pk)
         iki *= wcs.pixelArea()**2  # determined this empirically
-        return _BaseCorrelatedNoise(rng, iki, wcs)
+        return BaseCorrelatedNoise(rng, iki, wcs)
 
     def __eq__(self, other):
         return (self is other or

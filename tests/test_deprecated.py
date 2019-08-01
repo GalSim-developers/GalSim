@@ -81,7 +81,30 @@ def test_interpolant():
     assert l11.gsparams.kvalue_accuracy == 1.e-2
     assert check_dep(getattr, l11, 'tol') == l11.gsparams.kvalue_accuracy
 
+@timer
+def test_noise():
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    real_cat = galsim.RealGalaxyCatalog(
+        dir=real_gal_dir, file_name=real_gal_cat, preload=True)
+
+    test_seed=987654
+    test_index = 17
+    cf_1 = real_cat.getNoise(test_index, rng=galsim.BaseDeviate(test_seed))
+    im_2, pix_scale_2, var_2 = real_cat.getNoiseProperties(test_index)
+    # Check the variance:
+    var_1 = cf_1.getVariance()
+    assert var_1==var_2,'Inconsistent noise variance from getNoise and getNoiseProperties'
+    # Check the image:
+    ii = galsim.InterpolatedImage(im_2, normalization='sb', calculate_stepk=False,
+                                  calculate_maxk=False, x_interpolant='linear')
+    cf_2 = check_dep(galsim.correlatednoise._BaseCorrelatedNoise,
+                     galsim.BaseDeviate(test_seed), ii, im_2.wcs)
+    cf_2 = cf_2.withVariance(var_2)
+    assert cf_1==cf_2,'Inconsistent noise properties from getNoise and getNoiseProperties'
+
 if __name__ == "__main__":
     test_gsparams()
     test_phase_psf()
     test_interpolant()
+    test_noise()

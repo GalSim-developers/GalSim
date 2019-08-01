@@ -59,7 +59,7 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
 
     im1 = galsim.ImageD(16,16)
     im2 = galsim.ImageD(16,16)
-    if isinstance(obj1,galsim.correlatednoise._BaseCorrelatedNoise):
+    if isinstance(obj1,galsim.BaseCorrelatedNoise):
         obj1.drawImage(scale=0.2, image=im1)
         obj2.drawImage(scale=0.2, image=im2)
     else:

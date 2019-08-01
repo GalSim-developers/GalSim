@@ -1160,7 +1160,7 @@ def test_uncorrelated_noise_tracking():
     with assert_warns(galsim.GalSimWarning):
         noise = conv_obj.noise
     # The noise should be correlated, not just the original UncorrelatedNoise
-    assert isinstance(noise, galsim.correlatednoise._BaseCorrelatedNoise)
+    assert isinstance(noise, galsim.BaseCorrelatedNoise)
     assert not isinstance(noise, galsim.UncorrelatedNoise)
 
 
