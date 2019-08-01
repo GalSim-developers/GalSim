@@ -886,17 +886,16 @@ class GSObject(object):
     def shear(self, *args, **kwargs):
         """Create a version of the current object with an area-preserving shear applied to it.
 
-        The arguments may be either a Shear instance or arguments to be used to initialize one.
+        The arguments may be either a `Shear` instance or arguments to be used to initialize one.
 
-        For more details about the allowed keyword arguments, see the documentation for Shear
-        (for doxygen documentation, see galsim.shear.Shear).
+        For more details about the allowed keyword arguments, see the `Shear` docstring.
 
         The shear() method precisely preserves the area.  To include a lensing distortion with
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
         Parameters:
-            shear:      The Shear to be applied. Or, as described above, you may instead supply
+            shear:      The `Shear` to be applied. Or, as described above, you may instead supply
                         parameters do construct a shear directly.  eg. ``obj.shear(g1=g1,g2=g2)``.
 
         Returns:
@@ -928,7 +927,7 @@ class GSObject(object):
         Also, it won't propagate any noise attribute.
 
         Parameters:
-            shear:      The Shear to be applied. Must be a galsim.Shear instance.
+            shear:      The `Shear` to be applied.
 
         Returns:
             the sheared object.
@@ -942,7 +941,7 @@ class GSObject(object):
         applied to it.
 
         This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
-        specified using the g1, g2 definition of shear (see Shear documentation for more details).
+        specified using the g1, g2 definition of shear (see `Shear` for more details).
         This is the same definition as the outputs of the PowerSpectrum and NFWHalo classes, which
         compute shears according to some lensing power spectrum or lensing by an NFW dark matter
         halo.  The magnification determines the rescaling factor for the object area and flux,

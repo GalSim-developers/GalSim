@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file shear.py
-Redefinition of the Shear class at the Python layer.
-"""
 
 import numpy as np
 
@@ -25,22 +22,22 @@ from .angle import Angle, _Angle, radians
 from .errors import GalSimRangeError, GalSimIncompatibleValuesError
 
 class Shear(object):
-    """A class to represent shears in a variety of ways.
+    r"""A class to represent shears in a variety of ways.
 
-    The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
-    distortions.  A shear is an operation that transforms a circle into an ellipse with
-    minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see
-    below for a discussion of the implications of this choice).  Given the multiple definitions of
-    ellipticity, we have multiple definitions of shear::
+    The Shear object can be initialized in a variety of ways to represent shape distortions.
+    A shear is an operation that transforms a circle into an ellipse with minor-to-major axis ratio
+    b/a, with position angle beta, while conserving the area (see below for a discussion of the
+    implications of this choice).  Given the multiple definitions of ellipticity, we have multiple
+    definitions of shear:
 
-        reduced shear
-            :math:`|g| = (a - b)/(a + b)`
-        distortion
-            :math:`|e| = (a^2 - b^2)/(a^2 + b^2)`
-        conformal shear
-            :math:`\eta = log(b/a)`
-        minor-to-major axis ratio
-            :math:`q = b/a`
+    reduced shear
+        :math:`|g| = (a - b)/(a + b)`
+    distortion
+        :math:`|e| = (a^2 - b^2)/(a^2 + b^2)`
+    conformal shear
+        :math:`\eta = log(b/a)`
+    minor-to-major axis ratio
+        :math:`q = b/a`
 
     These can be thought of as a magnitude and a real-space position angle beta, or as two
     components, e.g., g1 and g2, with:
@@ -65,6 +62,7 @@ class Shear(object):
         >>> s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)
         >>> s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
         >>> s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
+        >>> s = galsim.Shear(0.05 + 0.03j)        # Uses the g1,g2 reduced shear definition
 
     There can be no mixing and matching, e.g., specifying ``g1`` and ``e2``.  It is permissible to
     only specify one of two components, with the other assumed to be zero.  If a magnitude such as
@@ -78,17 +76,45 @@ class Shear(object):
 
         >>> s = galsim._Shear(0.05 + 0.03j)  # Equivalent to galsim.Shear(g1=0.05, g2=0.03)
 
-    Since we have defined a Shear as a transformation that preserves area, this means that it is not
-    a precise description of what happens during the process of weak lensing.  The coordinate
-    transformation that occurs during the actual weak lensing process is such that if a galaxy is
-    sheared by some ``(gamma_1, gamma_2)``, and then sheared by ``(-gamma_1, -gamma_2)``, it will
-    in the end return to its original shape, but will have changed in area due to the magnification,
-    ``mu = 1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2))``, which is not equal to one for non-zero
-    shear even for convergence ``kappa=0``.  Application of a Shear using the `GSObject.shear`
-    method does not include this area change.  To properly incorporate the effective change in
-    area due to shear, it is necessary to either (a) define the Shear object, use the
-    `GSObject.shear` method, and separately use the `GSObject.magnify` method, or (b) use the
-    `GSObject.lens` method that simultaneously magnifies and shears.
+    Analagous to the construction options, one can access the shear in the same variety of
+    definitions.
+
+    Attributes:
+        g1:         The first component of the shear in the "reduced shear" definition.
+        g2:         The second component of the shear in the "reduced shear" definition.
+        g:          The magnitude of the shear in the "reduced shear" definition.
+        e1:         The first component of the shear in the "distortion" definition.
+        e2:         The second component of the shear in the "distortion" definition.
+        e:          The magnitude of the shear in the "distortion" definition.
+        eta1:       The first component of the shear in the "conformal shear" definition.
+        eta2:       The second component of the shear in the "conformal shear" definition.
+        eta:        The magnitude of the shear in the "conformal shear" definition.
+        q:          The minor-to-major axis ratio
+        beta:       The position angle as an `Angle` instance
+        shear:      The reduced shear as a complex number g1 + 1j * g2.
+
+    .. note::
+        Since we have defined a Shear as a transformation that preserves area, this means that it
+        is not a precise description of what happens during the process of weak lensing.
+
+        The coordinate transformation that occurs during the actual weak lensing process is such
+        that if a galaxy is sheared by some :math:`(\gamma_1, \gamma_2)`, and then sheared by
+        :math:`(-\gamma_1, -\gamma_2)``, it will in the end return to its original shape, but will
+        have changed in area due to the magnification,
+
+        .. math::
+
+            \mu = \frac{1}{(1.-\kappa)**2 - (\gamma_1**2 + \gamma_2**2)}
+
+        which is not equal to 1 for non-zero shear even for convergence :math:`\kappa=0`.
+
+        Application of a `Shear` using the `GSObject.shear` method does not include this area
+        change.  To properly incorporate the effective change in area due to shear, it is necessary
+        to either:
+
+        (a) define the Shear object, use the `GSObject.shear` method, and separately use the
+            `GSObject.magnify` method, or
+        (b) use the `GSObject.lens` method that simultaneously magnifies and shears.
     """
     def __init__(self, *args, **kwargs):
 
@@ -281,24 +307,31 @@ class Shear(object):
     def __ne__(self, other): return not self.__eq__(other)
 
     def getMatrix(self):
-        """Return the matrix that tells how this shear acts on a position vector:
+        r"""Return the matrix that tells how this shear acts on a position vector:
 
         If a field is sheared by some shear, s, then the position (x,y) -> (x',y')
         according to:
 
-        [ x' ] = S [ x ]
-        [ y' ]     [ y ]
+        .. math::
 
-        where S = s.getMatrix().
+            \left( \begin{array}{c} x^\prime & y^\prime \end{array} \right)
+            = S \left( \begin{array}{c} x  y \end{array} \right)
 
-        Specifically, the matrix is S = (1-g^2)^(-1/2) [ 1+g1 ,  g2  ]
-                                                       [  g2  , 1-g1 ]
+        and :math:`S` is the return value of this function ``S = s.getMatrix()``.
+
+        Specifically, the matrix is
+
+        .. math::
+
+            S = \frac{1}{\sqrt{1-g^2}}
+                    \left( \begin{array}{cc} 1+g_1 & g_2 \\
+                                             g_2 & 1-g_1 \end{array} \right)
         """
         return np.array([[ 1.+self.g1,  self.g2   ],
                          [  self.g2  , 1.-self.g1 ]]) / np.sqrt(1.-self.g**2)
 
     def rotationWith(self, other):
-        """Return the rotation angle associated with the addition of two shears.
+        r"""Return the rotation angle associated with the addition of two shears.
 
         The effect of two shears is not just a single net shear.  There is also a rotation
         associated with it.  This is easiest to understand in terms of the matrix representations:
@@ -306,10 +339,12 @@ class Shear(object):
         If s3 = s1 + s2, and the corresponding shear matrices are S1,S2,S3, then S3 R = S1 S2,
         where R is a rotation matrix:
 
-        R = [ cos(theta) , -sin(theta) ]
-            [ sin(theta) ,  cos(theta) ]
+        .. math::
 
-        and theta is the return value (as a galsim.Angle) from s1.rotationWith(s2).
+            R = \left( \begin{array}{cc} cos(\theta) & -sin(\theta) \\
+                                         sin(\theta) &  cos(\theta) \end{array} \right)
+
+        and :math:`\theta` is the return value (as a `galsim.Angle`) from ``s1.rotationWith(s2)``.
         """
         # Save a little time by only working on the first column.
         S3 = self.getMatrix().dot(other.getMatrix()[:,:1])
@@ -325,16 +360,16 @@ class Shear(object):
 
     def __hash__(self): return hash(self._g)
 
-def _Shear(g):
-    """Equivalent to Shear(shear), but without the overhead of the normal sanity checks and other
-    options for how to specify the shear.
+def _Shear(shear):
+    """Equivalent to ``galsim.Shear(shear)``, but without the overhead of the normal sanity checks
+    and other options for how to specify the shear.
 
     Parameters:
-        g:       The complex shear g1 + 1j * g2.
+        shear:      The complex shear g1 + 1j * g2.
 
     Returns:
-        a galsim.Shear instance
+        a `galsim.Shear` instance
     """
     ret = Shear.__new__(Shear)
-    ret._g = g
+    ret._g = shear
     return ret

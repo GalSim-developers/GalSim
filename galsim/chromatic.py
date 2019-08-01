@@ -848,11 +848,10 @@ class ChromaticObject(object):
             return self.expand(math.sqrt(mu))
 
     def shear(self, *args, **kwargs):
-        """Apply an area-preserving shear to this object, where arguments are either a Shear,
+        """Apply an area-preserving shear to this object, where arguments are either a `Shear`,
         or arguments that will be used to initialize one.
 
-        For more details about the allowed keyword arguments, see the documentation for Shear
-        (for doxygen documentation, see galsim.shear.Shear).
+        For more details about the allowed keyword arguments, see the `Shear` docstring.
 
         The shear() method precisely preserves the area.  To include a lensing distortion with
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
@@ -865,10 +864,10 @@ class ChromaticObject(object):
 
         Parameters:
             shear:      The shear to be applied. Or, as described above, you may instead supply
-                        parameters to construct a Shear directly.  eg. ``obj.shear(g1=g1,g2=g2)``.
+                        parameters to construct a `Shear` directly.  eg. ``obj.shear(g1=g1,g2=g2)``.
                         In addition, the ``shear`` parameter may be a callable function, in which
                         case the argument should be wavelength in nanometers and the return value
-                        the shear for that wavelength, returned as a galsim.Shear instance.
+                        the shear for that wavelength, returned as a `galsim.Shear` instance.
 
         Returns:
             the sheared object.

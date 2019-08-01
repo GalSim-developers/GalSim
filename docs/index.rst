@@ -13,7 +13,7 @@ GalSim: The modular galaxy image simulation toolkit
     wcs
     noise
     chromatic
-    shear
+    wl
     coord
     utilities
     config
