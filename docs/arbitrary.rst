@@ -12,6 +12,8 @@ Interpolated Images
 
 .. autoclass:: galsim.InterpolatedImage
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autofunction:: galsim._InterpolatedImage
 
@@ -20,6 +22,8 @@ Interpolated Fourier-space Images
 
 .. autoclass:: galsim.InterpolatedKImage
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autofunction:: galsim._InterpolatedKImage
 
@@ -28,5 +32,7 @@ Shapelet Decomposition
 
 .. autoclass:: galsim.Shapelet
     :members:
+    :special-members:
+    :show-inheritance:
 
 

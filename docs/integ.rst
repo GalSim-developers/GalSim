@@ -13,7 +13,15 @@ Integration
 
 .. autoclass:: galsim.integ.ImageIntegrator
     :members:
+    :special-members:
+
+.. autoclass:: galsim.integ.SampleIntegrator
+    :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.integ.ContinuousIntegrator
     :members:
+    :special-members:
+    :show-inheritance:
 

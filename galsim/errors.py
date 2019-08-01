@@ -305,11 +305,11 @@ class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
 
 class GalSimSEDError(GalSimError, TypeError):
     """A GalSim-specific exception class indicating an attempt to do something invalid for the
-    kind of SED that is present.  Typically involving a dimensionless SED where a spectral SED
-    is required (or vice versa).
+    kind of `SED` that is present.  Typically involving a dimensionless `SED` where a spectral
+    `SED` is required (or vice versa).
 
     Attributes:
-        sed:        The invalid SED
+        sed:        The invalid `SED`
     """
     def __init__(self, message, sed):
         self.message = message

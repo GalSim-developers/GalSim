@@ -164,7 +164,7 @@ class ImageIntegrator(object):
         Parameters:
             evaluateAtWavelength:   Function that returns a monochromatic surface brightness
                                     profile as a function of wavelength.
-            bandpass:               Bandpass object representing the filter being imaged through.
+            bandpass:               `Bandpass` object representing the filter being imaged through.
             image:                  Image used to set size and scale of output
             drawImageKwargs:        dict with other kwargs to send to drawImage function.
             doK:                    Integrate up results of drawKImage instead of results of
@@ -188,7 +188,7 @@ class ImageIntegrator(object):
 
 class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
-    wavelength using a Bandpass as a weight function.
+    wavelength using a `Bandpass` as a weight function.
 
     This integrator will evaluate the integrand only at the wavelengths in ``bandpass.wave_list``.
     See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
@@ -211,7 +211,7 @@ class SampleIntegrator(ImageIntegrator):
 
 class ContinuousIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
-    wavelength using a Bandpass as a weight function.
+    wavelength using a `Bandpass` as a weight function.
 
     This integrator will evaluate the integrand at a given number ``N`` of equally spaced
     wavelengths over the interval defined by bandpass.blue_limit and bandpass.red_limit.  See

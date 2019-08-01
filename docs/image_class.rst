@@ -4,7 +4,7 @@ The Image class
 
 .. autoclass:: galsim.Image
     :members:
-
+    :special-members:
 
 .. autofunction:: galsim._Image
 

@@ -1508,18 +1508,21 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 class CovarianceSpectrum(object):
     """Class to hold a `ChromaticSum` noise covariance spectrum (which is a generalization of a
     power spectrum or equivalently a correlation function).
+
     Analogous to how a `galsim.CorrelatedNoise` object stores the variance and covariance of a
     galsim.Image object, a `galsim.CovarianceSpectrum` stores the variance and covariance of the
-    Fourier mode amplitudes in different components of a `ChromaticSum`.  Note that the covariance
-    in question exists between different SED-components of the `ChromaticSum`, and not between
-    different Fourier modes, which are assumed to be uncorrelated.  This structure arises naturally
-    for a `ChromaticRealGalaxy` (see devel/modules/CGNotes.pdf for more details).
+    Fourier mode amplitudes in different components of a `ChromaticSum`.
+
+    Note that the covariance in question exists between different `SED` components of the
+    `ChromaticSum`, and not between different Fourier modes, which are assumed to be uncorrelated.
+    This structure arises naturally for a `ChromaticRealGalaxy` (see devel/modules/CGNotes.pdf for
+    more details).
 
     Parameters:
-        Sigma:     A dictionary whose keys are tuples numerically indicating a pair of `ChromaticSum`
-                   components whose Fourier mode amplitude covariances are described by the
-                   corresponding GSObject values.
-        SEDs:      SEDs of associated `ChromaticSum` components.
+        Sigma:     A dictionary whose keys are tuples numerically indicating a pair of
+                    `ChromaticSum` components whose Fourier mode amplitude covariances are
+                    described by the corresponding `GSObject` values.
+        SEDs:      `SED` instances of associated `ChromaticSum` components.
     """
     def __init__(self, Sigma, SEDs):
         self.Sigma = Sigma
@@ -1541,11 +1544,11 @@ class CovarianceSpectrum(object):
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def toNoise(self, bandpass, PSF, wcs, rng=None):
-        """ Derive the galsim.CorrelatedNoise object for the associated `ChromaticSum` when convolved
+        """Derive the `CorrelatedNoise` object for the associated `ChromaticSum` when convolved
         with ``PSF`` and drawn through ``bandpass`` onto pixels with specified ``wcs``.
 
         Parameters:
-            bandpass:     galsim.Bandpass object representing filter image is drawn through.
+            bandpass:     `Bandpass` object representing filter image is drawn through.
             PSF:          output chromatic PSF to convolve by.
             wcs:          WCS of output pixel scale.
             rng:          Random number generator to forward to resulting CorrelatedNoise object.

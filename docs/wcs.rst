@@ -28,42 +28,65 @@ WCS Base Classes
 
 .. autoclass:: galsim.BaseWCS
     :members:
+    :special-members:
 
 .. autoclass:: galsim.wcs.CelestialWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.wcs.EuclideanWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.wcs.UniformWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.wcs.LocalWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 Euclidean WCS's
 ===============
 
 .. autoclass:: galsim.PixelScale
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.OffsetWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.ShearWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.OffsetShearWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.JacobianWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.AffineTransform
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.UVFunction
     :members:
+    :special-members:
+    :show-inheritance:
 
 
 Celestial WCS's
@@ -71,18 +94,28 @@ Celestial WCS's
 
 .. autoclass:: galsim.RaDecFunction
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.AstropyWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.PyAstWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.WcsToolsWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.GSFitsWCS
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autofunction:: galsim.FitsWCS
 

@@ -32,10 +32,10 @@ from .errors import GalSimError, convert_cpp_errors
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None,
               propagate_gsparams=True):
-    """A function for transforming either a GSObject or ChromaticObject.
+    """A function for transforming either a `GSObject` or `ChromaticObject`.
 
-    This function will inspect its input argument to decide if a Transformation object or a
-    ChromaticTransformation object is required to represent the resulting transformed object.
+    This function will inspect its input argument to decide if a `Transformation` object or a
+    `ChromaticTransformation` object is required to represent the resulting transformed object.
 
     Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
     non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
@@ -55,7 +55,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
                             would not want to do this. [default: True]
 
     Returns:
-        a Transformation or ChromaticTransformation instance as appropriate.
+        a `Transformation` or `ChromaticTransformation` instance as appropriate.
     """
     from .sum import Sum
     from .convolve import Convolution
@@ -508,6 +508,8 @@ class Transformation(GSObject):
 def _Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.),
                flux_ratio=1., gsparams=None):
     """Approximately equivalent to Transform, but without some of the sanity checks (such as
-    checking for Chromatic options).  For ChromaticObjects, you must use the regular Transform.
+    checking for chromatic options).
+
+    For a `ChromaticObject`, you must use the regular `Transform`.
     """
     return Transformation(obj, jac, offset, flux_ratio, gsparams)
