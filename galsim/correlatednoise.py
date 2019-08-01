@@ -495,11 +495,10 @@ class _BaseCorrelatedNoise(object):
         return _BaseCorrelatedNoise(self.rng, self._profile.rotate(theta), self.wcs)
 
     def shear(self, *args, **kwargs):
-        """Apply a shear to this correlated noise model, where arguments are either a Shear,
+        """Apply a shear to this correlated noise model, where arguments are either a `Shear`,
         or arguments that will be used to initialize one.
 
-        For more details about the allowed keyword arguments, see the documentation for Shear
-        (for doxygen documentation, see galsim.Shear).
+        For more details about the allowed keyword arguments, see the `Shear` docstring.
 
         Parameters:
             shear:  The shear to be applied. Or, as described above, you may instead supply

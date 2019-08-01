@@ -15,8 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file nfw_halo.py The "lensing engine" for drawing shears from an NFW halo.
-"""
 
 import numpy as np
 
@@ -110,27 +108,28 @@ class Cosmology(object):
             return d/(1+z)
 
 class NFWHalo(object):
-    """Class for NFW halos.
+    """Class describing NFW halos.
 
-    Compute the lensing fields shear and convergence of a spherically symmetric NFW halo of given
-    mass, concentration, redshift, assuming Cosmology. No mass-concentration relation is employed.
+    This class computes the lensing fields shear and convergence of a spherically symmetric NFW
+    halo of given mass, concentration, redshift, assuming a particular cosmology.
+    No mass-concentration relation is employed.
 
     Based on Matthias Bartelmann's libastro.
 
-    The cosmology to use can be set either by providing a Cosmology instance as cosmo,
+    The cosmology to use can be set either by providing a `Cosmology` instance as cosmo,
     or by providing omega_m and/or omega_lam.
     If only one of the latter is provided, the other is taken to be one minus that.
-    If no cosmology parameters are set, a default Cosmology is constructed.
+    If no cosmology parameters are set, a default `Cosmology` is constructed.
 
     Parameters:
         mass:       Mass defined using a spherical overdensity of 200 times the critical density
                     of the universe, in units of M_solar/h.
         conc:       Concentration parameter, i.e., ratio of virial radius to NFW scale radius.
         redshift:   Redshift of the halo.
-        halo_pos:   Position of halo center (in arcsec). [default: PositionD(0,0)]
-        omega_m:    Omega_matter to pass to Cosmology constructor. [default: None]
-        omega_lam:  Omega_lambda to pass to Cosmology constructor. [default: None]
-        cosmo:      A Cosmology instance. [default: None]
+        halo_pos:   `Position` of halo center (in arcsec). [default: PositionD(0,0)]
+        omega_m:    Omega_matter to pass to `Cosmology` constructor. [default: None]
+        omega_lam:  Omega_lambda to pass to `Cosmology` constructor. [default: None]
+        cosmo:      A `Cosmology` instance. [default: None]
     """
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
     _opt_params = { 'halo_pos' : PositionD , 'omega_m' : float , 'omega_lam' : float }
@@ -290,14 +289,13 @@ class NFWHalo(object):
             po:         Position(s) of the source(s), assumed to be post-lensing!
                         Valid ways to input this:
 
-                        - single PositionD (or PositionI) instance
+                        - single `Position` instance
                         - tuple of floats: (x,y)
-                        - list/array of PositionD (or PositionI) instances
+                        - list/array of `Position` instances
                         - tuple of lists/arrays: ( xlist, ylist )
 
             z_s:        Source redshift(s).
-            units:      Angular units of coordinates (only arcsec implemented so far).
-                        [default: galsim.arcsec]
+            units:      Angular units of coordinates. [default: galsim.arcsec]
             reduced:    Whether returned shear(s) should be reduced shears. [default: True]
 
         Returns:
@@ -352,14 +350,13 @@ class NFWHalo(object):
             pos:        Position(s) of the source(s), assumed to be post-lensing!
                         Valid ways to input this:
 
-                        - single PositionD (or PositionI) instance
+                        - single `Position` instance
                         - tuple of floats: (x,y)
-                        - list/array of PositionD (or PositionI) instances
+                        - list/array of `Position` instances
                         - tuple of lists/arrays: ( xlist, ylist )
 
             z_s:        Source redshift(s).
-            unit:       Angular units of coordinates (only arcsec implemented so far).
-                        [default: galsim.arcsec]
+            unit:       Angular units of coordinates. [default: galsim.arcsec]
 
         Returns:
             the convergence, kappa
@@ -398,14 +395,13 @@ class NFWHalo(object):
             pos:        Position(s) of the source(s), assumed to be post-lensing!
                         Valid ways to input this:
 
-                        - single PositionD (or PositionI) instance
+                        - single `Position` instance
                         - tuple of floats: (x,y)
-                        - list/array of PositionD (or PositionI) instances
+                        - list/array of `Position` instances
                         - tuple of lists/arrays: ( xlist, ylist )
 
             z_s:        Source redshift(s).
-            units:      Angular units of coordinates (only arcsec implemented so far).
-                        [default: galsim.arcsec]
+            units:      Angular units of coordinates. [default: galsim.arcsec]
 
         Returns:
             the magnification mu
@@ -446,14 +442,13 @@ class NFWHalo(object):
             pos:        Position(s) of the source(s), assumed to be post-lensing!
                         Valid ways to input this:
 
-                        - single PositionD (or PositionI) instance
+                        - single `Position` instance
                         - tuple of floats: (x,y)
-                        - list/array of PositionD (or PositionI) instances
+                        - list/array of `Position` instances
                         - tuple of lists/arrays: ( xlist, ylist )
 
             z_s:        Source redshift(s).
-            units:      Angular units of coordinates (only arcsec implemented so far).
-                        [default: galsim.arcsec]
+            units:      Angular units of coordinates. [default: galsim.arcsec]
 
         Returns:
             the reduced shears and magnifications as a tuple (g1,g2,mu)

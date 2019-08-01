@@ -29,7 +29,7 @@ that can be adjusting using an optional ``hsmparams`` argument as described belo
 
 The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
 that is, they use an elliptical Gaussian weight that is matched to the image of the object being
-measured.  The observed moments can be represented as a Gaussian sigma and a Shear object
+measured.  The observed moments can be represented as a Gaussian sigma and a `Shear` object
 representing the shape.
 
 The PSF correction includes several algorithms, three that are re-implementations of methods
@@ -46,7 +46,7 @@ originated by others and one that was originated by Hirata & Seljak:
 
 These methods return shear (or shape) estimators, which may not in fact satisfy conditions like
 |e|<=1, and so they are represented simply as e1/e2 or g1/g2 (depending on the method) rather than
-using a Shear object, which IS required to satisfy |e|<=1.
+using a `Shear` object, which IS required to satisfy |e|<=1.
 
 These methods are all based on correction of moments, but with different sets of assumptions.  For
 more detailed discussion on all of these algorithms, see the relevant papers above.
@@ -468,10 +468,9 @@ HSMParams.default = HSMParams()
 # A helper function for taking input weight and badpix Images, and returning a weight Image in the
 # format that the C++ functions want
 def _convertMask(image, weight=None, badpix=None):
-    """Convert from input weight and badpix images to a single mask image needed by C++ functions.
+    # Convert from input weight and badpix images to a single mask image needed by C++ functions.
+    # This is used by EstimateShear() and FindAdaptiveMom().
 
-    This is used by EstimateShear() and FindAdaptiveMom().
-    """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight is None:
         mask = ImageI(bounds=image.bounds, init_value=1)
@@ -519,10 +518,9 @@ def _convertMask(image, weight=None, badpix=None):
 
 # A simpler helper function to force images to be of type ImageF or ImageD
 def _convertImage(image):
-    """Convert the given image to the correct format needed to pass to the C++ layer.
+    # Convert the given image to the correct format needed to pass to the C++ layer.
+    # This is used by EstimateShear() and FindAdaptiveMom().
 
-    This is used by EstimateShear() and FindAdaptiveMom().
-    """
     # if weight is not of type float/double, convert to float/double
     if (image.dtype == np.int16 or image.dtype == np.uint16):
         image = ImageF(image)
@@ -572,7 +570,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         >>> final_epsf_image = psf.drawImage(scale=0.2)
         >>> result = galsim.hsm.EstimateShear(final_image, final_epsf_image)
 
-    After running the above code, ``result.observed_shape`` is a galsim.Shear object with a value of
+    After running the above code, ``result.observed_shape`` is a `Shear` object with a value of
     ``(0.0438925349133, -2.85747392701e-18)`` and ``result.corrected_e1``, ``result_corrected_e2``
     are ``(0.09934103488922119, -3.746108423463568e-10)``, compared with the expected ``(0.09975,
     0)`` for a perfect PSF correction method.
@@ -638,7 +636,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                         the output ShapeData object. [default: True]
 
         hsmparams:      The hsmparams keyword can be used to change the settings used by
-                        EstimateShear() when estimating shears; see `HSMParams` documentation
+                        `EstimateShear` when estimating shears; see `HSMParams` documentation
                         for more information. [default: None]
 
     Returns:
