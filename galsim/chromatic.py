@@ -1785,7 +1785,7 @@ class ChromaticTransformation(ChromaticObject):
     @lazy_property
     def noise(self):
         from .transform import _Transform
-        from .correlatednoise import _BaseCorrelatedNoise
+        from .correlatednoise import BaseCorrelatedNoise
         # Condition for being able to propagate noise:
         # 1) All transformations are achromatic.
         # 2) This ChromaticTransformation wraps a ChromaticConvolution with a valid noise property.
@@ -1796,11 +1796,11 @@ class ChromaticTransformation(ChromaticObject):
         noise = self.original.noise
         jac = self._jac
         flux_ratio = self._flux_ratio(42.) # const, so use any wavelength
-        return _BaseCorrelatedNoise(noise.rng,
-                                    _Transform(noise._profile,
-                                               (jac[0,0], jac[0,1], jac[1,0], jac[1,1]),
-                                               flux_ratio=flux_ratio**2),
-                                    noise.wcs)
+        return BaseCorrelatedNoise(noise.rng,
+                                   _Transform(noise._profile,
+                                              (jac[0,0], jac[0,1], jac[1,0], jac[1,1]),
+                                              flux_ratio=flux_ratio**2),
+                                   noise.wcs)
 
 
 class ChromaticSum(ChromaticObject):

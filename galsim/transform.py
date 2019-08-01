@@ -179,12 +179,12 @@ class Transformation(GSObject):
 
     @lazy_property
     def _noise(self):
-        from .correlatednoise import _BaseCorrelatedNoise
+        from .correlatednoise import BaseCorrelatedNoise
         if self.original.noise is None:
             return None
         else:
             dudx, dudy, dvdx, dvdy = self._jac.ravel()
-            return _BaseCorrelatedNoise(
+            return BaseCorrelatedNoise(
                     self.original.noise.rng,
                     _Transform(self.original.noise._profile,
                                (dudx, dudy, dvdx, dvdy),

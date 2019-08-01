@@ -121,7 +121,8 @@ from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from .random import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 from .noise import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from .noise import DeviateNoise, VariableGaussianNoise
-from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise, CovarianceSpectrum
+from .correlatednoise import BaseCorrelatedNoise, CorrelatedNoise, UncorrelatedNoise
+from .correlatednoise import getCOSMOSNoise, CovarianceSpectrum
 
 # GSObject
 from .gsobject import GSObject

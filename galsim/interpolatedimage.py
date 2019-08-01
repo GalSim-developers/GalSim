@@ -489,7 +489,7 @@ class InterpolatedImage(GSObject):
         """
         from .random import BaseDeviate
         from .noise import GaussianNoise
-        from .correlatednoise import _BaseCorrelatedNoise, CorrelatedNoise
+        from .correlatednoise import BaseCorrelatedNoise, CorrelatedNoise
 
         # Make sure we make rng a BaseDeviate if rng is None
         rng1 = BaseDeviate(rng)
@@ -498,7 +498,7 @@ class InterpolatedImage(GSObject):
         try:
             noise_pad = float(noise_pad)
         except (TypeError, ValueError):
-            if isinstance(noise_pad, _BaseCorrelatedNoise):
+            if isinstance(noise_pad, BaseCorrelatedNoise):
                 noise = noise_pad.copy(rng=rng1)
             elif isinstance(noise_pad, Image):
                 noise = CorrelatedNoise(noise_pad, rng1)
