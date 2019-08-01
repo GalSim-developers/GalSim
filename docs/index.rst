@@ -11,7 +11,7 @@ GalSim: The modular galaxy image simulation toolkit
     image
     sb
     wcs
-    noise
+    random
     chromatic
     wl
     coord

@@ -636,6 +636,9 @@ def test_noise():
     cf_2 = cf_2.withVariance(var_2)
     assert cf_1==cf_2,'Inconsistent noise properties from getNoise and getNoiseProperties'
 
+    do_pickle(cf_1)
+    do_pickle(cf_2)
+
 
 @timer
 def test_area_norm():

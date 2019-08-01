@@ -200,7 +200,7 @@ class AtmosphericScreen(object):
                             :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then
                             it is required that ``alpha`` is set to something other than 1.0.
                             [default: None]
-        rng:                Random number generator as a galsim.BaseDeviate().  If None, then use
+        rng:                Random number generator as a `BaseDeviate`.  If None, then use
                             the clock time or system entropy to seed a new generator.
                             [default: None]
         suppress_warning:   Turn off instantiation sanity checking.  (See above)  [default: False]
@@ -787,7 +787,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
                         set by the ``time_step`` keyword argument to `PhaseScreenPSF` or
                         :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then it is
                         required that ``alpha`` is set to something other than 1.0.  [default: None]
-        rng:            Random number generator as a galsim.BaseDeviate().  If None, then use the
+        rng:            Random number generator as a `BaseDeviate`.  If None, then use the
                         clock time or system entropy to seed a new generator.  [default: None]
     """
     from .phase_psf import PhaseScreenList

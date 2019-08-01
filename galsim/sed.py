@@ -963,11 +963,11 @@ class SED(object):
             nphotons:    Number of samples (photons) to randomly draw.
             bandpass:    A `Bandpass` object representing a filter, or None to sample over the full
                          `SED` wavelength range.
-            rng:         If provided, a random number generator that is any kind of BaseDeviate
+            rng:         If provided, a random number generator that is any kind of `BaseDeviate`
                          object. If ``rng`` is None, one will be automatically created from the
                          system. [default: None]
-            npoints:     Number of points DistDeviate should use for its internal interpolation
-                         tables. [default: None, which uses the DistDeviate default]
+            npoints:     Number of points `DistDeviate` should use for its internal interpolation
+                         tables. [default: None, which uses the `DistDeviate` default]
         """
         from .random import DistDeviate
         nphotons=int(nphotons)

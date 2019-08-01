@@ -253,15 +253,13 @@ def rand_arr(shape, deviate):
 
     Parameters:
         shape:      A list of length 2, indicating the desired 2d array dimensions
-        deviate:    Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
+        deviate:    Any GalSim deviate (see random.py) such as `UniformDeviate`, `GaussianDeviate`,
                     etc. to be used to generate random numbers
 
     Returns:
         a NumPy array of the desired dimensions with random numbers generated using the
         supplied deviate.
     """
-    from .image import ImageD
-    from .noise import DeviateNoise
     tmp = np.empty(tuple(shape), dtype=float)
     deviate.generate(tmp.ravel())
     return tmp
@@ -1409,7 +1407,7 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     Parameters:
         n:          Number of random selections to make.
         n_choices:  Number of entries from which to choose.
-        rng:        RNG to use.  Should be a galsim.BaseDeviate.
+        rng:        RNG to use.  Must a `galsim.BaseDeviate` instance.
         weight:     Optional list of weight factors to use for weighting the selection of
                     random indices.
 

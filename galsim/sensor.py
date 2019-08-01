@@ -136,7 +136,7 @@ class SiliconSensor(Sensor):
                             [default: 'lsst_itl_8']
         strength:           Set the strength of the brighter-fatter effect relative to the
                             amount specified by the Poisson simulation results.  [default: 1]
-        rng:                A BaseDeviate object to use for the random number generation
+        rng:                A `BaseDeviate` object to use for the random number generation
                             for the stochastic aspects of the electron production and drift.
                             [default: None, in which case one will be made for you]
         diffusion_factor:   A factor by which to multiply the diffusion.  Use 0.0 to turn off the

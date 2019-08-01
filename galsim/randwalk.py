@@ -29,7 +29,6 @@ from .errors import (
     GalSimIncompatibleValuesError,
     convert_cpp_errors,
 )
-from .random import UniformDeviate
 from .gaussian import Gaussian
 
 class RandomWalk(GSObject):
@@ -64,7 +63,7 @@ class RandomWalk(GSObject):
                             None if profile is sent, otherwise 1.  [default: 1]
          profile:           Optional profile to use for drawing points.  If a profile is sent, the
                             half_light_radius and flux keywords are ignored.  [default: None]
-         rng:               Optional random number generator. Can be any galsim.BaseDeviate.  If
+         rng:               Optional random number generator. Can be any `galsim.BaseDeviate`.  If
                             None, the rng is created internally.  [default: None]
          gsparams:          Optional GSParams for the objects representing each point source.
                             [default: None]
