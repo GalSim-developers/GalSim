@@ -410,9 +410,9 @@ class WavelengthSampler(object):
     array of a PhotonArray.
 
     Parameters:
-        sed:        The SED to use for the objects spectral energy distribution.
-        bandpass:   A Bandpass object representing a filter, or None to sample over the full
-                    SED wavelength range.
+        sed:        The `SED` to use for the objects spectral energy distribution.
+        bandpass:   A `Bandpass` object representing a filter, or None to sample over the full
+                    `SED` wavelength range.
         rng:        If provided, a random number generator that is any kind of BaseDeviate
                     object. If `rng` is None, one will be automatically created, using the
                     time as a seed. [default: None]
@@ -517,8 +517,8 @@ class PhotonDCR(object):
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
     they are broadly reasonable for most observatories.
 
-    This surface op is intended to match the functionality of ChromaticAtmosphere, but acting
-    on the photon array rather than as a ChromaticObject.  The photons will need to have
+    This surface op is intended to match the functionality of `ChromaticAtmosphere`, but acting
+    on the photon array rather than as a `ChromaticObject`.  The photons will need to have
     wavelengths defined in order to work.
 
     IMPORTANT: The alpha parameter is only appropriate for stars.  This surface op will act on

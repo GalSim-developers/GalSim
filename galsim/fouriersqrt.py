@@ -27,16 +27,16 @@ from .errors import convert_cpp_errors, galsim_warn
 
 
 def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
-    """A function for computing the Fourier-space square root of either a GSObject or
-    ChromaticObject.
+    """A function for computing the Fourier-space square root of either a `GSObject` or
+    `ChromaticObject`.
 
     The FourierSqrt function is principally used for doing an optimal coaddition algorithm
     originally developed by Nick Kaiser (but unpublished) and also described by Zackay & Ofek 2015
     (http://adsabs.harvard.edu/abs/2015arXiv151206879Z).  See the script make_coadd.py in the
     GalSim/examples directory for an example of how it works.
 
-    This function will inspect its input argument to decide if a FourierSqrtProfile object or a
-    ChromaticFourierSqrtProfile object is required to represent the operation applied to a surface
+    This function will inspect its input argument to decide if a `FourierSqrtProfile` object or a
+    `ChromaticFourierSqrtProfile` object is required to represent the operation applied to a surface
     brightness profile.
 
     Parameters:
@@ -47,7 +47,7 @@ def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
                             would not want to do this. [default: True]
 
     Returns:
-        a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
+        a `FourierSqrtProfile` or `ChromaticFourierSqrtProfile` instance as appropriate.
     """
     from .chromatic import ChromaticFourierSqrtProfile
     if isinstance(obj, ChromaticObject):

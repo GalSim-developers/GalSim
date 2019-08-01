@@ -1193,10 +1193,11 @@ def structure_function(image):
 
 def combine_wave_list(*args):
     """Combine wave_list attributes of all objects in obj_list while respecting blue_limit and
-    red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
+    red_limit attributes.  Should work with any combination of `SED`, `Bandpass`, and
+    `ChromaticObject` instances.
 
     Parameters:
-        obj_list:   List of SED, Bandpass, or ChromaticObject objects.
+        obj_list:   List of `SED`, `Bandpass`, or `ChromaticObject` instances.
 
     Returns:
         wave_list, blue_limit, red_limit
@@ -1484,7 +1485,7 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
 
 
 def check_share_file(filename, subdir):
-    """Find SED or Bandpass file, possibly adding share_dir/subdir.
+    """Find `SED` or `Bandpass` file, possibly adding share_dir/subdir.
     """
     from . import meta_data
     import os

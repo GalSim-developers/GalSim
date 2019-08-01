@@ -13,5 +13,6 @@ will be raised.
 
 .. autoclass:: galsim.GSObject
     :members:
+    :special-members:
 
 

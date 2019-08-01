@@ -9,3 +9,4 @@ encapsulated in a class called `GSParams`.
 
 .. autoclass:: galsim.GSParams
     :members:
+    :special-members:

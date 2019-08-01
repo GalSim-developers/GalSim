@@ -83,8 +83,7 @@ def get_refraction(wave, zenith_angle, **kwargs):
 def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=None):
     """Compute the zenith angle and parallactic angle of a celestial coordinate, given either
     the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and
-    the latitude of the observer.  This is useful for the function ChromaticAtmosphere() in the
-    galsim.chromatic module.
+    the latitude of the observer.  This is useful for the function `ChromaticAtmosphere`.
 
     Parameters:
         obj_coord:       A CelestialCoord object for which the zenith and parallactic
@@ -117,7 +116,7 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
 
 def parse_dcr_angles(**kwargs):
     """Parse the various options for specifying the zenith angle and parallactic angle
-    in ChromaticAtmosphere.
+    in `ChromaticAtmosphere`.
 
     Parameters:
         zenith_angle:       Angle from object to zenith, expressed as an Angle

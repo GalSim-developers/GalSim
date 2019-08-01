@@ -370,10 +370,10 @@ class COSMOSCatalog(object):
         to bear in mind that we do not actually have spatially-resolved color information for these
         galaxies, so this keyword can only be True if we are using parametric galaxies.  Even then,
         we simply do the most arbitrary thing possible, which is to assign bulges an elliptical
-        SED, disks a disk-like SED, and Sersic galaxies with intermediate values of n some
-        intermediate SED.  We assume that the photometric redshift is the correct redshift for
+        `SED`, disks a disk-like `SED`, and `Sersic` galaxies with intermediate values of n some
+        intermediate `SED`.  We assume that the photometric redshift is the correct redshift for
         these galaxies (which is a good assumption for COSMOS 30-band photo-z for these bright
-        galaxies).  For the given SED and redshift, we then normalize to give the right (observed)
+        galaxies).  For the given `SED` and redshift, we then normalize to give the right (observed)
         flux in F814W.  Note that for a mock "deep" sample, the redshift distributions of the
         galaxies would be modified, which is not included here.
 
@@ -421,7 +421,7 @@ class COSMOSCatalog(object):
             gsparams:       An optional `GSParams` argument. [default: None]
 
         Returns:
-            Either a GSObject or a ChromaticObject depending on the value of ``chromatic``,
+            Either a `GSObject` or a `ChromaticObject` depending on the value of ``chromatic``,
             or a list of them if ``index`` is an iterable.
         """
         return self._makeGalaxy(self, index, gal_type, chromatic, noise_pad_size,

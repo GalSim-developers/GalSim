@@ -26,10 +26,10 @@ from . import _galsim
 from .errors import convert_cpp_errors
 
 def Add(*args, **kwargs):
-    """A function for adding 2 or more GSObject or ChromaticObject instances.
+    """A function for adding 2 or more `GSObject` or `ChromaticObject` instances.
 
-    This function will inspect its input arguments to decide if a Sum object or a
-    ChromaticSum object is required to represent the sum of surface brightness profiles.
+    This function will inspect its input arguments to decide if a `Sum` object or a
+    `ChromaticSum` object is required to represent the sum of surface brightness profiles.
 
     Typically, you do not need to call Add() explicitly.  Normally, you would just use the +
     operator, which returns a Sum::
@@ -39,7 +39,7 @@ def Add(*args, **kwargs):
         >>> gal = bulge + disk
         >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
 
-    If one of the items is chromatic, it will return a ChromaticSum::
+    If one of the items is chromatic, it will return a `ChromaticSum`::
 
         >>> disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
         >>> gal = bulge + disk
@@ -52,7 +52,7 @@ def Add(*args, **kwargs):
                             would not want to do this. [default: True]
 
     Returns:
-        a Sum or ChromaticSum instance as appropriate.
+        a `Sum` or `ChromaticSum` instance as appropriate.
     """
     if len(args) == 0:
         raise TypeError("At least one ChromaticObject or GSObject must be provided.")

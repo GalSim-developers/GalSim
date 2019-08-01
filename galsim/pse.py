@@ -31,8 +31,7 @@ from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 
 
 class PowerSpectrumEstimator(object):
-    """
-    Class for estimating the shear power spectrum from gridded shears.
+    """Class for estimating the shear power spectrum from gridded shears.
 
     The PowerSpectrumEstimator class can be used even on systems where GalSim is not installed.
     It just requires NumPy.

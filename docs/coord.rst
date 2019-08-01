@@ -17,11 +17,13 @@ Angles
 
 .. autoclass:: galsim.Angle
     :members:
+    :special-members:
 
 .. autofunction:: galsim._Angle
 
 .. autoclass:: galsim.AngleUnit
     :members:
+    :special-members:
 
 
 Celestial Coordinates
@@ -29,4 +31,5 @@ Celestial Coordinates
 
 .. autoclass:: galsim.CelestialCoord
     :members:
+    :special-members:
 

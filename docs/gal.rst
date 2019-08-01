@@ -10,53 +10,71 @@ Exponenatial Profile
 
 .. autoclass:: galsim.Exponential
     :members:
+    :special-members:
+    :show-inheritance:
 
 De Vaucouleurs Profile
 ----------------------
 
 .. autoclass:: galsim.DeVaucouleurs
     :members:
+    :special-members:
+    :show-inheritance:
 
 Sersic Profile
 --------------
 
 .. autoclass:: galsim.Sersic
     :members:
+    :special-members:
+    :show-inheritance:
 
 Inclined Exponential Profile
 ----------------------------
 
 .. autoclass:: galsim.InclinedExponential
     :members:
+    :special-members:
+    :show-inheritance:
 
 Inclined Sersic Profile
 -----------------------
 
 .. autoclass:: galsim.InclinedSersic
     :members:
+    :special-members:
+    :show-inheritance:
 
 Spergel Profile
 ---------------
 
 .. autoclass:: galsim.Spergel
     :members:
+    :special-members:
+    :show-inheritance:
 
 "Real" Galaxy
 -------------
 
 .. autoclass:: galsim.RealGalaxy
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autoclass:: galsim.RealGalaxyCatalog
     :members:
+    :special-members:
 
 .. autoclass:: galsim.COSMOSCatalog
     :members:
+    :special-members:
 
 Knots defined by a "random walk"
 --------------------------------
 
 .. autoclass:: galsim.RandomWalk
     :members:
+    :special-members:
+    :show-inheritance:
 
 

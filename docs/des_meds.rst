@@ -9,10 +9,17 @@ This module defines the `MultiExposureObject` class for representing multiple ex
 Importing this module also adds these data structures to the config framework, so that MEDS file output can subsequently be simulated directly using a config file.
 
 .. autoclass:: galsim.des.MultiExposureObject
-   :members:
+    :members:
+    :special-members:
+
 .. autoclass:: galsim.des.MEDSBuilder
-   :members:
+    :members:
+    :special-members:
+    :show-inheritance:
+
 .. autoclass:: galsim.des.OffsetBuilder
-   :members:
+    :members:
+    :special-members:
+    :show-inheritance:
 
 .. autofunction:: galsim.des.WriteMEDS

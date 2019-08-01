@@ -26,10 +26,10 @@ from .utilities import lazy_property, doc_inherit
 from .errors import GalSimError, convert_cpp_errors, galsim_warn
 
 def Convolve(*args, **kwargs):
-    """A function for convolving 2 or more GSObject or ChromaticObject instances.
+    """A function for convolving 2 or more `GSObject` or `ChromaticObject` instances.
 
-    This function will inspect its input arguments to decide if a Convolution object or a
-    ChromaticConvolution object is required to represent the convolution of surface
+    This function will inspect its input arguments to decide if a `Convolution` object or a
+    `ChromaticConvolution` object is required to represent the convolution of surface
     brightness profiles.
 
     Parameters:
@@ -43,7 +43,7 @@ def Convolve(*args, **kwargs):
                             would not want to do this. [default: True]
 
     Returns:
-        a Convolution or ChromaticConvolution instance as appropriate.
+        a `Convolution` or `ChromaticConvolution` instance as appropriate.
     """
     from .chromatic import ChromaticConvolution
     # First check for number of arguments != 0
@@ -434,10 +434,10 @@ class Convolution(GSObject):
 
 
 def Deconvolve(obj, gsparams=None, propagate_gsparams=True):
-    """A function for deconvolving by either a GSObject or ChromaticObject.
+    """A function for deconvolving by either a `GSObject` or `ChromaticObject`.
 
-    This function will inspect its input argument to decide if a Deconvolution object or a
-    ChromaticDeconvolution object is required to represent the deconvolution by a surface
+    This function will inspect its input argument to decide if a `Deconvolution` object or a
+    `ChromaticDeconvolution` object is required to represent the deconvolution by a surface
     brightness profile.
 
     Parameters:
@@ -448,7 +448,7 @@ def Deconvolve(obj, gsparams=None, propagate_gsparams=True):
                             would not want to do this. [default: True]
 
     Returns:
-        a Deconvolution or ChromaticDeconvolution instance as appropriate.
+        a `Deconvolution` or `ChromaticDeconvolution` instance as appropriate.
     """
     from .chromatic import ChromaticDeconvolution
     if isinstance(obj, ChromaticObject):
@@ -627,10 +627,10 @@ class Deconvolution(GSObject):
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
-    """A function for autoconvolving either a GSObject or ChromaticObject.
+    """A function for autoconvolving either a `GSObject` or `ChromaticObject`.
 
-    This function will inspect its input argument to decide if a AutoConvolution object or a
-    ChromaticAutoConvolution object is required to represent the convolution of a surface
+    This function will inspect its input argument to decide if a `AutoConvolution` object or a
+    `ChromaticAutoConvolution` object is required to represent the convolution of a surface
     brightness profile with itself.
 
     Parameters:
@@ -644,7 +644,7 @@ def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
                             would not want to do this. [default: True]
 
     Returns:
-        a AutoConvolution or ChromaticAutoConvolution instance as appropriate.
+        a `AutoConvolution` or `ChromaticAutoConvolution` instance as appropriate.
     """
     from .chromatic import ChromaticAutoConvolution
     if isinstance(obj, ChromaticObject):
@@ -785,10 +785,10 @@ class AutoConvolution(Convolution):
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
-    """A function for autocorrelating either a GSObject or ChromaticObject.
+    """A function for autocorrelating either a `GSObject` or `ChromaticObject`.
 
-    This function will inspect its input argument to decide if a AutoCorrelation object or a
-    ChromaticAutoCorrelation object is required to represent the correlation of a surface
+    This function will inspect its input argument to decide if a `AutoCorrelation` object or a
+    `ChromaticAutoCorrelation` object is required to represent the correlation of a surface
     brightness profile with itself.
 
     Parameters:
@@ -802,7 +802,7 @@ def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
                             would not want to do this. [default: True]
 
     Returns:
-        an AutoCorrelation or ChromaticAutoCorrelation instance as appropriate.
+        an `AutoCorrelation` or `ChromaticAutoCorrelation` instance as appropriate.
     """
     from .chromatic import ChromaticAutoCorrelation
     if isinstance(obj, ChromaticObject):

@@ -452,7 +452,7 @@ class GSObject(object):
     # Also need this method to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
         """Return profile at a given wavelength.  For GSObject instances, this is just ``self``.
-        This allows GSObject instances to be duck-typed as ChromaticObject instances."""
+        This allows `GSObject` instances to be duck-typed as `ChromaticObject` instances."""
         return self
 
     # Make op+ of two GSObjects work to return an Add object
@@ -476,7 +476,7 @@ class GSObject(object):
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.
 
-        You can also multiply by an SED, which will create a ChromaticObject where the SED
+        You can also multiply by an `SED`, which will create a `ChromaticObject` where the `SED`
         acts like a wavelength-dependent ``flux_ratio``.
         """
         return self.withScaledFlux(other)
@@ -763,8 +763,8 @@ class GSObject(object):
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location rescaled such that the total flux will be
-        the given value.  Note that if ``flux`` is an ``SED``, the return value will be a
-        ``ChromaticObject`` with specified SED.
+        the given value.  Note that if ``flux`` is an `SED`, the return value will be a
+        `ChromaticObject` with specified `SED`.
 
         Parameters:
             flux:       The new flux for the object.
@@ -782,13 +782,15 @@ class GSObject(object):
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.  If ``flux_ratio`` is an
-        SED, then the returned object is a ``ChromaticObject`` with an SED multiplied by obj.flux.
-        Note that in this case the ``.flux`` attribute of the GSObject being scaled gets interpreted
-        as being dimensionless, instead of having its normal units of [photons/s/cm^2].  The
-        photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely
-        if the SED is dimensionless itself (see discussion in the ChromaticObject docstring).  The
-        GSObject ``flux`` attribute *does* still contribute to the ChromaticObject normalization,
-        though.  For example, the following are equivalent::
+        `SED`, then the returned object is a `ChromaticObject` with the `SED` multiplied by
+        its current ``flux``.
+
+        Note that in this case the ``flux`` attribute of the GSObject being scaled gets interpreted
+        as being dimensionless, instead of having its normal units of [photons/s/cm^2].
+        The photons/s/cm^2 units are (optionally) carried by the `SED` instead, or even left out
+        entirely if the `SED` is dimensionless itself (see discussion in the `ChromaticObject`
+        docstring).  The `GSObject` ``flux`` attribute *does* still contribute to the
+        `ChromaticObject` normalization, though.  For example, the following are equivalent::
 
             >>> chrom_obj = gsobj.withScaledFlux(sed * 3.0)
             >>> chrom_obj2 = (gsobj * 3.0).withScaledFlux(sed)
@@ -920,7 +922,9 @@ class GSObject(object):
         """Equivalent to self.shear(shear), but without the overhead of sanity checks or other
         ways to input the shear value.
 
-        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shear.
+        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
+        `shear` method.
+
         Also, it won't propagate any noise attribute.
 
         Parameters:
@@ -1050,7 +1054,9 @@ class GSObject(object):
         """Equivalent to self.shift(shift), but without the overhead of sanity checks or option
         to give the shift as (dx,dy).
 
-        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shift.
+        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
+        `shift` method.
+
         Also, it won't propagate any noise attribute.
 
         Parameters:
@@ -1361,7 +1367,7 @@ class GSObject(object):
 
         Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
         So if you want, you can keep track of this properly and provide an ``area`` and ``exposure``
-        time here. This detail is more important with chromatic objects where the SED is typically
+        time here. This detail is more important with chromatic objects where the `SED` is typically
         given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
         objects however, it is often more convenient to ignore these details and just consider the
         flux to be the total number of photons for this exposure, in which case, you would leave the
@@ -1428,7 +1434,7 @@ class GSObject(object):
         passed into the sensor object.  For instance, the photons may need to be given appropriate
         incidence angles according to the optics of the telescope (since this matters for where the
         photons are converted to electrons).  You may also need to give the photons wavelengths
-        according to the SED of the object.  Such steps are specified in a ``surface_ops``
+        according to the `SED` of the object.  Such steps are specified in a ``surface_ops``
         parameter, which should be a list of any such operations you wish to perform on the photon
         array before passing them to the sensor.  See ``FRatioAngles`` and ``WavelengthSampler`` in
         photon_array.py for two examples of such surface operators.
