@@ -42,7 +42,7 @@ class Kolmogorov(GSObject):
     lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(6/5)].
 
     The natural units for this ratio is radians, which is not normally a convenient unit to use for
-    other GSObject dimensions.  Assuming that the other sky coordinates you are using are all in
+    other `GSObject` dimensions.  Assuming that the other sky coordinates you are using are all in
     arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
     should convert this to arcsec as well::
 
@@ -93,13 +93,13 @@ class Kolmogorov(GSObject):
                             relation r0 = r0_500 * (lam/500)**1.2.
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         scale_unit:         Units to use for the sky coordinates when calculating lam/r0 if these
-                            are supplied separately.  Note that the results of calling methods like
-                            getFWHM() will be returned in units of ``scale_unit`` as well.  Should
-                            be either a galsim.AngleUnit or a string that can be used to construct
+                            are supplied separately.  Note that the results of using properties
+                            like `fwhm` will be returned in units of ``scale_unit`` as well.  Should
+                            be either a `galsim.AngleUnit` or a string that can be used to construct
                             one (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods, Kolmogorov has the following access properties:
+    In addition to the usual `GSObject` methods, Kolmogorov has the following access properties:
 
     Attributes:
         lam_over_r0:        The input ratio lambda / r0

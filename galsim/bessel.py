@@ -15,10 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file bessel.py
-A Python layer version of the C++ Bessel functions, so we don't need
-scipy just to get bessel functions.
-"""
 
 from ._galsim import j0, j1, jv, kv, yv, iv, j0_root
 

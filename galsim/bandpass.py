@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file bandpass.py
-Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
-"""
 
 from past.builtins import basestring
 import numpy as np

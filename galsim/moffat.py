@@ -58,7 +58,7 @@ class Moffat(GSObject):
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods, Moffat has the following access properties:
+    In addition to the usual `GSObject` methods, Moffat has the following access properties:
 
     Attributes:
         beta:               The beta parameter
@@ -126,14 +126,6 @@ class Moffat(GSObject):
         with convert_cpp_errors():
             return _galsim.SBMoffat(self._beta, self._r0, self._trunc, self._flux,
                                     self.gsparams._gsp)
-
-    def getFWHM(self):
-        """Return the FWHM for this Moffat profile.
-        """
-
-    def getHalfLightRadius(self):
-        """Return the half light radius for this Moffat profile.
-        """
 
     @property
     def beta(self): return self._beta

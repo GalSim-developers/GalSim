@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file correlatednoise.py
-Python layer documentation and functions for handling correlated noise in GalSim.
-"""
 
 import numpy as np
 from future.utils import iteritems
@@ -506,7 +503,7 @@ class BaseCorrelatedNoise(object):
         """Apply a rotation ``theta`` to this correlated noise model.
 
         Parameters:
-            theta:  Rotation angle (Angle object, positive means anticlockwise).
+            theta:  Rotation angle (`Angle` object, positive means anticlockwise).
 
         Returns:
             a new `BaseCorrelatedNoise` object with the specified rotation.
@@ -610,7 +607,7 @@ class BaseCorrelatedNoise(object):
 
         The practical purpose of this method is that it allows us to model what is happening to
         noise in the images from Hubble Space Telescope that we use for simulating PSF convolved
-        galaxies with the RealGalaxy class.
+        galaxies with the `RealGalaxy` class.
 
         This modifies the representation of the correlation function, but leaves the random number
         generator unchanged.
@@ -1350,7 +1347,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     The default ``x_interpolant`` is a ``galsim.Linear()``, which uses bilinear interpolation.
     The use of this interpolant is an approximation that gives good empirical results without
-    requiring internal convolution of the correlation function profile by a Pixel object when
+    requiring internal convolution of the correlation function profile by a `Pixel` object when
     applying correlated noise to images: such an internal convolution has been found to be
     computationally costly in practice, requiring the Fourier transform of very large arrays.
 

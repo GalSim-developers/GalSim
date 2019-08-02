@@ -55,10 +55,10 @@ class InclinedExponential(GSObject):
     scale_h_over_r will be assumed to refer to the scale radius, not the half-light radius.
 
     Parameters:
-        inclination:        The inclination angle, which must be a galsim.Angle instance
+        inclination:        The inclination angle, which must be a `galsim.Angle` instance
         scale_radius:       The scale radius of the exponential disk.  Typically given in
                             arcsec. This can be compared to the 'scale_radius' parameter of the
-                            galsim.Exponential class, and in the face-on case, the same scale
+                            `galsim.Exponential` class, and in the face-on case, the same scale
                             radius will result in the same 2D light distribution as with that
                             class.
         half_light_radius:  The half-light radius of the exponential disk, as an alternative to
@@ -70,8 +70,8 @@ class InclinedExponential(GSObject):
         flux:               The flux (in photons) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, InclinedExponential has the following
-    access properties:
+    In addition to the usual `GSObject` methods and attributes, InclinedExponential has the
+    following access properties:
 
     Attributes:
         inclination:            The inclination angle
@@ -214,8 +214,9 @@ class InclinedExponential(GSObject):
 class InclinedSersic(GSObject):
     """A class describing an inclined sersic profile. This class is general, and so for certain
     special cases, more specialized classes will be more efficient. For the case where n==1
-    with no truncation, the InclinedExponential class will be much more efficient. For the case
-    where the inclination angle is zero (face-on), the Sersic class will be slightly more efficient.
+    with no truncation, the `InclinedExponential` class will be much more efficient. For the case
+    where the inclination angle is zero (face-on), the `Sersic` class will be slightly more
+    efficient.
 
     The InclinedSersic surface brightness profile is characterized by four properties: its
     Sersic index ``n``, its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
@@ -234,9 +235,9 @@ class InclinedSersic(GSObject):
     At present, this profile is not enabled for photon-shooting.
 
     The allowed range of values for the ``n`` parameter is 0.3 <= n <= 6.2.  An exception will be
-    thrown if you provide a value outside that range, matching the range of the Sersic profile.
+    thrown if you provide a value outside that range, matching the range of the `Sersic` profile.
 
-    This class shares the caching of Hankel transformations with the Sersic class; see that
+    This class shares the caching of Hankel transformations with the `Sersic` class; see that
     class for documentation on efficiency considerations with regards to caching.
 
     A profile can be initialized using one (and only one) of two possible size parameters:
@@ -248,10 +249,10 @@ class InclinedSersic(GSObject):
 
     Parameters:
         n:                  The Sersic index, n.
-        inclination:        The inclination angle, which must be a galsim.Angle instance
+        inclination:        The inclination angle, which must be a `galsim.Angle` instance
         scale_radius:       The scale radius of the disk.  Typically given in arcsec.
                             This can be compared to the 'scale_radius' parameter of the
-                            galsim.Sersic class, and in the face-on case, the same scale
+                            `galsim.Sersic` class, and in the face-on case, the same scale
                             radius will result in the same 2D light distribution as with that
                             class. Exactly one of this and half_light_radius must be provided.
         half_light_radius:  The half-light radius of disk when seen face-on. Exactly one of this
@@ -265,11 +266,11 @@ class InclinedSersic(GSObject):
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
         flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
-                            untruncated profile? See the documentation of the Sersic class for
+                            untruncated profile? See the documentation of the `Sersic` class for
                             more details. [default: False]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, InclinedSersic has the following
+    In addition to the usual `GSObject` methods and attributes, InclinedSersic has the following
     access properties:
 
     Attributes:

@@ -15,13 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file dcr.py
-Implementation of atmospheric differential chromatic refraction.
 
-This file defines functions that return the refraction angle (the angle between the true and
-apparent zenith angles of an object), as a function of zenith angle, wavelength, temperature,
-pressure, and water vapor content.
-"""
 from .errors import GalSimIncompatibleValuesError
 
 def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2O_pressure=1.067):
@@ -66,7 +60,7 @@ def get_refraction(wave, zenith_angle, **kwargs):
 
     Parameters:
         wave:            Wavelength array in nanometers
-        zenith_angle:    as an Angle
+        zenith_angle:    `Angle` from object to zenith
         **kwargs:        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
 
@@ -86,15 +80,15 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
     the latitude of the observer.  This is useful for the function `ChromaticAtmosphere`.
 
     Parameters:
-        obj_coord:       A CelestialCoord object for which the zenith and parallactic
+        obj_coord:       A `CelestialCoord` object for which the zenith and parallactic
                          angles will be computed.
-        zenith_coord:    A CelestialCoord indicating the coordinates of the zenith.
-        HA:              The hour angle (as an Angle) of the coordinate for which the
+        zenith_coord:    A `CelestialCoord` indicating the coordinates of the zenith.
+        HA:              The hour angle (as an `Angle`) of the coordinate for which the
                          zenith and parallactic angles will be computed.
-        latitude:        The observer's latitude, as an Angle.
+        latitude:        The observer's latitude, as an `Angle`.
 
     Returns:
-        the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
+        the tuple `(zenith_angle, parallactic_angle)`, each of which is an `Angle`.
     """
     from .celestial import CelestialCoord
     from .angle import degrees
@@ -119,16 +113,15 @@ def parse_dcr_angles(**kwargs):
     in `ChromaticAtmosphere`.
 
     Parameters:
-        zenith_angle:       Angle from object to zenith, expressed as an Angle
-                            [default: 0]
+        zenith_angle:       `Angle` from object to zenith [default: 0]
         parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured
                             from North through East.  [default: 0]
         obj_coord:          Celestial coordinates of the object being drawn as a
-                            CelestialCoord. [default: None]
-        zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                            `CelestialCoord`. [default: None]
+        zenith_coord:       Celestial coordinates of the zenith as a `CelestialCoord`.
                             [default: None]
-        HA:                 Hour angle of the object as an Angle. [default: None]
-        latitude:           Latitude of the observer as an Angle. [default: None]
+        HA:                 Hour angle of the object as an `Angle`. [default: None]
+        latitude:           Latitude of the observer as an `Angle`. [default: None]
         **kwargs:           For convenience, any other kwargs are returned back for further
                             processing.
 

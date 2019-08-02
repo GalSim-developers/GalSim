@@ -15,11 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file fitswcs.py
-The function FitsWCS() acts like a BaseWCS class, but it really calls one of several other
-classes depending on what python modules are available and what kind of FITS file you are
-trying to read.
-"""
 
 import warnings
 import numpy as np
@@ -849,7 +844,7 @@ class GSFitsWCS(CelestialWCS):
         >>> wcs = galsim.GSFitsWCS(file_name)
 
     In addition to reading from a FITS file, there is also a factory function that builds
-    a GSFitsWCS object implementing a TAN projection.  See the docstring of TanWCS() for
+    a GSFitsWCS object implementing a TAN projection.  See the docstring of `TanWCS` for
     more details.
 
     Parameters:
@@ -1575,7 +1570,7 @@ class GSFitsWCS(CelestialWCS):
 
 
 def TanWCS(affine, world_origin, units=arcsec):
-    """This is a function that returns a GSFitsWCS object for a TAN WCS projection.
+    """This is a function that returns a `GSFitsWCS` object for a TAN WCS projection.
 
     The TAN projection is essentially an affine transformation from image coordinates to
     Euclidean (u,v) coordinates on a tangent plane, and then a "deprojection" of this plane
@@ -1584,15 +1579,15 @@ def TanWCS(affine, world_origin, units=arcsec):
     coordinate system.
 
     Parameters:
-        affine:          An AffineTransform defining the transformation from image coordinates
+        affine:          An `AffineTransform` defining the transformation from image coordinates
                          to the coordinates on the tangent plane.
-        world_origin:    A CelestialCoord defining the location on the sphere where the
+        world_origin:    A `CelestialCoord` defining the location on the sphere where the
                          tangent plane is centered.
         units:           The angular units of the (u,v) intermediate coordinate system.
                          [default: galsim.arcsec]
 
     Returns:
-        a GSFitsWCS describing this WCS.
+        a `GSFitsWCS` describing this WCS.
     """
     # These will raise the appropriate errors if affine is not the right type.
     dudx = affine.dudx * units / degrees
@@ -1651,10 +1646,10 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     work.  It tries a number of different WCS classes until it finds one that succeeds in reading
     the file.
 
-    If none of them work, then the last class it tries, AffineTransform, is guaranteed to succeed,
+    If none of them work, then the last class it tries, `AffineTransform`, is guaranteed to succeed,
     but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using
     reasonable defaults if even these are missing.  If you think that you have the right software
-    for one of the WCS types, but FitsWCS still defaults to AffineTransform, it may be helpful to
+    for one of the WCS types, but FitsWCS still defaults to `AffineTransform`, it may be helpful to
     update your installation of astropy and/or starlink (if you don't already have the latest
     version).
 
@@ -1679,7 +1674,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                           to parse the file this way.  [default: False]
         suppress_warning: Should a warning be emitted if none of the real FITS WCS classes
                           are able to successfully read the file, and we have to reset to
-                          an AffineTransform instead?  [default: False]
+                          an `AffineTransform` instead?  [default: False]
                           (Note: this is set to True when this function is implicitly called from
                           one of the galsim.fits.read* functions.)
     """

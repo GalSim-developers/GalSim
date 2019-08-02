@@ -47,7 +47,7 @@ class Gaussian(GSObject):
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods, Gaussian has the following access properties:
+    In addition to the usual `GSObject` methods, Gaussian has the following access properties:
 
     Attributes:
         sigma:              The value of sigma for the profile
@@ -110,12 +110,22 @@ class Gaussian(GSObject):
             return _galsim.SBGaussian(self._sigma, self._flux, self.gsparams._gsp)
 
     @property
-    def sigma(self): return self._sigma
+    def sigma(self):
+        """Return the sigma of this Gaussian profile
+        """
+        return self._sigma
 
     @property
-    def half_light_radius(self): return self.sigma * Gaussian._hlr_factor
+    def half_light_radius(self):
+        """Return the half-light radius of this Gaussian profile
+        """
+        return self.sigma * Gaussian._hlr_factor
+
     @property
-    def fwhm(self): return self.sigma * Gaussian._fwhm_factor
+    def fwhm(self):
+        """Return the FWHM of this Gaussian profile
+        """
+        return self.sigma * Gaussian._fwhm_factor
 
     def __eq__(self, other):
         return (self is other or

@@ -15,16 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file chromatic.py
-Define wavelength-dependent surface brightness profiles.
-
-Implementation is done by constructing GSObjects as functions of wavelength. The drawImage()
-method then integrates over wavelength while also multiplying by a throughput function (a
-galsim.Bandpass instance).
-
-Possible uses include galaxies with color gradients, automatically drawing a given galaxy through
-different filters, or implementing wavelength-dependent point spread functions.
-"""
 
 import numpy as np
 
@@ -104,9 +94,8 @@ class ChromaticObject(object):
     ``.spectral`` attribute set to True, while the latter category of ChromaticObjects will have
     their ``.dimensionless`` attribute set to True.  These two classes of ChromaticObjects have
     different restrictions associated with them.  For example, only spectral ChromaticObjects can
-    be drawn using chrom_obj.drawImage(bandpass, ...), only ChromaticObjects of the same type can
-    be added together, and at most one spectral ChromaticObject can be part of a
-    `ChromaticConvolution`.
+    be drawn using `drawImage`, only ChromaticObjects of the same type can be added together, and
+    at most one spectral ChromaticObject can be part of a `ChromaticConvolution`.
 
     Multiplying a dimensionless ChromaticObject a spectral `SED` produces a spectral ChromaticObject
     (though note that the new object's `SED` may not be equal to the SED being multiplied by since
@@ -131,8 +120,7 @@ class ChromaticObject(object):
     object with the appropriate spatially integrated flux, flux density, or magnitude.
 
     The `drawImage` method draws the object as observed through a particular bandpass, so the
-    arguments are somewhat different.  See the docstring of `ChromaticObject.drawImage` for more
-    details.
+    arguments are somewhat different.  See the docstring of `drawImage` for more details.
     """
 
     # ChromaticObjects should adhere to the following invariants:
@@ -272,7 +260,7 @@ class ChromaticObject(object):
 
         The speedup involved in using interpolation depends in part on the bandpass used for
         rendering (since that determines how many full profile evaluations are involved in rendering
-        the image).  However, for `ChromaticAtmosphere` with simple profiles like Kolmogorov, the
+        the image).  However, for `ChromaticAtmosphere` with simple profiles like `Kolmogorov`, the
         speedup in some simple example cases is roughly a factor of three, whereas for more
         expensive to render profiles like the `ChromaticOpticalPSF`, the speedup is more typically a
         factor of 10-50.
@@ -312,10 +300,10 @@ class ChromaticObject(object):
             waves:              The list, tuple, or NumPy array of wavelengths to be used when
                                 building up the grid of images for interpolation.  The wavelengths
                                 should be given in nanometers, and they should span the full range
-                                of wavelengths covered by any bandpass to be used for drawing Images
-                                (i.e., this class will not extrapolate beyond the given range of
-                                wavelengths).  They can be spaced any way the user likes, not
-                                necessarily linearly, though interpolation will be linear in
+                                of wavelengths covered by any bandpass to be used for drawing an
+                                `Image` (i.e., this class will not extrapolate beyond the given
+                                range of wavelengths).  They can be spaced any way the user likes,
+                                not necessarily linearly, though interpolation will be linear in
                                 wavelength between the specified wavelengths.
             oversample_fac:     Factor by which to oversample the stored profiles compared to the
                                 default, which is to sample them at the Nyquist frequency for
@@ -412,14 +400,14 @@ class ChromaticObject(object):
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
                             'trapezoidal' or 'midpoint', in which case the routine will use a
-                            SampleIntegrator or ContinuousIntegrator depending on whether or not
-                            the object has a ``wave_list``.  [default: 'trapezoidal',
+                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
+                            not the object has a ``wave_list``.  [default: 'trapezoidal',
                             which will try to select an appropriate integrator using the
                             trapezoidal integration rule automatically.]
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`
 
         Returns:
-            the drawn Image.
+            the drawn `Image`.
         """
         from .table import LookupTable
         # Store the last bandpass used and any extra kwargs.
@@ -482,22 +470,22 @@ class ChromaticObject(object):
 
         Parameters:
             bandpass:   A `Bandpass` object representing the filter against which to integrate.
-            image:      If provided, this will be the ImageC onto which to draw the k-space
-                        image.  If ``image`` is None, then an automatically-sized image will be
-                        created.  If ``image`` is given, but its bounds are undefined, then it
-                        will be resized appropriately based on the profile's size.
+            image:      If provided, this will be the complex `Image` onto which to draw the
+                        k-space image.  If ``image`` is None, then an automatically-sized image
+                        will be created.  If ``image`` is given, but its bounds are undefined,
+                        then it will be resized appropriately based on the profile's size.
                         [default: None]
             integrator: When doing the exact evaluation of the profile, this argument should be
                         one of the image integrators from galsim.integ, or a string
                         'trapezoidal' or 'midpoint', in which case the routine will use a
-                        SampleIntegrator or ContinuousIntegrator depending on whether or not the
-                        object has a ``wave_list``.  [default: 'trapezoidal', which will try to
+                        `SampleIntegrator` or `ContinuousIntegrator` depending on whether or not
+                        the object has a ``wave_list``.  [default: 'trapezoidal', which will try to
                         select an appropriate integrator using the trapezoidal integration rule
                         automatically.]
             **kwargs:   For all other kwarg options, see `GSObject.drawKImage`.
 
         Returns:
-            an ImageC instance (created if necessary)
+            a complex `Image` instance (created if necessary)
         """
         from .table import LookupTable
 
@@ -933,13 +921,13 @@ class ChromaticObject(object):
         return sheared.magnify(mu)
 
     def rotate(self, theta):
-        """Rotate this object by an Angle ``theta``.
+        """Rotate this object by an `Angle` ``theta``.
 
         Parameters:
-            theta:      Rotation angle (Angle object, +ve anticlockwise). In addition, ``theta`` may
-                        be a callable function, in which case the argument should be wavelength in
-                        nanometers and the return value the rotation angle for that wavelength,
-                        returned as a galsim.Angle instance.
+            theta:      Rotation angle (`Angle` object, +ve anticlockwise). In addition, ``theta``
+                        may be a callable function, in which case the argument should be wavelength
+                        in nanometers and the return value the rotation angle for that wavelength,
+                        returned as a `galsim.Angle` instance.
 
         Returns:
             the rotated object.
@@ -1079,7 +1067,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         waves:          The list, tuple, or NumPy array of wavelengths to be used when
                         building up the grid of images for interpolation.  The wavelengths
                         should be given in nanometers, and they should span the full range
-                        of wavelengths covered by any bandpass to be used for drawing Images
+                        of wavelengths covered by any bandpass to be used for drawing an `Image`
                         (i.e., this class will not extrapolate beyond the given range of
                         wavelengths).  They can be spaced any way the user likes, not
                         necessarily linearly, though interpolation will be linear in
@@ -1177,13 +1165,13 @@ class InterpolatedChromaticObject(ChromaticObject):
         """
         Get an image of the object at a particular wavelength, using linear interpolation between
         the originally-stored images.  Also returns values for step_k and max_k, to be used to
-        expedite the instantation of InterpolatedImages.
+        expedite the instantation of `InterpolatedImage`.
 
         Parameters:
             wave:   Wavelength in nanometers.
 
         Returns:
-            an Image of the object at the given wavelength.
+            an `Image` of the object at the given wavelength.
         """
         # First, some wavelength-related sanity checks.
         if wave < np.min(self.waves) or wave > np.max(self.waves):
@@ -1324,14 +1312,14 @@ class InterpolatedChromaticObject(ChromaticObject):
         Parameters:
             bandpass:       A `Bandpass` object representing the filter against which to
                             integrate.
-            image:          Optionally, the Image to draw onto.  (See `GSObject.drawImage`
+            image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
                             for details.)  [default: None]
             integrator:     The integration algorithm to use, given as a string.  Either
                             'midpoint' or 'trapezoidal' is allowed. [default: 'trapezoidal']
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
-            the drawn Image.
+            the drawn `Image`.
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
@@ -1357,15 +1345,15 @@ class ChromaticAtmosphere(ChromaticObject):
     the zenith measured from North through East) of the object being drawn, these must be specified
     via keywords.  There are four ways to specify these values:
 
-      1) explicitly provide ``zenith_angle = ...`` as a keyword of type Angle, and
+      1) explicitly provide ``zenith_angle = ...`` as a keyword of type `Angle`, and
          ``parallactic_angle`` will be assumed to be 0 by default.
       2) explicitly provide both ``zenith_angle = ...`` and ``parallactic_angle = ...`` as
-         keywords of type Angle.
+         keywords of type `Angle`.
       3) provide the coordinates of the object ``obj_coord = ...`` and the coordinates of the zenith
-         ``zenith_coord = ...`` as keywords of type CelestialCoord.
-      4) provide the coordinates of the object ``obj_coord = ...`` as a CelestialCoord, the
-         hour angle of the object ``HA = ...`` as an Angle, and the latitude of the observer
-         ``latitude = ...`` as an Angle.
+         ``zenith_coord = ...`` as keywords of type `CelestialCoord`.
+      4) provide the coordinates of the object ``obj_coord = ...`` as a `CelestialCoord`, the
+         hour angle of the object ``HA = ...`` as an `Angle`, and the latitude of the observer
+         ``latitude = ...`` as an `Angle`.
 
     DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
@@ -1388,16 +1376,15 @@ class ChromaticAtmosphere(ChromaticObject):
                             [default: galsim.arcsec]
         alpha:              Power law index for wavelength-dependent seeing.  [default: -0.2,
                             the prediction for Kolmogorov turbulence]
-        zenith_angle:       Angle from object to zenith, expressed as an Angle
-                            [default: 0]
+        zenith_angle:       `Angle` from object to zenith [default: 0]
         parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured
                             from North through East.  [default: 0]
         obj_coord:          Celestial coordinates of the object being drawn as a
-                            CelestialCoord. [default: None]
-        zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                            `CelestialCoord`. [default: None]
+        zenith_coord:       Celestial coordinates of the zenith as a `CelestialCoord`.
                             [default: None]
-        HA:                 Hour angle of the object as an Angle. [default: None]
-        latitude:           Latitude of the observer as an Angle. [default: None]
+        HA:                 Hour angle of the object as an `Angle`. [default: None]
+        latitude:           Latitude of the observer as an `Angle`. [default: None]
         pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]
         temperature:        Temperature in Kelvins.  [default: 293.15 K]
         H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
@@ -1742,13 +1729,13 @@ class ChromaticTransformation(ChromaticObject):
         Parameters:
             bandpass:       A `Bandpass` object representing the filter against which to
                             integrate.
-            image:          Optionally, the Image to draw onto.  (See `GSObject.drawImage`
+            image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
                             for details.)  [default: None]
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
                             'trapezoidal' or 'midpoint', in which case the routine will use a
-                            SampleIntegrator or ContinuousIntegrator depending on whether or not
-                            the object has a ``wave_list``.  [default: 'trapezoidal',
+                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
+                            not the object has a ``wave_list``.  [default: 'trapezoidal',
                             which will try to select an appropriate integrator using the
                             trapezoidal integration rule automatically.]
                             If the object being transformed is an `InterpolatedChromaticObject`,
@@ -1757,7 +1744,7 @@ class ChromaticTransformation(ChromaticObject):
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
-            the drawn Image.
+            the drawn `Image`.
         """
         from .transform import Transform
         # Store the last bandpass used.
@@ -1818,7 +1805,7 @@ class ChromaticSum(ChromaticObject):
         >>> disk = galsim.Exponential(half_light_radius=1.4) * disk_sed
         >>> gal = bulge + disk
 
-    You can also use the Add() factory function, which returns a ChromaticSum object if any of
+    You can also use the `Add` factory function, which returns a ChromaticSum object if any of
     the individual objects are chromatic::
 
         >>> gal = galsim.Add([bulge,disk])
@@ -1976,26 +1963,26 @@ class ChromaticSum(ChromaticObject):
         Draws each summand individually and add resulting images together.  This might waste time if
         two or more summands are separable and have the same `SED`, and another summand with a
         different `SED` is also added, in which case the summands should be added together first and
-        the resulting Sum object can then be chromaticized.  In general, however, drawing individual
-        sums independently can help with speed by identifying chromatic profiles that are separable
-        into spectral and spatial factors.
+        the resulting `Sum` object can then be chromaticized.  In general, however, drawing
+        individual sums independently can help with speed by identifying chromatic profiles that
+        are separable into spectral and spatial factors.
 
         Parameters:
             bandpass:       A `Bandpass` object representing the filter against which to
                             integrate.
-            image:          Optionally, the Image to draw onto.  (See `GSObject.drawImage`
+            image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
                             for details.)  [default: None]
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
                             'trapezoidal' or 'midpoint', in which case the routine will use a
-                            SampleIntegrator or ContinuousIntegrator depending on whether or not
-                            the object has a ``wave_list``.  [default: 'trapezoidal',
+                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
+                            not the object has a ``wave_list``.  [default: 'trapezoidal',
                             which will try to select an appropriate integrator using the
                             trapezoidal integration rule automatically.]
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
-            the drawn Image.
+            the drawn `Image`.
         """
         # Store the last bandpass used.
         self._last_bp = bandpass
@@ -2240,21 +2227,21 @@ class ChromaticConvolution(ChromaticObject):
         Parameters:
             bandpass:       A `Bandpass` object representing the filter against which to
                             integrate.
-            image:          Optionally, the Image to draw onto.  (See `GSObject.drawImage`
+            image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
                             for details.)  [default: None]
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
                             'trapezoidal' or 'midpoint', in which case the routine will use a
-                            SampleIntegrator or ContinuousIntegrator depending on whether or not
-                            the object has a ``wave_list``.  [default: 'trapezoidal',
+                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
+                            not the object has a ``wave_list``.  [default: 'trapezoidal',
                             which will try to select an appropriate integrator using the
                             trapezoidal integration rule automatically.]
-            iimult:         Oversample any intermediate InterpolatedImages created to hold
+            iimult:         Oversample any intermediate `InterpolatedImage` created to hold
                             effective profiles by this amount. [default: None]
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
-            the drawn Image.
+            the drawn `Image`.
         """
         from .convolve import Convolve
         # Store the last bandpass used.
@@ -2909,7 +2896,7 @@ class ChromaticOpticalPSF(ChromaticObject):
 class ChromaticAiry(ChromaticObject):
     """A subclass of ChromaticObject meant to represent chromatic Airy profiles.
 
-    For more information about the basics of Airy profiles, please see help(galsim.Airy).
+    For more information about the basics of Airy profiles, please see `galsim.Airy`.
 
     This class is a chromatic representation of Airy profiles, including the wavelength-dependent
     diffraction limit.  One can also get this functionality using the ChromaticOpticalPSF class, but
@@ -2929,8 +2916,8 @@ class ChromaticAiry(ChromaticObject):
                         [default: galsim.arcsec]
         gsparams:       An optional GSParams argument.  See the docstring for GSParams for
                         details. [default: None]
-        **kwargs:       Any other keyword arguments to be passed to Airy: either flux, or
-                        gsparams.  See galsim.Airy docstring for a complete description of these
+        **kwargs:       Any other keyword arguments to be passed to `Airy`: either flux, or
+                        gsparams.  See `galsim.Airy` docstring for a complete description of these
                         options.
     """
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=None, gsparams=None,

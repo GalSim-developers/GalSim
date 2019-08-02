@@ -15,19 +15,16 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file gsparams.py
-This file defines the GSParams class.
-"""
 
 from . import _galsim
 from .errors import convert_cpp_errors
 
 class GSParams(object):
-    """GSParams stores a set of numbers that govern how GSObjects make various speed/accuracy
+    """GSParams stores a set of numbers that govern how a `GSObject` makes various speed/accuracy
     tradeoff decisions.
 
-    All GSObjects can take an optional parameter named ``gsparams``, which would be an instance of
-    this class.  e.g.::
+    All `GSObject` classes can take an optional parameter named ``gsparams``, which would be an
+    instance of this class.  e.g.::
 
         >>> gsp = galsim.GSParams(folding_threshold=1.e-3)
         >>> gal = galsim.Sersic(n=3.4, half_light_radius=3.2, flux=200, gsparams=gsp)
@@ -86,7 +83,7 @@ class GSParams(object):
                             to be no more than this value times the total flux.
                             [default: 1.e-5]
         table_spacing:      Several profiles use lookup tables for either the Hankel transform
-                            (Sersic, Moffat) or the real space radial function (Kolmogorov).
+                            (`Sersic`, `Moffat`) or the real space radial function (`Kolmogorov`).
                             We try to estimate a good spacing between values in the lookup
                             tables based on either ``xvalue_accuracy`` or ``kvalue_accuracy`` as
                             appropriate. However, you may change the spacing with this

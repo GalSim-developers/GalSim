@@ -15,24 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file fft.py
-Functional equivalents of (some of) the np.fft functions, but using FFTW.
-
-These should be drop in replacements for np.fft.* functions.  e.g.::
-
-    >>> karray = galsim.fft.fft2(xarray)
-
-is functionally equivalent to::
-
-    >>> karray = np.fft.fft2(xarray)
-
-but should be a bit faster.
-
-Note that the GalSim versions often only implement the normal use case without many of the
-advanced options available with the numpy functions.  This is mostly laziness on our part --
-we only implemented the functions that we needed.  If your usage requires some option available
-in the numpy version, feel free to post a feature request on our GitHub page.
-"""
 
 import numpy as np
 

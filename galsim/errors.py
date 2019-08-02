@@ -252,7 +252,7 @@ class GalSimBoundsError(GalSimError, ValueError):
 
 class GalSimUndefinedBoundsError(GalSimError):
     """A GalSim-specific exception class indicating an attempt to access the extent of
-    a Bounds instance that has not yet been defined.
+    a `Bounds` instance that has not yet been defined.
     """
     def __repr__(self):
         return 'galsim.GalSimUndefinedBoundsError(%r)'%(str(self))

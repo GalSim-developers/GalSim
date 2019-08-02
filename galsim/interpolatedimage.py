@@ -15,10 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file interpolatedimage.py
-
-InterpolatedImage is a class that allows one to treat an image as a profile.
-"""
 
 from past.builtins import basestring
 import numpy as np
@@ -38,38 +34,41 @@ from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndef
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
 
 class InterpolatedImage(GSObject):
-    """A class describing non-parametric profiles specified using an Image, which can be
+    """A class describing non-parametric profiles specified using an `Image`, which can be
     interpolated for the purpose of carrying out transformations.
 
     The InterpolatedImage class is useful if you have a non-parametric description of an object as
-    an Image, that you wish to manipulate / transform using GSObject methods such as shear(),
-    magnify(), shift(), etc.  Note that when convolving an InterpolatedImage, the use of real-space
-    convolution is not recommended, since it is typically a great deal slower than Fourier-space
-    convolution for this kind of object.
+    an `Image`, that you wish to manipulate / transform using `GSObject` methods such as
+    `GSObject.shear`, `GSObject.magnify`, `GSObject.shift`, etc.  Note that when convolving an
+    InterpolatedImage, the use of real-space convolution is not recommended, since it is typically
+    a great deal slower than Fourier-space convolution for this kind of object.
 
-    There are three options for determining the flux of the profile.  First, you can simply
-    specify a ``flux`` value explicitly.  Or there are two ways to get the flux from the image
-    directly.  If you set ``normalization = 'flux'``, the flux will be taken as the sum of the
-    pixel values.  This corresponds to an image that was drawn with ``drawImage(method='no_pixel')``.
-    This is the default if flux is not given.  The other option, ``normalization = 'sb'`` treats
-    the pixel values as samples of the surface brightness profile at each location.  This
-    corresponds to an image drawn with ``drawImage(method='sb')``.
+    There are three options for determining the flux of the profile.
+
+    1. You can simply specify a ``flux`` value explicitly.
+    2. If you set ``normalization = 'flux'``, the flux will be taken as the sum of the pixel values
+       in the input image.  This corresponds to an image that was drawn with
+       ``drawImage(method='no_pixel')``.  This is the default if flux is not given.
+    3. If you set ``normalization = 'sb'``, the pixel values are treated as samples of the surface
+       brightness profile at each location.  This corresponds to an image drawn with
+       ``drawImage(method='sb')``.  The flux is then the sum of the pixels in the input image
+       multiplied by the pixel area.
 
     You can also use images that were drawn with one of the pixel-integrating methods ('auto',
     'fft', or 'real_space'); however, the resulting profile will not correspond to the one
-    that was used to call ``drawImage``.  The integration over the pixel is equivalent to convolving
-    the original profile by a Pixel and then drawing with ``method='no_pixel'``.  So if you use
-    such an image with InterpolatedImage, the resulting profile will include the Pixel convolution
-    already.  As such, if you use it as a PSF for example, then the final objects convolved by
-    this PSF will already include the pixel convolution, so you should draw them using
-    ``method='no_pixel'``.
+    that was used to call `GSObject.drawImage`.  The integration over the pixel is equivalent to
+    convolving the original profile by a `Pixel` and then drawing with ``method='no_pixel'``.  So
+    if you use such an image with InterpolatedImage, the resulting profile will include the `Pixel`
+    convolution already.  As such, if you use it as a PSF for example, then the final objects
+    convolved by this PSF will already include the pixel convolution, so you should draw them
+    using ``method='no_pixel'``.
 
-    If the input Image has a ``scale`` or ``wcs`` associated with it, then there is no need to
+    If the input `Image` has a ``scale`` or ``wcs`` associated with it, then there is no need to
     specify one as a parameter here.  But if one is provided, that will override any ``scale`` or
-    ``wcs`` that is native to the Image.
+    ``wcs`` that is native to the `Image`.
 
     The user may optionally specify an interpolant, ``x_interpolant``, for real-space manipulations
-    (e.g., shearing, resampling).  If none is specified, then by default, a Quintic interpolant is
+    (e.g., shearing, resampling).  If none is specified, then by default, a `Quintic` interpolant is
     used.  The user may also choose to specify two quantities that can affect the Fourier space
     convolution: the k-space interpolant (``k_interpolant``) and the amount of padding to include
     around the original images (``pad_factor``).  The default values for ``x_interpolant``,
@@ -126,20 +125,20 @@ class InterpolatedImage(GSObject):
     re-drawn at a different size.
 
     Parameters:
-        image:              The Image from which to construct the object.
-                            This may be either an Image instance or a string indicating a fits
+        image:              The `Image` from which to construct the object.
+                            This may be either an `Image` instance or a string indicating a fits
                             file from which to read the image.  In the latter case, the ``hdu``
                             kwarg can be used to specify a particular HDU in that file.
-        x_interpolant:      Either an Interpolant instance or a string indicating which real-space
+        x_interpolant:      Either an `Interpolant` instance or a string indicating which real-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use. [default: galsim.Quintic()]
-        k_interpolant:      Either an Interpolant instance or a string indicating which k-space
+        k_interpolant:      Either an `Interpolant` instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use.  We strongly recommend leaving this parameter at its default
                             value; see text above for details.  [default: galsim.Quintic()]
-        normalization:      Two options for specifying the normalization of the input Image:
+        normalization:      Two options for specifying the normalization of the input `Image`:
 
                             - "flux" or "f" means that the sum of the pixels is normalized
                               to be equal to the total flux.
@@ -148,15 +147,15 @@ class InterpolatedImage(GSObject):
 
                             This is overridden if you specify an explicit flux value.
                             [default: "flux"]
-        scale:              If provided, use this as the pixel scale for the Image; this will
-                            override the pixel scale stored by the provided Image, in any.
+        scale:              If provided, use this as the pixel scale for the `Image`; this will
+                            override the pixel scale stored by the provided `Image`, in any.
                             If ``scale`` is ``None``, then take the provided image's pixel scale.
                             [default: None]
         wcs:                If provided, use this as the wcs for the image.  At most one of
                             ``scale`` or ``wcs`` may be provided. [default: None]
         flux:               Optionally specify a total flux for the object, which overrides the
-                            implied flux normalization from the Image itself. [default: None]
-        pad_factor:         Factor by which to pad the Image with zeros.  We strongly recommend
+                            implied flux normalization from the `Image` itself. [default: None]
+        pad_factor:         Factor by which to pad the `Image` with zeros.  We strongly recommend
                             leaving this parameter at its default value; see text above for
                             details.  [default: 4]
         noise_pad_size:     If provided, the image will be padded out to this size (in arcsec) with
@@ -197,10 +196,10 @@ class InterpolatedImage(GSObject):
                             `BaseCorrelatedNoise` instance (see the ``noise_pad`` parameter).
                             If ``rng=None``, one will be automatically created, using the time as a
                             seed. [default: None]
-        pad_image:          Image to be used for deterministically padding the original image.  This
-                            can be specified in two ways:
+        pad_image:          `Image` to be used for deterministically padding the original image.
+                            This can be specified in two ways:
 
-                            - as an Image; or
+                            - as an `Image`; or
                             - as a string which is interpreted as a filename containing an
                               image to use (in the first HDU).
 
@@ -230,7 +229,7 @@ class InterpolatedImage(GSObject):
                             the ``maxk`` value is still calculated, but will not go above the
                             provided value.
                             [default: True]
-        use_true_center:    Similar to the same parameter in the GSObject.drawImage() function,
+        use_true_center:    Similar to the same parameter in the `GSObject.drawImage` function,
                             this sets whether to use the true center of the provided image as the
                             center of the profile (if ``use_true_center=True``) or the nominal
                             center given by image.center (if ``use_true_center=False``)
@@ -240,7 +239,7 @@ class InterpolatedImage(GSObject):
                             (either the true center if ``use_true_center=True``, or the nominal
                             center if ``use_true_center=False``).  [default: None]
         gsparams:           An optional `GSParams` argument. [default: None]
-        hdu:                When reading in an Image from a file, this parameter can be used to
+        hdu:                When reading in an `Image` from a file, this parameter can be used to
                             select a particular HDU in the file. [default: None]
     """
     _req_params = { 'image' : str }
@@ -704,9 +703,9 @@ class InterpolatedImage(GSObject):
 def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
                        use_true_center=True, offset=None, gsparams=None,
                        force_stepk=0., force_maxk=0.):
-    """Approximately equivalent to InterpolatedImage, but with fewer options and no sanity checks.
+    """Approximately equivalent to `InterpolatedImage`, but with fewer options and no sanity checks.
 
-    Some notable reductions in functionality relative to InterpolatedImage:
+    Some notable reductions in functionality relative to `InterpolatedImage`:
 
     1. There are no padding options. The image must be provided with all padding already applied.
     2. The stepk and maxk values will not be calculated.  If you want to use values for these other
@@ -716,9 +715,10 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     4. The input image must have a defined wcs.
 
     Parameters:
-        image:              The Image from which to construct the object.
-        x_interpolant:      An Interpolant instance for real-space interpolation [default: Quintic]
-        k_interpolant:      An Interpolant instance for k-space interpolation [default: Quintic]
+        image:              The `Image` from which to construct the object.
+        x_interpolant:      An `Interpolant` instance for real-space interpolation
+                            [default: Quintic]
+        k_interpolant:      An `Interpolant` instance for k-space interpolation [default: Quintic]
         use_true_center:    Whether to use the true center of the provided image as the center
                             of the profile. [default: True]
         offset:             The location in the input image to use as the center of the profile.
@@ -728,7 +728,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
         force_maxk:         A maxk value to use rather than the default value. [default: 0.]
 
     Returns:
-        an InterpolatedImage instance
+        an `InterpolatedImage` instance
     """
     ret = InterpolatedImage.__new__(InterpolatedImage)
 
@@ -775,33 +775,34 @@ class InterpolatedKImage(GSObject):
     transform.
 
     The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
-    transform of the profile (provided as either a complex Image or two Images giving the real and
-    imaginary parts) that you wish to manipulate / transform using GSObject methods such as
-    shear(), magnify(), shift(), etc.  Note that neither real-space convolution nor photon-shooting
-    of InterpolatedKImages is currently implemented.  Please submit an issue at
-    http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
+    transform of the profile (provided as either a complex `Image` or two images giving the real
+    and imaginary parts) that you wish to manipulate / transform using `GSObject` methods such as
+    `GSObject.shear`, `GSObject.magnify`, `GSObject.shift`, etc.  Note that neither real-space
+    convolution nor photon-shooting of InterpolatedKImages is currently implemented.  Please submit
+    an issue at http://github.com/GalSim-developers/GalSim/issues if you require either of these
+    use cases.
 
     The images required for creating an InterpolatedKImage are precisely those returned by the
-    GSObject ``.drawKImage()`` method.  The ``a`` and ``b`` objects in the following command will
-    produce essentially equivalent images when drawn with the ``.drawImage()`` method::
+    `GSObject.drawKImage` method.  The ``a`` and ``b`` objects in the following command will
+    produce essentially equivalent images when drawn with the `GSObject.drawImage` method::
 
     >>> a = returns_a_GSObject()
     >>> b = galsim.InterpolatedKImage(a.drawKImage())
 
     The input ``kimage`` must have dtype=numpy.complex64 or dtype=numpy.complex128, which are also
-    known as ImageCF and ImageCD objects respectively.
-    The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case ``kimage.scale`` is
-    used for the ``stepk`` value unless overridden by the ``stepk`` initialization argument.
+    known as `ImageCF` and `ImageCD` objects respectively.
+    The only wcs permitted is a simple `PixelScale` (or `OffsetWCS`), in which case ``kimage.scale``
+    is used for the ``stepk`` value unless overridden by the ``stepk`` initialization argument.
 
     Furthermore, the complex-valued Fourier profile given by ``kimage`` must be Hermitian, since it
     represents a real-valued real-space profile.  (To see an example of valid input to
-    ``InterpolatedKImage``, you can look at the output of ``drawKImage``).
+    InterpolatedKImage, you can look at the output of `GSObject.drawKImage`).
 
     The user may optionally specify an interpolant, ``k_interpolant``, for Fourier-space
-    manipulations (e.g., shearing, resampling).  If none is specified, then by default, a Quintic
-    interpolant is used.  The Quintic interpolant has been found to be a good compromise between
+    manipulations (e.g., shearing, resampling).  If none is specified, then by default, a `Quintic`
+    interpolant is used.  The `Quintic` interpolant has been found to be a good compromise between
     speed and accuracy for real-and Fourier-space interpolation of objects specified by samples of
-    their real-space profiles (e.g., in InterpolatedImage), though no extensive testing has been
+    their real-space profiles (e.g., in `InterpolatedImage`), though no extensive testing has been
     performed for objects specified by samples of their Fourier-space profiles (e.g., this
     class).
 
@@ -813,8 +814,8 @@ class InterpolatedKImage(GSObject):
     Initializes ``interpolated_kimage`` as an InterpolatedKImage instance.
 
     Parameters:
-        kimage:         The complex Image corresponding to the Fourier-space samples.
-        k_interpolant:  Either an Interpolant instance or a string indicating which k-space
+        kimage:         The complex `Image` corresponding to the Fourier-space samples.
+        k_interpolant:  Either an `Interpolant` instance or a string indicating which k-space
                         interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                         'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                         to use.  [default: galsim.Quintic()]
@@ -1035,8 +1036,15 @@ class InterpolatedKImage(GSObject):
 
 
 def _InterpolatedKImage(kimage, k_interpolant, gsparams):
-    """Approximately equivalent to InterpolatedKImage, but with fewer options and no sanity checks.
-    """
+    """Approximately equivalent to `InterpolatedKImage`, but with fewer options and no sanity
+    checks.
+
+    Parameters:
+        kimage:         The complex `Image` corresponding to the Fourier-space samples.
+        k_interpolant:  An `Interpolant` instance indicating which k-space interpolant should be
+                        used.
+        gsparams:       An optional `GSParams` argument. [default: None]
+     """
     ret = InterpolatedKImage.__new__(InterpolatedKImage)
     ret._kimage = kimage.copy()
     ret._stepk = kimage.scale

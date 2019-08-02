@@ -587,8 +587,8 @@ class DistDeviate(BaseDeviate):
 
     DistDeviate is a `BaseDeviate` class that can be used to draw from an arbitrary probability
     distribution.  The probability distribution passed to DistDeviate can be given one of three
-    ways: as the name of a file containing a 2d ASCII array of x and P(x), as a LookupTable mapping
-    x to P(x), or as a callable function.
+    ways: as the name of a file containing a 2d ASCII array of x and P(x), as a `LookupTable`
+    mapping x to P(x), or as a callable function.
 
     Once given a probability, DistDeviate creates a table of the cumulative probability and draws
     from it using a `UniformDeviate`.  The precision of its outputs can be controlled with the
@@ -598,12 +598,12 @@ class DistDeviate(BaseDeviate):
 
     Two keywords, ``x_min`` and ``x_max``, define the support of the function.  They must be passed
     if a callable function is given to DistDeviate, unless the function is a `LookupTable`, which
-    has its own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use
-    of ``x_min`` or ``x_max`` will result in an error.
+    has its own defined endpoints.  If a filename or `LookupTable` is passed to DistDeviate, the
+    use of ``x_min`` or ``x_max`` will result in an error.
 
-    If given a table in a file, DistDeviate will construct an interpolated LookupTable to obtain
+    If given a table in a file, DistDeviate will construct an interpolated `LookupTable` to obtain
     more finely gridded probabilities for generating the cumulative probability table.  The default
-    ``interpolant`` is linear, but any interpolant understood by LookupTable may be used.  We
+    ``interpolant`` is linear, but any interpolant understood by `LookupTable` may be used.  We
     caution against the use of splines because they can cause non-monotonic behavior.  Passing the
     ``interpolant`` keyword next to anything but a table in a file will result in an error.
 
@@ -625,8 +625,8 @@ class DistDeviate(BaseDeviate):
         >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
 
     Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
-    arrays ``x`` and ``p`` which are used to make a callable LookupTable, and links the DistDeviate
-    PRNG to the already-existing random number generator ``rng``.
+    arrays ``x`` and ``p`` which are used to make a callable `LookupTable`, and links the
+    DistDeviate PRNG to the already-existing random number generator ``rng``.
 
     Successive calls to d() generate pseudo-random values with the given probability distribution.::
 
@@ -643,17 +643,17 @@ class DistDeviate(BaseDeviate):
         function:       A callable function giving a probability distribution or the name of a
                         file containing a probability distribution as a 2-column ASCII table.
                         [required]
-        x_min:          The minimum desired return value (required for non-LookupTable
+        x_min:          The minimum desired return value (required for non-`LookupTable`
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]
-        x_max:          The maximum desired return value (required for non-LookupTable
+        x_max:          The maximum desired return value (required for non-`LookupTable`
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]
         interpolant:    Type of interpolation used for interpolating a file (causes an error if
                         passed alongside a callable function).  Options are given in the
-                        documentation for LookupTable. [default: 'linear']
+                        documentation for `LookupTable`. [default: 'linear']
         npoints:        Number of points DistDeviate should create for its internal interpolation
-                        tables. [default: 256, unless the function is a non-log LookupTable, in
+                        tables. [default: 256, unless the function is a non-log `LookupTable`, in
                         which case it uses the table's x values]
     """
     def __init__(self, seed=None, function=None, x_min=None,

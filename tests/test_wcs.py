@@ -309,7 +309,6 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
     assert_raises(TypeError, wcs.xyTouv)
     assert_raises(TypeError, wcs.xyTouv, 3)
     assert_raises(TypeError, wcs.xyTouv, 3,4, units=galsim.degrees)
-    assert_raises(TypeError, wcs.xyTouv, 3,4,5)
     assert_raises(TypeError, wcs.xyTouv, galsim.PositionD(3,4))
 
     assert_raises(TypeError, wcs.toImage)

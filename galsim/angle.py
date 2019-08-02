@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file angle.py
-We just import the LSSTDESC.Coord Angle class and related things into our namespace.
-"""
 
 from coord import AngleUnit, Angle, _Angle
 from coord import radians, hours, degrees, arcmin, arcsec

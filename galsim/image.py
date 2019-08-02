@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file image.py
-The Image class
-"""
 
 from __future__ import division
 import numpy as np
@@ -566,12 +563,12 @@ class Image(object):
         return a
 
     def resize(self, bounds, wcs=None):
-        """Resize the image to have a new bounds (must be a BoundsI instance)
+        """Resize the image to have a new bounds (must be a `BoundsI` instance)
 
         Note that the resized image will have uninitialized data.  If you want to preserve
-        the existing data values, you should either use ``subImage`` (if you want a smaller
-        portion of the current Image) or make a new Image and copy over the current values
-        into a portion of the new image (if you are resizing to a larger Image).
+        the existing data values, you should either use `subImage` (if you want a smaller
+        portion of the current `Image`) or make a new `Image` and copy over the current values
+        into a portion of the new image (if you are resizing to a larger `Image`).
 
         Parameters:
             bounds:     The new bounds to resize to.
@@ -743,8 +740,8 @@ class Image(object):
         return ret;
 
     def _wrap(self, bounds, hermx, hermy):
-        """Essentially equivalent to Image.wrap(bounds, hermitian=='x', hermitian=='y'), but
-        without some of the sanity checks that the regular function does.
+        """Essentially equivalent to ``Image.wrap(bounds, hermitian=='x', hermitian=='y')``,
+        but without some of the sanity checks that the regular function does.
         """
         ret = self.subImage(bounds)
         with convert_cpp_errors():
@@ -774,7 +771,7 @@ class Image(object):
                     output pixel.
 
         Returns:
-            a new Image
+            a new `Image`
         """
         from .wcs import JacobianWCS
         ncol = self.xmax - self.xmin + 1
@@ -835,7 +832,7 @@ class Image(object):
                     means to use the same dtype as the original image]
 
         Returns:
-            a new Image
+            a new `Image`
         """
         ncol = self.xmax - self.xmin + 1
         nrow = self.ymax - self.ymin + 1
@@ -870,17 +867,17 @@ class Image(object):
         return _Image(target_ar, target_bounds, target_wcs)
 
     def calculate_fft(self):
-        """Performs an FFT of an Image in real space to produce a k-space Image.
+        """Performs an FFT of an `Image` in real space to produce a k-space `Image`.
 
         Note: the image will be padded with zeros as needed to make an image with bounds that
-        look like BoundsI(-N/2, N/2-1, -N/2, N/2-1).
+        look like ``BoundsI(-N/2, N/2-1, -N/2, N/2-1)``.
 
-        The input image must have a PixelScale wcs.  The output image will be complex (an ImageCF
-        or ImageCD instance) and its scale will be 2pi / (N dx), where dx is the scale of the input
-        image.
+        The input image must have a `PixelScale` wcs.  The output image will be complex (an
+        `ImageCF` or `ImageCD` instance) and its scale will be 2pi / (N dx), where dx is the scale
+        of the input image.
 
         Returns:
-            an Image instance with the k-space image.
+            an `Image` instance with the k-space image.
         """
         if self.wcs is None:
             raise GalSimError("calculate_fft requires that the scale be set.")
@@ -913,24 +910,24 @@ class Image(object):
         return out
 
     def calculate_inverse_fft(self):
-        """Performs an inverse FFT of an Image in k-space to produce a real-space Image.
+        """Performs an inverse FFT of an `Image` in k-space to produce a real-space `Image`.
 
-        The starting image is typically an ImageCD, although if the Fourier function is real valued,
-        then you could get away with using an ImageD or ImageF.
+        The starting image is typically an `ImageCD`, although if the Fourier function is real
+        valued, then you could get away with using an `ImageD` or `ImageF`.
 
         The image is assumed to be Hermitian.  In fact, only the portion with x >= 0 needs to
         be defined, with f(-x,-y) taken to be conj(f(x,y)).
 
         Note: the k-space image will be padded with zeros and/or wrapped as needed to make an
-        image with bounds that look like BoundsI(0, N/2, -N/2, N/2-1).  If you are building a
+        image with bounds that look like ``BoundsI(0, N/2, -N/2, N/2-1)``.  If you are building a
         larger k-space image and then wrapping, you should wrap directly into an image of
         this shape.
 
-        The input image must have a PixelScale wcs.  The output image will be real (an ImageD
+        The input image must have a `PixelScale` wcs.  The output image will be real (an `ImageD`
         instance) and its scale will be 2pi / (N dk), where dk is the scale of the input image.
 
         Returns:
-            an ImageD instance with the real-space image.
+            an `Image` instance with the real-space image.
         """
         if self.wcs is None:
             raise GalSimError("calculate_inverse_fft requires that the scale be set.")
@@ -999,7 +996,7 @@ class Image(object):
         but view the same underlying data as the original image.
 
         If you do not provide either ``scale`` or ``wcs``, the view will keep the same wcs
-        as the current Image object.
+        as the current `Image` object.
 
         Parameters:
             scale:      If provided, use this as the pixel scale for the image. [default: None]
@@ -1354,11 +1351,11 @@ class Image(object):
     def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
         """Returns the half-light radius of a drawn object.
 
-        This method is equivalent to GSObject.calculateHLR when the object has already been
+        This method is equivalent to `GSObject.calculateHLR` when the object has already been
         been drawn onto an image.  Note that the profile should be drawn using a method that
         integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
 
-        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+        If the image has a wcs other than a `PixelScale`, an AttributeError will be raised.
 
         Parameters:
             center:     The position in pixels to use for the center, r=0.
@@ -1411,11 +1408,11 @@ class Image(object):
     def calculateMomentRadius(self, center=None, flux=None, rtype='det'):
         """Returns an estimate of the radius based on unweighted second moments of a drawn object.
 
-        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        This method is equivalent to `GSObject.calculateMomentRadius` when the object has already
         been drawn onto an image.  Note that the profile should be drawn using a method that
         integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
 
-        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+        If the image has a wcs other than a `PixelScale`, an AttributeError will be raised.
 
         Parameters:
             center:     The position in pixels to use for the center, r=0.
@@ -1475,12 +1472,12 @@ class Image(object):
     def calculateFWHM(self, center=None, Imax=0.):
         """Returns the full-width half-maximum (FWHM) of a drawn object.
 
-        This method is equivalent to GSObject.calculateFWHM when the object has already
+        This method is equivalent to `GSObject.calculateFWHM` when the object has already
         been drawn onto an image.  Note that the profile should be drawn using a method that
         does not integrate over pixels, so either 'sb' or 'no_pixel'.  Also, if there is a
         significant amount of noise in the image, this method may not work well.
 
-        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+        If the image has a wcs other than a `PixelScale`, an AttributeError will be raised.
 
         Parameters:
             center:     The position in pixels to use for the center, r=0.
@@ -1548,7 +1545,7 @@ class Image(object):
     __hash__ = None
 
 def _Image(array, bounds, wcs):
-    """Equivalent to Image(array, bounds, wcs), but without the overhead of sanity checks,
+    """Equivalent to ``Image(array, bounds, wcs)``, but without the overhead of sanity checks,
     and the other options for how to provide the arguments.
     """
     ret = Image.__new__(Image)

@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file sed.py
-Spectral energy distribution class.  Used by galsim/chromatic.py
-"""
 
 from past.builtins import basestring
 import numpy as np
@@ -864,15 +861,15 @@ class SED(object):
 
         Parameters:
             bandpass:           `Bandpass` through which object is being imaged.
-            zenith_angle:       Angle from object to zenith, expressed as an Angle
+            zenith_angle:       `Angle` from object to zenith
             parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith,
                                 measured from North through East.  [default: 0]
             obj_coord:          Celestial coordinates of the object being drawn as a
-                                CelestialCoord. [default: None]
-            zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                                `CelestialCoord`. [default: None]
+            zenith_coord:       Celestial coordinates of the zenith as a `CelestialCoord`.
                                 [default: None]
-            HA:                 Hour angle of the object as an Angle. [default: None]
-            latitude:           Latitude of the observer as an Angle. [default: None]
+            HA:                 Hour angle of the object as an `Angle`. [default: None]
+            latitude:           Latitude of the observer as an `Angle`. [default: None]
             pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]
             temperature:        Temperature in Kelvins.  [default: 293.15 K]
             H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]

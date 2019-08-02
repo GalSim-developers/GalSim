@@ -106,7 +106,7 @@ class PowerSpectrum(object):
     function in Python (i.e., a function that is not associated with a name); for example, to define
     :math:`P(k)=k^2`, one would use ``lambda k : k**2``.  But the power spectra can also be more complicated
     user-defined functions that take a single argument ``k`` and return the power at that ``k``
-    value, or they can be instances of the LookupTable class for power spectra that are known at
+    value, or they can be instances of the `LookupTable` class for power spectra that are known at
     particular ``k`` values but for which there is not a simple analytic form.
 
     Cosmologists often express the power spectra in terms of an expansion in spherical harmonics
@@ -142,8 +142,8 @@ class PowerSpectrum(object):
                             the same shape.  The function should return the power spectrum desired
                             in the E (gradient) mode of the image.
                             It may also be a string that can be converted to a function using
-                            ``eval('lambda k : '+e_power_function)``, a LookupTable, or
-                            ``file_name`` from which to read in a LookupTable.  If a ``file_name``
+                            ``eval('lambda k : '+e_power_function)``, a `LookupTable`, or
+                            ``file_name`` from which to read in a `LookupTable`.  If a ``file_name``
                             is given, the resulting `LookupTable` uses the defaults for the
                             `LookupTable` class, namely spline interpolation in :math:`P(k)`.
                             Users who wish to deviate from those defaults (for example, to
@@ -161,7 +161,7 @@ class PowerSpectrum(object):
                             requires us to multiply by :math:`2\pi / k^2` to get the shear power
                             :math:`P(k)` in units of angle^2?  [default: False]
         units:              The angular units used for the power spectrum (i.e. the units of
-                            k^-1 and sqrt(P)). This should be either an AngleUnit instance
+                            k^-1 and sqrt(P)). This should be either an `AngleUnit` instance
                             (e.g. galsim.radians) or a string (e.g. 'radians'). [default: arcsec]
     """
     _req_params = {}
@@ -427,12 +427,12 @@ class PowerSpectrum(object):
         Parameters:
             grid_spacing:       Spacing for an evenly spaced grid of points, by default in arcsec
                                 for consistency with the natural length scale of images created
-                                using the drawImage() method.  Other units can be specified using
-                                the ``units`` keyword.
+                                using the `GSObject.drawImage` method.  Other units can be
+                                specified using the ``units`` keyword.
             ngrid:              Number of grid points in each dimension.  [Must be an integer]
             rng:                A `BaseDeviate` object for drawing the random numbers.
                                 [default: None]
-            interpolant:        Interpolant that will be used for interpolating the gridded shears
+            interpolant:        `Interpolant` that will be used for interpolating the gridded shears
                                 by methods like `getShear`, `getConvergence`, etc. if they are
                                 later called. [default: galsim.Lanczos(5)]
             center:             If setting up a new grid, define what position you want to consider
@@ -647,8 +647,8 @@ class PowerSpectrum(object):
         Parameters:
             grid_spacing:   Spacing for an evenly spaced grid of points, by default in arcsec
                             for consistency with the natural length scale of images created
-                            using the drawImage() method.  Other units can be specified using
-                            the ``units`` keyword.
+                            using the `GSObject.drawImage` method.  Other units can be specified
+                            using the ``units`` keyword.
             ngrid:          Number of grid points in each dimension.  [Must be an integer]
             units:          The angular units used for the positions.  [default = arcsec]
             kmin_factor:    (Optional) Factor by which the grid spacing in fourier space is

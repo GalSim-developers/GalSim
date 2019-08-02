@@ -15,10 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file integ.py
-Includes a Python layer version of the C++ int1d() function in galim::integ,
-and python image integrators for use in galsim.chromatic
-"""
 
 import numpy as np
 from functools import reduce
@@ -165,13 +161,14 @@ class ImageIntegrator(object):
             evaluateAtWavelength:   Function that returns a monochromatic surface brightness
                                     profile as a function of wavelength.
             bandpass:               `Bandpass` object representing the filter being imaged through.
-            image:                  Image used to set size and scale of output
-            drawImageKwargs:        dict with other kwargs to send to drawImage function.
-            doK:                    Integrate up results of drawKImage instead of results of
-                                    drawImage.  [default: False]
+            image:                  `Image` used to set size and scale of output
+            drawImageKwargs:        dict with other kwargs to send to `ChromaticObject.drawImage`
+                                    function.
+            doK:                    Integrate up results of `ChromaticObject.drawKImage` instead of
+                                    results of `ChromaticObject.drawImage`.  [default: False]
 
         Returns:
-            the result of integral as an Image
+            the result of integral as an `Image`
         """
         waves = self.calculateWaves(bandpass)
         self.last_n_eval = len(waves)

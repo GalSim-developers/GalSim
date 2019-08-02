@@ -15,12 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-""""@file table.py
-A few adjustments to galsim.LookupTable at the Python layer, including the
-addition of the docstring and few extra features.
-
-Also, a 2D table for gridded input data: LookupTable2D.
-"""
 import numpy as np
 import numbers
 
@@ -57,7 +51,7 @@ class LookupTable(object):
 
     The default interpolation method is a natural cubic spline.  This is usually the best choice,
     but we also provide other options, which can be specified by the ``interpolant`` kwarg.  The
-    choices include 'floor', 'ceil', 'linear', 'spline', or a galsim.Interpolant object:
+    choices include 'floor', 'ceil', 'linear', 'spline', or a `galsim.Interpolant` object:
 
     - 'floor' takes the value from the previous argument in the table.
     - 'ceil' takes the value from the next argument in the table.
@@ -65,25 +59,28 @@ class LookupTable(object):
     - 'linear' does linear interpolation between these two values.
     - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at
       each argument in the table.
-    - a galsim.Interpolant object or a string convertible to one.  This option can be used for
-      Lanczos or Quintic interpolation, for example.
+    - a `galsim.Interpolant` object or a string convertible to one.  This option can be used for
+      `Lanczos` or `Quintic` interpolation, for example.
 
     Note that specifying the string 'nearest' or 'linear' will use a LookupTable-optimized
-    interpolant instead of galsim.Nearest or galsim.Linear, though the latter options can still be
-    used by passing an Interpolant object instead of a string.  Also note that to use a
-    galsim.Interpolant in a LookupTable, the input data must be equally spaced, or logarithmically
-    spaced if ``x_log`` is set to True (see below).  Finally, although natural cubic spline used when
-    interpolant='spline' and the cubic convolution interpolant used when interpolant=galsim.Cubic
-    both produce piecewise cubic polynomial interpolations, their treatments of the continuity of
-    derivatives are different (the natural spline is smoother).
+    interpolant instead of `galsim.Nearest` or `galsim.Linear`, though the latter options can still
+    be used by passing an `Interpolant` object instead of a string.  Also note that to use a
+    `galsim.Interpolant` in a LookupTable, the input data must be equally spaced, or logarithmically
+    spaced if ``x_log`` is set to True (see below).  Finally, although natural cubic spline used
+    when interpolant='spline' and the cubic convolution interpolant used when the interpolant
+    is `galsim.Cubic` both produce piecewise cubic polynomial interpolations, their treatments of
+    the continuity of derivatives are different (the natural spline is smoother).
 
     There are also two factory functions which can be used to build a LookupTable:
 
-        LookupTable.from_func   makes a LookupTable from a callable function
-        LookupTable.from_file   reads in a file of x and f values.
+        `LookupTable.from_func`
+                makes a LookupTable from a callable function
+
+        `LookupTable.from_file`
+                reads in a file of x and f values.
 
     The user can also opt to interpolate in log(x) and/or log(f) (if not using a
-    galsim.Interpolant), though this is not the default.  It may be a wise choice depending on the
+    `galsim.Interpolant`), though this is not the default.  It may be a wise choice depending on the
     particular function, e.g., for a nearly power-law f(x) (or at least one that is locally
     power-law-ish for much of the x range) then it might be a good idea to interpolate in log(x) and
     log(f) rather than x and f.
@@ -93,9 +90,9 @@ class LookupTable(object):
                         which get silently converted to floats for the purpose of interpolation).
         f:              The list, tuple, or NumPy array of ``f(x)`` values (floats, doubles, or ints,
                         which get silently converted to floats for the purpose of interpolation).
-        interpolant:    The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
-                        'linear', 'spline', or a galsim.Interpolant or string convertible to one.
-                        [default: 'spline']
+        interpolant:    Type of interpolation to use, with the options being 'floor', 'ceil',
+                        'nearest', 'linear', 'spline', or a `galsim.Interpolant` or string
+                        convertible to one.  [default: 'spline']
         x_log:          Set to True if you wish to interpolate using log(x) rather than x.  Note
                         that all inputs / outputs will still be x, it's just a question of how the
                         interpolation is done. [default: False]
@@ -178,15 +175,15 @@ class LookupTable(object):
     def __len__(self): return len(self.x)
 
     def __call__(self, x):
-        """Interpolate the LookupTable to get ``f(x)`` at some ``x`` value(s).
+        """Interpolate the `LookupTable` to get ``f(x)`` at some ``x`` value(s).
 
-        When the LookupTable object is called with a single argument, it returns the value at that
-        argument.  An exception will be thrown automatically by the _LookupTable class if the ``x``
-        value is outside the range of the original tabulated values.  The value that is returned is
-        the same type as that provided as an argument, e.g., if a single value ``x`` is provided then
-        a single value of ``f`` is returned; if a tuple of ``x`` values is provided then a tuple of ``f``
-        values is returned; and so on.  Even if interpolation was done using the ``x_log`` option,
-        the user should still provide ``x`` rather than ``log(x)``.
+        When the `LookupTable` object is called with a single argument, it returns the value at that
+        argument.  An exception will be thrown automatically if the ``x`` value is outside the
+        range of the original tabulated values.  The value that is returned is the same type as
+        that provided as an argument, e.g., if a single value ``x`` is provided then a single value
+        of ``f`` is returned; if a tuple of ``x`` values is provided then a tuple of ``f`` values
+        is returned; and so on.  Even if interpolation was done using the ``x_log`` option, the
+        user should still provide ``x`` rather than ``log(x)``.
 
         Parameters:
             x:      The ``x`` value(s) for which ``f(x)`` should be calculated via interpolation on
@@ -283,7 +280,7 @@ class LookupTable(object):
 
     @classmethod
     def from_file(cls, file_name, interpolant='spline', x_log=False, f_log=False, amplitude=1.0):
-        """Create a LookupTable from a file of x, f values.
+        """Create a `LookupTable` from a file of x, f values.
 
         This reads in a file, which should contain two columns with the x and f values.
 
@@ -325,9 +322,9 @@ class LookupTable(object):
     @classmethod
     def from_func(cls, func, x_min, x_max, npoints=2000, interpolant='spline',
                   x_log=False, f_log=False):
-        """Create a LookupTable from a callable function
+        """Create a `LookupTable` from a callable function
 
-        This constructs a LookupTable over the given range from x_min and x_max, calculating the
+        This constructs a `LookupTable` over the given range from x_min and x_max, calculating the
         corresponding f values from the given function (technically any callable object).
 
         Parameters:
@@ -402,7 +399,7 @@ class LookupTable2D(object):
         - 'ceil'
         - 'nearest'
         - 'spline' (a Catmull-Rom cubic spline).
-        - a galsim.Interpolant or string convertible to one.
+        - a `galsim.Interpolant` or string convertible to one.
 
     ::
 
@@ -416,7 +413,7 @@ class LookupTable2D(object):
         >>> tab2d(2.2, 3.7)
         6.0
 
-    For interpolant='spline' or a galsim.Interpolant, the input arrays must be uniformly spaced.
+    For interpolant='spline' or a `galsim.Interpolant`, the input arrays must be uniformly spaced.
     For interpolant='spline', the derivatives df / dx, df / dy, and d^2 f / dx dy at grid-points may
     also optionally be provided if they're known, which will generally yield a more accurate
     interpolation (these derivatives will be estimated from finite differences if they're not
@@ -475,8 +472,8 @@ class LookupTable2D(object):
                         [default: None]
         d2fdxdy:        Optional cross derivative of f wrt x and y.  Only used if
                         interpolant='spline'.  [default: None]
-        interpolant:    Interpolant to use.  One of 'floor', 'ceil', 'nearest', 'linear',
-                        'spline', or a galsim.Interpolant or string convertible to one.
+        interpolant:    Type of interpolation to use.  One of 'floor', 'ceil', 'nearest', 'linear',
+                        'spline', or a `galsim.Interpolant` or string convertible to one.
                         [default: 'linear']
         edge_mode:      Keyword controlling how extrapolation beyond the input range is handled.
                         See above for details.  [default: 'raise']
@@ -900,7 +897,7 @@ class LookupTable2D(object):
 def _LookupTable2D(x, y, f, interpolant, edge_mode, constant,
                    dfdx=None, dfdy=None, d2fdxdy=None,
                    x0=None, y0=None, xperiod=None, yperiod=None):
-    """Make a LookupTable2D but without using any of the sanity checks or array manipulation used
+    """Make a `LookupTable2D` but without using any of the sanity checks or array manipulation used
     in the normal initializer.
     """
     ret = LookupTable2D.__new__(LookupTable2D)

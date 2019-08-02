@@ -15,8 +15,5 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file angle.py
-We just import the LSSTDESC.Coord Celestial class into our namespace.
-"""
 
 from coord import CelestialCoord
