@@ -14,6 +14,7 @@ GalSim: The modular galaxy image simulation toolkit
     random
     chromatic
     wl
+    photon
     coord
     utilities
     config
