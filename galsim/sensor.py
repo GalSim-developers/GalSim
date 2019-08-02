@@ -14,17 +14,6 @@
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
-"""@file sensor.py
-
-The Sensor classes implement the process of turning a set of photons incident at the surface
-of the detector in the focal plane into an image with counts of electrons in each pixel.
-
-The Sensor class itself implements the simplest possible sensor model, which just converts each
-photon into an electron in whatever pixel is below the location where the photon hits.
-However, it also serves as a base class for other classes that implement more sophisticated
-treatments of the photon to electron conversion and the drift from the conversion layer to the
-bottom of the detector.
-"""
 
 import numpy as np
 import glob
@@ -95,28 +84,33 @@ class SiliconSensor(Sensor):
     into account the repulsion of previously accumulated electrons (known as the brighter-fatter
     effect).
 
-    There are currently three sensors shipped with GalSim, which you can specify as the `name`
+    There are currently three sensors shipped with GalSim, which you can specify as the ``name``
     parameter mentioned below.
 
-        lsst_itl_8      The ITL sensor being used for LSST, using 8 points along each side of the
-                        pixel boundaries.
-        lsst_itl_32     The ITL sensor being used for LSST, using 32 points along each side of the
-                        pixel boundaries.  (This is more accurate than the lsst_itl_8, but slower.)
-        lsst_etv_32     The ETV sensor being used for LSST, using 32 points along each side of the
-                        pixel boundaries.  (This file is still somewhat preliminary and may be
-                        updated in the future.)
+        lsst_itl_8
+                    The ITL sensor being used for LSST, using 8 points along each side of the
+                    pixel boundaries.
 
-    The Silicon model is asymmetric in the behavior along rows and columns in the CCD.
+        lsst_itl_32
+                    The ITL sensor being used for LSST, using 32 points along each side of the
+                    pixel boundaries.  (This is more accurate than the lsst_itl_8, but slower.)
+
+        lsst_etv_32
+                    The ETV sensor being used for LSST, using 32 points along each side of the
+                    pixel boundaries.  (This file is still somewhat preliminary and may be
+                    updated in the future.)
+
+    The SiliconSensor model is asymmetric in the behavior along rows and columns in the CCD.
     The traditional meaning of (x,y) is (col,row), and the brighter-fatter effect is stronger
     along the columns than across the rows, since charge flows more easily in the readout
     direction.
 
-    There is also an option to include "tree rings" in the Silicon model, which add small
+    There is also an option to include "tree rings" in the SiliconSensor model, which add small
     distortions to the sensor pixel positions due to non-uniform background doping in the silicon
     sensor.  The tree rings are defined by a center and a radial amplitude function.  The radial
     function needs to be a `galsim.LookupTable` instance.  Note that if you just want a simple
-    cosine radial function, you can use the helper class method `SiliconSensor.simple_treerings`
-    to build the `LookupTable` for you.
+    cosine radial function, you can use the helper class method `simple_treerings` to build the
+    `LookupTable` for you.
 
     Note that there is an option to transpose the effect if your definition of the image is to
     have the readout "columns" along the x direction.  E.g. to conform with the LSST Camera
@@ -130,7 +124,7 @@ class SiliconSensor(Sensor):
         name:               The base name of the files which contains the sensor information,
                             presumably calculated from the Poisson_CCD simulator, which may
                             be specified either as an absolute path or as one of the above names
-                            that are in the `galsim.meta_data.share_dir/sensors` directory.
+                            that are in the ``galsim.meta_data.share_dir/sensors`` directory.
                             name.cfg should be the file used to simulate the pixel distortions,
                             and name.dat should containt the distorted pixel information.
                             [default: 'lsst_itl_8']
@@ -265,7 +259,7 @@ class SiliconSensor(Sensor):
         pixels in the image.
 
         Parameters:
-            photons:        A PhotonArray instance describing the incident photons
+            photons:        A `PhotonArray` instance describing the incident photons
             image:          The `Image` into which the photons should be accumuated.
             orig_center:    The `Position` of the image center in the original image coordinates.
                             [default: (0,0)]
@@ -292,13 +286,15 @@ class SiliconSensor(Sensor):
                                         resume)
 
     def calculate_pixel_areas(self, image, orig_center=PositionI(0,0)):
-        """Create an image with the corresponding pixel areas according to the Silicon model.
+        """Create an image with the corresponding pixel areas according to the `SiliconSensor`
+        model.
 
         The input image gives the flux values used to set the current levels of the brighter-fatter
         distortions.
 
         The returned image will have the same size and bounds as the input image, and will have
-        for its flux values the net pixel area for each pixel according to the Silicon model.
+        for its flux values the net pixel area for each pixel according to the `SiliconSensor`
+        model.
 
         Note: The areas here are in units of the nominal pixel area.  This does not account for
         any conversion from pixels to sky units using the image wcs (if any).
@@ -390,10 +386,11 @@ class SiliconSensor(Sensor):
 
     @classmethod
     def simple_treerings(cls, amplitude=0.5, period=100., r_max=8000., dr=None):
-        """Make a simple sinusoidal tree ring pattern that can be used as the treering_func
-        parameter of SiliconSensor.
+        r"""Make a simple sinusoidal tree ring pattern that can be used as the ``treering_func``
+        parameter of `SiliconSensor`.
 
-        The functional form is f(r) = amplitude * cos(2*pi*r/period)
+        The functional form is :math:`f(r) = A \cos(2 \pi r/P)` where :math:`A` is the
+        ``amplitude`` and :math:`P` is the ``period``.
 
         Parameters:
             amplitude:  The amplitude of the tree ring pattern distortion.  Typically

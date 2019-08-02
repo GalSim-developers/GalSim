@@ -65,7 +65,7 @@ class RandomWalk(GSObject):
                             half_light_radius and flux keywords are ignored.  [default: None]
          rng:               Optional random number generator. Can be any `galsim.BaseDeviate`.  If
                             None, the rng is created internally.  [default: None]
-         gsparams:          Optional GSParams for the objects representing each point source.
+         gsparams:          Optional `GSParams` for the objects representing each point source.
                             [default: None]
 
     This class inherits from galsim.Sum. Additional methods are

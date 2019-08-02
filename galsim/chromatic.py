@@ -1345,15 +1345,15 @@ class ChromaticAtmosphere(ChromaticObject):
     the zenith measured from North through East) of the object being drawn, these must be specified
     via keywords.  There are four ways to specify these values:
 
-      1) explicitly provide ``zenith_angle = ...`` as a keyword of type `Angle`, and
+      1) explicitly provide ``zenith_angle`` as a keyword of type `Angle`, and
          ``parallactic_angle`` will be assumed to be 0 by default.
-      2) explicitly provide both ``zenith_angle = ...`` and ``parallactic_angle = ...`` as
-         keywords of type `Angle`.
-      3) provide the coordinates of the object ``obj_coord = ...`` and the coordinates of the zenith
-         ``zenith_coord = ...`` as keywords of type `CelestialCoord`.
-      4) provide the coordinates of the object ``obj_coord = ...`` as a `CelestialCoord`, the
-         hour angle of the object ``HA = ...`` as an `Angle`, and the latitude of the observer
-         ``latitude = ...`` as an `Angle`.
+      2) explicitly provide both ``zenith_angle`` and ``parallactic_angle`` as keywords of type
+         `Angle`.
+      3) provide the coordinates of the object ``obj_coord`` and the coordinates of the zenith
+         ``zenith_coord`` as keywords of type `CelestialCoord`.
+      4) provide the coordinates of the object ``obj_coord`` as a `CelestialCoord`, the hour angle
+         of the object ``HA`` as an `Angle`, and the latitude of the observer ``latitude`` as an
+         `Angle`.
 
     DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
@@ -1522,7 +1522,7 @@ class ChromaticTransformation(ChromaticObject):
                             (dx,dy) by which to shift the profile.  May also be a function of
                             wavelength returning a numpy array.  [default: (0,0)]
         flux_ratio:         A factor by which to multiply the flux of the object. [default: 1]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
@@ -1812,7 +1812,7 @@ class ChromaticSum(ChromaticObject):
 
     Parameters:
         args:               Unnamed args should be a list of objects to add.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
@@ -2037,7 +2037,7 @@ class ChromaticConvolution(ChromaticObject):
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
@@ -2211,7 +2211,7 @@ class ChromaticConvolution(ChromaticObject):
                         gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', iimult=None, **kwargs):
-        """Optimized draw method for the ChromaticConvolution class.
+        """Optimized draw method for the `ChromaticConvolution` class.
 
         Works by finding sums of profiles which include separable portions, which can then be
         integrated before doing any convolutions, which are pushed to the end.
@@ -2388,18 +2388,20 @@ ChromaticConvolution._effective_prof_cache = utilities.LRU_Cache(
 
 
 class ChromaticDeconvolution(ChromaticObject):
-    """A class for deconvolving a ChromaticObject.
+    """A class for deconvolving a `ChromaticObject`.
 
     The ChromaticDeconvolution class represents a wavelength-dependent deconvolution kernel.
 
-    You may also specify a gsparams argument.  See the docstring for GSParams using
-    help(galsim.GSParams) for more information about this option.  Note: if ``gsparams`` is
-    unspecified (or None), then the ChromaticDeconvolution instance inherits the same GSParams as
-    the object being deconvolved.
+    You may also specify a gsparams argument.  See the docstring for `GSParams` for more
+    information about this option.  Note: if ``gsparams`` is unspecified (or None), then the
+    ChromaticDeconvolution instance inherits the same `GSParams` as the object being deconvolved.
+
+    This is the type returned from `galsim.Deconvolve` if the argument is a `ChromaticObject`.
+    This is the normal way to construct this class.
 
     Parameters:
         obj:                The object to deconvolve.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
@@ -2471,17 +2473,20 @@ class ChromaticDeconvolution(ChromaticObject):
 
 
 class ChromaticAutoConvolution(ChromaticObject):
-    """A special class for convolving a ChromaticObject with itself.
+    """A special class for convolving a `ChromaticObject` with itself.
 
     It is equivalent in functionality to ``galsim.Convolve([obj,obj])``, but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
+
+    This is the type returned from `galsim.AutoConvolve` if the argument is a `ChromaticObject`.
+    This is the normal way to construct this class.
 
     Parameters:
         obj:                The object to be convolved with itself.
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
@@ -2556,7 +2561,7 @@ class ChromaticAutoConvolution(ChromaticObject):
 
 
 class ChromaticAutoCorrelation(ChromaticObject):
-    """A special class for correlating a ChromaticObject with itself.
+    """A special class for correlating a `ChromaticObject` with itself.
 
     It is equivalent in functionality to::
 
@@ -2564,12 +2569,15 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
 
+    This is the type returned from `galsim.AutoCorrelate` if the argument is a `ChromaticObject`.
+    This is the normal way to construct this class.
+
     Parameters:
         obj:                The object to be convolved with itself.
         real_space:         Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
@@ -2645,26 +2653,25 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
 
 class ChromaticFourierSqrtProfile(ChromaticObject):
-    """A class for computing the Fourier-space square root of a ChromaticObject.
+    """A class for computing the Fourier-space square root of a `ChromaticObject`.
 
     The ChromaticFourierSqrtProfile class represents a wavelength-dependent Fourier-space square
     root of a profile.
 
-    You may also specify a gsparams argument.  See the docstring for GSParams using
-    help(galsim.GSParams) for more information about this option.  Note: if ``gsparams`` is
-    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams
-    as the object being operated on.
+    You may also specify a gsparams argument.  See the docstring for `GSParams` for more
+    information about this option.  Note: if ``gsparams`` is unspecified (or None), then the
+    ChromaticFourierSqrtProfile inherits the same `GSParams` as the object being operated on.
 
-    The normal way to use this class is to use the FourierSqrt() factory function::
+    The normal way to use this class is to use the `FourierSqrt` factory function::
 
         >>> fourier_sqrt = galsim.FourierSqrt(chromatic_obj)
 
-    If ``chromatic_obj`` is indeed a ChromaticObject, then that function will create a
+    If ``chromatic_obj`` is indeed a `ChromaticObject`, then that function will create a
     ChromaticFourierSqrtProfile object.
 
     Parameters:
         obj:                The object to compute the Fourier-space square root of.
-        gsparams:           An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
@@ -2748,7 +2755,7 @@ class ChromaticOpticalPSF(ChromaticObject):
     ChromaticOpticalPSF implicitly defines diffraction limits in units of ``scale_units``, which by
     default are arcsec, but can in principle be set to any of our GalSim angle units.
 
-    When using interpolation to speed up image rendering (see ChromaticObject.interpolate()
+    When using interpolation to speed up image rendering (see the `ChromaticObject.interpolate`
     method for details), the ideal number of wavelengths to use across a given bandpass depends on
     the application and accuracy requirements.  In general it will be necessary to do a test in
     comparison with a more exact calculation to ensure convergence.  However, a typical calculation
@@ -2779,7 +2786,7 @@ class ChromaticOpticalPSF(ChromaticObject):
                         size and format of this array is described in the OpticalPSF docstring.
         scale_unit:     Units used to define the diffraction limit and draw images.
                         [default: galsim.arcsec]
-        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:       An optional `GSParams` argument.  See the docstring for `GSParams` for
                         details. [default: None]
         **kwargs:       Any other keyword arguments to be passed to OpticalPSF, for example,
                         related to struts, obscuration, oversampling, etc.  See OpticalPSF
@@ -2894,14 +2901,14 @@ class ChromaticOpticalPSF(ChromaticObject):
 
 
 class ChromaticAiry(ChromaticObject):
-    """A subclass of ChromaticObject meant to represent chromatic Airy profiles.
+    """A subclass of `ChromaticObject` meant to represent chromatic Airy profiles.
 
     For more information about the basics of Airy profiles, please see `galsim.Airy`.
 
     This class is a chromatic representation of Airy profiles, including the wavelength-dependent
-    diffraction limit.  One can also get this functionality using the ChromaticOpticalPSF class, but
-    that class includes additional complications beyond a simple Airy profile, and thus has a more
-    complicated internal representation.  For users who only want a (possibly obscured) Airy
+    diffraction limit.  One can also get this functionality using the `ChromaticOpticalPSF` class,
+    but that class includes additional complications beyond a simple Airy profile, and thus has a
+    more complicated internal representation.  For users who only want a (possibly obscured) Airy
     profile, the ChromaticAiry class is likely to be a less computationally expensive and more
     accurate option.
 
@@ -2914,7 +2921,7 @@ class ChromaticAiry(ChromaticObject):
                         ``scale_unit``.  Either ``diam`` or ``lam_over_diam`` must be specified.
         scale_unit:     Units used to define the diffraction limit and draw images.
                         [default: galsim.arcsec]
-        gsparams:       An optional GSParams argument.  See the docstring for GSParams for
+        gsparams:       An optional `GSParams` argument.  See the docstring for `GSParams` for
                         details. [default: None]
         **kwargs:       Any other keyword arguments to be passed to `Airy`: either flux, or
                         gsparams.  See `galsim.Airy` docstring for a complete description of these

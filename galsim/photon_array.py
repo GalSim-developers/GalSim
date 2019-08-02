@@ -33,12 +33,15 @@ class PhotonArray(object):
 
     A PhotonArray object is not typically constructed directly by the user.  Rather, it is
     typically constructed as the return value of the `GSObject.shoot` method.
-    At this point, the photons only have x,y,flux values.  Then there are a number of classes
-    that perform various modifications to the photons such as giving them wavelengths or
-    inclination angles or removing some due to fringing or vignetting.
+    At this point, the photons only have x,y,flux values.
 
-    TODO: fringing, vignetting, and angles are not implemented yet, but we expect them to
-    be implemented soon, so the above paragraph is a bit aspirational atm.
+    Then there are a number of `Surface Operators`, which perform various modifications to the
+    photons such as giving them wavelengths (`WavelengthSampler` or inclination angles
+    (`FRatioAngles`) or move them around according to the effect of differential chromatic
+    refraction (DCR; `PhotonDCR`).
+
+    One could also add functionality to remove some photons due to fringing or vignetting,
+    but these are not yet implemented.
 
     A PhotonArray instance has the following attributes, each of which is a numpy array:
 
@@ -64,7 +67,7 @@ class PhotonArray(object):
 
         Normal photons have flux=1, but we allow for "fat" photons that combine the effect of
         several photons at once for efficiency.  Also, some profiles need to use negative flux
-        photons to properly implement photon shooting (e.g. `InterpolateImage`, which uses negative
+        photons to properly implement photon shooting (e.g. `InterpolatedImage`, which uses negative
         flux photons to get the interpolation correct).  Finally, when we "remove" photons, for
         better efficiency, we actually just set the flux to 0 rather than recreate new numpy arrays.
 
@@ -299,12 +302,9 @@ class PhotonArray(object):
         """Turn an existing `Image` into a `PhotonArray` that would accumulate into this image.
 
         The flux in each non-zero pixel will be turned into 1 or more photons with random positions
-        within the pixel bounds.  The `max_flux` parameter (which defaults to 1) sets an upper
+        within the pixel bounds.  The ``max_flux`` parameter (which defaults to 1) sets an upper
         limit for the absolute value of the flux of any photon.  Pixels with abs values > maxFlux
         will spawn multiple photons.
-
-        TODO: This corresponds to the `Nearest` interpolant.  It would be worth figuring out how
-              to implement other (presumably better) interpolation options here.
 
         Parameters:
             image:      The image to turn into a `PhotonArray`
@@ -314,6 +314,9 @@ class PhotonArray(object):
         Returns:
             a `PhotonArray`
         """
+        # TODO: This corresponds to the Nearest interpolant.  It would be worth figuring out how
+        #       to implement other (presumably better) interpolation options here.
+
         max_flux = float(max_flux)
         if (max_flux <= 0):
             raise GalSimRangeError("max_flux must be positive", max_flux, 0.)
@@ -343,7 +346,7 @@ class PhotonArray(object):
         Additionally, the columns 'dxdz', 'dydz', and 'wavelength' will be included if they are
         set for this `PhotonArray` object.
 
-        The file can be read back in with the classmethod `PhotonArray.read`.::
+        The file can be read back in with the classmethod `PhotonArray.read`::
 
             >>> photons.write('photons.fits')
             >>> photons2 = galsim.PhotonArray.read('photons.fits')
@@ -410,7 +413,7 @@ class WavelengthSampler(object):
         bandpass:   A `Bandpass` object representing a filter, or None to sample over the full
                     `SED` wavelength range.
         rng:        If provided, a random number generator that is any kind of `BaseDeviate`
-                    object. If `rng` is None, one will be automatically created, using the
+                    object. If ``rng`` is None, one will be automatically created, using the
                     time as a seed. [default: None]
         npoints:    Number of points `DistDeviate` should use for its internal interpolation
                     tables. [default: None, which uses the `DistDeviate` default]
@@ -488,26 +491,27 @@ class FRatioAngles(object):
         dydz[:] = tantheta * np.cos(phi)
 
 class PhotonDCR(object):
-    """A surface-layer operator that applies the effect of differential chromatic refraction (DCR)
+    r"""A surface-layer operator that applies the effect of differential chromatic refraction (DCR)
     and optionally the chromatic dilation due to atmospheric seeing.
 
     Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
     also predicts that blue photons get spread out more by the atmosphere than red photons,
-    specifically FWHM is proportional to wavelength^(-0.2).  Both of these effects can be
+    specifically FWHM is proportional to :math:`\lambda^{-0.2}`.  Both of these effects can be
     implemented by wavelength-dependent shifts of the photons.
 
     Since DCR depends on the zenith angle and the parallactic angle (which is the position angle of
     the zenith measured from North through East) of the object being drawn, these must be specified
     via keywords.  There are four ways to specify these values:
-      1) explicitly provide `zenith_angle = ...` as a keyword of type `Angle`, and
-         `parallactic_angle` will be assumed to be 0 by default.
-      2) explicitly provide both `zenith_angle = ...` and `parallactic_angle = ...` as
-         keywords of type `Angle`.
-      3) provide the coordinates of the object `obj_coord = ...` and the coordinates of the zenith
-         `zenith_coord = ...` as keywords of type `CelestialCoord`.
-      4) provide the coordinates of the object `obj_coord = ...` as a `CelestialCoord`, the
-         hour angle of the object `HA = ...` as an `Angle`, and the latitude of the observer
-         `latitude = ...` as an `Angle`.
+
+    1) explicitly provide ``zenith_angle`` as a keyword of type `Angle`, and ``parallactic_angle``
+       will be assumed to be 0 by default.
+    2) explicitly provide both ``zenith_angle`` and ``parallactic_angle`` as keywords of type
+       `Angle`.
+    3) provide the coordinates of the object ``obj_coord`` and the coordinates of the zenith
+       ``zenith_coord`` as keywords of type `CelestialCoord`.
+    4) provide the coordinates of the object ``obj_coord`` as a `CelestialCoord`, the hour angle
+       of the object ``HA`` as an `Angle`, and the latitude of the observer ``latitude`` as an
+       `Angle`.
 
     DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
@@ -517,24 +521,24 @@ class PhotonDCR(object):
     on the photon array rather than as a `ChromaticObject`.  The photons will need to have
     wavelengths defined in order to work.
 
-    IMPORTANT: The alpha parameter is only appropriate for stars.  This surface op will act on
-               all of the photons, so applying a chromatic dilation according to the chromatic
-               seeing is the wrong thing to do when the surface brightness being rendered is
-               not a pure PSF.  As such, the default is alpha=0, not -0.2, which would be
-               appropriate for Kolmogorov turbulence.
+    .. warning::
+        The alpha parameter is only appropriate for stars.  This surface op will act on
+        all of the photons, so applying a chromatic dilation according to the chromatic
+        seeing is the wrong thing to do when the surface brightness being rendered is
+        not a pure PSF.  As such, the default is alpha=0, not -0.2, which would be
+        appropriate for Kolmogorov turbulence.
 
     Parameters:
         base_wavelength:    Wavelength (in nm) represented by the fiducial photon positions
-        scale_unit:         Units used for the positions of the photons.  [default:
-                            galsim.arcsec]
+        scale_unit:         Units used for the positions of the photons.  [default: galsim.arcsec]
         alpha:              Power law index for wavelength-dependent seeing.  This should only
                             be used if doing a star-only simulation.  It is not correct when
                             drawing galaxies. [default: 0.]
         zenith_angle:       `Angle` from object to zenith, expressed as an `Angle`. [default: 0]
         parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured
                             from North through East.  [default: 0]
-        obj_coord:          Celestial coordinates of the object being drawn as a
-                            `CelestialCoord`. [default: None]
+        obj_coord:          Celestial coordinates of the object being drawn as a `CelestialCoord`.
+                            [default: None]
         zenith_coord:       Celestial coordinates of the zenith as a `CelestialCoord`.
                             [default: None]
         HA:                 Hour angle of the object as an `Angle`. [default: None]

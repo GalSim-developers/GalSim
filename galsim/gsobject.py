@@ -1240,56 +1240,56 @@ class GSObject(object):
         This is set by the ``method`` parameter.  The options are:
 
         auto
-            This is the default, which will normally be equivalent to 'fft'.  However,
-            if the object being rendered is simple (no convolution) and has hard edges
-            (e.g. a Box or a truncated Moffat or Sersic), then it will switch to
-            'real_space', since that is often both faster and more accurate in these
-            cases (due to ringing in Fourier space).
+                This is the default, which will normally be equivalent to 'fft'.  However,
+                if the object being rendered is simple (no convolution) and has hard edges
+                (e.g. a Box or a truncated Moffat or Sersic), then it will switch to
+                'real_space', since that is often both faster and more accurate in these
+                cases (due to ringing in Fourier space).
         fft
-            The integration of the light within each pixel is mathematically equivalent
-            to convolving by the pixel profile (a `Pixel` object) and sampling the result
-            at the centers of the pixels.  This method will do that convolution using
-            a discrete Fourier transform.  Furthermore, if the object (or any component
-            of it) has been transformed via shear(), dilate(), etc., then these
-            transformations are done in Fourier space as well.
+                The integration of the light within each pixel is mathematically equivalent
+                to convolving by the pixel profile (a `Pixel` object) and sampling the result
+                at the centers of the pixels.  This method will do that convolution using
+                a discrete Fourier transform.  Furthermore, if the object (or any component
+                of it) has been transformed via shear(), dilate(), etc., then these
+                transformations are done in Fourier space as well.
         real_space
-            This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)
-            in real space for the integration over the pixel response.  It is usually
-            slower than the 'fft' method, but if the profile has hard edges that cause
-            ringing in Fourier space, it can be faster and/or more accurate.  If you
-            use 'real_space' with something that is already a Convolution, then this
-            will revert to 'fft', since the double convolution that is required to also
-            handle the pixel response is far too slow to be practical using real-space
-            integrals.
+                This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)
+                in real space for the integration over the pixel response.  It is usually
+                slower than the 'fft' method, but if the profile has hard edges that cause
+                ringing in Fourier space, it can be faster and/or more accurate.  If you
+                use 'real_space' with something that is already a Convolution, then this
+                will revert to 'fft', since the double convolution that is required to also
+                handle the pixel response is far too slow to be practical using real-space
+                integrals.
         phot
-            This uses a technique called photon shooting to render the image.
-            Essentially, the object profile is taken as a probability distribution
-            from which a finite number of photons are "shot" onto the image.  Each
-            photon's flux gets added to whichever pixel the photon hits.  This process
-            automatically accounts for the integration of the light over the pixel
-            area, since all photons that hit any part of the pixel are counted.
-            Convolutions and transformations are simple geometric processes in this
-            framework.  However, there are two caveats with this method: (1) the
-            resulting image will have Poisson noise from the finite number of photons,
-            and (2) it is not available for all object types (notably anything that
-            includes a Deconvolution).
+                This uses a technique called photon shooting to render the image.
+                Essentially, the object profile is taken as a probability distribution
+                from which a finite number of photons are "shot" onto the image.  Each
+                photon's flux gets added to whichever pixel the photon hits.  This process
+                automatically accounts for the integration of the light over the pixel
+                area, since all photons that hit any part of the pixel are counted.
+                Convolutions and transformations are simple geometric processes in this
+                framework.  However, there are two caveats with this method: (1) the
+                resulting image will have Poisson noise from the finite number of photons,
+                and (2) it is not available for all object types (notably anything that
+                includes a Deconvolution).
         no_pixel
-            Instead of integrating over the pixels, this method will sample the profile
-            at the centers of the pixels and multiply by the pixel area.  If there is
-            a convolution involved, the choice of whether this will use an FFT or
-            real-space calculation is governed by the ``real_space`` parameter of the
-            Convolution class.  This method is the appropriate choice if you are using
-            a PSF that already includes a convolution by the pixel response.  For
-            example, if you are using a PSF from an observed image of a star, then it
-            has already been convolved by the pixel, so you would not want to do so
-            again.  Note: The multiplication by the pixel area gets the flux
-            normalization right for the above use case.  cf. ``method = 'sb'``.
+                Instead of integrating over the pixels, this method will sample the profile
+                at the centers of the pixels and multiply by the pixel area.  If there is
+                a convolution involved, the choice of whether this will use an FFT or
+                real-space calculation is governed by the ``real_space`` parameter of the
+                Convolution class.  This method is the appropriate choice if you are using
+                a PSF that already includes a convolution by the pixel response.  For
+                example, if you are using a PSF from an observed image of a star, then it
+                has already been convolved by the pixel, so you would not want to do so
+                again.  Note: The multiplication by the pixel area gets the flux
+                normalization right for the above use case.  cf. ``method = 'sb'``.
         sb
-            This is a lot like 'no_pixel', except that the image values will simply be
-            the sampled object profile's surface brightness, not multiplied by the
-            pixel area.  This does not correspond to any real observing scenario, but
-            it could be useful if you want to view the surface brightness profile of an
-            object directly, without including the pixel integration.
+                This is a lot like 'no_pixel', except that the image values will simply be
+                the sampled object profile's surface brightness, not multiplied by the
+                pixel area.  This does not correspond to any real observing scenario, but
+                it could be useful if you want to view the surface brightness profile of an
+                object directly, without including the pixel integration.
 
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
         number of photons to shoot is normally calculated from the object's flux.  This flux is
@@ -1396,7 +1396,7 @@ class GSObject(object):
         the brighter-fatter effect.
 
         Users interested in modeling this kind of effect can supply a ``sensor`` object to use
-        for the accumulation step.  See SiliconSensor for a class that models silicon-based CCD
+        for the accumulation step.  See `SiliconSensor` for a class that models silicon-based CCD
         sensors.
 
         Some related effects may need to be done to the photons at the surface layer before being
@@ -1405,14 +1405,14 @@ class GSObject(object):
         photons are converted to electrons).  You may also need to give the photons wavelengths
         according to the `SED` of the object.  Such steps are specified in a ``surface_ops``
         parameter, which should be a list of any such operations you wish to perform on the photon
-        array before passing them to the sensor.  See FRatioAngles and WavelengthSampler in
-        photon_array.py for two examples of such surface operators.
+        array before passing them to the sensor.  See `FRatioAngles` and `WavelengthSampler` for
+        two examples of such surface operators.
 
         Since the sensor deals with photons, it is most natural to use this feature in conjunction
         with photon shooting (``method='phot'``).  However, it is allowed with FFT methods too.
         But there is a caveat one should be aware of in this case.  The FFT drawing is used to
-        produce an intermediate image, which is then converted to a PhotonArray using the
-        factory function PhotonArray.makeFromImage.  This assigns photon positions randomly
+        produce an intermediate image, which is then converted to a `PhotonArray` using the
+        factory function `PhotonArray.makeFromImage`.  This assigns photon positions randomly
         within each pixel where they were drawn, which isn't always a particularly good
         approximation.
 
@@ -1474,8 +1474,7 @@ class GSObject(object):
                             [default: 0]
             rng:            If provided, a random number generator to use for photon shooting,
                             which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
+                            will be automatically created.  [default: None]
             max_extra_noise: If provided, the allowed extra noise in each pixel when photon
                             shooting.  This is only relevant if ``n_photons=0``, so the number of
                             photons is being automatically calculated.  In that case, if the image
@@ -1492,7 +1491,7 @@ class GSObject(object):
                             Poisson statistics for ``n_photons`` samples when photon shooting.
                             [default: True, unless ``n_photons`` is given, in which case the default
                             is False]
-            sensor:         An optional Sensor instance, which will be used to accumulate the
+            sensor:         An optional `Sensor` instance, which will be used to accumulate the
                             photons onto the image. [default: None]
             surface_ops:    A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
@@ -1506,7 +1505,7 @@ class GSObject(object):
             maxN:           Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
                             [default: None, which means no limit]
-            save_photons:   If True, save the PhotonArray as ``image.photons``. Only valid if
+            save_photons:   If True, save the `PhotonArray` as ``image.photons``. Only valid if
                             method is 'phot' or sensor is not None.  [default: False]
             setup_only:     Don't actually draw anything on the image.  Just make sure the image
                             is set up correctly.  This is used internally by GalSim, but there
@@ -1572,6 +1571,10 @@ class GSObject(object):
                 raise GalSimIncompatibleValuesError(
                     "surface_ops are only relevant for method='phot'",
                     method=method, sensor=sensor, surface_ops=surface_ops)
+            if maxN != None:
+                raise GalSimIncompatibleValuesError(
+                    "maxN is only relevant for method='phot'",
+                    method=method, sensor=sensor, maxN=maxN)
             if save_photons:
                 raise GalSimIncompatibleValuesError(
                     "save_photons is only valid for method='phot'",
@@ -2075,7 +2078,7 @@ class GSObject(object):
                             Poisson statistics for ``n_photons`` samples when photon shooting.
                             [default: True, unless ``n_photons`` is given, in which case the default
                             is False]
-            sensor:         An optional Sensor instance, which will be used to accumulate the
+            sensor:         An optional `Sensor` instance, which will be used to accumulate the
                             photons onto the image. [default: None]
             surface_ops:    A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
@@ -2090,7 +2093,7 @@ class GSObject(object):
         Returns:
             (added_flux, photons) where:
             - added_flux is the total flux of photons that landed inside the image bounds, and
-            - photons is the PhotonArray that was applied to the image.
+            - photons is the `PhotonArray` that was applied to the image.
         """
         from .sensor import Sensor
         from .image import ImageD
@@ -2170,7 +2173,7 @@ class GSObject(object):
 
 
     def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
+        """Shoot photons into a `PhotonArray`.
 
         Parameters:
             n_photons:  The number of photons to use for photon shooting.
@@ -2180,7 +2183,7 @@ class GSObject(object):
                         [default: None]
 
         Returns:
-            A PhotonArray.
+            A `PhotonArray`.
         """
         from .random import BaseDeviate
         from .photon_array import PhotonArray
@@ -2196,10 +2199,10 @@ class GSObject(object):
         return photons
 
     def _shoot(self, photons, rng):
-        """Shoot photons into the given PhotonArray
+        """Shoot photons into the given `PhotonArray`
 
         Parameters:
-            photons:    A PhotonArray instance into which the photons should be placed.
+            photons:    A `PhotonArray` instance into which the photons should be placed.
             rng:        A `BaseDeviate` instance to use for the photon shooting,
         """
         raise NotImplementedError("%s does not implement shoot"%self.__class__.__name__)
