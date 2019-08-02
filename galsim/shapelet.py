@@ -15,11 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file shapelet.py
-
-Shapelet is a GSObject that implements a shapelet decomposition of a profile.
-"""
-
 import numpy as np
 
 from .gsobject import GSObject
@@ -232,7 +227,7 @@ class Shapelet(GSObject):
     def fit(cls, sigma, order, image, center=None, normalization='flux', gsparams=None):
         """Fit for a shapelet decomposition of a given image.
 
-        The optional ``normalization`` parameter mirrors the parameter of the InterpolatedImage
+        The optional ``normalization`` parameter mirrors the parameter of the `InterpolatedImage`
         class.  The following sequence should produce drawn images that are approximate matches to
         the original image::
 
@@ -251,7 +246,7 @@ class Shapelet(GSObject):
             sigma:          The scale size in the standard units (usually arcsec).
             order:          The order of the shapelet decomposition.  This is the maximum
                             N=p+q included in the decomposition.
-            image:          The Image for which to fit the shapelet decomposition
+            image:          The `Image` for which to fit the shapelet decomposition
             center:         The position in pixels to use for the center of the decomposition.
                             [default: image.true_center]
             normalization:  The normalization to assume for the image.

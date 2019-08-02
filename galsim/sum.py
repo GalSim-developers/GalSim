@@ -74,9 +74,9 @@ def Add(*args, **kwargs):
 
 
 class Sum(GSObject):
-    """A class for adding 2 or more GSObject instances.
+    """A class for adding 2 or more `GSObject` instances.
 
-    The Sum class is used to represent the sum of multiple GSObject instances.  For example, it
+    The Sum class is used to represent the sum of multiple `GSObject` instances.  For example, it
     might be used to represent a multiple-component galaxy as the sum of an Exponential and a
     DeVaucouleurs, or to represent a PSF as the sum of multiple Gaussian objects.
 

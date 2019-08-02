@@ -176,7 +176,7 @@ class Sersic(GSObject):
                             untruncated profile? See below for more details. [default: False]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, Sersic has the following access
+    In addition to the usual `GSObject` methods and attributes, Sersic has the following access
     properties:
 
     Attributes:
@@ -379,7 +379,7 @@ class DeVaucouleurs(Sersic):
                             [default: False]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, DeVaucouleurs has the following
+    In addition to the usual `GSObject` methods and attributes, DeVaucouleurs has the following
     access properties:
 
     Attributes:

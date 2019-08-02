@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file catalog.py
-Routines for controlling catalog input/output with GalSim.
-"""
 
 from future.utils import iteritems, iterkeys, itervalues
 from builtins import zip

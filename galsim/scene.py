@@ -15,11 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file scene.py
-Routines for defining a "sky scene", i.e., a galaxy or star sample with reasonable properties that
-can then be placed throughout a large image.  Currently, this only includes routines for making a
-COSMOS-based galaxy sample, but it could be expanded to include star samples as well.
-"""
 
 import numpy as np
 import math
@@ -69,7 +64,7 @@ class COSMOSCatalog(object):
     argument ``sample`` that can be used to switch between the samples with limiting magnitudes of
     23.5 and 25.2.
 
-    After getting the catalogs, there is a method makeGalaxy() that can make a GSObject
+    After getting the catalogs, there is a method makeGalaxy() that can make a `GSObject`
     corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
     help(galsim.COSMOSCatalog.makeGalaxy) for more information.  As an interesting application and
     example of the usage of these routines, consider the following code::
@@ -349,8 +344,8 @@ class COSMOSCatalog(object):
     def makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
                    deep=False, sersic_prec=0.05, rng=None, n_random=None, gsparams=None):
         """
-        Routine to construct GSObjects corresponding to the catalog entry with a particular index
-        or indices.
+        Routine to construct one or more `GSObject` instances corresponding to the catalog entry
+        with a particular index or indices.
 
         The flux of the galaxy corresponds to a 1 second exposure time with the Hubble Space
         Telescope.  Users who wish to simulate F814W images with a different telescope and an
@@ -386,7 +381,7 @@ class COSMOSCatalog(object):
         the resulting object with ``gal.dilate(galsim.arcsec / scale_unit)``.
 
         Parameters:
-            index:          Index of the desired galaxy in the catalog for which a GSObject
+            index:          Index of the desired galaxy in the catalog for which a `GSObject`
                             should be constructed.  You may also provide a list or array of
                             indices, in which case a list of objects is returned. If None,
                             then a random galaxy (or more: see n_random kwarg) is chosen,
@@ -723,7 +718,7 @@ class COSMOSCatalog(object):
         return gal
 
     def getRealParams(self, index):
-        """Get the parameters needed to make a RealGalaxy for a given index."""
+        """Get the parameters needed to make a `RealGalaxy` for a given index."""
         # Used by COSMOSGalaxy to circumvent making the RealGalaxy here and potentially having
         # to pickle the result.  These raw materials should be smaller, so quicker to pickle.
         orig_index = self.orig_index[index]

@@ -15,55 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file phase_psf.py
-Utilities for creating PSFs from phase screens.
-
-For PSFs drawn using real-space or Fourier methods, these utilities essentially evaluate the Fourier
-optics diffraction equation:
-
-PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)
-
-where x, y are focal plane coordinates and u, v are pupil plane coordinates.
-
-For method='phot', one of two possible strategies are available.  The first strategy is to draw the
-PSF using Fourier methods into an InterpolatedImage, and then shoot photons from that profile.  This
-strategy has good accuracy, but can be computationally expensive, particularly for atmospheric PSFs
-that need to be built up in small increments to simulate a finite exposure time. The second
-strategy, which can be significantly faster, especially for atmospheric PSFs, is to use the
-geometric optics approximation.  This approximation has good accuracy for atmospheric PSFs, so we
-make it the default for PhaseScreenPSF.  The accuracy is somewhat less good for purely optical PSFs
-though, so the default behavior for OpticalPSF is to use the first strategy.  The
-``geometric_shooting`` keyword can be used in both cases to override the default.
-
-
-The main classes of note are:
-
-Aperture
-  Class representing the illuminated region of pupil.
-
-AtmosphericScreen
-  Class implementing phase(u, v, x, y, t) for von Karman type turbulence, with possibly evolving
-  "non-frozen-flow" phases.
-
-OpticalScreen
-  Class implementing optical aberrations using Zernike polynomial expansions in the wavefront.
-
-PhaseScreenList
-  Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
-  different altitudes, or self-consistently model atmospheric and optical phase aberrations.  A key
-  method is makePSF(), which will take the list of phase screens, add them together linearly
-  (Fraunhofer approximation), and evaluate the above diffraction equation to yield a
-  PhaseScreenPSF object.
-
-PhaseScreenPSF
-  A GSObject holding the evaluated PSF from a set of phase screens.
-
-OpticalPSF
-  A GSObject for optical PSFs with potentially complicated pupils and Zernike aberrations.
-
-Atmosphere
-  Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
-"""
 
 import sys
 from past.builtins import basestring
@@ -84,8 +35,8 @@ from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimIncom
 from .errors import GalSimFFTSizeError, galsim_warn
 
 class Aperture(object):
-    """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
-    with the PhaseScreenPSF class to create PSFs via Fourier or geometric optics.
+    """Class representing a telescope aperture embedded in a larger pupil plane array -- for use
+    with the `PhaseScreenPSF` class to create PSFs via Fourier or geometric optics.
 
     The pupil plane array is completely specified by its size, sampling interval, and pattern of
     illuminated pixels.  Pupil plane arrays can be specified either geometrically or using an image
@@ -122,17 +73,19 @@ class Aperture(object):
 
     The pupil plane array physical sampling interval (which is directly related to the resulting PSF
     image physical size) is set by default to the same interval as would be used to avoid
-    significant aliasing (image folding) for an obscured Airy profile with matching diameter and
+    significant aliasing (image folding) for an obscured `Airy` profile with matching diameter and
     obscuration and for the value of ``folding_threshold`` in the optionally specified gsparams
     argument.  If the phase aberrations are significant, however, the PSF image size computed this
     way may still not be sufficiently large to avoid aliasing.  To further increase the pupil plane
     sampling rate (and hence the PSF image size), you can increase the value of the ``pad_factor``
-    keyword.  An additional way to set the pupil sampling interval for a particular set of phase
-    screens (i.e., for a particular PhaseScreenList) is to provide the screens in the ``screen_list``
+    keyword.
+
+    An additional way to set the pupil sampling interval for a particular set of phase screens
+    (i.e., for a particular `PhaseScreenList`) is to provide the screens in the ``screen_list``
     argument.  Each screen in the list computes its own preferred sampling rate and the
-    PhaseScreenList appropriately aggregates these. This last option also requires that a wavelength
-    ``lam`` be specified, and is particularly helpful for creating PSFs derived from turbulent
-    atmospheric screens.
+    `PhaseScreenList` appropriately aggregates these. This last option also requires that a
+    wavelength ``lam`` be specified, and is particularly helpful for creating PSFs derived from
+    turbulent atmospheric screens.
 
     Finally, when specifying the pupil geometrically, Aperture may choose to make a small adjustment
     to ``pupil_plane_scale`` in order to produce an array with a good size for FFTs.  If your
@@ -178,22 +131,22 @@ class Aperture(object):
                             [default: 0]
         strut_thick:        Thickness of support struts as a fraction of aperture diameter.
                             [default: 0.05]
-        strut_angle:        Angle made between the vertical and the strut starting closest to it,
+        strut_angle:        `Angle` made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
-                            Angle instance. [default: 0. * galsim.degrees]
+                            `Angle` instance. [default: 0. * galsim.degrees]
         oversampling:       Optional oversampling factor *in the image plane* for the PSF
-                            eventually constructed using this Aperture.  Setting
+                            eventually constructed using this `Aperture`.  Setting
                             ``oversampling < 1`` will produce aliasing in the PSF (not good).
                             [default: 1.0]
         pad_factor:         Additional multiple by which to extend the PSF image to avoid
                             folding.  [default: 1.0]
-        screen_list:        An optional PhaseScreenList object.  If present, then get a good
+        screen_list:        An optional `PhaseScreenList` object.  If present, then get a good
                             pupil sampling interval using this object.  [default: None]
         pupil_plane_im:     The GalSim.Image, NumPy array, or name of file containing the pupil
                             plane image, to be used instead of generating one based on the
                             obscuration and strut parameters.  [default: None]
         pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil plane
-                            (positive in the counter-clockwise direction).  Must be an Angle
+                            (positive in the counter-clockwise direction).  Must be an `Angle`
                             instance. [default: 0. * galsim.degrees]
         pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In
                             most cases, it's a good idea to leave this as None, in which case
@@ -720,9 +673,9 @@ class Aperture(object):
 
 
 class PhaseScreenList(object):
-    """ List of phase screens that can be turned into a PSF.  Screens can be either atmospheric
+    """List of phase screens that can be turned into a PSF.  Screens can be either atmospheric
     layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using
-    the function ``Atmosphere``.  Layers can be added, removed, appended, etc. just like items can
+    the function `Atmosphere`.  Layers can be added, removed, appended, etc. just like items can
     be manipulated in a python list.  For example::
 
         # Create an atmosphere with three layers.
@@ -737,7 +690,7 @@ class PhaseScreenList(object):
         >>> screens[0], screens[1] = screens[1], screens[0]
 
     Methods:
-        makePSF:            Obtain a PSF from this set of phase screens.  See PhaseScreenPSF
+        makePSF:            Obtain a PSF from this set of phase screens.  See `PhaseScreenPSF`
                             docstring for more details.
         wavefront:          Compute the cumulative wavefront due to all screens.
         wavefront_gradient: Compute the cumulative wavefront gradient due to all screens.
@@ -842,7 +795,7 @@ class PhaseScreenList(object):
         self._update_attrs()
 
     def instantiate(self, pool=None, _bar=None, **kwargs):
-        """Instantiate the screens in this PhaseScreenList.
+        """Instantiate the screens in this `PhaseScreenList`.
 
         Parameters:
             pool:       A multiprocessing.Pool object to use to instantiate screens in parallel.
@@ -910,7 +863,7 @@ class PhaseScreenList(object):
         self._pending = []
 
     def wavefront(self, u, v, t, theta=(0.0*radians, 0.0*radians)):
-        """ Compute cumulative wavefront due to all phase screens in PhaseScreenList.
+        """ Compute cumulative wavefront due to all phase screens in `PhaseScreenList`.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave (pre-optics) or spherical wave (post-optics).
@@ -924,7 +877,7 @@ class PhaseScreenList(object):
                     iterable.  If None, then the internal time of the phase screens will be used
                     for all u, v.  If scalar, then the size will be broadcast up to match that of
                     u and v.  If iterable, then the shape must match the shapes of u and v.
-            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of ``galsim.Angle``
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`
                     instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
                     Only a single theta is permitted.
 
@@ -937,7 +890,7 @@ class PhaseScreenList(object):
             return self._layers[0].wavefront(u, v, t, theta)
 
     def wavefront_gradient(self, u, v, t, theta=(0.0*radians, 0.0*radians)):
-        """ Compute cumulative wavefront gradient due to all phase screens in PhaseScreenList.
+        """ Compute cumulative wavefront gradient due to all phase screens in `PhaseScreenList`.
 
         Parameters:
             u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
@@ -949,7 +902,7 @@ class PhaseScreenList(object):
                     will be used for all u, v.  If scalar, then the size will be broadcast up to
                     match that of u and v.  If iterable, then the shape must match the shapes of
                     u and v.
-            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of ``galsim.Angle``
+            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`
                     instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
                     Only a single theta is permitted.
 
@@ -976,7 +929,7 @@ class PhaseScreenList(object):
         return gradx, grady
 
     def makePSF(self, lam, **kwargs):
-        """Create a PSF from the current PhaseScreenList.
+        """Create a PSF from the current `PhaseScreenList`.
 
         Parameters:
             lam:                Wavelength in nanometers at which to compute PSF.
@@ -994,7 +947,7 @@ class PhaseScreenList(object):
                                 continuously in this case instead of at discrete intervals.
                                 [default: 0.025]
             flux:               Flux of output PSF.  [default: 1.0]
-            theta:              Field angle of PSF as a 2-tuple of Angles.
+            theta:              Field angle of PSF as a 2-tuple of `Angle` instances.
                                 [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
             interpolant:        Either an Interpolant instance or a string indicating which
                                 interpolant should be used.  Options are 'nearest', 'sinc',
@@ -1014,7 +967,7 @@ class PhaseScreenList(object):
                                 phase screen gradient.  If False, then first draw using Fourier
                                 optics and then shoot from the derived InterpolatedImage.
                                 [default: True]
-            aper:               Aperture to use to compute PSF(s).  [default: None]
+            aper:               `Aperture` to use to compute PSF(s).  [default: None]
             gsparams:           An optional `GSParams` argument. [default: None]
 
         The following are optional keywords to use to setup the aperture if ``aper`` is not
@@ -1029,11 +982,11 @@ class PhaseScreenList(object):
                                 obscuration. [default: 0]
             strut_thick:        Thickness of support struts as a fraction of aperture diameter.
                                 [default: 0.05]
-            strut_angle:        Angle made between the vertical and the strut starting closest to
+            strut_angle:        `Angle` made between the vertical and the strut starting closest to
                                 it, defined to be positive in the counter-clockwise direction;
-                                must be an Angle instance. [default: 0. * galsim.degrees]
+                                must be an `Angle` instance. [default: 0. * galsim.degrees]
             oversampling:       Optional oversampling factor *in the image plane* for the PSF
-                                eventually constructed using this Aperture.  Setting
+                                eventually constructed using this `Aperture`.  Setting
                                 ``oversampling < 1`` will produce aliasing in the PSF (not good).
                                 [default: 1.0]
             pad_factor:         Additional multiple by which to extend the PSF image to avoid
@@ -1043,7 +996,7 @@ class PhaseScreenList(object):
                                 the obscuration and strut parameters.  [default: None]
             pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil
                                 plane (positive in the counter-clockwise direction).  Must be an
-                                Angle instance. [default: 0. * galsim.degrees]
+                                `Angle` instance. [default: 0. * galsim.degrees]
             pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In
                                 most cases, it's a good idea to leave this as None, in which case
                                 GalSim will attempt to find a good value automatically.  The
@@ -1070,9 +1023,9 @@ class PhaseScreenList(object):
     def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this list of phase screens.
 
-        The required set of parameters depends on the types of the individual PhaseScreens in the
-        PhaseScreenList.  See the documentation for the individual PhaseScreen.pupil_plane_scale
-        methods for more details.
+        The required set of parameters depends on the types of the individual `PhaseScreen`
+        instances in the `PhaseScreenList`.  See the documentation for the individual
+        `PhaseScreen.pupil_plane_scale` methods for more details.
 
         Returns:
             stepk.
@@ -1096,24 +1049,24 @@ class PhaseScreenPSF(GSObject):
     """A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
     derived from a set of phase screens and an aperture.
 
-    There are two equivalent ways to construct a PhaseScreenPSF given a PhaseScreenList::
+    There are two equivalent ways to construct a PhaseScreenPSF given a `PhaseScreenList`::
 
         >>> psf = screen_list.makePSF(...)
         >>> psf = PhaseScreenPSF(screen_list, ...)
 
-    Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done
+    Computing a PSF from a phase screen also requires an `Aperture` be specified.  This can be done
     either directly via the ``aper`` keyword, or by setting a number of keywords that will be passed
-    to the ``Aperture`` constructor.  The ``aper`` keyword always takes precedence.
+    to the `Aperture` constructor.  The ``aper`` keyword always takes precedence.
 
-    There are effectively three ways to draw a PhaseScreenPSF (or GSObject that includes a
+    There are effectively three ways to draw a PhaseScreenPSF (or `GSObject` that includes a
     PhaseScreenPSF):
 
     1) Fourier optics
 
         This is the default, and is performed for all drawImage methods except method='phot'.  This
-        is generally the most accurate option.  For PhaseScreenLists that include an
-        AtmosphericScreen, however, this can be prohibitively slow.  For OpticalPSFs, though, this
-        can sometimes be a good option.
+        is generally the most accurate option.  For a `PhaseScreenList` that includes an
+        `AtmosphericScreen`, however, this can be prohibitively slow.  For `OpticalPSF`, though,
+        this can sometimes be a good option.
 
     2) Photon-shooting from an image produced using Fourier optics.
 
@@ -1127,7 +1080,7 @@ class PhaseScreenPSF(GSObject):
 
         This is done if geometric_shooting=True when creating the PhaseScreenPSF, and method='phot'
         when calling drawImage.  In this case, a completely different algorithm is used make an
-        image.  Photons are uniformly generated in the Aperture pupil, and then the phase gradient
+        image.  Photons are uniformly generated in the `Aperture` pupil, and then the phase gradient
         at that location is used to deflect each photon in the image plane.  This method, which
         corresponds to geometric optics, is broadly accurate for phase screens that vary slowly
         across the aperture, and is usually several orders of magnitude or more faster than Fourier
@@ -1135,20 +1088,20 @@ class PhaseScreenPSF(GSObject):
         bright flux levels).
 
         One short-coming of this method is that it neglects interference effects, i.e. diffraction.
-        For PhaseScreenLists that include at least one AtmosphericScreen, a correction, dubbed the
-        "second kick", will automatically be applied to handle both the quickly varying modes of the
-        screens and the diffraction pattern of the Aperture.  For PhaseScreenLists without an
-        AtmosphericScreen, the correction is simply an Airy function.  Note that this correction can
-        be overridden using the second_kick keyword argument, and also tuned to some extent using
-        the kcrit keyword argument.
+        For `PhaseScreenList` that include at least one `AtmosphericScreen`, a correction, dubbed
+        the "second kick", will automatically be applied to handle both the quickly varying modes
+        of the screens and the diffraction pattern of the `Aperture`.  For PhaseScreenLists without
+        an `AtmosphericScreen`, the correction is simply an Airy function.  Note that this
+        correction can be overridden using the second_kick keyword argument, and also tuned to some
+        extent using the kcrit keyword argument.
 
-    Note also that calling drawImage on a PhaseScreenPSF that uses a PhaseScreenList with any
-    uninstantiated AtmosphericScreens will perform that instantiation, and that the details of the
+    Note also that calling drawImage on a PhaseScreenPSF that uses a `PhaseScreenList` with any
+    uninstantiated `AtmosphericScreen` will perform that instantiation, and that the details of the
     instantiation depend on the drawing method used, and also the kcrit keyword argument to
-    PhaseScreenPSF.  See the AtmosphericScreen docstring for more details.
+    PhaseScreenPSF.  See the `AtmosphericScreen` docstring for more details.
 
     Parameters:
-        screen_list:        PhaseScreenList object from which to create PSF.
+        screen_list:        `PhaseScreenList` object from which to create PSF.
         lam:                Wavelength in nanometers at which to compute PSF.
         t0:                 Time at which to start exposure in seconds.  [default: 0.0]
         exptime:            Time in seconds over which to accumulate evolving instantaneous PSF.
@@ -1164,7 +1117,7 @@ class PhaseScreenPSF(GSObject):
                             continuously in this case instead of at discrete intervals.
                             [default: 0.025]
         flux:               Flux of output PSF [default: 1.0]
-        theta:              Field angle of PSF as a 2-tuple of Angles.
+        theta:              Field angle of PSF as a 2-tuple of `Angle` instances.
                             [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         interpolant:        Either an Interpolant instance or a string indicating which
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
@@ -1184,9 +1137,9 @@ class PhaseScreenPSF(GSObject):
                             phase screen gradient.  If False, then first draw using Fourier
                             optics and then shoot from the derived InterpolatedImage.
                             [default: True]
-        aper:               Aperture to use to compute PSF(s).  [default: None]
+        aper:               `Aperture` to use to compute PSF(s).  [default: None]
         second_kick:        An optional second kick to also convolve by when using geometric
-                            photon-shooting.  (This can technically be any GSObject, though
+                            photon-shooting.  (This can technically be any `GSObject`, though
                             usually it should probably be a SecondKick object).  If None, then a
                             good second kick will be chosen automatically based on
                             ``screen_list``.  If False, then a second kick won't be applied.
@@ -1211,11 +1164,11 @@ class PhaseScreenPSF(GSObject):
                             [default: 0]
         strut_thick:        Thickness of support struts as a fraction of aperture diameter.
                             [default: 0.05]
-        strut_angle:        Angle made between the vertical and the strut starting closest to it,
+        strut_angle:        `Angle` made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
-                            Angle instance. [default: 0. * galsim.degrees]
+                            `Angle` instance. [default: 0. * galsim.degrees]
         oversampling:       Optional oversampling factor *in the image plane* for the PSF
-                            eventually constructed using this Aperture.  Setting
+                            eventually constructed using this `Aperture`.  Setting
                             ``oversampling < 1`` will produce aliasing in the PSF (not good).
                             [default: 1.0]
         pad_factor:         Additional multiple by which to extend the PSF image to avoid
@@ -1224,7 +1177,7 @@ class PhaseScreenPSF(GSObject):
                             plane image, to be used instead of generating one based on the
                             obscuration and strut parameters.  [default: None]
         pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil plane
-                            (positive in the counter-clockwise direction).  Must be an Angle
+                            (positive in the counter-clockwise direction).  Must be an `Angle`
                             instance. [default: 0. * galsim.degrees]
         pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In
                             most cases, it's a good idea to leave this as None, in which case
@@ -1593,7 +1546,7 @@ class OpticalPSF(GSObject):
     The diffraction effects are characterized by the diffraction angle, which is a function of the
     ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the
     telescope.  The natural unit for this value is radians, which is not normally a convenient
-    unit to use for other GSObject dimensions.  Assuming that the other sky coordinates you are
+    unit to use for other `GSObject` dimensions.  Assuming that the other sky coordinates you are
     using are all in arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy,
     etc.), then you should convert this to arcsec as well::
 
@@ -1704,7 +1657,7 @@ class OpticalPSF(GSObject):
         annular_zernike:    Boolean indicating that aberrations specify the amplitudes of annular
                             Zernike polynomials instead of circular Zernike polynomials.
                             [default: False]
-        aper:               Aperture object to use when creating PSF.  [default: None]
+        aper:               `Aperture` object to use when creating PSF.  [default: None]
         circular_pupil:     Adopt a circular pupil?  [default: True]
         obscuration:        Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.). This should be specified even if you are providing
@@ -1719,7 +1672,7 @@ class OpticalPSF(GSObject):
                             Usually ``oversampling`` should be somewhat larger than 1.  1.5 is
                             usually a safe choice.  [default: 1.5]
         pad_factor:         Additional multiple by which to zero-pad the PSF image to avoid folding
-                            compared to what would be employed for a simple Airy.  Note that
+                            compared to what would be employed for a simple `Airy`.  Note that
                             ``pad_factor`` may need to be increased for stronger aberrations, i.e.
                             those larger than order unity.  [default: 1.5]
         ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when
@@ -1739,14 +1692,14 @@ class OpticalPSF(GSObject):
                             [default: 0]
         strut_thick:        Thickness of support struts as a fraction of pupil diameter.
                             [default: 0.05]
-        strut_angle:        Angle made between the vertical and the strut starting closest to it,
+        strut_angle:        `Angle` made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
-                            Angle instance. [default: 0. * galsim.degrees]
+                            `Angle` instance. [default: 0. * galsim.degrees]
         pupil_plane_im:     The GalSim.Image, NumPy array, or name of file containing the pupil
                             plane image, to be used instead of generating one based on the
                             obscuration and strut parameters.  [default: None]
         pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil plane
-                            (positive in the counter-clockwise direction).  Must be an Angle
+                            (positive in the counter-clockwise direction).  Must be an `Angle`
                             instance. [default: 0. * galsim.degrees]
         pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In
                             most cases, it's a good idea to leave this as None, in which case
@@ -1760,7 +1713,7 @@ class OpticalPSF(GSObject):
                             to find a good value automatically.  See also ``oversampling`` for
                             adjusting the pupil size.  [default: None]
         scale_unit:         Units to use for the sky coordinates when calculating lam/diam if these
-                            are supplied separately.  Should be either a galsim.AngleUnit or a
+                            are supplied separately.  Should be either a `galsim.AngleUnit` or a
                             string that can be used to construct one (e.g., 'arcsec', 'radians',
                             etc.).  [default: galsim.arcsec]
         gsparams:           An optional `GSParams` argument. [default: None]

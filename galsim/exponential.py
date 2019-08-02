@@ -31,7 +31,7 @@ class Exponential(GSObject):
     """A class describing an exponential profile.
 
     Surface brightness profile with I(r) ~ exp[-r/scale_radius].  This is a special case of
-    the Sersic profile, but is given a separate class since the Fourier transform has closed form
+    the `Sersic` profile, but is given a separate class since the Fourier transform has closed form
     and can be generated without lookup tables.
 
     An Exponential can be initialized using one (and only one) of two possible size parameters:
@@ -45,7 +45,7 @@ class Exponential(GSObject):
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, Exponential has the following access
+    In addition to the usual `GSObject` methods and attributes, Exponential has the following access
     properties:
 
     Attributes:

@@ -53,22 +53,6 @@ Spergel Profile
     :special-members:
     :show-inheritance:
 
-"Real" Galaxy
--------------
-
-.. autoclass:: galsim.RealGalaxy
-    :members:
-    :special-members:
-    :show-inheritance:
-
-.. autoclass:: galsim.RealGalaxyCatalog
-    :members:
-    :special-members:
-
-.. autoclass:: galsim.COSMOSCatalog
-    :members:
-    :special-members:
-
 Knots defined by a "random walk"
 --------------------------------
 

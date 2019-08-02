@@ -15,12 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file fits.py
-Support for reading and writing Image objects to FITS.
-
-This file includes routines for reading and writing individual Images to/from FITS files, and also
-routines for handling multiple Images.
-"""
 
 from future.utils import iteritems, iterkeys, itervalues
 from past.builtins import basestring
@@ -391,25 +385,26 @@ def closeHDUList(hdu_list, fin):
 def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compression='auto'):
     """Write a single image to a FITS file.
 
-    Write the Image instance ``image`` to a FITS file, with details depending on the arguments.
+    Write the `Image` instance ``image`` to a FITS file, with details depending on the arguments.
     This function can be called directly as ``galsim.fits.write(image, ...)``, with the image as the
-    first argument, or as an image method: ``image.write(...)``.
+    first argument, or as an `Image` method: ``image.write(...)``.
 
     Parameters:
-        image:          The image to write to file.  Per the description of this method, it may be
+        image:          The `Image` to write to file.  Per the description of this method, it may be
                         given explicitly via ``galsim.fits.write(image, ...)`` or the method may be
                         called directly as an image method, ``image.write(...)``.  Note that if the
-                        image has a 'header' attribute containing a FitsHeader, then the FitsHeader
-                        is written to the header in the PrimaryHDU, followed by the WCS as usual.
+                        image has a 'header' attribute containing a `FitsHeader`, then the
+                        `FitsHeader` is written to the header in the PrimaryHDU, followed by the
+                        WCS as usual.
         file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the
-                        image is appended to the end of the HDUList as a new HDU. In that case,
-                        the user is responsible for calling either ``hdu_list.writeto(...)`` or
-                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
-                        ``hdu_list`` is required.]
+        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,
+                        then the `Image` is appended to the end of the HDUList as a new HDU. In
+                        that case, the user is responsible for calling either
+                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.
+                        [Either ``file_name`` or ``hdu_list`` is required.]
         clobber:        Setting ``clobber=True`` when ``file_name`` is given will silently overwrite
                         existing files. [default: True]
         compression:    Which compression scheme to use (if any).  Options are:
@@ -468,17 +463,18 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     The details of how the images are written to file depends on the arguments.
 
     Parameters:
-        image_list:     A Python list of Images.  (For convenience, some items in this list
-                        may be HDUs already.  Any Images will be converted into pyfits HDUs.)
+        image_list:     A Python list of `Image` instances.  (For convenience, some items in this
+                        list may be HDUs already.  Any `Image` will be converted into an
+                        astropy.io.fits.HDU.)
         file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is
                         required.]
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the
-                        image is appended to the end of the HDUList as a new HDU. In that case,
-                        the user is responsible for calling either ``hdu_list.writeto(...)`` or
-                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
-                        ``hdu_list`` is required.]
+        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,
+                        then the `Image` is appended to the end of the HDUList as a new HDU. In
+                        that case, the user is responsible for calling either
+                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.
+                        [Either ``file_name`` or ``hdu_list`` is required.]
         clobber:        See documentation for this parameter on the galsim.fits.write() method.
         compression:    See documentation for this parameter on the galsim.fits.write() method.
     """
@@ -521,9 +517,9 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     """Write a Python list of images to a FITS file as a data cube.
 
     The details of how the images are written to file depends on the arguments.  Unlike for
-    writeMulti, when writing a data cube it is necessary that each Image in ``image_list`` has the
-    same size ``(nx, ny)``.  No check is made to confirm that all images have the same origin and
-    pixel scale (or WCS).
+    writeMulti, when writing a data cube it is necessary that each `Image` in ``image_list`` has
+    the same size ``(nx, ny)``.  No check is made to confirm that all images have the same origin
+    and pixel scale (or WCS).
 
     In fact, the WCS of the first image is the one that gets put into the FITS header (since only
     one WCS can be put into a FITS header).  Thus, if the images have different WCS functions,
@@ -541,10 +537,10 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
                         required.]
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the
-                        cube is appended to the end of the HDUList as a new HDU. In that case,
-                        the user is responsible for calling either ``hdu_list.writeto(...)`` or
-                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
+        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,
+                        then the cube is appended to the end of the HDUList as a new HDU. In that
+                        case, the user is responsible for calling either ``hdu_list.writeto(...)``
+                        or ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
                         ``hdu_list`` is required.]
         clobber:        See documentation for this parameter on the galsim.fits.write() method.
         compression:    See documentation for this parameter on the galsim.fits.write() method.
@@ -625,14 +621,14 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
     """Write a Pyfits hdu_list to a FITS file, taking care of the GalSim compression options.
 
     If you have used the write(), writeMulti() or writeCube() functions with the ``hdu_list``
-    option rather than writing directly to a file, you may subsequently use the pyfits command
+    option rather than writing directly to a file, you may subsequently use the command
     ``hdu_list.writeto(...)``.  However, it may be more convenient to use this function, writeFile()
     instead, since it treats the compression option consistently with how that option is handled in
     the above functions.
 
     Parameters:
         file_name:      The name of the file to write to.
-        hdu_list:       A pyfits HDUList.
+        hdu_list:       An astropy.io.fits.HDUList.
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
         clobber:        Setting ``clobber=True`` will silently overwrite existing files.
@@ -674,17 +670,19 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
 
 
 def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
-    """Construct an Image from a FITS file or pyfits HDUList.
+    """Construct an `Image` from a FITS file or HDUList.
 
     The normal usage for this function is to read a fits file and return the image contained
     therein, automatically decompressing it if necessary.  However, you may also pass it
     an HDUList, in which case it will select the indicated hdu (with the ``hdu`` parameter)
     from that.
 
-    Not all FITS pixel types are supported (only those with C++ Image template instantiations:
-    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start
-    with ``GS_`` keywords, these will be used to initialize the bounding box and WCS.  If not, the
-    bounding box will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.
+    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,
+    ``unsigned int``, ``float``, and ``double``.
+
+    If the FITS header has keywords that start with ``GS_`` keywords, these will be used to
+    initialize the bounding box and WCS.  If not, the bounding box will have ``(xmin,ymin)`` at
+    ``(1,1)`` and the scale will be set to 1.0.
 
     This function is called as ``im = galsim.fits.read(...)``
 
@@ -693,10 +691,10 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
                         required.]
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or
-                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be
-                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.
-                        [Either ``file_name`` or ``hdu_list`` is required.]
+        hdu_list:       Either an astropy.io.fits.HDUList, astropy.io.fits.PrimaryHDU, or
+                        astropy.io.fits..ImageHDU.  In the former case, the ``hdu`` in the list
+                        will be selected.  In the latter two cases, the ``hdu`` parameter is
+                        ignored.  [Either ``file_name`` or ``hdu_list`` is required.]
         hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
                         compression.  (e.g. for 'rice', the first extension is the one you normally
@@ -720,7 +718,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
                         [default: 'auto']
 
     Returns:
-        the image as an Image instance.
+        the image as an `Image` instance.
     """
     from . import wcs
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -762,16 +760,18 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     return image
 
 def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
-    """Construct a list of Images from a FITS file or pyfits HDUList.
+    """Construct a list of `Image` instances from a FITS file or HDUList.
 
     The normal usage for this function is to read a fits file and return a list of all the images
     contained therein, automatically decompressing them if necessary.  However, you may also pass
     it an HDUList, in which case it will build the images from these directly.
 
-    Not all FITS pixel types are supported (only those with C++ Image template instantiations:
-    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start
-    with ``GS_``, these will be used to initialize the bounding box and WCS.  If not, the bounding
-    box will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.
+    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,
+    ``unsigned int``, ``float``, and ``double``.
+
+    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the
+    bounding box and WCS.  If not, the bounding box will have ``(xmin,ymin)`` at ``(1,1)`` and the
+    scale will be set to 1.0.
 
     This function is called as ``im = galsim.fits.readMulti(...)``
 
@@ -780,8 +780,8 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
                         required.]
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-        hdu_list:       A ``pyfits.HDUList`` from which to read the images.  [Either ``file_name``
-                        or ``hdu_list`` is required.]
+        hdu_list:       An astropy.io.fits.HDUList from which to read the images.  [Either
+                        ``file_name`` or ``hdu_list`` is required.]
         compression:    Which decompression scheme to use (if any).  Options are:
 
                         - None or 'none' = no decompression
@@ -801,7 +801,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
                         [default: 'auto']
 
     Returns:
-        a Python list of Images
+        a Python list of `Image` instances.
     """
     from ._pyfits import pyfits
 
@@ -840,12 +840,14 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     return image_list
 
 def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
-    """Construct a Python list of Images from a FITS data cube.
+    """Construct a Python list of `Image` instances from a FITS data cube.
 
-    Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
-    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start
-    with ``GS_``, these will be used to initialize the bounding boxes and WCS's.  If not, the
-    bounding boxes will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.
+    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,
+    ``unsigned int``, ``float``, and ``double``.
+
+    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the
+    bounding boxes and WCS's.  If not, the bounding boxes will have ``(xmin,ymin)`` at ``(1,1)``
+    and the scale will be set to 1.0.
 
     This function is called as ``image_list = galsim.fits.readCube(...)``
 
@@ -854,9 +856,9 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
                         required.]
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or
-                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be
-                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.
+        hdu_list:       Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or
+                        astropy.io.fits.ImageHDU.  In the former case, the ``hdu`` in the list will
+                        be selected.  In the latter two cases, the ``hdu`` parameter is ignored.
                         [Either ``file_name`` or ``hdu_list`` is required.]
         hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
@@ -881,7 +883,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
                         [default: 'auto']
 
     Returns:
-        a Python list of Images.
+        a Python list of `Image` instances.
     """
     from . import wcs
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -1011,13 +1013,20 @@ class FitsHeader(object):
         >>> del fits_header[key]
         >>> etc.
 
-    This is a particularly useful abstraction, since pyfits has changed its syntax for how
-    to write to a fits header, so this class will work regardless of which version of pyfits
-    (or astropy.io.fits) is installed.
+    .. note::
+        This used to be a particularly useful abstraction, since PyFITS and then AstroPy used to
+        keep changing their syntax for how to write to a fits header rather often, so this class
+        had numerous checks for which version of PPyFITS or AstroPy was installed and call things
+        the right way depending on the version.  Thus, it was able to maintain a stable, intuitive
+        API that would work with any version on the backend.  We no longer support PyFITS or older
+        versions of AstroPy, so now much of the syntax of this class is very similar in interface
+        to the current version of astropy.io.fits.Header.  Indeed it is now a rather light wrapper
+        around their Header class with just a few convenience features to make it easier to work
+        with GalSim objects.
 
-    The underlying pyfits.Header object is available as a ``.header`` attribute::
+    The underlying Header object is available as a ``.header`` attribute::
 
-        >>> pyf_header = fits_header.header
+        >>> apy_header = fits_header.header
 
     A FitsHeader may be constructed from a file name, an open PyFits (or astropy.io.fits) HDUList
     object, or a PyFits (or astropy.io.fits) Header object.  It can also be constructed with
@@ -1035,14 +1044,14 @@ class FitsHeader(object):
         >>> h2 = galsim.FitsHeader(header)
 
     Parameters:
-        header:         A pyfits Header object or in fact any dict-like object or list of
+        header:         An astropy.io.fits.Header object or in fact any dict-like object or list of
                         (key,value) pairs.  [default: None]
         file_name:      The name of the file to read in.  [default: None]
         dir:            Optionally a directory name can be provided if ``file_name`` does not
                         already include it. [default: None]
-        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or
-                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be
-                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.
+        hdu_list:       Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or
+                        astropy.io.fits.ImageHDU.  In the former case, the ``hdu`` in the list will
+                        be selected.  In the latter two cases, the ``hdu`` parameter is ignored.
                         [default: None]
         hdu:            The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given

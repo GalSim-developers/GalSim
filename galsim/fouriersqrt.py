@@ -60,12 +60,12 @@ def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
 
 
 class FourierSqrtProfile(GSObject):
-    """A class for computing the Fourier-space sqrt of a GSObject.
+    """A class for computing the Fourier-space sqrt of a `GSObject`.
 
     The FourierSqrtProfile class represents the Fourier-space square root of another profile.
     Note that the FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a
     FourierSqrtProfile as one of the components cannot be photon-shot using the 'phot' method of
-    drawImage() method.
+    `GSObject.drawImage` method.
 
     You may also specify a ``gsparams`` argument.  See the docstring for `GSParams` for more
     information about this option.  Note: if ``gsparams`` is unspecified (or None), then the

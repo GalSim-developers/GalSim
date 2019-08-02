@@ -59,9 +59,9 @@ class Sensor(object):
         pixel.
 
         Parameters:
-            photons:        A PhotonArray instance describing the incident photons.
-            image:          The image into which the photons should be accumuated.
-            orig_center:    The position of the image center in the original image coordinates.
+            photons:        A `PhotonArray` instance describing the incident photons.
+            image:          The `Image` into which the photons should be accumuated.
+            orig_center:    The `Position` of the image center in the original image coordinates.
                             [default: (0,0)]
             resume:         Resume accumulating on the same image as a previous call to accumulate.
                             In the base class, this has no effect, but it can provide an efficiency
@@ -114,9 +114,9 @@ class SiliconSensor(Sensor):
     There is also an option to include "tree rings" in the Silicon model, which add small
     distortions to the sensor pixel positions due to non-uniform background doping in the silicon
     sensor.  The tree rings are defined by a center and a radial amplitude function.  The radial
-    function needs to be a galsim.LookupTable instance.  Note that if you just want a simple cosine
-    radial function, you can use the helper class method `SiliconSensor.simple_treerings` to
-    build the LookupTable for you.
+    function needs to be a `galsim.LookupTable` instance.  Note that if you just want a simple
+    cosine radial function, you can use the helper class method `SiliconSensor.simple_treerings`
+    to build the `LookupTable` for you.
 
     Note that there is an option to transpose the effect if your definition of the image is to
     have the readout "columns" along the x direction.  E.g. to conform with the LSST Camera
@@ -147,8 +147,8 @@ class SiliconSensor(Sensor):
                             Poisson simulation must be increased to match. [default: 3]
         nrecalc:            The number of electrons to accumulate before recalculating the
                             distortion of the pixel shapes. [default: 10000]
-        treering_func:      A galsim.LookupTable giving the tree ring pattern f(r). [default: None]
-        treering_center:    A PositionD object with the center of the tree ring pattern in pixel
+        treering_func:      A `LookupTable` giving the tree ring pattern f(r). [default: None]
+        treering_center:    A `PositionD` object with the center of the tree ring pattern in pixel
                             coordinates, which may be outside the pixel region. [default: None;
                             required if treering_func is provided]
         transpose:          Transpose the meaning of (x,y) so the brighter-fatter effect is
@@ -266,8 +266,8 @@ class SiliconSensor(Sensor):
 
         Parameters:
             photons:        A PhotonArray instance describing the incident photons
-            image:          The image into which the photons should be accumuated.
-            orig_center:    The position of the image center in the original image coordinates.
+            image:          The `Image` into which the photons should be accumuated.
+            orig_center:    The `Position` of the image center in the original image coordinates.
                             [default: (0,0)]
             resume:         Resume accumulating on the same image as a previous call to accumulate.
                             This skips an initial (slow) calculation at the start of the
@@ -304,12 +304,12 @@ class SiliconSensor(Sensor):
         any conversion from pixels to sky units using the image wcs (if any).
 
         Parameters:
-            image:          The image with the current flux values.
-            orig_center:    The position of the image center in the original image coordinates.
+            image:          The `Image` with the current flux values.
+            orig_center:    The `Position` of the image center in the original image coordinates.
                             [default: (0,0)]
 
         Returns:
-            a galsim.Image with the pixel areas
+            an `Image` with the pixel areas
         """
         from .wcs import PixelScale
         area_image = image.copy()

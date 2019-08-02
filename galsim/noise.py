@@ -187,13 +187,13 @@ class BaseNoise(object):
     __truediv__ = __div__
 
     def applyTo(self, image):
-        """Add noise to an input Image.
+        """Add noise to an input `Image`.
 
         e.g.::
 
             >>> noise.applyTo(image)
 
-        On output the Image instance ``image`` will have been given additional noise according
+        On output the `Image` instance ``image`` will have been given additional noise according
         to the current noise model.
 
         Note: This is equivalent to the alternate syntax::

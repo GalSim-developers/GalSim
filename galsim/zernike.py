@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file zernike.py
-Module contains code for evaluating and fitting Zernike polynomials
-"""
 
 import numpy as np
 
@@ -506,7 +503,7 @@ class Zernike(object):
 
         Parameters:
             rho:      radial coordinate of evaluation points.  Can be list-like.
-            theta:    azimuthal coordinate in radians (or as Angle object) of evaluation points.
+            theta:    azimuthal coordinate in radians (or as `Angle` object) of evaluation points.
                       Can be list-like.
 
         Returns:
@@ -529,7 +526,7 @@ class Zernike(object):
             >>> Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)
 
         Parameters:
-            theta:    Angle in radians.
+            theta:    angle in radians.
 
         Returns:
             A new Zernike object.
@@ -585,7 +582,7 @@ def zernikeRotMatrix(jmax, theta):
 
     Parameters:
         jmax:   Maximum Zernike index (in the Noll convention) over which to construct matrix.
-        theta:  Angle of rotation in radians.
+        theta:  angle of rotation in radians.
 
     Returns:
         Matrix of size [jmax+1, jmax+1].

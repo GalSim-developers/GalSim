@@ -15,22 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file real.py
-Functions for dealing with RealGalaxy objects and the catalogs that store their data.
-
-The RealGalaxy uses images of galaxies from real astrophysical data (e.g. the Hubble Space
-Telescope), along with a PSF model of the optical properties of the telescope that took these
-images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A
-description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS,
-540, 1518), although note that the details of the implementation in Section 7 of that work are not
-relevant to the more recent software used here.
-
-This module defines the RealGalaxyCatalog class, used to store all required information about a
-real galaxy simulation training sample and accompanying PSF model.  For information about
-downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
-page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
-"""
-
 
 import os
 import numpy as np
@@ -74,11 +58,11 @@ real_galaxy_bandpasses = {
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
-    uses a Convolution instance of an InterpolatedImage (for the observed galaxy) with a
-    Deconvolution of another InterpolatedImage (for the PSF).
+    uses a Convolution instance of an `InterpolatedImage` (for the observed galaxy) with a
+    `Deconvolution` of another `InterpolatedImage` (for the PSF).
 
     This class uses a catalog describing galaxies in some training data (for more details, see the
-    RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
+    `RealGalaxyCatalog` documentation) to read in data about realistic galaxies that can be used for
     simulations based on those galaxies.  Also included in the class is additional information that
     might be needed to make or interpret the simulations, e.g., the noise properties of the training
     data.  Users who wish to draw RealGalaxies that have well-defined flux scalings in various
@@ -94,7 +78,7 @@ class RealGalaxy(GSObject):
         ...                                 flux=None, pad_factor=4, noise_pad_size=0,
         ...                                 gsparams=None)
 
-    This initializes ``real_galaxy`` with three InterpolatedImage objects (one for the deconvolved
+    This initializes ``real_galaxy`` with three `InterpolatedImage` objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.
 
@@ -117,7 +101,7 @@ class RealGalaxy(GSObject):
     the resulting object with ``gal.dilate(galsim.arcsec / scale_unit)``.
 
     Parameters:
-        real_galaxy_catalog:    A RealGalaxyCatalog object with basic information about where to
+        real_galaxy_catalog:    A `RealGalaxyCatalog` object with basic information about where to
                                 find the data, etc.
         index:                  Index of the desired galaxy in the catalog. [One of ``index``,
                                 ``id``, or ``random`` is required.]
@@ -132,12 +116,12 @@ class RealGalaxy(GSObject):
         rng:                    A random number generator to use for selecting a random galaxy
                                 (may be any kind of `BaseDeviate` or None) and to use in generating
                                 any noise field when padding. [default: None]
-        x_interpolant:          Either an Interpolant instance or a string indicating which
+        x_interpolant:          Either an `Interpolant` instance or a string indicating which
                                 real-space interpolant should be used.  Options are 'nearest',
                                 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should
                                 be the integer order to use. [default: galsim.Quintic()]
-        k_interpolant:          Either an Interpolant instance or a string indicating which k-space
-                                interpolant should be used.  Options are 'nearest', 'sinc',
+        k_interpolant:          Either an `Interpolant` instance or a string indicating which
+                                k-space interpolant should be used.  Options are 'nearest', 'sinc',
                                 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                                 integer order to use.  We strongly recommend leaving this parameter
                                 at its default value; see text above for details.
@@ -154,8 +138,8 @@ class RealGalaxy(GSObject):
         flux_rescale:           Flux rescaling factor; if None, then no rescaling is done.  Either
                                 ``flux`` or ``flux_rescale`` may be set, but not both.
                                 [default: None]
-        pad_factor:             Factor by which to pad the Image when creating the
-                                InterpolatedImage.  We strongly recommend leaving this parameter
+        pad_factor:             Factor by which to pad the `Image` when creating the
+                                `InterpolatedImage`.  We strongly recommend leaving this parameter
                                 at its default value; see text above for details.  [default: 4]
         noise_pad_size:         If provided, the image will be padded out to this size (in arcsec)
                                 with the noise specified in the real galaxy catalog. This is
@@ -343,7 +327,7 @@ class RealGalaxy(GSObject):
 
     @classmethod
     def makeFromImage(cls, image, PSF, xi, **kwargs):
-        """Create a RealGalaxy directly from image, PSF, and noise description.
+        """Create a `RealGalaxy` directly from image, PSF, and noise description.
 
         Parameters:
             image:  `Image` of the galaxy you want to simulate.
@@ -538,7 +522,7 @@ class RealGalaxyCatalog(object):
                     the I/O time is in the constructor.  If ``preload=False``, there is
                     approximately the same total I/O time (assuming you eventually use most of
                     the image files referenced in the catalog), but it is spread over the
-                    various calls to getGalImage() and getPSFImage().  [default: False]
+                    various calls to `getGalImage` and `getPSFImage`.  [default: False]
         logger:     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
@@ -716,7 +700,7 @@ class RealGalaxyCatalog(object):
         return Bandpass(bp[0], wave_type='nm', zeropoint=bp[1])
 
     def getGalImage(self, i):
-        """Returns the galaxy at index ``i`` as an Image object.
+        """Returns the galaxy at index ``i`` as an `Image` object.
         """
         from .image import Image
         self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
@@ -732,7 +716,7 @@ class RealGalaxyCatalog(object):
         return im
 
     def getPSFImage(self, i):
-        """Returns the PSF at index ``i`` as an Image object.
+        """Returns the PSF at index ``i`` as an `Image` object.
         """
         from .image import Image
         self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
@@ -745,7 +729,7 @@ class RealGalaxyCatalog(object):
         return Image(np.ascontiguousarray(array.astype(np.float64)), scale=self.pixel_scale[i])
 
     def getPSF(self, i, x_interpolant=None, k_interpolant=None, gsparams=None):
-        """Returns the PSF at index ``i`` as a GSObject.
+        """Returns the PSF at index ``i`` as a `GSObject`.
         """
         from .interpolatedimage import InterpolatedImage
         psf_image = self.getPSFImage(i)
@@ -888,7 +872,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
     Fundamentally, the required inputs for this class are:
 
-    (1) a series of high resolution input Images of a single galaxy in different bands,
+    (1) a series of high resolution input `Image` instances of a single galaxy in different bands,
     (2) a list of `Bandpass` corresponding to those images,
     (3) the PSFs of those images as either `GSObject` or `ChromaticObject` instances, and
     (4) the noise properties of the input images as `BaseCorrelatedNoise` instances.
@@ -970,8 +954,8 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 ``len(real_galaxy_catalogs)`` SEDs that are polynomials in
                                 wavelength.  Note that if given, ``len(SEDs)`` must equal
                                 ``len(real_galaxy_catalogs)``. [default: None]
-        k_interpolant:          Either an Interpolant instance or a string indicating which k-space
-                                interpolant should be used.  Options are 'nearest', 'sinc',
+        k_interpolant:          Either an `Interpolant` instance or a string indicating which
+                                k-space interpolant should be used.  Options are 'nearest', 'sinc',
                                 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                                 integer order to use.  We strongly recommend leaving this parameter
                                 at its default value; see text above for details.
@@ -1079,8 +1063,8 @@ class ChromaticRealGalaxy(ChromaticSum):
         descriptions.  See the `ChromaticRealGalaxy` docstring for more information.
 
         Parameters:
-            images:             An iterable of high resolution ``Images`` of a galaxy through
-                                different bandpasses.
+            images:             An iterable of high resolution `Image` instances of a galaxy
+                                through different bandpasses.
             bands:              An iterable of `Bandpass` objects corresponding to the  input
                                 images.
             PSFs:               Either an iterable of `GSObject` or `ChromaticObject` indicating
@@ -1093,8 +1077,8 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 galaxies as sums of separable profiles.  By default, it will use
                                 ``len(images)`` SEDs that are polynomials in wavelength.  Note that
                                 if given, ``len(SEDs)`` must equal ``len(images)``. [default: None]
-            k_interpolant:      Either an Interpolant instance or a string indicating which k-space
-                                interpolant should be used.  Options are 'nearest', 'sinc',
+            k_interpolant:      Either an `Interpolant` instance or a string indicating which
+                                k-space interpolant should be used.  Options are 'nearest', 'sinc',
                                 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                                 integer order to use.  We strongly recommend leaving this parameter
                                 at its default value; see text above for details.  [default:

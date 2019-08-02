@@ -35,28 +35,28 @@ class Spergel(GSObject):
     properties, the surface brightness profile scales as I(r) ~ (r/scale_radius)^{nu} *
     K_{nu}(r/scale_radius), where K_{nu} is the modified Bessel function of the second kind.
 
-    The Spergel profile is intended as a generic galaxy profile, somewhat like a Sersic profile, but
-    with the advantage of being analytic in both real space and Fourier space.  The Spergel index
+    The Spergel profile is intended as a generic galaxy profile, somewhat like a `Sersic` profile,
+    but with the advantage of being analytic in both real space and Fourier space.  The Spergel index
     ``nu`` plays a similar role to the Sersic index ``n``, in that it adjusts the relative peakiness
     of the profile core and the relative prominence of the profile wings.  At ``nu = 0.5``, the
-    Spergel profile is equivalent to an Exponential profile (or alternatively an ``n = 1.0``
-    Sersic profile).  At ``nu = -0.6`` (and in the radial range near the half-light radius), the
-    Spergel profile is similar to a DeVaucouleurs profile or ``n = 4.0`` Sersic profile.
+    Spergel profile is equivalent to an `Exponential` profile (or alternatively an ``n = 1.0``
+    `Sersic` profile).  At ``nu = -0.6`` (and in the radial range near the half-light radius), the
+    Spergel profile is similar to a DeVaucouleurs profile or ``n = 4.0`` `Sersic` profile.
 
     Note that for ``nu <= 0.0``, the Spergel profile surface brightness diverges at the origin.
     This may lead to rendering problems if the profile is not convolved by either a PSF or a pixel
     and the profile center is precisely on a pixel center.
 
     Due to its analytic Fourier transform and depending on the indices ``n`` and ``nu``, the Spergel
-    profile can be considerably faster to draw than the roughly equivalent Sersic profile.  For
+    profile can be considerably faster to draw than the roughly equivalent `Sersic` profile.  For
     example, the ``nu = -0.6`` Spergel profile is roughly 3x faster to draw than an ``n = 4.0``
-    Sersic profile once the Sersic profile cache has been set up.  However, if not taking advantage
-    of the cache, for example, if drawing Sersic profiles with ``n`` continuously varying near 4.0
-    and Spergel profiles with ``nu`` continuously varying near -0.6, then the Spergel profiles are
-    about 50x faster to draw.  At the other end of the galaxy profile spectrum, the ``nu = 0.5``
-    Spergel profile, ``n = 1.0`` Sersic profile, and the Exponential profile all take about the
-    same amount of time to draw if cached, and the Spergel profile is about 2x faster than the
-    Sersic profile if uncached.
+    `Sersic` profile once the `Sersic` profile cache has been set up.  However, if not taking
+    advantage of the cache, for example, if drawing `Sersic` profiles with ``n`` continuously
+    varying near 4.0 and Spergel profiles with ``nu`` continuously varying near -0.6, then the
+    Spergel profiles are about 50x faster to draw.  At the other end of the galaxy profile
+    spectrum, the ``nu = 0.5`` Spergel profile, ``n = 1.0`` `Sersic` profile, and the `Exponential`
+    profile all take about the same amount of time to draw if cached, and the Spergel profile is
+    about 2x faster than the `Sersic` profile if uncached.
 
     For more information, refer to
 
@@ -81,8 +81,8 @@ class Spergel(GSObject):
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, the Spergel profile has the following
-    access properties:
+    In addition to the usual `GSObject` methods and attributes, the Spergel profile has the
+    following access properties:
 
     Atrributes:
         nu:                 The Spergel index, nu

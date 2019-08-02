@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file transform.py
-A class that handles affine tranformations of a profile including a possible flux scaling.
-"""
 
 import numpy as np
 import math
@@ -99,18 +96,21 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
 
 
 class Transformation(GSObject):
-    """A class for modeling an affine transformation of a GSObject instance.
+    """A class for modeling an affine transformation of a `GSObject` instance.
 
     Typically, you do not need to construct a Transformation object explicitly.  This is the type
-    returned by the various transformation methods of GSObject such as shear(), rotate(),
-    shift(), transform(), etc.  All the various transformations can be described as a combination
-    of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)
-    respectively.
+    returned by the various transformation methods of `GSObject` such as `GSObject.shear`,
+    `GSObject.rotate`, `GSObject.shift`, `GSObject.transform`, etc.
 
-    Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
-    non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
-    only refers to an overall amplitude ratio for the surface brightness profile.  The total
-    flux scaling is actually ``|det(jac)| * flux_ratio``.
+    All the various transformations can be described as a combination of a jacobian matrix
+    (i.e. `GSObject.transform`) and a translation (`GSObject.shift`), which are described by
+    (dudx,dudy,dvdx,dvdy) and (dx,dy) respectively.
+
+    .. note::
+        The name of the flux_ratio parameter is technically wrong here if the jacobian has a
+        non-unit determinant, since that would also scale the flux.  The flux_ratio parameter
+        actually only refers to an overall amplitude ratio for the surface brightness profile.
+        The total flux scaling is actually ``|det(jac)| * flux_ratio``.
 
     Parameters:
         obj:                The object to be transformed.
@@ -129,7 +129,7 @@ class Transformation(GSObject):
         jac:            The jacobian of the transformation matrix.
         offset:         The offset being applied.
         flux_ratio:     The amount by which the overall surface brightness amplitude is multiplied.
-        gsparams:       The usual gsparams attribute that all GSObjects have.
+        gsparams:       The usual gsparams attribute that all `GSObject` classes have.
 
     Note: if ``gsparams`` is unspecified (or None), then the Transformation instance inherits the
     `GSParams` from obj.  Also, note that parameters related to the Fourier-space calculations must

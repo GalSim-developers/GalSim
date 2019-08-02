@@ -15,7 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file fds_test.py
+"""
 I found these routines helpful in tracking down some errors about too many files being open.
 I've fixed the errors, but I'll leave this module here in case it is useful for someone else
 down the road.  I lifted the code from the following StackOverflow answers:

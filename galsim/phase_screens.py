@@ -56,7 +56,7 @@ _GSScreenShare = {}
 def initWorkerArgs():
     """Function used to generate worker arguments to pass to multiprocessing.Pool initializer.
 
-    See AtmosphericScreen docstring for more information.
+    See `AtmosphericScreen` docstring for more information.
     """
     for v in _GSScreenShare.values():
         if v['alpha'].value != 1.0:
@@ -68,7 +68,7 @@ def initWorkerArgs():
 def initWorker(share):
     """Worker initialization function to pass to multiprocessing.Pool initializer.
 
-    See AtmosphericScreen docstring for more information.
+    See `AtmosphericScreen` docstring for more information.
     """
     _GSScreenShare.update(share)  # pragma: no cover  (covered, but in a fork)
 
@@ -82,11 +82,11 @@ class AtmosphericScreen(object):
     AtmosphericScreen delays the actual instantiation of the phase screen array in memory until it
     is used for either drawing a PSF or querying the wavefront or wavefront gradient.  This is to
     facilitate automatic truncation of the screen power spectrum depending on the use case.  For
-    example, when drawing a PhaseScreenPSF using Fourier methods, the entire power spectrum should
+    example, when drawing a `PhaseScreenPSF` using Fourier methods, the entire power spectrum should
     generally be used.  On the other hand, when drawing using photon-shooting and the geometric
     approximation, it's better to truncate the high-k modes of the power spectrum here so
     that they can be handled instead by a SecondKick object (which also happens automatically; see
-    the PhaseScreenPSF docstring).  (See Peterson et al. 2015 for more details about the second
+    the `PhaseScreenPSF` docstring).  (See Peterson et al. 2015 for more details about the second
     kick).  Querying the wavefront or wavefront gradient will instantiate the screen using the full
     power spectrum.
 
@@ -96,7 +96,7 @@ class AtmosphericScreen(object):
     use the ``suppress_warning`` keyword argument.
 
     If you wish to override the automatic truncation determination, then you can directly
-    instantiate the phase screen array using the AtmosphericScreen.instantiate() method.
+    instantiate the phase screen array using the `AtmosphericScreen.instantiate` method.
 
     Note that once a screen has been instantiated with a particular set of truncation parameters, it
     cannot be re-instantiated with another set of parameters.
@@ -147,7 +147,7 @@ class AtmosphericScreen(object):
         results = [r.get() for r in results]
 
     It is also possible to manually instantiate each of the AtmosphericScreen objects in a
-    PhaseScreenList in parallel using a process pool.  This requires knowing what k-scale to
+    `PhaseScreenList` in parallel using a process pool.  This requires knowing what k-scale to
     truncate the screen at::
 
         atm = galsim.Atmosphere(..., mp_context=ctx)
@@ -197,7 +197,7 @@ class AtmosphericScreen(object):
         time_step:          Time interval between phase boiling updates.  Note that this is distinct
                             from the time interval used to integrate the PSF over time, which is set
                             by the ``time_step`` keyword argument to `PhaseScreenPSF` or
-                            :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then
+                            `PhaseScreenList.makePSF`.  If ``time_step`` is not None, then
                             it is required that ``alpha`` is set to something other than 1.0.
                             [default: None]
         rng:                Random number generator as a `BaseDeviate`.  If None, then use
@@ -682,7 +682,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     Simulating an atmospheric PSF is typically accomplished by first representing the 3-dimensional
     turbulence in the atmosphere as a series of discrete 2-dimensional phase screens.  These screens
     may blow around in the wind, and may or may not also evolve in time.  This function allows one
-    to quickly assemble a list of atmospheric phase screens into a galsim.PhaseScreenList object,
+    to quickly assemble a list of atmospheric phase screens into a `galsim.PhaseScreenList` object,
     which can then be used to evaluate PSFs through various columns of atmosphere at different field
     angles.
 
@@ -775,7 +775,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
                         approach a constant at scales larger than L0.  Set to ``None`` or ``np.inf``
                         for a power spectrum without an outer scale.  [default: 25.0]
         speed:          Wind speed in meters/second.  [default: 0.0]
-        direction:      Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]
+        direction:      Wind direction as `galsim.Angle` [default: 0.0 * galsim.degrees]
         alpha:          Square root of fraction of phase that is "remembered" between time_steps
                         (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
                         is then the amount of turbulence freshly generated in each step.  Setting
@@ -785,7 +785,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
         time_step:      Time interval between phase boiling updates.  Note that this is distinct
                         from the time interval used when integrating the PSF over time, which is
                         set by the ``time_step`` keyword argument to `PhaseScreenPSF` or
-                        :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then it is
+                        `PhaseScreenList.makePSF`.  If ``time_step`` is not None, then it is
                         required that ``alpha`` is set to something other than 1.0.  [default: None]
         rng:            Random number generator as a `BaseDeviate`.  If None, then use the
                         clock time or system entropy to seed a new generator.  [default: None]
@@ -870,7 +870,7 @@ class OpticalScreen(object):
                             [default: False]
         obscuration:        Linear dimension of central obscuration as fraction of aperture linear
                             dimension. [0., 1.).  Note it is the user's responsibility to ensure
-                            consistency of OpticalScreen obscuration and Aperture obscuration.
+                            consistency of `OpticalScreen` obscuration and `Aperture` obscuration.
                             [default: 0.0]
         lam_0:              Reference wavelength in nanometers at which Zernike aberrations are
                             being specified.  [default: 500]
@@ -985,8 +985,8 @@ class OpticalScreen(object):
                     be a scalar or an iterable.  The shapes of u and v must match.
             v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                     be a scalar or an iterable.  The shapes of u and v must match.
-            t:      Ignored for OpticalScreen.
-            theta:  Ignored for OpticalScreen.
+            t:      Ignored for `OpticalScreen`.
+            theta:  Ignored for `OpticalScreen`.
 
         Returns:
             Array of wavefront lag or lead in nanometers.
@@ -1010,8 +1010,8 @@ class OpticalScreen(object):
                     be a scalar or an iterable.  The shapes of u and v must match.
             v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                     be a scalar or an iterable.  The shapes of u and v must match.
-            t:      Ignored for OpticalScreen.
-            theta:  Ignored for OpticalScreen.
+            t:      Ignored for `OpticalScreen`.
+            theta:  Ignored for `OpticalScreen`.
 
         Returns:
             Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.

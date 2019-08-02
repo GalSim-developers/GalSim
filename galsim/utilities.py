@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file utilities.py
-Module containing general utilities for the GalSim software.
-"""
 import functools
 from contextlib import contextmanager
 from future.utils import iteritems
@@ -116,7 +113,7 @@ def rotate_xy(x, y, theta):
     Parameters:
         x:      NumPy array of input ``x`` coordinates
         y:      NumPy array of input ``y`` coordinates
-        theta:  Rotation angle (+ve counter clockwise) as an Angle instance
+        theta:  Rotation angle (+ve counter clockwise) as an `Angle` instance
 
     @return the rotated coordinates ``(x_rot,y_rot)``.
     """
@@ -265,7 +262,7 @@ def rand_arr(shape, deviate):
     return tmp
 
 def convert_interpolant(interpolant):
-    """Convert a given interpolant to an Interpolant if it is given as a string.
+    """Convert a given interpolant to an `Interpolant` if it is given as a string.
     """
     from .interpolant import Interpolant
     if isinstance(interpolant, Interpolant):
@@ -705,7 +702,7 @@ def _horner2d(x, y, coefs, result, temp, triangle=False):
 
 def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     """
-    The routine to do the opposite of what 'interleaveImages' routine does. It generates a
+    The routine to do the opposite of what `interleaveImages` routine does. It generates a
     (uniform) dither sequence of low resolution images from a high resolution image.
 
     Many pixel level detector effects, such as interpixel capacitance, persistence, charge
@@ -713,7 +710,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     be undersampled in most cases. Nyquist-sampled images that also include the effects of detector
     non-idealities can be obtained by drawing multiple undersampled images (with the detector
     effects included) that are offset from each other by a fraction of a pixel. If the offsets are
-    uniformly spaced, then images can be combined using 'interleaveImages' into a Nyquist-sampled
+    uniformly spaced, then images can be combined using `interleaveImages` into a Nyquist-sampled
     image.
 
     Drawing multiple low resolution images of a light profile can be a lot slower than drawing a
@@ -750,7 +747,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
                             [default: False]
 
     Returns:
-        a list of images and offsets to reconstruct the input image using 'interleaveImages'.
+        a list of images and offsets to reconstruct the input image using `interleaveImages`.
     """
     from .image import Image
     from .position import PositionD
@@ -863,7 +860,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         >>> img = galsim.utilities.interleaveImages(im_list=im_list,N=(n,1),offsets=offsets)
 
     Parameters:
-        im_list:                A list containing the galsim.Image instances to be interleaved.
+        im_list:                A list containing the `galsim.Image` instances to be interleaved.
         N:                      Number of images to interleave in either directions. It can be of
                                 type ``int`` if equal number of images are interleaved in both
                                 directions or a list or tuple of two integers, containing the number
@@ -1162,7 +1159,7 @@ def structure_function(image):
     set the scale of the radial distances.
 
     Parameters:
-        image:  Image containing random field realization.
+        image:  `Image` containing random field realization.
 
     Returns:
         A python callable mapping a separation length r to the estimate of the structure
@@ -1352,7 +1349,7 @@ def unweighted_moments(image, origin=None):
     but ignores any scale or wcs.
 
     Parameters:
-        image:      Image from which to compute moments
+        image:      `Image` from which to compute moments
         origin:     Optional origin in image coordinates used to compute Mx and My
                     [default: galsim.PositionD(0, 0)].
 
@@ -1385,7 +1382,7 @@ def unweighted_shape(arg):
         e2 = 2*Mxy / rsqr
 
     Parameters:
-        arg:    Either a galsim.Image or the output of unweighted_moments(image).
+        arg:    Either a `galsim.Image` or the output of unweighted_moments(image).
 
     Returns:
         Dict with entries for [rsqr, e1, e2]
@@ -1621,7 +1618,7 @@ def find_out_of_bounds_position(x, y, bounds, grid=False):
     Parameters:
         x:          Array of x values
         y:          Array of y values
-        bounds:     Bounds instance
+        bounds:     `Bounds` instance
         grid:       Bool indicating whether to check the outer product of x and y
                     (grid=True), or each sequential pair of x and y (grid=False).
                     If the latter, then x and y should have the same shape.

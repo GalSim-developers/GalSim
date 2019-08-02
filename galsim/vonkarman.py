@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file base.py
-This file implements the von Karman atmospheric PSF profile.
-"""
 
 import numpy as np
 
@@ -33,7 +30,7 @@ from .errors import GalSimIncompatibleValuesError
 
 class VonKarman(GSObject):
     """Class describing a von Karman surface brightness profile, which represents a long exposure
-    atmospheric PSF.  The difference between the von Karman profile and the related Kolmogorov
+    atmospheric PSF.  The difference between the von Karman profile and the related `Kolmogorov`
     profile is that the von Karman profile includes a parameter for the outer scale of atmospheric
     turbulence, which is a physical scale beyond which fluctuations in the refractive index stop
     growing, typically between 10 and 100 meters.  Quantitatively, the von Karman phase fluctuation
@@ -73,7 +70,7 @@ class VonKarman(GSObject):
         L0:                 Outer scale in meters.  [default: 25.0]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         scale_unit:         Units assumed when drawing this profile or evaluating xValue, kValue,
-                            etc.  Should be a galsim.AngleUnit or a string that can be used to
+                            etc.  Should be a `galsim.AngleUnit` or a string that can be used to
                             construct one (e.g., 'arcsec', 'radians', etc.).
                             [default: galsim.arcsec]
         do_delta:           Include delta-function at origin? (not recommended; see above).

@@ -24,6 +24,7 @@ the classes you would actually use when building the profile for an  astronomica
     psf
     phase_psf
     gal
+    real_gal
     simple
     arbitrary
     composite

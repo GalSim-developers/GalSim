@@ -15,46 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file hsm.py
-Routines for adaptive moment estimation and PSF correction.
-
-This file contains the python interface to C++ routines for estimation of second moments of images,
-and for carrying out PSF correction using a variety of algorithms.  The algorithms are described in
-Hirata & Seljak (2003; MNRAS, 343, 459), and were tested/characterized using real data in Mandelbaum
-et al. (2005; MNRAS, 361, 1287).  We also define a python-level container for the outputs of these
-codes, ShapeData, analogous to the C++-level CppShapeData.  Note that these routines for
-moment measurement and shear estimation are not accessible via config, only via python.  There are a
-number of default settings for the code (often governing the tradeoff between accuracy and speed)
-that can be adjusting using an optional ``hsmparams`` argument as described below.
-
-The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
-that is, they use an elliptical Gaussian weight that is matched to the image of the object being
-measured.  The observed moments can be represented as a Gaussian sigma and a `Shear` object
-representing the shape.
-
-The PSF correction includes several algorithms, three that are re-implementations of methods
-originated by others and one that was originated by Hirata & Seljak:
-
-- One from Kaiser, Squires, & Broadhurst (1995), "KSB"
-
-- One from Bernstein & Jarvis (2002), "BJ"
-
-- One that represents a modification by Hirata & Seljak (2003) of methods in Bernstein & Jarvis
-(2002), "LINEAR"
-
-- One method from Hirata & Seljak (2003), "REGAUSS" (re-Gaussianization)
-
-These methods return shear (or shape) estimators, which may not in fact satisfy conditions like
-|e|<=1, and so they are represented simply as e1/e2 or g1/g2 (depending on the method) rather than
-using a `Shear` object, which IS required to satisfy |e|<=1.
-
-These methods are all based on correction of moments, but with different sets of assumptions.  For
-more detailed discussion on all of these algorithms, see the relevant papers above.
-
-Users can find a listing of the parameters that can be adjusted using the ``hsmparams`` keyword,
-along with default values, using help(galsim.hsm.HSMParams).
-"""
-
 
 import numpy as np
 
@@ -542,10 +502,10 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     PSF.
 
     This method works from `Image` inputs rather than `GSObject` inputs, which provides
-    additional flexibility (e.g., it is possible to work from an Image that was read from file and
-    corresponds to no particular GSObject), but this also means that users who wish to apply it to
-    simple combinations of GSObjects (e.g., a Convolve) must take the additional step of drawing
-    their GSObjects into Images.
+    additional flexibility (e.g., it is possible to work from an `Image` that was read from file and
+    corresponds to no particular `GSObject`), but this also means that users who wish to apply it to
+    compount `GSObject` classes (e.g., `Convolve`) must take the additional step of drawing
+    their `GSObject` into `Image` instances.
 
     This routine assumes that (at least locally) the WCS can be approximated as a `PixelScale`, with
     no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.
@@ -589,9 +549,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
 
     Parameters:
         gal_image:      The `Image` of the galaxy being measured.
-
         PSF_image:      The `Image` for the PSF.
-
         weight:         The optional weight image for the galaxy being measured.  Can be an int
                         or a float array.  Currently, GalSim does not account for the variation
                         in non-zero weights, i.e., a weight map is converted to an image with 0
@@ -725,37 +683,29 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
 
     Parameters:
         object_image:       The `Image` for the object being measured.
-
         weight:             The optional weight image for the object being measured.  Can be an int
                             or a float array.  Currently, GalSim does not account for the variation
                             in non-zero weights, i.e., a weight map is converted to an image with 0
                             and 1 for pixels that are not and are used.  Full use of spatial
                             variation in non-zero weights will be included in a future version of
                             the code. [default: None]
-
         badpix:             The optional bad pixel mask for the image being used.  Zero should be
                             used for pixels that are good, and any nonzero value indicates a bad
                             pixel. [default: None]
-
         guess_sig:          Optional argument with an initial guess for the Gaussian sigma of the
                             object (in pixels). [default: 5.0]
-
         precision:          The convergence criterion for the moments. [default: 1e-6]
-
         guess_centroid:     An initial guess for the object centroid (useful in case it is not
                             located at the center, which is used if this keyword is not set).  The
                             convention for centroids is such that the center of the lower-left pixel
                             is (image.xmin, image.ymin).
                             [default: object_image.true_center]
-
         strict:             Whether to require success. If ``strict=True``, then there will be a
                             ``GalSimHSMError`` exception if shear estimation fails.  If set to
                             ``False``, then information about failures will be silently stored in
                             the output ShapeData object. [default: True]
-
         round_moments:      Use a circular weight function instead of elliptical.
                             [default: False]
-
         hsmparams:          The hsmparams keyword can be used to change the settings used by
                             FindAdaptiveMom when estimating moments; see `HSMParams` documentation
                             for more information. [default: None]

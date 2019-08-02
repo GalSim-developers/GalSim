@@ -15,10 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file photon_array.py
-Implements the PhotonArray class describing a collection of photons incident on a detector.
-Also includes classes that modify PhotonArray objects in a number of ways.
-"""
 
 import numpy as np
 
@@ -54,7 +50,7 @@ class PhotonArray(object):
         dydz:       The tangent of the inclination angles in the y direction
         wavelength  The wavelength of the photons
 
-    Unlike most GalSim objects (but like Images), PhotonArrays are mutable.  It is permissible
+    Unlike most GalSim objects (but like `Image`), PhotonArrays are mutable.  It is permissible
     to write values to the above attributes with code like::
 
         >>> photon_array.x += numpy.random.random(1000) * 0.01
@@ -68,7 +64,7 @@ class PhotonArray(object):
 
         Normal photons have flux=1, but we allow for "fat" photons that combine the effect of
         several photons at once for efficiency.  Also, some profiles need to use negative flux
-        photons to properly implement photon shooting (e.g. InterpolateImage, which uses negative
+        photons to properly implement photon shooting (e.g. `InterpolateImage`, which uses negative
         flux photons to get the interpolation correct).  Finally, when we "remove" photons, for
         better efficiency, we actually just set the flux to 0 rather than recreate new numpy arrays.
 
@@ -196,7 +192,7 @@ class PhotonArray(object):
         self._y *= float(scale)
 
     def assignAt(self, istart, rhs):
-        "Assign the contents of another PhotonArray to this one starting at istart."
+        "Assign the contents of another `PhotonArray` to this one starting at istart."
         if istart + rhs.size() > self.size():
             raise GalSimValueError(
                 "The given rhs does not fit into this array starting at %d"%istart, rhs)
@@ -211,7 +207,7 @@ class PhotonArray(object):
             self.wavelength[s] = rhs.wavelength
 
     def convolve(self, rhs, rng=None):
-        "Convolve this PhotonArray with another."
+        "Convolve this `PhotonArray` with another."
         if rhs.size() != self.size():
             raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
                                                 self_pa=self, rhs=rhs)
@@ -282,13 +278,13 @@ class PhotonArray(object):
     def addTo(self, image):
         """Add flux of photons to an image by binning into pixels.
 
-        Photon in this PhotonArray are binned into the pixels of the input
-        Image and their flux summed into the pixels.  Image is assumed to represent
+        Photons in this `PhotonArray` are binned into the pixels of the input
+        `Image` and their flux summed into the pixels.  The `Image` is assumed to represent
         surface brightness, so photons' fluxes are divided by image pixel area.
         Photons past the edges of the image are discarded.
 
         Parameters:
-            image:      The Image to which the photons' flux will be added.
+            image:      The `Image` to which the photons' flux will be added.
 
         Returns:
             the total flux of photons the landed inside the image bounds.
@@ -300,7 +296,7 @@ class PhotonArray(object):
 
     @classmethod
     def makeFromImage(cls, image, max_flux=1., rng=None):
-        """Turn an existing image into a PhotonArray that would accumulate into this image.
+        """Turn an existing `Image` into a `PhotonArray` that would accumulate into this image.
 
         The flux in each non-zero pixel will be turned into 1 or more photons with random positions
         within the pixel bounds.  The `max_flux` parameter (which defaults to 1) sets an upper
@@ -311,12 +307,12 @@ class PhotonArray(object):
               to implement other (presumably better) interpolation options here.
 
         Parameters:
-            image:      The image to turn into a PhotonArray
+            image:      The image to turn into a `PhotonArray`
             max_flux:   The maximum flux value to use for any output photon [default: 1]
             rng:        A `BaseDeviate` to use for the random number generation [default: None]
 
         Returns:
-            a PhotonArray
+            a `PhotonArray`
         """
         max_flux = float(max_flux)
         if (max_flux <= 0):
@@ -340,12 +336,12 @@ class PhotonArray(object):
         return photons
 
     def write(self, file_name):
-        """Write a PhotonArray to a FITS file.
+        """Write a `PhotonArray` to a FITS file.
 
-        The output file will be a FITS binary table with a row for each photon in the PhotonArray.
+        The output file will be a FITS binary table with a row for each photon in the `PhotonArray`.
         Columns will include 'id' (sequential from 1 to nphotons), 'x', 'y', and 'flux'.
         Additionally, the columns 'dxdz', 'dydz', and 'wavelength' will be included if they are
-        set for this PhotonArray object.
+        set for this `PhotonArray` object.
 
         The file can be read back in with the classmethod `PhotonArray.read`.::
 
@@ -380,10 +376,10 @@ class PhotonArray(object):
 
     @classmethod
     def read(cls, file_name):
-        """Create a PhotonArray, reading the photon data from a FITS file.
+        """Create a `PhotonArray`, reading the photon data from a FITS file.
 
         The file being read in is not arbitrary.  It is expected to be a file that was written
-        out with the PhotonArray `write` method.::
+        out with the `PhotonArray.write` method.::
 
             >>> photons.write('photons.fits')
             >>> photons2 = galsim.PhotonArray.read('photons.fits')
@@ -407,7 +403,7 @@ class PhotonArray(object):
 
 class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
-    array of a PhotonArray.
+    array of a `PhotonArray`.
 
     Parameters:
         sed:        The `SED` to use for the objects spectral energy distribution.
@@ -503,15 +499,15 @@ class PhotonDCR(object):
     Since DCR depends on the zenith angle and the parallactic angle (which is the position angle of
     the zenith measured from North through East) of the object being drawn, these must be specified
     via keywords.  There are four ways to specify these values:
-      1) explicitly provide `zenith_angle = ...` as a keyword of type Angle, and
+      1) explicitly provide `zenith_angle = ...` as a keyword of type `Angle`, and
          `parallactic_angle` will be assumed to be 0 by default.
       2) explicitly provide both `zenith_angle = ...` and `parallactic_angle = ...` as
-         keywords of type Angle.
+         keywords of type `Angle`.
       3) provide the coordinates of the object `obj_coord = ...` and the coordinates of the zenith
-         `zenith_coord = ...` as keywords of type CelestialCoord.
-      4) provide the coordinates of the object `obj_coord = ...` as a CelestialCoord, the
-         hour angle of the object `HA = ...` as an Angle, and the latitude of the observer
-         `latitude = ...` as an Angle.
+         `zenith_coord = ...` as keywords of type `CelestialCoord`.
+      4) provide the coordinates of the object `obj_coord = ...` as a `CelestialCoord`, the
+         hour angle of the object `HA = ...` as an `Angle`, and the latitude of the observer
+         `latitude = ...` as an `Angle`.
 
     DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
@@ -534,16 +530,15 @@ class PhotonDCR(object):
         alpha:              Power law index for wavelength-dependent seeing.  This should only
                             be used if doing a star-only simulation.  It is not correct when
                             drawing galaxies. [default: 0.]
-        zenith_angle:       Angle from object to zenith, expressed as an Angle
-                            [default: 0]
+        zenith_angle:       `Angle` from object to zenith, expressed as an `Angle`. [default: 0]
         parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured
                             from North through East.  [default: 0]
         obj_coord:          Celestial coordinates of the object being drawn as a
-                            CelestialCoord. [default: None]
-        zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.
+                            `CelestialCoord`. [default: None]
+        zenith_coord:       Celestial coordinates of the zenith as a `CelestialCoord`.
                             [default: None]
-        HA:                 Hour angle of the object as an Angle. [default: None]
-        latitude:           Latitude of the observer as an Angle. [default: None]
+        HA:                 Hour angle of the object as an `Angle`. [default: None]
+        latitude:           Latitude of the observer as an `Angle`. [default: None]
         pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]
         temperature:        Temperature in Kelvins.  [default: 293.15 K]
         H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]

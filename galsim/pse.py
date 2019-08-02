@@ -15,7 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file pse.py
+"""
 Module containing code for estimating shear power spectra from shears at gridded positions.
 
 The code below was developed largely by Joe Zuntz and tweaked by assorted GalSim

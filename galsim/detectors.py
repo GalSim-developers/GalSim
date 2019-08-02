@@ -14,11 +14,6 @@
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
-"""@file detectors.py
-
-Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
-failure, interpixel capacitance, etc.
-"""
 
 import numpy as np
 import sys
@@ -28,7 +23,7 @@ from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValues
 
 def applyNonlinearity(self, NLfunc, *args):
     """
-    Applies the given non-linearity function (``NLfunc``) on the Image instance directly.
+    Applies the given non-linearity function (``NLfunc``) on the `Image` instance directly.
 
     This routine can transform the image in a non-linear manner specified by the user. However,
     the typical kind of non-linearity one sees in astronomical images is voltage non-linearity,
@@ -41,7 +36,7 @@ def applyNonlinearity(self, NLfunc, *args):
     before the inclusion of nonlinearity.
 
     The argument ``NLfunc`` is a callable function (for example a lambda function, a
-    galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
+    `galsim.LookupTable`, or a user-defined function), possibly with arguments that need to be given
     as subsequent arguments to the ``applyNonlinearity`` function (after the ``NLfunc`` argument).
     ``NLfunc`` should be able to take a 2d NumPy array as input, and return a NumPy array of the
     same shape.  It should be defined such that it outputs the final image with nonlinearity
@@ -58,7 +53,7 @@ def applyNonlinearity(self, NLfunc, *args):
         >>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
         >>> img.applyNonlinearity(f, 1.e-7, 1.e-10)
 
-    On calling the method, the Image instance ``img`` is transformed by the user-defined function
+    On calling the method, the `Image` instance ``img`` is transformed by the user-defined function
     ``f`` with ``beta1`` = 1.e-7 and ``beta2`` = 1.e-10.
 
     Parameters:
@@ -80,7 +75,7 @@ def applyNonlinearity(self, NLfunc, *args):
 
 def addReciprocityFailure(self, exp_time, alpha, base_flux):
     """
-    Accounts for the reciprocity failure and includes it in the original Image directly.
+    Accounts for the reciprocity failure and includes it in the original `Image` directly.
 
     Reciprocity, in the context of photography, is the inverse relationship between the incident
     flux (I) of a source object and the exposure time (t) required to produce a given response (p)
@@ -147,7 +142,7 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
 def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_nonnegativity=True,
     kernel_normalization=True):
     """
-    Applies the effect of interpixel capacitance to the Image instance.
+    Applies the effect of interpixel capacitance to the `Image` instance.
 
     In NIR detectors, the quantity that is sensed is not the charge as in CCDs, but a voltage that
     relates to the charge present within each pixel. The voltage read at a given pixel location is
@@ -155,7 +150,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     coupling of sense nodes.
 
     This interpixel capacitance is approximated as a linear effect that can be described by a 3x3
-    kernel that is convolved with the image. The kernel must be an Image instance and could be
+    kernel that is convolved with the image. The kernel must be an `Image` instance and could be
     intrinsically anisotropic. A sensible kernel must have non-negative entries and must be
     normalized such that the sum of the elements is 1, in order to conserve the total charge.
     The (1,1) element of the kernel is the contribution to the voltage read at a pixel from the
@@ -177,7 +172,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     The size of the image array remains unchanged in all three cases.
 
     Parameters:
-        IPC_kernel:            A 3x3 Image instance that is convolved with the Image instance
+        IPC_kernel:            A 3x3 `Image` instance that is convolved with the `Image` instance
         edge_treatment:        Specifies the method of handling edges and should be one of
                                'crop', 'extend' or 'wrap'. See above for details.
                                [default: 'extend']
@@ -261,7 +256,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
 
 def applyPersistence(self,imgs,coeffs):
     """
-    Applies the effects of persistence to the Image instance.
+    Applies the effects of persistence to the `Image` instance.
 
     Persistence refers to the retention of a small fraction of the signal after resetting the
     imager pixel elements. The persistence signal of a previous exposure is left in the pixel even
@@ -270,18 +265,18 @@ def applyPersistence(self,imgs,coeffs):
     a fixed cadence, the persistence signal can be given as a linear combination of prior pixel
     values that can be added to the current image.
 
-    This routine takes in a list of Image instances and adds them to Image weighted by the values
-    passed on to 'coeffs'. The pixel values of the Image instances in the list must correspond to
-    the electron counts before the readout. This routine does NOT keep track of realistic dither
-    patterns. During the image simulation process, the user has to queue a list of previous Image
-    instances (imgs) outside the routine by inserting the latest image in the beginning of the list
-    and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to be
-    added. This usually remains constant in the image generation process.
+    This routine takes in a list of `Image` instances and adds them to `Image` weighted by the
+    values passed on to 'coeffs'. The pixel values of the `Image` instances in the list must
+    correspond to the electron counts before the readout. This routine does NOT keep track of
+    realistic dither patterns. During the image simulation process, the user has to queue a list of
+    previous `Image` instances (imgs) outside the routine by inserting the latest image in the
+    beginning of the list and deleting the oldest image. The values in 'coeffs' tell how much of
+    each `Image` is to be added. This usually remains constant in the image generation process.
 
     Parameters:
-        imgs:       A list of previous Image instances that still persist.
+        imgs:       A list of previous `Image` instances that still persist.
         coeffs:     A list of floats that specifies the retention factors for the corresponding
-                    Image instances listed in 'imgs'.
+                    `Image` instances listed in 'imgs'.
     """
     if not len(imgs)==len(coeffs):
         raise GalSimIncompatibleValuesError("The length of 'imgs' and 'coeffs' must be the same",
@@ -303,10 +298,10 @@ def quantize(self):
 
     Because we cannot guarantee that quantization will always be the last step in the process, the
     quantize() routine does not actually modify the type of the image to 'int'.  However, users can
-    easily do so by doing
+    easily do so by doing::
 
-        image.quantize()
-        int_image = galsim.Image(image, dtype=int)
+        >>> image.quantize()
+        >>> int_image = galsim.Image(image, dtype=int)
 
     """
     self.applyNonlinearity(np.round)

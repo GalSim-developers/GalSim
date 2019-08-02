@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file position.py
-A few adjustments to the Position classes at the Python layer.
-"""
 
 from . import _galsim
 

@@ -66,7 +66,7 @@ def Convolve(*args, **kwargs):
 
 
 class Convolution(GSObject):
-    """A class for convolving 2 or more GSObject instances.
+    """A class for convolving 2 or more `GSObject` instances.
 
     The convolution will normally be done using discrete Fourier transforms of each of the component
     profiles, multiplying them together, and then transforming back to real space.
@@ -77,10 +77,10 @@ class Convolution(GSObject):
     you try to use it for more than 2 profiles, an exception will be raised.
 
     The real-space convolution is normally slower than the DFT convolution.  The exception is if
-    both component profiles have hard edges, e.g. a truncated Moffat or Sersic with a Pixel.  In
-    that case, the highest frequency ``maxk`` for each component is quite large since the ringing
-    dies off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
-    real-space convolution tends to be more accurate in this case as well.
+    both component profiles have hard edges, e.g. a truncated `Moffat` or `Sersic` with a `Pixel`.
+    In that case, the highest frequency ``maxk`` for each component is quite large since the
+    ringing dies off fairly slowly.  So it can be quicker to use real-space convolution instead.
+    Also, real-space convolution tends to be more accurate in this case as well.
 
     If you do not specify either ``real_space = True`` or ``False`` explicitly, then we check if
     there are 2 profiles, both of which have hard edges.  In this case, we automatically use
@@ -460,11 +460,11 @@ def Deconvolve(obj, gsparams=None, propagate_gsparams=True):
 
 
 class Deconvolution(GSObject):
-    """A class for deconvolving a GSObject.
+    """A class for deconvolving a `GSObject`.
 
     The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,
     or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,
-    cannot be photon-shot using the 'phot' method of drawImage() method.
+    cannot be photon-shot using the 'phot' method of `GSObject.drawImage` method.
 
     You may also specify a ``gsparams`` argument.  See the docstring for `GSParams` for more
     information about this option.  Note: if ``gsparams`` is unspecified (or None), then the
@@ -658,7 +658,7 @@ def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):
 
 
 class AutoConvolution(Convolution):
-    """A special class for convolving a GSObject with itself.
+    """A special class for convolving a `GSObject` with itself.
 
     It is equivalent in functionality to ``Convolve([obj,obj])``, but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
@@ -816,7 +816,7 @@ def AutoCorrelate(obj, real_space=None, gsparams=None, propagate_gsparams=True):
 
 
 class AutoCorrelation(Convolution):
-    """A special class for correlating a GSObject with itself.
+    """A special class for correlating a `GSObject` with itself.
 
     It is equivalent in functionality to::
 

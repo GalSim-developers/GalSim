@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file bounds.py
-A few adjustments to the Bounds class at the Python layer.
-"""
 
 import math
 
@@ -29,8 +26,8 @@ class Bounds(object):
     """A class for representing image bounds as 2D rectangles.
 
     Bounds is a base class for two slightly different kinds of bounds:
-    BoundsD describes bounds with floating point values in x and y.
-    BoundsI described bounds with integer values in x and y.
+    `BoundsD` describes bounds with floating point values in x and y.
+    `BoundsI` described bounds with integer values in x and y.
 
     The bounds are stored as four numbers in each instance, (xmin, xmax, ymin, ymax), with an
     additional boolean switch to say whether or not the Bounds rectangle has been defined.  The
@@ -38,22 +35,23 @@ class Bounds(object):
 
     Initialization:
 
-    A BoundsI or BoundsD instance can be initialized in a variety of ways.  The most direct is via
-    four scalars::
+    A `BoundsI` or `BoundsD` instance can be initialized in a variety of ways.  The most direct is
+    via four scalars::
 
         >>> bounds = galsim.BoundsD(xmin, xmax, ymin, ymax)
         >>> bounds = galsim.BoundsI(imin, imax, jmin, jmax)
 
-    In the BoundsI example above, ``imin``, ``imax``, ``jmin`` and ``jmax`` must all be integers
+    In the `BoundsI` example above, ``imin``, ``imax``, ``jmin`` and ``jmax`` must all be integers
     to avoid a TypeError exception.
 
-    Another way to initialize a Bounds instance is using two PositionI/D instances, the first
+    Another way to initialize a `Bounds` instance is using two `Position` instances, the first
     for ``(xmin,ymin)`` and the second for ``(xmax,ymax)``::
 
         >>> bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin), galsim.PositionD(xmax, ymax))
         >>> bounds = galsim.BoundsI(galsim.PositionI(imin, jmin), galsim.PositionI(imax, jmax))
 
-    In both the examples above, the I/D type of PositionI/D must match that of BoundsI/D.
+    In both the examples above, the I/D type of `PositionI`/`PositionD` must match that of
+    `BoundsI`/`BoundsD`.
 
     Finally, there are a two ways to lazily initialize a bounds instance with ``xmin = xmax``,
     ``ymin = ymax``, which will have an undefined rectangle and the instance method isDefined()
@@ -67,7 +65,7 @@ class Bounds(object):
         >>> bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin))
         >>> bounds = galsim.BoundsI(galsim.PositionI(imin, jmin))
 
-    Once again, the I/D type of PositionI/D must match that of BoundsI/D.
+    Once again, the I/D type of `PositionI`/`PositionD` must match that of `BoundsI`/`BoundsD`.
 
     For the latter two initializations, you would typically then add to the bounds with::
 
@@ -151,7 +149,7 @@ class Bounds(object):
     def area(self):
         """Return the area of the enclosed region.
 
-        The area is a bit different for integer-type BoundsI and float-type BoundsD instances.
+        The area is a bit different for integer-type `BoundsI` and float-type `BoundsD` instances.
         For floating point types, it is simply ``(xmax-xmin)*(ymax-ymin)``.  However, for integer
         types, we add 1 to each size to correctly count the number of pixels being described by the
         bounding box.
@@ -159,7 +157,7 @@ class Bounds(object):
         return self._area()
 
     def withBorder(self, dx, dy=None):
-        """Return a new Bounds object that expands the current bounds by the specified width.
+        """Return a new `Bounds` object that expands the current bounds by the specified width.
 
         If two arguments are given, then these are separate dx and dy borders.
         """
@@ -172,17 +170,17 @@ class Bounds(object):
 
     @property
     def origin(self):
-        "The lower left position of the Bounds."
+        "The lower left position of the `Bounds`."
         return self._pos_class(self.xmin, self.ymin)
 
     @property
     def center(self):
-        """The central position of the Bounds.
+        """The central position of the `Bounds`.
 
-        For a BoundsI, this will return an integer PositionI, which will be above and/or to
+        For a `BoundsI`, this will return an integer `PositionI`, which will be above and/or to
         the right of the true center if the x or y ranges have an even number of pixels.
 
-        For a BoundsD, this is equivalent to true_center.
+        For a `BoundsD`, this is equivalent to true_center.
         """
         if not self.isDefined():
             raise GalSimUndefinedBoundsError("center is invalid for an undefined Bounds")
@@ -190,18 +188,18 @@ class Bounds(object):
 
     @property
     def true_center(self):
-        """The central position of the Bounds as a PositionD.
+        """The central position of the `Bounds` as a `PositionD`.
 
-        This is always (xmax + xmin)/2., (ymax + ymin)/2., even for integer BoundsI, where
-        this may not necessarily be an integer PositionI.
+        This is always (xmax + xmin)/2., (ymax + ymin)/2., even for integer `BoundsI`, where
+        this may not necessarily be an integer `PositionI`.
         """
         if not self.isDefined():
             raise GalSimUndefinedBoundsError("true_center is invalid for an undefined Bounds")
         return PositionD((self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2.)
 
     def includes(self, *args):
-        """Test whether a supplied ``(x,y)`` pair, Position, or Bounds lie within a defined Bounds
-        rectangle of this instance.
+        """Test whether a supplied ``(x,y)`` pair, `Position`, or `Bounds` lie within a defined
+        `Bounds` rectangle of this instance.
 
         Examples::
 
@@ -213,8 +211,8 @@ class Bounds(object):
             >>> bounds.includes(galsim.BoundsD(-50., -50., 150., 150.))
             False
 
-        The type of the PositionI/D and BoundsI/D instances (i.e. integer or float type) should
-        match that of the bounds instance.
+        The type of the `PositionI`/`PositionD` and `BoundsI`/`BoundsD` instances (i.e. integer or
+        float type) should match that of the bounds instance.
         """
         if len(args) == 1:
             if isinstance(args[0], Bounds):
@@ -242,7 +240,7 @@ class Bounds(object):
             raise TypeError("include takes at most 2 arguments (%d given)"%len(args))
 
     def expand(self, factor):
-        "Grow the Bounds by the supplied factor about the center."
+        "Grow the `Bounds` by the supplied factor about the center."
         dx = (self.xmax - self.xmin) * 0.5 * (factor-1.)
         dy = (self.ymax - self.ymin) * 0.5 * (factor-1.)
         if isinstance(self, BoundsI):
@@ -251,7 +249,7 @@ class Bounds(object):
         return self.withBorder(dx,dy)
 
     def isDefined(self):
-        "Test whether Bounds rectangle is defined."
+        "Test whether `Bounds` rectangle is defined."
         return self._isdefined
 
     def getXMin(self):
@@ -271,12 +269,12 @@ class Bounds(object):
         return self.ymax
 
     def shift(self, delta):
-        """Shift the Bounds instance by a supplied position
+        """Shift the `Bounds` instance by a supplied `Position`.
 
         Examples:
 
-        The shift method takes either a PositionI or PositionD instance, which must match
-        the type of the Bounds instance::
+        The shift method takes either a `PositionI` or `PositionD` instance, which must match
+        the type of the `Bounds` instance::
 
             >>> bounds = BoundsI(1,32,1,32)
             >>> bounds = bounds.shift(galsim.PositionI(3, 2))
@@ -360,9 +358,9 @@ class Bounds(object):
 
 
 class BoundsD(Bounds):
-    """A Bounds that takes floating point values.
+    """A `Bounds` that takes floating point values.
 
-    See the Bounds doc string for more details.
+    See the `Bounds` doc string for more details.
     """
     _pos_class = PositionD
 
@@ -396,11 +394,11 @@ class BoundsD(Bounds):
 
 
 class BoundsI(Bounds):
-    """A Bounds that takes only integer values.
+    """A `Bounds` that takes only integer values.
 
     Typically used to define the bounding box of an image.
 
-    See the Bounds doc string for more details.
+    See the `Bounds` doc string for more details.
     """
     _pos_class = PositionI
 
@@ -427,7 +425,7 @@ class BoundsI(Bounds):
         raise TypeError("%s must be an integer value"%name)
 
     def numpyShape(self):
-        "A simple utility function to get the numpy shape that corresponds to this Bounds object."
+        "A simple utility function to get the numpy shape that corresponds to this `Bounds` object."
         if self.isDefined():
             return self.ymax-self.ymin+1, self.xmax-self.xmin+1
         else:
@@ -452,7 +450,7 @@ class BoundsI(Bounds):
 
 
 def _BoundsD(xmin, xmax, ymin, ymax):
-    """Equivalent to BoundsD constructor, but skips some sanity checks and argument parsing.
+    """Equivalent to `BoundsD` constructor, but skips some sanity checks and argument parsing.
     This requires that the four values already be int types.
     """
     ret = BoundsD.__new__(BoundsD)
@@ -465,7 +463,7 @@ def _BoundsD(xmin, xmax, ymin, ymax):
 
 
 def _BoundsI(xmin, xmax, ymin, ymax):
-    """Equivalent to BoundsI constructor, but skips some sanity checks and argument parsing.
+    """Equivalent to `BoundsI` constructor, but skips some sanity checks and argument parsing.
     This requires that the four values already be int types.
     """
     ret = BoundsI.__new__(BoundsI)

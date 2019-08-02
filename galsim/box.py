@@ -37,7 +37,7 @@ class Box(GSObject):
         flux:           The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:       An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, Box has the following access
+    In addition to the usual `GSObject` methods and attributes, Box has the following access
     properties:
 
     Attributes:
@@ -141,8 +141,8 @@ class Pixel(Box):
     """A class describing a pixel profile.  This is just a 2D square top-hat function.
 
     This class is typically used to represent a pixel response function.  It is used internally by
-    the drawImage() function, but there may be cases where the user would want to use this profile
-    directly.
+    the `GSObject.drawImage` function, but there may be cases where the user would want to use
+    this profile directly.
 
     Parameters:
         scale:      The linear scale size of the pixel.  Typically given in arcsec.
@@ -150,7 +150,7 @@ class Pixel(Box):
                     certainly be left at the default value of 1. [default: 1]
         gsparams:   An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, Pixel has the following access
+    In addition to the usual `GSObject` methods and attributes, Pixel has the following access
     property:
 
     Attributes:
@@ -188,7 +188,7 @@ class TopHat(GSObject):
         flux:       The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:   An optional `GSParams` argument. [default: None]
 
-    In addition to the usual GSObject methods and attributes, TopHat has the following access
+    In addition to the usual `GSObject` methods and attributes, TopHat has the following access
     property:
 
     Attributes:
