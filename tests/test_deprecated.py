@@ -52,34 +52,34 @@ def test_phase_psf():
 def test_interpolant():
     d = check_dep(galsim.Delta, tol=1.e-2)
     assert d.gsparams.kvalue_accuracy == 1.e-2
-    assert d.tol == d.gsparams.kvalue_accuracy
+    assert check_dep(getattr, d, 'tol') == d.gsparams.kvalue_accuracy
     n = check_dep(galsim.Nearest, tol=1.e-2)
     assert n.gsparams.kvalue_accuracy == 1.e-2
-    assert n.tol == n.gsparams.kvalue_accuracy
+    assert check_dep(getattr, n, 'tol') == n.gsparams.kvalue_accuracy
     s = check_dep(galsim.SincInterpolant, tol=1.e-2)
     assert s.gsparams.kvalue_accuracy == 1.e-2
-    assert s.tol == s.gsparams.kvalue_accuracy
+    assert check_dep(getattr, s, 'tol') == s.gsparams.kvalue_accuracy
     l = check_dep(galsim.Linear, tol=1.e-2)
     assert l.gsparams.kvalue_accuracy == 1.e-2
-    assert l.tol == l.gsparams.kvalue_accuracy
+    assert check_dep(getattr, l, 'tol') == l.gsparams.kvalue_accuracy
     c = check_dep(galsim.Cubic, tol=1.e-2)
     assert c.gsparams.kvalue_accuracy == 1.e-2
-    assert c.tol == c.gsparams.kvalue_accuracy
+    assert check_dep(getattr, c, 'tol') == c.gsparams.kvalue_accuracy
     q = check_dep(galsim.Quintic, tol=1.e-2)
     assert q.gsparams.kvalue_accuracy == 1.e-2
-    assert q.tol == q.gsparams.kvalue_accuracy
+    assert check_dep(getattr, q, 'tol') == q.gsparams.kvalue_accuracy
     l3 = check_dep(galsim.Lanczos, 3, tol=1.e-2)
     assert l3.gsparams.kvalue_accuracy == 1.e-2
-    assert l3.tol == l3.gsparams.kvalue_accuracy
+    assert check_dep(getattr, l3, 'tol') == l3.gsparams.kvalue_accuracy
     ldc = check_dep(galsim.Lanczos, 3, False, tol=1.e-2)
     assert ldc.gsparams.kvalue_accuracy == 1.e-2
-    assert ldc.tol == ldc.gsparams.kvalue_accuracy
+    assert check_dep(getattr, ldc, 'tol') == ldc.gsparams.kvalue_accuracy
     l8 = check_dep(galsim.Lanczos, 8, tol=1.e-2)
     assert l8.gsparams.kvalue_accuracy == 1.e-2
-    assert l8.tol == l8.gsparams.kvalue_accuracy
+    assert check_dep(getattr, l8, 'tol') == l8.gsparams.kvalue_accuracy
     l11 = check_dep(galsim.Interpolant.from_name, 'lanczos11', tol=1.e-2)
     assert l11.gsparams.kvalue_accuracy == 1.e-2
-    assert l11.tol == l11.gsparams.kvalue_accuracy
+    assert check_dep(getattr, l11, 'tol') == l11.gsparams.kvalue_accuracy
 
 if __name__ == "__main__":
     test_gsparams()
