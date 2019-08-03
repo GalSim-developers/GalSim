@@ -106,11 +106,19 @@ class Interpolant(object):
 
     @property
     def positive_flux(self):
+        """The positive-flux fraction of the interpolation kernel."""
         return self._i.getPositiveFlux();
 
     @property
     def negative_flux(self):
+        """The negative-flux fraction of the interpolation kernel."""
         return self._i.getNegativeFlux();
+
+    @property
+    def tol(self):
+        from galsim.deprecated import depr
+        depr('interpolant.tol', 2.2, 'interpolant.gsparams.kvalue_accuracy')
+        return self._gsparams.kvalue_accuracy
 
     def withGSParams(self, gsparams):
         """Create a version of the current interpolant with the given gsparams
@@ -141,13 +149,11 @@ class Interpolant(object):
     def xval(self, x):
         """Calculate the value of the interpolant kernel at one or more x values
 
-        Parameters
-        ----------
+        Parameters:
             x:      The value (as a flost) or values (as a np.array) at which to compute the
                     amplitude of the Interpolant kernel.
 
-        Returns
-        -------
+        Returns:
             xval:   The value(s) at the x location(s).  If x was an array, then this is also
                     an array.
         """
@@ -164,13 +170,11 @@ class Interpolant(object):
     def kval(self, k):
         """Calculate the value of the interpolant kernel in Fourier space at one or more k values.
 
-        Parameters
-        ----------
+        Parameters:
             k:      The value (as a flost) or values (as a np.array) at which to compute the
                     amplitude of the Interpolant kernel in Fourier space.
 
-        Returns
-        -------
+        Returns:
             kval:   The k-value(s) at the k location(s).  If k was an array, then this is also
                     an array.
         """
@@ -218,10 +222,6 @@ class Delta(Interpolant):
         return "galsim.Delta()"
 
     @property
-    def tol(self):
-        return self._gsparams.kvalue_accuracy
-
-    @property
     def xrange(self):
         return 0.
 
@@ -263,10 +263,6 @@ class Nearest(Interpolant):
 
     def __str__(self):
         return "galsim.Nearest()"
-
-    @property
-    def tol(self):
-        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
@@ -313,10 +309,6 @@ class SincInterpolant(Interpolant):
         return "galsim.SincInterpolant()"
 
     @property
-    def tol(self):
-        return self._gsparams.kvalue_accuracy
-
-    @property
     def xrange(self):
         # Technically infinity, but truncated by the tolerance.
         return 1./(math.pi * self._gsparams.kvalue_accuracy)
@@ -358,10 +350,6 @@ class Linear(Interpolant):
 
     def __str__(self):
         return "galsim.Linear()"
-
-    @property
-    def tol(self):
-        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
@@ -406,10 +394,6 @@ class Cubic(Interpolant):
         return "galsim.Cubic()"
 
     @property
-    def tol(self):
-        return self._gsparams.kvalue_accuracy
-
-    @property
     def xrange(self):
         return 2.
 
@@ -450,10 +434,6 @@ class Quintic(Interpolant):
 
     def __str__(self):
         return "galsim.Quintic()"
-
-    @property
-    def tol(self):
-        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
@@ -514,10 +494,6 @@ class Lanczos(Interpolant):
     @property
     def conserve_dc(self):
         return self._conserve_dc
-
-    @property
-    def tol(self):
-        return self._gsparams.kvalue_accuracy
 
     @property
     def xrange(self):
