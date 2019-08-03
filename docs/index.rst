@@ -17,11 +17,14 @@ GalSim: The modular galaxy image simulation toolkit
     photon
     coord
     utilities
+    errors
+
     config
     hsm
     des
     wfirst
 
+    shared
     history
 
 ==================

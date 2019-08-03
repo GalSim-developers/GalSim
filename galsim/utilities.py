@@ -32,6 +32,12 @@ def isinteger(value):
     """Check if a value is an integer type (including np.int64, long, etc.)
 
     Specifically, it checks whether value == int(value).
+
+    Parameter:
+        value:      The value to be checked whether it is an integer
+
+    Returns:
+        True if the value is an integer type, False otherwise.
     """
     try:
         return value == int(value)
@@ -46,7 +52,7 @@ def roll2d(image, shape):
         shape:      (iroll, jroll) The roll in the i and j dimensions, respectively.
 
     Returns:
-        the rolled image.
+        the rolled array
     """
     (iroll, jroll) = shape
     # The ascontiguousarray bit didn't used to be necessary.  But starting with
@@ -54,22 +60,24 @@ def roll2d(image, shape):
     return np.ascontiguousarray(np.roll(np.roll(image, jroll, axis=1), iroll, axis=0))
 
 def kxky(array_shape=(256, 256)):
-    """Return the tuple ``(kx, ky)`` corresponding to the DFT of a unit integer-sampled array of
+    """Return the tuple (kx, ky) corresponding to the DFT of a unit integer-sampled array of
     input shape.
 
-    Uses the SBProfile conventions for Fourier space, so ``k`` varies in approximate range
-    (-pi, pi].  Uses the most common DFT element ordering conventions (and those of FFTW), so that
-    ``(0, 0)`` array element corresponds to ``(kx, ky) = (0, 0)``.
+    Uses the FFTW conventions for Fourier space, so k varies in approximate range (-pi, pi],
+    and the (0, 0) array element corresponds to (kx, ky) = (0, 0).
 
     See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
     but misses a factor of pi.
 
-    Adopts NumPy array index ordering so that the trailing axis corresponds to ``kx``, rather than
+    Adopts NumPy array index ordering so that the trailing axis corresponds to kx, rather than
     the leading axis as would be expected in IDL/Fortran.  See docstring for ``numpy.meshgrid``
     which also uses this convention.
 
     Parameters:
-        array_shape:    The NumPy array shape desired for ``kx, ky``.
+        array_shape:    The NumPy array shape desired for kx, ky.
+
+    Returns:
+        kx, ky
     """
     # Note: numpy shape is y,x
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
@@ -77,9 +85,9 @@ def kxky(array_shape=(256, 256)):
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def g1g2_to_e1e2(g1, g2):
-    """Convenience function for going from ``(g1, g2)`` -> ``(e1, e2)``.
+    """Convenience function for going from (g1, g2) -> (e1, e2).
 
-    Here ``g1`` and ``g2`` are reduced shears, and ``e1`` and ``e2`` are distortions - see `Shear`
+    Here g1 and g2 are reduced shears, and e1 and e2 are distortions - see `Shear`
     for definitions of reduced shear and distortion in terms of axis ratios or other ways of
     specifying ellipses.
 
@@ -111,11 +119,12 @@ def rotate_xy(x, y, theta):
     the origin of the Cartesian coordinate system.
 
     Parameters:
-        x:      NumPy array of input ``x`` coordinates
-        y:      NumPy array of input ``y`` coordinates
+        x:      NumPy array of input x coordinates
+        y:      NumPy array of input y coordinates
         theta:  Rotation angle (+ve counter clockwise) as an `Angle` instance
 
-    @return the rotated coordinates ``(x_rot,y_rot)``.
+    Returns:
+        the rotated coordinates (x_rot,y_rot).
     """
     sint, cost = theta.sincos()
     x_rot = x * cost - y * sint
@@ -135,6 +144,17 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
     If the inputs must be integers, set ``integer=True``.
     If there are other args/kwargs to parse after these, then their names should be
     be given as the parameter ``others``, which are passed back in a tuple after the position.
+
+    Parameters:
+        args:       The args of the original function.
+        kwargs:     The kwargs of the original function.
+        name1:      The allowed kwarg for the first coordinate.
+        name2:      The allowed kwarg for the second coordinate.
+        integer:    Whether to return a `PositionI` rather than a `PositionD`. [default: False]
+        others:     If given, other values to also parse and return from the kwargs. [default: []]
+
+    Returns:
+        a `Position` instance, possibly also with other values if ``others`` is given.
     """
     from .position import PositionD, PositionI
     def canindex(arg):
@@ -198,6 +218,10 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
 class SimpleGenerator:
     """A simple class that is constructed with an arbitrary object.
     Then generator() will return that object.
+
+    This is useful as a way to use an already existing object in a multiprocessing Proxy,
+    since that normally needs a factory function.  So this is a factory function that
+    just returns an already existing object.
     """
     def __init__(self, obj): self._obj = obj
     def __call__(self):  # pragma: no cover  (It is covered, but coveralls doesn't get it right.)
@@ -263,6 +287,12 @@ def rand_arr(shape, deviate):
 
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an `Interpolant` if it is given as a string.
+
+    Parameter:
+        interpolant:    Either an `Interpolant` or a string to convert.
+
+    Returns:
+        an `Interpolant`
     """
     from .interpolant import Interpolant
     if isinstance(interpolant, Interpolant):
@@ -275,8 +305,8 @@ def convert_interpolant(interpolant):
 def _convertPositions(pos, units, func):
     """Convert ``pos`` from the valid ways to input positions to two NumPy arrays
 
-       This is used by the functions getShear(), getConvergence(), getMagnification(), and
-       getLensing() for both PowerSpectrum and NFWHalo.
+    This is used by the functions getShear(), getConvergence(), getMagnification(), and
+    getLensing() for both PowerSpectrum and NFWHalo.
     """
     from .position import Position
     from .angle import AngleUnit, arcsec
@@ -378,8 +408,8 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
 
-    The input ``x,f`` values can be lists, NumPy arrays, or really anything that can be converted
-    to a NumPy array.  The new lists will be output as numpy arrays.
+    The input ``x`` and ``f`` values can be lists, NumPy arrays, or really anything that can be
+    converted to a NumPy array.  The new lists will be output as numpy arrays.
 
     Parameters:
         x:              The ``x`` values in the f(x) tabulation.
@@ -402,7 +432,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
                         requirement.  [default: True]
 
     Returns:
-        a tuple of lists ``(x_new, y_new)`` with the thinned tabulation.
+        a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
     from heapq import heappush, heappop
 
@@ -481,20 +511,24 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     splitpoints = sorted([0]+[h[2] for h in heap])
     return x[splitpoints], f[splitpoints]
 
-
-# In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
-# It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
-# Mike fixed this algorithm to at least work correctly.  However, we recommend using the above
-# algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
-# On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
-# we retain the old algorithm here in case we want to re-enable it for certain applications.
 def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # pragma: no cover
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
 
-    The input ``x,f`` values can be lists, NumPy arrays, or really anything that can be converted
-    to a NumPy array.  The new lists will be output as python lists.
+    The input ``x`` and ``f`` values can be lists, NumPy arrays, or really anything that can be
+    converted to a NumPy array.  The new lists will be output as python lists.
+
+    .. note::
+        In Issue #739, Josh wrote `thin_tabulated_values`  as a replacement for this function,
+        which had been buggy -- not actually hitting its target relative accuracy.  So on the
+        same issue, Mike fixed this algorithm to at least work correctly.
+
+        However, we recommend using the above algorithm, since it keeps fewer sample locations
+        for a given ``rel_err`` than the old algorithm.
+
+        On the other hand, the old algorithm (this one) may be quite a bit faster, so we retain
+        it here in case there is a use case where it is more appropriate.
 
     Parameters:
         x:              The ``x`` values in the f(x) tabulation.
@@ -506,7 +540,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
                         significant? (False)  [default: False]
 
     Returns:
-        a tuple of lists ``(x_new, y_new)`` with the thinned tabulation.
+        a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
     x = np.asarray(x, dtype=float)
     f = np.asarray(f, dtype=float)
@@ -747,7 +781,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
                             [default: False]
 
     Returns:
-        a list of images and offsets to reconstruct the input image using `interleaveImages`.
+        a list of images (`Image`) and offsets (`PositionD`) to reconstruct the input image using
+        `interleaveImages`.
     """
     from .image import Image
     from .position import PositionD
@@ -823,7 +858,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     Such an image can be obtained in a fairly simple manner in simulations of surface brightness
     profiles by convolving them explicitly with the native pixel response and setting a lower
-    sampling scale (or higher sampling rate) using the ``pixel_scale`` argument in 
+    sampling scale (or higher sampling rate) using the ``pixel_scale`` argument in
     `GSObject.drawImage` routine and setting the ``method`` parameter to 'no_pixel'.
 
     However, pixel level detector effects can be included only on images drawn at the native pixel
@@ -880,7 +915,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
                                 down the routine a little. [default: True]
 
     Returns:
-        the interleaved image
+        the interleaved `Image`
     """
     from .position import PositionD
     from .image import Image
@@ -911,7 +946,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     if not isinstance(im_list[0], Image):
         raise TypeError("im_list must be a list of galsim.Image instances")
 
-    # These should be the same for all images in `im_list'.
+    # These should be the same for all images in im_list.
     y_size, x_size = im_list[0].array.shape
     wcs = im_list[0].wcs
 
@@ -985,14 +1020,15 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     img.setOrigin(orig)
     for im in im_list[1:]:
         if not im.origin==orig:  # pragma: no cover
-            galsim_warn("Images in `im_list` have multiple values for origin. Assigning the "
-                        "origin of the first Image instance in 'im_list' to the interleaved image.")
+            galsim_warn("Images in im_list have multiple values for origin. Assigning the "
+                        "origin of the first Image instance in im_list to the interleaved image.")
             break
 
     return img
 
 class LRU_Cache:
-    """ Simplified Least Recently Used Cache.
+    """Simplified Least Recently Used Cache.
+
     Mostly stolen from http://code.activestate.com/recipes/577970-simplified-lru-cache/,
     but added a method for dynamic resizing.  The least recently used cached item is
     overwritten on a cache miss.
@@ -1011,11 +1047,6 @@ class LRU_Cache:
         >>> cache = galsim.utilities.LRU_Cache(slow_function)
         >>> v1 = cache(*k1)  # Returns slow_function(*k1), slowly the first time
         >>> v1 = cache(*k1)  # Returns slow_function(*k1) again, but fast this time.
-
-    Methods:
-        resize:     Resize the cache, either upwards or downwards.  Upwards resizing
-                    is non-destructive.  Downwards resizing will remove the least
-                    recently used items first::
     """
     def __init__(self, user_function, maxsize=1024):
         # Link layout:     [PREV, NEXT, KEY, RESULT]
@@ -1058,10 +1089,11 @@ class LRU_Cache:
         return result
 
     def resize(self, maxsize):
-        """ Resize the cache.  Increasing the size of the cache is non-destructive, i.e.,
-        previously cached inputs remain in the cache.  Decreasing the size of the cache will
-        necessarily remove items from the cache if the cache is already filled.  Items are removed
-        in least recently used order.
+        """Resize the cache.
+
+        Increasing the size of the cache is non-destructive, i.e., previously cached inputs remain
+        in the cache.  Decreasing the size of the cache will necessarily remove items from the
+        cache if the cache is already filled.  Items are removed in least recently used order.
 
         Parameters:
             maxsize:    The new maximum number of inputs to cache.
@@ -1090,9 +1122,22 @@ class LRU_Cache:
                     root[1] = link
 
 
-# http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
 @contextmanager
 def printoptions(*args, **kwargs):
+    """A context manager for using different numpy printoptions temporarily
+
+    From http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
+
+    Usage::
+
+        with printoptions(threshold=len(long_arr)):
+            print(long_arr)  # Doesn't omit values in the middle of the array
+        print(long_arr)  # If the array is long enough, will use ... in the middle.
+
+    .. note::
+        It seems Numpy finally added this feature in version 1.15.  So this is probably
+        equivalent to using ``numpy.prinoptions`` instead of ``galsim.utilities.printoptions``.
+    """
     original = np.get_printoptions()
     np.set_printoptions(*args, **kwargs)
     # contextmanager exception handling is tricky.  Don't forget to wrap the yield:
@@ -1104,7 +1149,14 @@ def printoptions(*args, **kwargs):
 
 
 def listify(arg):
-    """Turn argument into a list if not already iterable."""
+    """Turn argument into a list if not already iterable.
+
+    Parameters:
+        arg:        An argument that may be a lit or a single item
+
+    Returns:
+        [arg] if arg was not already a list, otherwise arg.
+    """
     return [arg] if not hasattr(arg, '__iter__') else arg
 
 
@@ -1113,6 +1165,17 @@ def dol_to_lod(dol, N=None, scalar_string=True):
     Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
     that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
     length-N lists.
+
+    Parameters:
+        dol:            A dict of lists
+        N:              The length of the lists if known in advance. [default: None, which will
+                        determine the maximum length of the lists for you]
+        scalar_string:  Whether strings in the input list should be treated as scalars (and thus
+                        broadcast to each item in the output) or not (in which case, they will
+                        be treated as lists of characters) [default: True]
+
+    Returns:
+        A list of dicts
     """
     if N is None:
         if scalar_string:
@@ -1147,13 +1210,15 @@ def dol_to_lod(dol, N=None, scalar_string=True):
         yield out
 
 def structure_function(image):
-    """Estimate the angularly-averaged structure function of a 2D random field.
+    r"""Estimate the angularly-averaged structure function of a 2D random field.
 
     The angularly-averaged structure function D(r) of the 2D field phi is defined as:
 
-    D(|r|) = <|phi(x) - phi(x+r)|^2>
+    .. math::
+        D(|r|) = \langle |phi(x) - phi(x+r)|^2 \rangle
 
-    where the x and r on the RHS are 2D vectors, but the |r| on the LHS is just a scalar length.
+    where the x and r on the RHS are 2D vectors, but the :math:`|r|` on the LHS is just a scalar
+    length.
 
     The image must have its ``scale`` attribute defined.  It will be used in the calculations to
     set the scale of the radial distances.
@@ -1229,7 +1294,7 @@ def combine_wave_list(*args):
     return wave_list, blue_limit, red_limit
 
 def functionize(f):
-    """ Decorate a function ``f`` which accepts scalar positional or keyword arguments, to accept
+    """Decorate a function ``f`` which accepts scalar positional or keyword arguments, to accept
     arguments that can be either scalars or _functions_.  If the arguments include univariate
     (N-variate) functions, then the output will be a univariate (N-variate) function.  While it's
     okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
@@ -1276,7 +1341,7 @@ def functionize(f):
         if not any(hasattr(arg, '__call__') for arg in args+tuple(kwargs.values())):
             return f(*args, **kwargs)  # ... if not, then keep output type a scalar ...
         else:
-            def fff(*inner_args, **inner_kwargs): # ...else the output type is a function: `fff`.
+            def fff(*inner_args, **inner_kwargs): # ...else the output type is a function: fff.
                 new_args = [arg
                             if not hasattr(arg, '__call__')
                             else arg(*inner_args, **inner_kwargs)
@@ -1397,9 +1462,9 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     """Select some number of random choices from a list, with replacement, using a supplied RNG.
 
     ``n`` random choices with replacement are made assuming that those choices should range from 0
-    to ``n_choices-1``, so they can be used as indices in a list/array.  If `weight` is supplied,
-    then it should be an array of length `n_choices` that ranges from 0-1, and can be used to make
-    weighted choices from the list.
+    to ``n_choices-1``, so they can be used as indices in a list/array.  If ``weight`` is supplied,
+    then it should be an array of length ``n_choices`` that ranges from 0-1, and can be used to
+    make weighted choices from the list.
 
     Parameters:
         n:          Number of random selections to make.
@@ -1409,7 +1474,7 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
                     random indices.
 
     Returns:
-        a NumPy array of length ``n`` containing the integer-valued indices that were selected.
+        a NumPy array of length n containing the integer-valued indices that were selected.
     """
     from .random import BaseDeviate, UniformDeviate
     # Make sure we got a proper RNG.
@@ -1481,6 +1546,14 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
 
 def check_share_file(filename, subdir):
     """Find `SED` or `Bandpass` file, possibly adding share_dir/subdir.
+
+    Parameters:
+        filename:       The file name to look for
+        subdir:         The subdirectory of `galsim.meta_data.share_dir` where this file might be.
+
+    Returns:
+        True, correct_filename      if the file was found
+        False, ''                   if not
     """
     from . import meta_data
     import os
@@ -1495,11 +1568,25 @@ def check_share_file(filename, subdir):
         return False, ''
 
 
-# http://stackoverflow.com/a/6849299
 class lazy_property(object):
     """
-    meant to be used for lazy evaluation of an object attribute.
-    property should represent non-mutable data, as it replaces itself.
+    This decorator will act similarly to @property, but will be efficient for multiple access
+    to values that require some significant calculation.
+
+    It works by replacing the attribute with the computed value, so after the first access,
+    the property (an attribute of the class) is superseded by the new attribute of the instance.
+
+    Note that is should only be used for non-mutable data, since the calculation will not be
+    repeated if anything about the instance changes.
+
+    Usage::
+
+        @lazy_property
+        def slow_function_to_be_used_as_a_property(self):
+            x =  ...  # Some slow calculation.
+            return x
+
+    Base on an answer from http://stackoverflow.com/a/6849299
     """
     def __init__(self, fget):
         self.fget = fget
@@ -1512,16 +1599,34 @@ class lazy_property(object):
         setattr(obj, self.func_name, value)
         return value
 
-# cf. Docstring Inheritance Decorator at:
-# https://github.com/ActiveState/code/wiki/Python_index_1
-# Although I modified it slightly, since the original recipe there had a bug that made it
-# not work properly with 2 levels of sub-classing (e.g. Pixel <- Box <- GSObject)
 class doc_inherit(object):
-    """
-    Docstring inheriting method descriptor
-    The class itself is also used as a decorator
-    """
+    '''
+    This decorator will grab a doc string from a base class version of a method.
+    Useful if the subclass doesn't change anything about the method API, but just has
+    a specialized implementation.  This lets the documentation live only in one place.
 
+    Usage::
+
+        class Base(object):
+            def some_method(self):
+                """A nice description of the functionality
+                """
+                pass
+
+        class Sub(Base):
+
+            @doc_inherit
+            def some_method(self):
+                # Don't bother with any doc string here.
+                pass
+
+    Based on the Docstring Inheritance Decorator at:
+
+    https://github.com/ActiveState/code/wiki/Python_index_1
+
+    Although I (MJ) modified it slightly, since the original recipe there had a bug that made it
+    not work properly with 2 levels of sub-classing (e.g. Pixel <- Box <- GSObject).
+    '''
     def __init__(self, mthd):
         self.mthd = mthd
         self.name = mthd.__name__
@@ -1555,8 +1660,9 @@ class doc_inherit(object):
         func.__doc__ = source.__doc__
         return func
 
-# Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.
 class OrderedWeakRef(weakref.ref):
+    """Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.
+    """
     def __lt__(self, other):
         return id(self) < id(other)
 
@@ -1564,6 +1670,20 @@ class OrderedWeakRef(weakref.ref):
 def nCr(n, r):
     """Combinations.  I.e., the number of ways to choose ``r`` distiguishable things from ``n``
     distinguishable things.
+
+    Parameters:
+        n       The number of options to choose from.
+        r       The number of items to choose
+
+    Returns:
+        nCr, the (n,r) binomial coefficient.
+
+    .. note::
+        In Python 3, the factorial function was improved such that doing this the direct way
+        of calculating n! / (r! (n-r)!) seems to be the fastest algorith.  In Python 2, for
+        largish values of n, a more complicated algorithm that avoided large integers was
+        faster.  This function uses the direct method for both -- we don't bother to check the
+        version of Python to potentially select a different algorithm in the two cases.
     """
     from math import factorial
     if 0 <= r <= n:
@@ -1571,8 +1691,17 @@ def nCr(n, r):
     else:
         return 0
 
-# From http://code.activestate.com/recipes/81253-weakmethod/
 class WeakMethod(object):
+    """Wrap a method in a weakref.
+
+    This is useful if you want to specialize a function if certain conditions hold.
+    You can check those conditions and return one of several possible implementations as
+    a `lazy_property`.
+
+    Using just a normal ``weakref`` doesn't work, but this class will work.
+
+    From http://code.activestate.com/recipes/81253-weakmethod/
+    """
     def __init__(self, f):
         self.f = f.__func__
         self.c = weakref.ref(f.__self__)
@@ -1587,6 +1716,9 @@ def ensure_dir(target):
 
     In particular check if the OS reported that the directory already exists when running
     makedirs, which can happen if another process creates it before this one can
+
+    Parameter:
+        target:     The file name for which to ensure that all necessary directories exist.
     """
 
     _ERR_FILE_EXISTS=17
@@ -1624,7 +1756,7 @@ def find_out_of_bounds_position(x, y, bounds, grid=False):
                     If the latter, then x and y should have the same shape.
 
     Returns:
-        a PositionD from x and y that is out-of-bounds of bounds.
+        a `PositionD` from x and y that is out-of-bounds of bounds.
     """
     from .position import PositionD
     if grid:
