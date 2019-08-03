@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,9 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file transform.py</span>
-<span class="sd">A class that handles affine tranformations of a profile including a possible flux scaling.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -196,10 +196,10 @@
 
 <div class="viewcode-block" id="Transform"><a class="viewcode-back" href="../../transform.html#galsim.Transform">[docs]</a><span class="k">def</span> <span class="nf">Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
               <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for transforming either a GSObject or ChromaticObject.</span>
+    <span class="sd">&quot;&quot;&quot;A function for transforming either a `GSObject` or `ChromaticObject`.</span>
 
-<span class="sd">    This function will inspect its input argument to decide if a Transformation object or a</span>
-<span class="sd">    ChromaticTransformation object is required to represent the resulting transformed object.</span>
+<span class="sd">    This function will inspect its input argument to decide if a `Transformation` object or a</span>
+<span class="sd">    `ChromaticTransformation` object is required to represent the resulting transformed object.</span>
 
 <span class="sd">    Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a</span>
 <span class="sd">    non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually</span>
@@ -213,14 +213,13 @@
 <span class="sd">        offset:             A galsim.PositionD giving the offset by which to shift the profile.</span>
 <span class="sd">        flux_ratio:         A factor by which to multiply the surface brightness of the object.</span>
 <span class="sd">                            (Technically, not necessarily the flux.  See above.) [default: 1]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This</span>
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        a Transformation or ChromaticTransformation instance as appropriate.</span>
+<span class="sd">        a `Transformation` or `ChromaticTransformation` instance as appropriate.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.sum</span> <span class="k">import</span> <span class="n">Sum</span>
     <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolution</span>
@@ -264,18 +263,21 @@
 
 
 <div class="viewcode-block" id="Transformation"><a class="viewcode-back" href="../../transform.html#galsim.Transformation">[docs]</a><span class="k">class</span> <span class="nc">Transformation</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for modeling an affine transformation of a GSObject instance.</span>
+    <span class="sd">&quot;&quot;&quot;A class for modeling an affine transformation of a `GSObject` instance.</span>
 
 <span class="sd">    Typically, you do not need to construct a Transformation object explicitly.  This is the type</span>
-<span class="sd">    returned by the various transformation methods of GSObject such as shear(), rotate(),</span>
-<span class="sd">    shift(), transform(), etc.  All the various transformations can be described as a combination</span>
-<span class="sd">    of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)</span>
-<span class="sd">    respectively.</span>
+<span class="sd">    returned by the various transformation methods of `GSObject` such as `GSObject.shear`,</span>
+<span class="sd">    `GSObject.rotate`, `GSObject.shift`, `GSObject.transform`, etc.</span>
 
-<span class="sd">    Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a</span>
-<span class="sd">    non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually</span>
-<span class="sd">    only refers to an overall amplitude ratio for the surface brightness profile.  The total</span>
-<span class="sd">    flux scaling is actually ``|det(jac)| * flux_ratio``.</span>
+<span class="sd">    All the various transformations can be described as a combination of a jacobian matrix</span>
+<span class="sd">    (i.e. `GSObject.transform`) and a translation (`GSObject.shift`), which are described by</span>
+<span class="sd">    (dudx,dudy,dvdx,dvdy) and (dx,dy) respectively.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The name of the flux_ratio parameter is technically wrong here if the jacobian has a</span>
+<span class="sd">        non-unit determinant, since that would also scale the flux.  The flux_ratio parameter</span>
+<span class="sd">        actually only refers to an overall amplitude ratio for the surface brightness profile.</span>
+<span class="sd">        The total flux scaling is actually ``|det(jac)| * flux_ratio``.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        obj:                The object to be transformed.</span>
@@ -284,8 +286,7 @@
 <span class="sd">        offset:             A galsim.PositionD giving the offset by which to shift the profile.</span>
 <span class="sd">        flux_ratio:         A factor by which to multiply the surface brightness of the object.</span>
 <span class="sd">                            (Technically, not necessarily the flux.  See above.) [default: 1]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This</span>
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
@@ -295,14 +296,14 @@
 <span class="sd">        jac:            The jacobian of the transformation matrix.</span>
 <span class="sd">        offset:         The offset being applied.</span>
 <span class="sd">        flux_ratio:     The amount by which the overall surface brightness amplitude is multiplied.</span>
-<span class="sd">        gsparams:       The usual gsparams attribute that all GSObjects have.</span>
+<span class="sd">        gsparams:       The usual gsparams attribute that all `GSObject` classes have.</span>
 
 <span class="sd">    Note: if ``gsparams`` is unspecified (or None), then the Transformation instance inherits the</span>
-<span class="sd">    GSParams from obj.  Also, note that parameters related to the Fourier-space calculations must</span>
+<span class="sd">    `GSParams` from obj.  Also, note that parameters related to the Fourier-space calculations must</span>
 <span class="sd">    be set when initializing obj, NOT when creating the Transform (at which point the accuracy and</span>
 <span class="sd">    threshold parameters will simply be ignored).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+<div class="viewcode-block" id="Transformation.__init__"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
                  <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jac</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
@@ -321,7 +322,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">*=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_flux_ratio</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">original</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span>
@@ -345,12 +346,12 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">_BaseCorrelatedNoise</span>
+        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">BaseCorrelatedNoise</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span>
                     <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span>
                                <span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">),</span>
@@ -373,7 +374,7 @@
             <span class="n">ret</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="Transformation.__eq__"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Transformation</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">original</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">original</span> <span class="ow">and</span>
@@ -381,18 +382,18 @@
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux_ratio</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Transformation.__hash__"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Transformation&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Transformation.__repr__"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.Transformation(</span><span class="si">%r</span><span class="s1">, jac=</span><span class="si">%r</span><span class="s1">, offset=</span><span class="si">%r</span><span class="s1">, flux_ratio=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_str_from_jac</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">jac</span><span class="p">):</span>
@@ -430,14 +431,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Transformation.__str__"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_from_jac</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;.shift(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39; * </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
     <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
@@ -674,7 +675,9 @@
 <div class="viewcode-block" id="_Transform"><a class="viewcode-back" href="../../transform.html#galsim._Transform">[docs]</a><span class="k">def</span> <span class="nf">_Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span>
                <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Approximately equivalent to Transform, but without some of the sanity checks (such as</span>
-<span class="sd">    checking for Chromatic options).  For ChromaticObjects, you must use the regular Transform.</span>
+<span class="sd">    checking for chromatic options).</span>
+
+<span class="sd">    For a `ChromaticObject`, you must use the regular `Transform`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">Transformation</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span></div>
 </pre></div>

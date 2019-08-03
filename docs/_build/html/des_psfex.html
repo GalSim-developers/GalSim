@@ -91,11 +91,13 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="des.html">The DES Module</a><ul class="current">
@@ -105,6 +107,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -180,7 +183,8 @@
 <dl class="class">
 <dt id="galsim.des.DES_PSFEx">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">DES_PSFEx</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">image_file_name=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class that handles DES files describing interpolated principal component images
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that handles DES files describing interpolated principal component images
 of the PSF.  These are usually stored as <code class="docutils literal notranslate"><span class="pre">*_psfcat.psf</span></code> files.</p>
 <p>PSFEx is software written by Emmanuel Bertin.  If you want more detail about it, please
 check out the web site:</p>
@@ -249,6 +253,18 @@ directory.) (Default <code class="docutils literal notranslate"><span class="pre
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.des.DES_PSFEx.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">image_file_name=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.des.DES_PSFEx.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.des.DES_PSFEx.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.des.DES_PSFEx.getLocalWCS">
 <code class="sig-name descname">getLocalWCS</code><span class="sig-paren">(</span><em class="sig-param">image_pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getLocalWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getLocalWCS" title="Permalink to this definition">¶</a></dt>

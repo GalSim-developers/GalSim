@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,10 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file interpolatedimage.py</span>
-
-<span class="sd">InterpolatedImage is a class that allows one to treat an image as a profile.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -202,38 +201,41 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="InterpolatedImage"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage">[docs]</a><span class="k">class</span> <span class="nc">InterpolatedImage</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified using an Image, which can be</span>
+    <span class="sd">&quot;&quot;&quot;A class describing non-parametric profiles specified using an `Image`, which can be</span>
 <span class="sd">    interpolated for the purpose of carrying out transformations.</span>
 
 <span class="sd">    The InterpolatedImage class is useful if you have a non-parametric description of an object as</span>
-<span class="sd">    an Image, that you wish to manipulate / transform using GSObject methods such as shear(),</span>
-<span class="sd">    magnify(), shift(), etc.  Note that when convolving an InterpolatedImage, the use of real-space</span>
-<span class="sd">    convolution is not recommended, since it is typically a great deal slower than Fourier-space</span>
-<span class="sd">    convolution for this kind of object.</span>
+<span class="sd">    an `Image`, that you wish to manipulate / transform using `GSObject` methods such as</span>
+<span class="sd">    `GSObject.shear`, `GSObject.magnify`, `GSObject.shift`, etc.  Note that when convolving an</span>
+<span class="sd">    InterpolatedImage, the use of real-space convolution is not recommended, since it is typically</span>
+<span class="sd">    a great deal slower than Fourier-space convolution for this kind of object.</span>
 
-<span class="sd">    There are three options for determining the flux of the profile.  First, you can simply</span>
-<span class="sd">    specify a ``flux`` value explicitly.  Or there are two ways to get the flux from the image</span>
-<span class="sd">    directly.  If you set ``normalization = &#39;flux&#39;``, the flux will be taken as the sum of the</span>
-<span class="sd">    pixel values.  This corresponds to an image that was drawn with ``drawImage(method=&#39;no_pixel&#39;)``.</span>
-<span class="sd">    This is the default if flux is not given.  The other option, ``normalization = &#39;sb&#39;`` treats</span>
-<span class="sd">    the pixel values as samples of the surface brightness profile at each location.  This</span>
-<span class="sd">    corresponds to an image drawn with ``drawImage(method=&#39;sb&#39;)``.</span>
+<span class="sd">    There are three options for determining the flux of the profile.</span>
+
+<span class="sd">    1. You can simply specify a ``flux`` value explicitly.</span>
+<span class="sd">    2. If you set ``normalization = &#39;flux&#39;``, the flux will be taken as the sum of the pixel values</span>
+<span class="sd">       in the input image.  This corresponds to an image that was drawn with</span>
+<span class="sd">       ``drawImage(method=&#39;no_pixel&#39;)``.  This is the default if flux is not given.</span>
+<span class="sd">    3. If you set ``normalization = &#39;sb&#39;``, the pixel values are treated as samples of the surface</span>
+<span class="sd">       brightness profile at each location.  This corresponds to an image drawn with</span>
+<span class="sd">       ``drawImage(method=&#39;sb&#39;)``.  The flux is then the sum of the pixels in the input image</span>
+<span class="sd">       multiplied by the pixel area.</span>
 
 <span class="sd">    You can also use images that were drawn with one of the pixel-integrating methods (&#39;auto&#39;,</span>
 <span class="sd">    &#39;fft&#39;, or &#39;real_space&#39;); however, the resulting profile will not correspond to the one</span>
-<span class="sd">    that was used to call ``drawImage``.  The integration over the pixel is equivalent to convolving</span>
-<span class="sd">    the original profile by a Pixel and then drawing with ``method=&#39;no_pixel&#39;``.  So if you use</span>
-<span class="sd">    such an image with InterpolatedImage, the resulting profile will include the Pixel convolution</span>
-<span class="sd">    already.  As such, if you use it as a PSF for example, then the final objects convolved by</span>
-<span class="sd">    this PSF will already include the pixel convolution, so you should draw them using</span>
-<span class="sd">    ``method=&#39;no_pixel&#39;``.</span>
+<span class="sd">    that was used to call `GSObject.drawImage`.  The integration over the pixel is equivalent to</span>
+<span class="sd">    convolving the original profile by a `Pixel` and then drawing with ``method=&#39;no_pixel&#39;``.  So</span>
+<span class="sd">    if you use such an image with InterpolatedImage, the resulting profile will include the `Pixel`</span>
+<span class="sd">    convolution already.  As such, if you use it as a PSF for example, then the final objects</span>
+<span class="sd">    convolved by this PSF will already include the pixel convolution, so you should draw them</span>
+<span class="sd">    using ``method=&#39;no_pixel&#39;``.</span>
 
-<span class="sd">    If the input Image has a ``scale`` or ``wcs`` associated with it, then there is no need to</span>
+<span class="sd">    If the input `Image` has a ``scale`` or ``wcs`` associated with it, then there is no need to</span>
 <span class="sd">    specify one as a parameter here.  But if one is provided, that will override any ``scale`` or</span>
-<span class="sd">    ``wcs`` that is native to the Image.</span>
+<span class="sd">    ``wcs`` that is native to the `Image`.</span>
 
 <span class="sd">    The user may optionally specify an interpolant, ``x_interpolant``, for real-space manipulations</span>
-<span class="sd">    (e.g., shearing, resampling).  If none is specified, then by default, a Quintic interpolant is</span>
+<span class="sd">    (e.g., shearing, resampling).  If none is specified, then by default, a `Quintic` interpolant is</span>
 <span class="sd">    used.  The user may also choose to specify two quantities that can affect the Fourier space</span>
 <span class="sd">    convolution: the k-space interpolant (``k_interpolant``) and the amount of padding to include</span>
 <span class="sd">    around the original images (``pad_factor``).  The default values for ``x_interpolant``,</span>
@@ -249,11 +251,11 @@
 <span class="sd">    The user can choose to pad the image with a noise profile if desired.  To do so, specify</span>
 <span class="sd">    the target size for the noise padding in ``noise_pad_size``, and specify the kind of noise</span>
 <span class="sd">    to use in ``noise_pad``.  The ``noise_pad`` option may be a Gaussian random noise of some</span>
-<span class="sd">    variance, or a Gaussian but correlated noise field that is specified either as a CorrelatedNoise</span>
-<span class="sd">    instance, an Image (from which a correlated noise model is derived), or a string (interpreted</span>
-<span class="sd">    as a filename containing an image to use for deriving a CorrelatedNoise).  The user can also</span>
-<span class="sd">    pass in a random number generator to be used for noise generation.  Finally, the user can pass</span>
-<span class="sd">    in a ``pad_image`` for deterministic image padding.</span>
+<span class="sd">    variance, or a Gaussian but correlated noise field that is specified either as a</span>
+<span class="sd">    `BaseCorrelatedNoise` instance, an `Image` (from which a correlated noise model is derived), or</span>
+<span class="sd">    a string (interpreted as a filename of an image to use for deriving a `CorrelatedNoise`).</span>
+<span class="sd">    The user can also pass in a random number generator to be used for noise generation.  Finally,</span>
+<span class="sd">    the user can pass in a ``pad_image`` for deterministic image padding.</span>
 
 <span class="sd">    By default, the InterpolatedImage recalculates the Fourier-space step and number of points to</span>
 <span class="sd">    use for further manipulations, rather than using the most conservative possibility.  For typical</span>
@@ -290,20 +292,20 @@
 <span class="sd">    re-drawn at a different size.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        image:              The Image from which to construct the object.</span>
-<span class="sd">                            This may be either an Image instance or a string indicating a fits</span>
+<span class="sd">        image:              The `Image` from which to construct the object.</span>
+<span class="sd">                            This may be either an `Image` instance or a string indicating a fits</span>
 <span class="sd">                            file from which to read the image.  In the latter case, the ``hdu``</span>
 <span class="sd">                            kwarg can be used to specify a particular HDU in that file.</span>
-<span class="sd">        x_interpolant:      Either an Interpolant instance or a string indicating which real-space</span>
+<span class="sd">        x_interpolant:      Either an `Interpolant` instance or a string indicating which real-space</span>
 <span class="sd">                            interpolant should be used.  Options are &#39;nearest&#39;, &#39;sinc&#39;, &#39;linear&#39;,</span>
 <span class="sd">                            &#39;cubic&#39;, &#39;quintic&#39;, or &#39;lanczosN&#39; where N should be the integer order</span>
 <span class="sd">                            to use. [default: galsim.Quintic()]</span>
-<span class="sd">        k_interpolant:      Either an Interpolant instance or a string indicating which k-space</span>
+<span class="sd">        k_interpolant:      Either an `Interpolant` instance or a string indicating which k-space</span>
 <span class="sd">                            interpolant should be used.  Options are &#39;nearest&#39;, &#39;sinc&#39;, &#39;linear&#39;,</span>
 <span class="sd">                            &#39;cubic&#39;, &#39;quintic&#39;, or &#39;lanczosN&#39; where N should be the integer order</span>
 <span class="sd">                            to use.  We strongly recommend leaving this parameter at its default</span>
 <span class="sd">                            value; see text above for details.  [default: galsim.Quintic()]</span>
-<span class="sd">        normalization:      Two options for specifying the normalization of the input Image:</span>
+<span class="sd">        normalization:      Two options for specifying the normalization of the input `Image`:</span>
 
 <span class="sd">                            - &quot;flux&quot; or &quot;f&quot; means that the sum of the pixels is normalized</span>
 <span class="sd">                              to be equal to the total flux.</span>
@@ -312,15 +314,15 @@
 
 <span class="sd">                            This is overridden if you specify an explicit flux value.</span>
 <span class="sd">                            [default: &quot;flux&quot;]</span>
-<span class="sd">        scale:              If provided, use this as the pixel scale for the Image; this will</span>
-<span class="sd">                            override the pixel scale stored by the provided Image, in any.</span>
+<span class="sd">        scale:              If provided, use this as the pixel scale for the `Image`; this will</span>
+<span class="sd">                            override the pixel scale stored by the provided `Image`, in any.</span>
 <span class="sd">                            If ``scale`` is ``None``, then take the provided image&#39;s pixel scale.</span>
 <span class="sd">                            [default: None]</span>
 <span class="sd">        wcs:                If provided, use this as the wcs for the image.  At most one of</span>
 <span class="sd">                            ``scale`` or ``wcs`` may be provided. [default: None]</span>
 <span class="sd">        flux:               Optionally specify a total flux for the object, which overrides the</span>
-<span class="sd">                            implied flux normalization from the Image itself. [default: None]</span>
-<span class="sd">        pad_factor:         Factor by which to pad the Image with zeros.  We strongly recommend</span>
+<span class="sd">                            implied flux normalization from the `Image` itself. [default: None]</span>
+<span class="sd">        pad_factor:         Factor by which to pad the `Image` with zeros.  We strongly recommend</span>
 <span class="sd">                            leaving this parameter at its default value; see text above for</span>
 <span class="sd">                            details.  [default: 4]</span>
 <span class="sd">        noise_pad_size:     If provided, the image will be padded out to this size (in arcsec) with</span>
@@ -331,40 +333,40 @@
 <span class="sd">        noise_pad:          Noise properties to use when padding the original image with</span>
 <span class="sd">                            noise.  This can be specified in several ways:</span>
 
-<span class="sd">                            - as a float, which is interpreted as being a variance to use when</span>
-<span class="sd">                              padding with uncorrelated Gaussian noise;</span>
-<span class="sd">                            - as a galsim.CorrelatedNoise, which contains information about the</span>
-<span class="sd">                              desired noise power spectrum - any random number generator passed</span>
-<span class="sd">                              to the ``rng`` keyword will take precedence over that carried in</span>
-<span class="sd">                              an input CorrelatedNoise instance;</span>
-<span class="sd">                            - as an Image of a noise field, which is used to calculate</span>
-<span class="sd">                              the desired noise power spectrum; or</span>
-<span class="sd">                            - as a string which is interpreted as a filename containing an</span>
-<span class="sd">                              example noise field with the proper noise power spectrum (as an</span>
-<span class="sd">                              Image in the first HDU).</span>
+<span class="sd">                            a) as a float, which is interpreted as being a variance to use when</span>
+<span class="sd">                               padding with uncorrelated Gaussian noise;</span>
+<span class="sd">                            b) as a `galsim.BaseCorrelatedNoise`, which contains information about</span>
+<span class="sd">                               the desired noise power spectrum - any random number generator passed</span>
+<span class="sd">                               to the ``rng`` keyword will take precedence over that carried in</span>
+<span class="sd">                               an input `BaseCorrelatedNoise` instance;</span>
+<span class="sd">                            c) as an `Image` of a noise field, which is used to calculate</span>
+<span class="sd">                               the desired noise power spectrum; or</span>
+<span class="sd">                            d) as a string which is interpreted as a filename containing an</span>
+<span class="sd">                               example noise field with the proper noise power spectrum (as an</span>
+<span class="sd">                               `Image` in the first HDU).</span>
 
 <span class="sd">                            It is important to keep in mind that the calculation of the correlation</span>
-<span class="sd">                            function that is internally stored within a CorrelatedNoise object is a</span>
-<span class="sd">                            non-negligible amount of overhead, so the recommended means of</span>
-<span class="sd">                            specifying a correlated noise field for padding are (b) or (d).  In the</span>
-<span class="sd">                            case of (d), if the same file is used repeatedly, then the ``use_cache``</span>
-<span class="sd">                            keyword (see below) can be used to prevent the need for repeated</span>
-<span class="sd">                            CorrelatedNoise initializations.</span>
-<span class="sd">                            [default: 0, i.e., pad with zeros]</span>
+<span class="sd">                            function that is internally stored within a `BaseCorrelatedNoise`</span>
+<span class="sd">                            object is a non-negligible amount of overhead, so the recommended means</span>
+<span class="sd">                            of specifying a correlated noise field for padding are (b) or (d).  In</span>
+<span class="sd">                            the case of (d), if the same file is used repeatedly, then the</span>
+<span class="sd">                            ``use_cache`` keyword (see below) can be used to prevent the need for</span>
+<span class="sd">                            repeated `CorrelatedNoise` initializations.  [default: 0, i.e., pad</span>
+<span class="sd">                            with zeros]</span>
 <span class="sd">        use_cache:          Specify whether to cache ``noise_pad`` read in from a file to save</span>
 <span class="sd">                            having to build a CorrelatedNoise object repeatedly from the same image.</span>
 <span class="sd">                            [default: True]</span>
 <span class="sd">        rng:                If padding by noise, the user can optionally supply the random noise</span>
 <span class="sd">                            generator to use for drawing random numbers as ``rng`` (may be any kind</span>
-<span class="sd">                            of BaseDeviate object).  Such a user-input random number generator</span>
-<span class="sd">                            takes precedence over any stored within a user-input CorrelatedNoise</span>
-<span class="sd">                            instance (see the ``noise_pad`` parameter).</span>
+<span class="sd">                            of `BaseDeviate` object).  Such a user-input random number generator</span>
+<span class="sd">                            takes precedence over any stored within a user-input</span>
+<span class="sd">                            `BaseCorrelatedNoise` instance (see the ``noise_pad`` parameter).</span>
 <span class="sd">                            If ``rng=None``, one will be automatically created, using the time as a</span>
 <span class="sd">                            seed. [default: None]</span>
-<span class="sd">        pad_image:          Image to be used for deterministically padding the original image.  This</span>
-<span class="sd">                            can be specified in two ways:</span>
+<span class="sd">        pad_image:          `Image` to be used for deterministically padding the original image.</span>
+<span class="sd">                            This can be specified in two ways:</span>
 
-<span class="sd">                            - as an Image; or</span>
+<span class="sd">                            - as an `Image`; or</span>
 <span class="sd">                            - as a string which is interpreted as a filename containing an</span>
 <span class="sd">                              image to use (in the first HDU).</span>
 
@@ -394,7 +396,7 @@
 <span class="sd">                            the ``maxk`` value is still calculated, but will not go above the</span>
 <span class="sd">                            provided value.</span>
 <span class="sd">                            [default: True]</span>
-<span class="sd">        use_true_center:    Similar to the same parameter in the GSObject.drawImage() function,</span>
+<span class="sd">        use_true_center:    Similar to the same parameter in the `GSObject.drawImage` function,</span>
 <span class="sd">                            this sets whether to use the true center of the provided image as the</span>
 <span class="sd">                            center of the profile (if ``use_true_center=True``) or the nominal</span>
 <span class="sd">                            center given by image.center (if ``use_true_center=False``)</span>
@@ -403,9 +405,8 @@
 <span class="sd">                            This should be specified relative to the center of the input image</span>
 <span class="sd">                            (either the true center if ``use_true_center=True``, or the nominal</span>
 <span class="sd">                            center if ``use_true_center=False``).  [default: None]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
-<span class="sd">        hdu:                When reading in an Image from a file, this parameter can be used to</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
+<span class="sd">        hdu:                When reading in an `Image` from a file, this parameter can be used to</span>
 <span class="sd">                            select a particular HDU in the file. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;image&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
@@ -433,7 +434,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="InterpolatedImage.__init__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span>
                  <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise_pad</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">calculate_stepk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">calculate_maxk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -516,7 +517,7 @@
         <span class="c1"># Process the different options for flux, stepk, maxk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getFlux</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">normalization</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getStepK</span><span class="p">(</span><span class="n">calculate_stepk</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="n">calculate_maxk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="n">calculate_maxk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="InterpolatedImage.withGSParams"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
@@ -654,7 +655,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
         <span class="kn">from</span> <span class="nn">.noise</span> <span class="k">import</span> <span class="n">GaussianNoise</span>
-        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">,</span> <span class="n">CorrelatedNoise</span>
+        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">BaseCorrelatedNoise</span><span class="p">,</span> <span class="n">CorrelatedNoise</span>
 
         <span class="c1"># Make sure we make rng a BaseDeviate if rng is None</span>
         <span class="n">rng1</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
@@ -663,7 +664,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">noise_pad</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">noise_pad</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">noise_pad</span><span class="p">,</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">noise_pad</span><span class="p">,</span> <span class="n">BaseCorrelatedNoise</span><span class="p">):</span>
                 <span class="n">noise</span> <span class="o">=</span> <span class="n">noise_pad</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng1</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">noise_pad</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
                 <span class="n">noise</span> <span class="o">=</span> <span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">noise_pad</span><span class="p">,</span> <span class="n">rng1</span><span class="p">)</span>
@@ -761,7 +762,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span><span class="o">.</span><span class="n">krange</span> <span class="o">/</span> <span class="n">max_scale</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpolatedImage.__eq__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">InterpolatedImage</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_xim</span> <span class="ow">and</span>
@@ -771,9 +772,9 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_offset</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_stepk</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_maxk</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_maxk</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpolatedImage.__hash__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Definitely want to cache this, since the size of the image could be large.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.InterpolatedImage&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">))</span>
@@ -790,9 +791,9 @@
             <span class="c1"># Just hash the diagonal.  Much faster, and usually is unique enough.</span>
             <span class="c1"># (Let python handle collisions as needed if multiple similar IIs are used as keys.)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span><span class="o">.</span><span class="n">array</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpolatedImage.__repr__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.InterpolatedImage(</span><span class="si">%r</span><span class="s1">, </span><span class="si">%r</span><span class="s1">, </span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">)</span>
         <span class="c1"># Most things we keep even if not required, but the pad_image is large, so skip it</span>
@@ -802,9 +803,9 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, pad_factor=</span><span class="si">%f</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, offset=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, use_true_center=False, gsparams=</span><span class="si">%r</span><span class="s1">, _force_stepk=</span><span class="si">%r</span><span class="s1">, _force_maxk=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedImage(image=</span><span class="si">%s</span><span class="s1">, flux=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span>
+<div class="viewcode-block" id="InterpolatedImage.__str__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedImage(image=</span><span class="si">%s</span><span class="s1">, flux=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -869,9 +870,9 @@
 <div class="viewcode-block" id="_InterpolatedImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span>
                        <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">force_stepk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">force_maxk</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Approximately equivalent to InterpolatedImage, but with fewer options and no sanity checks.</span>
+    <span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedImage`, but with fewer options and no sanity checks.</span>
 
-<span class="sd">    Some notable reductions in functionality relative to InterpolatedImage:</span>
+<span class="sd">    Some notable reductions in functionality relative to `InterpolatedImage`:</span>
 
 <span class="sd">    1. There are no padding options. The image must be provided with all padding already applied.</span>
 <span class="sd">    2. The stepk and maxk values will not be calculated.  If you want to use values for these other</span>
@@ -881,19 +882,20 @@
 <span class="sd">    4. The input image must have a defined wcs.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        image:              The Image from which to construct the object.</span>
-<span class="sd">        x_interpolant:      An Interpolant instance for real-space interpolation [default: Quintic]</span>
-<span class="sd">        k_interpolant:      An Interpolant instance for k-space interpolation [default: Quintic]</span>
+<span class="sd">        image:              The `Image` from which to construct the object.</span>
+<span class="sd">        x_interpolant:      An `Interpolant` instance for real-space interpolation</span>
+<span class="sd">                            [default: Quintic]</span>
+<span class="sd">        k_interpolant:      An `Interpolant` instance for k-space interpolation [default: Quintic]</span>
 <span class="sd">        use_true_center:    Whether to use the true center of the provided image as the center</span>
 <span class="sd">                            of the profile. [default: True]</span>
 <span class="sd">        offset:             The location in the input image to use as the center of the profile.</span>
 <span class="sd">                            [default: None]</span>
-<span class="sd">        gsparams:           An optional GSParams argument. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        force_stepk:        A stepk value to use rather than the default value. [default: 0.]</span>
 <span class="sd">        force_maxk:         A maxk value to use rather than the default value. [default: 0.]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        an InterpolatedImage instance</span>
+<span class="sd">        an `InterpolatedImage` instance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">InterpolatedImage</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">InterpolatedImage</span><span class="p">)</span>
 
@@ -940,33 +942,34 @@
 <span class="sd">    transform.</span>
 
 <span class="sd">    The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier</span>
-<span class="sd">    transform of the profile (provided as either a complex Image or two Images giving the real and</span>
-<span class="sd">    imaginary parts) that you wish to manipulate / transform using GSObject methods such as</span>
-<span class="sd">    shear(), magnify(), shift(), etc.  Note that neither real-space convolution nor photon-shooting</span>
-<span class="sd">    of InterpolatedKImages is currently implemented.  Please submit an issue at</span>
-<span class="sd">    http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.</span>
+<span class="sd">    transform of the profile (provided as either a complex `Image` or two images giving the real</span>
+<span class="sd">    and imaginary parts) that you wish to manipulate / transform using `GSObject` methods such as</span>
+<span class="sd">    `GSObject.shear`, `GSObject.magnify`, `GSObject.shift`, etc.  Note that neither real-space</span>
+<span class="sd">    convolution nor photon-shooting of InterpolatedKImages is currently implemented.  Please submit</span>
+<span class="sd">    an issue at http://github.com/GalSim-developers/GalSim/issues if you require either of these</span>
+<span class="sd">    use cases.</span>
 
 <span class="sd">    The images required for creating an InterpolatedKImage are precisely those returned by the</span>
-<span class="sd">    GSObject ``.drawKImage()`` method.  The ``a`` and ``b`` objects in the following command will</span>
-<span class="sd">    produce essentially equivalent images when drawn with the ``.drawImage()`` method::</span>
+<span class="sd">    `GSObject.drawKImage` method.  The ``a`` and ``b`` objects in the following command will</span>
+<span class="sd">    produce essentially equivalent images when drawn with the `GSObject.drawImage` method::</span>
 
 <span class="sd">    &gt;&gt;&gt; a = returns_a_GSObject()</span>
 <span class="sd">    &gt;&gt;&gt; b = galsim.InterpolatedKImage(a.drawKImage())</span>
 
 <span class="sd">    The input ``kimage`` must have dtype=numpy.complex64 or dtype=numpy.complex128, which are also</span>
-<span class="sd">    known as ImageCF and ImageCD objects respectively.</span>
-<span class="sd">    The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case ``kimage.scale`` is</span>
-<span class="sd">    used for the ``stepk`` value unless overridden by the ``stepk`` initialization argument.</span>
+<span class="sd">    known as `ImageCF` and `ImageCD` objects respectively.</span>
+<span class="sd">    The only wcs permitted is a simple `PixelScale` (or `OffsetWCS`), in which case ``kimage.scale``</span>
+<span class="sd">    is used for the ``stepk`` value unless overridden by the ``stepk`` initialization argument.</span>
 
 <span class="sd">    Furthermore, the complex-valued Fourier profile given by ``kimage`` must be Hermitian, since it</span>
 <span class="sd">    represents a real-valued real-space profile.  (To see an example of valid input to</span>
-<span class="sd">    ``InterpolatedKImage``, you can look at the output of ``drawKImage``).</span>
+<span class="sd">    InterpolatedKImage, you can look at the output of `GSObject.drawKImage`).</span>
 
 <span class="sd">    The user may optionally specify an interpolant, ``k_interpolant``, for Fourier-space</span>
-<span class="sd">    manipulations (e.g., shearing, resampling).  If none is specified, then by default, a Quintic</span>
-<span class="sd">    interpolant is used.  The Quintic interpolant has been found to be a good compromise between</span>
+<span class="sd">    manipulations (e.g., shearing, resampling).  If none is specified, then by default, a `Quintic`</span>
+<span class="sd">    interpolant is used.  The `Quintic` interpolant has been found to be a good compromise between</span>
 <span class="sd">    speed and accuracy for real-and Fourier-space interpolation of objects specified by samples of</span>
-<span class="sd">    their real-space profiles (e.g., in InterpolatedImage), though no extensive testing has been</span>
+<span class="sd">    their real-space profiles (e.g., in `InterpolatedImage`), though no extensive testing has been</span>
 <span class="sd">    performed for objects specified by samples of their Fourier-space profiles (e.g., this</span>
 <span class="sd">    class).</span>
 
@@ -978,8 +981,8 @@
 <span class="sd">    Initializes ``interpolated_kimage`` as an InterpolatedKImage instance.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        kimage:         The complex Image corresponding to the Fourier-space samples.</span>
-<span class="sd">        k_interpolant:  Either an Interpolant instance or a string indicating which k-space</span>
+<span class="sd">        kimage:         The complex `Image` corresponding to the Fourier-space samples.</span>
+<span class="sd">        k_interpolant:  Either an `Interpolant` instance or a string indicating which k-space</span>
 <span class="sd">                        interpolant should be used.  Options are &#39;nearest&#39;, &#39;sinc&#39;, &#39;linear&#39;,</span>
 <span class="sd">                        &#39;cubic&#39;, &#39;quintic&#39;, or &#39;lanczosN&#39; where N should be the integer order</span>
 <span class="sd">                        to use.  [default: galsim.Quintic()]</span>
@@ -988,10 +991,9 @@
 <span class="sd">                        This keyword allows the user to specify a coarser sampling in Fourier-</span>
 <span class="sd">                        space, which may increase efficiency at the expense of decreasing the</span>
 <span class="sd">                        separation between neighboring copies of the DFT-rendered real-space</span>
-<span class="sd">                        profile.  (See the GSParams docstring for the parameter</span>
+<span class="sd">                        profile.  (See the `GSParams` docstring for the parameter</span>
 <span class="sd">                        ``folding_threshold`` for more information). [default: kimage.scale]</span>
-<span class="sd">        gsparams:       An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                        details. [default: None]</span>
+<span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        real_kimage:    Optionally, rather than provide kimage, you may provide the real</span>
 <span class="sd">                        and imaginary parts separately.  These separate real-valued images</span>
 <span class="sd">                        may be strings, in which case they refer to FITS files from which</span>
@@ -1016,7 +1018,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stepk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="InterpolatedKImage.__init__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stepk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">real_kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">imag_kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">real_hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">imag_hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">kimage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">real_kimage</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">imag_kimage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1097,7 +1099,7 @@
         <span class="k">if</span> <span class="n">k_interpolant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">Quintic</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">convert_interpolant</span><span class="p">(</span><span class="n">k_interpolant</span><span class="p">)</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">convert_interpolant</span><span class="p">(</span><span class="n">k_interpolant</span><span class="p">)</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">kimage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1132,30 +1134,30 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbiki</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpolatedKImage.__eq__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">InterpolatedKImage</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">scale</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">k_interpolant</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">stepk</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpolatedKImage.__hash__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Definitely want to cache this, since the kimage could be large.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.InterpolatedKImage&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span><span class="p">,</span>
                                <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">wcs</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpolatedKImage.__repr__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.InterpolatedKImage(</span><span class="se">\n</span><span class="si">%r</span><span class="s1">,</span><span class="se">\n</span><span class="si">%r</span><span class="s1">, stepk=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedKImage(kimage=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">)</span>
+<div class="viewcode-block" id="InterpolatedKImage.__str__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedKImage(kimage=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># The SBInterpolatedKImage is picklable, but that is pretty inefficient, due to the large</span>
@@ -1201,8 +1203,15 @@
 
 
 <div class="viewcode-block" id="_InterpolatedKImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedKImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Approximately equivalent to InterpolatedKImage, but with fewer options and no sanity checks.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Approximately equivalent to `InterpolatedKImage`, but with fewer options and no sanity</span>
+<span class="sd">    checks.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        kimage:         The complex `Image` corresponding to the Fourier-space samples.</span>
+<span class="sd">        k_interpolant:  An `Interpolant` instance indicating which k-space interpolant should be</span>
+<span class="sd">                        used.</span>
+<span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
+<span class="sd">     &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">InterpolatedKImage</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">InterpolatedKImage</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_kimage</span> <span class="o">=</span> <span class="n">kimage</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_stepk</span> <span class="o">=</span> <span class="n">kimage</span><span class="o">.</span><span class="n">scale</span>

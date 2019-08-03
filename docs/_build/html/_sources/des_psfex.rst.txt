@@ -9,4 +9,6 @@ The `DES_PSFEx` class handles interpolated PCA images, which are generally store
 See documentation here: `<https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf>`_.
 
 .. autoclass:: galsim.des.DES_PSFEx
-   :members:
+    :members:
+    :special-members:
+    :show-inheritance:

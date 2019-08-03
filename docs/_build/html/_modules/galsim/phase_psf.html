@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,55 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file phase_psf.py</span>
-<span class="sd">Utilities for creating PSFs from phase screens.</span>
-
-<span class="sd">For PSFs drawn using real-space or Fourier methods, these utilities essentially evaluate the Fourier</span>
-<span class="sd">optics diffraction equation:</span>
-
-<span class="sd">PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)</span>
-
-<span class="sd">where x, y are focal plane coordinates and u, v are pupil plane coordinates.</span>
-
-<span class="sd">For method=&#39;phot&#39;, one of two possible strategies are available.  The first strategy is to draw the</span>
-<span class="sd">PSF using Fourier methods into an InterpolatedImage, and then shoot photons from that profile.  This</span>
-<span class="sd">strategy has good accuracy, but can be computationally expensive, particularly for atmospheric PSFs</span>
-<span class="sd">that need to be built up in small increments to simulate a finite exposure time. The second</span>
-<span class="sd">strategy, which can be significantly faster, especially for atmospheric PSFs, is to use the</span>
-<span class="sd">geometric optics approximation.  This approximation has good accuracy for atmospheric PSFs, so we</span>
-<span class="sd">make it the default for PhaseScreenPSF.  The accuracy is somewhat less good for purely optical PSFs</span>
-<span class="sd">though, so the default behavior for OpticalPSF is to use the first strategy.  The</span>
-<span class="sd">``geometric_shooting`` keyword can be used in both cases to override the default.</span>
-
-
-<span class="sd">The main classes of note are:</span>
-
-<span class="sd">Aperture</span>
-<span class="sd">  Class representing the illuminated region of pupil.</span>
-
-<span class="sd">AtmosphericScreen</span>
-<span class="sd">  Class implementing phase(u, v, x, y, t) for von Karman type turbulence, with possibly evolving</span>
-<span class="sd">  &quot;non-frozen-flow&quot; phases.</span>
-
-<span class="sd">OpticalScreen</span>
-<span class="sd">  Class implementing optical aberrations using Zernike polynomial expansions in the wavefront.</span>
-
-<span class="sd">PhaseScreenList</span>
-<span class="sd">  Python sequence type to hold multiple phase screens, for instance to simulate turbulence at</span>
-<span class="sd">  different altitudes, or self-consistently model atmospheric and optical phase aberrations.  A key</span>
-<span class="sd">  method is makePSF(), which will take the list of phase screens, add them together linearly</span>
-<span class="sd">  (Fraunhofer approximation), and evaluate the above diffraction equation to yield a</span>
-<span class="sd">  PhaseScreenPSF object.</span>
-
-<span class="sd">PhaseScreenPSF</span>
-<span class="sd">  A GSObject holding the evaluated PSF from a set of phase screens.</span>
-
-<span class="sd">OpticalPSF</span>
-<span class="sd">  A GSObject for optical PSFs with potentially complicated pupils and Zernike aberrations.</span>
-
-<span class="sd">Atmosphere</span>
-<span class="sd">  Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
@@ -248,8 +202,8 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="Aperture"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture">[docs]</a><span class="k">class</span> <span class="nc">Aperture</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Class representing a telescope aperture embedded in a larger pupil plane array -- for use</span>
-<span class="sd">    with the PhaseScreenPSF class to create PSFs via Fourier or geometric optics.</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a telescope aperture embedded in a larger pupil plane array -- for use</span>
+<span class="sd">    with the `PhaseScreenPSF` class to create PSFs via Fourier or geometric optics.</span>
 
 <span class="sd">    The pupil plane array is completely specified by its size, sampling interval, and pattern of</span>
 <span class="sd">    illuminated pixels.  Pupil plane arrays can be specified either geometrically or using an image</span>
@@ -286,17 +240,19 @@
 
 <span class="sd">    The pupil plane array physical sampling interval (which is directly related to the resulting PSF</span>
 <span class="sd">    image physical size) is set by default to the same interval as would be used to avoid</span>
-<span class="sd">    significant aliasing (image folding) for an obscured Airy profile with matching diameter and</span>
+<span class="sd">    significant aliasing (image folding) for an obscured `Airy` profile with matching diameter and</span>
 <span class="sd">    obscuration and for the value of ``folding_threshold`` in the optionally specified gsparams</span>
 <span class="sd">    argument.  If the phase aberrations are significant, however, the PSF image size computed this</span>
 <span class="sd">    way may still not be sufficiently large to avoid aliasing.  To further increase the pupil plane</span>
 <span class="sd">    sampling rate (and hence the PSF image size), you can increase the value of the ``pad_factor``</span>
-<span class="sd">    keyword.  An additional way to set the pupil sampling interval for a particular set of phase</span>
-<span class="sd">    screens (i.e., for a particular PhaseScreenList) is to provide the screens in the ``screen_list``</span>
+<span class="sd">    keyword.</span>
+
+<span class="sd">    An additional way to set the pupil sampling interval for a particular set of phase screens</span>
+<span class="sd">    (i.e., for a particular `PhaseScreenList`) is to provide the screens in the ``screen_list``</span>
 <span class="sd">    argument.  Each screen in the list computes its own preferred sampling rate and the</span>
-<span class="sd">    PhaseScreenList appropriately aggregates these. This last option also requires that a wavelength</span>
-<span class="sd">    ``lam`` be specified, and is particularly helpful for creating PSFs derived from turbulent</span>
-<span class="sd">    atmospheric screens.</span>
+<span class="sd">    `PhaseScreenList` appropriately aggregates these. This last option also requires that a</span>
+<span class="sd">    wavelength ``lam`` be specified, and is particularly helpful for creating PSFs derived from</span>
+<span class="sd">    turbulent atmospheric screens.</span>
 
 <span class="sd">    Finally, when specifying the pupil geometrically, Aperture may choose to make a small adjustment</span>
 <span class="sd">    to ``pupil_plane_scale`` in order to produce an array with a good size for FFTs.  If your</span>
@@ -342,22 +298,22 @@
 <span class="sd">                            [default: 0]</span>
 <span class="sd">        strut_thick:        Thickness of support struts as a fraction of aperture diameter.</span>
 <span class="sd">                            [default: 0.05]</span>
-<span class="sd">        strut_angle:        Angle made between the vertical and the strut starting closest to it,</span>
+<span class="sd">        strut_angle:        `Angle` made between the vertical and the strut starting closest to it,</span>
 <span class="sd">                            defined to be positive in the counter-clockwise direction; must be an</span>
-<span class="sd">                            Angle instance. [default: 0. * galsim.degrees]</span>
+<span class="sd">                            `Angle` instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">        oversampling:       Optional oversampling factor *in the image plane* for the PSF</span>
-<span class="sd">                            eventually constructed using this Aperture.  Setting</span>
+<span class="sd">                            eventually constructed using this `Aperture`.  Setting</span>
 <span class="sd">                            ``oversampling &lt; 1`` will produce aliasing in the PSF (not good).</span>
 <span class="sd">                            [default: 1.0]</span>
 <span class="sd">        pad_factor:         Additional multiple by which to extend the PSF image to avoid</span>
 <span class="sd">                            folding.  [default: 1.0]</span>
-<span class="sd">        screen_list:        An optional PhaseScreenList object.  If present, then get a good</span>
+<span class="sd">        screen_list:        An optional `PhaseScreenList` object.  If present, then get a good</span>
 <span class="sd">                            pupil sampling interval using this object.  [default: None]</span>
 <span class="sd">        pupil_plane_im:     The GalSim.Image, NumPy array, or name of file containing the pupil</span>
 <span class="sd">                            plane image, to be used instead of generating one based on the</span>
 <span class="sd">                            obscuration and strut parameters.  [default: None]</span>
 <span class="sd">        pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil plane</span>
-<span class="sd">                            (positive in the counter-clockwise direction).  Must be an Angle</span>
+<span class="sd">                            (positive in the counter-clockwise direction).  Must be an `Angle`</span>
 <span class="sd">                            instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">        pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In</span>
 <span class="sd">                            most cases, it&#39;s a good idea to leave this as None, in which case</span>
@@ -370,10 +326,9 @@
 <span class="sd">                            a good idea to leave this as None, in which case GalSim will attempt</span>
 <span class="sd">                            to find a good value automatically.  See also ``oversampling`` for</span>
 <span class="sd">                            adjusting the pupil size.  [default: None]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">circular_pupil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<div class="viewcode-block" id="Aperture.__init__"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">circular_pupil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="n">nstruts</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">strut_thick</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">strut_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span>
                  <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">screen_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">pupil_plane_im</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span>
@@ -423,7 +378,7 @@
         <span class="k">if</span> <span class="n">screen_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lam</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                 <span class="s2">&quot;Wavelength ``lam`` must be specified with ``screen_list``.&quot;</span><span class="p">,</span>
-                <span class="n">screen_list</span><span class="o">=</span><span class="n">screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">)</span>
+                <span class="n">screen_list</span><span class="o">=</span><span class="n">screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">)</span></div>
 
     <span class="c1"># For each of these, the actual value is defined during the construction of the _illuminated</span>
     <span class="c1"># array, so access that (lazy) property first.</span>
@@ -674,13 +629,13 @@
                 <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, strut_angle=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_strut_angle</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Aperture.__str__"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.Aperture(diam=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Pupil was created geometrically, so use that here.</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geometry_str</span><span class="p">()</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
     <span class="k">def</span> <span class="nf">_geometry_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -696,7 +651,7 @@
                 <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, strut_angle=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_strut_angle</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Aperture.__repr__"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.Aperture(diam=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Pupil was created geometrically, so use that here.</span>
@@ -715,9 +670,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">!=</span> <span class="n">GSParams</span><span class="p">():</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, gsparams=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="Aperture.__eq__"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Aperture</span><span class="p">)</span> <span class="ow">and</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">diam</span> <span class="ow">and</span>
@@ -736,14 +691,14 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_input_pupil_plane_scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_input_pupil_plane_scale</span> <span class="ow">and</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_input_pupil_plane_size</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_input_pupil_plane_size</span> <span class="ow">and</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_oversampling</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_oversampling</span> <span class="ow">and</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_pad_factor</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_pad_factor</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Aperture.__hash__"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Cache since self.illuminated may be large.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Aperture&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pupil_plane_scale</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illuminated</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span></div>
 
     <span class="c1"># Properties show up nicely in the interactive terminal for</span>
     <span class="c1">#     &gt;&gt;&gt;help(Aperture)</span>
@@ -885,9 +840,9 @@
 
 
 <div class="viewcode-block" id="PhaseScreenList"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList">[docs]</a><span class="k">class</span> <span class="nc">PhaseScreenList</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; List of phase screens that can be turned into a PSF.  Screens can be either atmospheric</span>
+    <span class="sd">&quot;&quot;&quot;List of phase screens that can be turned into a PSF.  Screens can be either atmospheric</span>
 <span class="sd">    layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using</span>
-<span class="sd">    the function ``Atmosphere``.  Layers can be added, removed, appended, etc. just like items can</span>
+<span class="sd">    the function `Atmosphere`.  Layers can be added, removed, appended, etc. just like items can</span>
 <span class="sd">    be manipulated in a python list.  For example::</span>
 
 <span class="sd">        # Create an atmosphere with three layers.</span>
@@ -902,7 +857,7 @@
 <span class="sd">        &gt;&gt;&gt; screens[0], screens[1] = screens[1], screens[0]</span>
 
 <span class="sd">    Methods:</span>
-<span class="sd">        makePSF:            Obtain a PSF from this set of phase screens.  See PhaseScreenPSF</span>
+<span class="sd">        makePSF:            Obtain a PSF from this set of phase screens.  See `PhaseScreenPSF`</span>
 <span class="sd">                            docstring for more details.</span>
 <span class="sd">        wavefront:          Compute the cumulative wavefront due to all screens.</span>
 <span class="sd">        wavefront_gradient: Compute the cumulative wavefront gradient due to all screens.</span>
@@ -910,7 +865,7 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        layers:     Sequence of phase screens.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenList.__init__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.phase_screens</span> <span class="k">import</span> <span class="n">AtmosphericScreen</span><span class="p">,</span> <span class="n">OpticalScreen</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="c1"># First check if layers[0] is a PhaseScreenList, so we avoid nesting.</span>
@@ -925,7 +880,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Pending PSFs to calculate upon first drawImage.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Pending PSFs to calculate upon first drawImage.</span></div>
 
     <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">)</span>
@@ -962,17 +917,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.PhaseScreenList([</span><span class="si">%s</span><span class="s2">])&quot;</span> <span class="o">%</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">)</span>
+<div class="viewcode-block" id="PhaseScreenList.__str__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.PhaseScreenList([</span><span class="si">%s</span><span class="s2">])&quot;</span> <span class="o">%</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.PhaseScreenList(</span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span>
+<div class="viewcode-block" id="PhaseScreenList.__repr__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.PhaseScreenList(</span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenList.__eq__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
-                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">PhaseScreenList</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_layers</span><span class="p">))</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">PhaseScreenList</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_layers</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+<div class="viewcode-block" id="PhaseScreenList.__ne__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span></div>
 
     <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Mutable means not hashable.</span>
 
@@ -1007,7 +962,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
 <div class="viewcode-block" id="PhaseScreenList.instantiate"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.instantiate">[docs]</a>    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Instantiate the screens in this PhaseScreenList.</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate the screens in this `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pool:       A multiprocessing.Pool object to use to instantiate screens in parallel.</span>
@@ -1075,7 +1030,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="PhaseScreenList.wavefront"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
-        <span class="sd">&quot;&quot;&quot; Compute cumulative wavefront due to all phase screens in PhaseScreenList.</span>
+        <span class="sd">&quot;&quot;&quot; Compute cumulative wavefront due to all phase screens in `PhaseScreenList`.</span>
 
 <span class="sd">        Wavefront here indicates the distance by which the physical wavefront lags or leads the</span>
 <span class="sd">        ideal plane wave (pre-optics) or spherical wave (post-optics).</span>
@@ -1089,7 +1044,7 @@
 <span class="sd">                    iterable.  If None, then the internal time of the phase screens will be used</span>
 <span class="sd">                    for all u, v.  If scalar, then the size will be broadcast up to match that of</span>
 <span class="sd">                    u and v.  If iterable, then the shape must match the shapes of u and v.</span>
-<span class="sd">            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of ``galsim.Angle``</span>
+<span class="sd">            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`</span>
 <span class="sd">                    instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</span>
 <span class="sd">                    Only a single theta is permitted.</span>
 
@@ -1102,7 +1057,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">wavefront</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhaseScreenList.wavefront_gradient"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.wavefront_gradient">[docs]</a>    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">)):</span>
-        <span class="sd">&quot;&quot;&quot; Compute cumulative wavefront gradient due to all phase screens in PhaseScreenList.</span>
+        <span class="sd">&quot;&quot;&quot; Compute cumulative wavefront gradient due to all phase screens in `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
@@ -1114,7 +1069,7 @@
 <span class="sd">                    will be used for all u, v.  If scalar, then the size will be broadcast up to</span>
 <span class="sd">                    match that of u and v.  If iterable, then the shape must match the shapes of</span>
 <span class="sd">                    u and v.</span>
-<span class="sd">            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of ``galsim.Angle``</span>
+<span class="sd">            theta:  Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`</span>
 <span class="sd">                    instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</span>
 <span class="sd">                    Only a single theta is permitted.</span>
 
@@ -1141,7 +1096,7 @@
         <span class="k">return</span> <span class="n">gradx</span><span class="p">,</span> <span class="n">grady</span>
 
 <div class="viewcode-block" id="PhaseScreenList.makePSF"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenList.makePSF">[docs]</a>    <span class="k">def</span> <span class="nf">makePSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a PSF from the current PhaseScreenList.</span>
+        <span class="sd">&quot;&quot;&quot;Create a PSF from the current `PhaseScreenList`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            lam:                Wavelength in nanometers at which to compute PSF.</span>
@@ -1159,7 +1114,7 @@
 <span class="sd">                                continuously in this case instead of at discrete intervals.</span>
 <span class="sd">                                [default: 0.025]</span>
 <span class="sd">            flux:               Flux of output PSF.  [default: 1.0]</span>
-<span class="sd">            theta:              Field angle of PSF as a 2-tuple of Angles.</span>
+<span class="sd">            theta:              Field angle of PSF as a 2-tuple of `Angle` instances.</span>
 <span class="sd">                                [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</span>
 <span class="sd">            interpolant:        Either an Interpolant instance or a string indicating which</span>
 <span class="sd">                                interpolant should be used.  Options are &#39;nearest&#39;, &#39;sinc&#39;,</span>
@@ -1179,9 +1134,8 @@
 <span class="sd">                                phase screen gradient.  If False, then first draw using Fourier</span>
 <span class="sd">                                optics and then shoot from the derived InterpolatedImage.</span>
 <span class="sd">                                [default: True]</span>
-<span class="sd">            aper:               Aperture to use to compute PSF(s).  [default: None]</span>
-<span class="sd">            gsparams:           An optional GSParams argument.  See the docstring for GSParams</span>
-<span class="sd">                                for details.  [default: None]</span>
+<span class="sd">            aper:               `Aperture` to use to compute PSF(s).  [default: None]</span>
+<span class="sd">            gsparams:           An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">        The following are optional keywords to use to setup the aperture if ``aper`` is not</span>
 <span class="sd">        provided.</span>
@@ -1195,11 +1149,11 @@
 <span class="sd">                                obscuration. [default: 0]</span>
 <span class="sd">            strut_thick:        Thickness of support struts as a fraction of aperture diameter.</span>
 <span class="sd">                                [default: 0.05]</span>
-<span class="sd">            strut_angle:        Angle made between the vertical and the strut starting closest to</span>
+<span class="sd">            strut_angle:        `Angle` made between the vertical and the strut starting closest to</span>
 <span class="sd">                                it, defined to be positive in the counter-clockwise direction;</span>
-<span class="sd">                                must be an Angle instance. [default: 0. * galsim.degrees]</span>
+<span class="sd">                                must be an `Angle` instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">            oversampling:       Optional oversampling factor *in the image plane* for the PSF</span>
-<span class="sd">                                eventually constructed using this Aperture.  Setting</span>
+<span class="sd">                                eventually constructed using this `Aperture`.  Setting</span>
 <span class="sd">                                ``oversampling &lt; 1`` will produce aliasing in the PSF (not good).</span>
 <span class="sd">                                [default: 1.0]</span>
 <span class="sd">            pad_factor:         Additional multiple by which to extend the PSF image to avoid</span>
@@ -1209,7 +1163,7 @@
 <span class="sd">                                the obscuration and strut parameters.  [default: None]</span>
 <span class="sd">            pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil</span>
 <span class="sd">                                plane (positive in the counter-clockwise direction).  Must be an</span>
-<span class="sd">                                Angle instance. [default: 0. * galsim.degrees]</span>
+<span class="sd">                                `Angle` instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">            pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In</span>
 <span class="sd">                                most cases, it&#39;s a good idea to leave this as None, in which case</span>
 <span class="sd">                                GalSim will attempt to find a good value automatically.  The</span>
@@ -1236,9 +1190,9 @@
     <span class="k">def</span> <span class="nf">_getStepK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return an appropriate stepk for this list of phase screens.</span>
 
-<span class="sd">        The required set of parameters depends on the types of the individual PhaseScreens in the</span>
-<span class="sd">        PhaseScreenList.  See the documentation for the individual PhaseScreen.pupil_plane_scale</span>
-<span class="sd">        methods for more details.</span>
+<span class="sd">        The required set of parameters depends on the types of the individual `PhaseScreen`</span>
+<span class="sd">        instances in the `PhaseScreenList`.  See the documentation for the individual</span>
+<span class="sd">        `PhaseScreen.pupil_plane_scale` methods for more details.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            stepk.</span>
@@ -1262,24 +1216,24 @@
     <span class="sd">&quot;&quot;&quot;A PSF surface brightness profile constructed by integrating over time the instantaneous PSF</span>
 <span class="sd">    derived from a set of phase screens and an aperture.</span>
 
-<span class="sd">    There are two equivalent ways to construct a PhaseScreenPSF given a PhaseScreenList::</span>
+<span class="sd">    There are two equivalent ways to construct a PhaseScreenPSF given a `PhaseScreenList`::</span>
 
 <span class="sd">        &gt;&gt;&gt; psf = screen_list.makePSF(...)</span>
 <span class="sd">        &gt;&gt;&gt; psf = PhaseScreenPSF(screen_list, ...)</span>
 
-<span class="sd">    Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done</span>
+<span class="sd">    Computing a PSF from a phase screen also requires an `Aperture` be specified.  This can be done</span>
 <span class="sd">    either directly via the ``aper`` keyword, or by setting a number of keywords that will be passed</span>
-<span class="sd">    to the ``Aperture`` constructor.  The ``aper`` keyword always takes precedence.</span>
+<span class="sd">    to the `Aperture` constructor.  The ``aper`` keyword always takes precedence.</span>
 
-<span class="sd">    There are effectively three ways to draw a PhaseScreenPSF (or GSObject that includes a</span>
+<span class="sd">    There are effectively three ways to draw a PhaseScreenPSF (or `GSObject` that includes a</span>
 <span class="sd">    PhaseScreenPSF):</span>
 
 <span class="sd">    1) Fourier optics</span>
 
 <span class="sd">        This is the default, and is performed for all drawImage methods except method=&#39;phot&#39;.  This</span>
-<span class="sd">        is generally the most accurate option.  For PhaseScreenLists that include an</span>
-<span class="sd">        AtmosphericScreen, however, this can be prohibitively slow.  For OpticalPSFs, though, this</span>
-<span class="sd">        can sometimes be a good option.</span>
+<span class="sd">        is generally the most accurate option.  For a `PhaseScreenList` that includes an</span>
+<span class="sd">        `AtmosphericScreen`, however, this can be prohibitively slow.  For `OpticalPSF`, though,</span>
+<span class="sd">        this can sometimes be a good option.</span>
 
 <span class="sd">    2) Photon-shooting from an image produced using Fourier optics.</span>
 
@@ -1293,7 +1247,7 @@
 
 <span class="sd">        This is done if geometric_shooting=True when creating the PhaseScreenPSF, and method=&#39;phot&#39;</span>
 <span class="sd">        when calling drawImage.  In this case, a completely different algorithm is used make an</span>
-<span class="sd">        image.  Photons are uniformly generated in the Aperture pupil, and then the phase gradient</span>
+<span class="sd">        image.  Photons are uniformly generated in the `Aperture` pupil, and then the phase gradient</span>
 <span class="sd">        at that location is used to deflect each photon in the image plane.  This method, which</span>
 <span class="sd">        corresponds to geometric optics, is broadly accurate for phase screens that vary slowly</span>
 <span class="sd">        across the aperture, and is usually several orders of magnitude or more faster than Fourier</span>
@@ -1301,20 +1255,20 @@
 <span class="sd">        bright flux levels).</span>
 
 <span class="sd">        One short-coming of this method is that it neglects interference effects, i.e. diffraction.</span>
-<span class="sd">        For PhaseScreenLists that include at least one AtmosphericScreen, a correction, dubbed the</span>
-<span class="sd">        &quot;second kick&quot;, will automatically be applied to handle both the quickly varying modes of the</span>
-<span class="sd">        screens and the diffraction pattern of the Aperture.  For PhaseScreenLists without an</span>
-<span class="sd">        AtmosphericScreen, the correction is simply an Airy function.  Note that this correction can</span>
-<span class="sd">        be overridden using the second_kick keyword argument, and also tuned to some extent using</span>
-<span class="sd">        the kcrit keyword argument.</span>
+<span class="sd">        For `PhaseScreenList` that include at least one `AtmosphericScreen`, a correction, dubbed</span>
+<span class="sd">        the &quot;second kick&quot;, will automatically be applied to handle both the quickly varying modes</span>
+<span class="sd">        of the screens and the diffraction pattern of the `Aperture`.  For PhaseScreenLists without</span>
+<span class="sd">        an `AtmosphericScreen`, the correction is simply an Airy function.  Note that this</span>
+<span class="sd">        correction can be overridden using the second_kick keyword argument, and also tuned to some</span>
+<span class="sd">        extent using the kcrit keyword argument.</span>
 
-<span class="sd">    Note also that calling drawImage on a PhaseScreenPSF that uses a PhaseScreenList with any</span>
-<span class="sd">    uninstantiated AtmosphericScreens will perform that instantiation, and that the details of the</span>
+<span class="sd">    Note also that calling drawImage on a PhaseScreenPSF that uses a `PhaseScreenList` with any</span>
+<span class="sd">    uninstantiated `AtmosphericScreen` will perform that instantiation, and that the details of the</span>
 <span class="sd">    instantiation depend on the drawing method used, and also the kcrit keyword argument to</span>
-<span class="sd">    PhaseScreenPSF.  See the AtmosphericScreen docstring for more details.</span>
+<span class="sd">    PhaseScreenPSF.  See the `AtmosphericScreen` docstring for more details.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        screen_list:        PhaseScreenList object from which to create PSF.</span>
+<span class="sd">        screen_list:        `PhaseScreenList` object from which to create PSF.</span>
 <span class="sd">        lam:                Wavelength in nanometers at which to compute PSF.</span>
 <span class="sd">        t0:                 Time at which to start exposure in seconds.  [default: 0.0]</span>
 <span class="sd">        exptime:            Time in seconds over which to accumulate evolving instantaneous PSF.</span>
@@ -1330,7 +1284,7 @@
 <span class="sd">                            continuously in this case instead of at discrete intervals.</span>
 <span class="sd">                            [default: 0.025]</span>
 <span class="sd">        flux:               Flux of output PSF [default: 1.0]</span>
-<span class="sd">        theta:              Field angle of PSF as a 2-tuple of Angles.</span>
+<span class="sd">        theta:              Field angle of PSF as a 2-tuple of `Angle` instances.</span>
 <span class="sd">                            [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</span>
 <span class="sd">        interpolant:        Either an Interpolant instance or a string indicating which</span>
 <span class="sd">                            interpolant should be used.  Options are &#39;nearest&#39;, &#39;sinc&#39;, &#39;linear&#39;,</span>
@@ -1350,9 +1304,9 @@
 <span class="sd">                            phase screen gradient.  If False, then first draw using Fourier</span>
 <span class="sd">                            optics and then shoot from the derived InterpolatedImage.</span>
 <span class="sd">                            [default: True]</span>
-<span class="sd">        aper:               Aperture to use to compute PSF(s).  [default: None]</span>
+<span class="sd">        aper:               `Aperture` to use to compute PSF(s).  [default: None]</span>
 <span class="sd">        second_kick:        An optional second kick to also convolve by when using geometric</span>
-<span class="sd">                            photon-shooting.  (This can technically be any GSObject, though</span>
+<span class="sd">                            photon-shooting.  (This can technically be any `GSObject`, though</span>
 <span class="sd">                            usually it should probably be a SecondKick object).  If None, then a</span>
 <span class="sd">                            good second kick will be chosen automatically based on</span>
 <span class="sd">                            ``screen_list``.  If False, then a second kick won&#39;t be applied.</span>
@@ -1364,8 +1318,7 @@
 <span class="sd">                            produce similar results, we caution the user to compare the affected</span>
 <span class="sd">                            geometric PSFs against Fourier optics PSFs carefully before changing</span>
 <span class="sd">                            this value.  [default: 0.2]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">    The following are optional keywords to use to setup the aperture if ``aper`` is not provided:</span>
 
@@ -1378,11 +1331,11 @@
 <span class="sd">                            [default: 0]</span>
 <span class="sd">        strut_thick:        Thickness of support struts as a fraction of aperture diameter.</span>
 <span class="sd">                            [default: 0.05]</span>
-<span class="sd">        strut_angle:        Angle made between the vertical and the strut starting closest to it,</span>
+<span class="sd">        strut_angle:        `Angle` made between the vertical and the strut starting closest to it,</span>
 <span class="sd">                            defined to be positive in the counter-clockwise direction; must be an</span>
-<span class="sd">                            Angle instance. [default: 0. * galsim.degrees]</span>
+<span class="sd">                            `Angle` instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">        oversampling:       Optional oversampling factor *in the image plane* for the PSF</span>
-<span class="sd">                            eventually constructed using this Aperture.  Setting</span>
+<span class="sd">                            eventually constructed using this `Aperture`.  Setting</span>
 <span class="sd">                            ``oversampling &lt; 1`` will produce aliasing in the PSF (not good).</span>
 <span class="sd">                            [default: 1.0]</span>
 <span class="sd">        pad_factor:         Additional multiple by which to extend the PSF image to avoid</span>
@@ -1391,7 +1344,7 @@
 <span class="sd">                            plane image, to be used instead of generating one based on the</span>
 <span class="sd">                            obscuration and strut parameters.  [default: None]</span>
 <span class="sd">        pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil plane</span>
-<span class="sd">                            (positive in the counter-clockwise direction).  Must be an Angle</span>
+<span class="sd">                            (positive in the counter-clockwise direction).  Must be an `Angle`</span>
 <span class="sd">                            instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">        pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In</span>
 <span class="sd">                            most cases, it&#39;s a good idea to leave this as None, in which case</span>
@@ -1410,7 +1363,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<div class="viewcode-block" id="PhaseScreenPSF.__init__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">),</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">ii_pad_factor</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">geometric_shooting</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">aper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">second_kick</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kcrit</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
@@ -1463,7 +1416,7 @@
         <span class="c1"># We&#39;ll set these more intelligently as needed below</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_second_kick</span> <span class="o">=</span> <span class="n">second_kick</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">_delayCalculation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span> <span class="o">=</span> <span class="kc">False</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_real_ii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1572,17 +1525,17 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenPSF.__str__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.PhaseScreenPSF(</span><span class="si">%s</span><span class="s2">, lam=</span><span class="si">%s</span><span class="s2">, exptime=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">))</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenPSF.__repr__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">outstr</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;galsim.PhaseScreenPSF(</span><span class="si">%r</span><span class="s2">, lam=</span><span class="si">%r</span><span class="s2">, exptime=</span><span class="si">%r</span><span class="s2">, flux=</span><span class="si">%r</span><span class="s2">, aper=</span><span class="si">%r</span><span class="s2">, theta=</span><span class="si">%r</span><span class="s2">, &quot;</span>
                   <span class="s2">&quot;interpolant=</span><span class="si">%r</span><span class="s2">, scale_unit=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outstr</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenPSF.__eq__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="c1"># Even if two PSFs were generated with different sets of parameters, they will act</span>
         <span class="c1"># identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
@@ -1598,12 +1551,12 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PhaseScreenPSF.__hash__"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.PhaseScreenPSF&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Trigger delayed computation of all pending PSFs.</span>
@@ -1760,7 +1713,7 @@
 <span class="sd">    The diffraction effects are characterized by the diffraction angle, which is a function of the</span>
 <span class="sd">    ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the</span>
 <span class="sd">    telescope.  The natural unit for this value is radians, which is not normally a convenient</span>
-<span class="sd">    unit to use for other GSObject dimensions.  Assuming that the other sky coordinates you are</span>
+<span class="sd">    unit to use for other `GSObject` dimensions.  Assuming that the other sky coordinates you are</span>
 <span class="sd">    using are all in arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy,</span>
 <span class="sd">    etc.), then you should convert this to arcsec as well::</span>
 
@@ -1871,7 +1824,7 @@
 <span class="sd">        annular_zernike:    Boolean indicating that aberrations specify the amplitudes of annular</span>
 <span class="sd">                            Zernike polynomials instead of circular Zernike polynomials.</span>
 <span class="sd">                            [default: False]</span>
-<span class="sd">        aper:               Aperture object to use when creating PSF.  [default: None]</span>
+<span class="sd">        aper:               `Aperture` object to use when creating PSF.  [default: None]</span>
 <span class="sd">        circular_pupil:     Adopt a circular pupil?  [default: True]</span>
 <span class="sd">        obscuration:        Linear dimension of central obscuration as fraction of pupil linear</span>
 <span class="sd">                            dimension, [0., 1.). This should be specified even if you are providing</span>
@@ -1886,7 +1839,7 @@
 <span class="sd">                            Usually ``oversampling`` should be somewhat larger than 1.  1.5 is</span>
 <span class="sd">                            usually a safe choice.  [default: 1.5]</span>
 <span class="sd">        pad_factor:         Additional multiple by which to zero-pad the PSF image to avoid folding</span>
-<span class="sd">                            compared to what would be employed for a simple Airy.  Note that</span>
+<span class="sd">                            compared to what would be employed for a simple `Airy`.  Note that</span>
 <span class="sd">                            ``pad_factor`` may need to be increased for stronger aberrations, i.e.</span>
 <span class="sd">                            those larger than order unity.  [default: 1.5]</span>
 <span class="sd">        ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when</span>
@@ -1906,14 +1859,14 @@
 <span class="sd">                            [default: 0]</span>
 <span class="sd">        strut_thick:        Thickness of support struts as a fraction of pupil diameter.</span>
 <span class="sd">                            [default: 0.05]</span>
-<span class="sd">        strut_angle:        Angle made between the vertical and the strut starting closest to it,</span>
+<span class="sd">        strut_angle:        `Angle` made between the vertical and the strut starting closest to it,</span>
 <span class="sd">                            defined to be positive in the counter-clockwise direction; must be an</span>
-<span class="sd">                            Angle instance. [default: 0. * galsim.degrees]</span>
+<span class="sd">                            `Angle` instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">        pupil_plane_im:     The GalSim.Image, NumPy array, or name of file containing the pupil</span>
 <span class="sd">                            plane image, to be used instead of generating one based on the</span>
 <span class="sd">                            obscuration and strut parameters.  [default: None]</span>
 <span class="sd">        pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil plane</span>
-<span class="sd">                            (positive in the counter-clockwise direction).  Must be an Angle</span>
+<span class="sd">                            (positive in the counter-clockwise direction).  Must be an `Angle`</span>
 <span class="sd">                            instance. [default: 0. * galsim.degrees]</span>
 <span class="sd">        pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In</span>
 <span class="sd">                            most cases, it&#39;s a good idea to leave this as None, in which case</span>
@@ -1927,11 +1880,10 @@
 <span class="sd">                            to find a good value automatically.  See also ``oversampling`` for</span>
 <span class="sd">                            adjusting the pupil size.  [default: None]</span>
 <span class="sd">        scale_unit:         Units to use for the sky coordinates when calculating lam/diam if these</span>
-<span class="sd">                            are supplied separately.  Should be either a galsim.AngleUnit or a</span>
+<span class="sd">                            are supplied separately.  Should be either a `galsim.AngleUnit` or a</span>
 <span class="sd">                            string that can be used to construct one (e.g., &#39;arcsec&#39;, &#39;radians&#39;,</span>
 <span class="sd">                            etc.).  [default: galsim.arcsec]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span>
@@ -1968,7 +1920,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+<div class="viewcode-block" id="OpticalPSF.__init__"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">astig1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">astig2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">coma1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">coma2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">trefoil1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">trefoil2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">spher</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">annular_zernike</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">aper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">circular_pupil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2047,7 +1999,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span> <span class="o">=</span> <span class="n">aper</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="o">=</span> <span class="n">_force_stepk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="o">=</span> <span class="n">_force_maxk</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">=</span> <span class="n">ii_pad_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">=</span> <span class="n">ii_pad_factor</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_psf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2061,7 +2013,7 @@
         <span class="n">psf</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>  <span class="c1"># No need to delay an OpticalPSF.</span>
         <span class="k">return</span> <span class="n">psf</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalPSF.__str__"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%s</span><span class="s2">, diam=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">lam_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">):</span>
@@ -2074,9 +2026,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, flux=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalPSF.__repr__"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%r</span><span class="s2">, diam=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, aper=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span>
@@ -2094,9 +2046,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">!=</span> <span class="mf">4.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, ii_pad_factor=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalPSF.__eq__"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">OpticalPSF</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_lam</span> <span class="ow">and</span>
@@ -2108,12 +2060,12 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalPSF.__hash__"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.OpticalPSF&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

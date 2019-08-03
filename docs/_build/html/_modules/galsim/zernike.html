@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,9 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file zernike.py</span>
-<span class="sd">Module contains code for evaluating and fitting Zernike polynomials</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -606,12 +606,12 @@
 <span class="sd">        R_outer:    Outer radius.  [default: 1.0]</span>
 <span class="sd">        R_inner:    Inner radius.  [default: 0.0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__init__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R_outer</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R_inner</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R_inner</span><span class="p">)</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_coef_array_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -670,7 +670,7 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            rho:      radial coordinate of evaluation points.  Can be list-like.</span>
-<span class="sd">            theta:    azimuthal coordinate in radians (or as Angle object) of evaluation points.</span>
+<span class="sd">            theta:    azimuthal coordinate in radians (or as `Angle` object) of evaluation points.</span>
 <span class="sd">                      Can be list-like.</span>
 
 <span class="sd">        Returns:</span>
@@ -693,7 +693,7 @@
 <span class="sd">            &gt;&gt;&gt; Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            theta:    Angle in radians.</span>
+<span class="sd">            theta:    angle in radians.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A new Zernike object.</span>
@@ -702,17 +702,17 @@
         <span class="n">M</span> <span class="o">=</span> <span class="n">zernikeRotMatrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__eq__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Zernike</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">R_outer</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">R_inner</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">R_inner</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Zernike&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">))</span>
+<div class="viewcode-block" id="Zernike.__hash__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Zernike&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__repr__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;galsim.zernike.Zernike(&quot;</span>
         <span class="n">out</span> <span class="o">+=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
@@ -720,7 +720,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, R_inner=</span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
         <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">out</span></div>
+        <span class="k">return</span> <span class="n">out</span></div></div>
 
 
 <div class="viewcode-block" id="zernikeRotMatrix"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.zernikeRotMatrix">[docs]</a><span class="k">def</span> <span class="nf">zernikeRotMatrix</span><span class="p">(</span><span class="n">jmax</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
@@ -749,7 +749,7 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        jmax:   Maximum Zernike index (in the Noll convention) over which to construct matrix.</span>
-<span class="sd">        theta:  Angle of rotation in radians.</span>
+<span class="sd">        theta:  angle of rotation in radians.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Matrix of size [jmax+1, jmax+1].</span>

@@ -94,22 +94,27 @@
 <li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -210,7 +215,7 @@ arcsec and then draw with <code class="docutils literal notranslate"><span class
 units for the sky coordinates, if you wanted, you could instead define the sizes of all your
 galaxies and PSFs in terms of radians and then use <code class="docutils literal notranslate"><span class="pre">pixel_scale=0.2/206265</span></code> when you draw
 them.</p>
-<p>Transforming methods:</p>
+<p><strong>Transforming methods</strong>:</p>
 <p>The GSObject class uses an “immutable” design[1], so all methods that would potentially modify
 the object actually return a new object instead.  This uses pointers and such behind the
 scenes, so it all happens efficiently, but it makes using the objects a bit simpler, since
@@ -228,7 +233,7 @@ more details about how to use them.:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span> <span class="o">*</span> <span class="n">ratio</span>           <span class="c1"># Scale the surface brightness profile by some factor.</span>
 </pre></div>
 </div>
-<p>Access Methods:</p>
+<p><strong>Access Methods</strong>:</p>
 <p>There are some access methods and properties that are available for all GSObjects.
 Again, see the docstrings for each method for more details.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span><span class="o">.</span><span class="n">flux</span>
@@ -245,22 +250,22 @@ Again, see the docstrings for each method for more details.:</p>
 </pre></div>
 </div>
 <p>Most subclasses have additional methods that are available for values that are particular to
-that specific surface brightness profile.  e.g. <code class="docutils literal notranslate"><span class="pre">sigma</span> <span class="pre">=</span> <span class="pre">gauss.getSigma()</span></code>.  However, note
+that specific surface brightness profile.  e.g. <code class="docutils literal notranslate"><span class="pre">sigma</span> <span class="pre">=</span> <span class="pre">gauss.sigma</span></code>.  However, note
 that class-specific methods are not available after performing one of the above transforming
 operations.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">g2</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sigma</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">getSigma</span><span class="p">()</span>              <span class="c1"># This will raise an exception.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sigma</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">sigma</span>               <span class="c1"># This will raise an exception.</span>
 </pre></div>
 </div>
 <p>It is however possible to access the original object that was transformed via the
 <code class="docutils literal notranslate"><span class="pre">original</span></code> attribute.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sigma</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">getSigma</span><span class="p">()</span>     <span class="c1"># This works.</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sigma</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">sigma</span>      <span class="c1"># This works.</span>
 </pre></div>
 </div>
 <p>No matter how many transformations are performed, the <code class="docutils literal notranslate"><span class="pre">original</span></code> attribute will contain the
 _original_ object (not necessarily the most recent ancestor).</p>
-<p>Drawing Methods:</p>
+<p><strong>Drawing Methods</strong>:</p>
 <p>The main thing to do with a GSObject once you have built it is to draw it onto an image.
 There are two methods that do this.  In both cases, there are lots of optional parameters.
 See the docstrings for these methods for more details.:</p>
@@ -274,27 +279,27 @@ See the docstrings for these methods for more details.:</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>original</strong> – This was mentioned above as a way to access the original object that has
 been transformed by one of the transforming methods.</p></li>
-<li><p><strong>noise</strong> – Some types, like RealGalaxy, set this attribute to be the intrinsic noise that
+<li><p><strong>noise</strong> – Some types, like <a class="reference internal" href="real_gal.html#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a>, set this attribute to be the intrinsic noise that
 is already inherent in the profile and will thus be present when you draw the
 object.  The noise is propagated correctly through the various transforming
 methods, as well as convolutions and flux rescalings.  Note that the <code class="docutils literal notranslate"><span class="pre">noise</span></code>
 attribute can be set directly by users even for GSObjects that do not naturally
 have one. The typical use for this attribute is to use it to whiten the noise in
-the image after drawing.  See CorrelatedNoise for more details.</p></li>
+the image after drawing.  See <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> for more details.</p></li>
 </ul>
 </dd>
 </dl>
-<p>GSParams:</p>
+<p><strong>GSParams</strong>:</p>
 <p>All GSObject classes take an optional <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> argument, so we document that feature here.
 For all documentation about the specific derived classes, please see the docstring for each
 one individually.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> argument can be used to specify various numbers that govern the tradeoff
 between accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
-encapsulated in a class called GSParams, and the user should make careful choices whenever they
-opt to deviate from the defaults.  For more details about the parameters and their default
-values, please see the docstring of the GSParams class (e.g. type <code class="docutils literal notranslate"><span class="pre">help(galsim.GSParams)</span></code>).</p>
+encapsulated in a class called <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>, and the user should make careful choices whenever
+they opt to deviate from the defaults.  For more details about the parameters and their default
+values, please see the docstring of the <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> class.</p>
 <p>For example, let’s say you want to do something that requires an FFT larger than 4096 x 4096
-(and you have enough memory to handle it!).  Then you can create a new GSParams object with a
+(and you have enough memory to handle it!).  Then you can create a new <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> object with a
 larger <code class="docutils literal notranslate"><span class="pre">maximum_fft_size</span></code> and pass that to your GSObject on construction:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">4.3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Moffat</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mf">2.85</span><span class="p">)</span>
@@ -318,21 +323,69 @@ larger <code class="docutils literal notranslate"><span class="pre">maximum_fft_
 <span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;high_res_sersic.fits&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that for compound objects such as Convolution or Sum, not all GSParams can be
+<p>Note that for compound objects such as <a class="reference internal" href="composite.html#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> or <a class="reference internal" href="composite.html#galsim.Sum" title="galsim.Sum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sum</span></code></a>, not all <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> can be
 changed when the compound object is created.  In the example given here, it is possible to
 change parameters related to the drawing, but not the Fourier space parameters for the
-components that go into the Convolution.  To get better sampling in Fourier space, for example,
-the <code class="docutils literal notranslate"><span class="pre">gal</span></code> and/or <code class="docutils literal notranslate"><span class="pre">psf</span></code> should be created with <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> that have a non-default value of
-<code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code>.  This statement applies to the threshold and accuracy parameters.</p>
+components that go into the <a class="reference internal" href="composite.html#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a>.  To get better sampling in Fourier space,
+for example, the <code class="docutils literal notranslate"><span class="pre">gal</span></code> and/or <code class="docutils literal notranslate"><span class="pre">psf</span></code> should be created with <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> that have a
+non-default value of <code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code>.  This statement applies to the threshold and
+accuracy parameters.</p>
+<dl class="method">
+<dt id="galsim.GSObject.__div__">
+<code class="sig-name descname">__div__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__div__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__div__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to obj * (1/other)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSObject.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSObject.__mul__">
+<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__mul__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale the flux of the object by the given factor.</p>
+<p>obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location scaled by the given amount.</p>
+<p>You can also multiply by an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, which will create a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> where the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>
+acts like a wavelength-dependent <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSObject.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSObject.__rmul__">
+<code class="sig-name descname">__rmul__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__rmul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__rmul__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to obj * other</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSObject.__truediv__">
+<code class="sig-name descname">__truediv__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="headerlink" href="#galsim.GSObject.__truediv__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to obj * (1/other)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.GSObject.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.GSObject.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.GSObject.calculateFWHM">
 <code class="sig-name descname">calculateFWHM</code><span class="sig-paren">(</span><em class="sig-param">size=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">centroid=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.calculateFWHM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.calculateFWHM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the full-width half-maximum (FWHM) of the object.</p>
 <p>If the profile has a fwhm attribute, it will just return that, but in the general case,
 we draw the profile and estimate the FWHM directly.</p>
-<p>As with calculateHLR and calculateMomentRadius, this function optionally takes size and
+<p>As with <a class="reference internal" href="#galsim.GSObject.calculateHLR" title="galsim.GSObject.calculateHLR"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">calculateHLR</span></code></a> and <a class="reference internal" href="#galsim.GSObject.calculateMomentRadius" title="galsim.GSObject.calculateMomentRadius"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">calculateMomentRadius</span></code></a>, this function optionally takes size and
 scale values to use for the image drawing.  The default is to use the the Nyquist scale
-for the pixel scale and let drawImage choose a size for the stamp that will enclose at
+for the pixel scale and let <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> choose a size for the stamp that will enclose at
 least 99.5% of the flux.  These were found to produce results accurate to well below
 one percent on our internal tests, so it is unlikely that you will want to adjust
 them for accuracy.  However, using a smaller size than default could help speed up
@@ -341,7 +394,7 @@ the calculation, since the default is usually much larger than is needed.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>size</strong> – If given, the stamp size to use for the drawn image. [default: None,
-which will let drawImage choose the size automatically]</p></li>
+which will let <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> choose the size automatically]</p></li>
 <li><p><strong>scale</strong> – If given, the pixel scale to use for the drawn image. [default:
 self.nyquist_scale]</p></li>
 <li><p><strong>centroid</strong> – The position to use for the centroid. [default: self.centroid]</p></li>
@@ -367,7 +420,7 @@ optional parameter scale to change the pixel scale used to draw the profile.</p>
 to a few percent on our internal tests.  Using a smaller scale will be more accurate at
 the expense of speed.</p>
 <p>In addition, you can optionally specify the size of the image to draw. The default size is
-None, which means drawImage will choose a size designed to contain around 99.5% of the
+None, which means <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> will choose a size designed to contain around 99.5% of the
 flux.  This is overkill for this calculation, so choosing a smaller size than this may
 speed up this calculation somewhat.</p>
 <p>Also, while the name of this function refers to the half-light radius, in fact it can also
@@ -380,7 +433,7 @@ discriminations.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>size</strong> – If given, the stamp size to use for the drawn image. [default: None,
-which will let drawImage choose the size automatically]</p></li>
+which will let <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> choose the size automatically]</p></li>
 <li><p><strong>scale</strong> – If given, the pixel scale to use for the drawn image. [default:
 0.5 * self.nyquist_scale]</p></li>
 <li><p><strong>centroid</strong> – The position to use for the centroid. [default: self.centroid]</p></li>
@@ -417,7 +470,7 @@ int(I(x,y) dx dy) * i_center * j_center.</p>
 Possibly worse depending on the profile being measured.  If you care about a high
 precision estimate of the radius, the accuracy can be improved using the optional
 parameters size and scale to change the size and pixel scale used to draw the profile.</p>
-<p>The default is to use the the Nyquist scale for the pixel scale and let drawImage
+<p>The default is to use the the Nyquist scale for the pixel scale and let <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>
 choose a size for the stamp that will enclose at least 99.5% of the flux.  These
 were found to produce results accurate to a few percent on our internal tests.
 Using a smaller scale and larger size will be more accurate at the expense of speed.</p>
@@ -428,7 +481,7 @@ discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.<
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>size</strong> – If given, the stamp size to use for the drawn image. [default: None,
-which will let drawImage choose the size automatically]</p></li>
+which will let <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> choose the size automatically]</p></li>
 <li><p><strong>scale</strong> – If given, the pixel scale to use for the drawn image. [default:
 self.nyquist_scale]</p></li>
 <li><p><strong>centroid</strong> – The position to use for the centroid. [default: self.centroid]</p></li>
@@ -472,24 +525,24 @@ changes the flux.</p>
 <dl class="method">
 <dt id="galsim.GSObject.drawFFT">
 <code class="sig-name descname">drawFFT</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">add_to_image=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawFFT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawFFT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draw this profile into an Image by computing the k-space image and performing an FFT.</p>
-<p>This is usually called from the <code class="docutils literal notranslate"><span class="pre">drawImage</span></code> function, rather than called directly by the
+<dd><p>Draw this profile into an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> by computing the k-space image and performing an FFT.</p>
+<p>This is usually called from the <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> function, rather than called directly by the
 user.  In particular, the input image must be already set up with defined bounds.  The
 profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
-bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+bounds, not the image center (unlike <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>).  The image also must have a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>
 wcs.  The profile being drawn should have already been converted to image coordinates via:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image_profile</span> <span class="o">=</span> <span class="n">original_wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">original_profile</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that the image produced by <code class="docutils literal notranslate"><span class="pre">drawFFT</span></code> represents the profile sampled at the center
+<p>Note that the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> produced by drawFFT represents the profile sampled at the center
 of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
 integrated over the area of the pixel.  This is equivalent to method=’no_pixel’ in
-drawImage.  If you want to render a profile integrated over the pixel, you can convolve
-with a Pixel first and draw that.</p>
+<a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>.  If you want to render a profile integrated over the pixel, you can convolve
+with a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> first and draw that.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – The Image onto which to place the flux. [required]</p></li>
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to place the flux. [required]</p></li>
 <li><p><strong>add_to_image</strong> – Whether to add flux to the existing image rather than clear out
 anything in the image before drawing. [default: False]</p></li>
 </ul>
@@ -509,8 +562,8 @@ drawn k-space image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – The Image onto which to place the flux.</p></li>
-<li><p><strong>kimage</strong> – The k-space Image where the object was drawn.</p></li>
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to place the flux.</p></li>
+<li><p><strong>kimage</strong> – The k-space <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> where the object was drawn.</p></li>
 <li><p><strong>wrap_size</strong> – The size of the region to wrap kimage, which must be either the same
 size as kimage or smaller.</p></li>
 <li><p><strong>add_to_image</strong> – Whether to add flux to the existing image rather than clear out
@@ -533,7 +586,7 @@ the PSF so drawing many models of the galaxy with the given PSF profile can avoi
 drawing the PSF each time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>image</strong> – The Image onto which to place the flux.</p>
+<dd class="field-odd"><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to place the flux.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>(kimage, wrap_size), where wrap_size is either the size of kimage or smaller if
@@ -545,13 +598,13 @@ the result should be wrapped before doing the inverse fft.</p>
 <dl class="method">
 <dt id="galsim.GSObject.drawImage">
 <code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">image=None</em>, <em class="sig-param">nx=None</em>, <em class="sig-param">ny=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">method='auto'</em>, <em class="sig-param">area=1.0</em>, <em class="sig-param">exptime=1.0</em>, <em class="sig-param">gain=1.0</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">use_true_center=True</em>, <em class="sig-param">offset=None</em>, <em class="sig-param">n_photons=0.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">max_extra_noise=0.0</em>, <em class="sig-param">poisson_flux=None</em>, <em class="sig-param">sensor=None</em>, <em class="sig-param">surface_ops=()</em>, <em class="sig-param">n_subsample=3</em>, <em class="sig-param">maxN=None</em>, <em class="sig-param">save_photons=False</em>, <em class="sig-param">setup_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawImage" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draws an Image of the object.</p>
-<p>The drawImage() method is used to draw an Image of the current object using one of several
-possible rendering methods (see below).  It can create a new Image or can draw onto an
+<dd><p>Draws an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the object.</p>
+<p>The drawImage() method is used to draw an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the current object using one of several
+possible rendering methods (see below).  It can create a new <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> or can draw onto an
 existing one if provided by the <code class="docutils literal notranslate"><span class="pre">image</span></code> parameter.  If the <code class="docutils literal notranslate"><span class="pre">image</span></code> is given, you can
-also optionally add to the given Image if <code class="docutils literal notranslate"><span class="pre">add_to_image</span> <span class="pre">=</span> <span class="pre">True</span></code>, but the default is to
+also optionally add to the given <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> if <code class="docutils literal notranslate"><span class="pre">add_to_image</span> <span class="pre">=</span> <span class="pre">True</span></code>, but the default is to
 replace the current contents with new values.</p>
-<p>Providing an input image:</p>
+<p><strong>Providing an input image</strong>:</p>
 <p>Note that if you provide an <code class="docutils literal notranslate"><span class="pre">image</span></code> parameter, it is the image onto which the profile
 will be drawn.  The provided image <em>will be modified</em>.  A reference to the same image
 is also returned to provide a parallel return behavior to when <code class="docutils literal notranslate"><span class="pre">image</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>
@@ -570,45 +623,42 @@ profile separately.  In this case, the returned value is typically ignored.  For
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="p">(</span><span class="n">stamp</span><span class="o">.</span><span class="n">array</span> <span class="o">==</span> <span class="n">full_image</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Letting drawImage create the image for you:</p>
+<p><strong>Letting drawImage create the image for you</strong>:</p>
 <p>If drawImage() will be creating the image from scratch for you, then there are several ways
 to control the size of the new image.  If the <code class="docutils literal notranslate"><span class="pre">nx</span></code> and <code class="docutils literal notranslate"><span class="pre">ny</span></code> keywords are present, then
 an image with these numbers of pixels on a side will be created.  Similarly, if the <code class="docutils literal notranslate"><span class="pre">bounds</span></code>
 keyword is present, then an image with the specified bounds will be created.  Note that it
-is an error to provide an existing Image when also specifying <code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, or <code class="docutils literal notranslate"><span class="pre">bounds</span></code>.
-In the absence of <code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, and <code class="docutils literal notranslate"><span class="pre">bounds</span></code>, drawImage will decide a good size to use
-based on the size of the object being drawn.  Basically, it will try to use an area large
-enough to include at least 99.5% of the flux.  (Note: the value 0.995 is really <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span>
-<span class="pre">folding_threshold</span></code>.  You can change the value of <code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code> for any object via
-GSParams.  See <code class="docutils literal notranslate"><span class="pre">help(GSParams)</span></code> for more details.)  You can set the pixel scale of the
-constructed image with the <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter, or set a WCS function with <code class="docutils literal notranslate"><span class="pre">wcs</span></code>.  If you
-do not provide either <code class="docutils literal notranslate"><span class="pre">scale</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code>, then drawImage() will default to using the
-Nyquist scale for the current object.  You can also set the data type used in the new Image
-with the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> parameter that has the same options as for the Image constructor.</p>
-<p>The drawing “method”:</p>
+is an error to provide an existing <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> when also specifying <code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">bounds</span></code>.  In the absence of <code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, and <code class="docutils literal notranslate"><span class="pre">bounds</span></code>, drawImage will decide a good
+size to use based on the size of the object being drawn.  Basically, it will try to use an
+area large enough to include at least 99.5% of the flux.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This value 0.995 is really <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">folding_threshold</span></code>.  You can change the value of
+<code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code> for any object via <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+</div>
+<p>You can set the pixel scale of the constructed image with the <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter, or set
+a WCS function with <code class="docutils literal notranslate"><span class="pre">wcs</span></code>.  If you do not provide either <code class="docutils literal notranslate"><span class="pre">scale</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code>, then
+drawImage() will default to using the Nyquist scale for the current object.</p>
+<p>You can also set the data type used in the new <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> with the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> parameter that has
+the same options as for the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> constructor.</p>
+<p><strong>The drawing “method”</strong>:</p>
 <p>There are several different possible methods drawImage() can use for rendering the image.
 This is set by the <code class="docutils literal notranslate"><span class="pre">method</span></code> parameter.  The options are:</p>
-<ul class="simple">
-<li><dl class="simple">
+<dl class="simple">
 <dt>auto</dt><dd><p>This is the default, which will normally be equivalent to ‘fft’.  However,
 if the object being rendered is simple (no convolution) and has hard edges
 (e.g. a Box or a truncated Moffat or Sersic), then it will switch to
 ‘real_space’, since that is often both faster and more accurate in these
 cases (due to ringing in Fourier space).</p>
 </dd>
-</dl>
-</li>
-<li><dl class="simple">
 <dt>fft</dt><dd><p>The integration of the light within each pixel is mathematically equivalent
-to convolving by the pixel profile (a Pixel object) and sampling the result
+to convolving by the pixel profile (a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> object) and sampling the result
 at the centers of the pixels.  This method will do that convolution using
 a discrete Fourier transform.  Furthermore, if the object (or any component
 of it) has been transformed via shear(), dilate(), etc., then these
 transformations are done in Fourier space as well.</p>
 </dd>
-</dl>
-</li>
-<li><dl class="simple">
 <dt>real_space</dt><dd><p>This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)
 in real space for the integration over the pixel response.  It is usually
 slower than the ‘fft’ method, but if the profile has hard edges that cause
@@ -618,9 +668,6 @@ will revert to ‘fft’, since the double convolution that is required to also
 handle the pixel response is far too slow to be practical using real-space
 integrals.</p>
 </dd>
-</dl>
-</li>
-<li><dl class="simple">
 <dt>phot</dt><dd><p>This uses a technique called photon shooting to render the image.
 Essentially, the object profile is taken as a probability distribution
 from which a finite number of photons are “shot” onto the image.  Each
@@ -633,9 +680,6 @@ resulting image will have Poisson noise from the finite number of photons,
 and (2) it is not available for all object types (notably anything that
 includes a Deconvolution).</p>
 </dd>
-</dl>
-</li>
-<li><dl class="simple">
 <dt>no_pixel</dt><dd><p>Instead of integrating over the pixels, this method will sample the profile
 at the centers of the pixels and multiply by the pixel area.  If there is
 a convolution involved, the choice of whether this will use an FFT or
@@ -647,9 +691,6 @@ has already been convolved by the pixel, so you would not want to do so
 again.  Note: The multiplication by the pixel area gets the flux
 normalization right for the above use case.  cf. <code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">'sb'</span></code>.</p>
 </dd>
-</dl>
-</li>
-<li><dl class="simple">
 <dt>sb</dt><dd><p>This is a lot like ‘no_pixel’, except that the image values will simply be
 the sampled object profile’s surface brightness, not multiplied by the
 pixel area.  This does not correspond to any real observing scenario, but
@@ -657,13 +698,11 @@ it could be useful if you want to view the surface brightness profile of an
 object directly, without including the pixel integration.</p>
 </dd>
 </dl>
-</li>
-</ul>
 <p>The ‘phot’ method has a few extra parameters that adjust how it functions.  The total
 number of photons to shoot is normally calculated from the object’s flux.  This flux is
 taken to be given in photons/cm^2/s, so for most simple profiles, this times area * exptime
 will equal the number of photons shot.  (See the discussion in Rowe et al, 2015, for why
-this might be modified for InterpolatedImage and related profiles.)  However, you can
+this might be modified for <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> and related profiles.)  However, you can
 manually set a different number of photons with <code class="docutils literal notranslate"><span class="pre">n_photons</span></code>.  You can also set
 <code class="docutils literal notranslate"><span class="pre">max_extra_noise</span></code> to tell drawImage() to use fewer photons than normal (and so is faster)
 such that no more than that much extra noise is added to any pixel.  This is particularly
@@ -675,9 +714,9 @@ variate, which is normally appropriate with photon shooting.  But you can turn t
 <code class="docutils literal notranslate"><span class="pre">n_photons</span></code>.</p>
 <p>Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
 to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
-the nature of the radial profile). See <code class="docutils literal notranslate"><span class="pre">help(galsim.GSParams)</span></code> for parameters that you can
-use to reduce the level of these artifacts, in particular <code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code> may be
-helpful if you see such artifacts in your images.</p>
+the nature of the radial profile). See <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for parameters that you can use to reduce
+the level of these artifacts, in particular <code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code> may be helpful if you see
+such artifacts in your images.</p>
 <p>Setting the offset:</p>
 <p>The object will by default be drawn with its nominal center at the center location of the
 image.  There is thus a qualitative difference in the appearance of the rendered profile
@@ -698,7 +737,7 @@ pixel values in real images.  Normally, the gain of a CCD is in electrons/ADU, b
 GalSim, we fold the quantum efficiency into the gain as well, so the units are photons/ADU.</p>
 <p>Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
 So if you want, you can keep track of this properly and provide an <code class="docutils literal notranslate"><span class="pre">area</span></code> and <code class="docutils literal notranslate"><span class="pre">exposure</span></code>
-time here. This detail is more important with chromatic objects where the SED is typically
+time here. This detail is more important with chromatic objects where the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> is typically
 given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
 objects however, it is often more convenient to ignore these details and just consider the
 flux to be the total number of photons for this exposure, in which case, you would leave the
@@ -714,8 +753,8 @@ large enough image to catch most of the flux.  For example:</p>
 of profile the object has, how big your image is relative to the size of your object,
 whether you are keeping <code class="docutils literal notranslate"><span class="pre">poisson_flux=True</span></code>, etc.</p>
 <p>The following code snippet illustrates how <code class="docutils literal notranslate"><span class="pre">gain</span></code>, <code class="docutils literal notranslate"><span class="pre">exptime</span></code>, <code class="docutils literal notranslate"><span class="pre">area</span></code>, and <code class="docutils literal notranslate"><span class="pre">method</span></code>
-can all influence the relationship between the <code class="docutils literal notranslate"><span class="pre">flux</span></code> attribute of a <code class="docutils literal notranslate"><span class="pre">GSObject</span></code> and
-both the pixel values and <code class="docutils literal notranslate"><span class="pre">.added_flux</span></code> attribute of an <code class="docutils literal notranslate"><span class="pre">Image</span></code> drawn with
+can all influence the relationship between the <code class="docutils literal notranslate"><span class="pre">flux</span></code> attribute of a <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> and
+both the pixel values and <code class="docutils literal notranslate"><span class="pre">.added_flux</span></code> attribute of an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> drawn with
 <code class="docutils literal notranslate"><span class="pre">drawImage()</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="n">fwhm</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span><span class="o">.</span><span class="n">flux</span>
@@ -753,21 +792,21 @@ deposited will repel subsequent electrons, both slowing down their descent, lead
 more diffusion, and pushing them laterally toward neighboring pixels, which is called
 the brighter-fatter effect.</p>
 <p>Users interested in modeling this kind of effect can supply a <code class="docutils literal notranslate"><span class="pre">sensor</span></code> object to use
-for the accumulation step.  See <code class="docutils literal notranslate"><span class="pre">SiliconSensor</span></code> in sensor.py for a class that models
-silicon-based CCD sensors.</p>
+for the accumulation step.  See <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a> for a class that models silicon-based CCD
+sensors.</p>
 <p>Some related effects may need to be done to the photons at the surface layer before being
 passed into the sensor object.  For instance, the photons may need to be given appropriate
 incidence angles according to the optics of the telescope (since this matters for where the
 photons are converted to electrons).  You may also need to give the photons wavelengths
-according to the SED of the object.  Such steps are specified in a <code class="docutils literal notranslate"><span class="pre">surface_ops</span></code>
+according to the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> of the object.  Such steps are specified in a <code class="docutils literal notranslate"><span class="pre">surface_ops</span></code>
 parameter, which should be a list of any such operations you wish to perform on the photon
-array before passing them to the sensor.  See <code class="docutils literal notranslate"><span class="pre">FRatioAngles</span></code> and <code class="docutils literal notranslate"><span class="pre">WavelengthSampler</span></code> in
-photon_array.py for two examples of such surface operators.</p>
+array before passing them to the sensor.  See <a class="reference internal" href="surface.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a> and <a class="reference internal" href="surface.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> for
+two examples of such surface operators.</p>
 <p>Since the sensor deals with photons, it is most natural to use this feature in conjunction
 with photon shooting (<code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>).  However, it is allowed with FFT methods too.
 But there is a caveat one should be aware of in this case.  The FFT drawing is used to
-produce an intermediate image, which is then converted to a PhotonArray using the
-factory function <code class="docutils literal notranslate"><span class="pre">PhotonArray.makeFromImage</span></code>.  This assigns photon positions randomly
+produce an intermediate image, which is then converted to a <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> using the
+factory function <a class="reference internal" href="photon_array.html#galsim.PhotonArray.makeFromImage" title="galsim.PhotonArray.makeFromImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhotonArray.makeFromImage</span></code></a>.  This assigns photon positions randomly
 within each pixel where they were drawn, which isn’t always a particularly good
 approximation.</p>
 <p>To improve this behavior, the intermediate image is drawn with smaller pixels than the
@@ -779,10 +818,10 @@ more memory).</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image</strong> – If provided, this will be the image on which to draw the profile.
-If <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, then an automatically-sized Image will be created.
-If <code class="docutils literal notranslate"><span class="pre">image</span></code> is given, but its bounds are undefined (e.g. if it was
-constructed with <code class="docutils literal notranslate"><span class="pre">image</span> <span class="pre">=</span> <span class="pre">galsim.Image()</span></code>), then it will be resized
-appropriately based on the profile’s size [default: None].</p></li>
+If <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, then an automatically-sized <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> will be
+created.  If <code class="docutils literal notranslate"><span class="pre">image</span></code> is given, but its bounds are undefined (e.g. if
+it was constructed with <code class="docutils literal notranslate"><span class="pre">image</span> <span class="pre">=</span> <span class="pre">galsim.Image()</span></code>), then it will be
+resized appropriately based on the profile’s size [default: None].</p></li>
 <li><p><strong>nx</strong> – If provided and <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, use to set the x-direction size of
 the image.  Must be accompanied by <code class="docutils literal notranslate"><span class="pre">ny</span></code>.</p></li>
 <li><p><strong>ny</strong> – If provided and <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, use to set the y-direction size of
@@ -828,9 +867,8 @@ more than this because some of the shot photons are negative
 (usually due to interpolants).
 [default: 0]</p></li>
 <li><p><strong>rng</strong> – If provided, a random number generator to use for photon shooting,
-which may be any kind of BaseDeviate object.  If <code class="docutils literal notranslate"><span class="pre">rng</span></code> is None, one
-will be automatically created, using the time as a seed.
-[default: None]</p></li>
+which may be any kind of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.  If <code class="docutils literal notranslate"><span class="pre">rng</span></code> is None, one
+will be automatically created.  [default: None]</p></li>
 <li><p><strong>max_extra_noise</strong> – If provided, the allowed extra noise in each pixel when photon
 shooting.  This is only relevant if <code class="docutils literal notranslate"><span class="pre">n_photons=0</span></code>, so the number of
 photons is being automatically calculated.  In that case, if the image
@@ -847,7 +885,7 @@ this uses a “variance” definition of noise, not a “sigma” definition.
 Poisson statistics for <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> samples when photon shooting.
 [default: True, unless <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> is given, in which case the default
 is False]</p></li>
-<li><p><strong>sensor</strong> – An optional Sensor instance, which will be used to accumulate the
+<li><p><strong>sensor</strong> – An optional <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> instance, which will be used to accumulate the
 photons onto the image. [default: None]</p></li>
 <li><p><strong>surface_ops</strong> – A list of operators that can modify the photon array that will be
 applied in order before accumulating the photons on the sensor.
@@ -861,8 +899,8 @@ assumption of uniform flux per pixel less bad of an approximation.
 <li><p><strong>maxN</strong> – Sets the maximum number of photons that will be added to the image
 at a time.  (Memory requirements are proportional to this number.)
 [default: None, which means no limit]</p></li>
-<li><p><strong>save_photons</strong> – If True, save the PhotonArray as <code class="docutils literal notranslate"><span class="pre">image.photons</span></code>. Only valid if method
-is ‘phot’ or sensor is not None.  [default: False]</p></li>
+<li><p><strong>save_photons</strong> – If True, save the <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> as <code class="docutils literal notranslate"><span class="pre">image.photons</span></code>. Only valid if
+method is ‘phot’ or sensor is not None.  [default: False]</p></li>
 <li><p><strong>setup_only</strong> – Don’t actually draw anything on the image.  Just make sure the image
 is set up correctly.  This is used internally by GalSim, but there
 may be cases where the user will want the same functionality.
@@ -870,7 +908,7 @@ may be cases where the user will want the same functionality.
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the drawn Image.</p>
+<dd class="field-even"><p>the drawn <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -878,12 +916,12 @@ may be cases where the user will want the same functionality.
 <dl class="method">
 <dt id="galsim.GSObject.drawKImage">
 <code class="sig-name descname">drawKImage</code><span class="sig-paren">(</span><em class="sig-param">image=None</em>, <em class="sig-param">nx=None</em>, <em class="sig-param">ny=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">recenter=True</em>, <em class="sig-param">setup_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawKImage" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draws the k-space (complex) Image of the object, with bounds optionally set by input
-Image instance.</p>
-<p>Normalization is always such that image(0,0) = flux.  Unlike the real-space drawImage()
+<dd><p>Draws the k-space (complex) <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the object, with bounds optionally set by input
+<a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance.</p>
+<p>Normalization is always such that image(0,0) = flux.  Unlike the real-space <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>
 function, the (0,0) point will always be one of the actual pixel values.  For even-sized
 images, it will be 1/2 pixel above and to the right of the true center of the image.</p>
-<p>Another difference from  drawImage() is that a wcs other than a simple pixel scale is not
+<p>Another difference from  <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> is that a wcs other than a simple pixel scale is not
 allowed.  There is no <code class="docutils literal notranslate"><span class="pre">wcs</span></code> parameter here, and if the images have a non-trivial wcs (and
 you don’t override it with the <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter), a TypeError will be raised.</p>
 <p>Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
@@ -891,7 +929,7 @@ transform of the surface brightness profile.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – If provided, this will be the Image onto which to draw the k-space
+<li><p><strong>image</strong> – If provided, this will be the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to draw the k-space
 image.  If <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, then an automatically-sized image will be
 created.  If <code class="docutils literal notranslate"><span class="pre">image</span></code> is given, but its bounds are undefined, then it
 will be resized appropriately based on the profile’s size.
@@ -916,7 +954,7 @@ trust the provided bounds (False).  [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an Image instance (created if necessary)</p>
+<dd class="field-even"><p>an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance (created if necessary)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -924,24 +962,24 @@ trust the provided bounds (False).  [default: True]</p></li>
 <dl class="method">
 <dt id="galsim.GSObject.drawPhot">
 <code class="sig-name descname">drawPhot</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">gain=1.0</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">n_photons=0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">max_extra_noise=0.0</em>, <em class="sig-param">poisson_flux=None</em>, <em class="sig-param">sensor=None</em>, <em class="sig-param">surface_ops=()</em>, <em class="sig-param">maxN=None</em>, <em class="sig-param">orig_center=galsim.PositionI(x=0</em>, <em class="sig-param">y=0)</em>, <em class="sig-param">local_wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawPhot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawPhot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draw this profile into an Image by shooting photons.</p>
-<p>This is usually called from the <code class="docutils literal notranslate"><span class="pre">drawImage</span></code> function, rather than called directly by the
+<dd><p>Draw this profile into an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> by shooting photons.</p>
+<p>This is usually called from the <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> function, rather than called directly by the
 user.  In particular, the input image must be already set up with defined bounds.  The
 profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
-bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+bounds, not the image center (unlike <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>).  The image also must have a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>
 wcs.  The profile being drawn should have already been converted to image coordinates via:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image_profile</span> <span class="o">=</span> <span class="n">original_wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">original_profile</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that the image produced by <code class="docutils literal notranslate"><span class="pre">drawPhot</span></code> represents the profile integrated over the
-area of each pixel.  This is equivalent to convolving the profile by a square <code class="docutils literal notranslate"><span class="pre">Pixel</span></code>
+<p>Note that the image produced by <a class="reference internal" href="#galsim.GSObject.drawPhot" title="galsim.GSObject.drawPhot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawPhot</span></code></a> represents the profile integrated over the
+area of each pixel.  This is equivalent to convolving the profile by a square <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a>
 profile and sampling the value at the center of each pixel, although this happens
 automatically by the shooting algorithm, so you do not need to manually convolve by
-a Pixel as you would for <code class="docutils literal notranslate"><span class="pre">drawReal</span></code> or <code class="docutils literal notranslate"><span class="pre">drawFFT</span></code>.</p>
+a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> as you would for <a class="reference internal" href="#galsim.GSObject.drawReal" title="galsim.GSObject.drawReal"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawReal</span></code></a> or <a class="reference internal" href="#galsim.GSObject.drawFFT" title="galsim.GSObject.drawFFT"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawFFT</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – The Image onto which to place the flux. [required]</p></li>
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to place the flux. [required]</p></li>
 <li><p><strong>gain</strong> – The number of photons per ADU (“analog to digital units”, the units of
 the numbers output from a CCD). [default: 1.]</p></li>
 <li><p><strong>add_to_image</strong> – Whether to add to the existing images rather than clear out
@@ -954,7 +992,7 @@ is equivalent to <code class="docutils literal notranslate"><span class="pre">n_
 more than this because some of the shot photons are negative
 (usually due to interpolants).  [default: 0]</p></li>
 <li><p><strong>rng</strong> – If provided, a random number generator to use for photon shooting,
-which may be any kind of BaseDeviate object.  If <code class="docutils literal notranslate"><span class="pre">rng</span></code> is None, one
+which may be any kind of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.  If <code class="docutils literal notranslate"><span class="pre">rng</span></code> is None, one
 will be automatically created, using the time as a seed.
 [default: None]</p></li>
 <li><p><strong>max_extra_noise</strong> – If provided, the allowed extra noise in each pixel when photon
@@ -973,7 +1011,7 @@ this uses a “variance” definition of noise, not a “sigma” definition.
 Poisson statistics for <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> samples when photon shooting.
 [default: True, unless <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> is given, in which case the default
 is False]</p></li>
-<li><p><strong>sensor</strong> – An optional Sensor instance, which will be used to accumulate the
+<li><p><strong>sensor</strong> – An optional <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> instance, which will be used to accumulate the
 photons onto the image. [default: None]</p></li>
 <li><p><strong>surface_ops</strong> – A list of operators that can modify the photon array that will be
 applied in order before accumulating the photons on the sensor.
@@ -989,7 +1027,7 @@ at a time.  (Memory requirements are proportional to this number.)
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>added_flux is the total flux of photons that landed inside the image bounds, and</p></li>
-<li><p>photons is the PhotonArray that was applied to the image.</p></li>
+<li><p>photons is the <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> that was applied to the image.</p></li>
 </ul>
 </p>
 </dd>
@@ -1002,11 +1040,11 @@ at a time.  (Memory requirements are proportional to this number.)
 <dl class="method">
 <dt id="galsim.GSObject.drawReal">
 <code class="sig-name descname">drawReal</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">add_to_image=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawReal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draw this profile into an Image by direct evaluation at the location of each pixel.</p>
-<p>This is usually called from the <code class="docutils literal notranslate"><span class="pre">drawImage</span></code> function, rather than called directly by the
+<dd><p>Draw this profile into an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> by direct evaluation at the location of each pixel.</p>
+<p>This is usually called from the <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> function, rather than called directly by the
 user.  In particular, the input image must be already set up with defined bounds.  The
 profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
-bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+bounds, not the image center (unlike <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>).  The image also must have a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>
 wcs.  The profile being drawn should have already been converted to image coordinates via:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image_profile</span> <span class="o">=</span> <span class="n">original_wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">original_profile</span><span class="p">)</span>
 </pre></div>
@@ -1014,12 +1052,12 @@ wcs.  The profile being drawn should have already been converted to image coordi
 <p>Note that the image produced by <code class="docutils literal notranslate"><span class="pre">drawReal</span></code> represents the profile sampled at the center
 of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
 integrated over the area of the pixel.  This is equivalent to method=’no_pixel’ in
-drawImage.  If you want to render a profile integrated over the pixel, you can convolve
-with a Pixel first and draw that.</p>
+<a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>.  If you want to render a profile integrated over the pixel, you can convolve
+with a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> first and draw that.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – The Image onto which to place the flux. [required]</p></li>
+<li><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to place the flux. [required]</p></li>
 <li><p><strong>add_to_image</strong> – Whether to add flux to the existing image rather than clear out
 anything in the image before drawing. [default: False]</p></li>
 </ul>
@@ -1033,8 +1071,8 @@ anything in the image before drawing. [default: False]</p></li>
 <dl class="method">
 <dt id="galsim.GSObject.evaluateAtWavelength">
 <code class="sig-name descname">evaluateAtWavelength</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.evaluateAtWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.evaluateAtWavelength" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return profile at a given wavelength.  For GSObject instances, this is just <code class="docutils literal notranslate"><span class="pre">self</span></code>.
-This allows GSObject instances to be duck-typed as ChromaticObject instances.</p>
+<dd><p>Return profile at a given wavelength.  For <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances, this is just <code class="docutils literal notranslate"><span class="pre">self</span></code>.
+This allows <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances to be duck-typed as <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1088,7 +1126,7 @@ Of course, if you prefer an odd-sized image, you can add 1 to the result.</p>
 <dl class="method">
 <dt id="galsim.GSObject.gsparams">
 <em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.GSObject.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>A GSParams object that sets various parameters relevant for speed/accuracy trade-offs</p>
+<dd><p>A <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> object that sets various parameters relevant for speed/accuracy trade-offs</p>
 </dd></dl>
 
 <dl class="method">
@@ -1127,8 +1165,8 @@ profile at a given position in k space.  The position argument may be provided a
 PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
 arguments).</p>
 <p>Technically, kValue() is available if and only if the given obj has <code class="docutils literal notranslate"><span class="pre">obj.is_analytic_k</span>
-<span class="pre">==</span> <span class="pre">True</span></code>, but this is the case for all GSObjects currently, so that should never be an
-issue (unlike for xValue()).</p>
+<span class="pre">==</span> <span class="pre">True</span></code>, but this is the case for all <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> classes currently, so that should never
+be an issue (unlike for <a class="reference internal" href="#galsim.GSObject.xValue" title="galsim.GSObject.xValue"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">xValue</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>position</strong> – The position in k space at which you want the fourier amplitude.</p>
@@ -1144,8 +1182,8 @@ issue (unlike for xValue()).</p>
 <code class="sig-name descname">lens</code><span class="sig-paren">(</span><em class="sig-param">g1</em>, <em class="sig-param">g2</em>, <em class="sig-param">mu</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.lens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.lens" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with both a lensing shear and magnification
 applied to it.</p>
-<p>This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
-specified using the g1, g2 definition of shear (see Shear documentation for more details).
+<p>This <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> method applies a lensing (reduced) shear and magnification.  The shear must
+be specified using the g1, g2 definition of shear (see <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> for more details).
 This is the same definition as the outputs of the PowerSpectrum and NFWHalo classes, which
 compute shears according to some lensing power spectrum or lensing by an NFW dark matter
 halo.  The magnification determines the rescaling factor for the object area and flux,
@@ -1228,7 +1266,7 @@ cases involving lookup tables, etc.</p>
 <em class="property">property </em><code class="sig-name descname">noise</code><a class="headerlink" href="#galsim.GSObject.noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>An estimate of the noise already in the profile.</p>
 <p>Some profiles have some noise already in their definition.  E.g. those that come from
-observations of galaxies in real data.  In GalSim, RealGalaxy objects are an example of
+observations of galaxies in real data.  In GalSim, <a class="reference internal" href="real_gal.html#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> objects are an example of
 this.  In these cases, the noise attribute gives an estimate of the Noise object that
 would generate noise consistent with that already in the profile.</p>
 <p>It is permissible to attach a noise estimate to an existing object with:</p>
@@ -1240,7 +1278,7 @@ would generate noise consistent with that already in the profile.</p>
 <dl class="method">
 <dt id="galsim.GSObject.nyquist_scale">
 <em class="property">property </em><code class="sig-name descname">nyquist_scale</code><a class="headerlink" href="#galsim.GSObject.nyquist_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Image pixel spacing that does not alias maxk.</p>
+<dd><p>The pixel spacing that does not alias maxk.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1259,10 +1297,10 @@ cases involving lookup tables, etc.</p>
 <dl class="method">
 <dt id="galsim.GSObject.rotate">
 <code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.rotate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rotate this object by an Angle <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
+<dd><p>Rotate this object by an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (Angle object, +ve anticlockwise).</p>
+<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object, positive means anticlockwise).</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the rotated object.</p>
@@ -1274,15 +1312,14 @@ cases involving lookup tables, etc.</p>
 <dt id="galsim.GSObject.shear">
 <code class="sig-name descname">shear</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with an area-preserving shear applied to it.</p>
-<p>The arguments may be either a Shear instance or arguments to be used to initialize one.</p>
-<p>For more details about the allowed keyword arguments, see the documentation for Shear
-(for doxygen documentation, see galsim.shear.Shear).</p>
+<p>The arguments may be either a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> instance or arguments to be used to initialize one.</p>
+<p>For more details about the allowed keyword arguments, see the <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> docstring.</p>
 <p>The shear() method precisely preserves the area.  To include a lensing distortion with
 the appropriate change in area, either use shear() with magnify(), or use lens(), which
 combines both operations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>shear</strong> – The Shear to be applied. Or, as described above, you may instead supply
+<dd class="field-odd"><p><strong>shear</strong> – The <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> to be applied. Or, as described above, you may instead supply
 parameters do construct a shear directly.  eg. <code class="docutils literal notranslate"><span class="pre">obj.shear(g1=g1,g2=g2)</span></code>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1295,23 +1332,23 @@ parameters do construct a shear directly.  eg. <code class="docutils literal not
 <dt id="galsim.GSObject.shift">
 <code class="sig-name descname">shift</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object shifted by some amount in real space.</p>
-<p>After this call, the caller’s type will be a GSObject.
-This means that if the caller was a derived type that had extra methods beyond
-those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-are no longer available.</p>
+<p>After this call, the caller’s type will be a <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
+This means that if the caller was a derived type that had extra methods or properties
+beyond those defined in <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> (e.g. <a class="reference internal" href="simple.html#galsim.Gaussian.sigma" title="galsim.Gaussian.sigma"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Gaussian.sigma</span></code></a>), then these methods are no
+longer available.</p>
 <p>Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
 or as a PositionD or PositionI object.</p>
-<p>The shift coordinates here are sky coordinates.  GSObjects are always defined in sky
-coordinates and only later (when they are drawn) is the connection to pixel coordinates
+<p>The shift coordinates here are sky coordinates.  <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> profiles are always defined in
+sky coordinates and only later (when they are drawn) is the connection to pixel coordinates
 established (via a pixel_scale or WCS).  So a shift of dx moves the object horizontally
 in the sky (e.g. west in the local tangent plane of the observation), and dy moves the
 object vertically (north in the local tangent plane).</p>
 <p>The units are typically arcsec, but we don’t enforce that anywhere.  The units here just
-need to be consistent with the units used for any size values used by the GSObject.
+need to be consistent with the units used for any size values used by the <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
 The connection of these units to the eventual image pixels is defined by either the
-<code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> or the <code class="docutils literal notranslate"><span class="pre">wcs</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">drawImage</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> or the <code class="docutils literal notranslate"><span class="pre">wcs</span></code> parameter of <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>.</p>
 <p>Note: if you want to shift the object by a set number (or fraction) of pixels in the
-drawn image, you probably want to use the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">drawImage</span></code> rather than
+drawn image, you probably want to use the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter of <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> rather than
 this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1337,19 +1374,19 @@ the two components separately if that is more convenient.</p>
 <dl class="method">
 <dt id="galsim.GSObject.shoot">
 <code class="sig-name descname">shoot</code><span class="sig-paren">(</span><em class="sig-param">n_photons</em>, <em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shoot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shoot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shoot photons into a PhotonArray.</p>
+<dd><p>Shoot photons into a <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n_photons</strong> – The number of photons to use for photon shooting.</p></li>
 <li><p><strong>rng</strong> – If provided, a random number generator to use for photon shooting,
-which may be any kind of BaseDeviate object.  If <code class="docutils literal notranslate"><span class="pre">rng</span></code> is None, one
+which may be any kind of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.  If <code class="docutils literal notranslate"><span class="pre">rng</span></code> is None, one
 will be automatically created, using the time as a seed.
 [default: None]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>PhotonArray.</p>
+<dd class="field-even"><p>A <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1373,7 +1410,7 @@ terms of (u,v) where:</p>
 v = dvdx x + dvdy y</p>
 </div></blockquote>
 <p>That is, an arbitrary affine transform, but without the translation (which is
-easily effected via the shift() method).</p>
+easily effected via the <a class="reference internal" href="#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shift</span></code></a> method).</p>
 <p>Note that this function is similar to expand in that it preserves surface brightness,
 not flux.  If you want to preserve flux, you should also do:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prof</span> <span class="o">*=</span> <span class="mf">1.</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">dudx</span><span class="o">*</span><span class="n">dvdy</span> <span class="o">-</span> <span class="n">dudy</span><span class="o">*</span><span class="n">dvdx</span><span class="p">)</span>
@@ -1401,8 +1438,8 @@ not flux.  If you want to preserve flux, you should also do:</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
 surface brightness at every location rescaled such that the total flux will be
-the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <code class="docutils literal notranslate"><span class="pre">SED</span></code>, the return value will be a
-<code class="docutils literal notranslate"><span class="pre">ChromaticObject</span></code> with specified SED.</p>
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
@@ -1427,13 +1464,14 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 is implemented in terms of this one.</p>
 <p>It creates a new object that has the same profile as the original, but with the
 surface brightness at every location scaled by the given amount.  If <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code> is an
-SED, then the returned object is a <code class="docutils literal notranslate"><span class="pre">ChromaticObject</span></code> with an SED multiplied by obj.flux.
-Note that in this case the <code class="docutils literal notranslate"><span class="pre">.flux</span></code> attribute of the GSObject being scaled gets interpreted
-as being dimensionless, instead of having its normal units of [photons/s/cm^2].  The
-photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely
-if the SED is dimensionless itself (see discussion in the ChromaticObject docstring).  The
-GSObject <code class="docutils literal notranslate"><span class="pre">flux</span></code> attribute <em>does</em> still contribute to the ChromaticObject normalization,
-though.  For example, the following are equivalent:</p>
+<a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, then the returned object is a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> multiplied by
+its current <code class="docutils literal notranslate"><span class="pre">flux</span></code>.</p>
+<p>Note that in this case the <code class="docutils literal notranslate"><span class="pre">flux</span></code> attribute of the <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> being scaled gets
+interpreted as being dimensionless, instead of having its normal units of [photons/s/cm^2].
+The photons/s/cm^2 units are (optionally) carried by the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> instead, or even left out
+entirely if the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> is dimensionless itself (see discussion in the <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>
+docstring).  The <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> <code class="docutils literal notranslate"><span class="pre">flux</span></code> attribute <em>does</em> still contribute to the
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> normalization, though.  For example, the following are equivalent:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">chrom_obj</span> <span class="o">=</span> <span class="n">gsobj</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">sed</span> <span class="o">*</span> <span class="mf">3.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">chrom_obj2</span> <span class="o">=</span> <span class="p">(</span><span class="n">gsobj</span> <span class="o">*</span> <span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">sed</span><span class="p">)</span>
 </pre></div>
@@ -1462,13 +1500,14 @@ in real space.  The position argument may be provided as a PositionD or Position
 argument, or it may be given as x,y (either as a tuple or as two arguments).</p>
 <p>The object surface brightness profiles are typically defined in world coordinates, so
 the position here should be in world coordinates as well.</p>
-<p>Not all GSObject classes can use this method.  Classes like Convolution that require a
+<p>Not all <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> classes can use this method.  Classes like Convolution that require a
 Discrete Fourier Transform to determine the real space values will not do so for a single
 position.  Instead a GalSimError will be raised.  The xValue() method is available if and
 only if <code class="docutils literal notranslate"><span class="pre">obj.is_analytic_x</span> <span class="pre">==</span> <span class="pre">True</span></code>.</p>
 <p>Users who wish to use the xValue() method for an object that is the convolution of other
 profiles can do so by drawing the convolved profile into an image, using the image to
-initialize a new InterpolatedImage, and then using the xValue() method for that new object.</p>
+initialize a new <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>, and then using the xValue() method for that new
+object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>position</strong> – The position at which you want the surface brightness of the object.</p>

@@ -91,9 +91,10 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Lookup Tables</a></li>
@@ -104,13 +105,17 @@
 <li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -204,7 +209,7 @@ floats/doubles):</p>
 </div>
 <p>The default interpolation method is a natural cubic spline.  This is usually the best choice,
 but we also provide other options, which can be specified by the <code class="docutils literal notranslate"><span class="pre">interpolant</span></code> kwarg.  The
-choices include ‘floor’, ‘ceil’, ‘linear’, ‘spline’, or a galsim.Interpolant object:</p>
+choices include ‘floor’, ‘ceil’, ‘linear’, ‘spline’, or a <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a> object:</p>
 <ul class="simple">
 <li><p>‘floor’ takes the value from the previous argument in the table.</p></li>
 <li><p>‘ceil’ takes the value from the next argument in the table.</p></li>
@@ -212,24 +217,28 @@ choices include ‘floor’, ‘ceil’, ‘linear’, ‘spline’, or a galsim
 <li><p>‘linear’ does linear interpolation between these two values.</p></li>
 <li><p>‘spline’ uses a cubic spline interpolation, so the interpolated values are smooth at
 each argument in the table.</p></li>
-<li><p>a galsim.Interpolant object or a string convertible to one.  This option can be used for
-Lanczos or Quintic interpolation, for example.</p></li>
+<li><p>a <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a> object or a string convertible to one.  This option can be used for
+<a class="reference internal" href="interpolant.html#galsim.Lanczos" title="galsim.Lanczos"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Lanczos</span></code></a> or <a class="reference internal" href="interpolant.html#galsim.Quintic" title="galsim.Quintic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Quintic</span></code></a> interpolation, for example.</p></li>
 </ul>
 <p>Note that specifying the string ‘nearest’ or ‘linear’ will use a LookupTable-optimized
-interpolant instead of galsim.Nearest or galsim.Linear, though the latter options can still be
-used by passing an Interpolant object instead of a string.  Also note that to use a
-galsim.Interpolant in a LookupTable, the input data must be equally spaced, or logarithmically
-spaced if <code class="docutils literal notranslate"><span class="pre">x_log</span></code> is set to True (see below).  Finally, although natural cubic spline used when
-interpolant=’spline’ and the cubic convolution interpolant used when interpolant=galsim.Cubic
-both produce piecewise cubic polynomial interpolations, their treatments of the continuity of
-derivatives are different (the natural spline is smoother).</p>
+interpolant instead of <a class="reference internal" href="interpolant.html#galsim.Nearest" title="galsim.Nearest"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Nearest</span></code></a> or <a class="reference internal" href="interpolant.html#galsim.Linear" title="galsim.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Linear</span></code></a>, though the latter options can still
+be used by passing an <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> object instead of a string.  Also note that to use a
+<a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a> in a LookupTable, the input data must be equally spaced, or logarithmically
+spaced if <code class="docutils literal notranslate"><span class="pre">x_log</span></code> is set to True (see below).  Finally, although natural cubic spline used
+when interpolant=’spline’ and the cubic convolution interpolant used when the interpolant
+is <a class="reference internal" href="interpolant.html#galsim.Cubic" title="galsim.Cubic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Cubic</span></code></a> both produce piecewise cubic polynomial interpolations, their treatments of
+the continuity of derivatives are different (the natural spline is smoother).</p>
 <p>There are also two factory functions which can be used to build a LookupTable:</p>
 <blockquote>
-<div><p>LookupTable.from_func   makes a LookupTable from a callable function
-LookupTable.from_file   reads in a file of x and f values.</p>
+<div><dl class="simple">
+<dt><a class="reference internal" href="#galsim.LookupTable.from_func" title="galsim.LookupTable.from_func"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.from_func</span></code></a></dt><dd><p>makes a LookupTable from a callable function</p>
+</dd>
+<dt><a class="reference internal" href="#galsim.LookupTable.from_file" title="galsim.LookupTable.from_file"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.from_file</span></code></a></dt><dd><p>reads in a file of x and f values.</p>
+</dd>
+</dl>
 </div></blockquote>
 <p>The user can also opt to interpolate in log(x) and/or log(f) (if not using a
-galsim.Interpolant), though this is not the default.  It may be a wise choice depending on the
+<a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a>), though this is not the default.  It may be a wise choice depending on the
 particular function, e.g., for a nearly power-law f(x) (or at least one that is locally
 power-law-ish for much of the x range) then it might be a good idea to interpolate in log(x) and
 log(f) rather than x and f.</p>
@@ -240,9 +249,9 @@ log(f) rather than x and f.</p>
 which get silently converted to floats for the purpose of interpolation).</p></li>
 <li><p><strong>f</strong> – The list, tuple, or NumPy array of <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> values (floats, doubles, or ints,
 which get silently converted to floats for the purpose of interpolation).</p></li>
-<li><p><strong>interpolant</strong> – The interpolant to use, with the options being ‘floor’, ‘ceil’, ‘nearest’,
-‘linear’, ‘spline’, or a galsim.Interpolant or string convertible to one.
-[default: ‘spline’]</p></li>
+<li><p><strong>interpolant</strong> – Type of interpolation to use, with the options being ‘floor’, ‘ceil’,
+‘nearest’, ‘linear’, ‘spline’, or a <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a> or string
+convertible to one.  [default: ‘spline’]</p></li>
 <li><p><strong>x_log</strong> – Set to True if you wish to interpolate using log(x) rather than x.  Note
 that all inputs / outputs will still be x, it’s just a question of how the
 interpolation is done. [default: False]</p></li>
@@ -253,9 +262,74 @@ interpolation is done. [default: False]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.LookupTable.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate the <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> to get <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> at some <code class="docutils literal notranslate"><span class="pre">x</span></code> value(s).</p>
+<p>When the <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> object is called with a single argument, it returns the value at that
+argument.  An exception will be thrown automatically if the <code class="docutils literal notranslate"><span class="pre">x</span></code> value is outside the
+range of the original tabulated values.  The value that is returned is the same type as
+that provided as an argument, e.g., if a single value <code class="docutils literal notranslate"><span class="pre">x</span></code> is provided then a single value
+of <code class="docutils literal notranslate"><span class="pre">f</span></code> is returned; if a tuple of <code class="docutils literal notranslate"><span class="pre">x</span></code> values is provided then a tuple of <code class="docutils literal notranslate"><span class="pre">f</span></code> values
+is returned; and so on.  Even if interpolation was done using the <code class="docutils literal notranslate"><span class="pre">x_log</span></code> option, the
+user should still provide <code class="docutils literal notranslate"><span class="pre">x</span></code> rather than <code class="docutils literal notranslate"><span class="pre">log(x)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – The <code class="docutils literal notranslate"><span class="pre">x</span></code> value(s) for which <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> should be calculated via interpolation on
+the original <code class="docutils literal notranslate"><span class="pre">(x,f)</span></code> lookup table.  <code class="docutils literal notranslate"><span class="pre">x</span></code> can be a single float/double, or a
+tuple, list, or arbitrarily shaped 1- or 2-dimensional NumPy array.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the interpolated <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> value(s).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">f</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.LookupTable.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.LookupTable.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.LookupTable.from_file">
 <em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em>, <em class="sig-param">amplitude=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.from_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a LookupTable from a file of x, f values.</p>
+<dd><p>Create a <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> from a file of x, f values.</p>
 <p>This reads in a file, which should contain two columns with the x and f values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -276,8 +350,8 @@ rather than their raw values. [default: False]</p></li>
 <dl class="method">
 <dt id="galsim.LookupTable.from_func">
 <em class="property">classmethod </em><code class="sig-name descname">from_func</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">x_min</em>, <em class="sig-param">x_max</em>, <em class="sig-param">npoints=2000</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.from_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.from_func" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a LookupTable from a callable function</p>
-<p>This constructs a LookupTable over the given range from x_min and x_max, calculating the
+<dd><p>Create a <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> from a callable function</p>
+<p>This constructs a <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> over the given range from x_min and x_max, calculating the
 corresponding f values from the given function (technically any callable object).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -344,7 +418,7 @@ dimensions (Nx, Ny):</p>
 <li><p>‘ceil’</p></li>
 <li><p>‘nearest’</p></li>
 <li><p>‘spline’ (a Catmull-Rom cubic spline).</p></li>
-<li><p>a galsim.Interpolant or string convertible to one.</p></li>
+<li><p>a <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a> or string convertible to one.</p></li>
 </ul>
 </div></blockquote>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tab2d</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">LookupTable2D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;floor&#39;</span><span class="p">)</span>
@@ -358,7 +432,7 @@ dimensions (Nx, Ny):</p>
 <span class="go">6.0</span>
 </pre></div>
 </div>
-<p>For interpolant=’spline’ or a galsim.Interpolant, the input arrays must be uniformly spaced.
+<p>For interpolant=’spline’ or a <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a>, the input arrays must be uniformly spaced.
 For interpolant=’spline’, the derivatives df / dx, df / dy, and d^2 f / dx dy at grid-points may
 also optionally be provided if they’re known, which will generally yield a more accurate
 interpolation (these derivatives will be estimated from finite differences if they’re not
@@ -420,8 +494,8 @@ the leading direction, and 1 row/column in the trailing direction:</p>
 [default: None]</p></li>
 <li><p><strong>d2fdxdy</strong> – Optional cross derivative of f wrt x and y.  Only used if
 interpolant=’spline’.  [default: None]</p></li>
-<li><p><strong>interpolant</strong> – Interpolant to use.  One of ‘floor’, ‘ceil’, ‘nearest’, ‘linear’,
-‘spline’, or a galsim.Interpolant or string convertible to one.
+<li><p><strong>interpolant</strong> – Type of interpolation to use.  One of ‘floor’, ‘ceil’, ‘nearest’, ‘linear’,
+‘spline’, or a <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Interpolant</span></code></a> or string convertible to one.
 [default: ‘linear’]</p></li>
 <li><p><strong>edge_mode</strong> – Keyword controlling how extrapolation beyond the input range is handled.
 See above for details.  [default: ‘raise’]</p></li>
@@ -430,6 +504,68 @@ See above for details.  [default: ‘raise’]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.LookupTable2D.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate at an arbitrary point or points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Either a single x value or an array of x values at which to interpolate.</p></li>
+<li><p><strong>y</strong> – Either a single y value or an array of y values at which to interpolate.</p></li>
+<li><p><strong>grid</strong> – Optional boolean indicating that output should be a 2D array corresponding
+to the outer product of input values.  If False (default), then the output
+array will be congruent to x and y.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a scalar value if x and y are scalar, or a numpy array if x and y are arrays.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable2D.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable2D.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable2D.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">f</em>, <em class="sig-param">dfdx=None</em>, <em class="sig-param">dfdy=None</em>, <em class="sig-param">d2fdxdy=None</em>, <em class="sig-param">interpolant='linear'</em>, <em class="sig-param">edge_mode='raise'</em>, <em class="sig-param">constant=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable2D.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable2D.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable2D.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.LookupTable2D.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.LookupTable2D.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.LookupTable2D.gradient">
 <code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.gradient" title="Permalink to this definition">¶</a></dt>

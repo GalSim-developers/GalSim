@@ -1,32 +1,10 @@
 
-Weak Lensing Shear
-##################
-
 The Shear class
 ===============
 
 .. autoclass:: galsim.Shear
     :members:
+    :special-members:
 
 .. autofunction:: galsim._Shear
 
-
-Power Spectrum Shears
-=====================
-
-.. autoclass:: galsim.PowerSpectrum
-    :members:
-
-NFW Halo Shears
-===============
-
-.. autoclass:: galsim.NFWHalo
-    :members:
-
-.. autoclass:: galsim.Cosmology
-    :members:
-
-Power Spectrum Estimation
-=========================
-
-.. autoclass:: galsim.pse.PowerSpectrumEstimator

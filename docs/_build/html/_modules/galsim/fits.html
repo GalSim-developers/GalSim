@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,12 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file fits.py</span>
-<span class="sd">Support for reading and writing Image objects to FITS.</span>
-
-<span class="sd">This file includes routines for reading and writing individual Images to/from FITS files, and also</span>
-<span class="sd">routines for handling multiple Images.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">iteritems</span><span class="p">,</span> <span class="n">iterkeys</span><span class="p">,</span> <span class="n">itervalues</span>
 <span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
@@ -535,11 +532,11 @@
 
 <span class="c1"># Unlike the other helpers, this one doesn&#39;t start with an underscore, since we make it</span>
 <span class="c1"># available to people who use the function ReadFile.</span>
-<span class="k">def</span> <span class="nf">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">):</span>
+<div class="viewcode-block" id="closeHDUList"><a class="viewcode-back" href="../../fits.html#galsim.fits.closeHDUList">[docs]</a><span class="k">def</span> <span class="nf">closeHDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;If necessary, close the file handle that was opened to read in the ``hdu_list``&quot;&quot;&quot;</span>
     <span class="n">hdu_list</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">fin</span><span class="p">:</span>
-        <span class="n">fin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">fin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 <span class="c1">##############################################################################################</span>
 <span class="c1">#</span>
@@ -555,25 +552,26 @@
 <div class="viewcode-block" id="write"><a class="viewcode-back" href="../../fits.html#galsim.fits.write">[docs]</a><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Write a single image to a FITS file.</span>
 
-<span class="sd">    Write the Image instance ``image`` to a FITS file, with details depending on the arguments.</span>
+<span class="sd">    Write the `Image` instance ``image`` to a FITS file, with details depending on the arguments.</span>
 <span class="sd">    This function can be called directly as ``galsim.fits.write(image, ...)``, with the image as the</span>
-<span class="sd">    first argument, or as an image method: ``image.write(...)``.</span>
+<span class="sd">    first argument, or as an `Image` method: ``image.write(...)``.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        image:          The image to write to file.  Per the description of this method, it may be</span>
+<span class="sd">        image:          The `Image` to write to file.  Per the description of this method, it may be</span>
 <span class="sd">                        given explicitly via ``galsim.fits.write(image, ...)`` or the method may be</span>
 <span class="sd">                        called directly as an image method, ``image.write(...)``.  Note that if the</span>
-<span class="sd">                        image has a &#39;header&#39; attribute containing a FitsHeader, then the FitsHeader</span>
-<span class="sd">                        is written to the header in the PrimaryHDU, followed by the WCS as usual.</span>
+<span class="sd">                        image has a &#39;header&#39; attribute containing a `FitsHeader`, then the</span>
+<span class="sd">                        `FitsHeader` is written to the header in the PrimaryHDU, followed by the</span>
+<span class="sd">                        WCS as usual.</span>
 <span class="sd">        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is</span>
 <span class="sd">                        required.]</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
-<span class="sd">        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the</span>
-<span class="sd">                        image is appended to the end of the HDUList as a new HDU. In that case,</span>
-<span class="sd">                        the user is responsible for calling either ``hdu_list.writeto(...)`` or</span>
-<span class="sd">                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or</span>
-<span class="sd">                        ``hdu_list`` is required.]</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,</span>
+<span class="sd">                        then the `Image` is appended to the end of the HDUList as a new HDU. In</span>
+<span class="sd">                        that case, the user is responsible for calling either</span>
+<span class="sd">                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.</span>
+<span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
 <span class="sd">        clobber:        Setting ``clobber=True`` when ``file_name`` is given will silently overwrite</span>
 <span class="sd">                        existing files. [default: True]</span>
 <span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
@@ -632,17 +630,18 @@
 <span class="sd">    The details of how the images are written to file depends on the arguments.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        image_list:     A Python list of Images.  (For convenience, some items in this list</span>
-<span class="sd">                        may be HDUs already.  Any Images will be converted into pyfits HDUs.)</span>
+<span class="sd">        image_list:     A Python list of `Image` instances.  (For convenience, some items in this</span>
+<span class="sd">                        list may be HDUs already.  Any `Image` will be converted into an</span>
+<span class="sd">                        astropy.io.fits.HDU.)</span>
 <span class="sd">        file_name:      The name of the file to write to.  [Either ``file_name`` or ``hdu_list`` is</span>
 <span class="sd">                        required.]</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
-<span class="sd">        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the</span>
-<span class="sd">                        image is appended to the end of the HDUList as a new HDU. In that case,</span>
-<span class="sd">                        the user is responsible for calling either ``hdu_list.writeto(...)`` or</span>
-<span class="sd">                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or</span>
-<span class="sd">                        ``hdu_list`` is required.]</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,</span>
+<span class="sd">                        then the `Image` is appended to the end of the HDUList as a new HDU. In</span>
+<span class="sd">                        that case, the user is responsible for calling either</span>
+<span class="sd">                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.</span>
+<span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
 <span class="sd">        clobber:        See documentation for this parameter on the galsim.fits.write() method.</span>
 <span class="sd">        compression:    See documentation for this parameter on the galsim.fits.write() method.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -685,9 +684,9 @@
     <span class="sd">&quot;&quot;&quot;Write a Python list of images to a FITS file as a data cube.</span>
 
 <span class="sd">    The details of how the images are written to file depends on the arguments.  Unlike for</span>
-<span class="sd">    writeMulti, when writing a data cube it is necessary that each Image in ``image_list`` has the</span>
-<span class="sd">    same size ``(nx, ny)``.  No check is made to confirm that all images have the same origin and</span>
-<span class="sd">    pixel scale (or WCS).</span>
+<span class="sd">    writeMulti, when writing a data cube it is necessary that each `Image` in ``image_list`` has</span>
+<span class="sd">    the same size ``(nx, ny)``.  No check is made to confirm that all images have the same origin</span>
+<span class="sd">    and pixel scale (or WCS).</span>
 
 <span class="sd">    In fact, the WCS of the first image is the one that gets put into the FITS header (since only</span>
 <span class="sd">    one WCS can be put into a FITS header).  Thus, if the images have different WCS functions,</span>
@@ -705,10 +704,10 @@
 <span class="sd">                        required.]</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
-<span class="sd">        hdu_list:       A pyfits HDUList.  If this is provided instead of ``file_name``, then the</span>
-<span class="sd">                        cube is appended to the end of the HDUList as a new HDU. In that case,</span>
-<span class="sd">                        the user is responsible for calling either ``hdu_list.writeto(...)`` or</span>
-<span class="sd">                        ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.  If this is provided instead of ``file_name``,</span>
+<span class="sd">                        then the cube is appended to the end of the HDUList as a new HDU. In that</span>
+<span class="sd">                        case, the user is responsible for calling either ``hdu_list.writeto(...)``</span>
+<span class="sd">                        or ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or</span>
 <span class="sd">                        ``hdu_list`` is required.]</span>
 <span class="sd">        clobber:        See documentation for this parameter on the galsim.fits.write() method.</span>
 <span class="sd">        compression:    See documentation for this parameter on the galsim.fits.write() method.</span>
@@ -789,14 +788,14 @@
     <span class="sd">&quot;&quot;&quot;Write a Pyfits hdu_list to a FITS file, taking care of the GalSim compression options.</span>
 
 <span class="sd">    If you have used the write(), writeMulti() or writeCube() functions with the ``hdu_list``</span>
-<span class="sd">    option rather than writing directly to a file, you may subsequently use the pyfits command</span>
+<span class="sd">    option rather than writing directly to a file, you may subsequently use the command</span>
 <span class="sd">    ``hdu_list.writeto(...)``.  However, it may be more convenient to use this function, writeFile()</span>
 <span class="sd">    instead, since it treats the compression option consistently with how that option is handled in</span>
 <span class="sd">    the above functions.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        file_name:      The name of the file to write to.</span>
-<span class="sd">        hdu_list:       A pyfits HDUList.</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList.</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
 <span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
@@ -838,17 +837,19 @@
 
 
 <div class="viewcode-block" id="read"><a class="viewcode-back" href="../../fits.html#galsim.fits.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Construct an Image from a FITS file or pyfits HDUList.</span>
+    <span class="sd">&quot;&quot;&quot;Construct an `Image` from a FITS file or HDUList.</span>
 
 <span class="sd">    The normal usage for this function is to read a fits file and return the image contained</span>
 <span class="sd">    therein, automatically decompressing it if necessary.  However, you may also pass it</span>
 <span class="sd">    an HDUList, in which case it will select the indicated hdu (with the ``hdu`` parameter)</span>
 <span class="sd">    from that.</span>
 
-<span class="sd">    Not all FITS pixel types are supported (only those with C++ Image template instantiations:</span>
-<span class="sd">    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start</span>
-<span class="sd">    with ``GS_`` keywords, these will be used to initialize the bounding box and WCS.  If not, the</span>
-<span class="sd">    bounding box will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.</span>
+<span class="sd">    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,</span>
+<span class="sd">    ``unsigned int``, ``float``, and ``double``.</span>
+
+<span class="sd">    If the FITS header has keywords that start with ``GS_`` keywords, these will be used to</span>
+<span class="sd">    initialize the bounding box and WCS.  If not, the bounding box will have ``(xmin,ymin)`` at</span>
+<span class="sd">    ``(1,1)`` and the scale will be set to 1.0.</span>
 
 <span class="sd">    This function is called as ``im = galsim.fits.read(...)``</span>
 
@@ -857,10 +858,10 @@
 <span class="sd">                        required.]</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
-<span class="sd">        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or</span>
-<span class="sd">                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be</span>
-<span class="sd">                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.</span>
-<span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
+<span class="sd">        hdu_list:       Either an astropy.io.fits.HDUList, astropy.io.fits.PrimaryHDU, or</span>
+<span class="sd">                        astropy.io.fits..ImageHDU.  In the former case, the ``hdu`` in the list</span>
+<span class="sd">                        will be selected.  In the latter two cases, the ``hdu`` parameter is</span>
+<span class="sd">                        ignored.  [Either ``file_name`` or ``hdu_list`` is required.]</span>
 <span class="sd">        hdu:            The number of the HDU to return.  [default: None, which means to return</span>
 <span class="sd">                        either the primary or first extension as appropriate for the given</span>
 <span class="sd">                        compression.  (e.g. for &#39;rice&#39;, the first extension is the one you normally</span>
@@ -884,7 +885,7 @@
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        the image as an Image instance.</span>
+<span class="sd">        the image as an `Image` instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">wcs</span>
     <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
@@ -926,16 +927,18 @@
     <span class="k">return</span> <span class="n">image</span></div>
 
 <div class="viewcode-block" id="readMulti"><a class="viewcode-back" href="../../fits.html#galsim.fits.readMulti">[docs]</a><span class="k">def</span> <span class="nf">readMulti</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Construct a list of Images from a FITS file or pyfits HDUList.</span>
+    <span class="sd">&quot;&quot;&quot;Construct a list of `Image` instances from a FITS file or HDUList.</span>
 
 <span class="sd">    The normal usage for this function is to read a fits file and return a list of all the images</span>
 <span class="sd">    contained therein, automatically decompressing them if necessary.  However, you may also pass</span>
 <span class="sd">    it an HDUList, in which case it will build the images from these directly.</span>
 
-<span class="sd">    Not all FITS pixel types are supported (only those with C++ Image template instantiations:</span>
-<span class="sd">    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start</span>
-<span class="sd">    with ``GS_``, these will be used to initialize the bounding box and WCS.  If not, the bounding</span>
-<span class="sd">    box will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.</span>
+<span class="sd">    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,</span>
+<span class="sd">    ``unsigned int``, ``float``, and ``double``.</span>
+
+<span class="sd">    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the</span>
+<span class="sd">    bounding box and WCS.  If not, the bounding box will have ``(xmin,ymin)`` at ``(1,1)`` and the</span>
+<span class="sd">    scale will be set to 1.0.</span>
 
 <span class="sd">    This function is called as ``im = galsim.fits.readMulti(...)``</span>
 
@@ -944,8 +947,8 @@
 <span class="sd">                        required.]</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
-<span class="sd">        hdu_list:       A ``pyfits.HDUList`` from which to read the images.  [Either ``file_name``</span>
-<span class="sd">                        or ``hdu_list`` is required.]</span>
+<span class="sd">        hdu_list:       An astropy.io.fits.HDUList from which to read the images.  [Either</span>
+<span class="sd">                        ``file_name`` or ``hdu_list`` is required.]</span>
 <span class="sd">        compression:    Which decompression scheme to use (if any).  Options are:</span>
 
 <span class="sd">                        - None or &#39;none&#39; = no decompression</span>
@@ -965,7 +968,7 @@
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        a Python list of Images</span>
+<span class="sd">        a Python list of `Image` instances.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
 
@@ -1004,12 +1007,14 @@
     <span class="k">return</span> <span class="n">image_list</span></div>
 
 <div class="viewcode-block" id="readCube"><a class="viewcode-back" href="../../fits.html#galsim.fits.readCube">[docs]</a><span class="k">def</span> <span class="nf">readCube</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Construct a Python list of Images from a FITS data cube.</span>
+    <span class="sd">&quot;&quot;&quot;Construct a Python list of `Image` instances from a FITS data cube.</span>
 
-<span class="sd">    Not all FITS pixel types are supported (only those with C++ Image template instantiations are:</span>
-<span class="sd">    ``short``, ``int``, ``float``, and ``double``).  If the FITS header has keywords that start</span>
-<span class="sd">    with ``GS_``, these will be used to initialize the bounding boxes and WCS&#39;s.  If not, the</span>
-<span class="sd">    bounding boxes will have ``(xmin,ymin)`` at ``(1,1)`` and the scale will be set to 1.0.</span>
+<span class="sd">    Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,</span>
+<span class="sd">    ``unsigned int``, ``float``, and ``double``.</span>
+
+<span class="sd">    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the</span>
+<span class="sd">    bounding boxes and WCS&#39;s.  If not, the bounding boxes will have ``(xmin,ymin)`` at ``(1,1)``</span>
+<span class="sd">    and the scale will be set to 1.0.</span>
 
 <span class="sd">    This function is called as ``image_list = galsim.fits.readCube(...)``</span>
 
@@ -1018,9 +1023,9 @@
 <span class="sd">                        required.]</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
-<span class="sd">        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or</span>
-<span class="sd">                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be</span>
-<span class="sd">                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.</span>
+<span class="sd">        hdu_list:       Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or</span>
+<span class="sd">                        astropy.io.fits.ImageHDU.  In the former case, the ``hdu`` in the list will</span>
+<span class="sd">                        be selected.  In the latter two cases, the ``hdu`` parameter is ignored.</span>
 <span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
 <span class="sd">        hdu:            The number of the HDU to return.  [default: None, which means to return</span>
 <span class="sd">                        either the primary or first extension as appropriate for the given</span>
@@ -1045,7 +1050,7 @@
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        a Python list of Images.</span>
+<span class="sd">        a Python list of `Image` instances.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">wcs</span>
     <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
@@ -1175,13 +1180,20 @@
 <span class="sd">        &gt;&gt;&gt; del fits_header[key]</span>
 <span class="sd">        &gt;&gt;&gt; etc.</span>
 
-<span class="sd">    This is a particularly useful abstraction, since pyfits has changed its syntax for how</span>
-<span class="sd">    to write to a fits header, so this class will work regardless of which version of pyfits</span>
-<span class="sd">    (or astropy.io.fits) is installed.</span>
+<span class="sd">    .. note::</span>
+<span class="sd">        This used to be a particularly useful abstraction, since PyFITS and then AstroPy used to</span>
+<span class="sd">        keep changing their syntax for how to write to a fits header rather often, so this class</span>
+<span class="sd">        had numerous checks for which version of PPyFITS or AstroPy was installed and call things</span>
+<span class="sd">        the right way depending on the version.  Thus, it was able to maintain a stable, intuitive</span>
+<span class="sd">        API that would work with any version on the backend.  We no longer support PyFITS or older</span>
+<span class="sd">        versions of AstroPy, so now much of the syntax of this class is very similar in interface</span>
+<span class="sd">        to the current version of astropy.io.fits.Header.  Indeed it is now a rather light wrapper</span>
+<span class="sd">        around their Header class with just a few convenience features to make it easier to work</span>
+<span class="sd">        with GalSim objects.</span>
 
-<span class="sd">    The underlying pyfits.Header object is available as a ``.header`` attribute::</span>
+<span class="sd">    The underlying Header object is available as a ``.header`` attribute::</span>
 
-<span class="sd">        &gt;&gt;&gt; pyf_header = fits_header.header</span>
+<span class="sd">        &gt;&gt;&gt; apy_header = fits_header.header</span>
 
 <span class="sd">    A FitsHeader may be constructed from a file name, an open PyFits (or astropy.io.fits) HDUList</span>
 <span class="sd">    object, or a PyFits (or astropy.io.fits) Header object.  It can also be constructed with</span>
@@ -1199,14 +1211,14 @@
 <span class="sd">        &gt;&gt;&gt; h2 = galsim.FitsHeader(header)</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        header:         A pyfits Header object or in fact any dict-like object or list of</span>
+<span class="sd">        header:         An astropy.io.fits.Header object or in fact any dict-like object or list of</span>
 <span class="sd">                        (key,value) pairs.  [default: None]</span>
 <span class="sd">        file_name:      The name of the file to read in.  [default: None]</span>
 <span class="sd">        dir:            Optionally a directory name can be provided if ``file_name`` does not</span>
 <span class="sd">                        already include it. [default: None]</span>
-<span class="sd">        hdu_list:       Either a ``pyfits.HDUList``, a ``pyfits.PrimaryHDU``, or</span>
-<span class="sd">                        ``pyfits.ImageHDU``.  In the former case, the ``hdu`` in the list will be</span>
-<span class="sd">                        selected.  In the latter two cases, the ``hdu`` parameter is ignored.</span>
+<span class="sd">        hdu_list:       Either an astropy.io.fits.HDUList, an astropy.io.fits.PrimaryHDU, or</span>
+<span class="sd">                        astropy.io.fits.ImageHDU.  In the former case, the ``hdu`` in the list will</span>
+<span class="sd">                        be selected.  In the latter two cases, the ``hdu`` parameter is ignored.</span>
 <span class="sd">                        [default: None]</span>
 <span class="sd">        hdu:            The number of the HDU to return.  [default: None, which means to return</span>
 <span class="sd">                        either the primary or first extension as appropriate for the given</span>
@@ -1239,7 +1251,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="FitsHeader.__init__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">text_file</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
 
@@ -1312,7 +1324,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
     <span class="c1"># The rest of the functions are typical non-mutating functions for a dict, for which we</span>
     <span class="c1"># generally just pass the request along to self.header.</span>
@@ -1384,27 +1396,27 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">value</span><span class="p">),</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FitsHeader.__repr__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FitsHeader.__str__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=&lt;Header object at </span><span class="si">%s</span><span class="s2">&gt;)&quot;</span><span class="o">%</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="FitsHeader.__eq__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">FitsHeader</span><span class="p">)</span> <span class="ow">and</span>
-                 <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
+                 <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+<div class="viewcode-block" id="FitsHeader.__ne__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
+<div class="viewcode-block" id="FitsHeader.__hash__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div></div>
 
 <span class="c1"># inject write as method of Image class</span>
 <span class="n">Image</span><span class="o">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">write</span>

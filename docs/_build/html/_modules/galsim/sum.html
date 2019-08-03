@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -190,10 +193,10 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">convert_cpp_errors</span>
 
 <div class="viewcode-block" id="Add"><a class="viewcode-back" href="../../composite.html#galsim.Add">[docs]</a><span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for adding 2 or more GSObject or ChromaticObject instances.</span>
+    <span class="sd">&quot;&quot;&quot;A function for adding 2 or more `GSObject` or `ChromaticObject` instances.</span>
 
-<span class="sd">    This function will inspect its input arguments to decide if a Sum object or a</span>
-<span class="sd">    ChromaticSum object is required to represent the sum of surface brightness profiles.</span>
+<span class="sd">    This function will inspect its input arguments to decide if a `Sum` object or a</span>
+<span class="sd">    `ChromaticSum` object is required to represent the sum of surface brightness profiles.</span>
 
 <span class="sd">    Typically, you do not need to call Add() explicitly.  Normally, you would just use the +</span>
 <span class="sd">    operator, which returns a Sum::</span>
@@ -203,21 +206,20 @@
 <span class="sd">        &gt;&gt;&gt; gal = bulge + disk</span>
 <span class="sd">        &gt;&gt;&gt; psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)</span>
 
-<span class="sd">    If one of the items is chromatic, it will return a ChromaticSum::</span>
+<span class="sd">    If one of the items is chromatic, it will return a `ChromaticSum`::</span>
 
 <span class="sd">        &gt;&gt;&gt; disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)</span>
 <span class="sd">        &gt;&gt;&gt; gal = bulge + disk</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        args:               Unnamed args should be a list of objects to add.</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        propagate_gsparams: Whether to propagate gsparams to each of the components.  This</span>
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        a Sum or ChromaticSum instance as appropriate.</span>
+<span class="sd">        a `Sum` or `ChromaticSum` instance as appropriate.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;At least one ChromaticObject or GSObject must be provided.&quot;</span><span class="p">)</span>
@@ -239,9 +241,9 @@
 
 
 <div class="viewcode-block" id="Sum"><a class="viewcode-back" href="../../composite.html#galsim.Sum">[docs]</a><span class="k">class</span> <span class="nc">Sum</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for adding 2 or more GSObject instances.</span>
+    <span class="sd">&quot;&quot;&quot;A class for adding 2 or more `GSObject` instances.</span>
 
-<span class="sd">    The Sum class is used to represent the sum of multiple GSObject instances.  For example, it</span>
+<span class="sd">    The Sum class is used to represent the sum of multiple `GSObject` instances.  For example, it</span>
 <span class="sd">    might be used to represent a multiple-component galaxy as the sum of an Exponential and a</span>
 <span class="sd">    DeVaucouleurs, or to represent a PSF as the sum of multiple Gaussian objects.</span>
 
@@ -260,8 +262,7 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        args:               Unnamed args should be a list of objects to add.</span>
-<span class="sd">        gsparam:            An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        propagate_gsparams: Whether to propagate gsparams to each of the components.  This</span>
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
@@ -269,7 +270,7 @@
 <span class="sd">    Note: if ``gsparams`` is unspecified (or None), then the Sum instance will use the most</span>
 <span class="sd">    restrictive combination of parameters from each of the component objects. Normally, this means</span>
 <span class="sd">    the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few</span>
-<span class="sd">    parameters, the largest numerical value is used.  See GSParams.combine for details.</span>
+<span class="sd">    parameters, the largest numerical value is used.  See `GSParams.combine` for details.</span>
 
 <span class="sd">    Furthermore, the gsparams used for the Sum (either given explicitly or derived from the</span>
 <span class="sd">    components) will normally be applied to each of the components.  It doesn&#39;t usually make much</span>
@@ -279,7 +280,7 @@
 <span class="sd">    one object is much fainter and can thus use looser accuracy tolerances), then you may</span>
 <span class="sd">    set ``propagate_gsparams=False``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Sum.__init__"><a class="viewcode-back" href="../../composite.html#galsim.Sum.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># Check kwargs first:</span>
         <span class="n">gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;gsparams&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -330,7 +331,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="n">args</span></div>
 
 
     <span class="nd">@property</span>
@@ -377,23 +378,23 @@
             <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="Sum.__eq__"><a class="viewcode-back" href="../../composite.html#galsim.Sum.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Sum</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">obj_list</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Sum&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+<div class="viewcode-block" id="Sum.__hash__"><a class="viewcode-back" href="../../composite.html#galsim.Sum.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Sum&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Sum.__repr__"><a class="viewcode-back" href="../../composite.html#galsim.Sum.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Sum(</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Sum.__str__"><a class="viewcode-back" href="../../composite.html#galsim.Sum.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">str_list</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
-        <span class="k">return</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_list</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_list</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span></div>
 
     <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">:</span>

@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,42 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file gsobject.py</span>
-<span class="sd">Definitions for the class GSObject.</span>
-
-<span class="sd">This file defines GSObject, the base class for all surface brightness profiles of astronomical</span>
-<span class="sd">objects (galaxies, PSFs, pixel response), which defines the top-level interface to using all</span>
-<span class="sd">of these classes.  The following other files include the implementations of various subclasses</span>
-<span class="sd">which define specific surface brightness profiles:</span>
-
-<span class="sd">    gaussian.py: a simple Gaussian profile.</span>
-<span class="sd">    moffat.py: a Moffat PSF profile.</span>
-<span class="sd">    airy.py: a (possibly obscurated) Airy profile.</span>
-<span class="sd">    kolmogorov.py: a Kolmogorov atmospheric PSF profile.</span>
-<span class="sd">    exponential.py: an Exponential disc.</span>
-<span class="sd">    sersic.py: a Sersic profile, along with DeVaucouleurs as a special case.</span>
-<span class="sd">    box.py: Box and Pixel, which are 2D box profiles and TopHat a radial top-hat profile.</span>
-<span class="sd">    sum.py: Add, Sum, which allow adding two profiles together.</span>
-<span class="sd">    convolve.py: Convolve, Convolution which convolve two profiles together, along with special</span>
-<span class="sd">                 cases AutoConvolution and AutoCorrelation, and Deconvolve, Deconvolution.</span>
-<span class="sd">    transform.py: Transform, Transformation, which allows profiles to be sheared, rotated,</span>
-<span class="sd">                  dilated, shifted, or scaled in flux.</span>
-<span class="sd">    fourierprofile.py: FourierProfile, which implements a square root in fourier-space.</span>
-<span class="sd">    inclinedexponential.py: InclinedExponential, an inclined 3D exponential disk.</span>
-<span class="sd">    inclinedsersic.py: InclinedSersic, an inclined 3D sersic profile.</span>
-<span class="sd">    interpolatedimage.py: InterpolatedImage, a surface brightness profile from an arbitrary image.</span>
-<span class="sd">    phase_psf.py: PhasePSF, OpticalPSF, PSF profiles from the wavefront at the pupil plane.</span>
-<span class="sd">    real.py: RealGalaxy, which uses HST images of real observed galaxies.</span>
-<span class="sd">    shapelet.py: a Shapelet profile, aka Gauss-Laguerre decomposition.</span>
-<span class="sd">    spergel.py: a Spergel profile, which is qualitatively similar to a Sersic profile, but is</span>
-<span class="sd">                analytic in k-space.</span>
-<span class="sd">    randwalk.py: RandomWalk, which models knots of star formation.</span>
-
-<span class="sd">All these classes have associated methods to (a) retrieve information (like the flux, half-light</span>
-<span class="sd">radius, or intensity at a particular point); (b) carry out common operations, like shearing,</span>
-<span class="sd">rescaling of flux or size, rotating, and shifting; and (c) actually make images of the surface</span>
-<span class="sd">brightness profiles.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -254,7 +221,7 @@
 <span class="sd">    galaxies and PSFs in terms of radians and then use ``pixel_scale=0.2/206265`` when you draw</span>
 <span class="sd">    them.</span>
 
-<span class="sd">    Transforming methods:</span>
+<span class="sd">    **Transforming methods**:</span>
 
 <span class="sd">    The GSObject class uses an &quot;immutable&quot; design[1], so all methods that would potentially modify</span>
 <span class="sd">    the object actually return a new object instead.  This uses pointers and such behind the</span>
@@ -274,7 +241,7 @@
 <span class="sd">        &gt;&gt;&gt; obj = obj.withFlux(flux)    # Set a new flux value.</span>
 <span class="sd">        &gt;&gt;&gt; obj = obj * ratio           # Scale the surface brightness profile by some factor.</span>
 
-<span class="sd">    Access Methods:</span>
+<span class="sd">    **Access Methods**:</span>
 
 <span class="sd">    There are some access methods and properties that are available for all GSObjects.</span>
 <span class="sd">    Again, see the docstrings for each method for more details.::</span>
@@ -292,23 +259,23 @@
 <span class="sd">        &gt;&gt;&gt; obj.kValue(kx,ky) os obj.kValue(kpos)</span>
 
 <span class="sd">    Most subclasses have additional methods that are available for values that are particular to</span>
-<span class="sd">    that specific surface brightness profile.  e.g. ``sigma = gauss.getSigma()``.  However, note</span>
+<span class="sd">    that specific surface brightness profile.  e.g. ``sigma = gauss.sigma``.  However, note</span>
 <span class="sd">    that class-specific methods are not available after performing one of the above transforming</span>
 <span class="sd">    operations.::</span>
 
 <span class="sd">        &gt;&gt;&gt; gal = galsim.Gaussian(sigma=5)</span>
 <span class="sd">        &gt;&gt;&gt; gal = gal.shear(g1=0.2, g2=0.05)</span>
-<span class="sd">        &gt;&gt;&gt; sigma = gal.getSigma()              # This will raise an exception.</span>
+<span class="sd">        &gt;&gt;&gt; sigma = gal.sigma               # This will raise an exception.</span>
 
 <span class="sd">    It is however possible to access the original object that was transformed via the</span>
 <span class="sd">    ``original`` attribute.::</span>
 
-<span class="sd">        &gt;&gt;&gt; sigma = gal.original.getSigma()     # This works.</span>
+<span class="sd">        &gt;&gt;&gt; sigma = gal.original.sigma      # This works.</span>
 
 <span class="sd">    No matter how many transformations are performed, the ``original`` attribute will contain the</span>
 <span class="sd">    _original_ object (not necessarily the most recent ancestor).</span>
 
-<span class="sd">    Drawing Methods:</span>
+<span class="sd">    **Drawing Methods**:</span>
 
 <span class="sd">    The main thing to do with a GSObject once you have built it is to draw it onto an image.</span>
 <span class="sd">    There are two methods that do this.  In both cases, there are lots of optional parameters.</span>
@@ -322,15 +289,15 @@
 <span class="sd">    Attributes:</span>
 <span class="sd">        original:   This was mentioned above as a way to access the original object that has</span>
 <span class="sd">                    been transformed by one of the transforming methods.</span>
-<span class="sd">        noise:      Some types, like RealGalaxy, set this attribute to be the intrinsic noise that</span>
+<span class="sd">        noise:      Some types, like `RealGalaxy`, set this attribute to be the intrinsic noise that</span>
 <span class="sd">                    is already inherent in the profile and will thus be present when you draw the</span>
 <span class="sd">                    object.  The noise is propagated correctly through the various transforming</span>
 <span class="sd">                    methods, as well as convolutions and flux rescalings.  Note that the ``noise``</span>
 <span class="sd">                    attribute can be set directly by users even for GSObjects that do not naturally</span>
 <span class="sd">                    have one. The typical use for this attribute is to use it to whiten the noise in</span>
-<span class="sd">                    the image after drawing.  See CorrelatedNoise for more details.</span>
+<span class="sd">                    the image after drawing.  See `BaseCorrelatedNoise` for more details.</span>
 
-<span class="sd">    GSParams:</span>
+<span class="sd">    **GSParams**:</span>
 
 <span class="sd">    All GSObject classes take an optional ``gsparams`` argument, so we document that feature here.</span>
 <span class="sd">    For all documentation about the specific derived classes, please see the docstring for each</span>
@@ -338,12 +305,12 @@
 
 <span class="sd">    The ``gsparams`` argument can be used to specify various numbers that govern the tradeoff</span>
 <span class="sd">    between accuracy and speed for the calculations made in drawing a GSObject.  The numbers are</span>
-<span class="sd">    encapsulated in a class called GSParams, and the user should make careful choices whenever they</span>
-<span class="sd">    opt to deviate from the defaults.  For more details about the parameters and their default</span>
-<span class="sd">    values, please see the docstring of the GSParams class (e.g. type ``help(galsim.GSParams)``).</span>
+<span class="sd">    encapsulated in a class called `GSParams`, and the user should make careful choices whenever</span>
+<span class="sd">    they opt to deviate from the defaults.  For more details about the parameters and their default</span>
+<span class="sd">    values, please see the docstring of the `GSParams` class.</span>
 
 <span class="sd">    For example, let&#39;s say you want to do something that requires an FFT larger than 4096 x 4096</span>
-<span class="sd">    (and you have enough memory to handle it!).  Then you can create a new GSParams object with a</span>
+<span class="sd">    (and you have enough memory to handle it!).  Then you can create a new `GSParams` object with a</span>
 <span class="sd">    larger ``maximum_fft_size`` and pass that to your GSObject on construction::</span>
 
 <span class="sd">        &gt;&gt;&gt; gal = galsim.Sersic(n=4, half_light_radius=4.3)</span>
@@ -367,12 +334,13 @@
 <span class="sd">        &gt;&gt;&gt; im = conv.drawImage(image=im)                   # Now it works (but is slow!)</span>
 <span class="sd">        &gt;&gt;&gt; im.write(&#39;high_res_sersic.fits&#39;)</span>
 
-<span class="sd">    Note that for compound objects such as Convolution or Sum, not all GSParams can be</span>
+<span class="sd">    Note that for compound objects such as `Convolution` or `Sum`, not all `GSParams` can be</span>
 <span class="sd">    changed when the compound object is created.  In the example given here, it is possible to</span>
 <span class="sd">    change parameters related to the drawing, but not the Fourier space parameters for the</span>
-<span class="sd">    components that go into the Convolution.  To get better sampling in Fourier space, for example,</span>
-<span class="sd">    the ``gal`` and/or ``psf`` should be created with ``gsparams`` that have a non-default value of</span>
-<span class="sd">    ``folding_threshold``.  This statement applies to the threshold and accuracy parameters.</span>
+<span class="sd">    components that go into the `Convolution`.  To get better sampling in Fourier space,</span>
+<span class="sd">    for example, the ``gal`` and/or ``psf`` should be created with ``gsparams`` that have a</span>
+<span class="sd">    non-default value of ``folding_threshold``.  This statement applies to the threshold and</span>
+<span class="sd">    accuracy parameters.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_gsparams_opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;minimum_fft_size&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                       <span class="s1">&#39;maximum_fft_size&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -390,8 +358,8 @@
                       <span class="s1">&#39;range_division_for_extrema&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                       <span class="s1">&#39;small_fraction_of_flux&#39;</span> <span class="p">:</span> <span class="nb">float</span>
                     <span class="p">}</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The GSObject base class should not be instantiated directly.&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="GSObject.__init__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The GSObject base class should not be instantiated directly.&quot;</span><span class="p">)</span></div>
 
     <span class="c1"># Note: subclasses are expected to define the following attributes or properties:</span>
     <span class="c1">#</span>
@@ -448,7 +416,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;A GSParams object that sets various parameters relevant for speed/accuracy trade-offs&quot;</span>
+        <span class="s2">&quot;A `GSParams` object that sets various parameters relevant for speed/accuracy trade-offs&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
     <span class="nd">@property</span>
@@ -463,7 +431,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nyquist_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;The Image pixel spacing that does not alias maxk.&quot;</span>
+        <span class="s2">&quot;The pixel spacing that does not alias maxk.&quot;</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxk</span>
 
     <span class="nd">@property</span>
@@ -574,7 +542,7 @@
         <span class="sd">&quot;&quot;&quot;An estimate of the noise already in the profile.</span>
 
 <span class="sd">        Some profiles have some noise already in their definition.  E.g. those that come from</span>
-<span class="sd">        observations of galaxies in real data.  In GalSim, RealGalaxy objects are an example of</span>
+<span class="sd">        observations of galaxies in real data.  In GalSim, `RealGalaxy` objects are an example of</span>
 <span class="sd">        this.  In these cases, the noise attribute gives an estimate of the Noise object that</span>
 <span class="sd">        would generate noise consistent with that already in the profile.</span>
 
@@ -614,8 +582,8 @@
 
     <span class="c1"># Also need this method to duck-type as a ChromaticObject</span>
 <div class="viewcode-block" id="GSObject.evaluateAtWavelength"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return profile at a given wavelength.  For GSObject instances, this is just ``self``.</span>
-<span class="sd">        This allows GSObject instances to be duck-typed as ChromaticObject instances.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return profile at a given wavelength.  For `GSObject` instances, this is just ``self``.</span>
+<span class="sd">        This allows `GSObject` instances to be duck-typed as `ChromaticObject` instances.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
     <span class="c1"># Make op+ of two GSObjects work to return an Add object</span>
@@ -631,7 +599,7 @@
         <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">other</span><span class="p">)])</span>
 
     <span class="c1"># Make op* work to adjust the flux of an object</span>
-    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__mul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Scale the flux of the object by the given factor.</span>
 
 <span class="sd">        obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)</span>
@@ -639,19 +607,19 @@
 <span class="sd">        It creates a new object that has the same profile as the original, but with the</span>
 <span class="sd">        surface brightness at every location scaled by the given amount.</span>
 
-<span class="sd">        You can also multiply by an SED, which will create a ChromaticObject where the SED</span>
+<span class="sd">        You can also multiply by an `SED`, which will create a `ChromaticObject` where the `SED`</span>
 <span class="sd">        acts like a wavelength-dependent ``flux_ratio``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__rmul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__rmul__">[docs]</a>    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to obj * other&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
     <span class="c1"># Likewise for op/</span>
-    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__div__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__div__">[docs]</a>    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to obj * (1/other)&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span></div>
 
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
@@ -675,7 +643,7 @@
 <span class="sd">        the expense of speed.</span>
 
 <span class="sd">        In addition, you can optionally specify the size of the image to draw. The default size is</span>
-<span class="sd">        None, which means drawImage will choose a size designed to contain around 99.5% of the</span>
+<span class="sd">        None, which means `drawImage` will choose a size designed to contain around 99.5% of the</span>
 <span class="sd">        flux.  This is overkill for this calculation, so choosing a smaller size than this may</span>
 <span class="sd">        speed up this calculation somewhat.</span>
 
@@ -689,7 +657,7 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            size:           If given, the stamp size to use for the drawn image. [default: None,</span>
-<span class="sd">                            which will let drawImage choose the size automatically]</span>
+<span class="sd">                            which will let `drawImage` choose the size automatically]</span>
 <span class="sd">            scale:          If given, the pixel scale to use for the drawn image. [default:</span>
 <span class="sd">                            0.5 * self.nyquist_scale]</span>
 <span class="sd">            centroid:       The position to use for the centroid. [default: self.centroid]</span>
@@ -745,7 +713,7 @@
 <span class="sd">        precision estimate of the radius, the accuracy can be improved using the optional</span>
 <span class="sd">        parameters size and scale to change the size and pixel scale used to draw the profile.</span>
 
-<span class="sd">        The default is to use the the Nyquist scale for the pixel scale and let drawImage</span>
+<span class="sd">        The default is to use the the Nyquist scale for the pixel scale and let `drawImage`</span>
 <span class="sd">        choose a size for the stamp that will enclose at least 99.5% of the flux.  These</span>
 <span class="sd">        were found to produce results accurate to a few percent on our internal tests.</span>
 <span class="sd">        Using a smaller scale and larger size will be more accurate at the expense of speed.</span>
@@ -756,7 +724,7 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            size:           If given, the stamp size to use for the drawn image. [default: None,</span>
-<span class="sd">                            which will let drawImage choose the size automatically]</span>
+<span class="sd">                            which will let `drawImage` choose the size automatically]</span>
 <span class="sd">            scale:          If given, the pixel scale to use for the drawn image. [default:</span>
 <span class="sd">                            self.nyquist_scale]</span>
 <span class="sd">            centroid:       The position to use for the centroid. [default: self.centroid]</span>
@@ -796,9 +764,9 @@
 <span class="sd">        If the profile has a fwhm attribute, it will just return that, but in the general case,</span>
 <span class="sd">        we draw the profile and estimate the FWHM directly.</span>
 
-<span class="sd">        As with calculateHLR and calculateMomentRadius, this function optionally takes size and</span>
+<span class="sd">        As with `calculateHLR` and `calculateMomentRadius`, this function optionally takes size and</span>
 <span class="sd">        scale values to use for the image drawing.  The default is to use the the Nyquist scale</span>
-<span class="sd">        for the pixel scale and let drawImage choose a size for the stamp that will enclose at</span>
+<span class="sd">        for the pixel scale and let `drawImage` choose a size for the stamp that will enclose at</span>
 <span class="sd">        least 99.5% of the flux.  These were found to produce results accurate to well below</span>
 <span class="sd">        one percent on our internal tests, so it is unlikely that you will want to adjust</span>
 <span class="sd">        them for accuracy.  However, using a smaller size than default could help speed up</span>
@@ -806,7 +774,7 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            size:           If given, the stamp size to use for the drawn image. [default: None,</span>
-<span class="sd">                            which will let drawImage choose the size automatically]</span>
+<span class="sd">                            which will let `drawImage` choose the size automatically]</span>
 <span class="sd">            scale:          If given, the pixel scale to use for the drawn image. [default:</span>
 <span class="sd">                            self.nyquist_scale]</span>
 <span class="sd">            centroid:       The position to use for the centroid. [default: self.centroid]</span>
@@ -850,14 +818,15 @@
 <span class="sd">        The object surface brightness profiles are typically defined in world coordinates, so</span>
 <span class="sd">        the position here should be in world coordinates as well.</span>
 
-<span class="sd">        Not all GSObject classes can use this method.  Classes like Convolution that require a</span>
+<span class="sd">        Not all `GSObject` classes can use this method.  Classes like Convolution that require a</span>
 <span class="sd">        Discrete Fourier Transform to determine the real space values will not do so for a single</span>
 <span class="sd">        position.  Instead a GalSimError will be raised.  The xValue() method is available if and</span>
 <span class="sd">        only if ``obj.is_analytic_x == True``.</span>
 
 <span class="sd">        Users who wish to use the xValue() method for an object that is the convolution of other</span>
 <span class="sd">        profiles can do so by drawing the convolved profile into an image, using the image to</span>
-<span class="sd">        initialize a new InterpolatedImage, and then using the xValue() method for that new object.</span>
+<span class="sd">        initialize a new `InterpolatedImage`, and then using the xValue() method for that new</span>
+<span class="sd">        object.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            position:    The position at which you want the surface brightness of the object.</span>
@@ -888,8 +857,8 @@
 <span class="sd">        arguments).</span>
 
 <span class="sd">        Technically, kValue() is available if and only if the given obj has ``obj.is_analytic_k</span>
-<span class="sd">        == True``, but this is the case for all GSObjects currently, so that should never be an</span>
-<span class="sd">        issue (unlike for xValue()).</span>
+<span class="sd">        == True``, but this is the case for all `GSObject` classes currently, so that should never</span>
+<span class="sd">        be an issue (unlike for `xValue`).</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            position:    The position in k space at which you want the fourier amplitude.</span>
@@ -926,8 +895,8 @@
 
 <span class="sd">        It creates a new object that has the same profile as the original, but with the</span>
 <span class="sd">        surface brightness at every location rescaled such that the total flux will be</span>
-<span class="sd">        the given value.  Note that if ``flux`` is an ``SED``, the return value will be a</span>
-<span class="sd">        ``ChromaticObject`` with specified SED.</span>
+<span class="sd">        the given value.  Note that if ``flux`` is an `SED`, the return value will be a</span>
+<span class="sd">        `ChromaticObject` with specified `SED`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            flux:       The new flux for the object.</span>
@@ -945,13 +914,15 @@
 
 <span class="sd">        It creates a new object that has the same profile as the original, but with the</span>
 <span class="sd">        surface brightness at every location scaled by the given amount.  If ``flux_ratio`` is an</span>
-<span class="sd">        SED, then the returned object is a ``ChromaticObject`` with an SED multiplied by obj.flux.</span>
-<span class="sd">        Note that in this case the ``.flux`` attribute of the GSObject being scaled gets interpreted</span>
-<span class="sd">        as being dimensionless, instead of having its normal units of [photons/s/cm^2].  The</span>
-<span class="sd">        photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely</span>
-<span class="sd">        if the SED is dimensionless itself (see discussion in the ChromaticObject docstring).  The</span>
-<span class="sd">        GSObject ``flux`` attribute *does* still contribute to the ChromaticObject normalization,</span>
-<span class="sd">        though.  For example, the following are equivalent::</span>
+<span class="sd">        `SED`, then the returned object is a `ChromaticObject` with the `SED` multiplied by</span>
+<span class="sd">        its current ``flux``.</span>
+
+<span class="sd">        Note that in this case the ``flux`` attribute of the `GSObject` being scaled gets</span>
+<span class="sd">        interpreted as being dimensionless, instead of having its normal units of [photons/s/cm^2].</span>
+<span class="sd">        The photons/s/cm^2 units are (optionally) carried by the `SED` instead, or even left out</span>
+<span class="sd">        entirely if the `SED` is dimensionless itself (see discussion in the `ChromaticObject`</span>
+<span class="sd">        docstring).  The `GSObject` ``flux`` attribute *does* still contribute to the</span>
+<span class="sd">        `ChromaticObject` normalization, though.  For example, the following are equivalent::</span>
 
 <span class="sd">            &gt;&gt;&gt; chrom_obj = gsobj.withScaledFlux(sed * 3.0)</span>
 <span class="sd">            &gt;&gt;&gt; chrom_obj2 = (gsobj * 3.0).withScaledFlux(sed)</span>
@@ -1047,17 +1018,16 @@
 <div class="viewcode-block" id="GSObject.shear"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shear">[docs]</a>    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current object with an area-preserving shear applied to it.</span>
 
-<span class="sd">        The arguments may be either a Shear instance or arguments to be used to initialize one.</span>
+<span class="sd">        The arguments may be either a `Shear` instance or arguments to be used to initialize one.</span>
 
-<span class="sd">        For more details about the allowed keyword arguments, see the documentation for Shear</span>
-<span class="sd">        (for doxygen documentation, see galsim.shear.Shear).</span>
+<span class="sd">        For more details about the allowed keyword arguments, see the `Shear` docstring.</span>
 
 <span class="sd">        The shear() method precisely preserves the area.  To include a lensing distortion with</span>
 <span class="sd">        the appropriate change in area, either use shear() with magnify(), or use lens(), which</span>
 <span class="sd">        combines both operations.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            shear:      The Shear to be applied. Or, as described above, you may instead supply</span>
+<span class="sd">            shear:      The `Shear` to be applied. Or, as described above, you may instead supply</span>
 <span class="sd">                        parameters do construct a shear directly.  eg. ``obj.shear(g1=g1,g2=g2)``.</span>
 
 <span class="sd">        Returns:</span>
@@ -1083,11 +1053,13 @@
         <span class="sd">&quot;&quot;&quot;Equivalent to self.shear(shear), but without the overhead of sanity checks or other</span>
 <span class="sd">        ways to input the shear value.</span>
 
-<span class="sd">        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shear.</span>
+<span class="sd">        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular</span>
+<span class="sd">        `shear` method.</span>
+
 <span class="sd">        Also, it won&#39;t propagate any noise attribute.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            shear:      The Shear to be applied. Must be a galsim.Shear instance.</span>
+<span class="sd">            shear:      The `Shear` to be applied.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the sheared object.</span>
@@ -1100,8 +1072,8 @@
         <span class="sd">&quot;&quot;&quot;Create a version of the current object with both a lensing shear and magnification</span>
 <span class="sd">        applied to it.</span>
 
-<span class="sd">        This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be</span>
-<span class="sd">        specified using the g1, g2 definition of shear (see Shear documentation for more details).</span>
+<span class="sd">        This `GSObject` method applies a lensing (reduced) shear and magnification.  The shear must</span>
+<span class="sd">        be specified using the g1, g2 definition of shear (see `Shear` for more details).</span>
 <span class="sd">        This is the same definition as the outputs of the PowerSpectrum and NFWHalo classes, which</span>
 <span class="sd">        compute shears according to some lensing power spectrum or lensing by an NFW dark matter</span>
 <span class="sd">        halo.  The magnification determines the rescaling factor for the object area and flux,</span>
@@ -1120,10 +1092,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="o">=</span><span class="n">g2</span><span class="p">)</span><span class="o">.</span><span class="n">magnify</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GSObject.rotate"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Rotate this object by an Angle ``theta``.</span>
+        <span class="sd">&quot;&quot;&quot;Rotate this object by an `Angle` ``theta``.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            theta:      Rotation angle (Angle object, +ve anticlockwise).</span>
+<span class="sd">            theta:      Rotation angle (`Angle` object, positive means anticlockwise).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the rotated object.</span>
@@ -1147,7 +1119,7 @@
 <span class="sd">            v = dvdx x + dvdy y</span>
 
 <span class="sd">        That is, an arbitrary affine transform, but without the translation (which is</span>
-<span class="sd">        easily effected via the shift() method).</span>
+<span class="sd">        easily effected via the `shift` method).</span>
 
 <span class="sd">        Note that this function is similar to expand in that it preserves surface brightness,</span>
 <span class="sd">        not flux.  If you want to preserve flux, you should also do::</span>
@@ -1169,27 +1141,27 @@
 <div class="viewcode-block" id="GSObject.shift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current object shifted by some amount in real space.</span>
 
-<span class="sd">        After this call, the caller&#39;s type will be a GSObject.</span>
-<span class="sd">        This means that if the caller was a derived type that had extra methods beyond</span>
-<span class="sd">        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods</span>
-<span class="sd">        are no longer available.</span>
+<span class="sd">        After this call, the caller&#39;s type will be a `GSObject`.</span>
+<span class="sd">        This means that if the caller was a derived type that had extra methods or properties</span>
+<span class="sd">        beyond those defined in `GSObject` (e.g. `Gaussian.sigma`), then these methods are no</span>
+<span class="sd">        longer available.</span>
 
 <span class="sd">        Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,</span>
 <span class="sd">        or as a PositionD or PositionI object.</span>
 
-<span class="sd">        The shift coordinates here are sky coordinates.  GSObjects are always defined in sky</span>
-<span class="sd">        coordinates and only later (when they are drawn) is the connection to pixel coordinates</span>
+<span class="sd">        The shift coordinates here are sky coordinates.  `GSObject` profiles are always defined in</span>
+<span class="sd">        sky coordinates and only later (when they are drawn) is the connection to pixel coordinates</span>
 <span class="sd">        established (via a pixel_scale or WCS).  So a shift of dx moves the object horizontally</span>
 <span class="sd">        in the sky (e.g. west in the local tangent plane of the observation), and dy moves the</span>
 <span class="sd">        object vertically (north in the local tangent plane).</span>
 
 <span class="sd">        The units are typically arcsec, but we don&#39;t enforce that anywhere.  The units here just</span>
-<span class="sd">        need to be consistent with the units used for any size values used by the GSObject.</span>
+<span class="sd">        need to be consistent with the units used for any size values used by the `GSObject`.</span>
 <span class="sd">        The connection of these units to the eventual image pixels is defined by either the</span>
-<span class="sd">        ``pixel_scale`` or the ``wcs`` parameter of ``drawImage``.</span>
+<span class="sd">        ``pixel_scale`` or the ``wcs`` parameter of `drawImage`.</span>
 
 <span class="sd">        Note: if you want to shift the object by a set number (or fraction) of pixels in the</span>
-<span class="sd">        drawn image, you probably want to use the ``offset`` parameter of ``drawImage`` rather than</span>
+<span class="sd">        drawn image, you probably want to use the ``offset`` parameter of `drawImage` rather than</span>
 <span class="sd">        this method.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1210,10 +1182,12 @@
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to self.shift(shift), but without the overhead of sanity checks or option</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``self.shift(shift)``, but without the overhead of sanity checks or option</span>
 <span class="sd">        to give the shift as (dx,dy).</span>
 
-<span class="sd">        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shift.</span>
+<span class="sd">        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular</span>
+<span class="sd">        `shift` method.</span>
+
 <span class="sd">        Also, it won&#39;t propagate any noise attribute.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1376,15 +1350,15 @@
                   <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                   <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">n_subsample</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">save_photons</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Draws an Image of the object.</span>
+        <span class="sd">&quot;&quot;&quot;Draws an `Image` of the object.</span>
 
-<span class="sd">        The drawImage() method is used to draw an Image of the current object using one of several</span>
-<span class="sd">        possible rendering methods (see below).  It can create a new Image or can draw onto an</span>
+<span class="sd">        The drawImage() method is used to draw an `Image` of the current object using one of several</span>
+<span class="sd">        possible rendering methods (see below).  It can create a new `Image` or can draw onto an</span>
 <span class="sd">        existing one if provided by the ``image`` parameter.  If the ``image`` is given, you can</span>
-<span class="sd">        also optionally add to the given Image if ``add_to_image = True``, but the default is to</span>
+<span class="sd">        also optionally add to the given `Image` if ``add_to_image = True``, but the default is to</span>
 <span class="sd">        replace the current contents with new values.</span>
 
-<span class="sd">        Providing an input image:</span>
+<span class="sd">        **Providing an input image**:</span>
 
 <span class="sd">        Note that if you provide an ``image`` parameter, it is the image onto which the profile</span>
 <span class="sd">        will be drawn.  The provided image *will be modified*.  A reference to the same image</span>
@@ -1405,85 +1379,90 @@
 <span class="sd">            &gt;&gt;&gt; stamp = obj.drawImage(image = full_image[b])</span>
 <span class="sd">            &gt;&gt;&gt; assert (stamp.array == full_image[b].array).all()</span>
 
-<span class="sd">        Letting drawImage create the image for you:</span>
+<span class="sd">        **Letting drawImage create the image for you**:</span>
 
 <span class="sd">        If drawImage() will be creating the image from scratch for you, then there are several ways</span>
 <span class="sd">        to control the size of the new image.  If the ``nx`` and ``ny`` keywords are present, then</span>
 <span class="sd">        an image with these numbers of pixels on a side will be created.  Similarly, if the ``bounds``</span>
 <span class="sd">        keyword is present, then an image with the specified bounds will be created.  Note that it</span>
-<span class="sd">        is an error to provide an existing Image when also specifying ``nx``, ``ny``, or ``bounds``.</span>
-<span class="sd">        In the absence of ``nx``, ``ny``, and ``bounds``, drawImage will decide a good size to use</span>
-<span class="sd">        based on the size of the object being drawn.  Basically, it will try to use an area large</span>
-<span class="sd">        enough to include at least 99.5% of the flux.  (Note: the value 0.995 is really ``1 -</span>
-<span class="sd">        folding_threshold``.  You can change the value of ``folding_threshold`` for any object via</span>
-<span class="sd">        GSParams.  See ``help(GSParams)`` for more details.)  You can set the pixel scale of the</span>
-<span class="sd">        constructed image with the ``scale`` parameter, or set a WCS function with ``wcs``.  If you</span>
-<span class="sd">        do not provide either ``scale`` or ``wcs``, then drawImage() will default to using the</span>
-<span class="sd">        Nyquist scale for the current object.  You can also set the data type used in the new Image</span>
-<span class="sd">        with the ``dtype`` parameter that has the same options as for the Image constructor.</span>
+<span class="sd">        is an error to provide an existing `Image` when also specifying ``nx``, ``ny``, or</span>
+<span class="sd">        ``bounds``.  In the absence of ``nx``, ``ny``, and ``bounds``, drawImage will decide a good</span>
+<span class="sd">        size to use based on the size of the object being drawn.  Basically, it will try to use an</span>
+<span class="sd">        area large enough to include at least 99.5% of the flux.</span>
 
-<span class="sd">        The drawing &quot;method&quot;:</span>
+<span class="sd">        .. note::</span>
+<span class="sd">            This value 0.995 is really ``1 - folding_threshold``.  You can change the value of</span>
+<span class="sd">            ``folding_threshold`` for any object via `GSParams`.</span>
+
+<span class="sd">        You can set the pixel scale of the constructed image with the ``scale`` parameter, or set</span>
+<span class="sd">        a WCS function with ``wcs``.  If you do not provide either ``scale`` or ``wcs``, then</span>
+<span class="sd">        drawImage() will default to using the Nyquist scale for the current object.</span>
+
+<span class="sd">        You can also set the data type used in the new `Image` with the ``dtype`` parameter that has</span>
+<span class="sd">        the same options as for the `Image` constructor.</span>
+
+<span class="sd">        **The drawing &quot;method&quot;**:</span>
 
 <span class="sd">        There are several different possible methods drawImage() can use for rendering the image.</span>
 <span class="sd">        This is set by the ``method`` parameter.  The options are:</span>
 
-<span class="sd">        - auto</span>
-<span class="sd">                        This is the default, which will normally be equivalent to &#39;fft&#39;.  However,</span>
-<span class="sd">                        if the object being rendered is simple (no convolution) and has hard edges</span>
-<span class="sd">                        (e.g. a Box or a truncated Moffat or Sersic), then it will switch to</span>
-<span class="sd">                        &#39;real_space&#39;, since that is often both faster and more accurate in these</span>
-<span class="sd">                        cases (due to ringing in Fourier space).</span>
-<span class="sd">        - fft</span>
-<span class="sd">                        The integration of the light within each pixel is mathematically equivalent</span>
-<span class="sd">                        to convolving by the pixel profile (a Pixel object) and sampling the result</span>
-<span class="sd">                        at the centers of the pixels.  This method will do that convolution using</span>
-<span class="sd">                        a discrete Fourier transform.  Furthermore, if the object (or any component</span>
-<span class="sd">                        of it) has been transformed via shear(), dilate(), etc., then these</span>
-<span class="sd">                        transformations are done in Fourier space as well.</span>
-<span class="sd">        - real_space</span>
-<span class="sd">                        This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)</span>
-<span class="sd">                        in real space for the integration over the pixel response.  It is usually</span>
-<span class="sd">                        slower than the &#39;fft&#39; method, but if the profile has hard edges that cause</span>
-<span class="sd">                        ringing in Fourier space, it can be faster and/or more accurate.  If you</span>
-<span class="sd">                        use &#39;real_space&#39; with something that is already a Convolution, then this</span>
-<span class="sd">                        will revert to &#39;fft&#39;, since the double convolution that is required to also</span>
-<span class="sd">                        handle the pixel response is far too slow to be practical using real-space</span>
-<span class="sd">                        integrals.</span>
-<span class="sd">        - phot</span>
-<span class="sd">                        This uses a technique called photon shooting to render the image.</span>
-<span class="sd">                        Essentially, the object profile is taken as a probability distribution</span>
-<span class="sd">                        from which a finite number of photons are &quot;shot&quot; onto the image.  Each</span>
-<span class="sd">                        photon&#39;s flux gets added to whichever pixel the photon hits.  This process</span>
-<span class="sd">                        automatically accounts for the integration of the light over the pixel</span>
-<span class="sd">                        area, since all photons that hit any part of the pixel are counted.</span>
-<span class="sd">                        Convolutions and transformations are simple geometric processes in this</span>
-<span class="sd">                        framework.  However, there are two caveats with this method: (1) the</span>
-<span class="sd">                        resulting image will have Poisson noise from the finite number of photons,</span>
-<span class="sd">                        and (2) it is not available for all object types (notably anything that</span>
-<span class="sd">                        includes a Deconvolution).</span>
-<span class="sd">        - no_pixel</span>
-<span class="sd">                        Instead of integrating over the pixels, this method will sample the profile</span>
-<span class="sd">                        at the centers of the pixels and multiply by the pixel area.  If there is</span>
-<span class="sd">                        a convolution involved, the choice of whether this will use an FFT or</span>
-<span class="sd">                        real-space calculation is governed by the ``real_space`` parameter of the</span>
-<span class="sd">                        Convolution class.  This method is the appropriate choice if you are using</span>
-<span class="sd">                        a PSF that already includes a convolution by the pixel response.  For</span>
-<span class="sd">                        example, if you are using a PSF from an observed image of a star, then it</span>
-<span class="sd">                        has already been convolved by the pixel, so you would not want to do so</span>
-<span class="sd">                        again.  Note: The multiplication by the pixel area gets the flux</span>
-<span class="sd">                        normalization right for the above use case.  cf. ``method = &#39;sb&#39;``.</span>
-<span class="sd">        - sb</span>
-<span class="sd">                        This is a lot like &#39;no_pixel&#39;, except that the image values will simply be</span>
-<span class="sd">                        the sampled object profile&#39;s surface brightness, not multiplied by the</span>
-<span class="sd">                        pixel area.  This does not correspond to any real observing scenario, but</span>
-<span class="sd">                        it could be useful if you want to view the surface brightness profile of an</span>
-<span class="sd">                        object directly, without including the pixel integration.</span>
+<span class="sd">        auto</span>
+<span class="sd">                This is the default, which will normally be equivalent to &#39;fft&#39;.  However,</span>
+<span class="sd">                if the object being rendered is simple (no convolution) and has hard edges</span>
+<span class="sd">                (e.g. a Box or a truncated Moffat or Sersic), then it will switch to</span>
+<span class="sd">                &#39;real_space&#39;, since that is often both faster and more accurate in these</span>
+<span class="sd">                cases (due to ringing in Fourier space).</span>
+<span class="sd">        fft</span>
+<span class="sd">                The integration of the light within each pixel is mathematically equivalent</span>
+<span class="sd">                to convolving by the pixel profile (a `Pixel` object) and sampling the result</span>
+<span class="sd">                at the centers of the pixels.  This method will do that convolution using</span>
+<span class="sd">                a discrete Fourier transform.  Furthermore, if the object (or any component</span>
+<span class="sd">                of it) has been transformed via shear(), dilate(), etc., then these</span>
+<span class="sd">                transformations are done in Fourier space as well.</span>
+<span class="sd">        real_space</span>
+<span class="sd">                This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)</span>
+<span class="sd">                in real space for the integration over the pixel response.  It is usually</span>
+<span class="sd">                slower than the &#39;fft&#39; method, but if the profile has hard edges that cause</span>
+<span class="sd">                ringing in Fourier space, it can be faster and/or more accurate.  If you</span>
+<span class="sd">                use &#39;real_space&#39; with something that is already a Convolution, then this</span>
+<span class="sd">                will revert to &#39;fft&#39;, since the double convolution that is required to also</span>
+<span class="sd">                handle the pixel response is far too slow to be practical using real-space</span>
+<span class="sd">                integrals.</span>
+<span class="sd">        phot</span>
+<span class="sd">                This uses a technique called photon shooting to render the image.</span>
+<span class="sd">                Essentially, the object profile is taken as a probability distribution</span>
+<span class="sd">                from which a finite number of photons are &quot;shot&quot; onto the image.  Each</span>
+<span class="sd">                photon&#39;s flux gets added to whichever pixel the photon hits.  This process</span>
+<span class="sd">                automatically accounts for the integration of the light over the pixel</span>
+<span class="sd">                area, since all photons that hit any part of the pixel are counted.</span>
+<span class="sd">                Convolutions and transformations are simple geometric processes in this</span>
+<span class="sd">                framework.  However, there are two caveats with this method: (1) the</span>
+<span class="sd">                resulting image will have Poisson noise from the finite number of photons,</span>
+<span class="sd">                and (2) it is not available for all object types (notably anything that</span>
+<span class="sd">                includes a Deconvolution).</span>
+<span class="sd">        no_pixel</span>
+<span class="sd">                Instead of integrating over the pixels, this method will sample the profile</span>
+<span class="sd">                at the centers of the pixels and multiply by the pixel area.  If there is</span>
+<span class="sd">                a convolution involved, the choice of whether this will use an FFT or</span>
+<span class="sd">                real-space calculation is governed by the ``real_space`` parameter of the</span>
+<span class="sd">                Convolution class.  This method is the appropriate choice if you are using</span>
+<span class="sd">                a PSF that already includes a convolution by the pixel response.  For</span>
+<span class="sd">                example, if you are using a PSF from an observed image of a star, then it</span>
+<span class="sd">                has already been convolved by the pixel, so you would not want to do so</span>
+<span class="sd">                again.  Note: The multiplication by the pixel area gets the flux</span>
+<span class="sd">                normalization right for the above use case.  cf. ``method = &#39;sb&#39;``.</span>
+<span class="sd">        sb</span>
+<span class="sd">                This is a lot like &#39;no_pixel&#39;, except that the image values will simply be</span>
+<span class="sd">                the sampled object profile&#39;s surface brightness, not multiplied by the</span>
+<span class="sd">                pixel area.  This does not correspond to any real observing scenario, but</span>
+<span class="sd">                it could be useful if you want to view the surface brightness profile of an</span>
+<span class="sd">                object directly, without including the pixel integration.</span>
 
 <span class="sd">        The &#39;phot&#39; method has a few extra parameters that adjust how it functions.  The total</span>
 <span class="sd">        number of photons to shoot is normally calculated from the object&#39;s flux.  This flux is</span>
 <span class="sd">        taken to be given in photons/cm^2/s, so for most simple profiles, this times area * exptime</span>
 <span class="sd">        will equal the number of photons shot.  (See the discussion in Rowe et al, 2015, for why</span>
-<span class="sd">        this might be modified for InterpolatedImage and related profiles.)  However, you can</span>
+<span class="sd">        this might be modified for `InterpolatedImage` and related profiles.)  However, you can</span>
 <span class="sd">        manually set a different number of photons with ``n_photons``.  You can also set</span>
 <span class="sd">        ``max_extra_noise`` to tell drawImage() to use fewer photons than normal (and so is faster)</span>
 <span class="sd">        such that no more than that much extra noise is added to any pixel.  This is particularly</span>
@@ -1496,9 +1475,9 @@
 
 <span class="sd">        Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due</span>
 <span class="sd">        to wrapping at the edges, particularly for objects that are quite extended (e.g., due to</span>
-<span class="sd">        the nature of the radial profile). See ``help(galsim.GSParams)`` for parameters that you can</span>
-<span class="sd">        use to reduce the level of these artifacts, in particular ``folding_threshold`` may be</span>
-<span class="sd">        helpful if you see such artifacts in your images.</span>
+<span class="sd">        the nature of the radial profile). See `GSParams` for parameters that you can use to reduce</span>
+<span class="sd">        the level of these artifacts, in particular ``folding_threshold`` may be helpful if you see</span>
+<span class="sd">        such artifacts in your images.</span>
 
 <span class="sd">        Setting the offset:</span>
 
@@ -1524,7 +1503,7 @@
 
 <span class="sd">        Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.</span>
 <span class="sd">        So if you want, you can keep track of this properly and provide an ``area`` and ``exposure``</span>
-<span class="sd">        time here. This detail is more important with chromatic objects where the SED is typically</span>
+<span class="sd">        time here. This detail is more important with chromatic objects where the `SED` is typically</span>
 <span class="sd">        given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic</span>
 <span class="sd">        objects however, it is often more convenient to ignore these details and just consider the</span>
 <span class="sd">        flux to be the total number of photons for this exposure, in which case, you would leave the</span>
@@ -1542,8 +1521,8 @@
 <span class="sd">        whether you are keeping ``poisson_flux=True``, etc.</span>
 
 <span class="sd">        The following code snippet illustrates how ``gain``, ``exptime``, ``area``, and ``method``</span>
-<span class="sd">        can all influence the relationship between the ``flux`` attribute of a ``GSObject`` and</span>
-<span class="sd">        both the pixel values and ``.added_flux`` attribute of an ``Image`` drawn with</span>
+<span class="sd">        can all influence the relationship between the ``flux`` attribute of a `GSObject` and</span>
+<span class="sd">        both the pixel values and ``.added_flux`` attribute of an `Image` drawn with</span>
 <span class="sd">        ``drawImage()``::</span>
 
 <span class="sd">            &gt;&gt;&gt; obj = galsim.Gaussian(fwhm=1)</span>
@@ -1584,23 +1563,23 @@
 <span class="sd">        the brighter-fatter effect.</span>
 
 <span class="sd">        Users interested in modeling this kind of effect can supply a ``sensor`` object to use</span>
-<span class="sd">        for the accumulation step.  See ``SiliconSensor`` in sensor.py for a class that models</span>
-<span class="sd">        silicon-based CCD sensors.</span>
+<span class="sd">        for the accumulation step.  See `SiliconSensor` for a class that models silicon-based CCD</span>
+<span class="sd">        sensors.</span>
 
 <span class="sd">        Some related effects may need to be done to the photons at the surface layer before being</span>
 <span class="sd">        passed into the sensor object.  For instance, the photons may need to be given appropriate</span>
 <span class="sd">        incidence angles according to the optics of the telescope (since this matters for where the</span>
 <span class="sd">        photons are converted to electrons).  You may also need to give the photons wavelengths</span>
-<span class="sd">        according to the SED of the object.  Such steps are specified in a ``surface_ops``</span>
+<span class="sd">        according to the `SED` of the object.  Such steps are specified in a ``surface_ops``</span>
 <span class="sd">        parameter, which should be a list of any such operations you wish to perform on the photon</span>
-<span class="sd">        array before passing them to the sensor.  See ``FRatioAngles`` and ``WavelengthSampler`` in</span>
-<span class="sd">        photon_array.py for two examples of such surface operators.</span>
+<span class="sd">        array before passing them to the sensor.  See `FRatioAngles` and `WavelengthSampler` for</span>
+<span class="sd">        two examples of such surface operators.</span>
 
 <span class="sd">        Since the sensor deals with photons, it is most natural to use this feature in conjunction</span>
 <span class="sd">        with photon shooting (``method=&#39;phot&#39;``).  However, it is allowed with FFT methods too.</span>
 <span class="sd">        But there is a caveat one should be aware of in this case.  The FFT drawing is used to</span>
-<span class="sd">        produce an intermediate image, which is then converted to a PhotonArray using the</span>
-<span class="sd">        factory function ``PhotonArray.makeFromImage``.  This assigns photon positions randomly</span>
+<span class="sd">        produce an intermediate image, which is then converted to a `PhotonArray` using the</span>
+<span class="sd">        factory function `PhotonArray.makeFromImage`.  This assigns photon positions randomly</span>
 <span class="sd">        within each pixel where they were drawn, which isn&#39;t always a particularly good</span>
 <span class="sd">        approximation.</span>
 
@@ -1612,10 +1591,10 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            image:          If provided, this will be the image on which to draw the profile.</span>
-<span class="sd">                            If ``image`` is None, then an automatically-sized Image will be created.</span>
-<span class="sd">                            If ``image`` is given, but its bounds are undefined (e.g. if it was</span>
-<span class="sd">                            constructed with ``image = galsim.Image()``), then it will be resized</span>
-<span class="sd">                            appropriately based on the profile&#39;s size [default: None].</span>
+<span class="sd">                            If ``image`` is None, then an automatically-sized `Image` will be</span>
+<span class="sd">                            created.  If ``image`` is given, but its bounds are undefined (e.g. if</span>
+<span class="sd">                            it was constructed with ``image = galsim.Image()``), then it will be</span>
+<span class="sd">                            resized appropriately based on the profile&#39;s size [default: None].</span>
 <span class="sd">            nx:             If provided and ``image`` is None, use to set the x-direction size of</span>
 <span class="sd">                            the image.  Must be accompanied by ``ny``.</span>
 <span class="sd">            ny:             If provided and ``image`` is None, use to set the y-direction size of</span>
@@ -1661,9 +1640,8 @@
 <span class="sd">                            (usually due to interpolants).</span>
 <span class="sd">                            [default: 0]</span>
 <span class="sd">            rng:            If provided, a random number generator to use for photon shooting,</span>
-<span class="sd">                            which may be any kind of BaseDeviate object.  If ``rng`` is None, one</span>
-<span class="sd">                            will be automatically created, using the time as a seed.</span>
-<span class="sd">                            [default: None]</span>
+<span class="sd">                            which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one</span>
+<span class="sd">                            will be automatically created.  [default: None]</span>
 <span class="sd">            max_extra_noise: If provided, the allowed extra noise in each pixel when photon</span>
 <span class="sd">                            shooting.  This is only relevant if ``n_photons=0``, so the number of</span>
 <span class="sd">                            photons is being automatically calculated.  In that case, if the image</span>
@@ -1680,7 +1658,7 @@
 <span class="sd">                            Poisson statistics for ``n_photons`` samples when photon shooting.</span>
 <span class="sd">                            [default: True, unless ``n_photons`` is given, in which case the default</span>
 <span class="sd">                            is False]</span>
-<span class="sd">            sensor:         An optional Sensor instance, which will be used to accumulate the</span>
+<span class="sd">            sensor:         An optional `Sensor` instance, which will be used to accumulate the</span>
 <span class="sd">                            photons onto the image. [default: None]</span>
 <span class="sd">            surface_ops:    A list of operators that can modify the photon array that will be</span>
 <span class="sd">                            applied in order before accumulating the photons on the sensor.</span>
@@ -1694,15 +1672,15 @@
 <span class="sd">            maxN:           Sets the maximum number of photons that will be added to the image</span>
 <span class="sd">                            at a time.  (Memory requirements are proportional to this number.)</span>
 <span class="sd">                            [default: None, which means no limit]</span>
-<span class="sd">            save_photons:   If True, save the PhotonArray as ``image.photons``. Only valid if method</span>
-<span class="sd">                            is &#39;phot&#39; or sensor is not None.  [default: False]</span>
+<span class="sd">            save_photons:   If True, save the `PhotonArray` as ``image.photons``. Only valid if</span>
+<span class="sd">                            method is &#39;phot&#39; or sensor is not None.  [default: False]</span>
 <span class="sd">            setup_only:     Don&#39;t actually draw anything on the image.  Just make sure the image</span>
 <span class="sd">                            is set up correctly.  This is used internally by GalSim, but there</span>
 <span class="sd">                            may be cases where the user will want the same functionality.</span>
 <span class="sd">                            [default: False]</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the drawn Image.</span>
+<span class="sd">            the drawn `Image`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageD</span>
         <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">Convolution</span><span class="p">,</span> <span class="n">Deconvolve</span>
@@ -1760,6 +1738,10 @@
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;surface_ops are only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="n">surface_ops</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">maxN</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;maxN is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="n">maxN</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;save_photons is only valid for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
@@ -1888,12 +1870,12 @@
 
 <div class="viewcode-block" id="GSObject.drawReal"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawReal">[docs]</a>    <span class="k">def</span> <span class="nf">drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Draw this profile into an Image by direct evaluation at the location of each pixel.</span>
+<span class="sd">        Draw this profile into an `Image` by direct evaluation at the location of each pixel.</span>
 
-<span class="sd">        This is usually called from the ``drawImage`` function, rather than called directly by the</span>
+<span class="sd">        This is usually called from the `drawImage` function, rather than called directly by the</span>
 <span class="sd">        user.  In particular, the input image must be already set up with defined bounds.  The</span>
 <span class="sd">        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given</span>
-<span class="sd">        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale</span>
+<span class="sd">        bounds, not the image center (unlike `drawImage`).  The image also must have a `PixelScale`</span>
 <span class="sd">        wcs.  The profile being drawn should have already been converted to image coordinates via::</span>
 
 <span class="sd">            &gt;&gt;&gt; image_profile = original_wcs.toImage(original_profile)</span>
@@ -1901,11 +1883,11 @@
 <span class="sd">        Note that the image produced by ``drawReal`` represents the profile sampled at the center</span>
 <span class="sd">        of each pixel and then multiplied by the pixel area.  That is, the profile is NOT</span>
 <span class="sd">        integrated over the area of the pixel.  This is equivalent to method=&#39;no_pixel&#39; in</span>
-<span class="sd">        drawImage.  If you want to render a profile integrated over the pixel, you can convolve</span>
-<span class="sd">        with a Pixel first and draw that.</span>
+<span class="sd">        `drawImage`.  If you want to render a profile integrated over the pixel, you can convolve</span>
+<span class="sd">        with a `Pixel` first and draw that.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:          The Image onto which to place the flux. [required]</span>
+<span class="sd">            image:          The `Image` onto which to place the flux. [required]</span>
 <span class="sd">            add_to_image:   Whether to add flux to the existing image rather than clear out</span>
 <span class="sd">                            anything in the image before drawing. [default: False]</span>
 
@@ -1933,7 +1915,7 @@
             <span class="k">return</span> <span class="n">im1</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to the regular drawReal(image, add_to_image=False), but without the usual</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to the regular ``drawReal(image, add_to_image=False)``, but without the usual</span>
 <span class="sd">        sanity checks, and the image&#39;s dtype must be either float32 or float64, and it must</span>
 <span class="sd">        have a c_contiguous array (image.iscontiguous must be True).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1975,7 +1957,7 @@
 <span class="sd">        drawing the PSF each time.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:      The Image onto which to place the flux.</span>
+<span class="sd">            image:      The `Image` onto which to place the flux.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            (kimage, wrap_size), where wrap_size is either the size of kimage or smaller if</span>
@@ -2024,8 +2006,8 @@
 <span class="sd">        It applies the Fourier transform to ``kimage`` and adds the result to ``image``.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:          The Image onto which to place the flux.</span>
-<span class="sd">            kimage:         The k-space Image where the object was drawn.</span>
+<span class="sd">            image:          The `Image` onto which to place the flux.</span>
+<span class="sd">            kimage:         The k-space `Image` where the object was drawn.</span>
 <span class="sd">            wrap_size:      The size of the region to wrap kimage, which must be either the same</span>
 <span class="sd">                            size as kimage or smaller.</span>
 <span class="sd">            add_to_image:   Whether to add flux to the existing image rather than clear out</span>
@@ -2059,24 +2041,24 @@
 
 <div class="viewcode-block" id="GSObject.drawFFT"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawFFT">[docs]</a>    <span class="k">def</span> <span class="nf">drawFFT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Draw this profile into an Image by computing the k-space image and performing an FFT.</span>
+<span class="sd">        Draw this profile into an `Image` by computing the k-space image and performing an FFT.</span>
 
-<span class="sd">        This is usually called from the ``drawImage`` function, rather than called directly by the</span>
+<span class="sd">        This is usually called from the `drawImage` function, rather than called directly by the</span>
 <span class="sd">        user.  In particular, the input image must be already set up with defined bounds.  The</span>
 <span class="sd">        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given</span>
-<span class="sd">        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale</span>
+<span class="sd">        bounds, not the image center (unlike `drawImage`).  The image also must have a `PixelScale`</span>
 <span class="sd">        wcs.  The profile being drawn should have already been converted to image coordinates via::</span>
 
 <span class="sd">            &gt;&gt;&gt; image_profile = original_wcs.toImage(original_profile)</span>
 
-<span class="sd">        Note that the image produced by ``drawFFT`` represents the profile sampled at the center</span>
+<span class="sd">        Note that the `Image` produced by drawFFT represents the profile sampled at the center</span>
 <span class="sd">        of each pixel and then multiplied by the pixel area.  That is, the profile is NOT</span>
 <span class="sd">        integrated over the area of the pixel.  This is equivalent to method=&#39;no_pixel&#39; in</span>
-<span class="sd">        drawImage.  If you want to render a profile integrated over the pixel, you can convolve</span>
-<span class="sd">        with a Pixel first and draw that.</span>
+<span class="sd">        `drawImage`.  If you want to render a profile integrated over the pixel, you can convolve</span>
+<span class="sd">        with a `Pixel` first and draw that.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:          The Image onto which to place the flux. [required]</span>
+<span class="sd">            image:          The `Image` onto which to place the flux. [required]</span>
 <span class="sd">            add_to_image:   Whether to add flux to the existing image rather than clear out</span>
 <span class="sd">                            anything in the image before drawing. [default: False]</span>
 
@@ -2094,7 +2076,7 @@
         <span class="sd">&quot;&quot;&quot;Calculate how many photons to shoot and what flux_ratio (called g) each one should</span>
 <span class="sd">        have in order to produce an image with the right S/N and total flux.</span>
 
-<span class="sd">        This routine is normally called by drawPhot.</span>
+<span class="sd">        This routine is normally called by `drawPhot`.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            n_photons, g</span>
@@ -2214,24 +2196,24 @@
                  <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
                  <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Draw this profile into an Image by shooting photons.</span>
+<span class="sd">        Draw this profile into an `Image` by shooting photons.</span>
 
-<span class="sd">        This is usually called from the ``drawImage`` function, rather than called directly by the</span>
+<span class="sd">        This is usually called from the `drawImage` function, rather than called directly by the</span>
 <span class="sd">        user.  In particular, the input image must be already set up with defined bounds.  The</span>
 <span class="sd">        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given</span>
-<span class="sd">        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale</span>
+<span class="sd">        bounds, not the image center (unlike `drawImage`).  The image also must have a `PixelScale`</span>
 <span class="sd">        wcs.  The profile being drawn should have already been converted to image coordinates via::</span>
 
 <span class="sd">            &gt;&gt;&gt; image_profile = original_wcs.toImage(original_profile)</span>
 
-<span class="sd">        Note that the image produced by ``drawPhot`` represents the profile integrated over the</span>
-<span class="sd">        area of each pixel.  This is equivalent to convolving the profile by a square ``Pixel``</span>
+<span class="sd">        Note that the image produced by `drawPhot` represents the profile integrated over the</span>
+<span class="sd">        area of each pixel.  This is equivalent to convolving the profile by a square `Pixel`</span>
 <span class="sd">        profile and sampling the value at the center of each pixel, although this happens</span>
 <span class="sd">        automatically by the shooting algorithm, so you do not need to manually convolve by</span>
-<span class="sd">        a Pixel as you would for ``drawReal`` or ``drawFFT``.</span>
+<span class="sd">        a `Pixel` as you would for `drawReal` or `drawFFT`.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:          The Image onto which to place the flux. [required]</span>
+<span class="sd">            image:          The `Image` onto which to place the flux. [required]</span>
 <span class="sd">            gain:           The number of photons per ADU (&quot;analog to digital units&quot;, the units of</span>
 <span class="sd">                            the numbers output from a CCD). [default: 1.]</span>
 <span class="sd">            add_to_image:   Whether to add to the existing images rather than clear out</span>
@@ -2244,7 +2226,7 @@
 <span class="sd">                            more than this because some of the shot photons are negative</span>
 <span class="sd">                            (usually due to interpolants).  [default: 0]</span>
 <span class="sd">            rng:            If provided, a random number generator to use for photon shooting,</span>
-<span class="sd">                            which may be any kind of BaseDeviate object.  If ``rng`` is None, one</span>
+<span class="sd">                            which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one</span>
 <span class="sd">                            will be automatically created, using the time as a seed.</span>
 <span class="sd">                            [default: None]</span>
 <span class="sd">            max_extra_noise: If provided, the allowed extra noise in each pixel when photon</span>
@@ -2263,7 +2245,7 @@
 <span class="sd">                            Poisson statistics for ``n_photons`` samples when photon shooting.</span>
 <span class="sd">                            [default: True, unless ``n_photons`` is given, in which case the default</span>
 <span class="sd">                            is False]</span>
-<span class="sd">            sensor:         An optional Sensor instance, which will be used to accumulate the</span>
+<span class="sd">            sensor:         An optional `Sensor` instance, which will be used to accumulate the</span>
 <span class="sd">                            photons onto the image. [default: None]</span>
 <span class="sd">            surface_ops:    A list of operators that can modify the photon array that will be</span>
 <span class="sd">                            applied in order before accumulating the photons on the sensor.</span>
@@ -2278,7 +2260,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            (added_flux, photons) where:</span>
 <span class="sd">            - added_flux is the total flux of photons that landed inside the image bounds, and</span>
-<span class="sd">            - photons is the PhotonArray that was applied to the image.</span>
+<span class="sd">            - photons is the `PhotonArray` that was applied to the image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.sensor</span> <span class="k">import</span> <span class="n">Sensor</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">ImageD</span>
@@ -2358,17 +2340,17 @@
 
 
 <div class="viewcode-block" id="GSObject.shoot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shoot">[docs]</a>    <span class="k">def</span> <span class="nf">shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Shoot photons into a PhotonArray.</span>
+        <span class="sd">&quot;&quot;&quot;Shoot photons into a `PhotonArray`.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            n_photons:  The number of photons to use for photon shooting.</span>
 <span class="sd">            rng:        If provided, a random number generator to use for photon shooting,</span>
-<span class="sd">                        which may be any kind of BaseDeviate object.  If ``rng`` is None, one</span>
+<span class="sd">                        which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one</span>
 <span class="sd">                        will be automatically created, using the time as a seed.</span>
 <span class="sd">                        [default: None]</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            PhotonArray.</span>
+<span class="sd">            A `PhotonArray`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
         <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="k">import</span> <span class="n">PhotonArray</span>
@@ -2384,24 +2366,24 @@
         <span class="k">return</span> <span class="n">photons</span></div>
 
     <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Shoot photons into the given PhotonArray</span>
+        <span class="sd">&quot;&quot;&quot;Shoot photons into the given `PhotonArray`</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            photons:    A PhotonArray instance into which the photons should be placed.</span>
-<span class="sd">            rng:        A BaseDeviate instance to use for the photon shooting,</span>
+<span class="sd">            photons:    A `PhotonArray` instance into which the photons should be placed.</span>
+<span class="sd">            rng:        A `BaseDeviate` instance to use for the photon shooting,</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement shoot&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GSObject.drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recenter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Draws the k-space (complex) Image of the object, with bounds optionally set by input</span>
-<span class="sd">        Image instance.</span>
+        <span class="sd">&quot;&quot;&quot;Draws the k-space (complex) `Image` of the object, with bounds optionally set by input</span>
+<span class="sd">        `Image` instance.</span>
 
-<span class="sd">        Normalization is always such that image(0,0) = flux.  Unlike the real-space drawImage()</span>
+<span class="sd">        Normalization is always such that image(0,0) = flux.  Unlike the real-space `drawImage`</span>
 <span class="sd">        function, the (0,0) point will always be one of the actual pixel values.  For even-sized</span>
 <span class="sd">        images, it will be 1/2 pixel above and to the right of the true center of the image.</span>
 
-<span class="sd">        Another difference from  drawImage() is that a wcs other than a simple pixel scale is not</span>
+<span class="sd">        Another difference from  `drawImage` is that a wcs other than a simple pixel scale is not</span>
 <span class="sd">        allowed.  There is no ``wcs`` parameter here, and if the images have a non-trivial wcs (and</span>
 <span class="sd">        you don&#39;t override it with the ``scale`` parameter), a TypeError will be raised.</span>
 
@@ -2409,7 +2391,7 @@
 <span class="sd">        transform of the surface brightness profile.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:          If provided, this will be the Image onto which to draw the k-space</span>
+<span class="sd">            image:          If provided, this will be the `Image` onto which to draw the k-space</span>
 <span class="sd">                            image.  If ``image`` is None, then an automatically-sized image will be</span>
 <span class="sd">                            created.  If ``image`` is given, but its bounds are undefined, then it</span>
 <span class="sd">                            will be resized appropriately based on the profile&#39;s size.</span>
@@ -2433,7 +2415,7 @@
 <span class="sd">                            trust the provided bounds (False).  [default: True]</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            an Image instance (created if necessary)</span>
+<span class="sd">            an `Image` instance (created if necessary)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
@@ -2507,21 +2489,21 @@
         <span class="k">return</span> <span class="n">image</span></div>
 
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to drawKImage(image, add_to_image, recenter=False, add_to_image=False), but</span>
-<span class="sd">        without the normal sanity checks or the option to create the image automatically.</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``drawKImage(image, add_to_image, recenter=False, add_to_image=False)``,</span>
+<span class="sd">        but without the normal sanity checks or the option to create the image automatically.</span>
 
-<span class="sd">        The input image must be provided as a complex Image instance (dtype=complex64 or</span>
+<span class="sd">        The input image must be provided as a complex `Image` instance (dtype=complex64 or</span>
 <span class="sd">        complex128), and the bounds should be set up appropriately (e.g. with 0,0 in the center if</span>
-<span class="sd">        so desired).  This corresponds to recenter=False for the normal drawKImage.  And, it must</span>
+<span class="sd">        so desired).  This corresponds to recenter=False for the normal `drawKImage`.  And, it must</span>
 <span class="sd">        have a c_contiguous array (image.iscontiguous must be True).</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:      The Image onto which to draw the k-space image. [required]</span>
+<span class="sd">            image:      The `Image` onto which to draw the k-space image. [required]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawKImage&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 
     <span class="c1"># Derived classes should define the __eq__ function</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+<div class="viewcode-block" id="GSObject.__ne__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

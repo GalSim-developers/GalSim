@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -219,10 +222,10 @@
 <span class="sd">    scale_h_over_r will be assumed to refer to the scale radius, not the half-light radius.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        inclination:        The inclination angle, which must be a galsim.Angle instance</span>
+<span class="sd">        inclination:        The inclination angle, which must be a `galsim.Angle` instance</span>
 <span class="sd">        scale_radius:       The scale radius of the exponential disk.  Typically given in</span>
 <span class="sd">                            arcsec. This can be compared to the &#39;scale_radius&#39; parameter of the</span>
-<span class="sd">                            galsim.Exponential class, and in the face-on case, the same scale</span>
+<span class="sd">                            `galsim.Exponential` class, and in the face-on case, the same scale</span>
 <span class="sd">                            radius will result in the same 2D light distribution as with that</span>
 <span class="sd">                            class.</span>
 <span class="sd">        half_light_radius:  The half-light radius of the exponential disk, as an alternative to</span>
@@ -232,11 +235,10 @@
 <span class="sd">        scale_h_over_r:     In lieu of the scale height, you may also specify the ratio of the</span>
 <span class="sd">                            scale height to the scale radius. [default: 0.1]</span>
 <span class="sd">        flux:               The flux (in photons) of the profile. [default: 1]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 
-<span class="sd">    In addition to the usual GSObject methods and attributes, InclinedExponential has the following</span>
-<span class="sd">    access properties:</span>
+<span class="sd">    In addition to the usual `GSObject` methods and attributes, InclinedExponential has the</span>
+<span class="sd">    following access properties:</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        inclination:            The inclination angle</span>
@@ -255,7 +257,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inclination</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="InclinedExponential.__init__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedExponential.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inclination</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">scale_h_over_r</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="c1"># Check that the scale/half-light radius is valid</span>
@@ -301,7 +303,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_inclination</span> <span class="o">=</span> <span class="n">inclination</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -321,31 +323,31 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_h_over_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="InclinedExponential.__eq__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedExponential.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">InclinedExponential</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inclination</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">inclination</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_height</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span> <span class="ow">and</span>
-                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)))</span>
+                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InclinedExponential.__hash__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedExponential.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.InclinedExponential&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InclinedExponential.__repr__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedExponential.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.InclinedExponential(inclination=</span><span class="si">%r</span><span class="s1">, scale_radius=</span><span class="si">%r</span><span class="s1">, scale_height=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InclinedExponential.__str__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedExponential.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.InclinedExponential(inclination=</span><span class="si">%s</span><span class="s1">, scale_radius=</span><span class="si">%s</span><span class="s1">, scale_height=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, flux=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -379,8 +381,9 @@
 <div class="viewcode-block" id="InclinedSersic"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic">[docs]</a><span class="k">class</span> <span class="nc">InclinedSersic</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class describing an inclined sersic profile. This class is general, and so for certain</span>
 <span class="sd">    special cases, more specialized classes will be more efficient. For the case where n==1</span>
-<span class="sd">    with no truncation, the InclinedExponential class will be much more efficient. For the case</span>
-<span class="sd">    where the inclination angle is zero (face-on), the Sersic class will be slightly more efficient.</span>
+<span class="sd">    with no truncation, the `InclinedExponential` class will be much more efficient. For the case</span>
+<span class="sd">    where the inclination angle is zero (face-on), the `Sersic` class will be slightly more</span>
+<span class="sd">    efficient.</span>
 
 <span class="sd">    The InclinedSersic surface brightness profile is characterized by four properties: its</span>
 <span class="sd">    Sersic index ``n``, its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),</span>
@@ -399,9 +402,9 @@
 <span class="sd">    At present, this profile is not enabled for photon-shooting.</span>
 
 <span class="sd">    The allowed range of values for the ``n`` parameter is 0.3 &lt;= n &lt;= 6.2.  An exception will be</span>
-<span class="sd">    thrown if you provide a value outside that range, matching the range of the Sersic profile.</span>
+<span class="sd">    thrown if you provide a value outside that range, matching the range of the `Sersic` profile.</span>
 
-<span class="sd">    This class shares the caching of Hankel transformations with the Sersic class; see that</span>
+<span class="sd">    This class shares the caching of Hankel transformations with the `Sersic` class; see that</span>
 <span class="sd">    class for documentation on efficiency considerations with regards to caching.</span>
 
 <span class="sd">    A profile can be initialized using one (and only one) of two possible size parameters:</span>
@@ -413,10 +416,10 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        n:                  The Sersic index, n.</span>
-<span class="sd">        inclination:        The inclination angle, which must be a galsim.Angle instance</span>
+<span class="sd">        inclination:        The inclination angle, which must be a `galsim.Angle` instance</span>
 <span class="sd">        scale_radius:       The scale radius of the disk.  Typically given in arcsec.</span>
 <span class="sd">                            This can be compared to the &#39;scale_radius&#39; parameter of the</span>
-<span class="sd">                            galsim.Sersic class, and in the face-on case, the same scale</span>
+<span class="sd">                            `galsim.Sersic` class, and in the face-on case, the same scale</span>
 <span class="sd">                            radius will result in the same 2D light distribution as with that</span>
 <span class="sd">                            class. Exactly one of this and half_light_radius must be provided.</span>
 <span class="sd">        half_light_radius:  The half-light radius of disk when seen face-on. Exactly one of this</span>
@@ -430,12 +433,11 @@
 <span class="sd">                            zero, in the same units as the size parameter.</span>
 <span class="sd">                            [default: 0, indicating no truncation]</span>
 <span class="sd">        flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the</span>
-<span class="sd">                            untruncated profile? See the documentation of the Sersic class for</span>
+<span class="sd">                            untruncated profile? See the documentation of the `Sersic` class for</span>
 <span class="sd">                            more details. [default: False]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 
-<span class="sd">    In addition to the usual GSObject methods and attributes, InclinedSersic has the following</span>
+<span class="sd">    In addition to the usual `GSObject` methods and attributes, InclinedSersic has the following</span>
 <span class="sd">    access properties:</span>
 
 <span class="sd">    Attributes:</span>
@@ -458,7 +460,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">inclination</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="InclinedSersic.__init__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">inclination</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">scale_h_over_r</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">flux_untruncated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
@@ -529,7 +531,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="mf">0.</span>  <span class="c1"># This will be updated by getHalfLightRadius if necessary.</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span> <span class="o">=</span> <span class="mf">1.</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -558,7 +560,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">*</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SersicHLR</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="InclinedSersic.__eq__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">InclinedSersic</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> <span class="ow">and</span>
@@ -567,18 +569,18 @@
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_height</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trunc</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">trunc</span><span class="p">)</span> <span class="ow">and</span>
-                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)))</span>
+                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InclinedSersic.__hash__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.InclinedSersic&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+<div class="viewcode-block" id="InclinedSersic.__repr__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.InclinedSersic(n=</span><span class="si">%r</span><span class="s1">, inclination=</span><span class="si">%r</span><span class="s1">, scale_radius=</span><span class="si">%r</span><span class="s1">, scale_height=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;flux=</span><span class="si">%r</span><span class="s1">, trunc=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InclinedSersic.__str__"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.InclinedSersic(n=</span><span class="si">%s</span><span class="s1">, inclination=</span><span class="si">%s</span><span class="s1">, scale_radius=</span><span class="si">%s</span><span class="s1">, scale_height=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
@@ -586,7 +588,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, trunc=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

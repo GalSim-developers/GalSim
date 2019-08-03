@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -338,10 +341,9 @@
 <span class="sd">                            [default: 0, indicating no truncation]</span>
 <span class="sd">        flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the</span>
 <span class="sd">                            untruncated profile? See below for more details. [default: False]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 
-<span class="sd">    In addition to the usual GSObject methods and attributes, Sersic has the following access</span>
+<span class="sd">    In addition to the usual `GSObject` methods and attributes, Sersic has the following access</span>
 <span class="sd">    properties:</span>
 
 <span class="sd">    Attributes:</span>
@@ -364,7 +366,7 @@
 
     <span class="c1"># The conversion from hlr to scale radius is complicated for Sersic, especially since we</span>
     <span class="c1"># allow it to be truncated.  So we do these calculations in the C++-layer constructor.</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="Sersic.__init__"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">flux_untruncated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
@@ -412,7 +414,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="mf">0.</span>  <span class="c1"># This will be updated by getHalfLightRadius if necessary.</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flux_fraction</span> <span class="o">=</span> <span class="mf">1.</span></div>
 
 <div class="viewcode-block" id="Sersic.calculateIntegratedFlux"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.calculateIntegratedFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateIntegratedFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the fraction of the total flux enclosed within a given radius, r&quot;&quot;&quot;</span>
@@ -443,24 +445,24 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateHLRFactor</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="Sersic.__eq__"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Sersic</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">n</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_radius</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">trunc</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Sersic.__hash__"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.SBSersic&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Sersic.__repr__"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Sersic(n=</span><span class="si">%r</span><span class="s1">, scale_radius=</span><span class="si">%r</span><span class="s1">, trunc=</span><span class="si">%r</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Sersic.__str__"><a class="viewcode-back" href="../../gal.html#galsim.Sersic.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Note: for the repr, we use the scale_radius, since that should just flow as is through</span>
         <span class="c1"># the constructor, so it should be exact.  But most people use half_light_radius</span>
         <span class="c1"># for Sersics, so use that in the looser str() function.</span>
@@ -470,7 +472,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, flux=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -542,10 +544,9 @@
 <span class="sd">        flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the</span>
 <span class="sd">                            untruncated profile? See the docstring for Sersic for more details.</span>
 <span class="sd">                            [default: False]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 
-<span class="sd">    In addition to the usual GSObject methods and attributes, DeVaucouleurs has the following</span>
+<span class="sd">    In addition to the usual `GSObject` methods and attributes, DeVaucouleurs has the following</span>
 <span class="sd">    access properties:</span>
 
 <span class="sd">    Attributes:</span>
@@ -558,25 +559,25 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span> <span class="s2">&quot;scale_radius&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s2">&quot;half_light_radius&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span> <span class="p">]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+<div class="viewcode-block" id="DeVaucouleurs.__init__"><a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">flux_untruncated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">DeVaucouleurs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="n">half_light_radius</span><span class="p">,</span>
                                             <span class="n">scale_radius</span><span class="o">=</span><span class="n">scale_radius</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
                                             <span class="n">trunc</span><span class="o">=</span><span class="n">trunc</span><span class="p">,</span> <span class="n">flux_untruncated</span><span class="o">=</span><span class="n">flux_untruncated</span><span class="p">,</span>
-                                            <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+                                            <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DeVaucouleurs.__repr__"><a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.DeVaucouleurs(scale_radius=</span><span class="si">%r</span><span class="s1">, trunc=</span><span class="si">%r</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DeVaucouleurs.__str__"><a class="viewcode-back" href="../../gal.html#galsim.DeVaucouleurs.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.DeVaucouleurs(half_light_radius=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">half_light_radius</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, trunc=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">trunc</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, flux=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">return</span> <span class="n">s</span></div></div>
 </pre></div>
 
            </div>

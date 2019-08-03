@@ -94,6 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Composite Profiles</a><ul>
@@ -102,18 +103,22 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -189,8 +194,9 @@
 <dl class="class">
 <dt id="galsim.Sum">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Sum</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for adding 2 or more GSObject instances.</p>
-<p>The Sum class is used to represent the sum of multiple GSObject instances.  For example, it
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class for adding 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances.</p>
+<p>The Sum class is used to represent the sum of multiple <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances.  For example, it
 might be used to represent a multiple-component galaxy as the sum of an Exponential and a
 DeVaucouleurs, or to represent a PSF as the sum of multiple Gaussian objects.</p>
 <p>Typically, you do not need to construct a Sum object explicitly.  Normally, you would just
@@ -210,8 +216,7 @@ individual objects are chromatic:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>args</strong> – Unnamed args should be a list of objects to add.</p></li>
-<li><p><strong>gsparam</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to each of the components.  This
 is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
@@ -221,7 +226,7 @@ would not want to do this. [default: True]</p></li>
 <p>Note: if <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> is unspecified (or None), then the Sum instance will use the most
 restrictive combination of parameters from each of the component objects. Normally, this means
 the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
-parameters, the largest numerical value is used.  See GSParams.combine for details.</p>
+parameters, the largest numerical value is used.  See <a class="reference internal" href="gsparams.html#galsim.GSParams.combine" title="galsim.GSParams.combine"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSParams.combine</span></code></a> for details.</p>
 <p>Furthermore, the gsparams used for the Sum (either given explicitly or derived from the
 components) will normally be applied to each of the components.  It doesn’t usually make much
 sense to apply stricter-than-normal accuracy or threshold values to one component but not
@@ -229,6 +234,36 @@ another in a Sum, so this ensures that they all have consistent rendering behavi
 However, if you want to keep the existing gsparams of the component objects (e.g. because
 one object is much fainter and can thus use looser accuracy tolerances), then you may
 set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>.</p>
+<dl class="method">
+<dt id="galsim.Sum.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sum.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sum.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sum.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sum.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Sum.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.withGSParams" title="Permalink to this definition">¶</a></dt>
@@ -245,9 +280,9 @@ of each object being added.</p>
 <dl class="function">
 <dt id="galsim.Add">
 <code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Add</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Add" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function for adding 2 or more GSObject or ChromaticObject instances.</p>
-<p>This function will inspect its input arguments to decide if a Sum object or a
-ChromaticSum object is required to represent the sum of surface brightness profiles.</p>
+<dd><p>A function for adding 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances.</p>
+<p>This function will inspect its input arguments to decide if a <a class="reference internal" href="#galsim.Sum" title="galsim.Sum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sum</span></code></a> object or a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> object is required to represent the sum of surface brightness profiles.</p>
 <p>Typically, you do not need to call Add() explicitly.  Normally, you would just use the +
 operator, which returns a Sum:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bulge</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
@@ -256,7 +291,7 @@ operator, which returns a Sum:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> <span class="o">+</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>If one of the items is chromatic, it will return a ChromaticSum:</p>
+<p>If one of the items is chromatic, it will return a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">disk</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="n">half_light_radius</span><span class="o">=</span><span class="mf">1.4</span><span class="p">)</span> <span class="o">*</span> <span class="n">galsim</span><span class="o">.</span><span class="n">SED</span><span class="p">(</span><span class="n">sed_file</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gal</span> <span class="o">=</span> <span class="n">bulge</span> <span class="o">+</span> <span class="n">disk</span>
 </pre></div>
@@ -265,15 +300,14 @@ operator, which returns a Sum:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>args</strong> – Unnamed args should be a list of objects to add.</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to each of the components.  This
 is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a Sum or ChromaticSum instance as appropriate.</p>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.Sum" title="galsim.Sum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sum</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> instance as appropriate.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -284,7 +318,8 @@ would not want to do this. [default: True]</p></li>
 <dl class="class">
 <dt id="galsim.Convolution">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Convolution</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for convolving 2 or more GSObject instances.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class for convolving 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances.</p>
 <p>The convolution will normally be done using discrete Fourier transforms of each of the component
 profiles, multiplying them together, and then transforming back to real space.</p>
 <p>There is also an option to do the convolution as integrals in real space.  To do this, use the
@@ -292,10 +327,10 @@ optional keyword argument <code class="docutils literal notranslate"><span class
 enabled for convolving 2 profiles.  (Aside from the trivial implementaion for 1 profile.)  If
 you try to use it for more than 2 profiles, an exception will be raised.</p>
 <p>The real-space convolution is normally slower than the DFT convolution.  The exception is if
-both component profiles have hard edges, e.g. a truncated Moffat or Sersic with a Pixel.  In
-that case, the highest frequency <code class="docutils literal notranslate"><span class="pre">maxk</span></code> for each component is quite large since the ringing
-dies off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
-real-space convolution tends to be more accurate in this case as well.</p>
+both component profiles have hard edges, e.g. a truncated <a class="reference internal" href="psf.html#galsim.Moffat" title="galsim.Moffat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Moffat</span></code></a> or <a class="reference internal" href="gal.html#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> with a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a>.
+In that case, the highest frequency <code class="docutils literal notranslate"><span class="pre">maxk</span></code> for each component is quite large since the
+ringing dies off fairly slowly.  So it can be quicker to use real-space convolution instead.
+Also, real-space convolution tends to be more accurate in this case as well.</p>
 <p>If you do not specify either <code class="docutils literal notranslate"><span class="pre">real_space</span> <span class="pre">=</span> <span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> explicitly, then we check if
 there are 2 profiles, both of which have hard edges.  In this case, we automatically use
 real-space convolution.  In all other cases, the default is not to use real-space convolution.</p>
@@ -315,8 +350,7 @@ be provided using either syntax.  (Well, the list has to include at least 1 item
 <li><p><strong>real_space</strong> – Whether to use real space convolution.  [default: None, which means
 to automatically decide this according to whether the objects have hard
 edges.]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to each of the components.  This
 is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
@@ -326,13 +360,43 @@ would not want to do this. [default: True]</p></li>
 <p>Note: if <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> is unspecified (or None), then the Convolution instance will use the most
 restrictive combination of parameters from each of the component objects. Normally, this means
 the smallest numerical value (e.g. folding_threshold, xvalue_accuracy, etc.), but for a few
-parameters, the largest numerical value is used.  See GSParams.combine for details.</p>
+parameters, the largest numerical value is used.  See <a class="reference internal" href="gsparams.html#galsim.GSParams.combine" title="galsim.GSParams.combine"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSParams.combine</span></code></a> for details.</p>
 <p>Furthermore, the gsparams used for the Convolution (either given explicitly or derived from the
 components) will normally be applied to each of the components.  It doesn’t usually make much
 sense to apply stricter-than-normal accuracy or threshold values to one component but not
 another in a Convolution, so this ensures that they all have consistent rendering behavior.
 However, if you want to keep the existing gsparams of the component objects, then you may
 set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>.</p>
+<dl class="method">
+<dt id="galsim.Convolution.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Convolution.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Convolution.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Convolution.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Convolution.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Convolution.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.withGSParams" title="Permalink to this definition">¶</a></dt>
@@ -349,9 +413,9 @@ of each object being convolved.</p>
 <dl class="function">
 <dt id="galsim.Convolve">
 <code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Convolve</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolve" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function for convolving 2 or more GSObject or ChromaticObject instances.</p>
-<p>This function will inspect its input arguments to decide if a Convolution object or a
-ChromaticConvolution object is required to represent the convolution of surface
+<dd><p>A function for convolving 2 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances.</p>
+<p>This function will inspect its input arguments to decide if a <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> object or a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticConvolution" title="galsim.ChromaticConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticConvolution</span></code></a> object is required to represent the convolution of surface
 brightness profiles.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -360,15 +424,14 @@ brightness profiles.</p>
 <li><p><strong>real_space</strong> – Whether to use real space convolution.  [default: None, which means
 to automatically decide this according to whether the objects have hard
 edges.]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to each of the components.  This
 is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a Convolution or ChromaticConvolution instance as appropriate.</p>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticConvolution" title="galsim.ChromaticConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticConvolution</span></code></a> instance as appropriate.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -376,7 +439,8 @@ would not want to do this. [default: True]</p></li>
 <dl class="class">
 <dt id="galsim.AutoConvolution">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AutoConvolution</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution" title="Permalink to this definition">¶</a></dt>
-<dd><p>A special class for convolving a GSObject with itself.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.convolve.Convolution</span></code></p>
+<p>A special class for convolving a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> with itself.</p>
 <p>It is equivalent in functionality to <code class="docutils literal notranslate"><span class="pre">Convolve([obj,obj])</span></code>, but takes advantage of
 the fact that the two profiles are the same for some efficiency gains.</p>
 <p>The normal way to use this class is to use the AutoConvolve() factory function:</p>
@@ -390,14 +454,43 @@ the fact that the two profiles are the same for some efficiency gains.</p>
 <li><p><strong>real_space</strong> – Whether to use real space convolution.  [default: None, which means
 to automatically decide this according to whether the object has hard
 edges.]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the auto-convolved object.  This
 is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.AutoConvolution.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoConvolution.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoConvolution.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoConvolution.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoConvolution.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.AutoConvolution.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
@@ -414,9 +507,9 @@ of the wrapped component object.</p>
 <dl class="function">
 <dt id="galsim.AutoConvolve">
 <code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AutoConvolve</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolve" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function for autoconvolving either a GSObject or ChromaticObject.</p>
-<p>This function will inspect its input argument to decide if a AutoConvolution object or a
-ChromaticAutoConvolution object is required to represent the convolution of a surface
+<dd><p>A function for autoconvolving either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
+<p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.AutoConvolution" title="galsim.AutoConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AutoConvolution</span></code></a> object or a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticAutoConvolution" title="galsim.ChromaticAutoConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAutoConvolution</span></code></a> object is required to represent the convolution of a surface
 brightness profile with itself.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -425,15 +518,14 @@ brightness profile with itself.</p>
 <li><p><strong>real_space</strong> – Whether to use real space convolution.  [default: None, which means
 to automatically decide this according to whether the object has hard
 edges.]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the auto-convolved object.  This
 is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a AutoConvolution or ChromaticAutoConvolution instance as appropriate.</p>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.AutoConvolution" title="galsim.AutoConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AutoConvolution</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAutoConvolution" title="galsim.ChromaticAutoConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAutoConvolution</span></code></a> instance as appropriate.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -441,15 +533,16 @@ would not want to do this. [default: True]</p></li>
 <dl class="class">
 <dt id="galsim.AutoCorrelation">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AutoCorrelation</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation" title="Permalink to this definition">¶</a></dt>
-<dd><p>A special class for correlating a GSObject with itself.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.convolve.Convolution</span></code></p>
+<p>A special class for correlating a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> with itself.</p>
 <p>It is equivalent in functionality to:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">([</span><span class="n">obj</span><span class="p">,</span><span class="n">obj</span><span class="o">.</span><span class="n">createRotated</span><span class="p">(</span><span class="mf">180.</span><span class="o">*</span><span class="n">galsim</span><span class="o">.</span><span class="n">degrees</span><span class="p">)])</span>
 </pre></div>
 </div>
 <p>but takes advantage of the fact that the two profiles are the same for some efficiency gains.</p>
-<p>This class is primarily targeted for use by the CorrelatedNoise models when convolving
-with a GSObject.</p>
-<p>The normal way to use this class is to use the AutoCorrelate() factory function:</p>
+<p>This class is primarily targeted for use by the <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> models when convolving
+with a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
+<p>The normal way to use this class is to use the <a class="reference internal" href="#galsim.AutoCorrelate" title="galsim.AutoCorrelate"><code class="xref any py py-func docutils literal notranslate"><span class="pre">AutoCorrelate</span></code></a> factory function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">psf_sq</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">AutoCorrelate</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -460,14 +553,43 @@ with a GSObject.</p>
 <li><p><strong>real_space</strong> – Whether to use real space convolution.  [default: None, which means
 to automatically decide this according to whether the object has hard
 edges.]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the auto-convorrelated object.
 This is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.AutoCorrelation.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoCorrelation.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoCorrelation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoCorrelation.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AutoCorrelation.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.AutoCorrelation.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.withGSParams" title="Permalink to this definition">¶</a></dt>
@@ -484,9 +606,9 @@ of the wrapped component object.</p>
 <dl class="function">
 <dt id="galsim.AutoCorrelate">
 <code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AutoCorrelate</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelate" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function for autocorrelating either a GSObject or ChromaticObject.</p>
-<p>This function will inspect its input argument to decide if a AutoCorrelation object or a
-ChromaticAutoCorrelation object is required to represent the correlation of a surface
+<dd><p>A function for autocorrelating either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
+<p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.AutoCorrelation" title="galsim.AutoCorrelation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AutoCorrelation</span></code></a> object or a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticAutoCorrelation" title="galsim.ChromaticAutoCorrelation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAutoCorrelation</span></code></a> object is required to represent the correlation of a surface
 brightness profile with itself.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -495,15 +617,14 @@ brightness profile with itself.</p>
 <li><p><strong>real_space</strong> – Whether to use real space convolution.  [default: None, which means
 to automatically decide this according to whether the object has hard
 edges.]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to the auto-convorrelated object.
 This is normally a good idea, but there may be use cases where one
 would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an AutoCorrelation or ChromaticAutoCorrelation instance as appropriate.</p>
+<dd class="field-even"><p>an <a class="reference internal" href="#galsim.AutoCorrelation" title="galsim.AutoCorrelation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AutoCorrelation</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAutoCorrelation" title="galsim.ChromaticAutoCorrelation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAutoCorrelation</span></code></a> instance as appropriate.</p>
 </dd>
 </dl>
 </dd></dl>

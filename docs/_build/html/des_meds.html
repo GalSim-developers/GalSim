@@ -91,11 +91,13 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="des.html">The DES Module</a><ul class="current">
@@ -105,6 +107,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -205,12 +208,25 @@
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.des.MultiExposureObject.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">images</em>, <em class="sig-param">weight=None</em>, <em class="sig-param">badpix=None</em>, <em class="sig-param">seg=None</em>, <em class="sig-param">psf=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">id=0</em>, <em class="sig-param">cutout_row=None</em>, <em class="sig-param">cutout_col=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MultiExposureObject.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MultiExposureObject.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.des.MultiExposureObject.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.des.MultiExposureObject.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.des.MEDSBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">MEDSBuilder</code><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MEDSBuilder" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.output.OutputBuilder</span></code></p>
+<dl class="method">
 <dt id="galsim.des.MEDSBuilder.buildImages">
 <code class="sig-name descname">buildImages</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">file_num</em>, <em class="sig-param">image_num</em>, <em class="sig-param">obj_num</em>, <em class="sig-param">ignore</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.buildImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.buildImages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a meds file as specified in config.</p>
@@ -262,7 +278,8 @@
 <dl class="class">
 <dt id="galsim.des.OffsetBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">OffsetBuilder</code><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.OffsetBuilder" title="Permalink to this definition">¶</a></dt>
-<dd><p>This saves the stamp offset values for later use. Subclass of <code class="docutils literal notranslate"><span class="pre">ExtraOutputBuilder</span></code>.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.extra.ExtraOutputBuilder</span></code></p>
+<p>This saves the stamp offset values for later use. Subclass of <code class="docutils literal notranslate"><span class="pre">ExtraOutputBuilder</span></code>.</p>
 <dl class="method">
 <dt id="galsim.des.OffsetBuilder.finalize">
 <code class="sig-name descname">finalize</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">main_data</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder.finalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.OffsetBuilder.finalize" title="Permalink to this definition">¶</a></dt>

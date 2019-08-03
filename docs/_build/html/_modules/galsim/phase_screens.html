@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -220,7 +223,7 @@
 <span class="k">def</span> <span class="nf">initWorkerArgs</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Function used to generate worker arguments to pass to multiprocessing.Pool initializer.</span>
 
-<span class="sd">    See AtmosphericScreen docstring for more information.</span>
+<span class="sd">    See `AtmosphericScreen` docstring for more information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_GSScreenShare</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
@@ -232,7 +235,7 @@
 <span class="k">def</span> <span class="nf">initWorker</span><span class="p">(</span><span class="n">share</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Worker initialization function to pass to multiprocessing.Pool initializer.</span>
 
-<span class="sd">    See AtmosphericScreen docstring for more information.</span>
+<span class="sd">    See `AtmosphericScreen` docstring for more information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_GSScreenShare</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">share</span><span class="p">)</span>  <span class="c1"># pragma: no cover  (covered, but in a fork)</span>
 
@@ -246,11 +249,11 @@
 <span class="sd">    AtmosphericScreen delays the actual instantiation of the phase screen array in memory until it</span>
 <span class="sd">    is used for either drawing a PSF or querying the wavefront or wavefront gradient.  This is to</span>
 <span class="sd">    facilitate automatic truncation of the screen power spectrum depending on the use case.  For</span>
-<span class="sd">    example, when drawing a PhaseScreenPSF using Fourier methods, the entire power spectrum should</span>
+<span class="sd">    example, when drawing a `PhaseScreenPSF` using Fourier methods, the entire power spectrum should</span>
 <span class="sd">    generally be used.  On the other hand, when drawing using photon-shooting and the geometric</span>
 <span class="sd">    approximation, it&#39;s better to truncate the high-k modes of the power spectrum here so</span>
 <span class="sd">    that they can be handled instead by a SecondKick object (which also happens automatically; see</span>
-<span class="sd">    the PhaseScreenPSF docstring).  (See Peterson et al. 2015 for more details about the second</span>
+<span class="sd">    the `PhaseScreenPSF` docstring).  (See Peterson et al. 2015 for more details about the second</span>
 <span class="sd">    kick).  Querying the wavefront or wavefront gradient will instantiate the screen using the full</span>
 <span class="sd">    power spectrum.</span>
 
@@ -260,7 +263,7 @@
 <span class="sd">    use the ``suppress_warning`` keyword argument.</span>
 
 <span class="sd">    If you wish to override the automatic truncation determination, then you can directly</span>
-<span class="sd">    instantiate the phase screen array using the AtmosphericScreen.instantiate() method.</span>
+<span class="sd">    instantiate the phase screen array using the `AtmosphericScreen.instantiate` method.</span>
 
 <span class="sd">    Note that once a screen has been instantiated with a particular set of truncation parameters, it</span>
 <span class="sd">    cannot be re-instantiated with another set of parameters.</span>
@@ -311,7 +314,7 @@
 <span class="sd">        results = [r.get() for r in results]</span>
 
 <span class="sd">    It is also possible to manually instantiate each of the AtmosphericScreen objects in a</span>
-<span class="sd">    PhaseScreenList in parallel using a process pool.  This requires knowing what k-scale to</span>
+<span class="sd">    `PhaseScreenList` in parallel using a process pool.  This requires knowing what k-scale to</span>
 <span class="sd">    truncate the screen at::</span>
 
 <span class="sd">        atm = galsim.Atmosphere(..., mp_context=ctx)</span>
@@ -361,10 +364,10 @@
 <span class="sd">        time_step:          Time interval between phase boiling updates.  Note that this is distinct</span>
 <span class="sd">                            from the time interval used to integrate the PSF over time, which is set</span>
 <span class="sd">                            by the ``time_step`` keyword argument to `PhaseScreenPSF` or</span>
-<span class="sd">                            :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then</span>
+<span class="sd">                            `PhaseScreenList.makePSF`.  If ``time_step`` is not None, then</span>
 <span class="sd">                            it is required that ``alpha`` is set to something other than 1.0.</span>
 <span class="sd">                            [default: None]</span>
-<span class="sd">        rng:                Random number generator as a galsim.BaseDeviate().  If None, then use</span>
+<span class="sd">        rng:                Random number generator as a `BaseDeviate`.  If None, then use</span>
 <span class="sd">                            the clock time or system entropy to seed a new generator.</span>
 <span class="sd">                            [default: None]</span>
 <span class="sd">        suppress_warning:   Turn off instantiation sanity checking.  (See above)  [default: False]</span>
@@ -382,7 +385,7 @@
 <span class="sd">    Published in Proceedings Volume 9148: Adaptive Optics Systems IV</span>
 <span class="sd">    September 2014</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_size</span><span class="p">,</span> <span class="n">screen_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">r0_500</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">L0</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span>
+<div class="viewcode-block" id="AtmosphericScreen.__init__"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_size</span><span class="p">,</span> <span class="n">screen_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">r0_500</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">L0</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span>
                  <span class="n">vx</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vy</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">mp_context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mp_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -455,7 +458,7 @@
         <span class="c1"># A unique id for this screen, created in the parent process, that can be used to find the</span>
         <span class="c1"># correct shared memory object in child processes.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">_GSScreenShare</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span>
+        <span class="n">_GSScreenShare</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span></div>
 
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
@@ -490,14 +493,14 @@
     <span class="k">def</span> <span class="nf">_ys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xs</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.AtmosphericScreen(altitude=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span>
+<div class="viewcode-block" id="AtmosphericScreen.__str__"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.AtmosphericScreen(altitude=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="AtmosphericScreen.__repr__"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.AtmosphericScreen(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, altitude=</span><span class="si">%r</span><span class="s2">, r0_500=</span><span class="si">%r</span><span class="s2">, L0=</span><span class="si">%r</span><span class="s2">, &quot;</span>
                 <span class="s2">&quot;vx=</span><span class="si">%r</span><span class="s2">, vy=</span><span class="si">%r</span><span class="s2">, alpha=</span><span class="si">%r</span><span class="s2">, time_step=</span><span class="si">%r</span><span class="s2">, rng=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">screen_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">screen_scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0_500</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L0</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">vx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">vx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="p">)</span></div>
 
     <span class="c1"># While AtmosphericScreen does have mutable internal state, it&#39;s still possible to treat the</span>
     <span class="c1"># object as hashable under the python data model.  The requirements for hashability are that</span>
@@ -511,7 +514,7 @@
     <span class="c1"># before instantiation.  Equality, on the other hand, does change.  An instantiated screen is</span>
     <span class="c1"># not equal to an otherwise identical uninstantiated screen.</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="AtmosphericScreen.__eq__"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">AtmosphericScreen</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">screen_size</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">screen_size</span> <span class="ow">and</span>
@@ -525,17 +528,17 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">time_step</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_rng</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">kmin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kmin</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">kmax</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kmax</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">kmax</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kmax</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="AtmosphericScreen.__hash__"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span>
                     <span class="s2">&quot;galsim.AtmosphericScreen&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">screen_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">screen_scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">r0_500</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span>
                     <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">serialize</span><span class="p">())))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span></div>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+<div class="viewcode-block" id="AtmosphericScreen.__ne__"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span></div>
 
 <div class="viewcode-block" id="AtmosphericScreen.instantiate"><a class="viewcode-back" href="../../phase_psf.html#galsim.AtmosphericScreen.instantiate">[docs]</a>    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kmin</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">kmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -693,9 +696,8 @@
         <span class="sd">&quot;&quot;&quot;Return an appropriate stepk for this atmospheric layer.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            lam:           Wavelength in nanometers.</span>
-<span class="sd">            gsparams:      An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                           details. [default: None]</span>
+<span class="sd">            lam:            Wavelength in nanometers.</span>
+<span class="sd">            gsparams:       An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Good pupil scale size in meters.</span>
@@ -847,7 +849,7 @@
 <span class="sd">    Simulating an atmospheric PSF is typically accomplished by first representing the 3-dimensional</span>
 <span class="sd">    turbulence in the atmosphere as a series of discrete 2-dimensional phase screens.  These screens</span>
 <span class="sd">    may blow around in the wind, and may or may not also evolve in time.  This function allows one</span>
-<span class="sd">    to quickly assemble a list of atmospheric phase screens into a galsim.PhaseScreenList object,</span>
+<span class="sd">    to quickly assemble a list of atmospheric phase screens into a `galsim.PhaseScreenList` object,</span>
 <span class="sd">    which can then be used to evaluate PSFs through various columns of atmosphere at different field</span>
 <span class="sd">    angles.</span>
 
@@ -940,7 +942,7 @@
 <span class="sd">                        approach a constant at scales larger than L0.  Set to ``None`` or ``np.inf``</span>
 <span class="sd">                        for a power spectrum without an outer scale.  [default: 25.0]</span>
 <span class="sd">        speed:          Wind speed in meters/second.  [default: 0.0]</span>
-<span class="sd">        direction:      Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]</span>
+<span class="sd">        direction:      Wind direction as `galsim.Angle` [default: 0.0 * galsim.degrees]</span>
 <span class="sd">        alpha:          Square root of fraction of phase that is &quot;remembered&quot; between time_steps</span>
 <span class="sd">                        (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)</span>
 <span class="sd">                        is then the amount of turbulence freshly generated in each step.  Setting</span>
@@ -950,9 +952,9 @@
 <span class="sd">        time_step:      Time interval between phase boiling updates.  Note that this is distinct</span>
 <span class="sd">                        from the time interval used when integrating the PSF over time, which is</span>
 <span class="sd">                        set by the ``time_step`` keyword argument to `PhaseScreenPSF` or</span>
-<span class="sd">                        :meth:`~PhaseScreenList.makePSF`.  If ``time_step`` is not None, then it is</span>
+<span class="sd">                        `PhaseScreenList.makePSF`.  If ``time_step`` is not None, then it is</span>
 <span class="sd">                        required that ``alpha`` is set to something other than 1.0.  [default: None]</span>
-<span class="sd">        rng:            Random number generator as a galsim.BaseDeviate().  If None, then use the</span>
+<span class="sd">        rng:            Random number generator as a `BaseDeviate`.  If None, then use the</span>
 <span class="sd">                        clock time or system entropy to seed a new generator.  [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.phase_psf</span> <span class="k">import</span> <span class="n">PhaseScreenList</span>
@@ -1035,12 +1037,12 @@
 <span class="sd">                            [default: False]</span>
 <span class="sd">        obscuration:        Linear dimension of central obscuration as fraction of aperture linear</span>
 <span class="sd">                            dimension. [0., 1.).  Note it is the user&#39;s responsibility to ensure</span>
-<span class="sd">                            consistency of OpticalScreen obscuration and Aperture obscuration.</span>
+<span class="sd">                            consistency of `OpticalScreen` obscuration and `Aperture` obscuration.</span>
 <span class="sd">                            [default: 0.0]</span>
 <span class="sd">        lam_0:              Reference wavelength in nanometers at which Zernike aberrations are</span>
 <span class="sd">                            being specified.  [default: 500]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">astig1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">astig2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">coma1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<div class="viewcode-block" id="OpticalScreen.__init__"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">astig1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">astig2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">coma1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="n">coma2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">trefoil1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">trefoil2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">spher</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">annular_zernike</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lam_0</span><span class="o">=</span><span class="mf">500.0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="o">=</span> <span class="n">diam</span>
@@ -1090,12 +1092,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_zernike</span> <span class="o">=</span> <span class="n">zernike</span><span class="o">.</span><span class="n">Zernike</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="n">R_outer</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dynamic</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reversible</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reversible</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.OpticalScreen(diam=</span><span class="si">%s</span><span class="s2">, lam_0=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span><span class="p">)</span>
+<div class="viewcode-block" id="OpticalScreen.__str__"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.OpticalScreen(diam=</span><span class="si">%s</span><span class="s2">, lam_0=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalScreen.__repr__"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalScreen(diam=</span><span class="si">%r</span><span class="s2">, lam_0=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="p">):</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, aberrations=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span>
@@ -1103,21 +1105,21 @@
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, annular_zernike=True&quot;</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, obscuration=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalScreen.__eq__"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">OpticalScreen</span><span class="p">)</span>
                  <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">diam</span>
                  <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">aberrations</span><span class="o">*</span><span class="n">other</span><span class="o">.</span><span class="n">lam_0</span><span class="p">)</span>
-                 <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">annular_zernike</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">))</span>
+                 <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">annular_zernike</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+<div class="viewcode-block" id="OpticalScreen.__ne__"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span></div>
 
     <span class="c1"># This screen is immutable, so make a hash for it.</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="OpticalScreen.__hash__"><a class="viewcode-back" href="../../phase_psf.html#galsim.OpticalScreen.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.OpticalScreen&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">,</span>
-                     <span class="nb">tuple</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">())))</span>
+                     <span class="nb">tuple</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">())))</span></div>
 
     <span class="c1"># Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk</span>
     <span class="c1"># can use the same signature, even though they depend on different parameters.</span>
@@ -1128,8 +1130,7 @@
 <span class="sd">            lam:            Wavelength in nanometers.</span>
 <span class="sd">            diam:           Aperture diameter in meters.</span>
 <span class="sd">            obscuration:    Fractional linear aperture obscuration. [default: 0.0]</span>
-<span class="sd">            gsparams        An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">            gsparams:       An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            stepk in inverse arcsec.</span>
@@ -1151,8 +1152,8 @@
 <span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
 <span class="sd">            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
 <span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
-<span class="sd">            t:      Ignored for OpticalScreen.</span>
-<span class="sd">            theta:  Ignored for OpticalScreen.</span>
+<span class="sd">            t:      Ignored for `OpticalScreen`.</span>
+<span class="sd">            theta:  Ignored for `OpticalScreen`.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Array of wavefront lag or lead in nanometers.</span>
@@ -1176,8 +1177,8 @@
 <span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
 <span class="sd">            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
 <span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
-<span class="sd">            t:      Ignored for OpticalScreen.</span>
-<span class="sd">            theta:  Ignored for OpticalScreen.</span>
+<span class="sd">            t:      Ignored for `OpticalScreen`.</span>
+<span class="sd">            theta:  Ignored for `OpticalScreen`.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</span>

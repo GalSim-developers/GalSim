@@ -91,9 +91,10 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
@@ -104,13 +105,17 @@
 <li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -212,6 +217,48 @@ ASCII catalog.  [default: ‘#’]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.Catalog.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Catalog.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Catalog.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">file_type=None</em>, <em class="sig-param">comments='#'</em>, <em class="sig-param">hdu=1</em>, <em class="sig-param">_nobjects_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Catalog.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Catalog.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Catalog.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Catalog.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Catalog.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.Catalog.get">
 <code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">index</em>, <em class="sig-param">col</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the data for the given <code class="docutils literal notranslate"><span class="pre">index</span></code> and <code class="docutils literal notranslate"><span class="pre">col</span></code> in its native type.</p>
@@ -278,6 +325,48 @@ columns are float]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.OutputCatalog.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OutputCatalog.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OutputCatalog.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">types=None</em>, <em class="sig-param">_rows=()</em>, <em class="sig-param">_sort_keys=()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OutputCatalog.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OutputCatalog.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OutputCatalog.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.OutputCatalog.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.OutputCatalog.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.OutputCatalog.addRow">
 <code class="sig-name descname">addRow</code><span class="sig-paren">(</span><em class="sig-param">row</em>, <em class="sig-param">sort_key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.addRow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.addRow" title="Permalink to this definition">¶</a></dt>
@@ -399,6 +488,48 @@ description of this feature above.)  [default: ‘.’]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.Dict.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Dict.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Dict.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">file_type=None</em>, <em class="sig-param">key_split='.'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Dict.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Dict.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Dict.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Dict.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Dict.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>

@@ -91,11 +91,13 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">The HSM Module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#shape-measurement-functions">Shape Measurement Functions</a></li>
@@ -105,6 +107,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -213,10 +216,10 @@ by initially guessing a circular Gaussian that is used as a weight function, com
 weighted moments, recomputing the moments using the result of the previous step as the weight
 function, and so on until the moments that are measured are the same as those used for the
 weight function.  <a class="reference internal" href="#galsim.hsm.FindAdaptiveMom" title="galsim.hsm.FindAdaptiveMom"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FindAdaptiveMom</span></code></a> can be used either as a free function, or as a method of the
-<a class="reference internal" href="image.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> class.</p>
+<a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> class.</p>
 <p>This routine assumes that (at least locally) the WCS can be approximated as a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>, with
 no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.</p>
-<p>Like <a class="reference internal" href="#galsim.hsm.EstimateShear" title="galsim.hsm.EstimateShear"><code class="xref any py py-func docutils literal notranslate"><span class="pre">EstimateShear</span></code></a>, <a class="reference internal" href="#galsim.hsm.FindAdaptiveMom" title="galsim.hsm.FindAdaptiveMom"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FindAdaptiveMom</span></code></a> works on <a class="reference internal" href="image.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> inputs, and fails if the object is
+<p>Like <a class="reference internal" href="#galsim.hsm.EstimateShear" title="galsim.hsm.EstimateShear"><code class="xref any py py-func docutils literal notranslate"><span class="pre">EstimateShear</span></code></a>, <a class="reference internal" href="#galsim.hsm.FindAdaptiveMom" title="galsim.hsm.FindAdaptiveMom"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FindAdaptiveMom</span></code></a> works on <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> inputs, and fails if the object is
 small compared to the pixel scale.  For more details, see <a class="reference internal" href="#galsim.hsm.EstimateShear" title="galsim.hsm.EstimateShear"><code class="xref any py py-func docutils literal notranslate"><span class="pre">EstimateShear</span></code></a>.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_gaussian</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
@@ -259,7 +262,7 @@ successful:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>object_image</strong> – The <a class="reference internal" href="image.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> for the object being measured.</p></li>
+<li><p><strong>object_image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> for the object being measured.</p></li>
 <li><p><strong>weight</strong> – The optional weight image for the object being measured.  Can be an int
 or a float array.  Currently, GalSim does not account for the variation
 in non-zero weights, i.e., a weight map is converted to an image with 0
@@ -301,11 +304,11 @@ for more information. [default: None]</p></li>
 <p>Carry out PSF correction using one of the methods of the HSM package (see references in
 docstring for file hsm.py) to estimate galaxy shears, correcting for the convolution by the
 PSF.</p>
-<p>This method works from <a class="reference internal" href="image.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> inputs rather than <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> inputs, which provides
-additional flexibility (e.g., it is possible to work from an Image that was read from file and
-corresponds to no particular GSObject), but this also means that users who wish to apply it to
-simple combinations of GSObjects (e.g., a Convolve) must take the additional step of drawing
-their GSObjects into Images.</p>
+<p>This method works from <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> inputs rather than <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> inputs, which provides
+additional flexibility (e.g., it is possible to work from an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> that was read from file and
+corresponds to no particular <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>), but this also means that users who wish to apply it to
+compount <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> classes (e.g., <a class="reference internal" href="composite.html#galsim.Convolve" title="galsim.Convolve"><code class="xref any py py-func docutils literal notranslate"><span class="pre">Convolve</span></code></a>) must take the additional step of drawing
+their <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> into <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances.</p>
 <p>This routine assumes that (at least locally) the WCS can be approximated as a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>, with
 no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.</p>
 <p>Note that the method will fail if the PSF or galaxy are too point-like to easily fit an
@@ -325,7 +328,7 @@ change from the default.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">hsm</span><span class="o">.</span><span class="n">EstimateShear</span><span class="p">(</span><span class="n">final_image</span><span class="p">,</span> <span class="n">final_epsf_image</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>After running the above code, <code class="docutils literal notranslate"><span class="pre">result.observed_shape</span></code> is a galsim.Shear object with a value of
+<p>After running the above code, <code class="docutils literal notranslate"><span class="pre">result.observed_shape</span></code> is a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> object with a value of
 <code class="docutils literal notranslate"><span class="pre">(0.0438925349133,</span> <span class="pre">-2.85747392701e-18)</span></code> and <code class="docutils literal notranslate"><span class="pre">result.corrected_e1</span></code>, <code class="docutils literal notranslate"><span class="pre">result_corrected_e2</span></code>
 are <code class="docutils literal notranslate"><span class="pre">(0.09934103488922119,</span> <span class="pre">-3.746108423463568e-10)</span></code>, compared with the expected <code class="docutils literal notranslate"><span class="pre">(0.09975,</span>
 <span class="pre">0)</span></code> for a perfect PSF correction method.</p>
@@ -344,8 +347,8 @@ explicitly catching and tracking any failures:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>gal_image</strong> – The <a class="reference internal" href="image.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the galaxy being measured.</p></li>
-<li><p><strong>PSF_image</strong> – The <a class="reference internal" href="image.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> for the PSF.</p></li>
+<li><p><strong>gal_image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the galaxy being measured.</p></li>
+<li><p><strong>PSF_image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> for the PSF.</p></li>
 <li><p><strong>weight</strong> – The optional weight image for the galaxy being measured.  Can be an int
 or a float array.  Currently, GalSim does not account for the variation
 in non-zero weights, i.e., a weight map is converted to an image with 0
@@ -380,7 +383,7 @@ the lower-left pixel is (image.xmin, image.ymin).
 <code class="docutils literal notranslate"><span class="pre">False</span></code>, then information about failures will be silently stored in
 the output ShapeData object. [default: True]</p></li>
 <li><p><strong>hsmparams</strong> – The hsmparams keyword can be used to change the settings used by
-EstimateShear() when estimating shears; see <a class="reference internal" href="#galsim.hsm.HSMParams" title="galsim.hsm.HSMParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">HSMParams</span></code></a> documentation
+<a class="reference internal" href="#galsim.hsm.EstimateShear" title="galsim.hsm.EstimateShear"><code class="xref any py py-func docutils literal notranslate"><span class="pre">EstimateShear</span></code></a> when estimating shears; see <a class="reference internal" href="#galsim.hsm.HSMParams" title="galsim.hsm.HSMParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">HSMParams</span></code></a> documentation
 for more information. [default: None]</p></li>
 </ul>
 </dd>
@@ -400,7 +403,7 @@ for more information. [default: None]</p></li>
 <p>The ShapeData class contains the following information about moment measurement (from either
 <a class="reference internal" href="#galsim.hsm.EstimateShear" title="galsim.hsm.EstimateShear"><code class="xref any py py-func docutils literal notranslate"><span class="pre">EstimateShear</span></code></a> or <a class="reference internal" href="#galsim.hsm.FindAdaptiveMom" title="galsim.hsm.FindAdaptiveMom"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FindAdaptiveMom</span></code></a>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">image_bounds</span></code>: a <a class="reference internal" href="image.html#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a> object describing the image.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_bounds</span></code>: a <a class="reference internal" href="bounds.html#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a> object describing the image.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">moments_status</span></code>: the status flag resulting from moments measurement; -1 indicates no
 attempt to measure, 0 indicates success.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">observed_shape</span></code>: a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> object representing the observed shape based on adaptive
@@ -412,9 +415,9 @@ Normally, this field is simply equal to the image flux (for objects that follow 
 light distribution, otherwise it is something approximating the flux).  However, if the image
 was drawn using <code class="docutils literal notranslate"><span class="pre">drawImage(method='sb')</span></code> then moments_amp relates to the flux via
 <code class="docutils literal notranslate"><span class="pre">flux=(moments_amp)*(pixel</span> <span class="pre">scale)^2</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">moments_centroid</span></code>: a <a class="reference internal" href="image.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> object representing the centroid based on adaptive
-moments, in units of pixels.  The indexing convention is defined with respect to the <a class="reference internal" href="image.html#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a>
-object defining the bounds of the input <a class="reference internal" href="image.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, i.e., the center of the lower left pixel is
+<li><p><code class="docutils literal notranslate"><span class="pre">moments_centroid</span></code>: a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> object representing the centroid based on adaptive
+moments, in units of pixels.  The indexing convention is defined with respect to the <a class="reference internal" href="bounds.html#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a>
+object defining the bounds of the input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, i.e., the center of the lower left pixel is
 <code class="docutils literal notranslate"><span class="pre">(image.xmin,</span> <span class="pre">image.ymin)</span></code>.  An object drawn at the center of the image should generally
 have moments_centroid equal to <code class="docutils literal notranslate"><span class="pre">image.true_center</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">moments_rho4</span></code>: the weighted radial fourth moment of the image.</p></li>
@@ -447,6 +450,42 @@ PSF-correction.</p></li>
 <p>The <a class="reference internal" href="#galsim.hsm.ShapeData" title="galsim.hsm.ShapeData"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ShapeData</span></code></a> object can be initialized completely empty, or can be returned from the
 routines that measure object moments (<a class="reference internal" href="#galsim.hsm.FindAdaptiveMom" title="galsim.hsm.FindAdaptiveMom"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FindAdaptiveMom</span></code></a>) and carry out PSF correction
 (<a class="reference internal" href="#galsim.hsm.EstimateShear" title="galsim.hsm.EstimateShear"><code class="xref any py py-func docutils literal notranslate"><span class="pre">EstimateShear</span></code></a>).</p>
+<dl class="method">
+<dt id="galsim.hsm.ShapeData.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.ShapeData.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.ShapeData.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">image_bounds=galsim.BoundsI()</em>, <em class="sig-param">moments_status=-1</em>, <em class="sig-param">observed_shape=galsim.Shear(0j)</em>, <em class="sig-param">moments_sigma=-1.0</em>, <em class="sig-param">moments_amp=-1.0</em>, <em class="sig-param">moments_centroid=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">moments_rho4=-1.0</em>, <em class="sig-param">moments_n_iter=0</em>, <em class="sig-param">correction_status=-10</em>, <em class="sig-param">corrected_e1=-10.0</em>, <em class="sig-param">corrected_e2=-10.0</em>, <em class="sig-param">corrected_g1=-10.0</em>, <em class="sig-param">corrected_g2=-10.0</em>, <em class="sig-param">meas_type='None'</em>, <em class="sig-param">corrected_shape_err=-1.0</em>, <em class="sig-param">correction_method='None'</em>, <em class="sig-param">resolution_factor=-1.0</em>, <em class="sig-param">psf_sigma=-1.0</em>, <em class="sig-param">psf_shape=galsim.Shear(0j)</em>, <em class="sig-param">error_message=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.ShapeData.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.ShapeData.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.hsm.ShapeData.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.hsm.ShapeData.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -542,6 +581,42 @@ measurement fails. [default: -1000.]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.hsm.HSMParams.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.HSMParams.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.HSMParams.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">nsig_rg=3.0</em>, <em class="sig-param">nsig_rg2=3.6</em>, <em class="sig-param">max_moment_nsig2=25.0</em>, <em class="sig-param">regauss_too_small=1</em>, <em class="sig-param">adapt_order=2</em>, <em class="sig-param">convergence_threshold=1e-06</em>, <em class="sig-param">max_mom2_iter=400</em>, <em class="sig-param">num_iter_default=-1</em>, <em class="sig-param">bound_correct_wt=0.25</em>, <em class="sig-param">max_amoment=8000.0</em>, <em class="sig-param">max_ashift=15.0</em>, <em class="sig-param">ksb_moments_max=4</em>, <em class="sig-param">ksb_sig_weight=0.0</em>, <em class="sig-param">ksb_sig_factor=1.0</em>, <em class="sig-param">failed_moments=-1000.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.HSMParams.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.hsm.HSMParams.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.hsm.HSMParams.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.hsm.HSMParams.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.hsm.HSMParams.check">
 <em class="property">static </em><code class="sig-name descname">check</code><span class="sig-paren">(</span><em class="sig-param">hsmparams</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.check" title="Permalink to this definition">¶</a></dt>

@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -178,11 +181,6 @@
 <span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
-<span class="sd">&quot;&quot;&quot;@file detectors.py</span>
-
-<span class="sd">Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity</span>
-<span class="sd">failure, interpixel capacitance, etc.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -192,7 +190,7 @@
 
 <span class="k">def</span> <span class="nf">applyNonlinearity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">NLfunc</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Applies the given non-linearity function (``NLfunc``) on the Image instance directly.</span>
+<span class="sd">    Applies the given non-linearity function (``NLfunc``) on the `Image` instance directly.</span>
 
 <span class="sd">    This routine can transform the image in a non-linear manner specified by the user. However,</span>
 <span class="sd">    the typical kind of non-linearity one sees in astronomical images is voltage non-linearity,</span>
@@ -205,7 +203,7 @@
 <span class="sd">    before the inclusion of nonlinearity.</span>
 
 <span class="sd">    The argument ``NLfunc`` is a callable function (for example a lambda function, a</span>
-<span class="sd">    galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given</span>
+<span class="sd">    `galsim.LookupTable`, or a user-defined function), possibly with arguments that need to be given</span>
 <span class="sd">    as subsequent arguments to the ``applyNonlinearity`` function (after the ``NLfunc`` argument).</span>
 <span class="sd">    ``NLfunc`` should be able to take a 2d NumPy array as input, and return a NumPy array of the</span>
 <span class="sd">    same shape.  It should be defined such that it outputs the final image with nonlinearity</span>
@@ -222,7 +220,7 @@
 <span class="sd">        &gt;&gt;&gt; f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x</span>
 <span class="sd">        &gt;&gt;&gt; img.applyNonlinearity(f, 1.e-7, 1.e-10)</span>
 
-<span class="sd">    On calling the method, the Image instance ``img`` is transformed by the user-defined function</span>
+<span class="sd">    On calling the method, the `Image` instance ``img`` is transformed by the user-defined function</span>
 <span class="sd">    ``f`` with ``beta1`` = 1.e-7 and ``beta2`` = 1.e-10.</span>
 
 <span class="sd">    Parameters:</span>
@@ -244,7 +242,7 @@
 
 <span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp_time</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">base_flux</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Accounts for the reciprocity failure and includes it in the original Image directly.</span>
+<span class="sd">    Accounts for the reciprocity failure and includes it in the original `Image` directly.</span>
 
 <span class="sd">    Reciprocity, in the context of photography, is the inverse relationship between the incident</span>
 <span class="sd">    flux (I) of a source object and the exposure time (t) required to produce a given response (p)</span>
@@ -311,7 +309,7 @@
 <span class="k">def</span> <span class="nf">applyIPC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">IPC_kernel</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="s1">&#39;extend&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kernel_nonnegativity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">kernel_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Applies the effect of interpixel capacitance to the Image instance.</span>
+<span class="sd">    Applies the effect of interpixel capacitance to the `Image` instance.</span>
 
 <span class="sd">    In NIR detectors, the quantity that is sensed is not the charge as in CCDs, but a voltage that</span>
 <span class="sd">    relates to the charge present within each pixel. The voltage read at a given pixel location is</span>
@@ -319,7 +317,7 @@
 <span class="sd">    coupling of sense nodes.</span>
 
 <span class="sd">    This interpixel capacitance is approximated as a linear effect that can be described by a 3x3</span>
-<span class="sd">    kernel that is convolved with the image. The kernel must be an Image instance and could be</span>
+<span class="sd">    kernel that is convolved with the image. The kernel must be an `Image` instance and could be</span>
 <span class="sd">    intrinsically anisotropic. A sensible kernel must have non-negative entries and must be</span>
 <span class="sd">    normalized such that the sum of the elements is 1, in order to conserve the total charge.</span>
 <span class="sd">    The (1,1) element of the kernel is the contribution to the voltage read at a pixel from the</span>
@@ -341,7 +339,7 @@
 <span class="sd">    The size of the image array remains unchanged in all three cases.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        IPC_kernel:            A 3x3 Image instance that is convolved with the Image instance</span>
+<span class="sd">        IPC_kernel:            A 3x3 `Image` instance that is convolved with the `Image` instance</span>
 <span class="sd">        edge_treatment:        Specifies the method of handling edges and should be one of</span>
 <span class="sd">                               &#39;crop&#39;, &#39;extend&#39; or &#39;wrap&#39;. See above for details.</span>
 <span class="sd">                               [default: &#39;extend&#39;]</span>
@@ -425,7 +423,7 @@
 
 <span class="k">def</span> <span class="nf">applyPersistence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">imgs</span><span class="p">,</span><span class="n">coeffs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Applies the effects of persistence to the Image instance.</span>
+<span class="sd">    Applies the effects of persistence to the `Image` instance.</span>
 
 <span class="sd">    Persistence refers to the retention of a small fraction of the signal after resetting the</span>
 <span class="sd">    imager pixel elements. The persistence signal of a previous exposure is left in the pixel even</span>
@@ -434,18 +432,18 @@
 <span class="sd">    a fixed cadence, the persistence signal can be given as a linear combination of prior pixel</span>
 <span class="sd">    values that can be added to the current image.</span>
 
-<span class="sd">    This routine takes in a list of Image instances and adds them to Image weighted by the values</span>
-<span class="sd">    passed on to &#39;coeffs&#39;. The pixel values of the Image instances in the list must correspond to</span>
-<span class="sd">    the electron counts before the readout. This routine does NOT keep track of realistic dither</span>
-<span class="sd">    patterns. During the image simulation process, the user has to queue a list of previous Image</span>
-<span class="sd">    instances (imgs) outside the routine by inserting the latest image in the beginning of the list</span>
-<span class="sd">    and deleting the oldest image. The values in &#39;coeffs&#39; tell how much of each Image is to be</span>
-<span class="sd">    added. This usually remains constant in the image generation process.</span>
+<span class="sd">    This routine takes in a list of `Image` instances and adds them to `Image` weighted by the</span>
+<span class="sd">    values passed on to &#39;coeffs&#39;. The pixel values of the `Image` instances in the list must</span>
+<span class="sd">    correspond to the electron counts before the readout. This routine does NOT keep track of</span>
+<span class="sd">    realistic dither patterns. During the image simulation process, the user has to queue a list of</span>
+<span class="sd">    previous `Image` instances (imgs) outside the routine by inserting the latest image in the</span>
+<span class="sd">    beginning of the list and deleting the oldest image. The values in &#39;coeffs&#39; tell how much of</span>
+<span class="sd">    each `Image` is to be added. This usually remains constant in the image generation process.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        imgs:       A list of previous Image instances that still persist.</span>
+<span class="sd">        imgs:       A list of previous `Image` instances that still persist.</span>
 <span class="sd">        coeffs:     A list of floats that specifies the retention factors for the corresponding</span>
-<span class="sd">                    Image instances listed in &#39;imgs&#39;.</span>
+<span class="sd">                    `Image` instances listed in &#39;imgs&#39;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">coeffs</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;The length of &#39;imgs&#39; and &#39;coeffs&#39; must be the same&quot;</span><span class="p">,</span>
@@ -467,10 +465,10 @@
 
 <span class="sd">    Because we cannot guarantee that quantization will always be the last step in the process, the</span>
 <span class="sd">    quantize() routine does not actually modify the type of the image to &#39;int&#39;.  However, users can</span>
-<span class="sd">    easily do so by doing</span>
+<span class="sd">    easily do so by doing::</span>
 
-<span class="sd">        image.quantize()</span>
-<span class="sd">        int_image = galsim.Image(image, dtype=int)</span>
+<span class="sd">        &gt;&gt;&gt; image.quantize()</span>
+<span class="sd">        &gt;&gt;&gt; int_image = galsim.Image(image, dtype=int)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">applyNonlinearity</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">)</span>

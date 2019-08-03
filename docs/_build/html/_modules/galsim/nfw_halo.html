@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,8 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file nfw_halo.py The &quot;lensing engine&quot; for drawing shears from an NFW halo.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -190,7 +191,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
-<div class="viewcode-block" id="Cosmology"><a class="viewcode-back" href="../../shear.html#galsim.Cosmology">[docs]</a><span class="k">class</span> <span class="nc">Cosmology</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Cosmology"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology">[docs]</a><span class="k">class</span> <span class="nc">Cosmology</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Basic cosmology calculations.</span>
 
 <span class="sd">    Cosmology calculates expansion function E(a) and angular diameter distances Da(z) for a</span>
@@ -205,22 +206,22 @@
 <span class="sd">        omega_lam:  Present day density of Dark Energy relative to critical density.</span>
 <span class="sd">                    [default: 0.7]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega_m</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">omega_lam</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+<div class="viewcode-block" id="Cosmology.__init__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega_m</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">omega_lam</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
         <span class="c1"># no quintessence, no radiation in this universe!</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span> <span class="o">=</span> <span class="n">omega_m</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span> <span class="o">=</span> <span class="n">omega_lam</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">omega_c</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">omega_m</span> <span class="o">-</span> <span class="n">omega_lam</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega_c</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">omega_m</span> <span class="o">-</span> <span class="n">omega_lam</span><span class="p">)</span></div>
         <span class="c1">#self.omega_r = 0</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.Cosmology(omega_m=</span><span class="si">%r</span><span class="s2">, omega_lam=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.Cosmology(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+<div class="viewcode-block" id="Cosmology.__repr__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.Cosmology(omega_m=</span><span class="si">%r</span><span class="s2">, omega_lam=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Cosmology.__str__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.Cosmology(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega_m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega_lam</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Cosmology.__eq__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Cosmology.__ne__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Cosmology.__hash__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Cosmology.a"><a class="viewcode-back" href="../../shear.html#galsim.Cosmology.a">[docs]</a>    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<div class="viewcode-block" id="Cosmology.a"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.a">[docs]</a>    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute scale factor.</span>
 
 <span class="sd">        Parameters:</span>
@@ -228,7 +229,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Cosmology.E"><a class="viewcode-back" href="../../shear.html#galsim.Cosmology.E">[docs]</a>    <span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+<div class="viewcode-block" id="Cosmology.E"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.E">[docs]</a>    <span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluates expansion function.</span>
 
 <span class="sd">        Parameters:</span>
@@ -243,7 +244,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="n">x</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span><span class="o">**-</span><span class="mi">1</span>
 
-<div class="viewcode-block" id="Cosmology.Da"><a class="viewcode-back" href="../../shear.html#galsim.Cosmology.Da">[docs]</a>    <span class="k">def</span> <span class="nf">Da</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z_ref</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="Cosmology.Da"><a class="viewcode-back" href="../../nfwhalo.html#galsim.Cosmology.Da">[docs]</a>    <span class="k">def</span> <span class="nf">Da</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z_ref</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute angular diameter distance between two redshifts in units of c/H0.</span>
 
 <span class="sd">        In order to get the distance in Mpc/h, multiply by c/H0~3000.</span>
@@ -273,35 +274,36 @@
                     <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rk</span><span class="o">*</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="n">rk</span>
             <span class="k">return</span> <span class="n">d</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="NFWHalo"><a class="viewcode-back" href="../../shear.html#galsim.NFWHalo">[docs]</a><span class="k">class</span> <span class="nc">NFWHalo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class for NFW halos.</span>
+<div class="viewcode-block" id="NFWHalo"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo">[docs]</a><span class="k">class</span> <span class="nc">NFWHalo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class describing NFW halos.</span>
 
-<span class="sd">    Compute the lensing fields shear and convergence of a spherically symmetric NFW halo of given</span>
-<span class="sd">    mass, concentration, redshift, assuming Cosmology. No mass-concentration relation is employed.</span>
+<span class="sd">    This class computes the lensing fields shear and convergence of a spherically symmetric NFW</span>
+<span class="sd">    halo of given mass, concentration, redshift, assuming a particular cosmology.</span>
+<span class="sd">    No mass-concentration relation is employed.</span>
 
 <span class="sd">    Based on Matthias Bartelmann&#39;s libastro.</span>
 
-<span class="sd">    The cosmology to use can be set either by providing a Cosmology instance as cosmo,</span>
+<span class="sd">    The cosmology to use can be set either by providing a `Cosmology` instance as cosmo,</span>
 <span class="sd">    or by providing omega_m and/or omega_lam.</span>
 <span class="sd">    If only one of the latter is provided, the other is taken to be one minus that.</span>
-<span class="sd">    If no cosmology parameters are set, a default Cosmology is constructed.</span>
+<span class="sd">    If no cosmology parameters are set, a default `Cosmology` is constructed.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        mass:       Mass defined using a spherical overdensity of 200 times the critical density</span>
 <span class="sd">                    of the universe, in units of M_solar/h.</span>
 <span class="sd">        conc:       Concentration parameter, i.e., ratio of virial radius to NFW scale radius.</span>
 <span class="sd">        redshift:   Redshift of the halo.</span>
-<span class="sd">        halo_pos:   Position of halo center (in arcsec). [default: PositionD(0,0)]</span>
-<span class="sd">        omega_m:    Omega_matter to pass to Cosmology constructor. [default: None]</span>
-<span class="sd">        omega_lam:  Omega_lambda to pass to Cosmology constructor. [default: None]</span>
-<span class="sd">        cosmo:      A Cosmology instance. [default: None]</span>
+<span class="sd">        halo_pos:   `Position` of halo center (in arcsec). [default: PositionD(0,0)]</span>
+<span class="sd">        omega_m:    Omega_matter to pass to `Cosmology` constructor. [default: None]</span>
+<span class="sd">        omega_lam:  Omega_lambda to pass to `Cosmology` constructor. [default: None]</span>
+<span class="sd">        cosmo:      A `Cosmology` instance. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;mass&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;conc&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;redshift&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;halo_pos&#39;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">,</span> <span class="s1">&#39;omega_m&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;omega_lam&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">conc</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="n">halo_pos</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+<div class="viewcode-block" id="NFWHalo.__init__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">conc</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="n">halo_pos</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
                  <span class="n">omega_m</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega_lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cosmo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">omega_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">omega_lam</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">cosmo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -338,21 +340,21 @@
         <span class="n">dl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span><span class="o">.</span><span class="n">Da</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="mf">3000.</span> <span class="c1"># in Mpc/h</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rs</span> <span class="o">/</span> <span class="n">dl</span>
         <span class="n">arcsec2rad</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="mi">206265</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rs_arcsec</span> <span class="o">=</span> <span class="n">scale</span><span class="o">/</span><span class="n">arcsec2rad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rs_arcsec</span> <span class="o">=</span> <span class="n">scale</span><span class="o">/</span><span class="n">arcsec2rad</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="NFWHalo.__repr__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.NFWHalo(mass=</span><span class="si">%r</span><span class="s2">, conc=</span><span class="si">%r</span><span class="s2">, redshift=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span> <span class="o">!=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, halo_pos=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">halo_pos</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span> <span class="o">!=</span> <span class="n">Cosmology</span><span class="p">():</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, cosmo=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">cosmo</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">s</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.NFWHalo(mass=</span><span class="si">%s</span><span class="s2">, conc=</span><span class="si">%s</span><span class="s2">, redshift=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+<div class="viewcode-block" id="NFWHalo.__str__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.NFWHalo(mass=</span><span class="si">%s</span><span class="s2">, conc=</span><span class="si">%s</span><span class="s2">, redshift=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">)</span></div>
+<div class="viewcode-block" id="NFWHalo.__eq__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+<div class="viewcode-block" id="NFWHalo.__ne__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+<div class="viewcode-block" id="NFWHalo.__hash__"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">__omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Matter density at scale factor a.</span>
@@ -447,21 +449,20 @@
         <span class="n">k_s</span> <span class="o">=</span> <span class="n">dl</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">rs</span> <span class="o">*</span> <span class="n">rho_s</span> <span class="o">/</span> <span class="n">Sigma_c</span>
         <span class="k">return</span> <span class="n">k_s</span>
 
-<div class="viewcode-block" id="NFWHalo.getShear"><a class="viewcode-back" href="../../shear.html#galsim.NFWHalo.getShear">[docs]</a>    <span class="k">def</span> <span class="nf">getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="NFWHalo.getShear"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getShear">[docs]</a>    <span class="k">def</span> <span class="nf">getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate (reduced) shear of halo at specified positions.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            po:         Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                        Valid ways to input this:</span>
 
-<span class="sd">                        - single PositionD (or PositionI) instance</span>
+<span class="sd">                        - single `Position` instance</span>
 <span class="sd">                        - tuple of floats: (x,y)</span>
-<span class="sd">                        - list/array of PositionD (or PositionI) instances</span>
+<span class="sd">                        - list/array of `Position` instances</span>
 <span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            z_s:        Source redshift(s).</span>
-<span class="sd">            units:      Angular units of coordinates (only arcsec implemented so far).</span>
-<span class="sd">                        [default: galsim.arcsec]</span>
+<span class="sd">            units:      Angular units of coordinates. [default: galsim.arcsec]</span>
 <span class="sd">            reduced:    Whether returned shear(s) should be reduced shears. [default: True]</span>
 
 <span class="sd">        Returns:</span>
@@ -509,21 +510,20 @@
         <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span>
 
 
-<div class="viewcode-block" id="NFWHalo.getConvergence"><a class="viewcode-back" href="../../shear.html#galsim.NFWHalo.getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<div class="viewcode-block" id="NFWHalo.getConvergence"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate convergence of halo at specified positions.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                        Valid ways to input this:</span>
 
-<span class="sd">                        - single PositionD (or PositionI) instance</span>
+<span class="sd">                        - single `Position` instance</span>
 <span class="sd">                        - tuple of floats: (x,y)</span>
-<span class="sd">                        - list/array of PositionD (or PositionI) instances</span>
+<span class="sd">                        - list/array of `Position` instances</span>
 <span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            z_s:        Source redshift(s).</span>
-<span class="sd">            unit:       Angular units of coordinates (only arcsec implemented so far).</span>
-<span class="sd">                        [default: galsim.arcsec]</span>
+<span class="sd">            unit:       Angular units of coordinates. [default: galsim.arcsec]</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the convergence, kappa</span>
@@ -555,21 +555,20 @@
         <span class="n">kappa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kappa</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">kappa</span>
 
-<div class="viewcode-block" id="NFWHalo.getMagnification"><a class="viewcode-back" href="../../shear.html#galsim.NFWHalo.getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<div class="viewcode-block" id="NFWHalo.getMagnification"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate magnification of halo at specified positions.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                        Valid ways to input this:</span>
 
-<span class="sd">                        - single PositionD (or PositionI) instance</span>
+<span class="sd">                        - single `Position` instance</span>
 <span class="sd">                        - tuple of floats: (x,y)</span>
-<span class="sd">                        - list/array of PositionD (or PositionI) instances</span>
+<span class="sd">                        - list/array of `Position` instances</span>
 <span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            z_s:        Source redshift(s).</span>
-<span class="sd">            units:      Angular units of coordinates (only arcsec implemented so far).</span>
-<span class="sd">                        [default: galsim.arcsec]</span>
+<span class="sd">            units:      Angular units of coordinates. [default: galsim.arcsec]</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the magnification mu</span>
@@ -603,21 +602,20 @@
         <span class="n">mu</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">kappa</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">g</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span>
         <span class="k">return</span> <span class="n">mu</span>
 
-<div class="viewcode-block" id="NFWHalo.getLensing"><a class="viewcode-back" href="../../shear.html#galsim.NFWHalo.getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<div class="viewcode-block" id="NFWHalo.getLensing"><a class="viewcode-back" href="../../nfwhalo.html#galsim.NFWHalo.getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">z_s</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate lensing shear and magnification of halo at specified positions.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                        Valid ways to input this:</span>
 
-<span class="sd">                        - single PositionD (or PositionI) instance</span>
+<span class="sd">                        - single `Position` instance</span>
 <span class="sd">                        - tuple of floats: (x,y)</span>
-<span class="sd">                        - list/array of PositionD (or PositionI) instances</span>
+<span class="sd">                        - list/array of `Position` instances</span>
 <span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            z_s:        Source redshift(s).</span>
-<span class="sd">            units:      Angular units of coordinates (only arcsec implemented so far).</span>
-<span class="sd">                        [default: galsim.arcsec]</span>
+<span class="sd">            units:      Angular units of coordinates. [default: galsim.arcsec]</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the reduced shears and magnifications as a tuple (g1,g2,mu)</span>

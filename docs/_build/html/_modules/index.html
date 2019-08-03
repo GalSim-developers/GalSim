@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../history.html">Revision History</a></li>
 </ul>
 
@@ -169,13 +172,16 @@
 <li><a href="galsim/bounds.html">galsim.bounds</a></li>
 <li><a href="galsim/box.html">galsim.box</a></li>
 <li><a href="galsim/catalog.html">galsim.catalog</a></li>
+<li><a href="galsim/cdmodel.html">galsim.cdmodel</a></li>
 <li><a href="galsim/chromatic.html">galsim.chromatic</a></li>
 <li><a href="galsim/convolve.html">galsim.convolve</a></li>
 <li><a href="galsim/correlatednoise.html">galsim.correlatednoise</a></li>
+<li><a href="galsim/dcr.html">galsim.dcr</a></li>
 <li><a href="galsim/deltafunction.html">galsim.deltafunction</a></li>
 <li><a href="galsim/des/des_meds.html">galsim.des.des_meds</a></li>
 <li><a href="galsim/des/des_psfex.html">galsim.des.des_psfex</a></li>
 <li><a href="galsim/detectors.html">galsim.detectors</a></li>
+<li><a href="galsim/errors.html">galsim.errors</a></li>
 <li><a href="galsim/exponential.html">galsim.exponential</a></li>
 <li><a href="galsim/fft.html">galsim.fft</a></li>
 <li><a href="galsim/fits.html">galsim.fits</a></li>
@@ -183,6 +189,7 @@
 <li><a href="galsim/fouriersqrt.html">galsim.fouriersqrt</a></li>
 <li><a href="galsim/gaussian.html">galsim.gaussian</a></li>
 <li><a href="galsim/gsobject.html">galsim.gsobject</a></li>
+<li><a href="galsim/gsparams.html">galsim.gsparams</a></li>
 <li><a href="galsim/hsm.html">galsim.hsm</a></li>
 <li><a href="galsim/image.html">galsim.image</a></li>
 <li><a href="galsim/inclined.html">galsim.inclined</a></li>
@@ -196,6 +203,7 @@
 <li><a href="galsim/noise.html">galsim.noise</a></li>
 <li><a href="galsim/phase_psf.html">galsim.phase_psf</a></li>
 <li><a href="galsim/phase_screens.html">galsim.phase_screens</a></li>
+<li><a href="galsim/photon_array.html">galsim.photon_array</a></li>
 <li><a href="galsim/position.html">galsim.position</a></li>
 <li><a href="galsim/pse.html">galsim.pse</a></li>
 <li><a href="galsim/random.html">galsim.random</a></li>
@@ -204,6 +212,7 @@
 <li><a href="galsim/scene.html">galsim.scene</a></li>
 <li><a href="galsim/second_kick.html">galsim.second_kick</a></li>
 <li><a href="galsim/sed.html">galsim.sed</a></li>
+<li><a href="galsim/sensor.html">galsim.sensor</a></li>
 <li><a href="galsim/sersic.html">galsim.sersic</a></li>
 <li><a href="galsim/shapelet.html">galsim.shapelet</a></li>
 <li><a href="galsim/shear.html">galsim.shear</a></li>
@@ -211,8 +220,14 @@
 <li><a href="galsim/sum.html">galsim.sum</a></li>
 <li><a href="galsim/table.html">galsim.table</a></li>
 <li><a href="galsim/transform.html">galsim.transform</a></li>
+<li><a href="galsim/utilities.html">galsim.utilities</a></li>
 <li><a href="galsim/vonkarman.html">galsim.vonkarman</a></li>
 <li><a href="galsim/wcs.html">galsim.wcs</a></li>
+<li><a href="galsim/wfirst/wfirst_backgrounds.html">galsim.wfirst.wfirst_backgrounds</a></li>
+<li><a href="galsim/wfirst/wfirst_bandpass.html">galsim.wfirst.wfirst_bandpass</a></li>
+<li><a href="galsim/wfirst/wfirst_detectors.html">galsim.wfirst.wfirst_detectors</a></li>
+<li><a href="galsim/wfirst/wfirst_psfs.html">galsim.wfirst.wfirst_psfs</a></li>
+<li><a href="galsim/wfirst/wfirst_wcs.html">galsim.wfirst.wfirst_wcs</a></li>
 <li><a href="galsim/zernike.html">galsim.zernike</a></li>
 </ul>
 

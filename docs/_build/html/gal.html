@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Simple Profiles" href="simple.html" />
+    <link rel="next" title="“Real” Galaxies" href="real_gal.html" />
     <link rel="prev" title="Phase-screen PSFs" href="phase_psf.html" /> 
 </head>
 
@@ -100,26 +100,30 @@
 <li class="toctree-l3"><a class="reference internal" href="#inclined-exponential-profile">Inclined Exponential Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inclined-sersic-profile">Inclined Sersic Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spergel-profile">Spergel Profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#real-galaxy">“Real” Galaxy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#knots-defined-by-a-random-walk">Knots defined by a “random walk”</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -197,9 +201,10 @@ if you have another use case for which one would be relevant.</p>
 <dl class="class">
 <dt id="galsim.Exponential">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Exponential</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class describing an exponential profile.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing an exponential profile.</p>
 <p>Surface brightness profile with I(r) ~ exp[-r/scale_radius].  This is a special case of
-the Sersic profile, but is given a separate class since the Fourier transform has closed form
+the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile, but is given a separate class since the Fourier transform has closed form
 and can be generated without lookup tables.</p>
 <p>An Exponential can be initialized using one (and only one) of two possible size parameters:
 <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.  Exactly one of these two is required.</p>
@@ -211,12 +216,11 @@ and can be generated without lookup tables.</p>
 <li><p><strong>scale_radius</strong> – The scale radius of the profile.  Typically given in arcsec.
 [One of <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required.]</p></li>
 <li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual GSObject methods and attributes, Exponential has the following access
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, Exponential has the following access
 properties:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -226,6 +230,36 @@ properties:</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.Exponential.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Exponential.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Exponential.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Exponential.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Exponential.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -234,7 +268,8 @@ properties:</p>
 <dl class="class">
 <dt id="galsim.DeVaucouleurs">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">DeVaucouleurs</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class describing DeVaucouleurs profile objects.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.sersic.Sersic</span></code></p>
+<p>A class describing DeVaucouleurs profile objects.</p>
 <p>Surface brightness profile with I(r) ~ exp[-(r/scale_radius)^{1/4}].  This is completely
 equivalent to a Sersic with n=4.</p>
 <p>For more information, refer to</p>
@@ -255,12 +290,11 @@ zero, in the same units as the size parameter.
 <li><p><strong>flux_untruncated</strong> – Should the provided <code class="docutils literal notranslate"><span class="pre">flux</span></code> and <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> refer to the
 untruncated profile? See the docstring for Sersic for more details.
 [default: False]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual GSObject methods and attributes, DeVaucouleurs has the following
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, DeVaucouleurs has the following
 access properties:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -271,6 +305,24 @@ access properties:</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.DeVaucouleurs.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.DeVaucouleurs.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.DeVaucouleurs.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -279,7 +331,8 @@ access properties:</p>
 <dl class="class">
 <dt id="galsim.Sersic">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Sersic</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class describing a Sersic profile.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing a Sersic profile.</p>
 <p>The Sersic surface brightness profile is characterized by three properties: its Sersic index
 <code class="docutils literal notranslate"><span class="pre">n</span></code>, its <code class="docutils literal notranslate"><span class="pre">flux</span></code>, and either the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.  Given these
 properties, the surface brightness profile scales as I(r) ~ exp[-(r/scale_radius)^{1/n}], or
@@ -416,12 +469,11 @@ zero, in the same units as the size parameter.
 [default: 0, indicating no truncation]</p></li>
 <li><p><strong>flux_untruncated</strong> – Should the provided <code class="docutils literal notranslate"><span class="pre">flux</span></code> and <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> refer to the
 untruncated profile? See below for more details. [default: False]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual GSObject methods and attributes, Sersic has the following access
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, Sersic has the following access
 properties:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -433,6 +485,36 @@ properties:</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.Sersic.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Sersic.calculateHLRFactor">
 <code class="sig-name descname">calculateHLRFactor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.calculateHLRFactor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.calculateHLRFactor" title="Permalink to this definition">¶</a></dt>
@@ -453,7 +535,8 @@ properties:</p>
 <dl class="class">
 <dt id="galsim.InclinedExponential">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">InclinedExponential</code><span class="sig-paren">(</span><em class="sig-param">inclination</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">scale_height=None</em>, <em class="sig-param">scale_h_over_r=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class describing an inclined exponential profile.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing an inclined exponential profile.</p>
 <p>The Inclined Exponential surface brightness profile is characterized by three properties: its
 inclination angle (where 0 degrees = face-on and 90 degrees = edge-on), its scale radius, and
 its scale height. The 3D light distribution function is:</p>
@@ -476,10 +559,10 @@ scale_h_over_r will be assumed to refer to the scale radius, not the half-light 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inclination</strong> – The inclination angle, which must be a galsim.Angle instance</p></li>
+<li><p><strong>inclination</strong> – The inclination angle, which must be a <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance</p></li>
 <li><p><strong>scale_radius</strong> – The scale radius of the exponential disk.  Typically given in
 arcsec. This can be compared to the ‘scale_radius’ parameter of the
-galsim.Exponential class, and in the face-on case, the same scale
+<a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Exponential</span></code></a> class, and in the face-on case, the same scale
 radius will result in the same 2D light distribution as with that
 class.</p></li>
 <li><p><strong>half_light_radius</strong> – The half-light radius of the exponential disk, as an alternative to
@@ -489,13 +572,12 @@ the scale radius.</p></li>
 <li><p><strong>scale_h_over_r</strong> – In lieu of the scale height, you may also specify the ratio of the
 scale height to the scale radius. [default: 0.1]</p></li>
 <li><p><strong>flux</strong> – The flux (in photons) of the profile. [default: 1]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual GSObject methods and attributes, InclinedExponential has the following
-access properties:</p>
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, InclinedExponential has the
+following access properties:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><ul class="simple">
@@ -507,6 +589,36 @@ access properties:</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.InclinedExponential.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedExponential.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedExponential.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">inclination</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">scale_height=None</em>, <em class="sig-param">scale_h_over_r=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedExponential.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedExponential.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -515,10 +627,12 @@ access properties:</p>
 <dl class="class">
 <dt id="galsim.InclinedSersic">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">InclinedSersic</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">inclination</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">scale_height=None</em>, <em class="sig-param">scale_h_over_r=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class describing an inclined sersic profile. This class is general, and so for certain
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing an inclined sersic profile. This class is general, and so for certain
 special cases, more specialized classes will be more efficient. For the case where n==1
-with no truncation, the InclinedExponential class will be much more efficient. For the case
-where the inclination angle is zero (face-on), the Sersic class will be slightly more efficient.</p>
+with no truncation, the <a class="reference internal" href="#galsim.InclinedExponential" title="galsim.InclinedExponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InclinedExponential</span></code></a> class will be much more efficient. For the case
+where the inclination angle is zero (face-on), the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> class will be slightly more
+efficient.</p>
 <p>The InclinedSersic surface brightness profile is characterized by four properties: its
 Sersic index <code class="docutils literal notranslate"><span class="pre">n</span></code>, its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
 its scale radius, and its scale height. The 3D light distribution function is:</p>
@@ -533,8 +647,8 @@ from the scale height and radius here, along with the inclination angle.</p>
 need to be rotated in most circumstances.</p>
 <p>At present, this profile is not enabled for photon-shooting.</p>
 <p>The allowed range of values for the <code class="docutils literal notranslate"><span class="pre">n</span></code> parameter is 0.3 &lt;= n &lt;= 6.2.  An exception will be
-thrown if you provide a value outside that range, matching the range of the Sersic profile.</p>
-<p>This class shares the caching of Hankel transformations with the Sersic class; see that
+thrown if you provide a value outside that range, matching the range of the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile.</p>
+<p>This class shares the caching of Hankel transformations with the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> class; see that
 class for documentation on efficiency considerations with regards to caching.</p>
 <p>A profile can be initialized using one (and only one) of two possible size parameters:
 <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.  Exactly one of these two is required. Similarly,
@@ -546,10 +660,10 @@ scale_h_over_r will be assumed to refer to the scale radius, not the half-light 
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n</strong> – The Sersic index, n.</p></li>
-<li><p><strong>inclination</strong> – The inclination angle, which must be a galsim.Angle instance</p></li>
+<li><p><strong>inclination</strong> – The inclination angle, which must be a <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance</p></li>
 <li><p><strong>scale_radius</strong> – The scale radius of the disk.  Typically given in arcsec.
 This can be compared to the ‘scale_radius’ parameter of the
-galsim.Sersic class, and in the face-on case, the same scale
+<a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Sersic</span></code></a> class, and in the face-on case, the same scale
 radius will result in the same 2D light distribution as with that
 class. Exactly one of this and half_light_radius must be provided.</p></li>
 <li><p><strong>half_light_radius</strong> – The half-light radius of disk when seen face-on. Exactly one of this
@@ -563,14 +677,13 @@ scale height to the scale radius. [default: 0.1]</p></li>
 zero, in the same units as the size parameter.
 [default: 0, indicating no truncation]</p></li>
 <li><p><strong>flux_untruncated</strong> – Should the provided <code class="docutils literal notranslate"><span class="pre">flux</span></code> and <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> refer to the
-untruncated profile? See the documentation of the Sersic class for
+untruncated profile? See the documentation of the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> class for
 more details. [default: False]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual GSObject methods and attributes, InclinedSersic has the following
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, InclinedSersic has the following
 access properties:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -585,6 +698,36 @@ access properties:</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.InclinedSersic.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedSersic.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedSersic.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">inclination</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">scale_height=None</em>, <em class="sig-param">scale_h_over_r=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedSersic.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedSersic.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -593,31 +736,32 @@ access properties:</p>
 <dl class="class">
 <dt id="galsim.Spergel">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Spergel</code><span class="sig-paren">(</span><em class="sig-param">nu</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class describing a Spergel profile.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing a Spergel profile.</p>
 <p>The Spergel surface brightness profile is characterized by three properties: its Spergel index
 <code class="docutils literal notranslate"><span class="pre">nu</span></code>, its <code class="docutils literal notranslate"><span class="pre">flux</span></code>, and either the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.  Given these
 properties, the surface brightness profile scales as I(r) ~ (r/scale_radius)^{nu} *
 K_{nu}(r/scale_radius), where K_{nu} is the modified Bessel function of the second kind.</p>
-<p>The Spergel profile is intended as a generic galaxy profile, somewhat like a Sersic profile, but
-with the advantage of being analytic in both real space and Fourier space.  The Spergel index
+<p>The Spergel profile is intended as a generic galaxy profile, somewhat like a <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile,
+but with the advantage of being analytic in both real space and Fourier space.  The Spergel index
 <code class="docutils literal notranslate"><span class="pre">nu</span></code> plays a similar role to the Sersic index <code class="docutils literal notranslate"><span class="pre">n</span></code>, in that it adjusts the relative peakiness
 of the profile core and the relative prominence of the profile wings.  At <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">0.5</span></code>, the
-Spergel profile is equivalent to an Exponential profile (or alternatively an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1.0</span></code>
-Sersic profile).  At <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">-0.6</span></code> (and in the radial range near the half-light radius), the
-Spergel profile is similar to a DeVaucouleurs profile or <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">4.0</span></code> Sersic profile.</p>
+Spergel profile is equivalent to an <a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a> profile (or alternatively an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1.0</span></code>
+<a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile).  At <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">-0.6</span></code> (and in the radial range near the half-light radius), the
+Spergel profile is similar to a DeVaucouleurs profile or <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">4.0</span></code> <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile.</p>
 <p>Note that for <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">&lt;=</span> <span class="pre">0.0</span></code>, the Spergel profile surface brightness diverges at the origin.
 This may lead to rendering problems if the profile is not convolved by either a PSF or a pixel
 and the profile center is precisely on a pixel center.</p>
 <p>Due to its analytic Fourier transform and depending on the indices <code class="docutils literal notranslate"><span class="pre">n</span></code> and <code class="docutils literal notranslate"><span class="pre">nu</span></code>, the Spergel
-profile can be considerably faster to draw than the roughly equivalent Sersic profile.  For
+profile can be considerably faster to draw than the roughly equivalent <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile.  For
 example, the <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">-0.6</span></code> Spergel profile is roughly 3x faster to draw than an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">4.0</span></code>
-Sersic profile once the Sersic profile cache has been set up.  However, if not taking advantage
-of the cache, for example, if drawing Sersic profiles with <code class="docutils literal notranslate"><span class="pre">n</span></code> continuously varying near 4.0
-and Spergel profiles with <code class="docutils literal notranslate"><span class="pre">nu</span></code> continuously varying near -0.6, then the Spergel profiles are
-about 50x faster to draw.  At the other end of the galaxy profile spectrum, the <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">0.5</span></code>
-Spergel profile, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1.0</span></code> Sersic profile, and the Exponential profile all take about the
-same amount of time to draw if cached, and the Spergel profile is about 2x faster than the
-Sersic profile if uncached.</p>
+<a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile once the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile cache has been set up.  However, if not taking
+advantage of the cache, for example, if drawing <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profiles with <code class="docutils literal notranslate"><span class="pre">n</span></code> continuously
+varying near 4.0 and Spergel profiles with <code class="docutils literal notranslate"><span class="pre">nu</span></code> continuously varying near -0.6, then the
+Spergel profiles are about 50x faster to draw.  At the other end of the galaxy profile
+spectrum, the <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">0.5</span></code> Spergel profile, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1.0</span></code> <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile, and the <a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a>
+profile all take about the same amount of time to draw if cached, and the Spergel profile is
+about 2x faster than the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile if uncached.</p>
 <p>For more information, refer to</p>
 <blockquote>
 <div><p>D. N. Spergel, “ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,”
@@ -639,19 +783,48 @@ Bessel function of the second kind.</p>
 <li><p><strong>scale_radius</strong> – The scale radius of the profile.  Typically given in arcsec.
 [One of <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required.]</p></li>
 <li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual GSObject methods and attributes, the Spergel profile has the following
-access properties:</p>
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, the Spergel profile has the
+following access properties:</p>
 <dl class="simple">
 <dt>Atrributes:</dt><dd><p>nu:                 The Spergel index, nu
 scale_radius:       The scale radius
 half_light_radius:  The half-light radius</p>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.Spergel.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Spergel.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Spergel.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">nu</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Spergel.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Spergel.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Spergel.calculateFluxRadius">
 <code class="sig-name descname">calculateFluxRadius</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.calculateFluxRadius"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.calculateFluxRadius" title="Permalink to this definition">¶</a></dt>
@@ -667,523 +840,13 @@ half_light_radius:  The half-light radius</p>
 </dd></dl>
 
 </div>
-<div class="section" id="real-galaxy">
-<h2>“Real” Galaxy<a class="headerlink" href="#real-galaxy" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="galsim.RealGalaxy">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">RealGalaxy</code><span class="sig-paren">(</span><em class="sig-param">real_galaxy_catalog</em>, <em class="sig-param">index=None</em>, <em class="sig-param">id=None</em>, <em class="sig-param">random=False</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">x_interpolant=None</em>, <em class="sig-param">k_interpolant=None</em>, <em class="sig-param">flux=None</em>, <em class="sig-param">flux_rescale=None</em>, <em class="sig-param">pad_factor=4</em>, <em class="sig-param">noise_pad_size=0</em>, <em class="sig-param">area_norm=1.0</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxy" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class describing real galaxies from some training dataset.  Its underlying implementation
-uses a Convolution instance of an InterpolatedImage (for the observed galaxy) with a
-Deconvolution of another InterpolatedImage (for the PSF).</p>
-<p>This class uses a catalog describing galaxies in some training data (for more details, see the
-RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
-simulations based on those galaxies.  Also included in the class is additional information that
-might be needed to make or interpret the simulations, e.g., the noise properties of the training
-data.  Users who wish to draw RealGalaxies that have well-defined flux scalings in various
-passbands, and/or parametric representations, should use the COSMOSGalaxy class.</p>
-<p>Because RealGalaxy involves a Deconvolution, <code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">'phot'</span></code> is unavailable for the
-drawImage() function.</p>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real_galaxy</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxy</span><span class="p">(</span><span class="n">real_galaxy_catalog</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="gp">... </span>                                <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="gp">... </span>                                <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-<span class="gp">... </span>                                <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This initializes <code class="docutils literal notranslate"><span class="pre">real_galaxy</span></code> with three InterpolatedImage objects (one for the deconvolved
-galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
-keywords for choosing a galaxy; exactly one must be set.</p>
-<p>Note that tests suggest that for optimal balance between accuracy and speed, <code class="docutils literal notranslate"><span class="pre">k_interpolant</span></code>
-and <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> should be kept at their default values.  The user should be aware that
-significant inaccuracy can result from using other combinations of these parameters; more
-details can be found in <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>, especially table 1, and in comment
-<a class="reference external" href="https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621">https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621</a> and the following
-comments.</p>
-<p>If you don’t set a flux, the flux of the returned object will be the flux of the original
-HST data, scaled to correspond to a 1 second HST exposure (though see the <code class="docutils literal notranslate"><span class="pre">area_norm</span></code>
-parameter below, and also caveats related to using the <code class="docutils literal notranslate"><span class="pre">flux</span></code> parameter).  If you want a flux
-appropriate for a longer exposure, or for a telescope with a different collecting area than HST,
-you can either renormalize the object with the <code class="docutils literal notranslate"><span class="pre">flux_rescale</span></code> parameter, or by using the
-<code class="docutils literal notranslate"><span class="pre">exptime</span></code> and <code class="docutils literal notranslate"><span class="pre">area</span></code> parameters to <code class="docutils literal notranslate"><span class="pre">drawImage</span></code>.</p>
-<p>Note that RealGalaxy objects use arcsec for the units of their linear dimension.  If you
-are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
-the resulting object with <code class="docutils literal notranslate"><span class="pre">gal.dilate(galsim.arcsec</span> <span class="pre">/</span> <span class="pre">scale_unit)</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>real_galaxy_catalog</strong> – A RealGalaxyCatalog object with basic information about where to
-find the data, etc.</p></li>
-<li><p><strong>index</strong> – Index of the desired galaxy in the catalog. [One of <code class="docutils literal notranslate"><span class="pre">index</span></code>,
-<code class="docutils literal notranslate"><span class="pre">id</span></code>, or <code class="docutils literal notranslate"><span class="pre">random</span></code> is required.]</p></li>
-<li><p><strong>id</strong> – Object ID for the desired galaxy in the catalog. [One of <code class="docutils literal notranslate"><span class="pre">index</span></code>,
-<code class="docutils literal notranslate"><span class="pre">id</span></code>, or <code class="docutils literal notranslate"><span class="pre">random</span></code> is required.]</p></li>
-<li><p><strong>random</strong> – If True, then select a random galaxy from the catalog.  If the
-catalog has a ‘weight’ associated with it to allow for correction of
-selection effects in which galaxies were included, the ‘weight’
-factor is used to remove those selection effects rather than
-selecting a completely random object.
-[One of <code class="docutils literal notranslate"><span class="pre">index</span></code>, <code class="docutils literal notranslate"><span class="pre">id</span></code>, or <code class="docutils literal notranslate"><span class="pre">random</span></code> is required.]</p></li>
-<li><p><strong>rng</strong> – A random number generator to use for selecting a random galaxy
-(may be any kind of BaseDeviate or None) and to use in generating
-any noise field when padding.  This user-input random number
-generator takes precedence over any stored within a user-input
-CorrelatedNoise instance (see <code class="docutils literal notranslate"><span class="pre">noise_pad</span></code> parameter below).
-[default: None]</p></li>
-<li><p><strong>x_interpolant</strong> – Either an Interpolant instance or a string indicating which
-real-space interpolant should be used.  Options are ‘nearest’,
-‘sinc’, ‘linear’, ‘cubic’, ‘quintic’, or ‘lanczosN’ where N should
-be the integer order to use. [default: galsim.Quintic()]</p></li>
-<li><p><strong>k_interpolant</strong> – Either an Interpolant instance or a string indicating which k-space
-interpolant should be used.  Options are ‘nearest’, ‘sinc’,
-‘linear’, ‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the
-integer order to use.  We strongly recommend leaving this parameter
-at its default value; see text above for details.
-[default: galsim.Quintic()]</p></li>
-<li><p><strong>flux</strong> – Total flux, if None then original flux in image is adopted without
-change.  Note that, technically, this parameter sets the flux of the
-postage stamp image and not the flux of the contained galaxy.
-These two values will be strongly correlated when the signal-to-
-noise ratio of the galaxy is large, but may be considerably
-different if the flux of the galaxy is small with respect to the
-noise variations in the postage stamp.  To avoid complications with
-faint galaxies, consider using the flux_rescale parameter.
-[default: None]</p></li>
-<li><p><strong>flux_rescale</strong> – Flux rescaling factor; if None, then no rescaling is done.  Either
-<code class="docutils literal notranslate"><span class="pre">flux</span></code> or <code class="docutils literal notranslate"><span class="pre">flux_rescale</span></code> may be set, but not both.
-[default: None]</p></li>
-<li><p><strong>pad_factor</strong> – Factor by which to pad the Image when creating the
-InterpolatedImage.  We strongly recommend leaving this parameter
-at its default value; see text above for details.  [default: 4]</p></li>
-<li><p><strong>noise_pad_size</strong> – If provided, the image will be padded out to this size (in arcsec)
-with the noise specified in the real galaxy catalog. This is
-important if you are planning to whiten the resulting image.  You
-should make sure that the padded image is larger than the postage
-stamp onto which you are drawing this object.
-[default: None]</p></li>
-<li><p><strong>area_norm</strong> – Area in cm^2 by which to normalize the flux of the returned object.
-When area_norm=1 (the default), drawing with <code class="docutils literal notranslate"><span class="pre">drawImage</span></code> keywords
-exptime=1 and area=1 will simulate an image with the appropriate
-number of counts for a 1 second exposure with the original
-telescope/camera (e.g., with HST when using the COSMOS catalog).
-If you would rather explicitly specify the collecting area of the
-telescope when using <code class="docutils literal notranslate"><span class="pre">drawImage</span></code> with a <code class="docutils literal notranslate"><span class="pre">RealGalaxy</span></code>, then you
-should set area_norm equal to the collecting area of the source
-catalog telescope when creating the <code class="docutils literal notranslate"><span class="pre">RealGalaxy</span></code> (e.g.,
-area_norm=45238.93416 for HST).  [default: 1]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
-<li><p><strong>logger</strong> – A logger object for output of progress statements if the user wants
-them.  [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.RealGalaxy.makeFromImage">
-<em class="property">classmethod </em><code class="sig-name descname">makeFromImage</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">PSF</em>, <em class="sig-param">xi</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxy.makeFromImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxy.makeFromImage" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a RealGalaxy directly from image, PSF, and noise description.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – Image of the galaxy you want to simulate.</p></li>
-<li><p><strong>PSF</strong> – GSObject representing the PSF of the galaxy image.  Note that this PSF
-should include the response of the pixel convolution.</p></li>
-<li><p><strong>xi</strong> – CorrelatedNoise or UncorrelatedNoise object characterizing the noise in the
-input image.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxy.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxy.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxy.withGSParams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a version of the current object with the given gsparams</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="galsim.RealGalaxyCatalog">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">RealGalaxyCatalog</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">sample=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">preload=False</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">_nobjects_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class containing a catalog with information about real galaxy training data.</p>
-<p>The RealGalaxyCatalog class reads in and stores information about a specific training sample of
-realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
-one directory; they could be individual files, or multiple HDUs of the same file.  Currently
-there is no functionality that lets this be a FITS data cube, because we assume that the object
-postage stamps will in general need to be different sizes depending on the galaxy size.</p>
-<p>Note that when simulating galaxies based on HST but using either realistic or parametric galaxy
-models, the COSMOSCatalog class may be more useful.  It allows the imposition of selection
-criteria and other subtleties that are more difficult to impose with RealGalaxyCatalog.</p>
-<p>While you could create your own catalog to use with this class, the typical use cases would
-be to use one of the catalogs that we have created and distributed.  There are three such
-catalogs currently, which can be use with one of the following initializations:</p>
-<ol class="arabic">
-<li><p>A small example catalog is distributed with the GalSim distribution.  This catalog only
-has 100 galaxies, so it is not terribly useful as a representative galaxy population.
-But for simplistic use cases, it might be sufficient.  We use it for our unit tests and
-in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
-initialize with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rgc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxyCatalog</span><span class="p">(</span><span class="s1">&#39;real_galaxy_catalog_23.5_example.fits&#39;</span><span class="p">,</span>
-<span class="go">                                   dir=&#39;path/to/GalSim/examples/data&#39;)</span>
-</pre></div>
-</div>
-</li>
-<li><p>There are two larger catalogs based on HST observations of the COSMOS field with around
-26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is
-a subset of the latter.) For information about how to download these catalogs, see the
-RealGalaxy Data Download Page on the GalSim Wiki:</p>
-<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data">https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data</a></p>
-<p>Be warned that the catalogs are quite large.  The larger one is around 11 GB after unpacking
-the tarball.  To use one of these catalogs, you would initialize with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rgc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxyCatalog</span><span class="p">(</span><span class="s1">&#39;real_galaxy_catalog_23.5.fits&#39;</span><span class="p">,</span>
-<span class="go">                                   dir=&#39;path/to/download/directory&#39;)</span>
-</pre></div>
-</div>
-</li>
-<li><p>There is a catalog containing a random subsample of the HST COSMOS images with a limiting
-magnitude of F814W=25.2.  More information about downloading these catalogs can be found on
-the RealGalaxy Data Download page linked above.</p></li>
-<li><p>Finally, we provide a program that will download the large COSMOS sample for you and
-put it in the $PREFIX/share/galsim directory of your installation path.  The program is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim_download_cosmos</span>
-</pre></div>
-</div>
-<p>which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
-this program to download the COSMOS catalog, then you can use it with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rgc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxyCatalog</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>GalSim knows the location of the installation share directory, so it will automatically
-look for it there.</p>
-</li>
-</ol>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>file_name</strong> – The file containing the catalog. [default: None, which will look for the
-F814W&lt;25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
-exception if the catalog is not there telling you to run
-galsim_download_cosmos.]</p></li>
-<li><p><strong>sample</strong> – A keyword argument that can be used to specify the sample to use, i.e.,
-“23.5” or “25.2”.  At most one of <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and <code class="docutils literal notranslate"><span class="pre">sample</span></code> should be
-specified.
-[default: None, which results in the same default as <code class="docutils literal notranslate"><span class="pre">file_name=None</span></code>.]</p></li>
-<li><p><strong>dir</strong> – The directory containing the catalog, image, and noise files, or symlinks to
-them. [default: None]</p></li>
-<li><p><strong>preload</strong> – Whether to preload the header information.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>, the bulk of
-the I/O time is in the constructor.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>, there is
-approximately the same total I/O time (assuming you eventually use most of
-the image files referenced in the catalog), but it is spread over the
-various calls to getGalImage() and getPSFImage().  [default: False]</p></li>
-<li><p><strong>logger</strong> – An optional logger object to log progress. [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.getBandpass">
-<code class="sig-name descname">getBandpass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getBandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getBandpass" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a Bandpass object for the catalog.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.getGalImage">
-<code class="sig-name descname">getGalImage</code><span class="sig-paren">(</span><em class="sig-param">i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getGalImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getGalImage" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the galaxy at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as an Image object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.getIndexForID">
-<code class="sig-name descname">getIndexForID</code><span class="sig-paren">(</span><em class="sig-param">id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getIndexForID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getIndexForID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Internal function to find which index number corresponds to the value ID in the ident
-field.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.getNoise">
-<code class="sig-name descname">getNoise</code><span class="sig-paren">(</span><em class="sig-param">i</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getNoise" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the noise correlation function at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as a CorrelatedNoise object.
-Note: the return value from this function is not picklable, so this cannot be used
-across processes.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.getNoiseProperties">
-<code class="sig-name descname">getNoiseProperties</code><span class="sig-paren">(</span><em class="sig-param">i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getNoiseProperties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getNoiseProperties" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the components needed to make the noise correlation function at index <code class="docutils literal notranslate"><span class="pre">i</span></code>.
-Specifically, the noise image (or None), the pixel_scale, and the noise variance,
-as a tuple (im, scale, var).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.getPSF">
-<code class="sig-name descname">getPSF</code><span class="sig-paren">(</span><em class="sig-param">i</em>, <em class="sig-param">x_interpolant=None</em>, <em class="sig-param">k_interpolant=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getPSF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the PSF at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as a GSObject.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.getPSFImage">
-<code class="sig-name descname">getPSFImage</code><span class="sig-paren">(</span><em class="sig-param">i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.getPSFImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.getPSFImage" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the PSF at index <code class="docutils literal notranslate"><span class="pre">i</span></code> as an Image object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RealGalaxyCatalog.preload">
-<code class="sig-name descname">preload</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#RealGalaxyCatalog.preload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RealGalaxyCatalog.preload" title="Permalink to this definition">¶</a></dt>
-<dd><p>Preload the files into memory.</p>
-<p>There are memory implications to this, so we don’t do this by default.  However, it can be
-a big speedup if memory isn’t an issue.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="galsim.COSMOSCatalog">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">COSMOSCatalog</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">sample=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">preload=False</em>, <em class="sig-param">use_real=True</em>, <em class="sig-param">exclusion_level='marginal'</em>, <em class="sig-param">min_hlr=0</em>, <em class="sig-param">max_hlr=0.0</em>, <em class="sig-param">min_flux=0.0</em>, <em class="sig-param">max_flux=0.0</em>, <em class="sig-param">_nobjects_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/scene.html#COSMOSCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.COSMOSCatalog" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class representing a random subsample of galaxies from the COSMOS sample with F814W&lt;25.2
-(default for GalSim v1.4), or alternatively the entire sample with F814W&lt;23.5 (which was the
-default for GalSim v1.3).</p>
-<p>Depending on the keyword arguments, particularly <code class="docutils literal notranslate"><span class="pre">use_real</span></code>, the catalog will either have
-information about real galaxies, and/or parametric ones.  To use this with either type of
-galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see</p>
-<blockquote>
-<div><p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data">https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data</a></p>
-</div></blockquote>
-<p>option (1) for more information.  Note that if you want to make real galaxies you need to
-download and store the full tarball with all galaxy images, whereas if you want to make
-parametric galaxies you only need the catalog real_galaxy_catalog_25.2_fits.fits (and the
-selection file real_galaxy_catalog_25.2_selection.fits if you want to place cuts on the
-postage stamp quality) and can delete the galaxy and PSF image files.</p>
-<p>Finally, we provide a program that will download the large COSMOS sample for you and
-put it in the $PREFIX/share/galsim directory of your installation path.  The program is</p>
-<blockquote>
-<div><p>galsim_download_cosmos</p>
-</div></blockquote>
-<p>which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
-this program to download the COSMOS catalog, then you can use it with</p>
-<blockquote>
-<div><p>cat = galsim.COSMOSCatalog()</p>
-</div></blockquote>
-<p>GalSim knows the location of the installation share directory, so it will automatically
-look for it there.</p>
-<p>In addition to the option of specifying catalog names, this class also accepts a keyword
-argument <code class="docutils literal notranslate"><span class="pre">sample</span></code> that can be used to switch between the samples with limiting magnitudes of
-23.5 and 25.2.</p>
-<p>After getting the catalogs, there is a method makeGalaxy() that can make a GSObject
-corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
-help(galsim.COSMOSCatalog.makeGalaxy) for more information.  As an interesting application and
-example of the usage of these routines, consider the following code:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">im_size</span> <span class="o">=</span> <span class="mi">64</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pix_scale</span> <span class="o">=</span> <span class="mf">0.05</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bp_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;wfc_F814W.dat.gz&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bandpass</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Bandpass</span><span class="p">(</span><span class="n">bp_file</span><span class="p">,</span> <span class="n">wave_type</span><span class="o">=</span><span class="s1">&#39;ang&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">thin</span><span class="p">()</span><span class="o">.</span><span class="n">withZeropoint</span><span class="p">(</span><span class="mf">25.94</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cosmos_cat</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">COSMOSCatalog</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">OpticalPSF</span><span class="p">(</span><span class="n">diam</span><span class="o">=</span><span class="mf">2.4</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mf">1000.</span><span class="p">)</span> <span class="c1"># bigger than HST F814W PSF.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">real_gal_list</span> <span class="o">=</span> <span class="n">cosmos_cat</span><span class="o">.</span><span class="n">makeGalaxy</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">gal_type</span><span class="o">=</span><span class="s1">&#39;real&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                      <span class="n">noise_pad_size</span><span class="o">=</span><span class="n">im_size</span><span class="o">*</span><span class="n">pix_scale</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">param_gal_list</span> <span class="o">=</span> <span class="n">cosmos_cat</span><span class="o">.</span><span class="n">makeGalaxy</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">gal_type</span><span class="o">=</span><span class="s1">&#39;parametric&#39;</span><span class="p">,</span> <span class="n">chromatic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">real_gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">(</span><span class="n">real_gal_list</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">psf</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">param_gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">(</span><span class="n">param_gal_list</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">psf</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_real</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">im_size</span><span class="p">,</span> <span class="n">im_size</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_param</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">im_size</span><span class="p">,</span> <span class="n">im_size</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">real_gal</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im_real</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">pix_scale</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">param_gal</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">im_param</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">pix_scale</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_real</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;im_real_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">im_param</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;im_param_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This code snippet will draw images of the first 10 entries in the COSMOS catalog, at slightly
-lower resolution than in COSMOS, with a real image and its parametric representation for each of
-those objects.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>file_name</strong> – The file containing the catalog. [default: None, which will look for the
-F814W&lt;25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
-exception if the catalog is not there telling you to run
-galsim_download_cosmos.]</p></li>
-<li><p><strong>sample</strong> – A keyword argument that can be used to specify the sample to use, i.e.,
-“23.5” or “25.2”.  At most one of <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and <code class="docutils literal notranslate"><span class="pre">sample</span></code> should be
-specified.  [default: None, which results in the same default as
-<code class="docutils literal notranslate"><span class="pre">file_name=None</span></code>.]</p></li>
-<li><p><strong>dir</strong> – The directory with the catalog file and, if making realistic galaxies,
-the image and noise files (or symlinks to them). [default: None, which
-will look in $PREFIX/share/galsim.]</p></li>
-<li><p><strong>preload</strong> – Keyword that is only used for real galaxies, not parametric ones, to
-choose whether to preload the header information.  If <code class="docutils literal notranslate"><span class="pre">preload=True</span></code>,
-the bulk of the I/O time is in the constructor.  If <code class="docutils literal notranslate"><span class="pre">preload=False</span></code>,
-there is approximately the same total I/O time (assuming you eventually
-use most of the image files referenced in the catalog), but it is spread
-over the calls to makeGalaxy().  [default: False]</p></li>
-<li><p><strong>use_real</strong> – Enable the use of realistic galaxies?  [default: True]
-If this parameter is False, then <code class="docutils literal notranslate"><span class="pre">makeGalaxy(gal_type='real')</span></code> will
-not be allowed, and there will be a (modest) decrease in RAM and time
-spent on I/O when initializing the COSMOSCatalog. If the real
-catalog is not available for some reason, it will still be possible to
-make parametric images.</p></li>
-<li><p><strong>exclusion_level</strong> – <p>Level of additional cuts to make on the galaxies based on the quality
-of postage stamp definition and/or parametric fit quality [beyond the
-minimal cuts imposed when making the catalog - see Mandelbaum et
-al. (2012, MNRAS, 420, 1518) for details].  Options:</p>
-<ul>
-<li><p>”none”: No cuts.</p></li>
-<li><p>”bad_stamp”: Apply cuts to eliminate galaxies that have failures in
-postage stamp definition.  These cuts may also eliminate a small
-subset of the good postage stamps as well.</p></li>
-<li><p>”bad_fits”: Apply cuts to eliminate galaxies that have failures in the
-parametric fits.  These cuts may also eliminate a small
-subset of the good parametric fits as well.</p></li>
-<li><p>”marginal”: Apply the above cuts, plus ones that eliminate some more
-marginal cases.</p></li>
-</ul>
-<p>[default: “marginal”]</p>
-</p></li>
-<li><p><strong>min_hlr</strong> – Exclude galaxies whose fitted half-light radius is smaller than this
-value (in arcsec).  [default: 0, meaning no limit]</p></li>
-<li><p><strong>max_hlr</strong> – Exclude galaxies whose fitted half-light radius is larger than this
-value (in arcsec).  [default: 0, meaning no limit]</p></li>
-<li><p><strong>min_flux</strong> – Exclude galaxies whose fitted flux is smaller than this value.
-[default: 0, meaning no limit]</p></li>
-<li><p><strong>max_flux</strong> – Exclude galaxies whose fitted flux is larger than this value.
-[default: 0, meaning no limit]</p></li>
-</ul>
-</dd>
-</dl>
-<p>After construction, the following attributes are available:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><p><strong>nobjects</strong> – The number of objects in the catalog</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.COSMOSCatalog.canMakeReal">
-<code class="sig-name descname">canMakeReal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/scene.html#COSMOSCatalog.canMakeReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.COSMOSCatalog.canMakeReal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Is it permissible to call makeGalaxy with gal_type=’real’?</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.COSMOSCatalog.getParametricRecord">
-<code class="sig-name descname">getParametricRecord</code><span class="sig-paren">(</span><em class="sig-param">index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/scene.html#COSMOSCatalog.getParametricRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.COSMOSCatalog.getParametricRecord" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the parametric record for a given index</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.COSMOSCatalog.getRealParams">
-<code class="sig-name descname">getRealParams</code><span class="sig-paren">(</span><em class="sig-param">index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/scene.html#COSMOSCatalog.getRealParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.COSMOSCatalog.getRealParams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the parameters needed to make a RealGalaxy for a given index.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.COSMOSCatalog.makeGalaxy">
-<code class="sig-name descname">makeGalaxy</code><span class="sig-paren">(</span><em class="sig-param">index=None</em>, <em class="sig-param">gal_type=None</em>, <em class="sig-param">chromatic=False</em>, <em class="sig-param">noise_pad_size=5</em>, <em class="sig-param">deep=False</em>, <em class="sig-param">sersic_prec=0.05</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">n_random=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/scene.html#COSMOSCatalog.makeGalaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.COSMOSCatalog.makeGalaxy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Routine to construct GSObjects corresponding to the catalog entry with a particular index
-or indices.</p>
-<p>The flux of the galaxy corresponds to a 1 second exposure time with the Hubble Space
-Telescope.  Users who wish to simulate F814W images with a different telescope and an
-exposure time longer than 1 second should multiply by that exposure time, and by the square
-of the ratio of the effective diameter of their telescope compared to that of HST.
-(Effective diameter may differ from the actual diameter if there is significant
-obscuration.)  See demo11.py for an example that explicitly takes this normalization into
-account.</p>
-<p>Due to the adopted flux normalization, drawing into an image with the COSMOS bandpass,
-zeropoint of 25.94, and pixel scale should give the right pixel values to mimic the actual
-COSMOS science images.  The COSMOS science images that we use are normalized to a count rate
-of 1 second, which is why there is no need to rescale to account for the COSMOS exposure
-time.</p>
-<p>There is an option to make chromatic objects (<code class="docutils literal notranslate"><span class="pre">chromatic=True</span></code>); however, it is important
-to bear in mind that we do not actually have spatially-resolved color information for these
-galaxies, so this keyword can only be True if we are using parametric galaxies.  Even then,
-we simply do the most arbitrary thing possible, which is to assign bulges an elliptical
-SED, disks a disk-like SED, and Sersic galaxies with intermediate values of n some
-intermediate SED.  We assume that the photometric redshift is the correct redshift for
-these galaxies (which is a good assumption for COSMOS 30-band photo-z for these bright
-galaxies).  For the given SED and redshift, we then normalize to give the right (observed)
-flux in F814W.  Note that for a mock “deep” sample, the redshift distributions of the
-galaxies would be modified, which is not included here.</p>
-<p>For this chromatic option, it is still the case that the output flux normalization is
-appropriate for the HST effective telescope diameter and a 1 second exposure time, so users
-who are simulating another scenario should account for this.</p>
-<p>Note that the returned objects use arcsec for the units of their linear dimension.  If you
-are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
-the resulting object with <code class="docutils literal notranslate"><span class="pre">gal.dilate(galsim.arcsec</span> <span class="pre">/</span> <span class="pre">scale_unit)</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>index</strong> – Index of the desired galaxy in the catalog for which a GSObject
-should be constructed.  You may also provide a list or array of
-indices, in which case a list of objects is returned. If None,
-then a random galaxy (or more: see n_random kwarg) is chosen,
-correcting for catalog-level selection effects if weights are
-available. [default: None]</p></li>
-<li><p><strong>gal_type</strong> – Either ‘real’ or ‘parametric’.  This determines which kind of
-galaxy model is made. [If catalog was loaded with <code class="docutils literal notranslate"><span class="pre">use_real=False</span></code>,
-then this defaults to ‘parametric’, and in fact ‘real’ is
-not allowed.  If catalog was loaded with <code class="docutils literal notranslate"><span class="pre">use_real=True</span></code>, then
-this defaults to ‘real’.]</p></li>
-<li><p><strong>chromatic</strong> – Make this a chromatic object, or not?  [default: False]</p></li>
-<li><p><strong>noise_pad_size</strong> – For realistic galaxies, the size of region to pad with noise,
-in arcsec.  [default: 5, an arbitrary, but not completely
-ridiculous choice.]</p></li>
-<li><p><strong>deep</strong> – Modify fluxes and sizes of galaxies from the F814W&lt;23.5 sample in
-order to roughly simulate an F814W&lt;25 sample but with higher S/N, as
-in GREAT3? [default: False]  Note that this keyword will be ignored
-(except for issuing a warning) if the input catalog already
-represents the F814W&lt;25.2 sample.</p></li>
-<li><p><strong>sersic_prec</strong> – The desired precision on the Sersic index n in parametric galaxies.
-GalSim is significantly faster if it gets a smallish number of
-Sersic values, so it can cache some of the calculations and use
-them again the next time it gets a galaxy with the same index.
-If <code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> is 0.0, then use the exact value of index n from
-the catalog.  But if it is &gt;0, then round the index to that
-precision.  [default: 0.05]</p></li>
-<li><p><strong>rng</strong> – A random number generator to use for selecting a random galaxy
-(may be any kind of BaseDeviate or None) and to use in generating
-any noise field when padding.  [default: None]</p></li>
-<li><p><strong>n_random</strong> – The number of random galaxies to build, if ‘index’ is None.
-[default: 1]</p></li>
-<li><p><strong>gsparams</strong> – An optional GSParams argument.  See the docstring for GSParams for
-details. [default: None]</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Either a GSObject or a ChromaticObject depending on the value of <code class="docutils literal notranslate"><span class="pre">chromatic</span></code>,
-or a list of them if <code class="docutils literal notranslate"><span class="pre">index</span></code> is an iterable.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.COSMOSCatalog.selectRandomIndex">
-<code class="sig-name descname">selectRandomIndex</code><span class="sig-paren">(</span><em class="sig-param">n_random=1</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">_n_rng_calls=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/scene.html#COSMOSCatalog.selectRandomIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.COSMOSCatalog.selectRandomIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Routine to select random indices out of the catalog.  This routine does a weighted random
-selection with replacement (i.e., there is no guarantee of uniqueness of the selected
-indices).  Weighting uses the weight factors available in the catalog, if any; these weights
-are typically meant to remove any selection effects in the catalog creation process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n_random</strong> – Number of random indices to return. [default: 1]</p></li>
-<li><p><strong>rng</strong> – A random number generator to use for selecting a random galaxy
-(may be any kind of BaseDeviate or None). [default: None]</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A single index if n_random==1 or a NumPy array containing the randomly-selected
-indices if n_random&gt;1.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
 <div class="section" id="knots-defined-by-a-random-walk">
 <h2>Knots defined by a “random walk”<a class="headerlink" href="#knots-defined-by-a-random-walk" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="galsim.RandomWalk">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">RandomWalk</code><span class="sig-paren">(</span><em class="sig-param">npoints</em>, <em class="sig-param">**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for generating a set of point sources distributed using a random
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class for generating a set of point sources distributed using a random
 walk of points drawn from a specified distribution.</p>
 <p>Uses of this profile include representing an “irregular” galaxy, or
 adding this profile to an Exponential to represent knots of star formation.</p>
@@ -1210,9 +873,9 @@ Gaussian distribution if an explicit profile is not sent. Defaults to
 None if profile is sent, otherwise 1.  [default: 1]</p></li>
 <li><p><strong>profile</strong> – Optional profile to use for drawing points.  If a profile is sent, the
 half_light_radius and flux keywords are ignored.  [default: None]</p></li>
-<li><p><strong>rng</strong> – Optional random number generator. Can be any galsim.BaseDeviate.  If
+<li><p><strong>rng</strong> – Optional random number generator. Can be any <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BaseDeviate</span></code></a>.  If
 None, the rng is created internally.  [default: None]</p></li>
-<li><p><strong>gsparams</strong> – Optional GSParams for the objects representing each point source.
+<li><p><strong>gsparams</strong> – Optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for the objects representing each point source.
 [default: None]</p></li>
 </ul>
 </dd>
@@ -1246,6 +909,36 @@ None, the rng is created internally.  [default: None]</p></li>
 </ul>
 </div>
 <dl class="method">
+<dt id="galsim.RandomWalk.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomWalk.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomWalk.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">npoints</em>, <em class="sig-param">**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomWalk.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomWalk.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt>
 <code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.calculateHLR"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>calculate the half-light radius of the generated points</p>
@@ -1276,7 +969,7 @@ method.  That value will be valid in all cases.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="simple.html" class="btn btn-neutral float-right" title="Simple Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="real_gal.html" class="btn btn-neutral float-right" title="“Real” Galaxies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="phase_psf.html" class="btn btn-neutral float-left" title="Phase-screen PSFs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

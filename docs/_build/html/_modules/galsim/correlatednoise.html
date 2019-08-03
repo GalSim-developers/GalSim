@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,9 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file correlatednoise.py</span>
-<span class="sd">Python layer documentation and functions for handling correlated noise in GalSim.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">iteritems</span>
@@ -190,19 +190,22 @@
 <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
 <span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
 <span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimUndefinedBoundsError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
+<span class="kn">from</span> <span class="nn">.deprecated.correlatednoise</span> <span class="k">import</span> <span class="n">_BaseCorrelatedNoise</span>
+
 <span class="k">def</span> <span class="nf">whitenNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="p">):</span>
     <span class="c1"># This will be inserted into the Image class as a method.  So self = image.</span>
     <span class="sd">&quot;&quot;&quot;Whiten the noise in the image assuming that the noise currently in the image can be described</span>
-<span class="sd">    by the CorrelatedNoise object ``noise``.  See CorrelatedNoise.whitenImage() docstring for more</span>
+<span class="sd">    by the `BaseCorrelatedNoise` object ``noise``.  See `BaseCorrelatedNoise.whitenImage` for more</span>
 <span class="sd">    details of how this method works.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        noise:      The CorrelatedNoise model to use when figuring out how much noise to add to</span>
-<span class="sd">                    make the final noise white.</span>
+<span class="sd">        noise:      The `BaseCorrelatedNoise` model to use when figuring out how much noise to add</span>
+<span class="sd">                    to make the final noise white.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        the theoretically calculated variance of the combined noise fields in the updated image.</span>
@@ -212,13 +215,13 @@
 <span class="k">def</span> <span class="nf">symmetrizeNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
     <span class="c1"># This will be inserted into the Image class as a method.  So self = image.</span>
     <span class="sd">&quot;&quot;&quot;Impose N-fold symmetry (where N=``order`` is an even integer &gt;=4) on the noise in a square</span>
-<span class="sd">    image assuming that the noise currently in the image can be described by the CorrelatedNoise</span>
-<span class="sd">    object ``noise``.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this</span>
-<span class="sd">    method works.</span>
+<span class="sd">    image assuming that the noise currently in the image can be described by the</span>
+<span class="sd">    `BaseCorrelatedNoise` object ``noise``.  See `BaseCorrelatedNoise.symmetrizeImage` for more</span>
+<span class="sd">    details of how this method works.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        noise:      The CorrelatedNoise model to use when figuring out how much noise to add to</span>
-<span class="sd">                    make the final noise have symmetry at the desired order.</span>
+<span class="sd">        noise:      The `BaseCorrelatedNoise` model to use when figuring out how much noise to add</span>
+<span class="sd">                    to make the final noise have symmetry at the desired order.</span>
 <span class="sd">        order:      Desired symmetry order.  Must be an even integer larger than 2.</span>
 <span class="sd">                    [default: 4]</span>
 
@@ -231,23 +234,35 @@
 <span class="n">Image</span><span class="o">.</span><span class="n">whitenNoise</span> <span class="o">=</span> <span class="n">whitenNoise</span>
 <span class="n">Image</span><span class="o">.</span><span class="n">symmetrizeNoise</span> <span class="o">=</span> <span class="n">symmetrizeNoise</span>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise">[docs]</a><span class="k">class</span> <span class="nc">_BaseCorrelatedNoise</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise">[docs]</a><span class="k">class</span> <span class="nc">BaseCorrelatedNoise</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A Base Class describing 2D correlated Gaussian random noise fields.</span>
 
-<span class="sd">    A _BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the</span>
-<span class="sd">    current ``_BaseCorrelatedNoise.__init__`` interface does not provide any guarantee that the input</span>
-<span class="sd">    GSObject represents a physical correlation function, e.g. a profile that is an even function</span>
+<span class="sd">    A BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the</span>
+<span class="sd">    current `BaseCorrelatedNoise.__init__` interface does not provide any guarantee that the input</span>
+<span class="sd">    `GSObject` represents a physical correlation function, e.g. a profile that is an even function</span>
 <span class="sd">    (two-fold rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern</span>
-<span class="sd">    is that users instead instantiate derived classes, such as the CorrelatedNoise, which are able</span>
-<span class="sd">    to guarantee the above.</span>
+<span class="sd">    is that users instead instantiate derived classes, such as the `CorrelatedNoise`, which are</span>
+<span class="sd">    able to guarantee the above.</span>
 
-<span class="sd">    The _BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes</span>
-<span class="sd">    (currently only CorrelatedNoise and UncorrelatedNoise) store the random deviate, noise</span>
+<span class="sd">    The BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes</span>
+<span class="sd">    (currently only `CorrelatedNoise` and `UncorrelatedNoise`) store the random deviate, noise</span>
 <span class="sd">    correlation function profile and allow operations with it, generate images containing noise with</span>
 <span class="sd">    these correlation properties, and generate covariance matrices according to the correlation</span>
 <span class="sd">    function.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        rng:        A `BaseDeviate` instance to use for generating the random numbers.</span>
+<span class="sd">        gsobject:   The `GSObject` defining the correlation function.</span>
+
+<span class="sd">                    .. warning:</span>
+
+<span class="sd">                        The user is responsible for ensuring this profile is 2-fold rotationally</span>
+<span class="sd">                        symmetric.  This is **not** checked.</span>
+
+<span class="sd">        wcs:        The wcs for the image to define the phyical relationship between the pixels.</span>
+<span class="sd">                    [default: PixelScale(1.0)]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">wcs</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.__init__"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">BaseDeviate</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="s2">&quot;Supplied rng argument not a galsim.BaseDeviate or derived class instance.&quot;</span><span class="p">)</span>
@@ -270,7 +285,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_rootps_symmetrizing_cache</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># Also set up the cache for a stored value of the variance, needed for efficiency once the</span>
         <span class="c1"># noise field can get convolved with other GSObjects making is_analytic_x False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_variance_cached</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_variance_cached</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">rng</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -282,7 +297,7 @@
 
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
     <span class="c1"># Make &quot;+&quot; work in the intuitive sense (variances being additive, correlation functions add as</span>
     <span class="c1"># you would expect)</span>
@@ -291,14 +306,14 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">wcs</span><span class="o">.</span><span class="n">compatible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">wcs</span><span class="p">):</span>
             <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Adding two CorrelatedNoise objects with incompatible WCS. &quot;</span>
                         <span class="s2">&quot;The result will have the WCS of the first object.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">wcs</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">wcs</span><span class="o">.</span><span class="n">compatible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">wcs</span><span class="p">):</span>
             <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Subtracting two CorrelatedNoise objects with incompatible WCS. &quot;</span>
                         <span class="s2">&quot;The result will have the WCS of the first object.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">)</span>
@@ -306,29 +321,29 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">variance_ratio</span><span class="p">)</span>
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.copy"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.copy"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns a copy of the correlated noise model.</span>
 
-<span class="sd">        By default, the copy will share the BaseDeviate random number generator with the parent</span>
+<span class="sd">        By default, the copy will share the `BaseDeviate` random number generator with the parent</span>
 <span class="sd">        instance.  However, you can provide a new rng to use in the copy if you want with::</span>
 
 <span class="sd">            &gt;&gt;&gt; cn_copy = cn.copy(rng=new_rng)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.correlatednoise._BaseCorrelatedNoise(</span><span class="si">%r</span><span class="s2">,</span><span class="si">%r</span><span class="s2">,</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.__repr__"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.BaseCorrelatedNoise(</span><span class="si">%r</span><span class="s2">,</span><span class="si">%r</span><span class="s2">,</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.correlatednoise._BaseCorrelatedNoise(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.__str__"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.BaseCorrelatedNoise(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
     <span class="c1"># Quick and dirty.  Just check reprs are equal.</span>
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.__eq__"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+<div class="viewcode-block" id="BaseCorrelatedNoise.__ne__"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+<div class="viewcode-block" id="BaseCorrelatedNoise.__hash__"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">_clear_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check if the profile has changed and clear caches if appropriate.</span>
@@ -341,23 +356,23 @@
         <span class="c1"># Set profile_for_cache for next time.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_profile_for_cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.applyTo"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply this correlated Gaussian random noise field to an input Image.</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.applyTo"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply this correlated Gaussian random noise field to an input `Image`.</span>
 
 <span class="sd">        To add deviates to every element of an image, the syntax::</span>
 
 <span class="sd">            &gt;&gt;&gt; image.addNoise(correlated_noise)</span>
 
-<span class="sd">        is preferred.  However, this is equivalent to calling this instance&#39;s applyTo() method as</span>
+<span class="sd">        is preferred.  However, this is equivalent to calling this instance&#39;s `applyTo` method as</span>
 <span class="sd">        follows::</span>
 
 <span class="sd">            &gt;&gt;&gt; correlated_noise.applyTo(image)</span>
 
-<span class="sd">        On output the Image instance ``image`` will have been given additional noise according to the</span>
-<span class="sd">        given CorrelatedNoise instance ``correlated_noise``.  Normally, ``image.scale`` is used to</span>
-<span class="sd">        determine the input Image pixel separation, and if ``image.scale &lt;= 0`` a pixel scale of 1 is</span>
-<span class="sd">        assumed.  If the image has a non-uniform WCS, the local uniform approximation at the center</span>
-<span class="sd">        of the image will be used.</span>
+<span class="sd">        On output the `Image` instance ``image`` will have been given additional noise according to</span>
+<span class="sd">        the given `BaseCorrelatedNoise` instance ``correlated_noise``.  Normally, ``image.scale``</span>
+<span class="sd">        is used to determine the input pixel separation, and if ``image.scale &lt;= 0`` a pixel scale</span>
+<span class="sd">        of 1 is assumed.  If the image has a non-uniform WCS, the local uniform approximation at</span>
+<span class="sd">        the center of the image will be used.</span>
 
 <span class="sd">        Note that the correlations defined in a correlated_noise object are defined in terms of</span>
 <span class="sd">        world coordinates (i.e. typically arcsec on the sky).  Some care is thus required if you</span>
@@ -378,14 +393,14 @@
 <span class="sd">        correlated noise image (in this case, the COSMOS images).  If the input image has no WCS</span>
 <span class="sd">        set, then it will be treated as having the same WCS as the noise.</span>
 
-<span class="sd">        Note that the correlated noise field in ``image`` will be periodic across its boundaries: this</span>
-<span class="sd">        is due to the fact that the internals of the CorrelatedNoise currently use a relatively</span>
-<span class="sd">        simple implementation of noise generation using the Fast Fourier Transform.  If you wish to</span>
-<span class="sd">        avoid this property being present in your final ``image`` you should add the noise to an</span>
-<span class="sd">        ``image`` of greater extent than you need, and take a subset.</span>
+<span class="sd">        Note that the correlated noise field in ``image`` will be periodic across its boundaries:</span>
+<span class="sd">        this is due to the fact that the internals of the `BaseCorrelatedNoise` currently use a</span>
+<span class="sd">        relatively simple implementation of noise generation using the Fast Fourier Transform.</span>
+<span class="sd">        If you wish to avoid this property being present in your final ``image`` you should add the</span>
+<span class="sd">        noise to an ``image`` of greater extent than you need, and take a subset.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:      The input Image object.</span>
+<span class="sd">            image:      The input `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Note that this uses the (fast) method of going via the power spectrum and FFTs to generate</span>
         <span class="c1"># noise according to the correlation function represented by this instance.  An alternative</span>
@@ -418,12 +433,14 @@
         <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">+=</span> <span class="n">noise_array</span>
         <span class="k">return</span> <span class="n">image</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.whitenImage"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.whitenImage">[docs]</a>    <span class="k">def</span> <span class="nf">whitenImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply noise designed to whiten correlated Gaussian random noise in an input Image.</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.whitenImage"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.whitenImage">[docs]</a>    <span class="k">def</span> <span class="nf">whitenImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply noise designed to whiten correlated Gaussian random noise in an input `Image`.</span>
 
-<span class="sd">        On output the Image instance ``image`` will have been given additional noise according to</span>
-<span class="sd">        a specified CorrelatedNoise instance, designed to whiten any correlated noise that may have</span>
-<span class="sd">        originally existed in ``image``.</span>
+<span class="sd">        On input, The `Image`, ``image``, is assumed to have correlated noise described by this</span>
+<span class="sd">        `BaseCorrelatedNoise` instance.</span>
+
+<span class="sd">        On output ``image`` will have been given additional (correlated) noise designed to whiten</span>
+<span class="sd">        the noise profile.</span>
 
 <span class="sd">        Note: the syntax ``image.whitenNoise(noise)`` is normally preferred, but it is equivalent</span>
 <span class="sd">        to::</span>
@@ -440,19 +457,19 @@
 <span class="sd">        Note that the code doesn&#39;t check that the &quot;if&quot; above is true: the user MUST make sure this</span>
 <span class="sd">        is the case for the final noise to be uncorrelated.</span>
 
-<span class="sd">        Normally, ``image.scale`` is used to determine the input Image pixel separation, and if</span>
-<span class="sd">        ``image.wcs`` is None, it will use the wcs of the noise.  If the image has a non-uniform WCS,</span>
-<span class="sd">        the local uniform approximation at the center of the image will be used.</span>
+<span class="sd">        Normally, ``image.scale`` is used to determine the input `Image` pixel separation, and if</span>
+<span class="sd">        ``image.wcs`` is None, it will use the wcs of the noise.  If the image has a non-uniform</span>
+<span class="sd">        WCS, the local uniform approximation at the center of the image will be used.</span>
 
 <span class="sd">        If you are interested in a theoretical calculation of the variance in the final noise field</span>
 <span class="sd">        after whitening, the whitenImage() method in fact returns this variance.  For example::</span>
 
 <span class="sd">            &gt;&gt;&gt; variance = correlated_noise.whitenImage(image)</span>
 
-<span class="sd">        Example:</span>
+<span class="sd">        **Example**:</span>
 
 <span class="sd">        To see noise whitening in action, let us use a model of the correlated noise in COSMOS</span>
-<span class="sd">        as returned by the getCOSMOSNoise() function.  Let&#39;s initialize and add noise to an image::</span>
+<span class="sd">        as returned by the `getCOSMOSNoise` function.  Let&#39;s initialize and add noise to an image::</span>
 
 <span class="sd">            &gt;&gt;&gt; cn = galsim.getCOSMOSNoise()</span>
 <span class="sd">            &gt;&gt;&gt; image = galsim.ImageD(256, 256, scale=0.03)</span>
@@ -469,7 +486,7 @@
 <span class="sd">        the algorithm is designed to make this additional noise (nearly) as small as possible.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:      The input Image object.</span>
+<span class="sd">            image:      The input `Image` object.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the theoretically calculated variance of the combined noise fields in the updated image.</span>
@@ -506,9 +523,15 @@
         <span class="c1"># Return the variance to the interested user</span>
         <span class="k">return</span> <span class="n">variance</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.symmetrizeImage"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.symmetrizeImage">[docs]</a>    <span class="k">def</span> <span class="nf">symmetrizeImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.symmetrizeImage"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.symmetrizeImage">[docs]</a>    <span class="k">def</span> <span class="nf">symmetrizeImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply noise designed to impose N-fold symmetry on the existing noise in a (square) input</span>
-<span class="sd">        Image.</span>
+<span class="sd">        `Image`.</span>
+
+<span class="sd">        On input, The `Image`, ``image``, is assumed to have correlated noise described by this</span>
+<span class="sd">        `BaseCorrelatedNoise` instance.</span>
+
+<span class="sd">        On output ``image`` will have been given additional (correlated) noise designed to</span>
+<span class="sd">        symmetrize the noise profile.</span>
 
 <span class="sd">        When called for a non-square image, this method will raise an exception, unlike the noise</span>
 <span class="sd">        whitening routines.</span>
@@ -522,10 +545,6 @@
 
 <span class="sd">            &gt;&gt;&gt; correlated_noise.symmetrizeImage(image, order=order)</span>
 
-<span class="sd">        On output the Image instance ``image`` will have been given additional noise according to a</span>
-<span class="sd">        specified CorrelatedNoise instance, designed to symmetrize the correlated noise that may</span>
-<span class="sd">        have originally existed in ``image``.</span>
-
 <span class="sd">        If the ``image`` originally contained noise with a correlation function described by the</span>
 <span class="sd">        ``correlated_noise`` instance, the combined noise after using the symmetrizeImage() method</span>
 <span class="sd">        will have a noise correlation function with N-fold symmetry, where ``N=order``.</span>
@@ -533,9 +552,9 @@
 <span class="sd">        Note that the code doesn&#39;t check that the &quot;if&quot; above is true: the user MUST make sure this</span>
 <span class="sd">        is the case for the final noise correlation function to be symmetric in the requested way.</span>
 
-<span class="sd">        Normally, ``image.scale`` is used to determine the input Image pixel separation, and if</span>
-<span class="sd">        ``image.wcs`` is None, it will use the wcs of the noise.  If the image has a non-uniform WCS,</span>
-<span class="sd">        the local uniform approximation at the center of the image will be used.</span>
+<span class="sd">        Normally, ``image.scale`` is used to determine the input pixel separation, and if</span>
+<span class="sd">        ``image.wcs`` is None, it will use the wcs of the noise.  If the image has a non-uniform</span>
+<span class="sd">        WCS, the local uniform approximation at the center of the image will be used.</span>
 
 <span class="sd">        If you are interested in a theoretical calculation of the variance in the final noise field</span>
 <span class="sd">        after imposing symmetry, the symmetrizeImage() method in fact returns this variance.</span>
@@ -543,14 +562,14 @@
 
 <span class="sd">            &gt;&gt;&gt; variance = correlated_noise.symmetrizeImage(image, order=order)</span>
 
-<span class="sd">        For context, in comparison with the whitenImage() method for the case of noise</span>
+<span class="sd">        For context, in comparison with the `whitenImage` method for the case of noise</span>
 <span class="sd">        correlation functions that are roughly like those in the COSMOS HST data, the amount of</span>
 <span class="sd">        noise added to impose N-fold symmetry is usually much less than what is added to fully</span>
 <span class="sd">        whiten the noise.  The usage of symmetrizeImage() is totally analogous to the usage of</span>
-<span class="sd">        whitenImage().</span>
+<span class="sd">        `whitenImage`.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:      The square input Image object.</span>
+<span class="sd">            image:      The square input `Image` object.</span>
 <span class="sd">            order:      The order at which to require the noise to be symmetric.  All noise fields</span>
 <span class="sd">                        are already 2-fold symmetric, so ``order`` should be an even integer &gt;2.</span>
 <span class="sd">                        [default: 4].</span>
@@ -594,7 +613,7 @@
         <span class="c1"># Return the variance to the interested user</span>
         <span class="k">return</span> <span class="n">variance</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.expand"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.expand"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Scale the linear scale of correlations in this noise model by ``scale``.</span>
 
 <span class="sd">        Scales the linear dimensions of the image by the factor ``scale``, e.g.</span>
@@ -604,11 +623,11 @@
 <span class="sd">            scale:      The linear rescaling factor to apply.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a new CorrelatedNoise object with the specified expansion.</span>
+<span class="sd">            a new `BaseCorrelatedNoise` object with the specified expansion.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">scale</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">scale</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.dilate"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.dilate">[docs]</a>    <span class="k">def</span> <span class="nf">dilate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.dilate"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.dilate">[docs]</a>    <span class="k">def</span> <span class="nf">dilate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply the appropriate changes to the scale and variance for when the object has</span>
 <span class="sd">        an applied dilation.</span>
 
@@ -616,13 +635,13 @@
 <span class="sd">            scale:  The linear dilation scale factor.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a new CorrelatedNoise object with the specified dilation.</span>
+<span class="sd">            a new `BaseCorrelatedNoise` object with the specified dilation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Expansion changes the flux by scale**2, dilate reverses that to conserve flux,</span>
         <span class="c1"># so the variance needs to change by scale**-4.</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.magnify"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.magnify">[docs]</a>    <span class="k">def</span> <span class="nf">magnify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.magnify"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.magnify">[docs]</a>    <span class="k">def</span> <span class="nf">magnify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply the appropriate changes to the scale and variance for when the object has</span>
 <span class="sd">        an applied magnification ``mu``.</span>
 
@@ -630,11 +649,11 @@
 <span class="sd">            mu:     The lensing magnification</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a new CorrelatedNoise object with the specified magnification.</span>
+<span class="sd">            a new `BaseCorrelatedNoise` object with the specified magnification.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">magnify</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">magnify</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.lens"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.lens">[docs]</a>    <span class="k">def</span> <span class="nf">lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.lens"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.lens">[docs]</a>    <span class="k">def</span> <span class="nf">lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply the appropriate changes for when the object has an applied shear and magnification.</span>
 
 <span class="sd">        Parameters:</span>
@@ -643,38 +662,37 @@
 <span class="sd">            mu:     Lensing magnification to apply to the object.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a new CorrelatedNoise object with the specified shear and magnification.</span>
+<span class="sd">            a new `BaseCorrelatedNoise` object with the specified shear and magnification.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">lens</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span><span class="n">g2</span><span class="p">,</span><span class="n">mu</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">lens</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span><span class="n">g2</span><span class="p">,</span><span class="n">mu</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.rotate"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.rotate"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply a rotation ``theta`` to this correlated noise model.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            theta:  Rotation angle (Angle object, positive means anticlockwise).</span>
+<span class="sd">            theta:  Rotation angle (`Angle` object, positive means anticlockwise).</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a new CorrelatedNoise object with the specified rotation.</span>
+<span class="sd">            a new `BaseCorrelatedNoise` object with the specified rotation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.shear"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.shear">[docs]</a>    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Apply a shear to this correlated noise model, where arguments are either a Shear,</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.shear"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.shear">[docs]</a>    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply a shear to this correlated noise model, where arguments are either a `Shear`,</span>
 <span class="sd">        or arguments that will be used to initialize one.</span>
 
-<span class="sd">        For more details about the allowed keyword arguments, see the documentation for Shear</span>
-<span class="sd">        (for doxygen documentation, see galsim.Shear).</span>
+<span class="sd">        For more details about the allowed keyword arguments, see the `Shear` docstring.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            shear:  The shear to be applied. Or, as described above, you may instead supply</span>
 <span class="sd">                    parameters do construct a shear directly.  eg. ``corr.shear(g1=g1,g2=g2)``.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a new CorrelatedNoise object with the specified shear.</span>
+<span class="sd">            a new `BaseCorrelatedNoise` object with the specified shear.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">shear</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">shear</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.transform"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.transform"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply an arbitrary jacobian transformation to this correlated noise model.</span>
 
 <span class="sd">        Parameters:</span>
@@ -684,12 +702,12 @@
 <span class="sd">            dvdy:   dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a new CorrelatedNoise object with the specified transformation.</span>
+<span class="sd">            a new `BaseCorrelatedNoise` object with the specified transformation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">),</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">),</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.getVariance"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.getVariance">[docs]</a>    <span class="k">def</span> <span class="nf">getVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.getVariance"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.getVariance">[docs]</a>    <span class="k">def</span> <span class="nf">getVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the point variance of this noise field, equal to its correlation function value at</span>
 <span class="sd">        zero distance.</span>
 
@@ -716,7 +734,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_variance_cached</span> <span class="o">=</span> <span class="n">variance</span> <span class="c1"># Store variance for next time</span>
         <span class="k">return</span> <span class="n">variance</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.withVariance"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.withVariance">[docs]</a>    <span class="k">def</span> <span class="nf">withVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.withVariance"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.withVariance">[docs]</a>    <span class="k">def</span> <span class="nf">withVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the point variance of the noise field, equal to its correlation function value at</span>
 <span class="sd">        zero distance, to an input ``variance``.  The rest of the correlated noise field is scaled</span>
 <span class="sd">        proportionally.</span>
@@ -725,14 +743,14 @@
 <span class="sd">            variance:   The desired point variance in the noise.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a CorrelatedNoise object with the new variance.</span>
+<span class="sd">            a `BaseCorrelatedNoise` object with the new variance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">variance</span> <span class="o">&lt;=</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;variance must be &gt; 0 in withVariance&quot;</span><span class="p">,</span> <span class="n">variance</span><span class="p">)</span>
         <span class="n">variance_ratio</span> <span class="o">=</span> <span class="n">variance</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">getVariance</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">variance_ratio</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.withScaledVariance"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.withScaledVariance">[docs]</a>    <span class="k">def</span> <span class="nf">withScaledVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.withScaledVariance"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.withScaledVariance">[docs]</a>    <span class="k">def</span> <span class="nf">withScaledVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Scale the entire correlated noise field by the given factor.</span>
 
 <span class="sd">        This is equivalent to cn * variance_ratio.</span>
@@ -742,13 +760,13 @@
 <span class="sd">                                function profile.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            a CorrelatedNoise object whose variance and covariances have been scaled up by</span>
+<span class="sd">            a `BaseCorrelatedNoise` object whose variance and covariances have been scaled up by</span>
 <span class="sd">            the given factor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">*</span> <span class="n">variance_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">*</span> <span class="n">variance_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.convolvedWith"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.convolvedWith">[docs]</a>    <span class="k">def</span> <span class="nf">convolvedWith</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Convolve the correlated noise model with an input GSObject.</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.convolvedWith"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.convolvedWith">[docs]</a>    <span class="k">def</span> <span class="nf">convolvedWith</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convolve the correlated noise model with an input `GSObject`.</span>
 
 <span class="sd">        The resulting correlated noise model will then give a statistical description of the noise</span>
 <span class="sd">        field that would result from convolving noise generated according to the initial correlated</span>
@@ -756,12 +774,12 @@
 
 <span class="sd">        The practical purpose of this method is that it allows us to model what is happening to</span>
 <span class="sd">        noise in the images from Hubble Space Telescope that we use for simulating PSF convolved</span>
-<span class="sd">        galaxies with the RealGalaxy class.</span>
+<span class="sd">        galaxies with the `RealGalaxy` class.</span>
 
 <span class="sd">        This modifies the representation of the correlation function, but leaves the random number</span>
 <span class="sd">        generator unchanged.</span>
 
-<span class="sd">        Examples:</span>
+<span class="sd">        **Examples**:</span>
 
 <span class="sd">        The following command simply applies a Moffat PSF with slope parameter beta=3. and</span>
 <span class="sd">        FWHM=0.7::</span>
@@ -788,40 +806,40 @@
 <span class="sd">        as is demanded for a linear operation such as convolution.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            gsobject:   A GSObject or derived class instance representing the function</span>
+<span class="sd">            gsobject:   A `GSObject` or derived class instance representing the function</span>
 <span class="sd">                        with which the user wants to convolve the correlated noise model.</span>
-<span class="sd">            gsparams:   An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                        details. [default: None]</span>
+<span class="sd">            gsparams:   An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the new CorrelatedNoise of the convolved profile.</span>
+<span class="sd">            the new `BaseCorrelatedNoise` of the convolved profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">AutoCorrelate</span>
         <span class="n">conv</span> <span class="o">=</span> <span class="n">Convolve</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="n">AutoCorrelate</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span><span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)],</span>
                         <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">conv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">conv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.drawImage"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.drawImage"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A method for drawing profiles storing correlation functions.</span>
 
-<span class="sd">        This is a mild reimplementation of the drawImage() method for GSObjects.  The ``method`` is</span>
+<span class="sd">        This is a mild reimplementation of the `GSObject.drawImage` method.  The ``method`` is</span>
 <span class="sd">        automatically set to &#39;sb&#39; and cannot be changed, and the ``gain`` is set to unity.</span>
-<span class="sd">        Also, not all the normal parameters of the GSObject method are available.</span>
+<span class="sd">        Also, not all the normal parameters of the `GSObject` method are available.</span>
 
-<span class="sd">        If ``scale`` and ``wcs`` are not set, and the ``image`` has no ``wcs`` attribute, then this will</span>
-<span class="sd">        use the wcs of the CorrelatedNoise object.</span>
+<span class="sd">        If ``scale`` and ``wcs`` are not set, and the ``image`` has no ``wcs`` attribute, then this</span>
+<span class="sd">        will use the wcs of the `BaseCorrelatedNoise` object.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            image:          If provided, this will be the image on which to draw the profile.</span>
-<span class="sd">                            If ``image`` is None, then an automatically-sized Image will be created.</span>
-<span class="sd">                            If ``image`` is given, but its bounds are undefined (e.g. if it was</span>
-<span class="sd">                            constructed with ``image = galsim.Image()``), then it will be resized</span>
-<span class="sd">                            appropriately based on the profile&#39;s size [default: None].</span>
+<span class="sd">                            If ``image`` is None, then an automatically-sized `Image` will be</span>
+<span class="sd">                            created.  If ``image`` is given, but its bounds are undefined (e.g. if</span>
+<span class="sd">                            it was constructed with ``image = galsim.Image()``), then it will be</span>
+<span class="sd">                            resized appropriately based on the profile&#39;s size [default: None].</span>
 <span class="sd">            scale:          If provided, use this as the pixel scale for the image.  [default: None]</span>
 <span class="sd">            wcs:            If provided, use this as the wcs for the image (possibly overriding any</span>
-<span class="sd">                            existing ``image.wcs``).  At most one of ``scale`` or ``wcs`` may be provided.</span>
-<span class="sd">                            [default: None]  Note: If no WCS is provided either via ``scale``, ``wcs``</span>
-<span class="sd">                            or ``image.wcs``, then the noise object&#39;s wcs will be used.</span>
+<span class="sd">                            existing ``image.wcs``).  At most one of ``scale`` or ``wcs`` may be</span>
+<span class="sd">                            provided.  [default: None]  Note: If no WCS is provided either via</span>
+<span class="sd">                            ``scale``, ``wcs`` or ``image.wcs``, then the noise object&#39;s wcs will</span>
+<span class="sd">                            be used.</span>
 <span class="sd">            dtype:          The data type to use for an automatically constructed image.  Only</span>
 <span class="sd">                            valid if ``image`` is None. [default: None, which means to use</span>
 <span class="sd">                            numpy.float32]</span>
@@ -831,7 +849,7 @@
 <span class="sd">                            bounds. [default: False]</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            an Image of the correlation function.</span>
+<span class="sd">            an `Image` of the correlation function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">_determine_wcs</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
@@ -839,28 +857,28 @@
             <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;sb&#39;</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
             <span class="n">add_to_image</span><span class="o">=</span><span class="n">add_to_image</span><span class="p">,</span> <span class="n">use_true_center</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="_BaseCorrelatedNoise.drawKImage"><a class="viewcode-back" href="../../noise.html#galsim._BaseCorrelatedNoise.drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="BaseCorrelatedNoise.drawKImage"><a class="viewcode-back" href="../../corr_noise.html#galsim.BaseCorrelatedNoise.drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A method for drawing profiles storing correlation functions (i.e., power spectra) in</span>
 <span class="sd">        Fourier space.</span>
 
-<span class="sd">        This is a mild reimplementation of the drawKImage() method for GSObjects.  The ``gain`` is</span>
-<span class="sd">        automatically set to unity and cannot be change.  Also, not all the normal parameters of the</span>
-<span class="sd">        GSObject method are available.</span>
+<span class="sd">        This is a mild reimplementation of the `GSObject.drawKImage` method.  The ``gain`` is</span>
+<span class="sd">        automatically set to unity and cannot be changed.  Also, not all the normal parameters of</span>
+<span class="sd">        the `GSObject` method are available.</span>
 
 <span class="sd">        If ``scale`` is not set, and ``image`` has no ``wcs`` attribute, then this will use the</span>
-<span class="sd">        wcs of the CorrelatedNoise object, which must be a `PixelScale`.</span>
+<span class="sd">        wcs of the `BaseCorrelatedNoise` object, which must be a `PixelScale`.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            image:          If provided, this will be the Image onto which to draw the k-space</span>
+<span class="sd">            image:          If provided, this will be the `Image` onto which to draw the k-space</span>
 <span class="sd">                            image.  If ``image`` is None, then an automatically-sized image will be</span>
 <span class="sd">                            created.  If ``image`` is given, but its bounds are undefined, then it</span>
 <span class="sd">                            will be resized appropriately based on the profile&#39;s size.</span>
 <span class="sd">                            [default: None]</span>
-<span class="sd">            nx:             If provided and ``image`` is None, use to set the x-direction size of the</span>
-<span class="sd">                            image.  Must be accompanied by ``ny``.</span>
-<span class="sd">            ny:             If provided and ``image`` is None, use to set the y-direction size of the</span>
-<span class="sd">                            image.  Must be accompanied by ``nx``.</span>
+<span class="sd">            nx:             If provided and ``image`` is None, use to set the x-direction size of</span>
+<span class="sd">                            the image.  Must be accompanied by ``ny``.</span>
+<span class="sd">            ny:             If provided and ``image`` is None, use to set the y-direction size of</span>
+<span class="sd">                            the image.  Must be accompanied by ``nx``.</span>
 <span class="sd">            bounds:         If provided and ``image`` is None, use to set the bounds of the image.</span>
 <span class="sd">            scale:          If provided, use this as the pixel scale, dk, for the images.</span>
 <span class="sd">                            If ``scale`` is None and ``image`` is given, then take the provided</span>
@@ -874,15 +892,15 @@
 <span class="sd">                            bounds. [default: False]</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the tuple of Image instances, ``(re, im)`` (created if necessary)</span>
+<span class="sd">            the tuple of `Image` instances, ``(re, im)`` (created if necessary)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">drawKImage</span><span class="p">(</span>
                 <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="n">add_to_image</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_get_update_rootps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wcs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Internal utility function for querying the ``rootps`` cache, used by applyTo(),</span>
-<span class="sd">        whitenImage(), and symmetrizeImage() methods.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Internal utility function for querying the rootps cache, used by applyTo(),</span>
+        <span class="c1"># whitenImage(), and symmetrizeImage() methods.</span>
+
         <span class="c1"># Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)</span>
         <span class="n">half_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">half_shape</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span>
@@ -935,12 +953,11 @@
         <span class="k">return</span> <span class="n">rootps</span>
 
     <span class="k">def</span> <span class="nf">_get_update_rootps_whitening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">headroom</span><span class="o">=</span><span class="mf">1.05</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Internal utility function for querying the ``rootps_whitening`` cache, used by the</span>
-<span class="sd">        whitenImage() method, and calculate and update it if not present.</span>
+        <span class="c1"># Internal utility function for querying the rootps_whitening cache, used by the</span>
+        <span class="c1"># whitenImage() method, and calculate and update it if not present.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            rootps_whitening, variance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Returns: rootps_whitening, variance</span>
+
         <span class="c1"># Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)</span>
         <span class="n">half_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
@@ -972,12 +989,11 @@
         <span class="k">return</span> <span class="n">rootps_whitening</span><span class="p">,</span> <span class="n">variance</span>
 
     <span class="k">def</span> <span class="nf">_get_update_rootps_symmetrizing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">headroom</span><span class="o">=</span><span class="mf">1.02</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Internal utility function for querying the ``rootps_symmetrizing`` cache, used by the</span>
-<span class="sd">        symmetrizeImage() method, and calculate and update it if not present.</span>
+        <span class="c1"># Internal utility function for querying the ``rootps_symmetrizing`` cache, used by the</span>
+        <span class="c1"># symmetrizeImage() method, and calculate and update it if not present.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            rootps_symmetrizing, variance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Returns: rootps_symmetrizing, variance</span>
+
         <span class="c1"># Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)</span>
         <span class="n">half_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
@@ -1015,14 +1031,15 @@
         <span class="k">return</span> <span class="n">rootps_symmetrizing</span><span class="p">,</span> <span class="n">variance</span>
 
     <span class="k">def</span> <span class="nf">_get_symmetrized_ps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Internal utility function for taking an input power spectrum and generating a version of</span>
-<span class="sd">        it with symmetry at a given ``order``.</span>
+        <span class="c1"># Internal utility function for taking an input power spectrum and generating a version of</span>
+        <span class="c1"># it with symmetry at a given order.</span>
 
-<span class="sd">        We make an image of the PS and turn it into an galsim.InterpolatedImage in order to carry</span>
-<span class="sd">        out the necessary rotations using well-tested interpolation routines.  We will also require</span>
-<span class="sd">        the output to be strictly &gt;= the input noise power spectrum, so that it should be possible</span>
-<span class="sd">        to generate noise with power equal to the difference between the two power spectra.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># We make an image of the PS and turn it into an galsim.InterpolatedImage in order to carry</span>
+        <span class="c1"># out the necessary rotations using well-tested interpolation routines.  We will also</span>
+        <span class="c1"># require the output to be strictly &gt;= the input noise power spectrum, so that it should be</span>
+        <span class="c1"># possible to generate noise with power equal to the difference between the two power</span>
+        <span class="c1"># spectra.</span>
+
         <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
         <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span>
         <span class="c1"># Initialize a temporary copy of the original PS array, expanded to full size rather than</span>
@@ -1085,21 +1102,17 @@
 <span class="c1"># Power Spectrum</span>
 <span class="c1">#</span>
 <span class="k">def</span> <span class="nf">_generate_noise_from_rootps</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">rootps</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Utility function for generating a NumPy array containing a Gaussian random noise field with</span>
-<span class="sd">    a user-specified power spectrum also supplied as a NumPy array.</span>
+    <span class="c1"># Utility function for generating a NumPy array containing a Gaussian random noise field with</span>
+    <span class="c1"># a user-specified power spectrum also supplied as a NumPy array.</span>
 
-<span class="sd">    Parameters:</span>
-<span class="sd">        rng:        BaseDeviate instance to provide the random number generation</span>
-<span class="sd">        shape:      Shape of the output array, needed because of the use of Hermitian symmetry to</span>
-<span class="sd">                    increase inverse FFT efficiency using the ``np.fft.irfft2`` function (gets sent to</span>
-<span class="sd">                    the kwarg ``s`` of ``np.fft.irfft2``)</span>
-<span class="sd">        rootps:     NumPy array containing the square root of the discrete Power Spectrum ordered</span>
-<span class="sd">                    in two dimensions according to the usual DFT pattern for ``np.fft.rfft2`` output</span>
-<span class="sd">                    (see also ``np.fft.fftfreq``)</span>
+    <span class="c1"># shape is the shape of the output array, needed because of the use of Hermitian symmetry to</span>
+    <span class="c1">#       increase inverse FFT efficiency using the np.fft.irfft2 function (gets sent</span>
+    <span class="c1">#       to the kwarg s of np.fft.irfft2)</span>
+    <span class="c1"># rootps is a NumPy array containing the square root of the discrete power spectrum ordered</span>
+    <span class="c1">#        in two dimensions according to the usual DFT pattern for np.fft.rfft2 output</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        a NumPy array (contiguous) of the requested shape, filled with the noise field.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Returns a NumPy array (contiguous) of the requested shape, filled with the noise field.</span>
+
     <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">GaussianDeviate</span>
     <span class="c1"># Quickest to create Gaussian rng each time needed, so do that here...</span>
     <span class="c1"># Note sigma scaling: 1/sqrt(2) needed so &lt;|gaussvec|**2&gt; = product(shape)</span>
@@ -1130,53 +1143,54 @@
     <span class="c1"># Finally generate and return noise using the irfft</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft2</span><span class="p">(</span><span class="n">gvec</span> <span class="o">*</span> <span class="n">rootps</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span>
 
-
 <span class="c1">###</span>
 <span class="c1"># Then we define the CorrelatedNoise, which generates a correlation function by estimating it</span>
 <span class="c1"># directly from images:</span>
 <span class="c1">#</span>
-<div class="viewcode-block" id="CorrelatedNoise"><a class="viewcode-back" href="../../noise.html#galsim.CorrelatedNoise">[docs]</a><span class="k">class</span> <span class="nc">CorrelatedNoise</span><span class="p">(</span><span class="n">_BaseCorrelatedNoise</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class that represents 2D correlated noise fields calculated from an input Image.</span>
+<div class="viewcode-block" id="CorrelatedNoise"><a class="viewcode-back" href="../../corr_noise.html#galsim.CorrelatedNoise">[docs]</a><span class="k">class</span> <span class="nc">CorrelatedNoise</span><span class="p">(</span><span class="n">BaseCorrelatedNoise</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class that represents 2D correlated noise fields calculated from an input `Image`.</span>
 
 <span class="sd">    This class stores an internal representation of a 2D, discrete correlation function, and allows</span>
 <span class="sd">    a number of subsequent operations including interpolation, shearing, magnification and rendering</span>
-<span class="sd">    of the correlation function profile into an output Image.  The class also allows correlated</span>
-<span class="sd">    Gaussian noise fields to be generated according to the correlation function, and added to an</span>
-<span class="sd">    Image: see the applyTo() method.  It also provides methods for whitening or imposing N-fold</span>
-<span class="sd">    symmetry on pre-existing noise that shares the same spatial correlations: see the</span>
-<span class="sd">    whitenImage() and symmetrizeImage() methods, respectively.</span>
+<span class="sd">    of the correlation function profile into an output `Image`.</span>
+
+<span class="sd">    The class also allows correlated Gaussian noise fields to be generated according to the</span>
+<span class="sd">    correlation function, and added to an `Image`: see `BaseCorrelatedNoise.applyTo`.</span>
+
+<span class="sd">    It also provides methods for whitening or imposing N-fold symmetry on pre-existing noise that</span>
+<span class="sd">    shares the same spatial correlations: see `BaseCorrelatedNoise.whitenImage` and</span>
+<span class="sd">    `BaseCorrelatedNoise.symmetrizeImage`, respectively.</span>
 
 <span class="sd">    It also allows the combination of multiple correlation functions by addition, and for the</span>
 <span class="sd">    scaling of the total variance they represent by scalar factors.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        image:              The image from which to derive the correlated noise profile</span>
-<span class="sd">        rng:                A BaseDeviate instance to use for generating the random numbers.</span>
+<span class="sd">        rng:                A `BaseDeviate` instance to use for generating the random numbers.</span>
 <span class="sd">        scale:              If provided, use this as the pixel scale.  Normally, the scale (or wcs)</span>
 <span class="sd">                            is taken from the image.wcs field, but you may override that by</span>
 <span class="sd">                            providing either scale or wcs.  [default: use image.wcs if defined,</span>
 <span class="sd">                            else 1.0, unless ``wcs`` is provided]</span>
-<span class="sd">        wcs:                If provided, use this as the wcs for the image.  At most one of ``scale``</span>
-<span class="sd">                            or ``wcs`` may be provided. [default: None]</span>
+<span class="sd">        wcs:                If provided, use this as the wcs for the image.  At most one of</span>
+<span class="sd">                            ``scale`` or ``wcs`` may be provided. [default: None]</span>
 <span class="sd">        x_interpolant:      The interpolant to use for interpolating the image of the correlation</span>
 <span class="sd">                            function. (See below.) [default: galsim.Linear(tol=1.e-4)]</span>
 <span class="sd">        correct_periodicity: Whether to correct for the effects of periodicity.  (See below.)</span>
 <span class="sd">                            [default: True]</span>
 <span class="sd">        subtract_mean:      Whether to subtract off the mean value from the image before computing</span>
 <span class="sd">                            the correlation function. [default: False]</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 
-<span class="sd">    Basic example::</span>
+<span class="sd">    **Basic example**::</span>
 
 <span class="sd">        &gt;&gt;&gt; cn = galsim.CorrelatedNoise(image, rng=rng)</span>
 
 <span class="sd">    Instantiates a CorrelatedNoise using the pixel scale information contained in ``image.scale``</span>
 <span class="sd">    (assumes the scale is unity if ``image.scale &lt;= 0.``) by calculating the correlation function</span>
-<span class="sd">    in the input ``image``.  The input ``rng`` must be a BaseDeviate or derived class instance,</span>
+<span class="sd">    in the input ``image``.  The input ``rng`` must be a `BaseDeviate` or derived class instance,</span>
 <span class="sd">    setting the random number generation for the noise.</span>
 
-<span class="sd">    Optional Inputs: Interpolant::</span>
+<span class="sd">    **Optional Inputs**::</span>
 
 <span class="sd">        &gt;&gt;&gt; cn = galsim.CorrelatedNoise(image, rng=rng, scale=0.2)</span>
 
@@ -1188,31 +1202,30 @@
 <span class="sd">    The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant</span>
 <span class="sd">    for interpolation of the internal lookup table in real space.</span>
 
-<span class="sd">    The default ``x_interpolant`` is ``galsim.Linear(tol=1.e-4)``, which uses bilinear interpolation.</span>
-<span class="sd">    The use of this interpolant is an approximation that gives good empirical results without</span>
-<span class="sd">    requiring internal convolution of the correlation function profile by a Pixel object when</span>
-<span class="sd">    applying correlated noise to images: such an internal convolution has been found to be</span>
-<span class="sd">    computationally costly in practice, requiring the Fourier transform of very large arrays.</span>
+<span class="sd">    The default ``x_interpolant`` is ``galsim.Linear(tol=1.e-4)``, which uses bilinear</span>
+<span class="sd">    interpolation.  The use of this interpolant is an approximation that gives good empirical</span>
+<span class="sd">    results without requiring internal convolution of the correlation function profile by a `Pixel`</span>
+<span class="sd">    object when applying correlated noise to images: such an internal convolution has been found to</span>
+<span class="sd">    be computationally costly in practice, requiring the Fourier transform of very large arrays.</span>
 
 <span class="sd">    The use of the bilinear interpolants means that the representation of correlated noise will be</span>
 <span class="sd">    noticeably inaccurate in at least the following two regimes:</span>
 
-<span class="sd">      i)  If the pixel scale of the desired final output (e.g. the target image of drawImage(),</span>
-<span class="sd">          applyTo() or whitenImage()) is small relative to the separation between pixels</span>
+<span class="sd">      i)  If the pixel scale of the desired final output (e.g. the target image of</span>
+<span class="sd">          `BaseCorrelatedNoise.drawImage`, `BaseCorrelatedNoise.applyTo` or</span>
+<span class="sd">          `BaseCorrelatedNoise.whitenImage`) is small relative to the separation between pixels</span>
 <span class="sd">          in the ``image`` used to instantiate ``cn`` as shown above.</span>
 <span class="sd">      ii) If the CorrelatedNoise instance ``cn`` was instantiated with an image of scale comparable</span>
 <span class="sd">          to that in the final output, and ``cn`` has been rotated or otherwise transformed (e.g.</span>
-<span class="sd">          via the rotate(), shear() methods, see below).</span>
+<span class="sd">          via the `BaseCorrelatedNoise.rotate`, `BaseCorrelatedNoise.shear` methods; see below).</span>
 
 <span class="sd">    Conversely, the approximation will work best in the case where the correlated noise used to</span>
-<span class="sd">    instantiate the ``cn`` is taken from an input image for which ``image.scale`` is smaller than that</span>
-<span class="sd">    in the desired output.  This is the most common use case in the practical treatment of</span>
+<span class="sd">    instantiate the ``cn`` is taken from an input image for which ``image.scale`` is smaller than</span>
+<span class="sd">    that in the desired output.  This is the most common use case in the practical treatment of</span>
 <span class="sd">    correlated noise when simulating galaxies from space telescopes, such as COSMOS.</span>
 
 <span class="sd">    Changing from the default bilinear interpolant is made possible, but not recommended.  For more</span>
 <span class="sd">    information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.</span>
-
-<span class="sd">    Optional Inputs: Periodicity Correction:</span>
 
 <span class="sd">    There is also an option to switch off an internal correction for assumptions made about the</span>
 <span class="sd">    periodicity in the input noise image.  If you wish to turn this off you may, e.g.::</span>
@@ -1221,11 +1234,11 @@
 
 <span class="sd">    The default and generally recommended setting is ``correct_periodicity=True``.</span>
 
-<span class="sd">    Users should note that the internal calculation of the discrete correlation function in ``image``</span>
-<span class="sd">    will assume that ``image`` is periodic across its boundaries, introducing a dilution bias in the</span>
-<span class="sd">    estimate of inter-pixel correlations that increases with separation.  Unless you know that the</span>
-<span class="sd">    noise in ``image`` is indeed periodic (perhaps because you generated it to be so), you will not</span>
-<span class="sd">    generally wish to use the ``correct_periodicity=False`` option.</span>
+<span class="sd">    Users should note that the internal calculation of the discrete correlation function in</span>
+<span class="sd">    ``image`` will assume that ``image`` is periodic across its boundaries, introducing a dilution</span>
+<span class="sd">    bias in the estimate of inter-pixel correlations that increases with separation.  Unless you</span>
+<span class="sd">    know that the noise in ``image`` is indeed periodic (perhaps because you generated it to be so),</span>
+<span class="sd">    you will not generally wish to use the ``correct_periodicity=False`` option.</span>
 
 <span class="sd">    By default, the image is not mean subtracted before the correlation function is estimated.  To</span>
 <span class="sd">    do an internal mean subtraction, you can set the ``subtract_mean`` keyword to ``True``, e.g.::</span>
@@ -1244,10 +1257,10 @@
 <span class="sd">    from an imperfectly-estimated sample mean subtraction.  If this is not possible, just be aware</span>
 <span class="sd">    that ``subtract_mean=True`` will bias the correlation function low to some level.</span>
 
-<span class="sd">    You may also specify a gsparams argument.  See the docstring for GSParams using</span>
-<span class="sd">    help(galsim.GSParams) for more information about this option.</span>
+<span class="sd">    You may also specify a gsparams argument.  See the docstring for `GSParams` for more</span>
+<span class="sd">    information about this option.</span>
 
-<span class="sd">    Methods:</span>
+<span class="sd">    **Methods**:</span>
 
 <span class="sd">    The main way that a CorrelatedNoise is used is to add correlated noise to an image.</span>
 <span class="sd">    The syntax::</span>
@@ -1258,11 +1271,11 @@
 
 <span class="sd">        &gt;&gt;&gt; cn.applyTo(image)</span>
 
-<span class="sd">    is equivalent.  See the addNoise() method docstring for more information.  The ``image.scale``</span>
-<span class="sd">    is used to get the pixel scale of the input image unless this is &lt;= 0, in which case a scale</span>
-<span class="sd">    of 1 is assumed.</span>
+<span class="sd">    is equivalent.  See the `Image.addNoise` method docstring for more information.  The</span>
+<span class="sd">    ``image.scale`` is used to get the pixel scale of the input image unless this is &lt;= 0, in which</span>
+<span class="sd">    case a scale of 1 is assumed.</span>
 
-<span class="sd">    A number of methods familiar from GSObject instances have also been implemented directly as</span>
+<span class="sd">    A number of methods familiar from `GSObject` instances have also been implemented directly as</span>
 <span class="sd">    ``cn`` methods, so that the following commands are all legal::</span>
 
 <span class="sd">        &gt;&gt;&gt; image = cn.drawImage(im, scale)</span>
@@ -1271,7 +1284,7 @@
 <span class="sd">        &gt;&gt;&gt; cn = cn.rotate(theta * galsim.degrees)</span>
 <span class="sd">        &gt;&gt;&gt; cn = cn.transform(dudx, dudy, dvdx, dvdy)</span>
 
-<span class="sd">    See the individual method docstrings for more details.  The shift() method is not available</span>
+<span class="sd">    See the individual method docstrings for more details.  The ``shift`` method is not available</span>
 <span class="sd">    since a correlation function must always be centred and peaked at the origin.</span>
 
 <span class="sd">    The methods::</span>
@@ -1282,12 +1295,14 @@
 
 <span class="sd">    can be used to get and set the point variance of the correlated noise, equivalent to the zero</span>
 <span class="sd">    separation distance correlation function value.</span>
-<span class="sd">    The :py:meth:`galsim.correlatednoise._BaseCorrelatedNoise.withVariance` method scales</span>
-<span class="sd">    the whole internal correlation function so that its point variance matches ``variance``.</span>
-<span class="sd">    Similarly, :py:meth:`galsim.correlatednoise._BaseCorrelatedNoise.withScaledVariance`</span>
-<span class="sd">    scales the entire function by the given factor.</span>
 
-<span class="sd">    Arithmetic Operators:</span>
+<span class="sd">    The `BaseCorrelatedNoise.withVariance` method scales the whole internal correlation function so</span>
+<span class="sd">    that its point variance matches ``variance``.</span>
+
+<span class="sd">    Similarly, `BaseCorrelatedNoise.withScaledVariance` scales the entire function by the given</span>
+<span class="sd">    factor.</span>
+
+<span class="sd">    **Arithmetic Operators**:</span>
 
 <span class="sd">    Addition, multiplication and division operators are defined to work in an intuitive way for</span>
 <span class="sd">    correlation functions.</span>
@@ -1301,12 +1316,12 @@
 <span class="sd">    by the individual correlation function operands.</span>
 
 <span class="sd">    What happens to the internally stored random number generators in the examples above?  For all</span>
-<span class="sd">    addition operations it is the BaseDeviate belonging to the instance on the Left-Hand Side</span>
+<span class="sd">    addition operations it is the `BaseDeviate` belonging to the instance on the *left-hand side*</span>
 <span class="sd">    of the operator that is retained.</span>
 
-<span class="sd">    In the example above therefore, it is the random number generator from ``cn2`` that will be stored</span>
-<span class="sd">    and used by ``cn3``, and ``cn4`` will retain its random number generator after in-place addition of</span>
-<span class="sd">    ``cn5``.  The random number generator of ``cn5`` is not affected by the operation.</span>
+<span class="sd">    In the example above therefore, it is the random number generator from ``cn2`` that will be</span>
+<span class="sd">    stored and used by ``cn3``, and ``cn4`` will retain its random number generator after in-place</span>
+<span class="sd">    addition of ``cn5``.  The random number generator of ``cn5`` is not affected by the operation.</span>
 
 <span class="sd">    The multiplication and division operators, e.g.::</span>
 
@@ -1316,7 +1331,7 @@
 <span class="sd">    scale the overall correlation function by a scalar operand.  The random number generators are</span>
 <span class="sd">    not affected by these scaling operations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="CorrelatedNoise.__init__"><a class="viewcode-back" href="../../corr_noise.html#galsim.CorrelatedNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">correct_periodicity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">subtract_mean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">BaseWCS</span>
         <span class="kn">from</span> <span class="nn">.interpolant</span> <span class="k">import</span> <span class="n">Linear</span>
@@ -1412,7 +1427,7 @@
             <span class="n">calculate_stepk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">calculate_maxk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1">#&lt;-these internal calculations do not seem</span>
             <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>                           <span class="c1">#  to do very well with often sharp-peaked</span>
                                                          <span class="c1">#  correlation function images...</span>
-        <span class="n">_BaseCorrelatedNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">cf_object</span><span class="p">,</span> <span class="n">cf_image</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
+        <span class="n">BaseCorrelatedNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">cf_object</span><span class="p">,</span> <span class="n">cf_image</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">store_rootps</span><span class="p">:</span>
             <span class="c1"># If it corresponds to the CF above, store in the cache</span>
@@ -1422,10 +1437,10 @@
             <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">half_shape</span><span class="p">,</span> <span class="n">cf_image</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_rootps_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ps_array</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.CorrelatedNoise(</span><span class="si">%s</span><span class="s2">, wcs=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+<div class="viewcode-block" id="CorrelatedNoise.__str__"><a class="viewcode-back" href="../../corr_noise.html#galsim.CorrelatedNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.CorrelatedNoise(</span><span class="si">%s</span><span class="s2">, wcs=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">_cf_periodicity_dilution_correction</span><span class="p">(</span><span class="n">cf_shape</span><span class="p">):</span>
@@ -1457,7 +1472,7 @@
 
 
 <span class="c1"># Free function for returning a COSMOS noise field correlation function</span>
-<div class="viewcode-block" id="getCOSMOSNoise"><a class="viewcode-back" href="../../noise.html#galsim.getCOSMOSNoise">[docs]</a><span class="k">def</span> <span class="nf">getCOSMOSNoise</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cosmos_scale</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="getCOSMOSNoise"><a class="viewcode-back" href="../../corr_noise.html#galsim.getCOSMOSNoise">[docs]</a><span class="k">def</span> <span class="nf">getCOSMOSNoise</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cosmos_scale</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd</span>
 <span class="sd">    images.</span>
@@ -1467,24 +1482,24 @@
 <span class="sd">    weak lensing science.</span>
 
 <span class="sd">    This function uses a stacked estimate of the correlation function in COSMOS noise fields.</span>
-<span class="sd">    The correlation function was computed by the GalSim team as described in</span>
+<span class="sd">    The correlation function was computed by the GalSim team as described in::</span>
 
-<span class="sd">        /YOUR/REPO/PATH/GalSim/devel/external/hst/make_cosmos_cfimage.py</span>
+<span class="sd">        GalSim/devel/external/hst/make_cosmos_cfimage.py</span>
 
-<span class="sd">    and the resulting file is distributed with GalSim as</span>
+<span class="sd">    The resulting file is distributed with GalSim as::</span>
 
-<span class="sd">        /YOUR/REPO/PATH/GalSim/share/acs_I_unrot_sci_20_cf.fits</span>
+<span class="sd">        os.path.join(&#39;galsim.meta_data.share_dir&#39;, &#39;acs_I_unrot_sci_20_cf.fits&#39;)</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        file_name:      If provided, override the usual location of the file with the given</span>
 <span class="sd">                        file name.  [default: None]</span>
 <span class="sd">        rng:            If provided, a random number generator to use as the random number</span>
 <span class="sd">                        generator of the resulting noise object. (may be any kind of</span>
-<span class="sd">                        BaseDeviate object) [default: None, in which case, one will be</span>
+<span class="sd">                        `BaseDeviate` object) [default: None, in which case, one will be</span>
 <span class="sd">                        automatically created, using the time as a seed.]</span>
 <span class="sd">        cosmos_scale:   COSMOS ACS F814W coadd image pixel scale in the units you are using to</span>
-<span class="sd">                        describe GSObjects and image scales in GalSim. [default: 0.03 (arcsec),</span>
-<span class="sd">                        see below for more information.]</span>
+<span class="sd">                        describe `GSObject` instances and image scales in GalSim. [default: 0.03</span>
+<span class="sd">                        (arcsec), see below for more information.]</span>
 <span class="sd">        variance:       Scales the correlation function so that its point variance, equivalent</span>
 <span class="sd">                        to its value at zero separation distance, matches this value.</span>
 <span class="sd">                        [default: 0., which means to use the variance in the original COSMOS</span>
@@ -1492,39 +1507,40 @@
 <span class="sd">        x_interpolant:  Forces use of a non-default interpolant for interpolation of the</span>
 <span class="sd">                        internal lookup table in real space.  See below for more details.</span>
 <span class="sd">                        [default: galsim.Linear(tol=1.e-4)]</span>
-<span class="sd">        gsparams:       An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                        details. [default: None]</span>
+<span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.</span>
+<span class="sd">        a `BaseCorrelatedNoise` instance representing correlated noise in F814W COSMOS images.</span>
 
-<span class="sd">    The default ``x_interpolant`` is a ``galsim.Linear(tol=1.e-4)``, which uses bilinear interpolation.</span>
+<span class="sd">    The default ``x_interpolant`` is a ``galsim.Linear(tol=1.e-4)``, which uses bilinear</span>
+<span class="sd">    interpolation.</span>
 <span class="sd">    The use of this interpolant is an approximation that gives good empirical results without</span>
-<span class="sd">    requiring internal convolution of the correlation function profile by a Pixel object when</span>
+<span class="sd">    requiring internal convolution of the correlation function profile by a `Pixel` object when</span>
 <span class="sd">    applying correlated noise to images: such an internal convolution has been found to be</span>
 <span class="sd">    computationally costly in practice, requiring the Fourier transform of very large arrays.</span>
 
 <span class="sd">    The use of the bilinear interpolants means that the representation of correlated noise will be</span>
 <span class="sd">    noticeably inaccurate in at least the following two regimes:</span>
 
-<span class="sd">      i)  If the pixel scale of the desired final output (e.g. the target image of drawImage(),</span>
-<span class="sd">          applyTo() or whitenImage()) is small relative to the separation between pixels</span>
-<span class="sd">          in the ``image`` used to instantiate ``cn`` as shown above.</span>
-<span class="sd">      ii) If the CorrelatedNoise instance ``cn`` was instantiated with an image of scale comparable</span>
-<span class="sd">          to that in the final output, and ``cn`` has been rotated or otherwise transformed (e.g.</span>
-<span class="sd">          via the rotate(), shear() methods, see below).</span>
+<span class="sd">    1. If the pixel scale of the desired final output (e.g. the target image of</span>
+<span class="sd">       `BaseCorrelatedNoise.drawImage`, `BaseCorrelatedNoise.applyTo` or</span>
+<span class="sd">       `BaseCorrelatedNoise.whitenImage`) is small relative to the separation between pixels in</span>
+<span class="sd">       the ``image`` used to instantiate ``cn`` as shown above.</span>
+<span class="sd">    2. If the `BaseCorrelatedNoise` instance ``cn`` was instantiated with an image of scale</span>
+<span class="sd">       comparable to that in the final output, and ``cn`` has been rotated or otherwise transformed</span>
+<span class="sd">       (e.g.  via the `BaseCorrelatedNoise.rotate`, `BaseCorrelatedNoise.shear` methods; see below).</span>
 
 <span class="sd">    Conversely, the approximation will work best in the case where the correlated noise used to</span>
-<span class="sd">    instantiate the ``cn`` is taken from an input image for which ``image.scale`` is smaller than that</span>
-<span class="sd">    in the desired output.  This is the most common use case in the practical treatment of</span>
+<span class="sd">    instantiate the ``cn`` is taken from an input image for which ``image.scale`` is smaller than</span>
+<span class="sd">    that in the desired output.  This is the most common use case in the practical treatment of</span>
 <span class="sd">    correlated noise when simulating galaxies from COSMOS, for which this function is expressly</span>
 <span class="sd">    designed.</span>
 
 <span class="sd">    Changing from the default bilinear interpolant is made possible, but not recommended.  For more</span>
 <span class="sd">    information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.</span>
 
-<span class="sd">    You may also specify a gsparams argument.  See the docstring for GSParams using</span>
-<span class="sd">    help(galsim.GSParams) for more information about this option.</span>
+<span class="sd">    You may also specify a gsparams argument.  See the docstring for `GSParams` for more</span>
+<span class="sd">    information about this option.</span>
 
 <span class="sd">    .. note::</span>
 
@@ -1535,7 +1551,7 @@
 <span class="sd">        If you wish to use other units, ensure that the input keyword ``cosmos_scale`` takes the</span>
 <span class="sd">        value corresponding to 0.03 arcsec in your chosen system.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    **Example**:</span>
 
 <span class="sd">    The following commands use this function to generate a 300 pixel x 300 pixel image of noise with</span>
 <span class="sd">    HST COSMOS correlation properties (substitute in your own file and path for the ``filestring``)::</span>
@@ -1561,7 +1577,6 @@
     <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fits</span>
     <span class="kn">from</span> <span class="nn">.interpolant</span> <span class="k">import</span> <span class="n">Linear</span>
     <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
-    <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
     <span class="c1"># First try to read in the image of the COSMOS correlation function stored in the repository</span>
     <span class="kn">import</span> <span class="nn">os</span>
     <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1590,17 +1605,17 @@
     <span class="n">ii</span> <span class="o">=</span> <span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">cfimage</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">cosmos_scale</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s2">&quot;sb&quot;</span><span class="p">,</span>
                            <span class="n">calculate_stepk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">calculate_maxk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                            <span class="n">x_interpolant</span><span class="o">=</span><span class="n">x_interpolant</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
-    <span class="n">ret</span> <span class="o">=</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">(</span><span class="n">cosmos_scale</span><span class="p">))</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">(</span><span class="n">cosmos_scale</span><span class="p">))</span>
     <span class="c1"># If the input keyword variance is non-zero, scale the correlation function to have this</span>
     <span class="c1"># variance</span>
     <span class="k">if</span> <span class="n">variance</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">withVariance</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="UncorrelatedNoise"><a class="viewcode-back" href="../../noise.html#galsim.UncorrelatedNoise">[docs]</a><span class="k">class</span> <span class="nc">UncorrelatedNoise</span><span class="p">(</span><span class="n">_BaseCorrelatedNoise</span><span class="p">):</span>
+<div class="viewcode-block" id="UncorrelatedNoise"><a class="viewcode-back" href="../../corr_noise.html#galsim.UncorrelatedNoise">[docs]</a><span class="k">class</span> <span class="nc">UncorrelatedNoise</span><span class="p">(</span><span class="n">BaseCorrelatedNoise</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class that represents 2D correlated noise fields that are actually (at least initially)</span>
-<span class="sd">    uncorrelated.  Subsequent applications of things like shear or convolvedWith will induce</span>
-<span class="sd">    correlations.</span>
+<span class="sd">    uncorrelated.  Subsequent applications of things like `BaseCorrelatedNoise.shear` or</span>
+<span class="sd">    `BaseCorrelatedNoise.convolvedWith` will induce correlations.</span>
 
 <span class="sd">    The noise is characterized by a variance in each image pixel and a pixel size and shape.</span>
 <span class="sd">    The ``variance`` value refers to the noise variance in each pixel.  If the pixels are square</span>
@@ -1616,16 +1631,15 @@
 <span class="sd">                        over the whole image.</span>
 <span class="sd">        rng:            If provided, a random number generator to use as the random number</span>
 <span class="sd">                        generator of the resulting noise object. (may be any kind of</span>
-<span class="sd">                        BaseDeviate object) [default: None, in which case, one will be</span>
+<span class="sd">                        `BaseDeviate` object) [default: None, in which case, one will be</span>
 <span class="sd">                        automatically created, using the time as a seed.]</span>
 <span class="sd">        scale:          If provided, use this as the pixel scale.  [default: 1.0, unless ``wcs`` is</span>
 <span class="sd">                        provided]</span>
 <span class="sd">        wcs:            If provided, use this as the wcs for the image.  At most one of ``scale``</span>
 <span class="sd">                        or ``wcs`` may be provided. [default: None]</span>
-<span class="sd">        gsparams:       An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                        details. [default: None]</span>
+<span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="UncorrelatedNoise.__init__"><a class="viewcode-back" href="../../corr_noise.html#galsim.UncorrelatedNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">BaseWCS</span><span class="p">,</span> <span class="n">PixelScale</span>
         <span class="kn">from</span> <span class="nn">.box</span> <span class="k">import</span> <span class="n">Pixel</span>
         <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">AutoConvolve</span>
@@ -1659,39 +1673,42 @@
         <span class="n">world_cf</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">profileToWorld</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
         <span class="c1"># This gets the shape right, but not the amplitude.  Need to rescale by the pixel area</span>
         <span class="n">world_cf</span> <span class="o">*=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">()</span>
-        <span class="n">_BaseCorrelatedNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">world_cf</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span>
+        <span class="n">BaseCorrelatedNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">world_cf</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">UncorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UncorrelatedNoise.__repr__"><a class="viewcode-back" href="../../corr_noise.html#galsim.UncorrelatedNoise.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.UncorrelatedNoise(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, wcs=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.UncorrelatedNoise(variance=</span><span class="si">%r</span><span class="s2">, wcs=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
+<div class="viewcode-block" id="UncorrelatedNoise.__str__"><a class="viewcode-back" href="../../corr_noise.html#galsim.UncorrelatedNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.UncorrelatedNoise(variance=</span><span class="si">%r</span><span class="s2">, wcs=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="CovarianceSpectrum"><a class="viewcode-back" href="../../chromatic.html#galsim.CovarianceSpectrum">[docs]</a><span class="k">class</span> <span class="nc">CovarianceSpectrum</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="CovarianceSpectrum"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum">[docs]</a><span class="k">class</span> <span class="nc">CovarianceSpectrum</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class to hold a `ChromaticSum` noise covariance spectrum (which is a generalization of a</span>
 <span class="sd">    power spectrum or equivalently a correlation function).</span>
+
 <span class="sd">    Analogous to how a `galsim.CorrelatedNoise` object stores the variance and covariance of a</span>
-<span class="sd">    galsim.Image object, a `galsim.CovarianceSpectrum` stores the variance and covariance of the</span>
-<span class="sd">    Fourier mode amplitudes in different components of a `ChromaticSum`.  Note that the covariance</span>
-<span class="sd">    in question exists between different SED-components of the `ChromaticSum`, and not between</span>
-<span class="sd">    different Fourier modes, which are assumed to be uncorrelated.  This structure arises naturally</span>
-<span class="sd">    for a `ChromaticRealGalaxy` (see devel/modules/CGNotes.pdf for more details).</span>
+<span class="sd">    `galsim.Image` object, a `galsim.CovarianceSpectrum` stores the variance and covariance of the</span>
+<span class="sd">    Fourier mode amplitudes in different components of a `ChromaticSum`.</span>
+
+<span class="sd">    Note that the covariance in question exists between different `SED` components of the</span>
+<span class="sd">    `ChromaticSum`, and not between different Fourier modes, which are assumed to be uncorrelated.</span>
+<span class="sd">    This structure arises naturally for a `ChromaticRealGalaxy` (see devel/modules/CGNotes.pdf for</span>
+<span class="sd">    more details).</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        Sigma:     A dictionary whose keys are tuples numerically indicating a pair of `ChromaticSum`</span>
-<span class="sd">                   components whose Fourier mode amplitude covariances are described by the</span>
-<span class="sd">                   corresponding GSObject values.</span>
-<span class="sd">        SEDs:      SEDs of associated `ChromaticSum` components.</span>
+<span class="sd">        Sigma:     A dictionary whose keys are tuples numerically indicating a pair of</span>
+<span class="sd">                    `ChromaticSum` components whose Fourier mode amplitude covariances are</span>
+<span class="sd">                    described by the corresponding `GSObject` values.</span>
+<span class="sd">        SEDs:      `SED` instances of associated `ChromaticSum` components.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">SEDs</span><span class="p">):</span>
+<div class="viewcode-block" id="CovarianceSpectrum.__init__"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">SEDs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span> <span class="o">=</span> <span class="n">SEDs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span> <span class="o">=</span> <span class="n">SEDs</span></div>
 
     <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">)</span>
@@ -1708,12 +1725,12 @@
             <span class="n">Sigma</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">variance_ratio</span>
         <span class="k">return</span> <span class="n">CovarianceSpectrum</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CovarianceSpectrum.toNoise"><a class="viewcode-back" href="../../chromatic.html#galsim.CovarianceSpectrum.toNoise">[docs]</a>    <span class="k">def</span> <span class="nf">toNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">PSF</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Derive the galsim.CorrelatedNoise object for the associated `ChromaticSum` when convolved</span>
+<div class="viewcode-block" id="CovarianceSpectrum.toNoise"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum.toNoise">[docs]</a>    <span class="k">def</span> <span class="nf">toNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">PSF</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Derive the `CorrelatedNoise` object for the associated `ChromaticSum` when convolved</span>
 <span class="sd">        with ``PSF`` and drawn through ``bandpass`` onto pixels with specified ``wcs``.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            bandpass:     galsim.Bandpass object representing filter image is drawn through.</span>
+<span class="sd">            bandpass:     `Bandpass` object representing filter image is drawn through.</span>
 <span class="sd">            PSF:          output chromatic PSF to convolve by.</span>
 <span class="sd">            wcs:          WCS of output pixel scale.</span>
 <span class="sd">            rng:          Random number generator to forward to resulting CorrelatedNoise object.</span>
@@ -1746,26 +1763,26 @@
         <span class="n">pk</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">pkout</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">stepk</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>  <span class="c1"># imag part should be zero</span>
         <span class="n">iki</span> <span class="o">=</span> <span class="n">InterpolatedKImage</span><span class="p">(</span><span class="n">pk</span><span class="p">)</span>
         <span class="n">iki</span> <span class="o">*=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">()</span><span class="o">**</span><span class="mi">2</span>  <span class="c1"># determined this empirically</span>
-        <span class="k">return</span> <span class="n">_BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">iki</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">iki</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="CovarianceSpectrum.__eq__"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CovarianceSpectrum</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">SEDs</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">Sigma</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">Sigma</span><span class="p">))</span></div>
+<div class="viewcode-block" id="CovarianceSpectrum.__ne__"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CovarianceSpectrum.__hash__"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.CovarianceSpectrum&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">),</span>
-                     <span class="nb">frozenset</span><span class="p">(</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">))))</span>
+                     <span class="nb">frozenset</span><span class="p">(</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">))))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.CovarianceSpectrum(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">)</span>
+<div class="viewcode-block" id="CovarianceSpectrum.__repr__"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.CovarianceSpectrum(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CovarianceSpectrum.__str__"><a class="viewcode-back" href="../../spectral.html#galsim.CovarianceSpectrum.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">sigma_str</span> <span class="o">=</span> <span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
         <span class="n">seds_str</span> <span class="o">=</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.CovarianceSpectrum(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sigma_str</span><span class="p">,</span> <span class="n">seds_str</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="s2">&quot;galsim.CovarianceSpectrum(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sigma_str</span><span class="p">,</span> <span class="n">seds_str</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

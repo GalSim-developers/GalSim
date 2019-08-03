@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Miscellaneous Utilities" href="misc.html" />
+    <link rel="next" title="Differential Chromatic Refraction" href="dcr.html" />
     <link rel="prev" title="Fourier Transforms" href="fft.html" /> 
 </head>
 
@@ -91,9 +91,10 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
@@ -104,13 +105,17 @@
 <li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -245,6 +250,36 @@ coef[4] is ‘defocus’, …)</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.zernike.Zernike.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">coef</em>, <em class="sig-param">R_outer=1.0</em>, <em class="sig-param">R_inner=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.zernike.Zernike.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.zernike.Zernike.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.zernike.Zernike.evalCartesian">
 <code class="sig-name descname">evalCartesian</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</p>
@@ -269,7 +304,7 @@ coef[4] is ‘defocus’, …)</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>rho</strong> – radial coordinate of evaluation points.  Can be list-like.</p></li>
-<li><p><strong>theta</strong> – azimuthal coordinate in radians (or as Angle object) of evaluation points.
+<li><p><strong>theta</strong> – azimuthal coordinate in radians (or as <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object) of evaluation points.
 Can be list-like.</p></li>
 </ul>
 </dd>
@@ -291,7 +326,7 @@ Can be list-like.</p></li>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>theta</strong> – Angle in radians.</p>
+<dd class="field-odd"><p><strong>theta</strong> – angle in radians.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A new Zernike object.</p>
@@ -343,7 +378,7 @@ is [jmax+1, jmax+1].</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>jmax</strong> – Maximum Zernike index (in the Noll convention) over which to construct matrix.</p></li>
-<li><p><strong>theta</strong> – Angle of rotation in radians.</p></li>
+<li><p><strong>theta</strong> – angle of rotation in radians.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -400,7 +435,7 @@ to individual Zernike polynomials.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="misc.html" class="btn btn-neutral float-right" title="Miscellaneous Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="dcr.html" class="btn btn-neutral float-right" title="Differential Chromatic Refraction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="fft.html" class="btn btn-neutral float-left" title="Fourier Transforms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

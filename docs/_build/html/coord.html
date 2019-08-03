@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Helper Functions and Classes" href="utilities.html" />
-    <link rel="prev" title="Weak Lensing Shear" href="shear.html" /> 
+    <link rel="prev" title="Surface Operators" href="surface.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -91,19 +91,22 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Angles and Coordinates</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#angles">Angles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#celestial-coordinates">Celestial Coordinates</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -334,6 +337,55 @@ calculating the difference between them.</p>
 <p>There is also an option to wrap into a different 2 pi range if so desired by specifying
 the center of the range.</p>
 </div></blockquote>
+<dl class="method">
+<dt id="galsim.Angle.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Angle.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Angle.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">theta</em>, <em class="sig-param">unit=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> – The numerical value of the angle.</p></li>
+<li><p><strong>unit</strong> – The units theta is measured in.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Angle.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Angle.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Angle.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Angle.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Angle.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Angle.cos">
 <code class="sig-name descname">cos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.cos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.cos" title="Permalink to this definition">¶</a></dt>
@@ -604,6 +656,72 @@ of the desired angular unit in radians.  For example:</p>
 </div></blockquote>
 </div></blockquote>
 <dl class="method">
+<dt id="galsim.AngleUnit.__div__">
+<code class="sig-name descname">__div__</code><span class="sig-paren">(</span><em class="sig-param">unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.__div__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.__div__" title="Permalink to this definition">¶</a></dt>
+<dd><p>AngleUnit / AngleUnit returns a float giving the relative scaling.</p>
+<p>Note: At least to within machine precision, it is the case that</p>
+<blockquote>
+<div><p>(x * angle_unit1) / angle_unit2 == x * (angle_unit1 / angle_unit2)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AngleUnit.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AngleUnit.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AngleUnit.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – The measure of the unit in radians.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AngleUnit.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AngleUnit.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AngleUnit.__rmul__">
+<code class="sig-name descname">__rmul__</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.__rmul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.__rmul__" title="Permalink to this definition">¶</a></dt>
+<dd><p>float * AngleUnit returns an Angle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AngleUnit.__truediv__">
+<code class="sig-name descname">__truediv__</code><span class="sig-paren">(</span><em class="sig-param">unit</em><span class="sig-paren">)</span><a class="headerlink" href="#galsim.AngleUnit.__truediv__" title="Permalink to this definition">¶</a></dt>
+<dd><p>AngleUnit / AngleUnit returns a float giving the relative scaling.</p>
+<p>Note: At least to within machine precision, it is the case that</p>
+<blockquote>
+<div><p>(x * angle_unit1) / angle_unit2 == x * (angle_unit1 / angle_unit2)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.AngleUnit.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.AngleUnit.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.AngleUnit.from_name">
 <em class="property">static </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.from_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a string into the corresponding AngleUnit.</p>
@@ -755,6 +873,534 @@ method:</p>
 </div></blockquote>
 <p>where u and v are Angles and center and sky_coord are CelestialCoords.</p>
 </div></blockquote>
+<dl class="method">
+<dt id="galsim.CelestialCoord.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">ra</em>, <em class="sig-param">dec=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ra</strong> – The right ascension.  Must be an Angle instance.</p></li>
+<li><p><strong>dec</strong> – The declination.  Must be an Angle instance.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.CelestialCoord.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.CelestialCoord.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.angleBetween">
+<code class="sig-name descname">angleBetween</code><span class="sig-paren">(</span><em class="sig-param">coord2</em>, <em class="sig-param">coord3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.angleBetween"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.angleBetween" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the open angle at the location of the current coord between <code class="docutils literal notranslate"><span class="pre">coord2</span></code> and <code class="docutils literal notranslate"><span class="pre">coord3</span></code>.</p>
+<p>The current coordinate along with the two other coordinates form a spherical triangle
+on the sky.  This function calculates the angle between the two sides at the location of
+the current coordinate.</p>
+<p>Note that this returns a signed angle.  The angle is positive if the sweep direction from
+<code class="docutils literal notranslate"><span class="pre">coord2</span></code> to <code class="docutils literal notranslate"><span class="pre">coord3</span></code> is counter-clockwise (as observed from Earth).  It is negative if
+the direction is clockwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord2</strong> – A second CelestialCoord</p></li>
+<li><p><strong>coord3</strong> – A third CelestialCoord</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the angle between the great circles joining the other two coordinates to the
+current coordinate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.area">
+<code class="sig-name descname">area</code><span class="sig-paren">(</span><em class="sig-param">coord2</em>, <em class="sig-param">coord3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the area of a spherical triangle in steradians.</p>
+<p>The current coordinate along with the two other coordinates form a spherical triangle
+on the sky.  This function calculates the area of that spherical triangle, which is
+measured in steradians (i.e. surface area of the triangle on the unit sphere).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord2</strong> – A second CelestialCoord</p></li>
+<li><p><strong>coord3</strong> – A third CelestialCoord</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the area in steradians of the given spherical triangle.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.dec">
+<em class="property">property </em><code class="sig-name descname">dec</code><a class="headerlink" href="#galsim.CelestialCoord.dec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A read-only attribute, giving the Declination as an Angle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.deproject">
+<code class="sig-name descname">deproject</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">projection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.deproject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.deproject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do the reverse process from the project() function.</p>
+<p>i.e. This takes in a position (u,v) and returns the corresponding celestial
+coordinate, using the current coordinate as the center point of the tangent plane
+projection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – The u position on the tangent plane to deproject (must be an Angle
+instance)</p></li>
+<li><p><strong>v</strong> – The v position on the tangent plane to deproject (must be an Angle
+instance)</p></li>
+<li><p><strong>projection</strong> – The name of the projection to be used. [default: gnomonic, see <code class="docutils literal notranslate"><span class="pre">project</span></code>
+docstring for other options]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the corresponding CelestialCoord for that position.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.deproject_rad">
+<code class="sig-name descname">deproject_rad</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">projection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.deproject_rad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.deproject_rad" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is basically identical to the deproject() function except that the output <code class="docutils literal notranslate"><span class="pre">ra</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dec</span></code> are returned as a tuple (ra, dec) in radians rather than packaged as a CelestialCoord
+object and <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code> are in radians rather than Angle instances.</p>
+<p>The main advantage to this is that it will work if <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code> are NumPy arrays, in which
+case the output <code class="docutils literal notranslate"><span class="pre">ra</span></code>, <code class="docutils literal notranslate"><span class="pre">dec</span></code> will also be NumPy arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – The u position in radians on the tangent plane to deproject</p></li>
+<li><p><strong>v</strong> – The v position in radians on the tangent plane to deproject</p></li>
+<li><p><strong>projection</strong> – The name of the projection to be used. [default: gnomonic, see <code class="docutils literal notranslate"><span class="pre">project</span></code>
+docstring for other options]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the corresponding RA, Dec in radians</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.distanceTo">
+<code class="sig-name descname">distanceTo</code><span class="sig-paren">(</span><em class="sig-param">coord2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.distanceTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.distanceTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the great circle distance between this coord and another one.
+The return value is an Angle object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coord2</strong> – The CelestialCoordinate to calculate the distance to.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the great circle distance to <code class="docutils literal notranslate"><span class="pre">coord2</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.ecliptic">
+<code class="sig-name descname">ecliptic</code><span class="sig-paren">(</span><em class="sig-param">epoch=2000.0</em>, <em class="sig-param">date=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.ecliptic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.ecliptic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the longitude and latitude in ecliptic coordinates corresponding to this position.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">epoch</span></code> parameter is used to get an accurate value for the (time-varying) obliquity of
+the ecliptic.  The formulae for this are quite straightforward.  It requires just a single
+parameter for the transformation, the obliquity of the ecliptic (the Earth’s axial tilt).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epoch</strong> – The epoch to be used for estimating the obliquity of the ecliptic, if
+<code class="docutils literal notranslate"><span class="pre">date</span></code> is None.  But if <code class="docutils literal notranslate"><span class="pre">date</span></code> is given, then use that to determine the
+epoch.  [default: 2000.]</p></li>
+<li><p><strong>date</strong> – If a date is given as a python datetime object, then return the
+position in ecliptic coordinates with respect to the sun position at
+that date.  If None, then return the true ecliptic coordiantes.
+[default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the longitude and latitude as a tuple (lambda, beta), given as Angle instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.from_ecliptic">
+<em class="property">static </em><code class="sig-name descname">from_ecliptic</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">beta</em>, <em class="sig-param">epoch=2000.0</em>, <em class="sig-param">date=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_ecliptic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.from_ecliptic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a CelestialCoord from the given ecliptic coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lam</strong> – The longitude in ecliptic coordinates (an Angle instance)</p></li>
+<li><p><strong>beta</strong> – The latitude in ecliptic coordinates (an Angle instance)</p></li>
+<li><p><strong>epoch</strong> – The epoch to be used for estimating the obliquity of the ecliptic, if
+<code class="docutils literal notranslate"><span class="pre">date</span></code> is None.  But if <code class="docutils literal notranslate"><span class="pre">date</span></code> is given, then use that to determine the
+epoch.  [default: 2000.]</p></li>
+<li><p><strong>date</strong> – If a date is given as a python datetime object, then return the
+position in ecliptic coordinates with respect to the sun position at
+that date.  If None, then return the true ecliptic coordiantes.
+[default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the CelestialCoord corresponding to these ecliptic coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.from_galactic">
+<em class="property">static </em><code class="sig-name descname">from_galactic</code><span class="sig-paren">(</span><em class="sig-param">el</em>, <em class="sig-param">b</em>, <em class="sig-param">epoch=2000.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_galactic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.from_galactic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a CelestialCoord from the given galactic coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>el</strong> – The longitude in galactic coordinates (an Angle instance)</p></li>
+<li><p><strong>b</strong> – The latitude in galactic coordinates (an Angle instance)</p></li>
+<li><p><strong>epoch</strong> – The epoch of the returned coordinate. [default: 2000.]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the CelestialCoord corresponding to these galactic coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.from_xyz">
+<em class="property">static </em><code class="sig-name descname">from_xyz</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">z</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.from_xyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.from_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a CelestialCoord from a given (x,y,z) position in three dimensions.</p>
+<p>The 3D (x,y,z) position does not need to fall on the unit sphere.  The RA, Dec will
+be inferred from the relations:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}x &amp;= r \cos(dec) \cos(ra)  \\
+y &amp;= r \cos(dec) \sin(ra)  \\
+z &amp;= r \sin(dec)\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r\)</span> is arbitrary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The x position in 3 dimensions.  Corresponds to r cos(dec) cos(ra)</p></li>
+<li><p><strong>y</strong> – The y position in 3 dimensions.  Corresponds to r cos(dec) sin(ra)</p></li>
+<li><p><strong>z</strong> – The z position in 3 dimensions.  Corresponds to r sin(dec)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a CelestialCoord instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.galactic">
+<code class="sig-name descname">galactic</code><span class="sig-paren">(</span><em class="sig-param">epoch=2000.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.galactic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.galactic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the longitude and latitude in galactic coordinates corresponding to this position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>epoch</strong> – The epoch of the current coordinate. [default: 2000.]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the longitude and latitude as a tuple (el, b), given as Angle instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.get_xyz">
+<code class="sig-name descname">get_xyz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.get_xyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.get_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}x &amp;= \cos(dec) \cos(ra)  \\
+y &amp;= \cos(dec) \sin(ra)  \\
+z &amp;= \sin(dec)\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a tuple (x,y,z)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.jac_deproject">
+<code class="sig-name descname">jac_deproject</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">projection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.jac_deproject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.jac_deproject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the jacobian of the deprojection.</p>
+<p>i.e. if the input position is (u,v) then the return matrix is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}J \equiv \begin{bmatrix} J00 &amp; J01 \\ J10 &amp; J11 \end{bmatrix}
+  = \begin{bmatrix}
+    d\textrm{ra}/du \cos(\textrm{dec}) &amp; d\textrm{ra}/dv \cos(\textrm{dec})  \\
+            d\textrm{dec}/du             &amp;      d\textrm{dec}/dv
+     \end{bmatrix}\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – The u position (as an Angle instance) on the tangent plane</p></li>
+<li><p><strong>v</strong> – The v position (as an Angle instance) on the tangent plane</p></li>
+<li><p><strong>projection</strong> – The name of the projection to be used. [default: gnomonic, see <code class="docutils literal notranslate"><span class="pre">project</span></code>
+docstring for other options]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the Jacobian as a 2x2 numpy array [[J00, J01], [J10, J11]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.jac_deproject_rad">
+<code class="sig-name descname">jac_deproject_rad</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">projection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.jac_deproject_rad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.jac_deproject_rad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">jac_deproject</span></code>, but the inputs are in radians and may be numpy
+arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – The u position (in radians) on the tangent plane</p></li>
+<li><p><strong>v</strong> – The v position (in radians) on the tangent plane</p></li>
+<li><p><strong>projection</strong> – The name of the projection to be used. [default: gnomonic, see <a class="reference internal" href="#galsim.CelestialCoord.project" title="galsim.CelestialCoord.project"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">project</span></code></a>
+docstring for other options]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the Jacobian as a 2x2 numpy array [[J00, J01], [J10, J11]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.normal">
+<code class="sig-name descname">normal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the coordinate in the “normal” convention of having 0 &lt;= ra &lt; 24 hours.</p>
+<p>This convention is not enforced on construction, so this function exists to make it
+easy to convert if desired.</p>
+<p>Functions such as <a class="reference internal" href="#galsim.CelestialCoord.from_galactic" title="galsim.CelestialCoord.from_galactic"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">from_galactic</span></code></a> and <a class="reference internal" href="#galsim.CelestialCoord.from_xyz" title="galsim.CelestialCoord.from_xyz"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">from_xyz</span></code></a> will return normal coordinates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.precess">
+<code class="sig-name descname">precess</code><span class="sig-paren">(</span><em class="sig-param">from_epoch</em>, <em class="sig-param">to_epoch</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.precess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.precess" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>This function precesses equatorial ra and dec from one epoch to another.</dt><dd><p>It is adapted from a set of fortran subroutines based on (a) pages 30-34 of
+the Explanatory Supplement to the AE, (b) Lieske, et al. (1977) A&amp;A 58, 1-16,
+and (c) Lieske (1979) A&amp;A 73, 282-284.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from_epoch</strong> – The epoch of the current coordinate</p></li>
+<li><p><strong>to_epoch</strong> – The epoch of the returned precessed coordinate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a CelestialCoord object corresponding to the precessed position.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.project">
+<code class="sig-name descname">project</code><span class="sig-paren">(</span><em class="sig-param">coord2</em>, <em class="sig-param">projection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the currect coord as the center point of a tangent plane projection to project
+the <code class="docutils literal notranslate"><span class="pre">coord2</span></code> coordinate onto that plane.</p>
+<p>This function return a tuple (u,v) in the Euclidean coordinate system defined by
+a tangent plane projection around the current coordinate, with +v pointing north and
++u pointing west. (i.e. to the right on the sky if +v is up.)</p>
+<p>There are currently four options for the projection, which you can specify with the
+optional <code class="docutils literal notranslate"><span class="pre">projection</span></code> keyword argument:</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">gnomonic</dt>
+<dd class="field-odd"><p>[default] uses a gnomonic projection (i.e. a projection from the center of
+the sphere, which has the property that all great circles become straight
+lines.  For more information, see
+<a class="reference external" href="http://mathworld.wolfram.com/GnomonicProjection.html">http://mathworld.wolfram.com/GnomonicProjection.html</a>
+This is the usual TAN projection used by most FITS images.</p>
+</dd>
+<dt class="field-even">stereographic</dt>
+<dd class="field-even"><p>uses a stereographic proejection, which preserves angles, but
+not area.  For more information, see
+<a class="reference external" href="http://mathworld.wolfram.com/StereographicProjection.html">http://mathworld.wolfram.com/StereographicProjection.html</a></p>
+</dd>
+<dt class="field-odd">lambert</dt>
+<dd class="field-odd"><p>uses a Lambert azimuthal projection, which preserves area, but not angles.
+For more information, see
+<a class="reference external" href="http://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html">http://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html</a></p>
+</dd>
+<dt class="field-even">postel</dt>
+<dd class="field-even"><p>uses a Postel equidistant proejection, which preserves distances from
+the projection point, but not area or angles.  For more information, see
+<a class="reference external" href="http://mathworld.wolfram.com/AzimuthalEquidistantProjection.html">http://mathworld.wolfram.com/AzimuthalEquidistantProjection.html</a></p>
+</dd>
+</dl>
+</div></blockquote>
+<p>The distance or angle errors increase with distance from the projection point of course.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord2</strong> – The coordinate to project onto the tangent plane.</p></li>
+<li><p><strong>projection</strong> – The name of the projection to be used. [default: gnomonic, see above
+for other options]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(u,v) as Angle instances</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.project_rad">
+<code class="sig-name descname">project_rad</code><span class="sig-paren">(</span><em class="sig-param">ra</em>, <em class="sig-param">dec</em>, <em class="sig-param">projection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.project_rad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.project_rad" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is basically identical to the project() function except that the input <code class="docutils literal notranslate"><span class="pre">ra</span></code>, <code class="docutils literal notranslate"><span class="pre">dec</span></code>
+are given in radians rather than packaged as a CelestialCoord object and the returned
+u,v are given in radians.</p>
+<p>The main advantage to this is that it will work if <code class="docutils literal notranslate"><span class="pre">ra</span></code> and <code class="docutils literal notranslate"><span class="pre">dec</span></code> are NumPy arrays, in which
+case the output <code class="docutils literal notranslate"><span class="pre">u</span></code>, <code class="docutils literal notranslate"><span class="pre">v</span></code> will also be NumPy arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ra</strong> – The right ascension in radians to project onto the tangent plane.</p></li>
+<li><p><strong>dec</strong> – The declination in radians to project onto the tangent plane.</p></li>
+<li><p><strong>projection</strong> – The name of the projection to be used. [default: gnomonic, see <code class="docutils literal notranslate"><span class="pre">project</span></code>
+docstring for other options]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(u,v) in radians</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.ra">
+<em class="property">property </em><code class="sig-name descname">ra</code><a class="headerlink" href="#galsim.CelestialCoord.ra" title="Permalink to this definition">¶</a></dt>
+<dd><p>A read-only attribute, giving the Right Ascension as an Angle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.rad">
+<em class="property">property </em><code class="sig-name descname">rad</code><a class="headerlink" href="#galsim.CelestialCoord.rad" title="Permalink to this definition">¶</a></dt>
+<dd><p>A convenience property, giving a tuple (ra.rad, dec.rad)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.radec_to_xyz">
+<em class="property">static </em><code class="sig-name descname">radec_to_xyz</code><span class="sig-paren">(</span><em class="sig-param">ra</em>, <em class="sig-param">dec</em>, <em class="sig-param">r=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.radec_to_xyz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.radec_to_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert ra, dec (in radians) to 3D x,y,z coordinates on the unit sphere.</p>
+<p>The connection between (ra,dec) and (x,y,z) are given by the following formulae:
+.. math:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">&amp;=</span> <span class="n">r</span> \<span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> \<span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>  \\
+<span class="n">y</span> <span class="o">&amp;=</span> <span class="n">r</span> \<span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> \<span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>  \\
+<span class="n">z</span> <span class="o">&amp;=</span> <span class="n">r</span> \<span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For a single ra,dec pair, the following are essentially equivalent:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ra</span> <span class="o">=</span> <span class="mi">12</span><span class="o">*</span><span class="n">hours</span><span class="o">/</span><span class="n">radians</span>       <span class="c1"># May be any angle measured</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dec</span> <span class="o">=</span> <span class="mi">31</span><span class="o">*</span><span class="n">degrees</span><span class="o">/</span><span class="n">radians</span>    <span class="c1"># in radians</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">CelestialCoord</span><span class="o">.</span><span class="n">radec_to_xyz</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">)</span>
+<span class="go">(-0.85716730070211233, 1.0497271911386187e-16, 0.51503807491005416)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">CelestialCoord</span><span class="p">(</span><span class="n">ra</span> <span class="o">*</span> <span class="n">radians</span><span class="p">,</span> <span class="n">dec</span> <span class="o">*</span> <span class="n">radians</span><span class="p">)</span><span class="o">.</span><span class="n">get_xyz</span><span class="p">()</span>
+<span class="go">(-0.85716730070211233, 1.0497271911386187e-16, 0.51503807491005416)</span>
+</pre></div>
+</div>
+<p>However, the advantage of this function is that the input values may be numpy
+arrays, in which case, the return values will also be numpy arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ra</strong> – The right ascension(s) in radians. May be a numpy array.</p></li>
+<li><p><strong>dec</strong> – The declination(s) in radians. May be a numpy array.</p></li>
+<li><p><strong>r</strong> – The distance(s) from Earth (default 1.). May be a numpy array.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>x, y, z as a tuple.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CelestialCoord.xyz_to_radec">
+<em class="property">static </em><code class="sig-name descname">xyz_to_radec</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">z</em>, <em class="sig-param">return_r=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/celestial.html#CelestialCoord.xyz_to_radec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CelestialCoord.xyz_to_radec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert 3D x,y,z coordinates to ra, dec (in radians).</p>
+<p>The connection between (ra,dec) and (x,y,z) are given by the following formulae:
+.. math:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">&amp;=</span> <span class="n">r</span> \<span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> \<span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>  \\
+<span class="n">y</span> <span class="o">&amp;=</span> <span class="n">r</span> \<span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> \<span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>  \\
+<span class="n">z</span> <span class="o">&amp;=</span> <span class="n">r</span> \<span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For a single (x,y,z) position, the following are essentially equivalent:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.839</span>       <span class="c1"># May be any any 3D location</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="mf">0.123</span>       <span class="c1"># Not necessarily on unit sphere</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="mf">0.530</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">CelestialCoord</span><span class="o">.</span><span class="n">xyz_to_radec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">(0.14556615088111796, 0.558616191048523)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_xyz</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">rad</span>
+<span class="go">(0.145566150881118, 0.558616191048523)</span>
+</pre></div>
+</div>
+<p>However, the advantage of this function is that the input values may be numpy
+arrays, in which case, the return values will also be numpy arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The x position(s) in 3 dimensions. May be a numpy array.</p></li>
+<li><p><strong>y</strong> – The y position(s) in 3 dimensions. May be a numpy array.</p></li>
+<li><p><strong>z</strong> – The z position(s) in 3 dimensions. May be a numpy array.</p></li>
+<li><p><strong>return_r</strong> – Whether to return r as well as ra, dec. (default: False)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ra, dec as a tuple.  Or if return_r is True, (ra, dec, r).</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -771,7 +1417,7 @@ method:</p>
         <a href="utilities.html" class="btn btn-neutral float-right" title="Helper Functions and Classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="shear.html" class="btn btn-neutral float-left" title="Weak Lensing Shear" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="surface.html" class="btn btn-neutral float-left" title="Surface Operators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

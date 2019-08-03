@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,9 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file sed.py</span>
-<span class="sd">Spectral energy distribution class.  Used by galsim/chromatic.py</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -198,7 +198,7 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimSEDError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimIncompatibleValuesError</span>
 
-<div class="viewcode-block" id="SED"><a class="viewcode-back" href="../../chromatic.html#galsim.SED">[docs]</a><span class="k">class</span> <span class="nc">SED</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="SED"><a class="viewcode-back" href="../../sed.html#galsim.SED">[docs]</a><span class="k">class</span> <span class="nc">SED</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Object to represent the spectral energy distributions of stars and galaxies.</span>
 
 <span class="sd">    SEDs are callable, usually returning the flux density in photons/nm/cm^2/s as a function of</span>
@@ -219,10 +219,10 @@
 <span class="sd">    SEDs are immutable; all transformative SED methods return *new* SEDs, and leave their</span>
 <span class="sd">    originating SEDs unaltered.</span>
 
-<span class="sd">    SEDs have ``blue_limit`` and ``red_limit`` attributes, which indicate the range over which the SED</span>
-<span class="sd">    is defined.  An exception will be raised if the flux density or normalization is requested</span>
-<span class="sd">    outside of this range.  Note that ``blue_limit`` and ``red_limit`` are always in nanometers and in</span>
-<span class="sd">    the observed frame when ``redshift != 0``.</span>
+<span class="sd">    SEDs have ``blue_limit`` and ``red_limit`` attributes, which indicate the range over which the</span>
+<span class="sd">    SED is defined.  An exception will be raised if the flux density or normalization is requested</span>
+<span class="sd">    outside of this range.  Note that ``blue_limit`` and ``red_limit`` are always in nanometers and</span>
+<span class="sd">    in the observed frame when ``redshift != 0``.</span>
 
 <span class="sd">    SEDs may be multiplied by scalars or scalar functions of wavelength.  In particular, an SED</span>
 <span class="sd">    multiplied by a `Bandpass` will yield the appropriately filtered SED.  Two SEDs may be</span>
@@ -235,17 +235,20 @@
 <span class="sd">    The input parameter, ``spec``, may be one of several possible forms:</span>
 
 <span class="sd">    1. a regular python function (or an object that acts like a function)</span>
-<span class="sd">    2. a LookupTable</span>
-<span class="sd">    3. a file from which a LookupTable can be read in</span>
-<span class="sd">    4. a string which can be evaluated into a function of ``wave`` via eval(&#39;lambda wave : &#39;+spec),</span>
-<span class="sd">       e.g., spec = &#39;0.8 + 0.2 * (wave-800)&#39;</span>
+<span class="sd">    2. a `LookupTable`</span>
+<span class="sd">    3. a file from which a `LookupTable` can be read in</span>
+<span class="sd">    4. a string which can be evaluated to a function of ``wave`` via ``eval(&#39;lambda wave:&#39;+spec)``,</span>
+<span class="sd">       e.g.::</span>
+
+<span class="sd">            spec = &#39;0.8 + 0.2 * (wave-800)&#39;</span>
+
 <span class="sd">    5. a python scalar (only possible for dimensionless SEDs)</span>
 
-<span class="sd">    The argument of ``spec`` should be the wavelength in units specified by ``wave_type``, which should</span>
-<span class="sd">    be an instance of ``astropy.units.Unit`` of equivalency class ``astropy.units.spectral``, or one of</span>
-<span class="sd">    the case-insensitive aliases &#39;nm&#39;, &#39;nanometer&#39;, &#39;nanometers&#39;, &#39;A&#39;, &#39;Ang&#39;, &#39;Angstrom&#39;, or</span>
-<span class="sd">    &#39;Angstroms&#39;.  Note that ``astropy.units.spectral`` includes not only units with dimensions of</span>
-<span class="sd">    length, but also frequency, energy, or wavenumber.</span>
+<span class="sd">    The argument of ``spec`` should be the wavelength in units specified by ``wave_type``, which</span>
+<span class="sd">    should be an instance of ``astropy.units.Unit`` of equivalency class ``astropy.units.spectral``,</span>
+<span class="sd">    or one of the case-insensitive aliases &#39;nm&#39;, &#39;nanometer&#39;, &#39;nanometers&#39;, &#39;A&#39;, &#39;Ang&#39;, &#39;Angstrom&#39;,</span>
+<span class="sd">    or &#39;Angstroms&#39;.  Note that ``astropy.units.spectral`` includes not only units with dimensions</span>
+<span class="sd">    of length, but also frequency, energy, or wavenumber.</span>
 
 <span class="sd">    The return value of ``spec`` should be a spectral density with units specified by ``flux_type``,</span>
 <span class="sd">    which should be an instance of ``astropy.units.Unit`` of equivalency class</span>
@@ -261,8 +264,8 @@
 <span class="sd">    [photons/time/area/unit-wavelength], and so on.</span>
 
 <span class="sd">    Finally, the optional ``fast`` keyword option is used to specify when unit and dimension changes</span>
-<span class="sd">    are executed, particularly for SEDs specified by a LookupTable.  If ``fast=True``, the default,</span>
-<span class="sd">    then the input units/dimensions may be converted to an internal working unit before</span>
+<span class="sd">    are executed, particularly for SEDs specified by a `LookupTable`.  If ``fast=True``, the</span>
+<span class="sd">    default, then the input units/dimensions may be converted to an internal working unit before</span>
 <span class="sd">    interpolation in wavelength is performed.  Alternatively, ``fast=False`` implies that</span>
 <span class="sd">    interpolation should take place in the native units of the input ``spec``, and subsequently flux</span>
 <span class="sd">    density converted to photons/cm^2/s/nm afterwards.  Generally, the former option is faster, but</span>
@@ -292,7 +295,7 @@
     <span class="n">_h</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;erg s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
     <span class="n">_dimensionless</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="n">flux_type</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<div class="viewcode-block" id="SED.__init__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="n">flux_type</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">_blue_limit</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">_red_limit</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_spectral</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux_type</span> <span class="o">=</span> <span class="n">flux_type</span>  <span class="c1"># Need to save the original for repr</span>
         <span class="c1"># Parse the various options for wave_type</span>
@@ -395,7 +398,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
         <span class="c1"># Define the appropriate functions to call</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_funcs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_funcs</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_setup_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Set up the various functions we use to do the right calculation based on which</span>
@@ -505,11 +508,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span>
 
-<div class="viewcode-block" id="SED.check_spectral"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.check_spectral">[docs]</a>    <span class="k">def</span> <span class="nf">check_spectral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.check_spectral"><a class="viewcode-back" href="../../sed.html#galsim.SED.check_spectral">[docs]</a>    <span class="k">def</span> <span class="nf">check_spectral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return boolean indicating if SED has units compatible with a spectral density.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_type</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">SED</span><span class="o">.</span><span class="n">_fphotons</span><span class="p">,</span> <span class="n">SED</span><span class="o">.</span><span class="n">_spec_nm</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SED.check_dimensionless"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.check_dimensionless">[docs]</a>    <span class="k">def</span> <span class="nf">check_dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.check_dimensionless"><a class="viewcode-back" href="../../sed.html#galsim.SED.check_dimensionless">[docs]</a>    <span class="k">def</span> <span class="nf">check_dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return boolean indicating if SED is dimensionless.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_type</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">SED</span><span class="o">.</span><span class="n">_dimensionless</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_flux_type</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
@@ -566,7 +569,7 @@
                 <span class="k">return</span> <span class="n">LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_call_fast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return either flux in photons / sec / cm^2 / nm, or dimensionless normalization.</span>
+        <span class="sd">&quot;&quot;&quot;Return either flux in photons / sec / cm^2 / nm, or dimensionless normalization.</span>
 
 <span class="sd">        Assumes that self._spec has already been transformed to accept correct wavelength units and</span>
 <span class="sd">        yield correct flux units.</span>
@@ -581,7 +584,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast_spec</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_call_slow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return flux in photons / sec / cm^2 / nm or dimensionless normalization.</span>
+        <span class="sd">&quot;&quot;&quot;Return flux in photons / sec / cm^2 / nm or dimensionless normalization.</span>
 
 <span class="sd">        Uses self._spec that has not been pre-transformed for desired units, instead does all unit</span>
 <span class="sd">        conversions inside this method.</span>
@@ -610,8 +613,8 @@
             <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_to_photons</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">rest_wave_native</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return photon flux density or dimensionless normalization at wavelength ``wave``.</span>
+<div class="viewcode-block" id="SED.__call__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return photon flux density or dimensionless normalization at wavelength ``wave``.</span>
 
 <span class="sd">        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``</span>
 <span class="sd">        attributes, the SED is considered undefined, and this method will raise an exception if a</span>
@@ -625,7 +628,7 @@
 <span class="sd">            photon flux density in units of photons/nm/cm^2/s if self.spectral, or</span>
 <span class="sd">            dimensionless normalization if self.dimensionless.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_mul_sed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to self * other when other is an SED, but no sanity checks.&quot;&quot;&quot;</span>
@@ -832,10 +835,12 @@
         <span class="c1"># Subtract two SEDs, with the same caveats as adding two SEDs.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">other</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SED.withFluxDensity"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.withFluxDensity">[docs]</a>    <span class="k">def</span> <span class="nf">withFluxDensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux_density</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return a new SED with flux density set to ``target_flux_density`` at wavelength</span>
-<span class="sd">        ``wavelength``.  See ChromaticObject docstring for information about how SED normalization</span>
-<span class="sd">        affects ChromaticObject normalization.</span>
+<div class="viewcode-block" id="SED.withFluxDensity"><a class="viewcode-back" href="../../sed.html#galsim.SED.withFluxDensity">[docs]</a>    <span class="k">def</span> <span class="nf">withFluxDensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux_density</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a new `SED` with flux density set to ``target_flux_density`` at wavelength</span>
+<span class="sd">        ``wavelength``.</span>
+
+<span class="sd">        See `ChromaticObject` docstring for information about how `SED` normalization affects</span>
+<span class="sd">        `ChromaticObject` normalization.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            target_flux_density:    The target normalization in photons/nm/cm^2/s.</span>
@@ -858,34 +863,37 @@
         <span class="n">factor</span> <span class="o">=</span> <span class="n">target_flux_density</span> <span class="o">/</span> <span class="n">current_flux_density</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">factor</span></div>
 
-<div class="viewcode-block" id="SED.withFlux"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.withFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return a new SED with flux through the Bandpass ``bandpass`` set to ``target_flux``.  See</span>
-<span class="sd">        ChromaticObject docstring for information about how SED normalization affects</span>
-<span class="sd">        ChromaticObject normalization.</span>
+<div class="viewcode-block" id="SED.withFlux"><a class="viewcode-back" href="../../sed.html#galsim.SED.withFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a new `SED` with flux through the `Bandpass` ``bandpass`` set to ``target_flux``.</span>
+
+<span class="sd">        See `ChromaticObject` docstring for information about how `SED` normalization affects</span>
+<span class="sd">        `ChromaticObject` normalization.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            target_flux:    The desired flux normalization of the SED.</span>
-<span class="sd">            bandpass:       A Bandpass object defining a filter bandpass.</span>
+<span class="sd">            bandpass:       A `Bandpass` object defining a filter bandpass.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the new normalized SED.</span>
+<span class="sd">            the new normalized `SED`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">current_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateFlux</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
         <span class="n">norm</span> <span class="o">=</span> <span class="n">target_flux</span><span class="o">/</span><span class="n">current_flux</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">norm</span></div>
 
-<div class="viewcode-block" id="SED.withMagnitude"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.withMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">withMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_magnitude</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return a new SED with magnitude through ``bandpass`` set to ``target_magnitude``.  Note</span>
-<span class="sd">        that this requires ``bandpass`` to have been assigned a zeropoint using</span>
-<span class="sd">        `Bandpass.withZeropoint`.  See ChromaticObject docstring for information about how SED</span>
-<span class="sd">        normalization affects ChromaticObject normalization.</span>
+<div class="viewcode-block" id="SED.withMagnitude"><a class="viewcode-back" href="../../sed.html#galsim.SED.withMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">withMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_magnitude</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a new `SED` with magnitude through the `Bandpass` ``bandpass`` set to</span>
+<span class="sd">        ``target_magnitude``.</span>
+
+<span class="sd">        Note that this requires ``bandpass`` to have been assigned a zeropoint using</span>
+<span class="sd">        `Bandpass.withZeropoint`.  See `ChromaticObject` docstring for information about how `SED`</span>
+<span class="sd">        normalization affects `ChromaticObject` normalization.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            target_magnitude:   The desired magnitude of the SED.</span>
-<span class="sd">            bandpass:           A Bandpass object defining a filter bandpass.</span>
+<span class="sd">            target_magnitude:   The desired magnitude of the `SED`.</span>
+<span class="sd">            bandpass:           A `Bandpass` object defining a filter bandpass.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the new normalized SED.</span>
+<span class="sd">            the new normalized `SED`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">zeropoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Cannot call SED.withMagnitude on this bandpass, because it does &quot;</span>
@@ -894,14 +902,14 @@
         <span class="n">norm</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="o">*</span><span class="p">(</span><span class="n">target_magnitude</span> <span class="o">-</span> <span class="n">current_magnitude</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">norm</span></div>
 
-<div class="viewcode-block" id="SED.atRedshift"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.atRedshift">[docs]</a>    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return a new SED with redshifted wavelengths.</span>
+<div class="viewcode-block" id="SED.atRedshift"><a class="viewcode-back" href="../../sed.html#galsim.SED.atRedshift">[docs]</a>    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a new `SED` with redshifted wavelengths.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            redshift:   The redshift for the returned SED</span>
+<span class="sd">            redshift:   The redshift for the returned `SED`</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the redshifted SED.</span>
+<span class="sd">            the redshifted `SED`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">redshift</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid redshift&quot;</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
@@ -913,14 +921,14 @@
         <span class="k">return</span> <span class="n">SED</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_type</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast</span><span class="p">,</span>
                    <span class="n">_wave_list</span><span class="o">=</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">_blue_limit</span><span class="o">=</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">_red_limit</span><span class="o">=</span><span class="n">red_limit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SED.calculateFlux"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.calculateFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return the flux (photons/cm^2/s) of the SED through the bandpass.</span>
+<div class="viewcode-block" id="SED.calculateFlux"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateFlux">[docs]</a>    <span class="k">def</span> <span class="nf">calculateFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the flux (photons/cm^2/s) of the `SED` through the `Bandpass` bandpass.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            bandpass:     A Bandpass object representing a filter, or None to compute the bolometric</span>
-<span class="sd">                          flux.  For the bolometric flux the integration limits will be set to</span>
-<span class="sd">                          (0, infinity), which implies that the SED needs to be evaluable over</span>
-<span class="sd">                          this entire range.</span>
+<span class="sd">            bandpass:   A `Bandpass` object representing a filter, or None to compute the</span>
+<span class="sd">                        bolometric flux.  For the bolometric flux the integration limits will be</span>
+<span class="sd">                        set to (0, infinity), which implies that the `SED` needs to be evaluable</span>
+<span class="sd">                        over this entire range.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the flux through the bandpass.</span>
@@ -942,15 +950,17 @@
             <span class="k">return</span> <span class="n">integ</span><span class="o">.</span><span class="n">int1d</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">bandpass</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="p">(</span><span class="n">w</span><span class="p">),</span>
                                <span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SED.calculateMagnitude"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.calculateMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">calculateMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return the SED magnitude through a Bandpass ``bandpass``.  Note that this requires</span>
-<span class="sd">        ``bandpass`` to have been assigned a zeropoint using `Bandpass.withZeropoint`.</span>
+<div class="viewcode-block" id="SED.calculateMagnitude"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateMagnitude">[docs]</a>    <span class="k">def</span> <span class="nf">calculateMagnitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the `SED` magnitude through a `Bandpass` ``bandpass``.</span>
+
+<span class="sd">        Note that this requires ``bandpass`` to have been assigned a zeropoint using</span>
+<span class="sd">        `Bandpass.withZeropoint`.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            bandpass:     A Bandpass object representing a filter, or None to compute the</span>
+<span class="sd">            bandpass:     A `Bandpass` object representing a filter, or None to compute the</span>
 <span class="sd">                          bolometric magnitude.  For the bolometric magnitude the integration</span>
-<span class="sd">                          limits will be set to (0, infinity), which implies that the SED needs to</span>
-<span class="sd">                          be evaluable over this entire range.</span>
+<span class="sd">                          limits will be set to (0, infinity), which implies that the `SED` needs</span>
+<span class="sd">                          to be evaluable over this entire range.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the bandpass magnitude.</span>
@@ -963,13 +973,15 @@
         <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateFlux</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
         <span class="k">return</span> <span class="o">-</span><span class="mf">2.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span> <span class="o">+</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">zeropoint</span></div>
 
-<div class="viewcode-block" id="SED.thin"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.thin">[docs]</a>    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; If the SED was initialized with a LookupTable or from a file (which internally creates a</span>
-<span class="sd">        LookupTable), then remove tabulated values while keeping the integral over the set of</span>
-<span class="sd">        tabulated values still accurate to ``rel_err``.</span>
+<div class="viewcode-block" id="SED.thin"><a class="viewcode-back" href="../../sed.html#galsim.SED.thin">[docs]</a>    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_err</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">trim_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fast_search</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove some tabulated values while keeping the integral over the set of tabulated values</span>
+<span class="sd">        still accurate to ``rel_err``.</span>
+
+<span class="sd">        This is only relevant if the `SED` was initialized with a `LookupTable` or from a file</span>
+<span class="sd">        (which internally creates a `LookupTable`).</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            rel_err:          The relative error allowed in the integral over the SED</span>
+<span class="sd">            rel_err:          The relative error allowed in the integral over the `SED`</span>
 <span class="sd">                              [default: 1.e-4]</span>
 <span class="sd">            trim_zeros:       Remove redundant leading and trailing points where f=0?  (The last</span>
 <span class="sd">                              leading point with f=0 and the first trailing point with f=0 will</span>
@@ -977,7 +989,7 @@
 <span class="sd">                              preserve_range are True, then the only the range of ``x`` *after*</span>
 <span class="sd">                              zero trimming is preserved.  [default: True]</span>
 <span class="sd">            preserve_range:   Should the original range (``blue_limit`` and ``red_limit``) of the</span>
-<span class="sd">                              SED be preserved? (True) Or should the ends be trimmed to</span>
+<span class="sd">                              `SED` be preserved? (True) Or should the ends be trimmed to</span>
 <span class="sd">                              include only the region where the integral is significant? (False)</span>
 <span class="sd">                              [default: True]</span>
 <span class="sd">            fast_search:      If set to True, then the underlying algorithm will use a</span>
@@ -989,7 +1001,7 @@
 <span class="sd">                              [default: True]</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the thinned SED.</span>
+<span class="sd">            the thinned `SED`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">rest_wave_native</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rest_native_waves</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span>
@@ -1006,22 +1018,25 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="SED.calculateDCRMomentShifts"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.calculateDCRMomentShifts">[docs]</a>    <span class="k">def</span> <span class="nf">calculateDCRMomentShifts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Calculates shifts in first and second moments of PSF due to differential chromatic</span>
-<span class="sd">        refraction (DCR).  I.e., equations (1) and (2) from Plazas and Bernstein (2012)</span>
-<span class="sd">        (http://arxiv.org/abs/1204.1346).</span>
+<div class="viewcode-block" id="SED.calculateDCRMomentShifts"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateDCRMomentShifts">[docs]</a>    <span class="k">def</span> <span class="nf">calculateDCRMomentShifts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculates shifts in first and second moments of PSF due to differential chromatic</span>
+<span class="sd">        refraction (DCR).</span>
+
+<span class="sd">        I.e., equations (1) and (2) from Plazas and Bernstein (2012):</span>
+
+<span class="sd">        http://arxiv.org/abs/1204.1346).</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            bandpass:           Bandpass through which object is being imaged.</span>
-<span class="sd">            zenith_angle:       Angle from object to zenith, expressed as an Angle</span>
+<span class="sd">            bandpass:           `Bandpass` through which object is being imaged.</span>
+<span class="sd">            zenith_angle:       `Angle` from object to zenith</span>
 <span class="sd">            parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith,</span>
 <span class="sd">                                measured from North through East.  [default: 0]</span>
 <span class="sd">            obj_coord:          Celestial coordinates of the object being drawn as a</span>
-<span class="sd">                                CelestialCoord. [default: None]</span>
-<span class="sd">            zenith_coord:       Celestial coordinates of the zenith as a CelestialCoord.</span>
+<span class="sd">                                `CelestialCoord`. [default: None]</span>
+<span class="sd">            zenith_coord:       Celestial coordinates of the zenith as a `CelestialCoord`.</span>
 <span class="sd">                                [default: None]</span>
-<span class="sd">            HA:                 Hour angle of the object as an Angle. [default: None]</span>
-<span class="sd">            latitude:           Latitude of the observer as an Angle. [default: None]</span>
+<span class="sd">            HA:                 Hour angle of the object as an `Angle`. [default: None]</span>
+<span class="sd">            latitude:           Latitude of the observer as an `Angle`. [default: None]</span>
 <span class="sd">            pressure:           Air pressure in kiloPascals.  [default: 69.328 kPa]</span>
 <span class="sd">            temperature:        Temperature in Kelvins.  [default: 293.15 K]</span>
 <span class="sd">            H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]</span>
@@ -1072,12 +1087,12 @@
         <span class="n">V</span> <span class="o">=</span> <span class="n">rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">V</span><span class="p">]]))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Rbar</span><span class="p">,</span> <span class="n">V</span></div>
 
-<div class="viewcode-block" id="SED.calculateSeeingMomentRatio"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.calculateSeeingMomentRatio">[docs]</a>    <span class="k">def</span> <span class="nf">calculateSeeingMomentRatio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">base_wavelength</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Calculates the relative size of a PSF compared to the monochromatic PSF size at</span>
+<div class="viewcode-block" id="SED.calculateSeeingMomentRatio"><a class="viewcode-back" href="../../sed.html#galsim.SED.calculateSeeingMomentRatio">[docs]</a>    <span class="k">def</span> <span class="nf">calculateSeeingMomentRatio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">base_wavelength</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculates the relative size of a PSF compared to the monochromatic PSF size at</span>
 <span class="sd">        wavelength ``base_wavelength``.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            bandpass:           Bandpass through which object is being imaged.</span>
+<span class="sd">            bandpass:           `Bandpass` through which object is being imaged.</span>
 <span class="sd">            alpha:              Power law index for wavelength-dependent seeing.  [default:</span>
 <span class="sd">                                -0.2, the prediction for Kolmogorov turbulence]</span>
 <span class="sd">            base_wavelength:    Reference wavelength in nm from which to compute the relative</span>
@@ -1104,19 +1119,19 @@
     <span class="k">def</span> <span class="nf">_cache_deviate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span>
 
-<div class="viewcode-block" id="SED.sampleWavelength"><a class="viewcode-back" href="../../chromatic.html#galsim.SED.sampleWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">sampleWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nphotons</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Sample a number of random wavelength values from the SED, possibly as observed through</span>
-<span class="sd">        a bandpass.</span>
+<div class="viewcode-block" id="SED.sampleWavelength"><a class="viewcode-back" href="../../sed.html#galsim.SED.sampleWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">sampleWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nphotons</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sample a number of random wavelength values from the `SED`, possibly as observed through</span>
+<span class="sd">        a `Bandpass` bandpass.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            nphotons:    Number of samples (photons) to randomly draw.</span>
-<span class="sd">            bandpass:    A Bandpass object representing a filter, or None to sample over the full</span>
-<span class="sd">                         SED wavelength range.</span>
-<span class="sd">            rng:         If provided, a random number generator that is any kind of BaseDeviate</span>
+<span class="sd">            bandpass:    A `Bandpass` object representing a filter, or None to sample over the full</span>
+<span class="sd">                         `SED` wavelength range.</span>
+<span class="sd">            rng:         If provided, a random number generator that is any kind of `BaseDeviate`</span>
 <span class="sd">                         object. If ``rng`` is None, one will be automatically created from the</span>
 <span class="sd">                         system. [default: None]</span>
-<span class="sd">            npoints:     Number of points DistDeviate should use for its internal interpolation</span>
-<span class="sd">                         tables. [default: None, which uses the DistDeviate default]</span>
+<span class="sd">            npoints:     Number of points `DistDeviate` should use for its internal interpolation</span>
+<span class="sd">                         tables. [default: None, which uses the `DistDeviate` default]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">DistDeviate</span>
         <span class="n">nphotons</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">nphotons</span><span class="p">)</span>
@@ -1147,7 +1162,7 @@
         <span class="n">ret</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.__eq__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SED</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_spec</span> <span class="ow">and</span>
@@ -1157,31 +1172,31 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">redshift</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">red_limit</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">blue_limit</span> <span class="ow">and</span>
-                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span><span class="n">other</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)))</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span><span class="n">other</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)))</span></div>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+<div class="viewcode-block" id="SED.__ne__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.__hash__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Cache this in case self._orig_spec or self.wave_list is long.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.SED&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_type</span><span class="p">,</span>
                                <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span>
                                <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.__repr__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">outstr</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;galsim.SED(</span><span class="si">%r</span><span class="s1">, wave_type=</span><span class="si">%r</span><span class="s1">, flux_type=</span><span class="si">%r</span><span class="s1">, redshift=</span><span class="si">%r</span><span class="s1">, fast=</span><span class="si">%r</span><span class="s1">,&#39;</span>
                   <span class="s1">&#39; _wave_list=</span><span class="si">%r</span><span class="s1">, _blue_limit=</span><span class="si">%r</span><span class="s1">, _red_limit=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                       <span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast</span><span class="p">,</span>
                       <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span>
                       <span class="s2">&quot;float(&#39;inf&#39;)&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">outstr</span>
+        <span class="k">return</span> <span class="n">outstr</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SED.__str__"><a class="viewcode-back" href="../../sed.html#galsim.SED.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">orig_spec</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_spec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="p">:</span>
             <span class="n">orig_spec</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_spec</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.SED(</span><span class="si">%s</span><span class="s1">, redshift=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">orig_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.SED(</span><span class="si">%s</span><span class="s1">, redshift=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">orig_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

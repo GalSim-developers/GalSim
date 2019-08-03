@@ -10,6 +10,8 @@ Affine Transformations
 
 .. autoclass:: galsim.Transformation
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autofunction:: galsim.Transform
 
@@ -21,6 +23,8 @@ De-convolution of a GSObject
 
 .. autoclass:: galsim.Deconvolution
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autofunction:: galsim.Deconvolve
 
@@ -30,6 +34,8 @@ Fourier-space Square Root
 
 .. autoclass:: galsim.FourierSqrtProfile
     :members:
+    :special-members:
+    :show-inheritance:
 
 .. autofunction:: galsim.FourierSqrt
 

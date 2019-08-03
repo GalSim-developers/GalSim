@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The GSObject base class" href="gsobject.html" />
-    <link rel="prev" title="Images and Related Concepts" href="image.html" /> 
+    <link rel="prev" title="Positions" href="pos.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -94,22 +94,27 @@
 <li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -208,8 +213,12 @@ the classes you would actually use when building the profile for an  astronomica
 <li class="toctree-l2"><a class="reference internal" href="gal.html#inclined-exponential-profile">Inclined Exponential Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html#inclined-sersic-profile">Inclined Sersic Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html#spergel-profile">Spergel Profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html#real-galaxy">“Real” Galaxy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html#knots-defined-by-a-random-walk">Knots defined by a “random walk”</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog">Downloading the COSMOS Catalog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html#hsc-postage-stamp-data">HSC Postage Stamp Data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="simple.html">Simple Profiles</a><ul>
@@ -237,6 +246,7 @@ the classes you would actually use when building the profile for an  astronomica
 <li class="toctree-l2"><a class="reference internal" href="transform.html#fourier-space-square-root">Fourier-space Square Root</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
 </ul>
 </div>
 </div>
@@ -252,7 +262,7 @@ the classes you would actually use when building the profile for an  astronomica
         <a href="gsobject.html" class="btn btn-neutral float-right" title="The GSObject base class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="image.html" class="btn btn-neutral float-left" title="Images and Related Concepts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pos.html" class="btn btn-neutral float-left" title="Positions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

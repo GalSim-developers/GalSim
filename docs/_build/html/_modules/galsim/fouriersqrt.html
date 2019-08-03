@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -191,28 +194,27 @@
 
 
 <div class="viewcode-block" id="FourierSqrt"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrt">[docs]</a><span class="k">def</span> <span class="nf">FourierSqrt</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A function for computing the Fourier-space square root of either a GSObject or</span>
-<span class="sd">    ChromaticObject.</span>
+    <span class="sd">&quot;&quot;&quot;A function for computing the Fourier-space square root of either a `GSObject` or</span>
+<span class="sd">    `ChromaticObject`.</span>
 
 <span class="sd">    The FourierSqrt function is principally used for doing an optimal coaddition algorithm</span>
 <span class="sd">    originally developed by Nick Kaiser (but unpublished) and also described by Zackay &amp; Ofek 2015</span>
 <span class="sd">    (http://adsabs.harvard.edu/abs/2015arXiv151206879Z).  See the script make_coadd.py in the</span>
 <span class="sd">    GalSim/examples directory for an example of how it works.</span>
 
-<span class="sd">    This function will inspect its input argument to decide if a FourierSqrtProfile object or a</span>
-<span class="sd">    ChromaticFourierSqrtProfile object is required to represent the operation applied to a surface</span>
+<span class="sd">    This function will inspect its input argument to decide if a `FourierSqrtProfile` object or a</span>
+<span class="sd">    `ChromaticFourierSqrtProfile` object is required to represent the operation applied to a surface</span>
 <span class="sd">    brightness profile.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        obj:                The object to compute the Fourier-space square root of.</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This</span>
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.</span>
+<span class="sd">        a `FourierSqrtProfile` or `ChromaticFourierSqrtProfile` instance as appropriate.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.chromatic</span> <span class="k">import</span> <span class="n">ChromaticFourierSqrtProfile</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ChromaticObject</span><span class="p">):</span>
@@ -225,26 +227,24 @@
 
 
 <div class="viewcode-block" id="FourierSqrtProfile"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile">[docs]</a><span class="k">class</span> <span class="nc">FourierSqrtProfile</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class for computing the Fourier-space sqrt of a GSObject.</span>
+    <span class="sd">&quot;&quot;&quot;A class for computing the Fourier-space sqrt of a `GSObject`.</span>
 
 <span class="sd">    The FourierSqrtProfile class represents the Fourier-space square root of another profile.</span>
 <span class="sd">    Note that the FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a</span>
 <span class="sd">    FourierSqrtProfile as one of the components cannot be photon-shot using the &#39;phot&#39; method of</span>
-<span class="sd">    drawImage() method.</span>
+<span class="sd">    `GSObject.drawImage` method.</span>
 
-<span class="sd">    You may also specify a ``gsparams`` argument.  See the docstring for GSParams using</span>
-<span class="sd">    ``help(galsim.GSParams)`` for more information about this option.  Note: if ``gsparams`` is</span>
-<span class="sd">    unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the</span>
-<span class="sd">    object being operated on.</span>
+<span class="sd">    You may also specify a ``gsparams`` argument.  See the docstring for `GSParams` for more</span>
+<span class="sd">    information about this option.  Note: if ``gsparams`` is unspecified (or None), then the</span>
+<span class="sd">    FourierSqrtProfile instance inherits the same `GSParams` as the object being operated on.</span>
 
-<span class="sd">    The normal way to use this class is to use the FourierSqrt() factory function::</span>
+<span class="sd">    The normal way to use this class is to use the `FourierSqrt` factory function::</span>
 
 <span class="sd">        &gt;&gt;&gt; fourier_sqrt = galsim.FourierSqrt(obj)</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        obj:                The object to compute Fourier-space square root of.</span>
-<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams for</span>
-<span class="sd">                            details. [default: None]</span>
+<span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        propagate_gsparams: Whether to propagate gsparams to the transformed object.  This</span>
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
@@ -254,7 +254,7 @@
     <span class="n">_has_hard_edges</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="FourierSqrtProfile.__init__"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument to FourierSqrtProfile must be a GSObject.&quot;</span><span class="p">)</span>
 
@@ -264,7 +264,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="n">obj</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">orig_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span>
@@ -296,23 +296,23 @@
             <span class="n">ret</span><span class="o">.</span><span class="n">_orig_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="FourierSqrtProfile.__eq__"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">FourierSqrtProfile</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">orig_obj</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FourierSqrtProfile.__hash__"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.FourierSqrtProfile&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FourierSqrtProfile.__repr__"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.FourierSqrtProfile(</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.FourierSqrt(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span>
+<div class="viewcode-block" id="FourierSqrtProfile.__str__"><a class="viewcode-back" href="../../transform.html#galsim.FourierSqrtProfile.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.FourierSqrt(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span></div>
 
     <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>

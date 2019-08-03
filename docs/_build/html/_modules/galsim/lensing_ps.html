@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,9 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file lensing_ps.py</span>
-<span class="sd">The &quot;lensing engine&quot; for drawing shears from some power spectrum.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -197,14 +197,14 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
-<span class="k">def</span> <span class="nf">theoryToObserved</span><span class="p">(</span><span class="n">gamma1</span><span class="p">,</span> <span class="n">gamma2</span><span class="p">,</span> <span class="n">kappa</span><span class="p">):</span>
+<div class="viewcode-block" id="theoryToObserved"><a class="viewcode-back" href="../../powerspectrum.html#galsim.theoryToObserved">[docs]</a><span class="k">def</span> <span class="nf">theoryToObserved</span><span class="p">(</span><span class="n">gamma1</span><span class="p">,</span> <span class="n">gamma2</span><span class="p">,</span> <span class="n">kappa</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to convert theoretical lensing quantities to observed ones.</span>
 
-<span class="sd">    This helper function is used internally by PowerSpectrum.getShear(), getMagnification(), and</span>
-<span class="sd">    getLensing() to convert from theoretical quantities (shear and convergence) to observable ones</span>
-<span class="sd">    (reduced shear and magnification).  Users of `PowerSpectrum.buildGrid` outputs can also apply</span>
-<span class="sd">    this method directly to the outputs in order to get the values of reduced shear and</span>
-<span class="sd">    magnification on the output grid.</span>
+<span class="sd">    This helper function is used internally by the methods `PowerSpectrum.getShear`,</span>
+<span class="sd">    `PowerSpectrum.getMagnification`, and `PowerSpectrum.getLensing` to convert from theoretical</span>
+<span class="sd">    quantities (shear and convergence) to observable ones (reduced shear and magnification).</span>
+<span class="sd">    Users of `PowerSpectrum.buildGrid` outputs can also apply this method directly to the outputs</span>
+<span class="sd">    in order to get the values of reduced shear and magnification on the output grid.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        gamma1:     The first shear component, which must be the NON-reduced shear.  This and</span>
@@ -223,35 +223,36 @@
     <span class="n">g1</span> <span class="o">=</span> <span class="n">gamma1</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">kappa</span><span class="p">)</span>
     <span class="n">g2</span> <span class="o">=</span> <span class="n">gamma2</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">kappa</span><span class="p">)</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">((</span><span class="mf">1.</span><span class="o">-</span><span class="n">kappa</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">gamma1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">gamma2</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span>
+    <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span></div>
 
-<div class="viewcode-block" id="PowerSpectrum"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrum</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class to represent a lensing shear field according to some power spectrum P(k).</span>
+<div class="viewcode-block" id="PowerSpectrum"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrum</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class to represent a lensing shear field according to some power spectrum :math:`P(k)`.</span>
 
-<span class="sd">    General considerations:</span>
+<span class="sd">    **General considerations**:</span>
 
 <span class="sd">    A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at</span>
 <span class="sd">    arbitary positions.  This class is originally initialized with a power spectrum from which we</span>
 <span class="sd">    would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates</span>
-<span class="sd">    shears on a grid, and if necessary, when getShear() (or another ``get`` method) is called, it will</span>
-<span class="sd">    interpolate to the requested positions.  For detail on how these processes are carried out,</span>
-<span class="sd">    please see the document in the GalSim repository, ``devel/modules/lensing_engine.pdf``.</span>
+<span class="sd">    shears on a grid, and if necessary, when `getShear` (or another &quot;get&quot; method) is called, it</span>
+<span class="sd">    will interpolate to the requested positions.  For detail on how these processes are carried</span>
+<span class="sd">    out, please see the document in the GalSim repository, ``devel/modules/lensing_engine.pdf``.</span>
 
 <span class="sd">    This class generates the shears according to the input power spectrum using a DFT approach,</span>
-<span class="sd">    which means that we implicitly assume our discrete representation of P(k) on a grid is one</span>
-<span class="sd">    complete cell in an infinite periodic series.  We are making assumptions about what P(k) is</span>
-<span class="sd">    doing outside of our minimum and maximum k range, and those must be kept in mind when comparing</span>
-<span class="sd">    with theoretical expectations.  Specifically, since the power spectrum is realized on only a</span>
-<span class="sd">    finite grid it has been been effectively bandpass filtered between a minimum and maximum k value</span>
-<span class="sd">    in each of the k1, k2 directions.  See the `buildGrid` method for more information.</span>
+<span class="sd">    which means that we implicitly assume our discrete representation of :math:`P(k)` on a grid is</span>
+<span class="sd">    one complete cell in an infinite periodic series.  We are making assumptions about what</span>
+<span class="sd">    :math:`P(k)` is doing outside of our minimum and maximum k range, and those must be kept in</span>
+<span class="sd">    mind when comparing with theoretical expectations.  Specifically, since the power spectrum is</span>
+<span class="sd">    realized on only a finite grid it has been been effectively bandpass filtered between a</span>
+<span class="sd">    minimum and maximum k value in each of the k1, k2 directions.  See the `buildGrid` method for</span>
+<span class="sd">    more information.</span>
 
 <span class="sd">    As a result, the shear generation currently does not include sample variance due to coverage of</span>
-<span class="sd">    a finite patch.  We explicitly enforce ``P(k=0)=0``, which is true for the full sky in a</span>
+<span class="sd">    a finite patch.  We explicitly enforce :math:`P(0)=0`, which is true for the full sky in a</span>
 <span class="sd">    reasonable cosmological model, but it ignores the fact that our little patch of sky might</span>
-<span class="sd">    reasonably live in some special region with respect to shear correlations.  Our ``P(k=0)=0`` is</span>
-<span class="sd">    essentially setting the integrated power below our minimum k value to zero.  The implications of</span>
-<span class="sd">    the discrete representation, and the ``P(k=0)=0`` choice, are discussed in more detail in</span>
-<span class="sd">    ``devel/modules/lensing_engine.pdf``.</span>
+<span class="sd">    reasonably live in some special region with respect to shear correlations.  Our :math:`P(0)=0`</span>
+<span class="sd">    is essentially setting the integrated power below our minimum k value to zero.  The</span>
+<span class="sd">    implications of the discrete representation, and the :math:`P(0)=0` choice, are discussed in</span>
+<span class="sd">    more detail in ``devel/modules/lensing_engine.pdf``.</span>
 
 <span class="sd">    The effective shear correlation function for the gridded points will be modified both because of</span>
 <span class="sd">    the DFT approach to representing shears according to a power spectrum, and because of the power</span>
@@ -263,40 +264,44 @@
 <span class="sd">    ideal theoretical correlation function given an infinite k range.</span>
 
 <span class="sd">    When interpolating the shears to non-gridded points, the shear correlation function and power</span>
-<span class="sd">    spectrum are modified; see the getShear() and other ``get`` method docstrings for more details.</span>
+<span class="sd">    spectrum are modified; see the `getShear` and other &quot;get&quot; method docstrings for more details.</span>
 
-<span class="sd">    The power spectra to be used:</span>
+<span class="sd">    **The power spectra to be used**:</span>
 
 <span class="sd">    When creating a PowerSpectrum instance, you must specify at least one of the E or B mode power</span>
-<span class="sd">    spectra, which is normally given as a function P(k).  The typical thing is to just use a lambda</span>
+<span class="sd">    spectra, which is normally given as a function :math:`P(k)`.  The typical thing is to just use a lambda</span>
 <span class="sd">    function in Python (i.e., a function that is not associated with a name); for example, to define</span>
-<span class="sd">    P(k)=k^2, one would use ``lambda k : k**2``.  But the power spectra can also be more complicated</span>
-<span class="sd">    user-defined functions that take a single argument ``k`` and return the power at that ``k`` value,</span>
-<span class="sd">    or they can be instances of the LookupTable class for power spectra that are known at</span>
+<span class="sd">    :math:`P(k)=k^2`, one would use ``lambda k : k**2``.  But the power spectra can also be more complicated</span>
+<span class="sd">    user-defined functions that take a single argument ``k`` and return the power at that ``k``</span>
+<span class="sd">    value, or they can be instances of the `LookupTable` class for power spectra that are known at</span>
 <span class="sd">    particular ``k`` values but for which there is not a simple analytic form.</span>
 
 <span class="sd">    Cosmologists often express the power spectra in terms of an expansion in spherical harmonics</span>
-<span class="sd">    (ell), i.e., the C_ell values.  In the flat-sky limit, we can replace ell with k and C_ell with</span>
-<span class="sd">    P(k).  Thus, k and P(k) have dimensions of inverse angle and angle^2, respectively.  It is quite</span>
-<span class="sd">    common for people to plot ell(ell+1)C_ell/2pi, a dimensionless quantity; the analogous flat-sky</span>
-<span class="sd">    quantity is Delta^2 = k^2 P(k)/2pi.  By default, the PowerSpectrum object assumes it is getting</span>
-<span class="sd">    P(k), but it is possible to instead give it Delta^2 by setting the optional keyword ``delta2 =</span>
-<span class="sd">    True`` in the constructor.</span>
+<span class="sd">    (ell), i.e., the :math:`C_\ell` values.  In the flat-sky limit, we can replace :math:`\ell`</span>
+<span class="sd">    with :math:`k` and :math:`C_\ell` with :math:`P(k)`.  Thus, :math:`k` and :math:`P(k)` have</span>
+<span class="sd">    dimensions of inverse angle and angle^2, respectively.  It is quite common for people to plot</span>
+<span class="sd">    :math:`\ell(\ell+1) C_\ell/2\pi`, a dimensionless quantity; the analogous flat-sky</span>
+<span class="sd">    quantity is :math:`\Delta^2 = k^2 P(k)/2\pi`.</span>
+
+<span class="sd">    By default, the PowerSpectrum object assumes it is getting :math:`P(k)`, but it is possible to</span>
+<span class="sd">    instead give it :math:`\Delta^2` by setting the optional keyword ``delta2 = True`` in the</span>
+<span class="sd">    constructor.</span>
 
 <span class="sd">    The power functions must return a list/array that is the same size as what they are given, e.g.,</span>
 <span class="sd">    in the case of no power or constant power, a function that just returns a float would not be</span>
 <span class="sd">    permitted; it would have to return an array of floats all with the same value.</span>
 
 <span class="sd">    It is important to note that the power spectra used to initialize the PowerSpectrum object</span>
-<span class="sd">    should use the same units for k and P(k), i.e., if k is in inverse radians then P(k) should be</span>
-<span class="sd">    in radians^2 (as is natural for outputs from a cosmological shear power spectrum calculator).</span>
-<span class="sd">    However, when we actually draw images, there is a natural scale that defines the pitch of the</span>
-<span class="sd">    image, which is typically taken to be arcsec.  This definition of a specific length scale</span>
-<span class="sd">    means that by default we assume all quantities to the PowerSpectrum are in arcsec, and those are</span>
-<span class="sd">    the units used for internal calculations, but the ``units`` keyword can be used to specify</span>
-<span class="sd">    different input units for P(k) (again, within the constraint that k and P(k) must be</span>
-<span class="sd">    consistent).  If the ``delta2`` keyword is set to specify that the input is actually the</span>
-<span class="sd">    dimensionless power Delta^2, then the input ``units`` are taken to apply only to the k values.</span>
+<span class="sd">    should use the same units for k and :math:`P(k)`, i.e., if k is in inverse radians then</span>
+<span class="sd">    :math:`P(k)` should be in radians^2 (as is natural for outputs from a cosmological shear power</span>
+<span class="sd">    spectrum calculator).  However, when we actually draw images, there is a natural scale that</span>
+<span class="sd">    defines the pitch of the image, which is typically taken to be arcsec.  This definition of a</span>
+<span class="sd">    specific length scale means that by default we assume all quantities to the PowerSpectrum are</span>
+<span class="sd">    in arcsec, and those are the units used for internal calculations, but the ``units`` keyword</span>
+<span class="sd">    can be used to specify different input units for :math:`P(k)` (again, within the constraint</span>
+<span class="sd">    that k and :math:`P(k)` must be consistent).  If the ``delta2`` keyword is set to specify that</span>
+<span class="sd">    the input is actually the dimensionless power :math:`\Delta^2`, then the input ``units`` are</span>
+<span class="sd">    taken to apply only to the k values.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        e_power_function:   A function or other callable that accepts a NumPy array of abs(k)</span>
@@ -304,25 +309,26 @@
 <span class="sd">                            the same shape.  The function should return the power spectrum desired</span>
 <span class="sd">                            in the E (gradient) mode of the image.</span>
 <span class="sd">                            It may also be a string that can be converted to a function using</span>
-<span class="sd">                            ``eval(&#39;lambda k : &#39;+e_power_function)``, a LookupTable, or ``file_name``</span>
-<span class="sd">                            from which to read in a LookupTable.  If a ``file_name`` is given, the</span>
-<span class="sd">                            resulting LookupTable uses the defaults for the LookupTable class,</span>
-<span class="sd">                            namely spline interpolation in P(k).  Users who wish to deviate from</span>
-<span class="sd">                            those defaults (for example, to interpolate in log(P) and log(k), as</span>
-<span class="sd">                            might be more natural for power-law functions) should instead read in</span>
-<span class="sd">                            the file to create a LookupTable using the necessary non-default</span>
-<span class="sd">                            settings. [default: None, which means no E-mode power.]</span>
+<span class="sd">                            ``eval(&#39;lambda k : &#39;+e_power_function)``, a `LookupTable`, or</span>
+<span class="sd">                            ``file_name`` from which to read in a `LookupTable`.  If a ``file_name``</span>
+<span class="sd">                            is given, the resulting `LookupTable` uses the defaults for the</span>
+<span class="sd">                            `LookupTable` class, namely spline interpolation in :math:`P(k)`.</span>
+<span class="sd">                            Users who wish to deviate from those defaults (for example, to</span>
+<span class="sd">                            interpolate in log(P) and log(k), as might be more natural for</span>
+<span class="sd">                            power-law functions) should instead read in the file to create a</span>
+<span class="sd">                            `LookupTable` using the necessary non-default settings. [default: None,</span>
+<span class="sd">                            which means no E-mode power.]</span>
 <span class="sd">        b_power_function:   A function or other callable that accepts a NumPy array of abs(k)</span>
 <span class="sd">                            values, and returns the B-mode power spectrum P_B(abs(k)) in an array of</span>
 <span class="sd">                            the same shape.  The function should return the power spectrum desired</span>
 <span class="sd">                            in the B (curl) mode of the image.  See description of</span>
-<span class="sd">                            ``e_power_function`` for input format options.</span>
-<span class="sd">                            [default: None, which means no B-mode power.]</span>
-<span class="sd">        delta2:             Is the power actually given as dimensionless Delta^2, which requires us</span>
-<span class="sd">                            to multiply by 2pi / k^2 to get the shear power P(k) in units of</span>
-<span class="sd">                            angle^2?  [default: False]</span>
+<span class="sd">                            ``e_power_function`` for input format options.  [default: None, which</span>
+<span class="sd">                            means no B-mode power.]</span>
+<span class="sd">        delta2:             Is the power actually given as dimensionless :math:`\Delta^2`, which</span>
+<span class="sd">                            requires us to multiply by :math:`2\pi / k^2` to get the shear power</span>
+<span class="sd">                            :math:`P(k)` in units of angle^2?  [default: False]</span>
 <span class="sd">        units:              The angular units used for the power spectrum (i.e. the units of</span>
-<span class="sd">                            k^-1 and sqrt(P)). This should be either an AngleUnit instance</span>
+<span class="sd">                            k^-1 and sqrt(P)). This should be either an `AngleUnit` instance</span>
 <span class="sd">                            (e.g. galsim.radians) or a string (e.g. &#39;radians&#39;). [default: arcsec]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{}</span>
@@ -331,7 +337,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delta2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__init__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delta2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
         <span class="c1"># Check that at least one power function is not None</span>
         <span class="k">if</span> <span class="n">e_power_function</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">b_power_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -362,9 +368,9 @@
         <span class="k">if</span> <span class="n">units</span> <span class="o">==</span> <span class="n">arcsec</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">units</span> <span class="o">/</span> <span class="n">arcsec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">units</span> <span class="o">/</span> <span class="n">arcsec</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__repr__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.PowerSpectrum(e_power_function=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, b_power_function=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span>
@@ -373,25 +379,25 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="n">arcsec</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, units=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__str__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.PowerSpectrum(e_power_function=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, b_power_function=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__eq__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PowerSpectrum</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">e_power_function</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">delta2</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">delta2</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span></div>
+<div class="viewcode-block" id="PowerSpectrum.__ne__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+<div class="viewcode-block" id="PowerSpectrum.__hash__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">_get_scale_fac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -434,12 +440,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="k">lambda</span> <span class="n">k</span> <span class="p">:</span> <span class="n">power_function</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">bandlimit_func</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k_max</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PowerSpectrum.buildGrid"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum.buildGrid">[docs]</a>    <span class="k">def</span> <span class="nf">buildGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="PowerSpectrum.buildGrid"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.buildGrid">[docs]</a>    <span class="k">def</span> <span class="nf">buildGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">center</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">get_convergence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">kmax_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kmin_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bandlimit</span><span class="o">=</span><span class="s2">&quot;hard&quot;</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate a realization of the current power spectrum on the specified grid.</span>
 
-<span class="sd">        Basic functionality:</span>
+<span class="sd">        **Basic functionality**:</span>
 
 <span class="sd">        This function will generate a Gaussian random realization of the specified E and B mode</span>
 <span class="sd">        shear power spectra at a grid of positions, specified by the input parameters</span>
@@ -454,16 +460,16 @@
 <span class="sd">        The quantities that are returned are the theoretical shears and convergences, usually</span>
 <span class="sd">        denoted gamma and kappa, respectively.  Users who wish to obtain the more</span>
 <span class="sd">        observationally-relevant reduced shear and magnification (that describe real lensing</span>
-<span class="sd">        distortions) can either use the getShear(), getMagnification(), or getLensing() methods</span>
-<span class="sd">        after `buildGrid`, or can use the convenience function galsim.lensing_ps.theoryToObserved()</span>
+<span class="sd">        distortions) can either use the `getShear`, `getMagnification`, or `getLensing` methods</span>
+<span class="sd">        after `buildGrid`, or can use the convenience function `galsim.lensing_ps.theoryToObserved`</span>
 <span class="sd">        to convert from theoretical to observed quantities.</span>
 
-<span class="sd">        Effects of DFT approach, and keywords that can be used to ameliorate them:</span>
+<span class="sd">        **Caveats of the DFT approach**:</span>
 
 <span class="sd">        Note that the shears generated using this method correspond to the PowerSpectrum multiplied</span>
 <span class="sd">        by a sharp bandpass filter, set by the dimensions of the grid.</span>
 
-<span class="sd">        The filter sets P(k) = 0 for::</span>
+<span class="sd">        The filter sets :math:`P(k) = 0` for::</span>
 
 <span class="sd">            abs(k1), abs(k2) &lt; kmin / 2</span>
 
@@ -506,7 +512,7 @@
 <span class="sd">        than one can be helpful in getting the shear correlations closer to the ideal theoretical</span>
 <span class="sd">        ones (see ``devel/module/lensing_engine.pdf`` for details).</span>
 
-<span class="sd">        Aliasing:</span>
+<span class="sd">        **Aliasing**:</span>
 
 <span class="sd">        If the user provides a power spectrum that does not include a cutoff at kmax, then our</span>
 <span class="sd">        method of generating shears will result in aliasing that will show up in both E- and</span>
@@ -521,7 +527,7 @@
 <span class="sd">        they will need to set ``bandlimit`` again (and if their grid setup is different in a way</span>
 <span class="sd">        that changes ``kmax``, then that&#39;s fine).</span>
 
-<span class="sd">        Interpolation:</span>
+<span class="sd">        **Interpolation**:</span>
 
 <span class="sd">        If the grid is being created for the purpose of later interpolating to random positions, the</span>
 <span class="sd">        following findings should be kept in mind: since the interpolant modifies the effective</span>
@@ -537,7 +543,7 @@
 <span class="sd">        cosmological shear power spectrum; precise figures for this suppression can also depend on</span>
 <span class="sd">        the shear correlation function itself.</span>
 
-<span class="sd">        Sign conventions and other info:</span>
+<span class="sd">        **Sign conventions and other info**:</span>
 
 <span class="sd">        Note also that the convention for axis orientation differs from that for the GREAT10</span>
 <span class="sd">        challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2</span>
@@ -546,7 +552,7 @@
 <span class="sd">        For more information on the effects of finite grid representation of the power spectrum</span>
 <span class="sd">        see ``devel/modules/lensing_engine.pdf``.</span>
 
-<span class="sd">        Some examples:</span>
+<span class="sd">        **Examples**:</span>
 
 <span class="sd">        1. Get shears on a grid of points separated by 1 arcsec::</span>
 
@@ -574,10 +580,10 @@
 <span class="sd">                ...                          rng = galsim.BaseDeviate(1413231),</span>
 <span class="sd">                ...                          center = galsim.PositionD(256.5, 256.5) )</span>
 
-<span class="sd">        3. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at</span>
-<span class="sd">           all necessary values of k, then generate shears and convergences on a grid, and convert</span>
-<span class="sd">           to reduced shear and magnification so they can be used to transform galaxy images.</span>
-<span class="sd">           E.g., assuming that k and P_k are NumPy arrays containing k and P(k)::</span>
+<span class="sd">        3. Make a `PowerSpectrum` from a tabulated :math:`P(k)` that gets interpolated to find the</span>
+<span class="sd">           power at all necessary values of k, then generate shears and convergences on a grid, and</span>
+<span class="sd">           convert to reduced shear and magnification so they can be used to transform galaxy</span>
+<span class="sd">           images.  E.g., assuming that k and P_k are NumPy arrays containing k and :math:`P(k)`::</span>
 
 <span class="sd">                &gt;&gt;&gt; tab_pk = galsim.LookupTable(k, P_k)</span>
 <span class="sd">                &gt;&gt;&gt; my_ps = galsim.PowerSpectrum(tab_pk)</span>
@@ -588,12 +594,13 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">            grid_spacing:       Spacing for an evenly spaced grid of points, by default in arcsec</span>
 <span class="sd">                                for consistency with the natural length scale of images created</span>
-<span class="sd">                                using the drawImage() method.  Other units can be specified using</span>
-<span class="sd">                                the ``units`` keyword.</span>
+<span class="sd">                                using the `GSObject.drawImage` method.  Other units can be</span>
+<span class="sd">                                specified using the ``units`` keyword.</span>
 <span class="sd">            ngrid:              Number of grid points in each dimension.  [Must be an integer]</span>
-<span class="sd">            rng:                A BaseDeviate object for drawing the random numbers. [default: None]</span>
-<span class="sd">            interpolant:        Interpolant that will be used for interpolating the gridded shears</span>
-<span class="sd">                                by methods like getShear(), getConvergence(), etc. if they are</span>
+<span class="sd">            rng:                A `BaseDeviate` object for drawing the random numbers.</span>
+<span class="sd">                                [default: None]</span>
+<span class="sd">            interpolant:        `Interpolant` that will be used for interpolating the gridded shears</span>
+<span class="sd">                                by methods like `getShear`, `getConvergence`, etc. if they are</span>
 <span class="sd">                                later called. [default: galsim.Lanczos(5)]</span>
 <span class="sd">            center:             If setting up a new grid, define what position you want to consider</span>
 <span class="sd">                                the center of that grid.  Units must be consistent with those for</span>
@@ -614,19 +621,19 @@
 <span class="sd">                                    kmax = pi / grid_spacing * kmax_factor</span>
 
 <span class="sd">                                [default: 1; must be an integer]</span>
-<span class="sd">            bandlimit:          Keyword determining how to handle power P(k) above the limiting k</span>
-<span class="sd">                                value, kmax.  The options None, &#39;hard&#39;, and &#39;soft&#39; correspond to</span>
-<span class="sd">                                doing nothing (i.e., allow P(&gt;kmax) to be aliased to lower k</span>
-<span class="sd">                                values), cutting off all power above kmax, and applying a softening</span>
-<span class="sd">                                filter to gradually cut off power above kmax.  Use of this keyword</span>
-<span class="sd">                                does not modify the internally-stored power spectrum, just the</span>
-<span class="sd">                                shears generated for this particular call to `buildGrid`.</span>
+<span class="sd">            bandlimit:          Keyword determining how to handle power :math:`P(k)` above the</span>
+<span class="sd">                                limiting k value, kmax.  The options None, &#39;hard&#39;, and &#39;soft&#39;</span>
+<span class="sd">                                correspond to doing nothing (i.e., allow P(&gt;kmax) to be aliased to</span>
+<span class="sd">                                lower k values), cutting off all power above kmax, and applying a</span>
+<span class="sd">                                softening filter to gradually cut off power above kmax.  Use of</span>
+<span class="sd">                                this keyword does not modify the internally-stored power spectrum,</span>
+<span class="sd">                                just the shears generated for this particular call to `buildGrid`.</span>
 <span class="sd">                                [default: &quot;hard&quot;]</span>
 <span class="sd">            variance:           Optionally renormalize the variance of the output shears to a</span>
 <span class="sd">                                given value.  This is useful if you know the functional form of</span>
 <span class="sd">                                the power spectrum you want, but not the normalization.  This lets</span>
 <span class="sd">                                you set the normalization separately.  The resulting shears should</span>
-<span class="sd">                                have var(g1) + var(g2) ~= variance.  If only e_power_function is</span>
+<span class="sd">                                have var(g1) + var(g2) ~= variance.  If only ``e_power_function`` is</span>
 <span class="sd">                                given, then this is also the variance of kappa.  Otherwise, the</span>
 <span class="sd">                                variance of kappa may be smaller than the specified variance.</span>
 <span class="sd">                                [default: None]</span>
@@ -731,7 +738,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_g1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_g2</span></div>
 
-<div class="viewcode-block" id="PowerSpectrum.nRandCallsForBuildGrid"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum.nRandCallsForBuildGrid">[docs]</a>    <span class="k">def</span> <span class="nf">nRandCallsForBuildGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.nRandCallsForBuildGrid"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.nRandCallsForBuildGrid">[docs]</a>    <span class="k">def</span> <span class="nf">nRandCallsForBuildGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the number of times the rng() was called the last time `buildGrid` was called.</span>
 
 <span class="sd">        This can be useful for keeping rngs in sync if the connection between them is broken</span>
@@ -777,7 +784,7 @@
             <span class="n">pf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">1.</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">pf</span>
 
-<div class="viewcode-block" id="PowerSpectrum.calculateXi"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum.calculateXi">[docs]</a>    <span class="k">def</span> <span class="nf">calculateXi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">kmax_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kmin_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_theta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<div class="viewcode-block" id="PowerSpectrum.calculateXi"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.calculateXi">[docs]</a>    <span class="k">def</span> <span class="nf">calculateXi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_spacing</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">kmax_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kmin_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_theta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                     <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">bandlimit</span><span class="o">=</span><span class="s2">&quot;hard&quot;</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate shear correlation functions for the current power spectrum on the specified</span>
 <span class="sd">        grid.</span>
@@ -807,8 +814,8 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">            grid_spacing:   Spacing for an evenly spaced grid of points, by default in arcsec</span>
 <span class="sd">                            for consistency with the natural length scale of images created</span>
-<span class="sd">                            using the drawImage() method.  Other units can be specified using</span>
-<span class="sd">                            the ``units`` keyword.</span>
+<span class="sd">                            using the `GSObject.drawImage` method.  Other units can be specified</span>
+<span class="sd">                            using the ``units`` keyword.</span>
 <span class="sd">            ngrid:          Number of grid points in each dimension.  [Must be an integer]</span>
 <span class="sd">            units:          The angular units used for the positions.  [default = arcsec]</span>
 <span class="sd">            kmin_factor:    (Optional) Factor by which the grid spacing in fourier space is</span>
@@ -825,8 +832,8 @@
 <span class="sd">                            [default ``kmax_factor = 1``; must be an integer]</span>
 <span class="sd">            n_theta:        (Optional) Number of logarithmically spaced bins in angular</span>
 <span class="sd">                            separation. [default ``n_theta=100``]</span>
-<span class="sd">            bandlimit:      (Optional) Keyword determining how to handle power P(k) above the</span>
-<span class="sd">                            limiting k value, kmax.  The options None, &#39;hard&#39;, and &#39;soft&#39;</span>
+<span class="sd">            bandlimit:      (Optional) Keyword determining how to handle power :math:`P(k)` above</span>
+<span class="sd">                            the limiting k value, kmax.  The options None, &#39;hard&#39;, and &#39;soft&#39;</span>
 <span class="sd">                            correspond to doing nothing (i.e., allow P(&gt;kmax) to be aliased to</span>
 <span class="sd">                            lower k values), cutting off all power above kmax, and applying a</span>
 <span class="sd">                            softening filter to gradually cut off power above kmax.  Use of this</span>
@@ -911,15 +918,10 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_softening_function</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k_max</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Softening function for the power spectrum band-limiting step, instead of a hard cut in k.</span>
+        <span class="c1"># Softening function for the power spectrum band-limiting step, instead of a hard cut in k.</span>
+        <span class="c1"># We use an arctan function to go smoothly from 1 to 0 above k_max.  The input k values</span>
+        <span class="c1"># can be in any units, as long as the choice of units for k and k_max is the same.</span>
 
-<span class="sd">        We use an arctan function to go smoothly from 1 to 0 above ``k_max``.  The input ``k`` values</span>
-<span class="sd">        can be in any units, as long as the choice of units for ``k`` and ``k_max`` is the same.</span>
-
-<span class="sd">        Parameters:</span>
-<span class="sd">            k:         Fourier wavenumber k.</span>
-<span class="sd">            k_max:     Fourier wavenumber for the maximum k value.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># The magic numbers in the code below come from the following:</span>
         <span class="c1"># We define the function as</span>
         <span class="c1">#     (arctan[A log(k/k_max) + B] + pi/2)/pi</span>
@@ -931,6 +933,7 @@
         <span class="c1">#     -0.45 pi = arctan(B), or</span>
         <span class="c1">#     B = tan(-0.45 pi).</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="o">-</span><span class="mf">0.45</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
         <span class="c1"># Then, we get A from the first equation:</span>
         <span class="c1">#     0.45 pi = arctan[log(0.95) A + B]</span>
         <span class="c1">#     tan(0.45 pi) = log(0.95) A  + B</span>
@@ -944,7 +947,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">k</span> <span class="o">&lt;</span> <span class="n">k_max</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PowerSpectrum.getShear"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum.getShear">[docs]</a>    <span class="k">def</span> <span class="nf">getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.getShear"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getShear">[docs]</a>    <span class="k">def</span> <span class="nf">getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the shear values for a given</span>
 <span class="sd">        list of input positions (or just a single position).  Before calling this function, you must</span>
@@ -975,7 +978,7 @@
 <span class="sd">        care about the correlation function should not use this option, and for this reason it&#39;s</span>
 <span class="sd">        not the default.</span>
 
-<span class="sd">        Some examples of how to use getShear():</span>
+<span class="sd">        **Examples**:</span>
 
 <span class="sd">        1. Get the shear for a particular point::</span>
 
@@ -1003,9 +1006,9 @@
 <span class="sd">            pos:            Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                            Valid ways to input this:</span>
 
-<span class="sd">                            - single PositionD (or PositionI) instance</span>
+<span class="sd">                            - single `Position` instance</span>
 <span class="sd">                            - tuple of floats: (x,y)</span>
-<span class="sd">                            - list/array of PositionD (or PositionI) instances</span>
+<span class="sd">                            - list/array of `Position` instances</span>
 <span class="sd">                            - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            units:          The angular units used for the positions.  [default: arcsec]</span>
@@ -1030,7 +1033,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getShear</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">reduced</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to getShear(pos.x, pos.y, reduced, periodic)</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``getShear(pos.x, pos.y, reduced, periodic)``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
@@ -1059,7 +1062,7 @@
         <span class="n">ret</span> <span class="o">=</span> <span class="n">lut_g1</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_g2</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span>
 
-<div class="viewcode-block" id="PowerSpectrum.getConvergence"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum.getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.getConvergence"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the convergence values for a</span>
 <span class="sd">        given list of input positions (or just a single position).  Before calling this function,</span>
@@ -1068,21 +1071,21 @@
 <span class="sd">        use when building a grid that is to be later interpolated to random positions.</span>
 
 <span class="sd">        Note that the interpolation (specified when calling `buildGrid`) modifies the effective</span>
-<span class="sd">        2-point functions of these quantities.  See docstring for getShear() docstring for caveats</span>
+<span class="sd">        2-point functions of these quantities.  See docstring for `getShear` docstring for caveats</span>
 <span class="sd">        about interpolation.  The user is advised to be very careful about deviating from the</span>
 <span class="sd">        default Lanczos-5 interpolant.</span>
 
-<span class="sd">        The usage of getConvergence() is the same as for getShear(), except that it returns only a</span>
+<span class="sd">        The usage of getConvergence() is the same as for `getShear`, except that it returns only a</span>
 <span class="sd">        single quantity (convergence value or array of convergence values) rather than two</span>
-<span class="sd">        quantities.  See documentation for getShear() for some examples.</span>
+<span class="sd">        quantities.  See documentation for `getShear` for some examples.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                        Valid ways to input this:</span>
 
-<span class="sd">                        - single PositionD (or PositionI) instance</span>
+<span class="sd">                        - single `Position` instance</span>
 <span class="sd">                        - tuple of floats: (x,y)</span>
-<span class="sd">                        - list or array of PositionD (or PositionI) instances</span>
+<span class="sd">                        - list or array of `Position` instances</span>
 <span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            units:      The angular units used for the positions.  [default: arcsec]</span>
@@ -1125,7 +1128,7 @@
 
         <span class="k">return</span> <span class="n">lut_kappa</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PowerSpectrum.getMagnification"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum.getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.getMagnification"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the lensing magnification (mu)</span>
 <span class="sd">        values for a given list of input positions (or just a single position).  Before calling this</span>
@@ -1135,21 +1138,21 @@
 <span class="sd">        positions.</span>
 
 <span class="sd">        Note that the interpolation (specified when calling `buildGrid`) modifies the effective</span>
-<span class="sd">        2-point functions of these quantities.  See docstring for getShear() docstring for caveats</span>
+<span class="sd">        2-point functions of these quantities.  See docstring for `getShear` docstring for caveats</span>
 <span class="sd">        about interpolation.  The user is advised to be very careful about deviating from the</span>
 <span class="sd">        default Lanczos-5 interpolant.</span>
 
-<span class="sd">        The usage of getMagnification() is the same as for getShear(), except that it returns only a</span>
-<span class="sd">        single quantity (a magnification value or array of magnification values) rather than a pair</span>
-<span class="sd">        of quantities.  See documentation for getShear() for some examples.</span>
+<span class="sd">        The usage of `getMagnification` is the same as for `getShear`, except that it returns only</span>
+<span class="sd">        a single quantity (a magnification value or array of magnification values) rather than a</span>
+<span class="sd">        pair of quantities.  See documentation for `getShear` for some examples.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                        Valid ways to input this:</span>
 
-<span class="sd">                        - single PositionD (or PositionI) instance</span>
+<span class="sd">                        - single `Position` instance</span>
 <span class="sd">                        - tuple of floats: (x,y)</span>
-<span class="sd">                        - list/array of PositionD (or PositionI) instances</span>
+<span class="sd">                        - list/array of `Position` instances</span>
 <span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            units:      The angular units used for the positions.  [default: arcsec]</span>
@@ -1173,7 +1176,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMagnification</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to getMagnification(pos.x, pos.y, periodic)</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``getMagnification(pos.x, pos.y, periodic)``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
@@ -1191,7 +1194,7 @@
 
         <span class="k">return</span> <span class="n">lut_mu</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
-<div class="viewcode-block" id="PowerSpectrum.getLensing"><a class="viewcode-back" href="../../shear.html#galsim.PowerSpectrum.getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.getLensing"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function can interpolate between grid positions to find the lensing observable</span>
 <span class="sd">        quantities (reduced shears g1 and g2, and magnification mu) for a given list of input</span>
@@ -1201,21 +1204,21 @@
 <span class="sd">        use when building a grid that is to be later interpolated to random positions.</span>
 
 <span class="sd">        Note that the interpolation (specified when calling `buildGrid`) modifies the effective</span>
-<span class="sd">        2-point functions of these quantities.  See docstring for getShear() docstring for caveats</span>
+<span class="sd">        2-point functions of these quantities.  See docstring for `getShear` docstring for caveats</span>
 <span class="sd">        about interpolation.  The user is advised to be very careful about deviating from the</span>
 <span class="sd">        default Lanczos-5 interpolant.</span>
 
-<span class="sd">        The usage of getLensing() is the same as for getShear(), except that it returns three</span>
+<span class="sd">        The usage of `getLensing` is the same as for `getShear`, except that it returns three</span>
 <span class="sd">        quantities (two reduced shear components and magnification) rather than two.  See</span>
-<span class="sd">        documentation for getShear() for some examples.</span>
+<span class="sd">        documentation for `getShear` for some examples.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos:        Position(s) of the source(s), assumed to be post-lensing!</span>
 <span class="sd">                        Valid ways to input this:</span>
 
-<span class="sd">                        - single PositionD (or PositionI) instance</span>
+<span class="sd">                        - single `Position` instance</span>
 <span class="sd">                        - tuple of floats: (x,y)</span>
-<span class="sd">                        - list/array of PositionD (or PositionI) instances</span>
+<span class="sd">                        - list/array of `Position` instances</span>
 <span class="sd">                        - tuple of lists/arrays: ( xlist, ylist )</span>
 
 <span class="sd">            units:      The angular units used for the positions.  [default: arcsec]</span>
@@ -1241,7 +1244,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getLensing</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to getLensing(pos.x, pos.y, periodic)</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``getLensing(pos.x, pos.y, periodic)``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
@@ -1283,10 +1286,10 @@
 <span class="sd">        ngrid:          The size of the grid in one dimension.</span>
 <span class="sd">        pixel_size:     The size of the pixel sides, in units consistent with the units expected</span>
 <span class="sd">                        by the power spectrum functions.</span>
-<span class="sd">        p_E:            Equivalent to e_power_function in the documentation for the</span>
-<span class="sd">                        PowerSpectrum class.</span>
-<span class="sd">        p_B:            Equivalent to b_power_function in the documentation for the</span>
-<span class="sd">                        PowerSpectrum class.</span>
+<span class="sd">        p_E:            Equivalent to ``e_power_function`` in the documentation for the</span>
+<span class="sd">                        `PowerSpectrum` class.</span>
+<span class="sd">        p_B:            Equivalent to ``b_power_function`` in the documentation for the</span>
+<span class="sd">                        `PowerSpectrum` class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">,</span> <span class="n">p_E</span><span class="p">,</span> <span class="n">p_B</span><span class="p">):</span>
         <span class="c1"># Set up the k grids in x and y, and the instance variables</span>
@@ -1345,7 +1348,7 @@
 <span class="sd">                        given value.  This is useful if you know the functional form of</span>
 <span class="sd">                        the power spectrum you want, but not the normalization.  This lets</span>
 <span class="sd">                        you set the normalization separately.  The resulting shears should</span>
-<span class="sd">                        have var(g1) + var(g2) ~= variance.  If only e_power_function is</span>
+<span class="sd">                        have var(g1) + var(g2) ~= variance.  If only ``e_power_function`` is</span>
 <span class="sd">                        given, then this is also the variance of kappa.  Otherwise, the</span>
 <span class="sd">                        variance of kappa may be smaller than the specified variance.</span>
 <span class="sd">                        [default: None]</span>
@@ -1486,14 +1489,14 @@
 <span class="sd">    that are not handled by this function, and likewise there are known edge effects.</span>
 
 <span class="sd">    Note that, like any process that attempts to recover information from discretely sampled data,</span>
-<span class="sd">    the ``kappa_E`` and ``kappa_B`` maps returned by this function are subject to aliasing.  There will</span>
-<span class="sd">    be distortions if there are non-zero frequency modes in the lensing field represented by ``g1``</span>
-<span class="sd">    and ``g2`` at more than half the frequency represented by the ``g1``, ``g2`` grid spacing.  To avoid</span>
-<span class="sd">    this issue in practice you can smooth the input ``g1``, ``g2`` to effectively bandlimit them (the</span>
-<span class="sd">    same smoothing kernel will be present in the output ``kappa_E``, ``kappa_B``).  If applying this</span>
-<span class="sd">    function to shears drawn randomly according to some power spectrum, the power spectrum that is</span>
-<span class="sd">    used should be modified to go to zero above the relevant maximum k value for the grid being</span>
-<span class="sd">    used.</span>
+<span class="sd">    the ``kappa_E`` and ``kappa_B`` maps returned by this function are subject to aliasing.</span>
+<span class="sd">    There will be distortions if there are non-zero frequency modes in the lensing field represented</span>
+<span class="sd">    by ``g1`` and ``g2`` at more than half the frequency represented by the ``g1``, ``g2`` grid</span>
+<span class="sd">    spacing.  To avoid this issue in practice you can smooth the input ``g1``, ``g2`` to effectively</span>
+<span class="sd">    bandlimit them (the same smoothing kernel will be present in the output ``kappa_E``,</span>
+<span class="sd">    ``kappa_B``).  If applying this function to shears drawn randomly according to some power</span>
+<span class="sd">    spectrum, the power spectrum that is used should be modified to go to zero above the relevant</span>
+<span class="sd">    maximum k value for the grid being used.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        g1:     Square NumPy array containing the first component of shear.</span>

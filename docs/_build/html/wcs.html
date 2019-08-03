@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Noise and Random Values" href="noise.html" />
-    <link rel="prev" title="Transformed Profiles" href="transform.html" /> 
+    <link rel="next" title="Noise and Random Values" href="random.html" />
+    <link rel="prev" title="The GSParams class" href="gsparams.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -97,15 +97,18 @@
 <li class="toctree-l2"><a class="reference internal" href="#wcs-utilities">WCS Utilities</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
@@ -201,65 +204,65 @@ two kinds of world coordinates.  We use the labels <code class="docutils literal
 define helper functions to implement each particular WCS definition.  So this base
 class defines the common interface for all WCS classes.</p>
 <p>There are several types of WCS classes that we implement. The basic class hierarchy is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BaseWCS</span>
-    <span class="o">---</span> <span class="n">EuclideanWCS</span>
-            <span class="o">---</span> <span class="n">UniformWCS</span>
-                    <span class="o">---</span> <span class="n">LocalWCS</span>
-    <span class="o">---</span> <span class="n">CelestialWCS</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>`BaseWCS`
+    --- `EuclideanWCS`
+            --- `UniformWCS`
+                    --- `LocalWCS`
+    --- `CelestialWCS`
 </pre></div>
 </div>
 <p>These base classes are not constructible.  They do not have __init__ defined.</p>
 <ol class="arabic">
-<li><p>LocalWCS classes are those which really just define a pixel size and shape.
+<li><p><a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a> classes are those which really just define a pixel size and shape.
 They implicitly have the origin in image coordinates correspond to the origin
 in world coordinates.  They are primarily designed to handle local transformations
 at the location of a single galaxy, where it should usually be a good approximation
 to consider the pixel shape to be constant over the size of the galaxy.</p>
-<p>Currently we define the following LocalWCS classes:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">PixelScale</span>
-<span class="o">-</span> <span class="n">ShearWCS</span>
-<span class="o">-</span> <span class="n">JacobianWCS</span>
+<p>Currently we define the following <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a> classes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>- `PixelScale`
+- `ShearWCS`
+- `JacobianWCS`
 </pre></div>
 </div>
 </li>
-<li><p>UniformWCS classes have a constant pixel size and shape, but they have an arbitrary origin
-in both image coordinates and world coordinates.  A LocalWCS class can be turned into a
-non-local UniformWCS class when an image has its bounds changed, e.g. by the commands
-withCenter(), withOrigin() or shift().</p>
-<p>Currently we define the following non-local, UniformWCS classes:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">OffsetWCS</span>
-<span class="o">-</span> <span class="n">OffsetShearWCS</span>
-<span class="o">-</span> <span class="n">AffineTransform</span>
+<li><p><a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a> classes have a constant pixel size and shape, but they have an arbitrary origin
+in both image coordinates and world coordinates.  A <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a> class can be turned into a
+non-local <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a> class when an image has its bounds changed, e.g. by the commands
+<a class="reference internal" href="image_class.html#galsim.Image.setCenter" title="galsim.Image.setCenter"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.setCenter</span></code></a>, <a class="reference internal" href="image_class.html#galsim.Image.setOrigin" title="galsim.Image.setOrigin"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.setOrigin</span></code></a> or <a class="reference internal" href="image_class.html#galsim.Image.shift" title="galsim.Image.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.shift</span></code></a>.</p>
+<p>Currently we define the following non-local, <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a> classes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>- `OffsetWCS`
+- `OffsetShearWCS`
+- `AffineTransform`
 </pre></div>
 </div>
 </li>
-<li><p>EuclideanWCS classes use a regular Euclidean coordinate system for the world coordinates,
+<li><p><a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a> classes use a regular Euclidean coordinate system for the world coordinates,
 using PositionD for the world positions.  We use the notation (u,v) for the world
 coordinates and (x,y) for the image coordinates.</p>
-<p>Currently we define the following non-uniform, Euclidean WCS class:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">UVFunction</span>
+<p>Currently we define the following non-uniform, <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a> class:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>- `UVFunction`
 </pre></div>
 </div>
 </li>
-<li><p>CelestialWCS classes are defined with their world coordinates on the celestial sphere
+<li><p><a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a> classes are defined with their world coordinates on the celestial sphere
 in terms of right ascension (RA) and declination (Dec).  The pixel size and shape are
-always variable.  We use CelestialCoord for the world coordinates, which helps
+always variable.  We use <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> for the world coordinates, which helps
 facilitate the spherical trigonometry that is sometimes required.</p>
-<p>Currently we define the following celestial WCS classes: (The ones in italics are defined
+<p>Currently we define the following <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a> classes: (All but the first are defined
 in the file fitswcs.py.)</p>
 <ul class="simple">
-<li><p>RaDecFunction</p></li>
-<li><p><em>AstropyWCS</em>          – requires astropy.wcs python module to be installed</p></li>
-<li><p><em>PyAstWCS</em>            – requires starlink.Ast python module to be installed</p></li>
-<li><p><em>WcsToolsWCS</em>         – requires wcstools command line functions to be installed</p></li>
-<li><p><em>GSFitsWCS</em>           – native code, but has less functionality than the above</p></li>
+<li><p><a class="reference internal" href="#galsim.RaDecFunction" title="galsim.RaDecFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RaDecFunction</span></code></a></p></li>
+<li><p><a class="reference internal" href="#galsim.AstropyWCS" title="galsim.AstropyWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AstropyWCS</span></code></a>          – requires astropy.wcs python module to be installed</p></li>
+<li><p><a class="reference internal" href="#galsim.PyAstWCS" title="galsim.PyAstWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PyAstWCS</span></code></a>            – requires starlink.Ast python module to be installed</p></li>
+<li><p><a class="reference internal" href="#galsim.WcsToolsWCS" title="galsim.WcsToolsWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WcsToolsWCS</span></code></a>         – requires wcstools command line functions to be installed</p></li>
+<li><p><a class="reference internal" href="#galsim.GSFitsWCS" title="galsim.GSFitsWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSFitsWCS</span></code></a>           – native code, but has less functionality than the above</p></li>
 </ul>
 </li>
 </ol>
-<p>There is also a factory function called FitsWCS() (also defined in fitswcs.py), which is
+<p>There is also a factory function called <a class="reference internal" href="#galsim.FitsWCS" title="galsim.FitsWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FitsWCS</span></code></a> (also defined in fitswcs.py), which is
 intended to act like a class initializer.  It tries to read a fits file using one of the
 above classes and returns an instance of whichever one it found was successful.  It should
-always be successful, since its final attempt uses AffineTransform(), which has reasonable
+always be successful, since its final attempt uses <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>, which has reasonable
 defaults when the WCS key words are not in the file, but of course this will only be
 a very rough approximation of the true WCS.</p>
 <p>Some things you can do with a WCS instance:</p>
@@ -274,10 +277,10 @@ to as sky coordinates):</p>
 implemented.  If it is not implemented for a particular WCS class, a NotImplementedError
 will be raised.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> parameter should be a PositionD.  However, <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> will
-be a CelestialCoord if the transformation is in terms of celestial coordinates
+be a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> if the transformation is in terms of celestial coordinates
 (if <code class="docutils literal notranslate"><span class="pre">wcs.isCelestial()</span> <span class="pre">==</span> <span class="pre">True</span></code>).  Otherwise, it will be a PositionD as well.</p>
 </li>
-<li><p>Convert a GSObject that is defined in world coordinates to the equivalent profile defined
+<li><p>Convert a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> that is defined in world coordinates to the equivalent profile defined
 in terms of image coordinates (or vice versa):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image_profile</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">world_profile</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">world_profile</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_profile</span><span class="p">)</span>
@@ -296,8 +299,8 @@ in terms of image coordinates (or vice versa):</p>
 </div>
 <p>If <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(image_pos)</span></code> is not implemented for a particular WCS class, then a
 NotImplementedError will be raised if you pass in a <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> argument.</p>
-<p>The returned <code class="docutils literal notranslate"><span class="pre">local_wcs</span></code> is usually a JacobianWCS instance, but see the doc string for
-local() for more details.</p>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">local_wcs</span></code> is usually a <a class="reference internal" href="#galsim.JacobianWCS" title="galsim.JacobianWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">JacobianWCS</span></code></a> instance, but see the doc string for
+<a class="reference internal" href="#galsim.BaseWCS.local" title="galsim.BaseWCS.local"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">local</span></code></a> for more details.</p>
 </li>
 <li><p>Construct a full affine approximation of a WCS at a given location:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">affine_wcs</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">affine</span><span class="p">(</span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">image_pos</span><span class="p">)</span>
@@ -306,7 +309,7 @@ local() for more details.</p>
 </div>
 <p>This preserves the transformation near the location of <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>, but it is linear, so
 the transformed values may not agree as you get farther from the given point.</p>
-<p>The returned <code class="docutils literal notranslate"><span class="pre">affine_wcs</span></code> is always an AffineTransform instance.</p>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">affine_wcs</span></code> is always an <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> instance.</p>
 </li>
 <li><p>Get some properties of the pixel size and shape:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">area</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">()</span>
@@ -332,12 +335,18 @@ the transformed values may not agree as you get farther from the given point.</p
 </div>
 </li>
 </ul>
+<dl class="attribute">
+<dt id="galsim.BaseWCS.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.BaseWCS.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.BaseWCS.affine">
 <code class="sig-name descname">affine</code><span class="sig-paren">(</span><em class="sig-param">image_pos=None</em>, <em class="sig-param">world_pos=None</em>, <em class="sig-param">color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.affine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseWCS.affine" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the local AffineTransform of the WCS at a given point.</p>
+<dd><p>Return the local <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> of the WCS at a given point.</p>
 <p>This returns a linearized version of the current WCS at a given point.  It
-returns an AffineTransform that is locally approximately the same as the WCS in
+returns an <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> that is locally approximately the same as the WCS in
 the vicinity of the given point.</p>
 <p>It is similar to jacobian(), except that this preserves the offset information
 between the image coordinates and world coordinates rather than setting both
@@ -354,7 +363,7 @@ at the given position.  So, <code class="docutils literal notranslate"><span cla
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wcs</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span><span class="o">.</span><span class="n">withOrigin</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>You can use the returned AffineTransform to access the relevant values of the 2x2
+<p>You can use the returned <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> to access the relevant values of the 2x2
 Jacobian matrix and the origins directly:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">affine</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">affine</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
@@ -375,7 +384,7 @@ local affine transform. [default: None]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an AffineTransform instance</p>
+<dd class="field-even"><p>an <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> instance</p>
 </dd>
 </dl>
 </dd></dl>
@@ -399,7 +408,7 @@ for the given color.</p>
 <dl class="method">
 <dt id="galsim.BaseWCS.isCelestial">
 <code class="sig-name descname">isCelestial</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isCelestial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseWCS.isCelestial" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return whether the world coordinates are CelestialCoord (i.e. ra,dec).</p>
+<dd><p>Return whether the world coordinates are <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> (i.e. ra,dec).</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isCelestial()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">galsim.CelestialWCS)</span></code>.</p>
 </dd></dl>
 
@@ -413,9 +422,9 @@ for the given color.</p>
 <dl class="method">
 <dt id="galsim.BaseWCS.isPixelScale">
 <code class="sig-name descname">isPixelScale</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.isPixelScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseWCS.isPixelScale" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return whether the WCS transformation is a simple PixelScale or OffsetWCS.</p>
-<p>These are the simplest two WCS transformations.  PixelScale is local and OffsetWCS
-is non-local.  If an Image has one of these WCS transformations as its WCS, then
+<dd><p>Return whether the WCS transformation is a simple <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>.</p>
+<p>These are the simplest two WCS transformations.  <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> is local and <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>
+is non-local.  If an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> has one of these WCS transformations as its WCS, then
 <code class="docutils literal notranslate"><span class="pre">im.scale</span></code> works to read and write the pixel scale.  If not, <code class="docutils literal notranslate"><span class="pre">im.scale</span></code> will raise a
 TypeError exception.</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isPixelScale()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">(galsim.PixelScale,</span>
@@ -432,9 +441,9 @@ TypeError exception.</p>
 <dl class="method">
 <dt id="galsim.BaseWCS.jacobian">
 <code class="sig-name descname">jacobian</code><span class="sig-paren">(</span><em class="sig-param">image_pos=None</em>, <em class="sig-param">world_pos=None</em>, <em class="sig-param">color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseWCS.jacobian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the local JacobianWCS of the WCS at a given point.</p>
+<dd><p>Return the local <a class="reference internal" href="#galsim.JacobianWCS" title="galsim.JacobianWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">JacobianWCS</span></code></a> of the WCS at a given point.</p>
 <p>This is basically the same as local(), but the return value is guaranteed to be a
-JacobianWCS, which can be useful in some situations, since you can access the values
+<a class="reference internal" href="#galsim.JacobianWCS" title="galsim.JacobianWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">JacobianWCS</span></code></a>, which can be useful in some situations, since you can access the values
 of the 2x2 Jacobian matrix directly:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">jac</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
@@ -455,7 +464,7 @@ local jacobian. [default: None]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a JacobianWCS instance.</p>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.JacobianWCS" title="galsim.JacobianWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">JacobianWCS</span></code></a> instance.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -474,7 +483,7 @@ local WCS. [default: None]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a LocalWCS instance.</p>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a> instance.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -554,7 +563,7 @@ scale. [default: None]</p></li>
 <dt id="galsim.BaseWCS.pixelArea">
 <code class="sig-name descname">pixelArea</code><span class="sig-paren">(</span><em class="sig-param">image_pos=None</em>, <em class="sig-param">world_pos=None</em>, <em class="sig-param">color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#BaseWCS.pixelArea"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseWCS.pixelArea" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the area of a pixel in arcsec**2 (or in whatever units you are using for
-world coordinates if it is a EuclideanWCS).</p>
+world coordinates if it is a <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a>).</p>
 <p>For non-uniform WCS transforms, you must provide either <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>
 to say where the pixel is located.</p>
 <dl class="field-list simple">
@@ -597,11 +606,11 @@ pixel area. [default: None]</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image_pos</strong> – The position in image coordinates</p></li>
 <li><p><strong>color</strong> – For color-dependent WCS’s, the color term to use. [default: None]</p></li>
-<li><p><strong>project_center</strong> – (Only valid for CelestialWCS) A CelestialCoord to use for
+<li><p><strong>project_center</strong> – (Only valid for <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a>) A <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> to use for
 projecting the result onto a tangent plane world system rather
-than returning a CelestialCoord. [default: None]</p></li>
+than returning a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
 <li><p><strong>projection</strong> – If project_center != None, the kind of projection to use.  See
-CelestialCoord.project for the valid options. [default: ‘gnomonic’]</p></li>
+<a class="reference internal" href="coord.html#galsim.CelestialCoord.project" title="galsim.CelestialCoord.project"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">CelestialCoord.project</span></code></a> for the valid options. [default: ‘gnomonic’]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -657,13 +666,13 @@ CelestialCoord.project for the valid options. [default: ‘gnomonic’]</p></li>
 <p>There are essentially three overloaded versions of this function here.</p>
 <ol class="arabic">
 <li><p>The first converts a position from world coordinates to image coordinates.
-If the WCS is a EuclideanWCS, the argument may be either a PositionD or PositionI
-argument.  If it is a CelestialWCS, then the argument must be a CelestialCoord.
+If the WCS is a <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a>, the argument may be either a PositionD or PositionI
+argument.  If it is a <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a>, then the argument must be a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
 It returns the corresponding position in image coordinates as a PositionD:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">world_pos</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Equivalent to wcs.posToImage(world_pos).</p>
+<p>Equivalent to <a class="reference internal" href="#galsim.BaseWCS.posToImage" title="galsim.BaseWCS.posToImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">posToImage</span></code></a>.</p>
 </li>
 <li><p>The second is nearly the same, but takes either u and v values or ra and dec values
 (depending on the kind of wcs being used) directly and returns x and y values.
@@ -673,11 +682,11 @@ are also numpy arrays:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span> <span class="c1"># For CelestialWCS types</span>
 </pre></div>
 </div>
-<p>Equivalent to wcs.uvToxy(u, v) or wcs.radecToxy(ra, dec, units=units).</p>
+<p>Equivalent to <a class="reference internal" href="#galsim.wcs.EuclideanWCS.uvToxy" title="galsim.wcs.EuclideanWCS.uvToxy"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">uvToxy</span></code></a> or <a class="reference internal" href="#galsim.wcs.CelestialWCS.radecToxy" title="galsim.wcs.CelestialWCS.radecToxy"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">radecToxy</span></code></a>.</p>
 </li>
-<li><p>The third converts a surface brightness profile (a GSObject) from world
+<li><p>The third converts a surface brightness profile (a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>) from world
 coordinates to image coordinates, returning the profile in image coordinates
-as a new GSObject.  For non-uniform WCS transforms, you must provide either
+as a new <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  For non-uniform WCS transforms, you must provide either
 <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> to say where the profile is located so the right
 transformation can be performed.  And optionally, you may provide a flux scaling
 to be performed at the same time:</p>
@@ -685,7 +694,7 @@ to be performed at the same time:</p>
 <span class="go">                                flux_ratio=1, offset=(0,0))</span>
 </pre></div>
 </div>
-<p>Equivalent to wcs.profileToImage(world_profile, …).</p>
+<p>Equivalent to <a class="reference internal" href="#galsim.BaseWCS.profileToImage" title="galsim.BaseWCS.profileToImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">profileToImage</span></code></a>.</p>
 </li>
 </ol>
 </dd></dl>
@@ -696,10 +705,9 @@ to be performed at the same time:</p>
 <dd><p>Convert from image coordinates to world coordinates.</p>
 <p>There are essentially three overloaded versions of this function here.</p>
 <ol class="arabic">
-<li><p>The first converts a position from image coordinates to world coordinates.
-The argument may be either a PositionD or PositionI argument.  It returns
-the corresponding position in world coordinates as a PositionD if the WCS
-is a EuclideanWCS, or a CelestialCoord if it is a CelestialWCS:</p>
+<li><p>The first converts a <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> from image coordinates to world coordinates.
+It returns the corresponding position in world coordinates as a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> if the WCS
+is a <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a>, or a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> if it is a <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">world_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -713,11 +721,11 @@ arrays:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span> <span class="c1"># For CelestialWCS types</span>
 </pre></div>
 </div>
-<p>Equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.xyTouv(x,</span> <span class="pre">y)</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs.xyToradec(x,</span> <span class="pre">y)</span></code>.</p>
+<p>Equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.xyTouv(x,</span> <span class="pre">y)</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs.xyToradec(x,</span> <span class="pre">y,</span> <span class="pre">units=units)</span></code>.</p>
 </li>
-<li><p>The third converts a surface brightness profile (a GSObject) from image
+<li><p>The third converts a surface brightness profile (a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>) from image
 coordinates to world coordinates, returning the profile in world coordinates
-as a new GSObject.  For non-uniform WCS transforms, you must provide either
+as a new <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  For non-uniform WCS transforms, you must provide either
 <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> to say where the profile is located, so the right
 transformation can be performed.  And optionally, you may provide a flux scaling
 to be performed at the same time:</p>
@@ -756,7 +764,7 @@ example should work regardless of what kind of WCS this is:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># world_pos1 should be equal to world_pos2</span>
 </pre></div>
 </div>
-<p>Furthermore, if the current WCS is a EuclideanWCS (wcs.isCelestial() == False) you may
+<p>Furthermore, if the current WCS is a <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a> (wcs.isCelestial() == False) you may
 also provide a <code class="docutils literal notranslate"><span class="pre">world_origin</span></code> argument which defines what (u,v) position you want to
 correspond to the new origin.  Continuing the previous example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wcs3</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">withOrigin</span><span class="p">(</span><span class="n">new_origin</span><span class="p">,</span> <span class="n">new_world_origin</span><span class="p">)</span>
@@ -792,19 +800,6 @@ transform with respect to the image center.)</p>
 <p>However, this is not necessary for the WCS to survive a round trip through the FITS
 header, as it will also write GalSim-specific key words that should allow it to
 reconstruct the WCS correctly.</p>
-<p>Caveat: For UVFunction and RaDecFunction, if the functions are real python functions
-(rather than a string that is converted to a function), then the mechanism we use to
-convert the function to a string that can be written to the header has a few limitations.</p>
-<ol class="arabic simple">
-<li><p>It apparently only works for cpython implementations.</p></li>
-<li><p>It probably won’t work to write from one version of python and read from another.
-(At least for major version differences.)</p></li>
-<li><p>If the function uses globals, you’ll need to make sure the globals are present
-when you read it back in as well, or it probably won’t work.</p></li>
-<li><p>It looks really ugly in the header.</p></li>
-<li><p>We haven’t thought much about the security implications of this, so beware using
-GalSim to open FITS files from untrusted sources.</p></li>
-</ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -820,12 +815,19 @@ GalSim to open FITS files from untrusted sources.</p></li>
 <dl class="class">
 <dt id="galsim.wcs.CelestialWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.wcs.</code><code class="sig-name descname">CelestialWCS</code><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>A CelestialWCS is a BaseWCS whose world coordinates are on the celestial sphere.
-We use the CelestialCoord class for the world coordinates.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.BaseWCS</span></code></p>
+<p>A CelestialWCS is a <a class="reference internal" href="#galsim.BaseWCS" title="galsim.BaseWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseWCS</span></code></a> whose world coordinates are on the celestial sphere.
+We use the <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> class for the world coordinates.</p>
+<dl class="method">
+<dt id="galsim.wcs.CelestialWCS.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.wcs.CelestialWCS.isCelestial">
 <code class="sig-name descname">isCelestial</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#CelestialWCS.isCelestial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.CelestialWCS.isCelestial" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return whether the world coordinates are CelestialCoord (i.e. ra,dec).</p>
+<dd><p>Return whether the world coordinates are <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> (i.e. ra,dec).</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isCelestial()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">galsim.CelestialWCS)</span></code>.</p>
 </dd></dl>
 
@@ -864,7 +866,7 @@ the pos interface.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> – The x value(s) in image coordinates</p></li>
 <li><p><strong>y</strong> – The y value(s) in image coordinates</p></li>
-<li><p><strong>units</strong> – (Only valid for CelestialWCS, in which case it is required)
+<li><p><strong>units</strong> – (Only valid for <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a>, in which case it is required)
 The units to use for the returned ra, dec values.</p></li>
 <li><p><strong>color</strong> – For color-dependent WCS’s, the color term to use. [default: None]</p></li>
 </ul>
@@ -880,9 +882,16 @@ The units to use for the returned ra, dec values.</p></li>
 <dl class="class">
 <dt id="galsim.wcs.EuclideanWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.wcs.</code><code class="sig-name descname">EuclideanWCS</code><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>A EuclideanWCS is a BaseWCS whose world coordinates are on a Euclidean plane.
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.BaseWCS</span></code></p>
+<p>A EuclideanWCS is a <a class="reference internal" href="#galsim.BaseWCS" title="galsim.BaseWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseWCS</span></code></a> whose world coordinates are on a Euclidean plane.
 We usually use the notation (u,v) to refer to positions in world coordinates, and
 they use the class PositionD.</p>
+<dl class="method">
+<dt id="galsim.wcs.EuclideanWCS.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.wcs.EuclideanWCS.uvToxy">
 <code class="sig-name descname">uvToxy</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.uvToxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.uvToxy" title="Permalink to this definition">¶</a></dt>
@@ -904,7 +913,7 @@ will be vectorized, which is often much faster than using the pos interface.</p>
 
 <dl class="method">
 <dt id="galsim.wcs.EuclideanWCS.xyTouv">
-<code class="sig-name descname">xyTouv</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">units=None</em>, <em class="sig-param">color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.xyTouv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.xyTouv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">xyTouv</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#EuclideanWCS.xyTouv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.EuclideanWCS.xyTouv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert x,y from image coordinates to world coordinates.</p>
 <p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.toWorld(x,y)</span></code>.</p>
 <p>It is also equivalent to <code class="docutils literal notranslate"><span class="pre">wcs.posToWorld(galsim.PositionD(x,y))</span></code> when x and y are scalars;
@@ -915,8 +924,6 @@ will be vectorized, which is often much faster than using the pos interface.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> – The x value(s) in image coordinates</p></li>
 <li><p><strong>y</strong> – The y value(s) in image coordinates</p></li>
-<li><p><strong>units</strong> – (Only valid for CelestialWCS, in which case it is required)
-The units to use for the returned ra, dec values.</p></li>
 <li><p><strong>color</strong> – For color-dependent WCS’s, the color term to use. [default: None]</p></li>
 </ul>
 </dd>
@@ -931,7 +938,14 @@ The units to use for the returned ra, dec values.</p></li>
 <dl class="class">
 <dt id="galsim.wcs.UniformWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.wcs.</code><code class="sig-name descname">UniformWCS</code><a class="reference internal" href="_modules/galsim/wcs.html#UniformWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.UniformWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>A UniformWCS is a EuclideanWCS which has a uniform pixel size and shape.</p>
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.EuclideanWCS</span></code></a></p>
+<p>A UniformWCS is a <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EuclideanWCS</span></code></a> which has a uniform pixel size and shape.</p>
+<dl class="method">
+<dt id="galsim.wcs.UniformWCS.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UniformWCS.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.UniformWCS.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.wcs.UniformWCS.inverse">
 <code class="sig-name descname">inverse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UniformWCS.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.UniformWCS.inverse" title="Permalink to this definition">¶</a></dt>
@@ -951,7 +965,8 @@ the “image” and “world” coordinates.</p>
 <dl class="class">
 <dt id="galsim.wcs.LocalWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.wcs.</code><code class="sig-name descname">LocalWCS</code><a class="reference internal" href="_modules/galsim/wcs.html#LocalWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.wcs.LocalWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>A LocalWCS is a UniformWCS in which (0,0) in image coordinates is at the same place
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.UniformWCS</span></code></a></p>
+<p>A LocalWCS is a <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UniformWCS</span></code></a> in which (0,0) in image coordinates is at the same place
 as (0,0) in world coordinates</p>
 <dl class="method">
 <dt id="galsim.wcs.LocalWCS.isLocal">
@@ -968,7 +983,8 @@ as (0,0) in world coordinates</p>
 <dl class="class">
 <dt id="galsim.PixelScale">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PixelScale</code><span class="sig-paren">(</span><em class="sig-param">scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PixelScale" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the simplest possible WCS transformation.  It only involves a unit conversion
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.LocalWCS</span></code></a></p>
+<p>This is the simplest possible WCS transformation.  It only involves a unit conversion
 from pixels to arcsec (or whatever units you want to take for your world coordinate system).</p>
 <p>The conversion functions are:</p>
 <blockquote>
@@ -985,11 +1001,35 @@ v = y * scale</p>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.PixelScale.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PixelScale.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PixelScale.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PixelScale.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PixelScale.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PixelScale.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PixelScale.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PixelScale.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.PixelScale.isPixelScale">
 <code class="sig-name descname">isPixelScale</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#PixelScale.isPixelScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PixelScale.isPixelScale" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return whether the WCS transformation is a simple PixelScale or OffsetWCS.</p>
-<p>These are the simplest two WCS transformations.  PixelScale is local and OffsetWCS
-is non-local.  If an Image has one of these WCS transformations as its WCS, then
+<dd><p>Return whether the WCS transformation is a simple <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>.</p>
+<p>These are the simplest two WCS transformations.  <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> is local and <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>
+is non-local.  If an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> has one of these WCS transformations as its WCS, then
 <code class="docutils literal notranslate"><span class="pre">im.scale</span></code> works to read and write the pixel scale.  If not, <code class="docutils literal notranslate"><span class="pre">im.scale</span></code> will raise a
 TypeError exception.</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isPixelScale()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">(galsim.PixelScale,</span>
@@ -1001,7 +1041,8 @@ TypeError exception.</p>
 <dl class="class">
 <dt id="galsim.OffsetWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OffsetWCS</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS is similar to PixelScale, except the origin is not necessarily (0,0) in both
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.UniformWCS</span></code></a></p>
+<p>This WCS is similar to <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>, except the origin is not necessarily (0,0) in both
 the image and world coordinates.</p>
 <p>The conversion functions are:</p>
 <blockquote>
@@ -1026,11 +1067,29 @@ If provided, it should be a PositionD.
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.OffsetWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OffsetWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OffsetWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.OffsetWCS.isPixelScale">
 <code class="sig-name descname">isPixelScale</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetWCS.isPixelScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetWCS.isPixelScale" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return whether the WCS transformation is a simple PixelScale or OffsetWCS.</p>
-<p>These are the simplest two WCS transformations.  PixelScale is local and OffsetWCS
-is non-local.  If an Image has one of these WCS transformations as its WCS, then
+<dd><p>Return whether the WCS transformation is a simple <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>.</p>
+<p>These are the simplest two WCS transformations.  <a class="reference internal" href="#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> is local and <a class="reference internal" href="#galsim.OffsetWCS" title="galsim.OffsetWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OffsetWCS</span></code></a>
+is non-local.  If an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> has one of these WCS transformations as its WCS, then
 <code class="docutils literal notranslate"><span class="pre">im.scale</span></code> works to read and write the pixel scale.  If not, <code class="docutils literal notranslate"><span class="pre">im.scale</span></code> will raise a
 TypeError exception.</p>
 <p><code class="docutils literal notranslate"><span class="pre">wcs.isPixelScale()</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">isinstance(wcs,</span> <span class="pre">(galsim.PixelScale,</span>
@@ -1042,7 +1101,8 @@ TypeError exception.</p>
 <dl class="class">
 <dt id="galsim.ShearWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">ShearWCS</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">shear</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#ShearWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ShearWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS is a uniformly sheared coordinate system.</p>
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.LocalWCS</span></code></a></p>
+<p>This WCS is a uniformly sheared coordinate system.</p>
 <p>The shear is given as the shape that a round object has when observed in image coordinates.</p>
 <p>The conversion functions in terms of (g1,g2) are therefore:</p>
 <blockquote>
@@ -1068,12 +1128,37 @@ v = (y + g1 y - g2 x) * scale / sqrt(1-g1**2-g2**2)</p>
 </dl>
 <p>The Shear transformation conserves object area, so if the input <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">==</span> <span class="pre">1</span></code> then the
 transformation represented by the ShearWCS will conserve object area also.</p>
+<dl class="method">
+<dt id="galsim.ShearWCS.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#ShearWCS.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ShearWCS.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ShearWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#ShearWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ShearWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ShearWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">shear</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#ShearWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ShearWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ShearWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#ShearWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ShearWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.OffsetShearWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OffsetShearWCS</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">shear</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetShearWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetShearWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS is a uniformly sheared coordinate system with image and world origins
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.UniformWCS</span></code></a></p>
+<p>This WCS is a uniformly sheared coordinate system with image and world origins
 that are not necessarily coincident.</p>
 <p>The conversion functions are:</p>
 <blockquote>
@@ -1100,12 +1185,31 @@ If provided, it should be a PositionD.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.OffsetShearWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetShearWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetShearWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OffsetShearWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">shear</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetShearWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetShearWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OffsetShearWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#OffsetShearWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OffsetShearWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.JacobianWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">JacobianWCS</code><span class="sig-paren">(</span><em class="sig-param">dudx</em>, <em class="sig-param">dudy</em>, <em class="sig-param">dvdx</em>, <em class="sig-param">dvdy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.JacobianWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS is the most general local linear WCS implementing a 2x2 Jacobian matrix.</p>
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.LocalWCS</span></code></a></p>
+<p>This WCS is the most general local linear WCS implementing a 2x2 Jacobian matrix.</p>
 <p>The conversion functions are:</p>
 <blockquote>
 <div><p>u = dudx x + dudy y
@@ -1137,6 +1241,30 @@ this transformation.  See the docstring for that method for more information.</p
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.JacobianWCS.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.JacobianWCS.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.JacobianWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.JacobianWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.JacobianWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dudx</em>, <em class="sig-param">dudy</em>, <em class="sig-param">dvdx</em>, <em class="sig-param">dvdy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.JacobianWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.JacobianWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.JacobianWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.JacobianWCS.getDecomposition">
 <code class="sig-name descname">getDecomposition</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#JacobianWCS.getDecomposition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.JacobianWCS.getDecomposition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the equivalent expansion, shear, rotation and possible flip corresponding to
@@ -1166,7 +1294,7 @@ a flip of (x,y) -&gt; (y,x).</p>
 </div>
 <p>in that order.  (Rotation and shear do not commute.)</p>
 <p>The decomposition is returned as a tuple: (scale, shear, theta, flip), where scale is a
-float, shear is a Shear, theta is an Angle, and flip is a bool.</p>
+float, shear is a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a>, theta is an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and flip is a bool.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1184,7 +1312,8 @@ float, shear is a Shear, theta is an Angle, and flip is a bool.</p>
 <dl class="class">
 <dt id="galsim.AffineTransform">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AffineTransform</code><span class="sig-paren">(</span><em class="sig-param">dudx</em>, <em class="sig-param">dudy</em>, <em class="sig-param">dvdx</em>, <em class="sig-param">dvdy</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#AffineTransform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AffineTransform" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS is the most general linear transformation.  It involves a 2x2 Jacobian
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.UniformWCS" title="galsim.wcs.UniformWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.UniformWCS</span></code></a></p>
+<p>This WCS is the most general linear transformation.  It involves a 2x2 Jacobian
 matrix and an offset.  You can provide the offset in terms of either the <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>
 (x0,y0) where (u,v) = (0,0), or the <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> (u0,v0) where (x,y) = (0,0).
 Or, in fact, you may provide both, in which case the <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> (x0,y0) corresponds
@@ -1216,12 +1345,31 @@ If provided, it should be a PositionD.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.AffineTransform.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#AffineTransform.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AffineTransform.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AffineTransform.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dudx</em>, <em class="sig-param">dudy</em>, <em class="sig-param">dvdx</em>, <em class="sig-param">dvdy</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#AffineTransform.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AffineTransform.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AffineTransform.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#AffineTransform.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AffineTransform.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.UVFunction">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">UVFunction</code><span class="sig-paren">(</span><em class="sig-param">ufunc</em>, <em class="sig-param">vfunc</em>, <em class="sig-param">xfunc=None</em>, <em class="sig-param">yfunc=None</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em>, <em class="sig-param">uses_color=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UVFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UVFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS takes two arbitrary functions for u(x,y) and v(x,y).</p>
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.EuclideanWCS</span></code></a></p>
+<p>This WCS takes two arbitrary functions for u(x,y) and v(x,y).</p>
 <dl class="simple">
 <dt>The ufunc and vfunc parameters may be:</dt><dd><ul class="simple">
 <li><p>python functions that take (x,y) arguments</p></li>
@@ -1260,6 +1408,30 @@ the color values you use when using the wcs.) [default: False]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.UVFunction.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UVFunction.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UVFunction.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.UVFunction.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UVFunction.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UVFunction.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.UVFunction.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">ufunc</em>, <em class="sig-param">vfunc</em>, <em class="sig-param">xfunc=None</em>, <em class="sig-param">yfunc=None</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">world_origin=None</em>, <em class="sig-param">uses_color=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UVFunction.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UVFunction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.UVFunction.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#UVFunction.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UVFunction.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1268,7 +1440,8 @@ the color values you use when using the wcs.) [default: False]</p></li>
 <dl class="class">
 <dt id="galsim.RaDecFunction">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">RaDecFunction</code><span class="sig-paren">(</span><em class="sig-param">ra_func</em>, <em class="sig-param">dec_func=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#RaDecFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RaDecFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS takes an arbitrary function for the Right Ascension (ra) and Declination (dec).</p>
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a></p>
+<p>This WCS takes an arbitrary function for the Right Ascension (ra) and Declination (dec).</p>
 <p>In many cases, it can be more convenient to calculate both ra and dec in a single function,
 since there will typically be intermediate values that are common to both, so it may be more
 efficient to just calculate those once and thence calculate both ra and dec.  Thus, we
@@ -1284,10 +1457,10 @@ provide the option to provide either a single function or two separate functions
 <p>The return values, ra and dec, should be given in _radians_.</p>
 <p>The first argument is called <code class="docutils literal notranslate"><span class="pre">ra_func</span></code>, but if <code class="docutils literal notranslate"><span class="pre">dec_func</span></code> is omitted, then it is assumed
 to calculate both ra and dec.  The two values should be returned as a tuple (ra,dec).</p>
-<p>We don’t want a function that returns Angles, because we want to allow for the
+<p>We don’t want a function that returns <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instances, because we want to allow for the
 possibility of using NumPy arrays as inputs and outputs to speed up some calculations.  The
 function isn’t _required_ to work with NumPy arrays, but it is possible that some things
-will be faster if it does.  If it were expected to return Angles, then it definitely
+will be faster if it does.  If it were expected to return <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instances, then it definitely
 couldn’t work with arrays.</p>
 <p>An RaDecFunction is initialized with either of the following commands:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wcs</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RaDecFunction</span><span class="p">(</span><span class="n">radec_func</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -1307,12 +1480,37 @@ If provided, it should be a PositionD or PositionI.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.RaDecFunction.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#RaDecFunction.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RaDecFunction.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RaDecFunction.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#RaDecFunction.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RaDecFunction.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RaDecFunction.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">ra_func</em>, <em class="sig-param">dec_func=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#RaDecFunction.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RaDecFunction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RaDecFunction.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/wcs.html#RaDecFunction.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RaDecFunction.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.AstropyWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AstropyWCS</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#AstropyWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AstropyWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS uses astropy.wcs to read WCS information from a FITS file.
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a></p>
+<p>This WCS uses astropy.wcs to read WCS information from a FITS file.
 It requires the astropy.wcs python module to be installed.</p>
 <p>Astropy may be installed using pip, fink, or port:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span> <span class="n">install</span> <span class="n">astropy</span>
@@ -1357,12 +1555,37 @@ If provided, it should be a PositionD or PositionI.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.AstropyWCS.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#AstropyWCS.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AstropyWCS.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AstropyWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#AstropyWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AstropyWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AstropyWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#AstropyWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AstropyWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AstropyWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#AstropyWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AstropyWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.PyAstWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PyAstWCS</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">wcsinfo=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#PyAstWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PyAstWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a></p>
+<p>This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
 information from a FITS file.  It requires the starlink.Ast python module to be installed.</p>
 <p>Starlink may be installed using pip:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pip</span> <span class="n">install</span> <span class="n">starlink</span><span class="o">-</span><span class="n">pyast</span>
@@ -1403,12 +1626,37 @@ If provided, it should be a PositionD or PositionI.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.PyAstWCS.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#PyAstWCS.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PyAstWCS.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PyAstWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#PyAstWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PyAstWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PyAstWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">wcsinfo=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#PyAstWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PyAstWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PyAstWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#PyAstWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PyAstWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.WcsToolsWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">WcsToolsWCS</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#WcsToolsWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WcsToolsWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS uses wcstools executables to perform the appropriate WCS transformations
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a></p>
+<p>This WCS uses wcstools executables to perform the appropriate WCS transformations
 for a given FITS file.  It requires wcstools command line functions to be installed.</p>
 <p>Note: It uses the wcstools executables xy2sky and sky2xy, so it can be quite a bit less
 efficient than other options that keep the WCS in memory.</p>
@@ -1431,12 +1679,37 @@ If provided, it should be a PositionD or PositionI.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.WcsToolsWCS.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#WcsToolsWCS.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WcsToolsWCS.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.WcsToolsWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#WcsToolsWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WcsToolsWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.WcsToolsWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">origin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#WcsToolsWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WcsToolsWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.WcsToolsWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#WcsToolsWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WcsToolsWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="galsim.GSFitsWCS">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GSFitsWCS</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">_data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSFitsWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This WCS uses a GalSim implementation to read a WCS from a FITS file.</p>
+<dd><p>Bases: <a class="reference internal" href="#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a></p>
+<p>This WCS uses a GalSim implementation to read a WCS from a FITS file.</p>
 <p>It doesn’t do nearly as many WCS types as the other options, and it does not try to be
 as rigorous about supporting all possible valid variations in the FITS parameters.
 However, it does several popular WCS types properly, and it doesn’t require any additional
@@ -1453,7 +1726,7 @@ without it being named:</p>
 </pre></div>
 </div>
 <p>In addition to reading from a FITS file, there is also a factory function that builds
-a GSFitsWCS object implementing a TAN projection.  See the docstring of TanWCS() for
+a GSFitsWCS object implementing a TAN projection.  See the docstring of <a class="reference internal" href="#galsim.TanWCS" title="galsim.TanWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">TanWCS</span></code></a> for
 more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1475,6 +1748,36 @@ If provided, it should be a PositionD or PositionI.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.GSFitsWCS.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSFitsWCS.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSFitsWCS.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSFitsWCS.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSFitsWCS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">origin=None</em>, <em class="sig-param">_data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSFitsWCS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSFitsWCS.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSFitsWCS.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GSFitsWCS.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#GSFitsWCS.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSFitsWCS.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -1483,10 +1786,10 @@ If provided, it should be a PositionD or PositionI.
 <dd><p>This factory function will try to read the WCS from a FITS file and return a WCS that will
 work.  It tries a number of different WCS classes until it finds one that succeeds in reading
 the file.</p>
-<p>If none of them work, then the last class it tries, AffineTransform, is guaranteed to succeed,
+<p>If none of them work, then the last class it tries, <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>, is guaranteed to succeed,
 but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using
 reasonable defaults if even these are missing.  If you think that you have the right software
-for one of the WCS types, but FitsWCS still defaults to AffineTransform, it may be helpful to
+for one of the WCS types, but FitsWCS still defaults to <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>, it may be helpful to
 update your installation of astropy and/or starlink (if you don’t already have the latest
 version).</p>
 <p>Note: The list of classes this function will try may be edited, e.g. by an external module
@@ -1511,7 +1814,7 @@ SCamp).  In this case you should set <code class="docutils literal notranslate">
 to parse the file this way.  [default: False]</p></li>
 <li><p><strong>suppress_warning</strong> – Should a warning be emitted if none of the real FITS WCS classes
 are able to successfully read the file, and we have to reset to
-an AffineTransform instead?  [default: False]
+an <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> instead?  [default: False]
 (Note: this is set to True when this function is implicitly called from
 one of the galsim.fits.read* functions.)</p></li>
 </ul>
@@ -1522,7 +1825,7 @@ one of the galsim.fits.read* functions.)</p></li>
 <dl class="function">
 <dt id="galsim.TanWCS">
 <code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">TanWCS</code><span class="sig-paren">(</span><em class="sig-param">affine</em>, <em class="sig-param">world_origin</em>, <em class="sig-param">units=coord.arcsec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fitswcs.html#TanWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.TanWCS" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a function that returns a GSFitsWCS object for a TAN WCS projection.</p>
+<dd><p>This is a function that returns a <a class="reference internal" href="#galsim.GSFitsWCS" title="galsim.GSFitsWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSFitsWCS</span></code></a> object for a TAN WCS projection.</p>
 <p>The TAN projection is essentially an affine transformation from image coordinates to
 Euclidean (u,v) coordinates on a tangent plane, and then a “deprojection” of this plane
 onto the sphere given a particular RA, Dec for the location of the tangent point.
@@ -1531,16 +1834,16 @@ coordinate system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>affine</strong> – An AffineTransform defining the transformation from image coordinates
+<li><p><strong>affine</strong> – An <a class="reference internal" href="#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a> defining the transformation from image coordinates
 to the coordinates on the tangent plane.</p></li>
-<li><p><strong>world_origin</strong> – A CelestialCoord defining the location on the sphere where the
+<li><p><strong>world_origin</strong> – A <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> defining the location on the sphere where the
 tangent plane is centered.</p></li>
 <li><p><strong>units</strong> – The angular units of the (u,v) intermediate coordinate system.
 [default: galsim.arcsec]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a GSFitsWCS describing this WCS.</p>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.GSFitsWCS" title="galsim.GSFitsWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSFitsWCS</span></code></a> describing this WCS.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1561,7 +1864,9 @@ you can also call it directly as</p>
 then this should always succeed in reading back in the original WCS.  It may not end up
 as exactly the same class as the original, but the underlying world coordinate system
 transformation should be preserved.</p>
-<p>Caveat: For UVFunction and RaDecFunction, if the functions that were written to the FITS
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For <a class="reference internal" href="#galsim.UVFunction" title="galsim.UVFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UVFunction</span></code></a> and <a class="reference internal" href="#galsim.RaDecFunction" title="galsim.RaDecFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RaDecFunction</span></code></a>, if the functions that were written to the FITS
 header were real python functions (rather than a string that is converted to a function),
 then the mechanism we use to write to the header and read it back in has some limitations:</p>
 <ol class="arabic simple">
@@ -1574,6 +1879,7 @@ when you read it back in as well, or it probably won’t work.</p></li>
 <li><p>We haven’t thought much about the security implications of this, so beware using
 GalSim to open FITS files from untrusted sources.</p></li>
 </ol>
+</div>
 <p>If the file was not written by GalSim, then this code will do its best to read the
 WCS information in the FITS header.  Depending on what kind of WCS is encoded in the
 header, this may or may not be successful.</p>
@@ -1611,10 +1917,10 @@ equal.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="noise.html" class="btn btn-neutral float-right" title="Noise and Random Values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="random.html" class="btn btn-neutral float-right" title="Noise and Random Values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="transform.html" class="btn btn-neutral float-left" title="Transformed Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="gsparams.html" class="btn btn-neutral float-left" title="The GSParams class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

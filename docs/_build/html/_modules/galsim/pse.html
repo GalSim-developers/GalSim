@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,7 +182,7 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file pse.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Module containing code for estimating shear power spectra from shears at gridded positions.</span>
 
 <span class="sd">The code below was developed largely by Joe Zuntz and tweaked by assorted GalSim</span>
@@ -194,12 +197,8 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 
-<div class="viewcode-block" id="PowerSpectrumEstimator"><a class="viewcode-back" href="../../shear.html#galsim.pse.PowerSpectrumEstimator">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrumEstimator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Class for estimating the shear power spectrum from gridded shears.</span>
-
-<span class="sd">    The PowerSpectrumEstimator class can be used even on systems where GalSim is not installed.</span>
-<span class="sd">    It just requires NumPy.</span>
+<div class="viewcode-block" id="PowerSpectrumEstimator"><a class="viewcode-back" href="../../pse.html#galsim.pse.PowerSpectrumEstimator">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrumEstimator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for estimating the shear power spectrum from gridded shears.</span>
 
 <span class="sd">    This class stores all the data used in power spectrum estimation that is fixed with the geometry</span>
 <span class="sd">    of the problem - the binning and spin weighting factors.</span>
@@ -247,23 +246,19 @@
 <span class="sd">    Some important notes:</span>
 
 <span class="sd">    1) Power spectrum estimation requires a weight function which decides how the averaging is done</span>
-<span class="sd">    across ell within each bin.  By default that weighting is flat in ell using an analytic</span>
-<span class="sd">    calculation of the area in ell space, but this is easy to change with the ``_bin_power``</span>
-<span class="sd">    function.  (Note this area averaged bin weighting is only approximate for the higher frequency</span>
-<span class="sd">    bins in which the lower ``ell`` edge is greater than ``pi * ngrid / grid_size``, due to the</span>
-<span class="sd">    annular ``ell`` region being cut off by the square grid edges beyond this value.)  A keyword</span>
-<span class="sd">    allows for weighting by the power itself, but use of this functionality requires the GalSim</span>
-<span class="sd">    software package.</span>
-
+<span class="sd">       across ell within each bin.  By default that weighting is flat in ell using an analytic</span>
+<span class="sd">       calculation of the area in ell space, but this is easy to change with the ``_bin_power``</span>
+<span class="sd">       function.  (Note this area averaged bin weighting is only approximate for the higher</span>
+<span class="sd">       frequency bins in which the lower ``ell`` edge is greater than ``pi * ngrid / grid_size``,</span>
+<span class="sd">       due to the annular ``ell`` region being cut off by the square grid edges beyond this value.)</span>
+<span class="sd">       A keyword allows for weighting by the power itself.</span>
 <span class="sd">    2) This is the power spectrum of the gridded *data*, not the underlying field - we do not</span>
-<span class="sd">    account for the effects of the finite grid (basically, ignoring all the reasons why power</span>
-<span class="sd">    spectrum estimation is hard - see devel/modules/lensing_engine.pdf in the GalSim repository).</span>
-<span class="sd">    Users must account for the contribution of noise in ``g1``, ``g2`` and any masking.</span>
-
+<span class="sd">       account for the effects of the finite grid (basically, ignoring all the reasons why power</span>
+<span class="sd">       spectrum estimation is hard - see devel/modules/lensing_engine.pdf in the GalSim repository).</span>
+<span class="sd">       Users must account for the contribution of noise in ``g1``, ``g2`` and any masking.</span>
 <span class="sd">    3) The binning is currently fixed as uniform in log(ell).</span>
-
 <span class="sd">    4) The code for this class uses the notation of the GREAT10 handbook (Kitching et al. 2011,</span>
-<span class="sd">    http://dx.doi.org/10.1214/11-AOAS484), equations 17-21.</span>
+<span class="sd">       http://dx.doi.org/10.1214/11-AOAS484), equations 17-21.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">sky_size_deg</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">15</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a PowerSpectrumEstimator object given some grid parameters.</span>
@@ -356,19 +351,15 @@
     <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">weight_EE</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">weight_BB</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">theory_func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute the EE, BB, and EB power spectra of two 2D arrays ``g1`` and ``g2``.</span>
 
-<span class="sd">        For example usage, see the docstring for the PowerSpectrumEstimator class.</span>
+<span class="sd">        For example usage, see the docstring for the `PowerSpectrumEstimator` class.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            g1:             The shear component g1 as a square 2D NumPy array.</span>
 <span class="sd">            g2:             The shear component g2 as a square 2D NumPy array.</span>
 <span class="sd">            weight_EE:      If True, then the E auto-power spectrum is re-computed weighting by</span>
-<span class="sd">                            the power within each logarithmically-spaced ell bin. Note that use</span>
-<span class="sd">                            of this option requires a usable GalSim installation, unlike the</span>
-<span class="sd">                            rest of the PowerSpectrumEstimator functionality.  [default: False]</span>
+<span class="sd">                            the power within each logarithmically-spaced ell bin. [default: False]</span>
 <span class="sd">            weight_BB:      If True, then the B auto-power spectrum is re-computed weighting by</span>
-<span class="sd">                            the power within each logarithmically-spaced ell bin. Note that use</span>
-<span class="sd">                            of this option requires a usable GalSim installation, unlike the</span>
-<span class="sd">                            rest of the PowerSpectrumEstimator functionality.  [default: False]</span>
+<span class="sd">                            the power within each logarithmically-spaced ell bin. [default: False]</span>
 <span class="sd">            theory_func:    An optional callable function that can be used to get an idealized</span>
 <span class="sd">                            value of power at each point on the grid, and then see what results</span>
 <span class="sd">                            it gives for our chosen ell binning. [default: None]</span>
@@ -405,7 +396,6 @@
             <span class="n">C_theory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bin_power</span><span class="p">(</span><span class="n">C_theory_ell</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">weight_EE</span> <span class="ow">or</span> <span class="n">weight_BB</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">galsim</span>
             <span class="c1"># Need to interpolate C_EE to values of self.l_abs.  A bit of kludginess as we go off</span>
             <span class="c1"># the end of our final ell grid...</span>
             <span class="n">new_ell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ell</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>

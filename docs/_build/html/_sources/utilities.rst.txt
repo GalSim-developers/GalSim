@@ -17,6 +17,7 @@ that use galsim and have similar needs.
     bessel
     fft
     zernike
+    dcr
+    cd
     misc
-
 

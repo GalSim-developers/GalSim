@@ -11,16 +11,20 @@ GalSim: The modular galaxy image simulation toolkit
     image
     sb
     wcs
-    noise
+    random
     chromatic
-    shear
+    wl
+    photon
     coord
     utilities
+    errors
+
     config
     hsm
     des
     wfirst
 
+    shared
     history
 
 ==================

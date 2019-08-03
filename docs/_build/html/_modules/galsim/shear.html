@@ -89,15 +89,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
 
@@ -179,9 +182,6 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="sd">&quot;&quot;&quot;@file shear.py</span>
-<span class="sd">Redefinition of the Shear class at the Python layer.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -189,22 +189,22 @@
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 <div class="viewcode-block" id="Shear"><a class="viewcode-back" href="../../shear.html#galsim.Shear">[docs]</a><span class="k">class</span> <span class="nc">Shear</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class to represent shears in a variety of ways.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class to represent shears in a variety of ways.</span>
 
-<span class="sd">    The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape</span>
-<span class="sd">    distortions.  A shear is an operation that transforms a circle into an ellipse with</span>
-<span class="sd">    minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see</span>
-<span class="sd">    below for a discussion of the implications of this choice).  Given the multiple definitions of</span>
-<span class="sd">    ellipticity, we have multiple definitions of shear::</span>
+<span class="sd">    The Shear object can be initialized in a variety of ways to represent shape distortions.</span>
+<span class="sd">    A shear is an operation that transforms a circle into an ellipse with minor-to-major axis ratio</span>
+<span class="sd">    b/a, with position angle beta, while conserving the area (see below for a discussion of the</span>
+<span class="sd">    implications of this choice).  Given the multiple definitions of ellipticity, we have multiple</span>
+<span class="sd">    definitions of shear:</span>
 
-<span class="sd">        reduced shear</span>
-<span class="sd">            :math:`|g| = (a - b)/(a + b)`</span>
-<span class="sd">        distortion</span>
-<span class="sd">            :math:`|e| = (a^2 - b^2)/(a^2 + b^2)`</span>
-<span class="sd">        conformal shear</span>
-<span class="sd">            :math:`\eta = log(b/a)`</span>
-<span class="sd">        minor-to-major axis ratio</span>
-<span class="sd">            :math:`q = b/a`</span>
+<span class="sd">    reduced shear</span>
+<span class="sd">        :math:`|g| = (a - b)/(a + b)`</span>
+<span class="sd">    distortion</span>
+<span class="sd">        :math:`|e| = (a^2 - b^2)/(a^2 + b^2)`</span>
+<span class="sd">    conformal shear</span>
+<span class="sd">        :math:`\eta = log(b/a)`</span>
+<span class="sd">    minor-to-major axis ratio</span>
+<span class="sd">        :math:`q = b/a`</span>
 
 <span class="sd">    These can be thought of as a magnitude and a real-space position angle beta, or as two</span>
 <span class="sd">    components, e.g., g1 and g2, with:</span>
@@ -229,6 +229,7 @@
 <span class="sd">        &gt;&gt;&gt; s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)</span>
 <span class="sd">        &gt;&gt;&gt; s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)</span>
 <span class="sd">        &gt;&gt;&gt; s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)</span>
+<span class="sd">        &gt;&gt;&gt; s = galsim.Shear(0.05 + 0.03j)        # Uses the g1,g2 reduced shear definition</span>
 
 <span class="sd">    There can be no mixing and matching, e.g., specifying ``g1`` and ``e2``.  It is permissible to</span>
 <span class="sd">    only specify one of two components, with the other assumed to be zero.  If a magnitude such as</span>
@@ -242,19 +243,47 @@
 
 <span class="sd">        &gt;&gt;&gt; s = galsim._Shear(0.05 + 0.03j)  # Equivalent to galsim.Shear(g1=0.05, g2=0.03)</span>
 
-<span class="sd">    Since we have defined a Shear as a transformation that preserves area, this means that it is not</span>
-<span class="sd">    a precise description of what happens during the process of weak lensing.  The coordinate</span>
-<span class="sd">    transformation that occurs during the actual weak lensing process is such that if a galaxy is</span>
-<span class="sd">    sheared by some ``(gamma_1, gamma_2)``, and then sheared by ``(-gamma_1, -gamma_2)``, it will</span>
-<span class="sd">    in the end return to its original shape, but will have changed in area due to the magnification,</span>
-<span class="sd">    ``mu = 1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2))``, which is not equal to one for non-zero</span>
-<span class="sd">    shear even for convergence ``kappa=0``.  Application of a Shear using the `GSObject.shear`</span>
-<span class="sd">    method does not include this area change.  To properly incorporate the effective change in</span>
-<span class="sd">    area due to shear, it is necessary to either (a) define the Shear object, use the</span>
-<span class="sd">    `GSObject.shear` method, and separately use the `GSObject.magnify` method, or (b) use the</span>
-<span class="sd">    `GSObject.lens` method that simultaneously magnifies and shears.</span>
+<span class="sd">    Analagous to the construction options, one can access the shear in the same variety of</span>
+<span class="sd">    definitions.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        g1:         The first component of the shear in the &quot;reduced shear&quot; definition.</span>
+<span class="sd">        g2:         The second component of the shear in the &quot;reduced shear&quot; definition.</span>
+<span class="sd">        g:          The magnitude of the shear in the &quot;reduced shear&quot; definition.</span>
+<span class="sd">        e1:         The first component of the shear in the &quot;distortion&quot; definition.</span>
+<span class="sd">        e2:         The second component of the shear in the &quot;distortion&quot; definition.</span>
+<span class="sd">        e:          The magnitude of the shear in the &quot;distortion&quot; definition.</span>
+<span class="sd">        eta1:       The first component of the shear in the &quot;conformal shear&quot; definition.</span>
+<span class="sd">        eta2:       The second component of the shear in the &quot;conformal shear&quot; definition.</span>
+<span class="sd">        eta:        The magnitude of the shear in the &quot;conformal shear&quot; definition.</span>
+<span class="sd">        q:          The minor-to-major axis ratio</span>
+<span class="sd">        beta:       The position angle as an `Angle` instance</span>
+<span class="sd">        shear:      The reduced shear as a complex number g1 + 1j * g2.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        Since we have defined a Shear as a transformation that preserves area, this means that it</span>
+<span class="sd">        is not a precise description of what happens during the process of weak lensing.</span>
+
+<span class="sd">        The coordinate transformation that occurs during the actual weak lensing process is such</span>
+<span class="sd">        that if a galaxy is sheared by some :math:`(\gamma_1, \gamma_2)`, and then sheared by</span>
+<span class="sd">        :math:`(-\gamma_1, -\gamma_2)``, it will in the end return to its original shape, but will</span>
+<span class="sd">        have changed in area due to the magnification,</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \mu = \frac{1}{(1.-\kappa)**2 - (\gamma_1**2 + \gamma_2**2)}</span>
+
+<span class="sd">        which is not equal to 1 for non-zero shear even for convergence :math:`\kappa=0`.</span>
+
+<span class="sd">        Application of a `Shear` using the `GSObject.shear` method does not include this area</span>
+<span class="sd">        change.  To properly incorporate the effective change in area due to shear, it is necessary</span>
+<span class="sd">        to either:</span>
+
+<span class="sd">        (a) define the Shear object, use the `GSObject.shear` method, and separately use the</span>
+<span class="sd">            `GSObject.magnify` method, or</span>
+<span class="sd">        (b) use the `GSObject.lens` method that simultaneously magnifies and shears.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Shear.__init__"><a class="viewcode-back" href="../../shear.html#galsim.Shear.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># There is no valid set of &gt;2 keyword arguments, so raise an exception in this case:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
@@ -370,7 +399,7 @@
         <span class="c1"># initializing a Shear</span>
         <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;Shear constructor got unexpected extra argument(s): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="s2">&quot;Shear constructor got unexpected extra argument(s): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">g1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="o">.</span><span class="n">real</span>
@@ -440,29 +469,36 @@
     <span class="c1"># order of operations: shear by -other._shear, then by self._shear</span>
     <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Shear</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_g</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+<div class="viewcode-block" id="Shear.__eq__"><a class="viewcode-back" href="../../shear.html#galsim.Shear.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Shear</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_g</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Shear.__ne__"><a class="viewcode-back" href="../../shear.html#galsim.Shear.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Shear.getMatrix"><a class="viewcode-back" href="../../shear.html#galsim.Shear.getMatrix">[docs]</a>    <span class="k">def</span> <span class="nf">getMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the matrix that tells how this shear acts on a position vector:</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the matrix that tells how this shear acts on a position vector:</span>
 
 <span class="sd">        If a field is sheared by some shear, s, then the position (x,y) -&gt; (x&#39;,y&#39;)</span>
 <span class="sd">        according to:</span>
 
-<span class="sd">        [ x&#39; ] = S [ x ]</span>
-<span class="sd">        [ y&#39; ]     [ y ]</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">        where S = s.getMatrix().</span>
+<span class="sd">            \left( \begin{array}{c} x^\prime &amp; y^\prime \end{array} \right)</span>
+<span class="sd">            = S \left( \begin{array}{c} x  y \end{array} \right)</span>
 
-<span class="sd">        Specifically, the matrix is S = (1-g^2)^(-1/2) [ 1+g1 ,  g2  ]</span>
-<span class="sd">                                                       [  g2  , 1-g1 ]</span>
+<span class="sd">        and :math:`S` is the return value of this function ``S = s.getMatrix()``.</span>
+
+<span class="sd">        Specifically, the matrix is</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            S = \frac{1}{\sqrt{1-g^2}}</span>
+<span class="sd">                    \left( \begin{array}{cc} 1+g_1 &amp; g_2 \\</span>
+<span class="sd">                                             g_2 &amp; 1-g_1 \end{array} \right)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mf">1.</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">g1</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">g2</span>   <span class="p">],</span>
                          <span class="p">[</span>  <span class="bp">self</span><span class="o">.</span><span class="n">g2</span>  <span class="p">,</span> <span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">g1</span> <span class="p">]])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Shear.rotationWith"><a class="viewcode-back" href="../../shear.html#galsim.Shear.rotationWith">[docs]</a>    <span class="k">def</span> <span class="nf">rotationWith</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the rotation angle associated with the addition of two shears.</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the rotation angle associated with the addition of two shears.</span>
 
 <span class="sd">        The effect of two shears is not just a single net shear.  There is also a rotation</span>
 <span class="sd">        associated with it.  This is easiest to understand in terms of the matrix representations:</span>
@@ -470,10 +506,12 @@
 <span class="sd">        If s3 = s1 + s2, and the corresponding shear matrices are S1,S2,S3, then S3 R = S1 S2,</span>
 <span class="sd">        where R is a rotation matrix:</span>
 
-<span class="sd">        R = [ cos(theta) , -sin(theta) ]</span>
-<span class="sd">            [ sin(theta) ,  cos(theta) ]</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">        and theta is the return value (as a galsim.Angle) from s1.rotationWith(s2).</span>
+<span class="sd">            R = \left( \begin{array}{cc} cos(\theta) &amp; -sin(\theta) \\</span>
+<span class="sd">                                         sin(\theta) &amp;  cos(\theta) \end{array} \right)</span>
+
+<span class="sd">        and :math:`\theta` is the return value (as a `galsim.Angle`) from ``s1.rotationWith(s2)``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Save a little time by only working on the first column.</span>
         <span class="n">S3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()[:,:</span><span class="mi">1</span><span class="p">])</span>
@@ -481,26 +519,26 @@
         <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">R</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">theta</span> <span class="o">*</span> <span class="n">radians</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.Shear(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">)</span>
+<div class="viewcode-block" id="Shear.__repr__"><a class="viewcode-back" href="../../shear.html#galsim.Shear.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Shear(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.Shear(g1=</span><span class="si">%s</span><span class="s1">,g2=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">g2</span><span class="p">)</span>
+<div class="viewcode-block" id="Shear.__str__"><a class="viewcode-back" href="../../shear.html#galsim.Shear.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Shear(g1=</span><span class="si">%s</span><span class="s1">,g2=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">g2</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Shear.__hash__"><a class="viewcode-back" href="../../shear.html#galsim.Shear.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_g</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="_Shear"><a class="viewcode-back" href="../../shear.html#galsim._Shear">[docs]</a><span class="k">def</span> <span class="nf">_Shear</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to Shear(shear), but without the overhead of the normal sanity checks and other</span>
-<span class="sd">    options for how to specify the shear.</span>
+<div class="viewcode-block" id="_Shear"><a class="viewcode-back" href="../../shear.html#galsim._Shear">[docs]</a><span class="k">def</span> <span class="nf">_Shear</span><span class="p">(</span><span class="n">shear</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Equivalent to ``galsim.Shear(shear)``, but without the overhead of the normal sanity checks</span>
+<span class="sd">    and other options for how to specify the shear.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        g:       The complex shear g1 + 1j * g2.</span>
+<span class="sd">        shear:      The complex shear g1 + 1j * g2.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        a galsim.Shear instance</span>
+<span class="sd">        a `galsim.Shear` instance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">Shear</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">Shear</span><span class="p">)</span>
-    <span class="n">ret</span><span class="o">.</span><span class="n">_g</span> <span class="o">=</span> <span class="n">g</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_g</span> <span class="o">=</span> <span class="n">shear</span>
     <span class="k">return</span> <span class="n">ret</span></div>
 </pre></div>
 

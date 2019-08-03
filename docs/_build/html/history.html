@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="The WFIRST Module" href="wfirst.html" /> 
+    <link rel="prev" title="Shared Data" href="shared.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,15 +90,18 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noise.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shear.html">Weak Lensing Shear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Revision History</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-1-to-v2-2">Changes from v2.1 to v2.2</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#deprecated-features">Deprecated Features</a></li>
@@ -196,6 +199,10 @@
 <h2>Changes from v2.1 to v2.2<a class="headerlink" href="#changes-from-v2-1-to-v2-2" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="deprecated-features">
 <h3>Deprecated Features<a class="headerlink" href="#deprecated-features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Deprecated the nominally private class galsim.correlatednoise._BaseCorrelatedNoise.  If you
+were using it for any purpose, you should now use galsim.BaseCorrelatedNoise. (#160)</p></li>
+</ul>
 </div>
 <div class="section" id="api-changes">
 <h3>API Changes<a class="headerlink" href="#api-changes" title="Permalink to this headline">¶</a></h3>
@@ -909,7 +916,7 @@ numpy.int32 types), and made Image handling generally more robust (#293, #294).<
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="wfirst.html" class="btn btn-neutral float-left" title="The WFIRST Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="shared.html" class="btn btn-neutral float-left" title="Shared Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
