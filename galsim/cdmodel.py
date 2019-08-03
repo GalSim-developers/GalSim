@@ -142,7 +142,7 @@ def _modelShiftCoeffL(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of left pixel border as a function of int pixel
     position (x, y).
 
-    Equivalent to `-_modelShiftCoeffR(x+1, y, *args)`.
+    Equivalent to ``-_modelShiftCoeffR(x+1, y, *args)``.
     """
     return -_modelShiftCoeffR(x+1, y, r0, t0, rx, tx, r, t, alpha)
 
@@ -167,7 +167,7 @@ def _modelShiftCoeffB(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of bottom pixel border as a function of int pixel
     position (x, y)
 
-    Equivalent to `-_modelShiftCoeffT(x, y+1, *args)`.
+    Equivalent to ``-_modelShiftCoeffT(x, y+1, *args)``.
     """
     return -_modelShiftCoeffT(x, y+1, r0, t0, rx, tx, r, t, alpha)
 
@@ -180,20 +180,21 @@ class PowerLawCD(BaseCDModel):
         """Initialize a power-law charge deflection model.
 
         The deflections from charges in the six pixels directly neighbouring a pixel border are
-        modelled independently by the parameters `r0`, `t0` (directly adjacent to borders between
-        two pixels in the same row=y / column=x) and `rx`, `tx` (pixels on the corner of pixel
-        borders).
+        modelled independently by the parameters ``r0``, ``t0`` (directly adjacent to borders
+        between two pixels in the same row=y / column=x) and ``rx``, ``tx`` (pixels on the corner
+        of pixel borders).
 
         Deflections due to charges further away are modelled as a power-law
 
             a = A * numpy.sin(theta) * (r_distance)**(-alpha)
 
-        where `A` is a power-law amplitude (`r` for `a_l / a_b` and `t` `for a_b / a_t`), `theta` is
+        where A is a power-law amplitude (``r`` for a_l / a_b and ``t`` for a_b / a_t), theta is
         the angle between the pixel border line and the line from border center to the other pixel
         center.
 
-        Sign conventions are such that positive `r0`, `t0`, `rx`, `tx`, `r`, `t` correspond to
-        physical deflection of equal charges (this is also how the `theta` above is defined).
+        Sign conventions are such that positive ``r0``, ``t0``, ``rx``, ``tx``, ``r``, ``t``
+        correspond to physical deflection of equal charges (this is also how the theta above is
+        defined).
 
         Parameters:
             n:      Maximum separation [pix] out to which charges contribute to deflection

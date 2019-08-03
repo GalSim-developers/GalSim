@@ -88,7 +88,7 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
         latitude:        The observer's latitude, as an `Angle`.
 
     Returns:
-        the tuple `(zenith_angle, parallactic_angle)`, each of which is an `Angle`.
+        the tuple (zenith_angle, parallactic_angle), each of which is an `Angle`.
     """
     from .celestial import CelestialCoord
     from .angle import degrees

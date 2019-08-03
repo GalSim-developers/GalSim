@@ -30,6 +30,7 @@ Reading FITS Files
 
 .. autofunction:: galsim.fits.readFile
 
+.. autofunction:: galsim.fits.closeHDUList
 
 Writing FITS Files
 ------------------
@@ -48,3 +49,4 @@ FITS Headers
 .. autoclass:: galsim.fits.FitsHeader
     :members:
     :special-members:
+
