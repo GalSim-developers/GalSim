@@ -1335,8 +1335,8 @@ class GSObject(object):
         GalSim, we fold the quantum efficiency into the gain as well, so the units are photons/ADU.
 
         Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
-        So if you want, you can keep track of this properly and provide an ``area`` and ``exposure``
-        time here. This detail is more important with chromatic objects where the `SED` is typically
+        So if you want, you can keep track of this properly and provide an ``area`` and ``exptime``
+        here. This detail is more important with chromatic objects where the `SED` is typically
         given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
         objects however, it is often more convenient to ignore these details and just consider the
         flux to be the total number of photons for this exposure, in which case, you would leave the

@@ -30,3 +30,4 @@ the classes you would actually use when building the profile for an  astronomica
     composite
     transform
     gsparams
+    units
