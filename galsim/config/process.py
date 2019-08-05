@@ -26,8 +26,10 @@ def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 such that it has all the information from either config1 or
     config2 including places where both input dicts have some of a field defined.
-    e.g. config1 has image.pixel_scale, and config2 has image.noise.
-            Then the returned dict will have both.
+
+    e.g. If config1 has image.pixel_scale, and config2 has image.noise, then the returned dict
+    will have both.
+
     For real conflicts (the same value in both cases), config1's value takes precedence
     """
     logger = LoggerWrapper(logger)
@@ -56,9 +58,11 @@ def ReadYaml(config_file):
 
     The return value will be a list of dicts, one dict for each job to be done.
 
-    @param config_file      The name of the configuration file to read.
+    Parameters:
+        config_file:    The name of the configuration file to read.
 
-    @returns list of config dicts
+    Returns:
+        list of config dicts
     """
     import yaml
 
@@ -103,9 +107,11 @@ def ReadJson(config_file):
     A JSON file only defines a single dict.  However to be parallel to the functionality of
     ReadYaml, the output is a list with a single item, which is the dict defined by the JSON file.
 
-    @param config_file      The name of the configuration file to read.
+    Parameters:
+        config_file:    The name of the configuration file to read.
 
-    @returns [config_dict]
+    Returns:
+        [config_dict]
     """
     import json
 
@@ -123,7 +129,8 @@ def ConvertNones(config):
     To allow some parameters to be set to None in the config dict (e.g. in a list, where only
     some values need to be None), we convert all values == 'None' to None.
 
-    @param config       The config dict to process
+    Parameters:
+        config:     The config dict to process
     """
     if isinstance(config, dict):
         keys = config.keys()
@@ -162,12 +169,14 @@ def ReadConfig(config_file, file_type=None, logger=None):
     this is for the truth catalog.  This lets the columns be in the same order as the entries
     in the config file.  With a normal dict, they get scrambled.
 
-    @param config_file      The name of the configuration file to read.
-    @param file_type        If given, the type of file to read.  [default: None, which mean
-                            infer the file type from the extension.]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config_file:    The name of the configuration file to read.
+        file_type:      If given, the type of file to read.  [default: None, which mean
+                        infer the file type from the extension.]
+        logger:         If given, a logger object to log progress. [default: None]
 
-    @returns list of config dicts
+    Returns:
+        list of config dicts
     """
     logger = LoggerWrapper(logger)
     # Determine the file type from the extension if necessary:
@@ -199,15 +208,16 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     """
     Remove any "current" values stored in the config dict at any level.
 
-    @param config       The configuration dict.
-    @param keep_safe    Should current values that are marked as safe be preserved?
-                        [default: False]
-    @param type         If provided, only clear the current value of objects that use this
-                        particular type.  [default: None, which means to remove current values
-                        of all types.]
-    @param index_key    If provided, only clear the current value of objects that use this
-                        index_key (or start with this index_key, so obj_num also does
-                        obj_num_in_file).  [default: None]
+    Parameters:
+        config:     The configuration dict.
+        keep_safe:  Should current values that are marked as safe be preserved?
+                    [default: False]
+        type:       If provided, only clear the current value of objects that use this
+                    particular type.  [default: None, which means to remove current values
+                    of all types.]
+        index_key:  If provided, only clear the current value of objects that use this
+                    index_key (or start with this index_key, so obj_num also does
+                    obj_num_in_file).  [default: None]
     """
     # End recursion if this is not a dict.
     if not isinstance(config,dict): return
@@ -250,9 +260,11 @@ def CopyConfig(config):
     config dict back to the root process.  We do this a few different times, so encapsulate
     the copy semantics once here.
 
-    @param config           The configuration dict to copy.
+    Parameters:
+        config:     The configuration dict to copy.
 
-    @returns a deep copy of the config dict.
+    Returns:
+        a deep copy of the config dict.
     """
     import copy
     config1 = copy.copy(config)
@@ -272,9 +284,11 @@ def GetLoggerProxy(logger):
     """Make a proxy for the given logger that can be passed into multiprocessing Processes
     and used safely.
 
-    @param logger       The logger to make a copy of
+    Parameters:
+        logger:      The logger to make a copy of
 
-    @returns a proxy for the given logger
+    Returns:
+        a proxy for the given logger
     """
     from multiprocessing.managers import BaseManager
     if logger:
@@ -298,7 +312,8 @@ class LoggerWrapper(object):
     pipe before (typically) being ignored.  Here, we check whether the call will actually
     produce any output before calling the functions.
 
-    @param logger       The logger object to wrap.
+    Parameters:
+        logger:     The logger object to wrap.
     """
     def __init__(self, logger):
         if isinstance(logger,LoggerWrapper):
@@ -343,13 +358,15 @@ def UpdateNProc(nproc, ntot, config, logger=None):
     - If nproc < 0, set nproc to ncpu
     - Make sure nproc <= ntot
 
-    @param nproc        The nominal number of processes from the config dict
-    @param ntot         The total number of files/images/stamps to do, so the maximum number of
-                        processes that would make sense.
-    @param config       The configuration dict to copy.
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        nproc:      The nominal number of processes from the config dict
+        ntot:       The total number of files/images/stamps to do, so the maximum number of
+                    processes that would make sense.
+        config:     The configuration dict to copy.
+        logger:     If given, a logger object to log progress. [default: None]
 
-    @returns the number of processes to use.
+    Returns:
+        the number of processes to use.
     """
     logger = LoggerWrapper(logger)
     # First if nproc < 0, update based on ncpu
@@ -381,6 +398,9 @@ def UpdateNProc(nproc, ntot, config, logger=None):
 
 
 def ParseRandomSeed(config, param_name, base, seed_offset):
+    """Parse the random_seed field, converting an integer (initial) seed value into a
+    Sequence.
+    """
     # Normally, random_seed parameter is just a number, which really means to use that number
     # for the first item and go up sequentially from there for each object.
     # However, we allow for random_seed to be a gettable parameter, so for the
@@ -447,12 +467,14 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     - Setup config['image']['random_seed'] if necessary
     - Set config['rng'] and other related values based on appropriate random_seed
 
-    @param config           The configuration dict.
-    @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
-                            [default: 0]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         The configuration dict.
+        seed_offset:    An offset to use relative to what config['image']['random_seed'] gives.
+                        [default: 0]
+        logger:         If given, a logger object to log progress. [default: None]
 
-    @returns the seed used to initialize the RNG.
+    Returns:
+        the seed used to initialize the RNG.
     """
     logger = LoggerWrapper(logger)
 
@@ -534,7 +556,8 @@ def ImportModules(config):
     effects of the import statements will persist.  In particular, these are allowed to
     register additional custom types that can then be used in the current config dict.
 
-    @param config           The configuration dict.
+    Parameters:
+        config:     The configuration dict.
     """
     import sys
     if 'modules' in config:
@@ -561,10 +584,12 @@ def ParseExtendedKey(config, key):
 
     If key is a regular string, then is just returns the original (config, key).
 
-    @param config       The configuration dict.
-    @param key          The possibly extended key.
+    Parameters:
+        config:     The configuration dict.
+        key:        The possibly extended key.
 
-    @returns the equivalent (config, key) where key is now a regular non-extended key.
+    Returns:
+        the equivalent (config, key) where key is now a regular non-extended key.
     """
     # This is basically identical to the code for Dict.get(key) in catalog.py.
     chain = key.split('.')
@@ -590,10 +615,12 @@ def GetFromConfig(config, key):
     However, key is allowed to be a chain of keys such as 'gal.items.0.ellip.e', in which
     case this function will return config['gal']['items'][0]['ellip']['e'].
 
-    @param config       The configuration dict.
-    @param key          The possibly extended key.
+    Parameters:
+        config:     The configuration dict.
+        key:        The possibly extended key.
 
-    @returns the value of that key from the config.
+    Returns:
+        the value of that key from the config.
     """
     d, k = ParseExtendedKey(config, key)
     try:
@@ -610,10 +637,12 @@ def SetInConfig(config, key, value):
     However, key is allowed to be a chain of keys such as 'gal.items.0.ellip.e', in which
     case this function will set config['gal']['items'][0]['ellip']['e'] = value.
 
-    @param config       The configuration dict.
-    @param key          The possibly extended key.
+    Parameters:
+        config:     The configuration dict.
+        key:        The possibly extended key.
 
-    @returns the value of that key from the config.
+    Returns:
+        the value of that key from the config.
     """
     d, k = ParseExtendedKey(config, key)
     if value == '':
@@ -630,10 +659,11 @@ def SetInConfig(config, key, value):
 def UpdateConfig(config, new_params):
     """Update the given config dict with additional parameters/values.
 
-    @param config           The configuration dict to update.
-    @param new_params       A dict of parameters to update.  The keys of this dict may be
-                            chained field names, such as gal.first.dilate, which will be
-                            parsed to update config['gal']['first']['dilate'].
+    Parameters:
+        config:         The configuration dict to update.
+        new_params:     A dict of parameters to update.  The keys of this dict may be
+                        chained field names, such as gal.first.dilate, which will be
+                        parsed to update config['gal']['first']['dilate'].
     """
     for key, value in new_params.items():
         SetInConfig(config, key, value)
@@ -643,9 +673,10 @@ def ProcessTemplate(config, base, logger=None):
     """If the config dict has a 'template' item, read in the appropriate file and
     make any requested updates.
 
-    @param config           The configuration dict.
-    @param base             The base configuration dict.
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         The configuration dict.
+        base:           The base configuration dict.
+        logger:         If given, a logger object to log progress. [default: None]
     """
     logger = LoggerWrapper(logger)
     if 'template' in config:
@@ -680,9 +711,10 @@ def ProcessTemplate(config, base, logger=None):
 def ProcessAllTemplates(config, logger=None, base=None):
     """Check through the full config dict and process any fields that have a 'template' item.
 
-    @param config           The configuration dict.
-    @param base             The base configuration dict.
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         The configuration dict.
+        logger:         If given, a logger object to log progress. [default: None]
+        base:           The base configuration dict. [default: None]
     """
     if base is None: base = config
     ProcessTemplate(config, base, logger)
@@ -708,14 +740,15 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     the total amount of work into njobs and only do one of those jobs here.  To do this,
     set njobs to be the number of jobs total and job to be which job should be done here.
 
-    @param config           The configuration dict.
-    @param logger           If given, a logger object to log progress. [default: None]
-    @param njobs            The total number of jobs to split the work into. [default: 1]
-    @param job              Which job should be worked on here (1..njobs). [default: 1]
-    @param new_params       A dict of new parameter values that should be used to update the config
-                            dict after any template loading (if any). [default: None]
-    @param except_abort     Whether to abort processing when a file raises an exception (True)
-                            or just report errors and continue on (False). [default: False]
+    Parameters:
+        config:         The configuration dict.
+        logger:         If given, a logger object to log progress. [default: None]
+        njobs:          The total number of jobs to split the work into. [default: 1]
+        job:            Which job should be worked on here (1..njobs). [default: 1]
+        new_params:     A dict of new parameter values that should be used to update the config
+                        dict after any template loading (if any). [default: None]
+        except_abort:   Whether to abort processing when a file raises an exception (True)
+                        or just report errors and continue on (False). [default: False]
     """
     logger = LoggerWrapper(logger)
     import pprint
@@ -789,28 +822,36 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
     Each job is a tuple consisting of (kwargs, k), where kwargs is the dict of kwargs to pass to
     the job_func and k is the index of this job in the full list of jobs.
 
-    @param nproc            How many processes to use.
-    @param config           The configuration dict.
-    @param job_func         The function to run for each job.  It will be called as
-                                result = job_func(**kwargs)
-                            where kwargs is from one of the jobs in the task list.
-    @param tasks            A list of tasks to run.  Each task is a list of jobs, each of which is
-                            a tuple (kwargs, k).
-    @param item             A string indicating what is being worked on.
-    @param logger           If given, a logger object to log progress. [default: None]
-    @param done_func        A function to run upon completion of each job.  It will be called as
-                                done_func(logger, proc, k, result, t)
-                            where proc is the process name, k is the index of the job, result is
-                            the return value of that job, and t is the time taken. [default: None]
-    @param except_func      A function to run if an exception is encountered.  It will be called as
-                                except_func(logger, proc, k, ex, tr)
-                            where proc is the process name, k is the index of the job that failed,
-                            ex is the exception caught, and tr is the traceback. [default: None]
-    @param except_abort     Whether an exception should abort the rest of the processing.
-                            If False, then the returned results list will not include anything
-                            for the jobs that failed.  [default: True]
+    Parameters:
+        nproc:          How many processes to use.
+        config:         The configuration dict.
+        job_func:       The function to run for each job.  It will be called as::
 
-    @returns a list of the outputs from job_func for each job
+                            result = job_func(**kwargs)
+
+                        where kwargs is from one of the jobs in the task list.
+        tasks:          A list of tasks to run.  Each task is a list of jobs, each of which is
+                        a tuple (kwargs, k).
+        item:           A string indicating what is being worked on.
+        logger:         If given, a logger object to log progress. [default: None]
+        done_func:      A function to run upon completion of each job.  It will be called as::
+
+                            done_func(logger, proc, k, result, t)
+
+                        where proc is the process name, k is the index of the job, result is
+                        the return value of that job, and t is the time taken. [default: None]
+        except_func:    A function to run if an exception is encountered.  It will be called as::
+
+                            except_func(logger, proc, k, ex, tr)
+
+                        where proc is the process name, k is the index of the job that failed,
+                        ex is the exception caught, and tr is the traceback. [default: None]
+        except_abort:   Whether an exception should abort the rest of the processing.
+                        If False, then the returned results list will not include anything
+                        for the jobs that failed.  [default: True]
+
+    Returns:
+        a list of the outputs from job_func for each job
     """
     import time
     import traceback
@@ -1006,7 +1047,8 @@ def GetIndex(config, base, is_sequence=False):
     Then if base[index_key] is other than obj_num, use that.
     Finally, if this is a sequence, default to 'obj_num_in_file', otherwise 'obj_num'.
 
-    @returns index, index_key
+    Returns:
+        index, index_key
     """
     if 'index_key' in config:
         index_key = config['index_key']
@@ -1031,13 +1073,15 @@ def GetRNG(config, base, logger=None, tag=''):
 
     If a logger is provided, then it will emit a warning if there is no current rng setup.
 
-    @param config           The configuration dict for the current item being worked on.
-    @param base             The base configuration dict.
-    @param logger           If given, a logger object to log progress. [default: None]
-    @param tag              If given, an appropriate name for the current item to use in the
-                            warning message. [default: '']
+    Parameters:
+        config:         The configuration dict for the current item being worked on.
+        base:           The base configuration dict.
+        logger:         If given, a logger object to log progress. [default: None]
+        tag:            If given, an appropriate name for the current item to use in the
+                        warning message. [default: '']
 
-    @returns either the appropriate rng for the current index_key or None
+    Returns:
+        either the appropriate rng for the current index_key or None
     """
     logger = LoggerWrapper(logger)
     index, index_key = GetIndex(config, base)

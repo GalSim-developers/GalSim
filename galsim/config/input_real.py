@@ -27,7 +27,7 @@ RegisterInputType('real_catalog', InputLoader(galsim.RealGalaxyCatalog))
 # There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 
 def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGalaxy'):
-    """@brief Build a RealGalaxy from the real_catalog input item.
+    """Build a RealGalaxy from the real_catalog input item.
     """
     real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
 
@@ -67,7 +67,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
 
 
 def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
-    """@brief Return the original image from a RealGalaxy using the real_catalog input item.
+    """Return the original image from a RealGalaxy using the real_catalog input item.
     """
     gal, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
                                    param_name='RealGalaxyOriginal')

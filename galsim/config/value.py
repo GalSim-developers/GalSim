@@ -41,9 +41,17 @@ standard_ignore = [
 ]
 
 def ParseValue(config, key, base, value_type):
-    """@brief Read or generate a parameter value from config.
+    """Read or generate a parameter value from config.
 
-    @returns the tuple (value, safe).
+    Parameters:
+        config:     The config dict from which to parse the value.
+        key:        The key value in the dict to parse.
+        base:       The base config dict.  [default: None, which means use base=config]
+        value_type: The value_type expected.  [default: None, which means it won't check
+                    that the value is the right type.]
+
+    Returns:
+        the tuple (value, safe).
     """
     # Special: if the "value_type" is GSObject, then switch over to that builder instead.
     if value_type is galsim.GSObject:
@@ -180,15 +188,17 @@ def ParseValue(config, key, base, value_type):
 
 
 def GetCurrentValue(key, config, value_type=None, base=None):
-    """@brief Get the current value of another config item given the key name.
+    """Get the current value of another config item given the key name.
 
-    @param key          The (extended) key value in the dict to get the current value of.
-    @param config       The config dict from which to get the key.
-    @param value_type   The value_type expected.  [default: None, which means it won't check
-                        that the value is the right type.]
-    @param base         The base config dict.  [default: None, which means use base=config]
+    Parameters:
+        key:        The (extended) key value in the dict to get the current value of.
+        config:     The config dict from which to get the key.
+        value_type: The value_type expected.  [default: None, which means it won't check
+                    that the value is the right type.]
+        base:       The base config dict.  [default: None, which means use base=config]
 
-    @returns the current value
+    Returns:
+        the current value
     """
     #print('GetCurrent %s.  value_type = %s'%(key,value_type))
     if base is None:
@@ -204,11 +214,12 @@ def EvaluateCurrentValue(key, config, base, value_type=None):
     """Helper function to evaluate the current value at config[key] where key is no longer
     an extended key, and config is the local dict where it is relevant.
 
-    @param key          The key value in the dict to get the current value of.
-    @param config       The config dict from which to get the key.
-    @param base         The base config dict.
-    @param value_type   The value_type expected.  [default: None, which means it won't check
-                        that the value is the right type.]
+    Parameters:
+        key:        The key value in the dict to get the current value of.
+        config:     The config dict from which to get the key.
+        base:       The base config dict.
+        value_type: The value_type expected.  [default: None, which means it won't check
+                    that the value is the right type.]
     """
     if not isinstance(config[key], dict):
         if value_type is not None or (isinstance(config[key],str) and config[key][0] in ('@','$')):
@@ -237,6 +248,10 @@ def SetDefaultIndex(config, num):
     When the number of items in a list is known, we allow the user to omit some of
     the parameters of a Sequence or Random and set them automatically based on the
     size of the list, catalog, etc.
+
+    Parameters:
+        config:     The config dict with the field to be updated.
+        num:        The number to use for the length of the index Sequence if appropriate.
     """
     # We use a default item (set to True) to indicate that the value of nitems, last, or max
     # has been set here, rather than by the user.  This way if the number of items in the
@@ -282,9 +297,17 @@ def SetDefaultIndex(config, num):
 
 
 def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
-    """@brief Check that the parameters for a particular item are all valid
+    """Check that the parameters for a particular item are all valid
 
-    @returns a dict, get, with get[key] = value_type for all keys to get.
+    Parameters:
+        config:     The config dict to check
+        req:        The required items [default: {}]
+        opt:        The optional items [default: {}]
+        single:     List of items where exactly one is required [default: []]
+        ignore:     Items to ignore [default: []]
+
+    Returns:
+        a dict, get, with get[key] = value_type for all keys to get.
     """
     if '_get' in config: return config['_get']
 
@@ -333,9 +356,17 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
 
 
 def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
-    """@brief Check and get all the parameters for a particular item
+    """Check and get all the parameters for a particular item
 
-    @returns the tuple (kwargs, safe).
+    Parameters:
+        config:     The config dict from which to get items.
+        req:        The required items [default: {}]
+        opt:        The optional items [default: {}]
+        single:     List of items where exactly one is required [default: []]
+        ignore:     Items to ignore [default: []]
+
+    Returns:
+        the tuple (kwargs, safe).
     """
     get = CheckAllParams(config,req,opt,single,ignore)
     kwargs = {}
@@ -355,7 +386,7 @@ def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
 #
 
 def _GetAngleValue(param):
-    """ @brief Convert a string consisting of a value and an angle unit into an Angle.
+    """Convert a string consisting of a value and an angle unit into an Angle.
     """
     try :
         value, unit = param.rsplit(None,1)
@@ -367,7 +398,7 @@ def _GetAngleValue(param):
 
 
 def _GetPositionValue(param):
-    """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
+    """Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
     """
     try:
         x = float(param[0])
@@ -384,7 +415,7 @@ def _GetPositionValue(param):
 
 
 def _GetBoolValue(param):
-    """ @brief Convert a string to a bool
+    """Convert a string to a bool
     """
     if isinstance(param,str):
         if param.strip().upper() in ('TRUE', 'YES'):
@@ -409,7 +440,7 @@ def _GetBoolValue(param):
 #
 
 def _GenerateFromG1G2(config, base, value_type):
-    """@brief Return a Shear constructed from given (g1, g2)
+    """Return a Shear constructed from given (g1, g2)
     """
     req = { 'g1' : float, 'g2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -417,7 +448,7 @@ def _GenerateFromG1G2(config, base, value_type):
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromE1E2(config, base, value_type):
-    """@brief Return a Shear constructed from given (e1, e2)
+    """Return a Shear constructed from given (e1, e2)
     """
     req = { 'e1' : float, 'e2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -425,7 +456,7 @@ def _GenerateFromE1E2(config, base, value_type):
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEta1Eta2(config, base, value_type):
-    """@brief Return a Shear constructed from given (eta1, eta2)
+    """Return a Shear constructed from given (eta1, eta2)
     """
     req = { 'eta1' : float, 'eta2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -433,7 +464,7 @@ def _GenerateFromEta1Eta2(config, base, value_type):
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromGBeta(config, base, value_type):
-    """@brief Return a Shear constructed from given (g, beta)
+    """Return a Shear constructed from given (g, beta)
     """
     req = { 'g' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -441,7 +472,7 @@ def _GenerateFromGBeta(config, base, value_type):
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEBeta(config, base, value_type):
-    """@brief Return a Shear constructed from given (e, beta)
+    """Return a Shear constructed from given (e, beta)
     """
     req = { 'e' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -449,7 +480,7 @@ def _GenerateFromEBeta(config, base, value_type):
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEtaBeta(config, base, value_type):
-    """@brief Return a Shear constructed from given (eta, beta)
+    """Return a Shear constructed from given (eta, beta)
     """
     req = { 'eta' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -457,7 +488,7 @@ def _GenerateFromEtaBeta(config, base, value_type):
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromQBeta(config, base, value_type):
-    """@brief Return a Shear constructed from given (q, beta)
+    """Return a Shear constructed from given (q, beta)
     """
     req = { 'q' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -465,7 +496,7 @@ def _GenerateFromQBeta(config, base, value_type):
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromXY(config, base, value_type):
-    """@brief Return a PositionD constructed from given (x,y)
+    """Return a PositionD constructed from given (x,y)
     """
     req = { 'x' : float, 'y' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -473,7 +504,7 @@ def _GenerateFromXY(config, base, value_type):
     return galsim.PositionD(**kwargs), safe
 
 def _GenerateFromRTheta(config, base, value_type):
-    """@brief Return a PositionD constructed from given (r,theta)
+    """Return a PositionD constructed from given (r,theta)
     """
     req = { 'r' : float, 'theta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -484,7 +515,7 @@ def _GenerateFromRTheta(config, base, value_type):
     return galsim.PositionD(r*theta.cos(), r*theta.sin()), safe
 
 def _GenerateFromRADec(config, base, value_type):
-    """@brief Return a CelestialCoord constructed from given (ra,dec)
+    """Return a CelestialCoord constructed from given (ra,dec)
     """
     req = { 'ra' : galsim.Angle, 'dec' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -492,7 +523,7 @@ def _GenerateFromRADec(config, base, value_type):
     return galsim.CelestialCoord(**kwargs), safe
 
 def _GenerateFromRad(config, base, value_type):
-    """@brief Return an Angle constructed from given theta in radians
+    """Return an Angle constructed from given theta in radians
     """
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -500,7 +531,7 @@ def _GenerateFromRad(config, base, value_type):
     return kwargs['theta'] * galsim.radians, safe
 
 def _GenerateFromDeg(config, base, value_type):
-    """@brief Return an Angle constructed from given theta in degrees
+    """Return an Angle constructed from given theta in degrees
     """
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
@@ -508,7 +539,7 @@ def _GenerateFromDeg(config, base, value_type):
     return kwargs['theta'] * galsim.degrees, safe
 
 def _GenerateFromSequence(config, base, value_type):
-    """@brief Return next in a sequence of integers
+    """Return next in a sequence of integers
     """
     ignore = [ 'default' ]
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
@@ -565,7 +596,7 @@ def _GenerateFromSequence(config, base, value_type):
 
 
 def _GenerateFromNumberedFile(config, base, value_type):
-    """@brief Return a file_name using a root, a number, and an extension
+    """Return a file_name using a root, a number, and an extension
     """
     if 'num' not in config:
         config['num'] = { 'type' : 'Sequence' }
@@ -585,7 +616,7 @@ def _GenerateFromNumberedFile(config, base, value_type):
     return s, safe
 
 def _GenerateFromFormattedStr(config, base, value_type):
-    """@brief Create a string from a format string
+    """Create a string from a format string
     """
     req = { 'format' : str, 'items' : list }
     # Ignore items for now, we'll deal with it differently.
@@ -634,7 +665,7 @@ def _GenerateFromFormattedStr(config, base, value_type):
 
 
 def _GenerateFromList(config, base, value_type):
-    """@brief Return next item from a provided list
+    """Return next item from a provided list
     """
     req = { 'items' : list }
     opt = { 'index' : int }
@@ -656,7 +687,7 @@ def _GenerateFromList(config, base, value_type):
     return val, safe
 
 def _GenerateFromSum(config, base, value_type):
-    """@brief Return next item from a provided list
+    """Return next item from a provided list
     """
     req = { 'items' : list }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
@@ -675,7 +706,7 @@ def _GenerateFromSum(config, base, value_type):
     return sum, safe
 
 def _GenerateFromCurrent(config, base, value_type):
-    """@brief Get the current value of another config item.
+    """Get the current value of another config item.
     """
     if '_kd' in config:
         k, d = config['_kd']
@@ -716,14 +747,17 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     and the current value and type stored, so currently the only two types that allow
     None as a valid type are Current and Eval.
 
-    @param type_name        The name of the 'type' specification in the config dict.
-    @param gen_func         A function to generate a value from the config information.
-                            The call signature is
-                                value, safe = Generate(config, base, value_type)
-    @param valid_types      A list of types for which this type name is valid.
-    @param input_type       If the generator utilises an input object, give the key name of the
-                            input type here.  (If it uses more than one, this may be a list.)
-                            [default: None]
+    Parameters:
+        type_name:      The name of the 'type' specification in the config dict.
+        gen_func:       A function to generate a value from the config information.
+                        The call signature is::
+
+                            value, safe = Generate(config, base, value_type)
+
+        valid_types:    A list of types for which this type name is valid.
+        input_type:     If the generator utilises an input object, give the key name of the
+                        input type here.  (If it uses more than one, this may be a list.)
+                        [default: None]
     """
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
     if input_type is not None:

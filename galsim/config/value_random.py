@@ -24,7 +24,7 @@ import galsim
 # and RandomCircle.
 
 def _GenerateFromRandom(config, base, value_type):
-    """@brief Return a random value drawn from a uniform distribution
+    """Return a random value drawn from a uniform distribution
     """
     rng = galsim.config.GetRNG(config, base)
     ud = galsim.UniformDeviate(rng)
@@ -64,7 +64,7 @@ def _GenerateFromRandom(config, base, value_type):
 
 
 def _GenerateFromRandomGaussian(config, base, value_type):
-    """@brief Return a random value drawn from a Gaussian distribution
+    """Return a random value drawn from a Gaussian distribution
     """
     rng = galsim.config.GetRNG(config, base)
 
@@ -125,7 +125,7 @@ def _GenerateFromRandomGaussian(config, base, value_type):
     return val, False
 
 def _GenerateFromRandomPoisson(config, base, value_type):
-    """@brief Return a random value drawn from a Poisson distribution
+    """Return a random value drawn from a Poisson distribution
     """
     rng = galsim.config.GetRNG(config, base)
 
@@ -141,7 +141,7 @@ def _GenerateFromRandomPoisson(config, base, value_type):
     return val, False
 
 def _GenerateFromRandomBinomial(config, base, value_type):
-    """@brief Return a random value drawn from a Binomial distribution
+    """Return a random value drawn from a Binomial distribution
     """
     rng = galsim.config.GetRNG(config, base)
 
@@ -169,7 +169,7 @@ def _GenerateFromRandomBinomial(config, base, value_type):
 
 
 def _GenerateFromRandomWeibull(config, base, value_type):
-    """@brief Return a random value drawn from a Weibull distribution
+    """Return a random value drawn from a Weibull distribution
     """
     rng = galsim.config.GetRNG(config, base)
 
@@ -186,7 +186,7 @@ def _GenerateFromRandomWeibull(config, base, value_type):
 
 
 def _GenerateFromRandomGamma(config, base, value_type):
-    """@brief Return a random value drawn from a Gamma distribution
+    """Return a random value drawn from a Gamma distribution
     """
     rng = galsim.config.GetRNG(config, base)
 
@@ -203,7 +203,7 @@ def _GenerateFromRandomGamma(config, base, value_type):
 
 
 def _GenerateFromRandomChi2(config, base, value_type):
-    """@brief Return a random value drawn from a Chi^2 distribution
+    """Return a random value drawn from a Chi^2 distribution
     """
     rng = galsim.config.GetRNG(config, base)
 
@@ -219,7 +219,7 @@ def _GenerateFromRandomChi2(config, base, value_type):
     return val, False
 
 def _GenerateFromRandomDistribution(config, base, value_type):
-    """@brief Return a random value drawn from a user-defined probability distribution
+    """Return a random value drawn from a user-defined probability distribution
     """
     rng = galsim.config.GetRNG(config, base)
 
@@ -271,7 +271,7 @@ def _GenerateFromRandomDistribution(config, base, value_type):
 
 
 def _GenerateFromRandomCircle(config, base, value_type):
-    """@brief Return a PositionD drawn from a circular top hat distribution.
+    """Return a PositionD drawn from a circular top hat distribution.
     """
     rng = galsim.config.GetRNG(config, base)
 

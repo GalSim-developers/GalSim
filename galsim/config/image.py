@@ -37,13 +37,15 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     """
     Build a number of postage stamp images as specified by the config dict.
 
-    @param nimages          How many images to build.
-    @param config           The configuration dict.
-    @param image_num        If given, the current image number. [default: 0]
-    @param obj_num          If given, the first object number in the image. [default: 0]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        nimages:        How many images to build.
+        config:         The configuration dict.
+        image_num:      If given, the current image number. [default: 0]
+        obj_num:        If given, the first object number in the image. [default: 0]
+        logger:         If given, a logger object to log progress. [default: None]
 
-    @returns a list of images
+    Returns:
+        a list of images
     """
     logger = galsim.config.LoggerWrapper(logger)
     logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
@@ -107,10 +109,11 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
     - Set default config['image']['type'] to 'Single' if not specified
     - Check that the specified image type is valid.
 
-    @param config           The configuration dict.
-    @param image_num        The current image number.
-    @param obj_num          The first object number in the image.
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         The configuration dict.
+        image_num:      The current image number.
+        obj_num:        The first object number in the image.
+        logger:         If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     config['image_num'] = image_num
@@ -155,10 +158,11 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     - If wcs.isPixelScale(), also set config['pixel_scale'] for convenience.
     - Set config['world_center'] to either a given value or based on wcs and image_center
 
-    @param config       The configuration dict.
-    @param xsize        The size of the image in the x-dimension.
-    @param ysize        The size of the image in the y-dimension.
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict.
+        xsize:      The size of the image in the x-dimension.
+        ysize:      The size of the image in the y-dimension.
+        logger:     If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     config['image_xsize'] = xsize
@@ -208,12 +212,14 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     """
     Build an Image according to the information in config.
 
-    @param config           The configuration dict.
-    @param image_num        If given, the current image number. [default: 0]
-    @param obj_num          If given, the first object number in the image. [default: 0]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         The configuration dict.
+        image_num:      If given, the current image number. [default: 0]
+        obj_num:        If given, the first object number in the image. [default: 0]
+        logger:         If given, a logger object to log progress. [default: None]
 
-    @returns the final image
+    Returns:
+        the final image
     """
     logger = galsim.config.LoggerWrapper(logger)
     logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
@@ -278,10 +284,12 @@ def GetNObjForImage(config, image_num):
     Get the number of objects that will be made for the image number image_num based on
     the information in the config dict.
 
-    @param config           The configuration dict.
-    @param image_num        The current image number.
+    Parameters:
+        config:         The configuration dict.
+        image_num:      The current image number.
 
-    @returns the number of objects
+    Returns:
+        the number of objects
     """
     image = config.get('image',{})
     image_type = image.get('type','Single')
@@ -298,13 +306,15 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     current variance is anywhere in the full image and adds noise to the other pixels
     to bring everything up to that level.
 
-    @param config           The configuration dict.
-    @param full_image       The full image onto which the noise should be added.
-    @param stamps           A list of the individual postage stamps.
-    @param current_vars     A list of the current variance in each postage stamps.
-    @param logger           If given, a logger object to log progress.
+    Parameters:
+        config:         The configuration dict.
+        full_image:     The full image onto which the noise should be added.
+        stamps:         A list of the individual postage stamps.
+        current_vars:   A list of the current variance in each postage stamps.
+        logger:         If given, a logger object to log progress.
 
-    @returns the final variance in the image
+    Returns:
+        the final variance in the image
     """
     logger = galsim.config.LoggerWrapper(logger)
     rng = config['image_num_rng']
@@ -346,12 +356,14 @@ def MakeImageTasks(config, jobs, logger):
     But some image types may need groups of jobs to be done sequentially by the same process.
     The image type=Single for instance uses whatever grouping is needed for the stamp type.
 
-    @param config           The configuration dict
-    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
-                            dict of parameters that includes 'image_num' and 'obj_num'.
-    @param logger           If given, a logger object to log progress.
+    Parameters:
+        config:     The configuration dict
+        jobs:       A list of jobs to split up into tasks.  Each job in the list is a
+                    dict of parameters that includes 'image_num' and 'obj_num'.
+        logger:     If given, a logger object to log progress.
 
-    @returns a list of tasks
+    Returns:
+        a list of tasks
     """
     image = config.get('image', {})
     image_type = image.get('type', 'Single')
@@ -372,15 +384,17 @@ class ImageBuilder(object):
 
         This figures out the size that the image will be, but doesn't actually build it yet.
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
-        @param obj_num      The first object number in the image.
-        @param ignore       A list of parameters that are allowed to be in config that we can
-                            ignore here. i.e. it won't be an error if these parameters are present.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
+            obj_num:    The first object number in the image.
+            ignore:     A list of parameters that are allowed to be in config that we can
+                        ignore here. i.e. it won't be an error if these parameters are present.
+            logger:     If given, a logger object to log progress.
 
-        @returns xsize, ysize
+        Returns:
+            xsize, ysize
         """
         logger.debug('image %d: Build Single Image: image, obj = %d,%d',
                      image_num,image_num,obj_num)
@@ -415,13 +429,15 @@ class ImageBuilder(object):
 
         For Single, this is just an image consisting of a single postage stamp.
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
-        @param obj_num      The first object number in the image.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
+            obj_num:    The first object number in the image.
+            logger:     If given, a logger object to log progress.
 
-        @returns the final image and the current noise variance in the image as a tuple
+        Returns:
+            the final image and the current noise variance in the image as a tuple
         """
         xsize = base['image_xsize']
         ysize = base['image_ysize']
@@ -455,13 +471,15 @@ class ImageBuilder(object):
 
             return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param jobs         A list of jobs to split up into tasks.  Each job in the list is a
-                            dict of parameters that includes 'image_num' and 'obj_num'.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            jobs:       A list of jobs to split up into tasks.  Each job in the list is a
+                        dict of parameters that includes 'image_num' and 'obj_num'.
+            logger:     If given, a logger object to log progress.
 
-        @returns a list of tasks
+        Returns:
+            a list of tasks
         """
         return galsim.config.MakeStampTasks(base, jobs, logger)
 
@@ -472,13 +490,14 @@ class ImageBuilder(object):
         the noise at that level.  But some image types need to do extra work at the end to
         add the noise properly.
 
-        @param image        The image onto which to add the noise.
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
-        @param obj_num      The first object number in the image.
-        @param current_var  The current noise variance in each postage stamps.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            image:          The image onto which to add the noise.
+            config:         The configuration dict for the image field.
+            base:           The base configuration dict.
+            image_num:      The current image number.
+            obj_num:        The first object number in the image.
+            current_var:    The current noise variance in each postage stamps.
+            logger:         If given, a logger object to log progress.
         """
         pass
 
@@ -488,20 +507,23 @@ class ImageBuilder(object):
         For Single, this is just 1, but other image types would figure this out from the
         configuration parameters.
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
 
-        @returns the number of objects
+        Returns:
+            the number of objects
         """
         return 1
 
 def RegisterImageType(image_type, builder):
     """Register an image type for use by the config apparatus.
 
-    @param image_type       The name of the type in config['image']
-    @param builder          A builder object to use for building the images.  It should be an
-                            instance of ImageBuilder or a subclass thereof.
+    Parameters:
+        image_type:     The name of the type in config['image']
+        builder:        A builder object to use for building the images.  It should be an
+                        instance of ImageBuilder or a subclass thereof.
     """
     valid_image_types[image_type] = builder
 

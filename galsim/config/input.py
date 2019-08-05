@@ -54,11 +54,12 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
     e.g. config['_input_objs']['catalog'][0] holds the first catalog item defined in
     config['input']['catalog'] (if any).
 
-    @param config           The configuration dict to process
-    @param logger           If given, a logger object to log progress. [default: None]
-    @param file_scope_only  If True, only process the input items that are marked as being
+    Parameters:
+        config:             The configuration dict to process
+        logger:             If given, a logger object to log progress. [default: None]
+        file_scope_only:    If True, only process the input items that are marked as being
                             possibly relevant for file- and image-level items. [default: False]
-    @param safe_only        If True, only process the input items whose construction parameters
+        safe_only:          If True, only process the input items whose construction parameters
                             are not going to change every file, so it can be made once and
                             used by multiple processes if appropriate. [default: False]
     """
@@ -206,7 +207,11 @@ def SetupInput(config, logger=None):
 
     This is mostly useful if the user isn't running through the full processing and just starting
     at BuildImage say.  This will make sure the input objects are set up in the way that they
-    normally would have been by the first level of processing in a `galsim config_file` run.
+    normally would have been by the first level of processing in a ``galsim config_file`` run.
+
+    Parameters:
+        config:     The configuration dict in which to setup the input items.
+        logger:     If given, a logger object to log progress. [default: None]
     """
     if '_input_objs' not in config:
         orig_index_key = config.get('index_key',None)
@@ -231,10 +236,12 @@ def ProcessInputNObjects(config, logger=None):
             set nobjects or nimages in the configuration dict, rather than relying on this
             galsim.config "magic".
 
-    @param config       The configuration dict to process
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict to process
+        logger:     If given, a logger object to log progress. [default: None]
 
-    @returns the number of objects to use.
+    Returns:
+        the number of objects to use.
     """
     logger = galsim.config.LoggerWrapper(logger)
     if 'input' in config:
@@ -262,8 +269,9 @@ def ProcessInputNObjects(config, logger=None):
 def SetupInputsForImage(config, logger=None):
     """Do any necessary setup of the input items at the start of an image.
 
-    @param config       The configuration dict to process
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict to process
+        logger:     If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
         SetupInput(config, logger=logger)
@@ -286,11 +294,12 @@ def SetupInputsForImage(config, logger=None):
 def GetInputObj(input_type, config, base, param_name):
     """Get the input object needed for generating a particular value
 
-    @param input_type   The type of input object to get
-    @param config       The config dict for this input item
-    @param base         The base config dict
-    @param param_name   The type of value that we are trying to construct (only used for
-                        error messages).
+    Parameters:
+        input_type: The type of input object to get
+        config:     The config dict for this input item
+        base:       The base config dict
+        param_name: The type of value that we are trying to construct (only used for
+                    error messages).
     """
     if '_input_objs' not in base or input_type not in base['_input_objs']:
         raise galsim.GalSimConfigError(
@@ -319,26 +328,29 @@ class InputLoader(object):
     The loader object defines a few attributes that will be used by the processing framework,
     so any derived class should make sure to define them as well.
 
-        init_func   The class or function that will be used to build the input object.
+    init_func
+                The class or function that will be used to build the input object.
 
-        has_nobj    Whether the object can be used to automatically determine the number of
-                    objects to build for a given file or image.  For example, a galsim.Catalog has
-                    a specific number of rows in it.  In many cases, you will just want to run
-                    through the whole catalog for each output file.  So the number of objects to
-                    build will just be the number of objects in the input catalog. [default: False]
+    has_nobj
+                Whether the object can be used to automatically determine the number of
+                objects to build for a given file or image.  For example, a galsim.Catalog has
+                a specific number of rows in it.  In many cases, you will just want to run
+                through the whole catalog for each output file.  So the number of objects to
+                build will just be the number of objects in the input catalog. [default: False]
 
-                    If this is True, the constructed input object must have a `getNObjects()`
-                    method.  It must also take a construction kwarg, `_nobjects_only` that tells
-                    it to only do enough initialization to efficiently determine nobjects.
+                If this is True, the constructed input object must have a ``getNObjects()``
+                method.  It must also take a construction kwarg, ``_nobjects_only`` that tells
+                it to only do enough initialization to efficiently determine nobjects.
 
-        file_scope  Whether the input object might be relevant at file scope when the file and
-                    image is initially being set up. [default: False]
+    file_scope
+                Whether the input object might be relevant at file scope when the file and
+                image is initially being set up. [default: False]
 
-                    If this is False, then the input object won't be loaded until after the
-                    initial file setup.  For example, you might store the file names you want
-                    to use for the output files in a YAML file, which you plan to read in as a
-                    dict input object. Thus, dict is our canonical example of an input type for
-                    which this parameter should be True.
+                If this is False, then the input object won't be loaded until after the
+                initial file setup.  For example, you might store the file names you want
+                to use for the output files in a YAML file, which you plan to read in as a
+                dict input object. Thus, dict is our canonical example of an input type for
+                which this parameter should be True.
     """
     def __init__(self, init_func, has_nobj=False, file_scope=False):
         self.init_func = init_func
@@ -350,11 +362,15 @@ class InputLoader(object):
 
         The default implementation looks for special class attributes called:
 
-            _req_params     A dict of required parameters and their types.
-            _opt_params     A dict of optional parameters and their types.
-            _single_params  A list of dicts of parameters such that one and only one of
-                            parameter in each dict is required.
-            _takes_rng      A bool value saying whether an rng object is required.
+        _req_params
+                        A dict of required parameters and their types.
+        _opt_params
+                        A dict of optional parameters and their types.
+        _single_params
+                        A list of dicts of parameters such that one and only one of
+                        parameter in each dict is required.
+        _takes_rng
+                        A bool value saying whether an rng object is required.
 
         See galsim.Catalog for an example of a class that sets these attributes.
 
@@ -362,11 +378,13 @@ class InputLoader(object):
         the constructed object will be safe to keep around for multiple files (True) of if
         it will need to be rebuilt for each output file (False).
 
-        @param config       The config dict for this input item
-        @param base         The base config dict
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            config:     The config dict for this input item
+            base:       The base config dict
+            logger:     If given, a logger object to log progress. [default: None]
 
-        @returns kwargs, safe
+        Returns:
+            kwargs, safe
         """
         req = self.init_func._req_params
         opt = self.init_func._opt_params
@@ -384,19 +402,21 @@ class InputLoader(object):
         In the base class, this function does not do anything.  But see PowerSpectrumLoader
         for an example that does require some setup at the start of each image.
 
-        @param input_obj    The input object to use
-        @param config       The configuration dict for the input type
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress.  [default: None]
+        Parameters:
+            input_obj:  The input object to use
+            config:     The configuration dict for the input type
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.  [default: None]
         """
         pass
 
 def RegisterInputType(input_type, loader):
     """Register an input type for use by the config apparatus.
 
-    @param input_type       The name of the type in config['input']
-    @param loader           A loader object to use for loading in the input object.
-                            It should be an instance of InputLoader or a subclass thereof.
+    Parameters:
+        input_type:     The name of the type in config['input']
+        loader:         A loader object to use for loading in the input object.
+                        It should be an instance of InputLoader or a subclass thereof.
 
     """
     valid_input_types[input_type] = loader
@@ -406,8 +426,9 @@ def RegisterInputType(input_type, loader):
 def RegisterInputConnectedType(input_type, type_name):
     """Register that some gsobject or value type is connected to a given input type.
 
-    @param input_type       The name of the type in config['input']
-    @param type_name        The name of the type that uses this input object.
+    Parameters:
+        input_type:     The name of the type in config['input']
+        type_name:      The name of the type that uses this input object.
     """
     if input_type not in connected_types:
         connected_types[input_type] = set()
@@ -418,7 +439,7 @@ def RegisterInputConnectedType(input_type, type_name):
 
 # Now define the value generators connected to the catalog and dict input types.
 def _GenerateFromCatalog(config, base, value_type):
-    """@brief Return a value read from an input catalog
+    """Return a value read from an input catalog
     """
     input_cat = GetInputObj('catalog', config, base, 'Catalog')
 
@@ -450,7 +471,7 @@ def _GenerateFromCatalog(config, base, value_type):
     return val, safe
 
 def _GenerateFromDict(config, base, value_type):
-    """@brief Return a value read from an input dict.
+    """Return a value read from an input dict.
     """
     input_dict = GetInputObj('dict', config, base, 'Dict')
 

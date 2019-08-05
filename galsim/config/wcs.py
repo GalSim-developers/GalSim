@@ -31,12 +31,14 @@ valid_wcs_types = {}
 def BuildWCS(config, key, base, logger=None):
     """Read the wcs parameters from config[key] and return a constructed wcs object.
 
-    @param config       A dict with the configuration information. (usually base['image'])
-    @param key          The key name in config indicating which object to build.
-    @param base         The base dict of the configuration.
-    @param logger       Optionally, provide a logger for logging debug statements. [default: None]
+    Parameters:
+        config:     A dict with the configuration information. (usually base['image'])
+        key:        The key name in config indicating which object to build.
+        base:       The base dict of the configuration.
+        logger:     Optionally, provide a logger for logging debug statements. [default: None]
 
-    @returns a BaseWCS instance
+    Returns:
+        a BaseWCS instance
     """
     logger = galsim.config.LoggerWrapper(logger)
     logger.debug('image %d: Start BuildWCS key = %s',base.get('image_num',0),key)
@@ -105,11 +107,13 @@ class WCSBuilder(object):
 
         Note: Sub-classes must override this function with a real implementation.
 
-        @param config           The configuration dict for the wcs type.
-        @param base             The base configuration dict.
-        @param logger           If provided, a logger for logging debug statements.
+        Parameters:
+            config:     The configuration dict for the wcs type.
+            base:       The base configuration dict.
+            logger:     If provided, a logger for logging debug statements.
 
-        @returns the constructed WCS object.
+        Returns:
+            the constructed WCS object.
         """
         raise NotImplementedError("The %s class has not overridden buildWCS"%self.__class__)
 
@@ -128,20 +132,26 @@ class SimpleWCSBuilder(WCSBuilder):
         """Get the kwargs to pass to the build function based on the following attributes of
         build_func:
 
-            _req_params     A dict of required parameters and their types.
-            _opt_params     A dict of optional parameters and their types.
-            _single_params  A list of dicts of parameters such that one and only one of
-                            parameter in each dict is required.
-            _takes_rng      A bool value saying whether an rng object is required.
-                            (Which would be weird for this, but it's part of our standard set.)
+        _req_params
+                        A dict of required parameters and their types.
+        _opt_params
+                        A dict of optional parameters and their types.
+        _single_params
+                        A list of dicts of parameters such that one and only one of
+                        parameter in each dict is required.
+        _takes_rng
+                        A bool value saying whether an rng object is required.
+                        (Which would be weird for this, but it's part of our standard set.)
 
         See any of the classes in wcs.py for examples of classes that set these attributes.
 
-        @param build_func       The class or function from which to get the
-        @param config           The configuration dict for the wcs type.
-        @param base             The base configuration dict.
+        Parameters:
+            build_func: The class or function from which to get the
+            config:     The configuration dict for the wcs type.
+            base:       The base configuration dict.
 
-        @returns kwargs
+        Returns:
+            kwargs
         """
         # Then use the standard trick of reading the required and optional parameters
         # from the class or function attributes.
@@ -164,11 +174,13 @@ class SimpleWCSBuilder(WCSBuilder):
     def buildWCS(self, config, base, logger):
         """Build the WCS based on the specifications in the config dict.
 
-        @param config           The configuration dict for the wcs type.
-        @param base             The base configuration dict.
-        @param logger           If provided, a logger for logging debug statements.
+        Parameters:
+            config:     The configuration dict for the wcs type.
+            base:       The base configuration dict.
+            logger:     If provided, a logger for logging debug statements.
 
-        @returns the constructed WCS object.
+        Returns:
+            the constructed WCS object.
         """
         kwargs = self.getKwargs(self.init_func,config,base)
         return self.init_func(**kwargs)
@@ -186,11 +198,13 @@ class OriginWCSBuilder(SimpleWCSBuilder):
         """Build the WCS based on the specifications in the config dict, using the appropriate
         type depending on whether an origin is provided.
 
-        @param config           The configuration dict for the wcs type.
-        @param base             The base configuration dict.
-        @param logger           If provided, a logger for logging debug statements.
+        Parameters:
+            config:     The configuration dict for the wcs type.
+            base:       The base configuration dict.
+            logger:     If provided, a logger for logging debug statements.
 
-        @returns the constructed WCS object.
+        Returns:
+            the constructed WCS object.
         """
         if 'origin' in config or 'world_origin' in config:
             build_func = self.origin_init_func
@@ -211,11 +225,13 @@ class TanWCSBuilder(WCSBuilder):
     def buildWCS(self, config, base, logger):
         """Build the TanWCS based on the specifications in the config dict.
 
-        @param config           The configuration dict for the wcs type.
-        @param base             The base configuration dict.
-        @param logger           If provided, a logger for logging debug statements.
+        Parameters:
+            config:     The configuration dict for the wcs type.
+            base:       The base configuration dict.
+            logger:     If provided, a logger for logging debug statements.
 
-        @returns the constructed WCS object.
+        Returns:
+            the constructed WCS object.
         """
         req = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float,
                 "ra" : galsim.Angle, "dec" : galsim.Angle }
@@ -260,12 +276,13 @@ class ListWCSBuilder(WCSBuilder):
 def RegisterWCSType(wcs_type, builder, input_type=None):
     """Register a wcs type for use by the config apparatus.
 
-    @param wcs_type         The name of the type in config['image']['wcs']
-    @param builder          A builder object to use for building the WCS object.  It should
-                            be an instance of a subclass of WCSBuilder.
-    @param input_type       If the WCS builder utilises an input object, give the key name of the
-                            input type here.  (If it uses more than one, this may be a list.)
-                            [default: None]
+    Parameters:
+        wcs_type:       The name of the type in config['image']['wcs']
+        builder:        A builder object to use for building the WCS object.  It should
+                        be an instance of a subclass of WCSBuilder.
+        input_type:     If the WCS builder utilises an input object, give the key name of the
+                        input type here.  (If it uses more than one, this may be a list.)
+                        [default: None]
     """
     valid_wcs_types[wcs_type] = builder
     if input_type is not None:

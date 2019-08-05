@@ -35,6 +35,10 @@ valid_noise_types = {}
 
 def AddSky(config, im):
     """Add the sky level to the image
+
+    Parameters:
+        config:         The configuration dict
+        im:             The image onto which to add the sky
     """
     index, orig_index_key = galsim.config.GetIndex(config['image'], config)
     config['index_key'] = 'image_num'
@@ -48,10 +52,11 @@ def AddNoise(config, im, current_var=0., logger=None):
     """
     Add noise to an image according to the noise specifications in the noise dict.
 
-    @param config           The configuration dict
-    @param im               The image onto which to add the noise
-    @param current_var      The current noise variance present in the image already [default: 0]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         The configuration dict
+        im:             The image onto which to add the noise
+        current_var:    The current noise variance present in the image already [default: 0]
+        logger:         If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     if 'noise' in config['image']:
@@ -87,9 +92,11 @@ def CalculateNoiseVariance(config):
     """
     Calculate the noise variance from the noise specified in the noise dict.
 
-    @param config           The configuration dict
+    Parameters:
+        config:     The configuration dict
 
-    @returns the noise variance
+    Returns:
+        the noise variance
     """
     noise = config['image']['noise']
     if not isinstance(noise, dict):
@@ -113,15 +120,17 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     Add the noise variance to an image according to the noise specifications in the noise dict.
     Typically, this is used for building a weight map, which is typically the inverse variance.
 
-    @param config           The configuration dict
-    @param im               The image onto which to add the variance values
-    @param include_obj_var  Whether to add the variance from the object photons for noise
+    Parameters:
+        config:             The configuration dict
+        im:                 The image onto which to add the variance values
+        include_obj_var:    Whether to add the variance from the object photons for noise
                             models that have a component based on the number of photons.
                             Note: if this is True, the returned variance will not include this
                             contribution to the noise variance.  [default: False]
-    @param logger           If given, a logger object to log progress. [default: None]
+        logger:             If given, a logger object to log progress. [default: None]
 
-    @returns the variance in the image
+    Returns:
+        the variance in the image
     """
     logger = galsim.config.LoggerWrapper(logger)
     if 'noise' in config['image']:
@@ -149,6 +158,14 @@ def GetSky(config, base, logger=None):
     If an image is required (because wcs is not uniform) then it will use the presence of
     base['image_pos'] to determine what size image to return (stamp or full).  If there is
     a current image_pos, then we are doing a stamp.  Otherwise a full image.
+
+    Parameters:
+        config:             The configuration dict
+        base:               The base configuration dict
+        logger:             If given, a logger object to log progress. [default: None]
+
+    Returns:
+        sky, either a float value or an Image.
     """
     logger = galsim.config.LoggerWrapper(logger)
     if 'sky_level' in config:
@@ -203,23 +220,26 @@ class NoiseBuilder(object):
         """Read the noise parameters from the config dict and add the appropriate noise to the
         given image.
 
-        @param config           The configuration dict for the noise field.
-        @param base             The base configuration dict.
-        @param im               The image onto which to add the noise
-        @param rng              The random number generator to use for adding the noise.
-        @param current_var      The current noise variance present in the image already.
-        @param draw_method      The method that was used to draw the objects on the image.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            config:         The configuration dict for the noise field.
+            base:           The base configuration dict.
+            im:             The image onto which to add the noise
+            rng:            The random number generator to use for adding the noise.
+            current_var:    The current noise variance present in the image already.
+            draw_method:    The method that was used to draw the objects on the image.
+            logger:         If given, a logger object to log progress.
         """
         raise NotImplementedError("The %s class has not overridden addNoise"%self.__class__)
 
     def getNoiseVariance(self, config, base):
         """Read the noise parameters from the config dict and return the variance.
 
-        @param config           The configuration dict for the noise field.
-        @param base             The base configuration dict.
+        Parameters:
+            config:         The configuration dict for the noise field.
+            base:           The base configuration dict.
 
-        @returns the variance of the noise model
+        Returns:
+            the variance of the noise model
         """
         raise NotImplementedError("The %s class has not overridden addNoise"%self.__class__)
 
@@ -235,14 +255,15 @@ class NoiseBuilder(object):
         a constant noise variance.  It just gets the variance from getNoiseVariance and adds
         that constant value to every pixel.
 
-        @param config           The configuration dict for the noise field.
-        @param base             The base configuration dict.
-        @param im               The image onto which to add the noise variance
-        @param include_obj_var  Whether the noise variance values should the photon noise from
+        Parameters:
+            config:             The configuration dict for the noise field.
+            base:               The base configuration dict.
+            im:                 The image onto which to add the noise variance
+            include_obj_var:    Whether the noise variance values should the photon noise from
                                 object flux in addition to the sky flux.  Only relevant for
                                 noise models that are based on the image flux values such as
                                 Poisson and CCDNoise.
-        @param logger           If given, a logger object to log progress.
+            logger:             If given, a logger object to log progress.
         """
         im += self.getNoiseVariance(config, base)
 
@@ -555,12 +576,13 @@ class COSMOSNoiseBuilder(NoiseBuilder):
 def RegisterNoiseType(noise_type, builder, input_type=None):
     """Register a noise type for use by the config apparatus.
 
-    @param noise_type       The name of the type in config['image']['noise']
-    @param builder          A builder object to use for building the noise.  It should be an
-                            instance of a subclass of NoiseBuilder.
-    @param input_type       If the builder utilises an input object, give the key name of the
-                            input type here.  (If it uses more than one, this may be a list.)
-                            [default: None]
+    Parameters:
+        noise_type:     The name of the type in config['image']['noise']
+        builder:        A builder object to use for building the noise.  It should be an
+                        instance of a subclass of NoiseBuilder.
+        input_type:     If the builder utilises an input object, give the key name of the
+                        input type here.  (If it uses more than one, this may be a list.)
+                        [default: None]
     """
     valid_noise_types[noise_type] = builder
     if input_type is not None:  # pragma: no cover

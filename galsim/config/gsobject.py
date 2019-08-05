@@ -44,18 +44,20 @@ class SkipThisObject(Exception):
 def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     """Build a GSObject from the parameters in config[key].
 
-    @param config       A dict with the configuration information.
-    @param key          The key name in config indicating which object to build.
-    @param base         The base dict of the configuration. [default: config]
-    @param gsparams     Optionally, provide non-default GSParams items.  Any `gsparams` specified
-                        at this level will be added to the list.  This should be a dict with
-                        whatever kwargs should be used in constructing the GSParams object.
-                        [default: {}]
-    @param logger       Optionally, provide a logger for logging debug statements.
-                        [default: None]
+    Parameters:
+        config:     A dict with the configuration information.
+        key:        The key name in config indicating which object to build.
+        base:       The base dict of the configuration. [default: config]
+        gsparams:   Optionally, provide non-default GSParams items.  Any ``gsparams`` specified
+                    at this level will be added to the list.  This should be a dict with
+                    whatever kwargs should be used in constructing the GSParams object.
+                    [default: {}]
+        logger:     Optionally, provide a logger for logging debug statements.
+                    [default: None]
 
-    @returns the tuple `(gsobject, safe)`, where `gsobject` is the built object, and `safe` is
-             a bool that says whether it is safe to use this object again next time.
+    Returns:
+        the tuple (gsobject, safe), where ``gsobject`` is the built object, and ``safe`` is
+        a bool that says whether it is safe to use this object again next time.
     """
     logger = galsim.config.LoggerWrapper(logger)
     if base is None:
@@ -186,7 +188,15 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
 
 def UpdateGSParams(gsparams, config, base):
-    """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
+    """Add additional items to the ``gsparams`` dict based on config['gsparams'].
+
+    Parameters:
+        gsparams:   A dict with whatever kwargs should be used in constructing the GSParams object.
+        config:     A dict with the configuration information.
+        base:       The base dict of the configuration.
+
+    Returns:
+        an updated gsparams dict
     """
     opt = galsim.GSObject._gsparams_opt
     kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
@@ -204,7 +214,7 @@ def UpdateGSParams(gsparams, config, base):
 #
 
 def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
-    """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
+    """Build a simple GSObject (i.e. one without a specialized _Build function) or
     any other GalSim object that defines _req_params, _opt_params and _single_params.
     """
     # Build the kwargs according to the various params objects in the class definition.
@@ -230,13 +240,13 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
 
 
 def _BuildNone(config, base, ignore, gsparams, logger):
-    """@brief Special type=None returns None.
+    """Special type=None returns None.
     """
     return None, True
 
 
 def _BuildAdd(config, base, ignore, gsparams, logger):
-    """@brief  Build a Sum object.
+    """Build a Sum object.
     """
     req = { 'items' : list }
     opt = { 'flux' : float }
@@ -290,7 +300,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
     return gsobject, safe
 
 def _BuildConvolve(config, base, ignore, gsparams, logger):
-    """@brief  Build a Convolution object.
+    """Build a Convolution object.
     """
     req = { 'items' : list }
     opt = { 'flux' : float }
@@ -325,7 +335,7 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
     return gsobject, safe
 
 def _BuildList(config, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject selected from a List.
+    """Build a GSObject selected from a List.
     """
     req = { 'items' : list }
     opt = { 'index' : float , 'flux' : float }
@@ -354,7 +364,7 @@ def _BuildList(config, base, ignore, gsparams, logger):
     return gsobject, safe
 
 def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
-    """@brief Build an OpticalPSF.
+    """Build an OpticalPSF.
     """
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.OpticalPSF._req_params,
@@ -383,10 +393,17 @@ def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
 #
 
 def TransformObject(gsobject, config, base, logger):
-    """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
+    """Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
     supplied GSObject, in that order.
 
-    @returns transformed GSObject.
+    Parameters:
+        gsobject:   The GSObject to be transformed.
+        config:     A dict with the tranformation information for this object.
+        base:       The base dict of the configuration.
+        logger:     A logger for logging debug statements.
+
+    Returns:
+        transformed GSObject.
     """
     logger = galsim.config.LoggerWrapper(logger)
     # The transformations are applied in the following order:
@@ -466,13 +483,16 @@ def RegisterObjectType(type_name, build_func, input_type=None):
        performed internally.  OpticalPSF is a good example of where this can have a significant
        speed up.
 
-    @param type_name        The name of the 'type' specification in the config dict.
-    @param build_func       A function to build a GSObject from the config information.
-                            The call signature is
-                                obj, safe = Build(config, base, ignore, gsparams, logger)
-    @param input_type       If the type requires an input object, give the key name of the input
-                            type here.  (If it uses more than one, this may be a list.)
-                            [default: None]
+    Parameters:
+        type_name:      The name of the 'type' specification in the config dict.
+        build_func:     A function to build a GSObject from the config information.
+                        The call signature is::
+
+                            obj, safe = Build(config, base, ignore, gsparams, logger)
+
+        input_type:     If the type requires an input object, give the key name of the input
+                        type here.  (If it uses more than one, this may be a list.)
+                        [default: None]
     """
     valid_gsobject_types[type_name] = build_func
     if input_type is not None:

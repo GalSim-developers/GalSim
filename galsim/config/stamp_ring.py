@@ -34,15 +34,17 @@ class RingBuilder(StampBuilder):
         Most of the work is done by SetupBasic, but we do need to check that the required parameters
         are present, and also that no additional parameters are present.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param xsize        The xsize of the image to build (if known).
-        @param ysize        The ysize of the image to build (if known).
-        @param ignore       A list of parameters that are allowed to be in config that we can
-                            ignore here. i.e. it won't be an error if these parameters are present.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            xsize:      The xsize of the image to build (if known).
+            ysize:      The ysize of the image to build (if known).
+            ignore:     A list of parameters that are allowed to be in config that we can
+                        ignore here. i.e. it won't be an error if these parameters are present.
+            logger:     If given, a logger object to log progress.
 
-        @returns xsize, ysize, image_pos, world_pos
+        Returns:
+            xsize, ysize, image_pos, world_pos
         """
         req = { 'num' : int }
         opt = { 'full_rotation' : galsim.Angle , 'index' : int }
@@ -78,14 +80,16 @@ class RingBuilder(StampBuilder):
         created on the first time.  Then for later stamps in the ring, it retrieves the stored
         first galaxy and just rotates it before convolving by the psf.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param psf          The PSF, if any.  This may be None, in which case, no PSF is convolved.
-        @param gsparams     A dict of kwargs to use for a GSParams.  More may be added to this
-                            list by the galaxy object.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            psf:        The PSF, if any.  This may be None, in which case, no PSF is convolved.
+            gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this
+                        list by the galaxy object.
+            logger:     If given, a logger object to log progress.
 
-        @returns the final profile
+        Returns:
+            the final profile
         """
         # These have all already been checked to exist in SetupRing.
         num = galsim.config.ParseValue(config, 'num', base, int)[0]
@@ -125,14 +129,16 @@ class RingBuilder(StampBuilder):
         This is the same as base class reject for the first item in the ring.  Later items are not
         checked though, since rejecting them would mess up the ring.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param prof         The profile that was drawn.
-        @param psf          The psf that was used to build the profile.
-        @param image        The postage stamp image.  No noise is on it yet at this point.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            prof:       The profile that was drawn.
+            psf:        The psf that was used to build the profile.
+            image:      The postage stamp image.  No noise is on it yet at this point.
+            logger:     If given, a logger object to log progress.
 
-        @returns whether the galaxy was rejected.
+        Returns:
+            whether the galaxy was rejected.
         """
         index = galsim.config.ParseValue(config, 'index', base, int)[0]
         if index == 0:
@@ -146,13 +152,15 @@ class RingBuilder(StampBuilder):
         For the Ring stamp type, we group jobs into sets of num.  If there are extra jobs that
         don't fit into a full ring, the last task will be a partial ring.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param jobs         A list of jobs to split up into tasks.  Each job in the list is a
-                            dict of parameters that includes 'obj_num'.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            jobs:       A list of jobs to split up into tasks.  Each job in the list is a
+                        dict of parameters that includes 'obj_num'.
+            logger:     If given, a logger object to log progress.
 
-        @returns a list of tasks
+        Returns:
+            a list of tasks
         """
         if 'num' not in config:
             raise galsim.GalSimConfigError("Attribute num is required for type = Ring")
