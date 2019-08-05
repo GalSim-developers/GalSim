@@ -446,14 +446,14 @@ class OutputBuilder(object):
         In the base class, this function just calls BuildImage to build the single image to
         put in the output file.  So the returned list only has one item.
 
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
-        @param file_num         The current file_num.
-        @param image_num        The current image_num.
-        @param obj_num          The current obj_num.
-        @param ignore           A list of parameters that are allowed to be in config that we can
-                                ignore here.  i.e. it won't be an error if they are present.
-        @param logger           If given, a logger object to log progress.
+        @param config       The configuration dict for the output field.
+        @param base         The base configuration dict.
+        @param file_num     The current file_num.
+        @param image_num    The current image_num.
+        @param obj_num      The current obj_num.
+        @param ignore       A list of parameters that are allowed to be in config that we can
+                            ignore here.  i.e. it won't be an error if they are present.
+        @param logger       If given, a logger object to log progress.
 
         @returns a list of the images built
         """
@@ -470,8 +470,8 @@ class OutputBuilder(object):
 
         In the base class, this is just output.nfiles.
 
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
+        @param config       The configuration dict for the output field.
+        @param base         The base configuration dict.
 
         @returns the number of files to build.
         """
@@ -486,9 +486,9 @@ class OutputBuilder(object):
         In the base class, we only build a single image, so it returns 1.
 
         Parameters:
-           config (dict):           The configuration dict for the output field.
-           base (dict):             The base configuration dict.
-           file_num (int):          The current file number.
+           config:          The configuration dict for the output field.
+           base:            The base configuration dict.
+           file_num:        The current file number.
 
         Returns:
            the number of images to build.

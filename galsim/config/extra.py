@@ -382,10 +382,10 @@ class ExtraOutputBuilder(object):
         is safe, even if multiprocessing is being used.
 
         Parameters:
-           obj_num (int):      The object number
-           config (dict):      The configuration field for this output object.
-           base (dict):        The base configuration dict.
-           logger (object):    If given, a logger object to log progress. [default: None]
+           obj_num:     The object number
+           config:      The configuration field for this output object.
+           base:        The base configuration dict.
+           logger:      If given, a logger object to log progress. [default: None]
         """
         pass  # pragma: no cover  (all our ExtraBuilders override this function.)
 
@@ -450,10 +450,10 @@ class ExtraOutputBuilder(object):
         more appropriate.
 
         Parameters:
-           config (dict):              The configuration field for this output object.
-           base (dict):         The base configuration dict.
-           main_data (object):           The main file data in case it is needed.
-           logger (object):       If given, a logger object to log progress. [default: None]
+           config:      The configuration field for this output object.
+           base:        The base configuration dict.
+           main_data:   The main file data in case it is needed.
+           logger:      If given, a logger object to log progress. [default: None]
 
         Returns:
            The final version of the object.

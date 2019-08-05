@@ -1,5 +1,0 @@
-
-DES Shapelet
-============
-
-In development.

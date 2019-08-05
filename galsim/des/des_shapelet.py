@@ -15,13 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file des_shapelet.py
-
-Part of the DES module.  This file implements one way that DES measures the PSF.
-
-The DES_Shapelet class handles interpolated shapelet decompositions, which are generally
-stored in *_fitpsf.fits files.
-"""
 
 import galsim
 import galsim.config
@@ -29,7 +22,7 @@ import numpy as np
 
 class DES_Shapelet(object):
     """Class that handles DES files describing interpolated polar shapelet decompositions.
-    These are stored as *_fitpsf.fits files.  They are not used in DES anymore, so this
+    These are stored as ``*_fitpsf.fits`` files.  They are not used in DES anymore, so this
     class is at best of historical interest
 
     The shapelet PSFs measure a shapelet decomposition of each star and interpolate the shapelet
@@ -61,9 +54,10 @@ class DES_Shapelet(object):
         >>>     [...skip this object...]
 
 
-    @param file_name        The name of the file to be read in.
-    @param dir              Optionally a directory name can be provided if the file names do not
-                            already include it. [default: None]
+    Parameters:
+        file_name:  The name of the file to be read in.
+        dir:        Optionally a directory name can be provided if the file names do not
+                    already include it. [default: None]
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str }
@@ -118,10 +112,13 @@ class DES_Shapelet(object):
     def getPSF(self, image_pos, gsparams=None):
         """Returns the PSF at position image_pos
 
-        @param image_pos    The position in pixel units for which to build the PSF.
-        @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
+        Parameters:
+            image_pos:  The position in pixel units for which to build the PSF.
+            gsparams:   An optional `GSParams` instance to pass to the constructed GSObject.
+                        [default: None]
 
-        @returns the PSF as a galsim.Shapelet instance
+        Returns:
+            the PSF as a galsim.Shapelet instance
         """
         psf = galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
 
@@ -179,7 +176,12 @@ galsim.config.RegisterInputType('des_shapelet', galsim.config.InputLoader(DES_Sh
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
 def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
-    """@brief Build a RealGalaxy type GSObject from user input.
+    """Build a GSObject representing the shapelet model at the correct location in the image in a
+    config-processing context.
+
+    This is used as object type ``DES_Shapelet`` in a config file.
+
+    It requires the use of the ``des_shapelet`` input field.
     """
     des_shapelet = galsim.config.GetInputObj('des_shapelet', config, base, 'DES_Shapelet')
 
