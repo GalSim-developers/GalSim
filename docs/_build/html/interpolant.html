@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -195,6 +195,36 @@ brightness between pixel centers is defined from the values at the centers.</p>
 <p>An Interpolant is needed for an <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> to define how interpolation should be done
 an locations in between the integer pixel centers.</p>
 <dl class="method">
+<dt id="galsim.Interpolant.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Interpolant.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Interpolant.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Interpolant.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Interpolant.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Interpolant.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.Interpolant.from_name">
 <em class="property">static </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.from_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>A factory function to create an <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> of the correct type according to
@@ -224,12 +254,6 @@ the default <code class="docutils literal notranslate"><span class="pre">conserv
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Interpolant.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.Interpolant.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> of the <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a></p>
 </dd></dl>
 
 <dl class="method">
@@ -314,21 +338,21 @@ photon-shooting, where it is trivially implemented as no displacements.</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Delta.ixrange">
-<em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Delta.ixrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+<dt id="galsim.Delta.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Delta.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Delta.krange">
-<em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Delta.krange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+<dt id="galsim.Delta.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Delta.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Delta.xrange">
-<em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Delta.xrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+<dt id="galsim.Delta.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Delta.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -352,21 +376,21 @@ necessarily the best choice in terms of accuracy).</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Nearest.ixrange">
-<em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Nearest.ixrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+<dt id="galsim.Nearest.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Nearest.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Nearest.krange">
-<em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Nearest.krange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+<dt id="galsim.Nearest.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Nearest.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Nearest.xrange">
-<em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Nearest.xrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+<dt id="galsim.Nearest.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Nearest.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -389,21 +413,21 @@ quite efficient (but not necessarily the best choice in terms of accuracy).</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Linear.ixrange">
-<em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Linear.ixrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+<dt id="galsim.Linear.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Linear.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Linear.krange">
-<em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Linear.krange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+<dt id="galsim.Linear.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Linear.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Linear.xrange">
-<em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Linear.xrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+<dt id="galsim.Linear.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Linear.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -425,21 +449,21 @@ interpolant for interpolated images.  (See Bernstein &amp; Gruen, <a class="refe
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Cubic.ixrange">
-<em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Cubic.ixrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+<dt id="galsim.Cubic.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cubic.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Cubic.krange">
-<em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Cubic.krange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+<dt id="galsim.Cubic.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cubic.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Cubic.xrange">
-<em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Cubic.xrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+<dt id="galsim.Cubic.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cubic.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -461,21 +485,21 @@ interpolant.</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Quintic.ixrange">
-<em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Quintic.ixrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+<dt id="galsim.Quintic.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Quintic.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Quintic.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Quintic.krange">
-<em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Quintic.krange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+<dt id="galsim.Quintic.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Quintic.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Quintic.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Quintic.xrange">
-<em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Quintic.xrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+<dt id="galsim.Quintic.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Quintic.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Quintic.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -500,21 +524,21 @@ sinc accuracy vs. speed is the <a class="reference internal" href="#galsim.Lancz
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.SincInterpolant.ixrange">
-<em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.SincInterpolant.ixrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+<dt id="galsim.SincInterpolant.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SincInterpolant.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SincInterpolant.krange">
-<em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.SincInterpolant.krange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+<dt id="galsim.SincInterpolant.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SincInterpolant.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SincInterpolant.xrange">
-<em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.SincInterpolant.xrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+<dt id="galsim.SincInterpolant.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SincInterpolant.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -543,33 +567,21 @@ to a constant input. [default: True, see above]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Lanczos.conserve_dc">
-<em class="property">property </em><code class="sig-name descname">conserve_dc</code><a class="headerlink" href="#galsim.Lanczos.conserve_dc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether this interpolant is modified to improve flux conservation.</p>
+<dt id="galsim.Lanczos.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">conserve_dc=True</em>, <em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Lanczos.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Lanczos.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Lanczos.ixrange">
-<em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Lanczos.ixrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+<dt id="galsim.Lanczos.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Lanczos.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Lanczos.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Lanczos.krange">
-<em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Lanczos.krange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Lanczos.n">
-<em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.Lanczos.n" title="Permalink to this definition">¶</a></dt>
-<dd><p>The order of the Lanczos function.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Lanczos.xrange">
-<em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Lanczos.xrange" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+<dt id="galsim.Lanczos.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Lanczos.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Lanczos.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>

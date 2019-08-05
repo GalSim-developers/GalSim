@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -299,9 +299,7 @@ the points to sample the integrand at. [default: 1000].</p></li>
 <dl class="class">
 <dt id="galsim.integ.ImageIntegrator">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">ImageIntegrator</code><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator" title="Permalink to this definition">¶</a></dt>
-<dd><p>A base class for integrators used by <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> to integrate the drawn images
-over wavelengthh using a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> as a weight function.</p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="galsim.integ.ImageIntegrator.__call__">
 <code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">evaluateAtWavelength</em>, <em class="sig-param">bandpass</em>, <em class="sig-param">image</em>, <em class="sig-param">drawImageKwargs</em>, <em class="sig-param">doK=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -321,6 +319,18 @@ results of <a class="reference internal" href="chromaticobject.html#galsim.Chrom
 <dd class="field-even"><p>the result of integral as an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.integ.ImageIntegrator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.integ.ImageIntegrator.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.integ.ImageIntegrator.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 </dd></dl>
@@ -345,6 +355,12 @@ brightness samples.  Options include:</p>
 </p>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.integ.SampleIntegrator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">rule</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#SampleIntegrator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.SampleIntegrator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -379,6 +395,12 @@ set to False in this case.  [default: True]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.integ.ContinuousIntegrator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">rule</em>, <em class="sig-param">N=250</em>, <em class="sig-param">use_endpoints=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ContinuousIntegrator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ContinuousIntegrator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>

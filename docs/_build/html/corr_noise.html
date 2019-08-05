@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Weak Lensing" href="wl.html" />
+    <link rel="next" title="Wavelength-dependent Profiles" href="chromatic.html" />
     <link rel="prev" title="Noise Generators" href="noise.html" /> 
 </head>
 
@@ -91,8 +91,6 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="random.html">Noise and Random Values</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="deviate.html">Random Deviates</a></li>
@@ -100,8 +98,10 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Correlated Noise</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -221,7 +221,7 @@ achieving the goal of not having correlated noise bias weak lensing shear measur
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A Base Class describing 2D correlated Gaussian random noise fields.</p>
 <p>A BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
-current <code class="docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.__init__</span></code> interface does not provide any guarantee that the input
+current <a class="reference internal" href="#galsim.BaseCorrelatedNoise.__init__" title="galsim.BaseCorrelatedNoise.__init__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.__init__</span></code></a> interface does not provide any guarantee that the input
 <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> represents a physical correlation function, e.g. a profile that is an even function
 (two-fold rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern
 is that users instead instantiate derived classes, such as the <a class="reference internal" href="#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a>, which are
@@ -242,6 +242,48 @@ function.</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.BaseCorrelatedNoise.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.BaseCorrelatedNoise.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.BaseCorrelatedNoise.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">rng</em>, <em class="sig-param">gsobject</em>, <em class="sig-param">wcs=galsim.PixelScale(1.0)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.BaseCorrelatedNoise.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.BaseCorrelatedNoise.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.BaseCorrelatedNoise.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.BaseCorrelatedNoise.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.BaseCorrelatedNoise.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.BaseCorrelatedNoise.applyTo">
 <code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.applyTo" title="Permalink to this definition">¶</a></dt>
@@ -469,12 +511,6 @@ zero distance.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.BaseCorrelatedNoise.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.BaseCorrelatedNoise.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.BaseCorrelatedNoise.lens">
 <code class="sig-name descname">lens</code><span class="sig-paren">(</span><em class="sig-param">g1</em>, <em class="sig-param">g2</em>, <em class="sig-param">mu</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.lens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.lens" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the appropriate changes for when the object has an applied shear and magnification.</p>
@@ -508,18 +544,12 @@ an applied magnification <code class="docutils literal notranslate"><span class=
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.BaseCorrelatedNoise.rng">
-<em class="property">property </em><code class="sig-name descname">rng</code><a class="headerlink" href="#galsim.BaseCorrelatedNoise.rng" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> for this object.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.BaseCorrelatedNoise.rotate">
 <code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.rotate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply a rotation <code class="docutils literal notranslate"><span class="pre">theta</span></code> to this correlated noise model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object, positive means anticlockwise).</p>
+<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object, positive means anticlockwise).</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified rotation.</p>
@@ -670,12 +700,6 @@ the algorithm is designed to make this additional noise (nearly) as small as pos
 <dd class="field-even"><p>the theoretically calculated variance of the combined noise fields in the updated image.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.BaseCorrelatedNoise.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.withGSParams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -879,6 +903,18 @@ addition of <code class="docutils literal notranslate"><span class="pre">cn5</sp
 </div>
 <p>scale the overall correlation function by a scalar operand.  The random number generators are
 not affected by these scaling operations.</p>
+<dl class="method">
+<dt id="galsim.CorrelatedNoise.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">x_interpolant=None</em>, <em class="sig-param">correct_periodicity=True</em>, <em class="sig-param">subtract_mean=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CorrelatedNoise.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CorrelatedNoise.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CorrelatedNoise.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CorrelatedNoise.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CorrelatedNoise.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -914,9 +950,21 @@ or <code class="docutils literal notranslate"><span class="pre">wcs</span></code
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.UncorrelatedNoise.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#UncorrelatedNoise.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UncorrelatedNoise.withGSParams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+<dt id="galsim.UncorrelatedNoise.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">variance</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#UncorrelatedNoise.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UncorrelatedNoise.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.UncorrelatedNoise.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#UncorrelatedNoise.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UncorrelatedNoise.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.UncorrelatedNoise.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#UncorrelatedNoise.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UncorrelatedNoise.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -1029,7 +1077,7 @@ the noise:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="wl.html" class="btn btn-neutral float-right" title="Weak Lensing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="chromatic.html" class="btn btn-neutral float-right" title="Wavelength-dependent Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="noise.html" class="btn btn-neutral float-left" title="Noise Generators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -16,11 +16,10 @@ is functionally equivalent to::
 
 but should be a bit faster.
 
-.. note::
-    The GalSim versions often only implement the normal use case without many of the
-    advanced options available with the numpy functions.  This is mostly laziness on our part --
-    we only implemented the functions that we needed.  If your usage requires some option available
-    in the numpy version, feel free to post a feature request on our GitHub page.
+Note that the GalSim versions often only implement the normal use case without many of the
+advanced options available with the numpy functions.  This is mostly laziness on our part --
+we only implemented the functions that we needed.  If your usage requires some option available
+in the numpy version, feel free to post a feature request on our GitHub page.
 
 
 .. autofunction:: galsim.fft.fft2

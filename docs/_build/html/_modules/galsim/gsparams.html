@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -278,10 +278,8 @@
 <span class="sd">                            radial profile. When such approximations need to be made, it makes</span>
 <span class="sd">                            sure that the resulting fractional error in the flux will be at</span>
 <span class="sd">                            most this much. [default: 1.e-5]</span>
-
-<span class="sd">    After construction, all of the above parameters are available as read-only attributes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum_fft_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">maximum_fft_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">,</span>
+<div class="viewcode-block" id="GSParams.__init__"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum_fft_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">maximum_fft_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">,</span>
                  <span class="n">folding_threshold</span><span class="o">=</span><span class="mf">5.e-3</span><span class="p">,</span> <span class="n">stepk_minimum_hlr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">,</span>
                  <span class="n">kvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">xvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">table_spacing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">realspace_relerr</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">realspace_abserr</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span>
@@ -315,7 +313,7 @@
 
         <span class="c1"># This is the thing that is needed for any c++ calls.</span>
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gsp</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gsp</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">())</span></div>
 
     <span class="c1"># Make all the attributes read-only</span>
     <span class="nd">@property</span>
@@ -398,18 +396,18 @@
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">state</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GSParams.__repr__"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.GSParams(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSParams.__eq__"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
-                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GSParams</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GSParams</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span></div>
+<div class="viewcode-block" id="GSParams.__ne__"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+<div class="viewcode-block" id="GSParams.__hash__"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
 
 <span class="c1"># We use the default a lot, so make it a class attribute.</span>
 <span class="n">GSParams</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">()</span>

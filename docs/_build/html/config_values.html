@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
@@ -208,10 +208,10 @@ have been designating using the following italic names:</p>
 <li><p><em>int_value</em> corresponds to a Python <code class="docutils literal notranslate"><span class="pre">int</span></code> value.  See <a class="reference internal" href="#int-value"><span class="std std-ref">int_value</span></a></p></li>
 <li><p><em>bool_value</em> corresponds to a Python <code class="docutils literal notranslate"><span class="pre">bool</span></code> value.  See <a class="reference internal" href="#bool-value"><span class="std std-ref">bool_value</span></a></p></li>
 <li><p><em>str_value</em> corresponds to a Python <code class="docutils literal notranslate"><span class="pre">str</span></code> value.  See <a class="reference internal" href="#str-value"><span class="std std-ref">str_value</span></a></p></li>
-<li><p><em>angle_value</em> corresponds to a GalSim <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance.  See <a class="reference internal" href="#angle-value"><span class="std std-ref">angle_value</span></a></p></li>
+<li><p><em>angle_value</em> corresponds to a GalSim <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance.  See <a class="reference internal" href="#angle-value"><span class="std std-ref">angle_value</span></a></p></li>
 <li><p><em>shear_value</em> corresponds to a GalSim <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> instance.  See <a class="reference internal" href="#shear-value"><span class="std std-ref">shear_value</span></a></p></li>
 <li><p><em>pos_value</em> corresponds to a GalSim <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> instance.  See <a class="reference internal" href="#pos-value"><span class="std std-ref">pos_value</span></a></p></li>
-<li><p><em>sky_value</em> corresponds to a GalSim <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> instance.  See <a class="reference internal" href="#sky-value"><span class="std std-ref">sky_value</span></a></p></li>
+<li><p><em>sky_value</em> corresponds to a GalSim <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> instance.  See <a class="reference internal" href="#sky-value"><span class="std std-ref">sky_value</span></a></p></li>
 </ul>
 <p>Each of the Python types can be given as a constant value using the normal Python conventions
 for how to specify such a value.  The GalSim <em>angle_value</em> and <em>pos_value</em> also have
@@ -1128,7 +1128,7 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
 <li><p>‘i’ = <code class="docutils literal notranslate"><span class="pre">int</span></code></p></li>
 <li><p>‘b’ = <code class="docutils literal notranslate"><span class="pre">bool</span></code></p></li>
 <li><p>‘s’ = <code class="docutils literal notranslate"><span class="pre">str</span></code></p></li>
-<li><p>‘a’ = <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a></p></li>
+<li><p>‘a’ = <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a></p></li>
 <li><p>‘p’ = <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a></p></li>
 <li><p>‘g’ = <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Shear</span></code></a></p></li>
 </ul>

@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -242,7 +242,7 @@
 
 
 <span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp_time</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">base_flux</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Accounts for the reciprocity failure and includes it in the original `Image` directly.</span>
 
 <span class="sd">    Reciprocity, in the context of photography, is the inverse relationship between the incident</span>
@@ -259,25 +259,20 @@
 <span class="sd">    and hence we lack a good theoretical model. Many models that fit the empirical data exist and</span>
 <span class="sd">    a common relation is</span>
 
-<span class="sd">    .. math::</span>
-<span class="sd">            \frac{p_R}{p} = \left(1 + \alpha \log_{10}\left(\frac{p}{t}\right)</span>
-<span class="sd">                               - \alpha \log_{10}\left(\frac{p^\prime}{t^\prime}\right)\right)</span>
+<span class="sd">            pR/p = (1 + alpha*log10(p/t) - alpha*log10(p&#39;/t&#39;))</span>
 
-<span class="sd">    where :math:`t` is the exposure time (in units of seconds), :math:`p` is the pixel response</span>
-<span class="sd">    (in units of electrons) and :math:`p_R` is the response if the reciprocity relation fails to</span>
-<span class="sd">    hold. :math:`p^\prime/t^\prime` is the count rate (in electrons/second) corresponding to the</span>
-<span class="sd">    photon flux (base flux) at which the detector is calibrated to have its nominal gain.</span>
-<span class="sd">    \alpha is the parameter in the model, measured in units of per decade and varies with detectors</span>
-<span class="sd">    and the operating temperature. The functional form for the reciprocity failure is motivated</span>
-<span class="sd">    empirically from the tests carried out on H2RG detectors.</span>
+<span class="sd">    where t is the exposure time (in units of seconds), p is the pixel response (in units of</span>
+<span class="sd">    electrons) and pR is the response if the reciprocity relation fails to hold. p&#39;/t&#39; is count</span>
+<span class="sd">    rate (in electrons/second) corresponding to the photon flux (base flux) at which the detector</span>
+<span class="sd">    is calibrated to have its nominal gain. alpha is the parameter in the model, measured in units</span>
+<span class="sd">    of per decade and varies with detectors and the operating temperature. The functional form for</span>
+<span class="sd">    the reciprocity failure is motivated empirically from the tests carried out on H2RG detectors.</span>
+<span class="sd">    See for reference Fig. 1 and Fig. 2 of http://arxiv.org/abs/1106.1090. Since pR/p remains</span>
+<span class="sd">    close to unity over a wide range of flux, we convert this relation to a power law by</span>
+<span class="sd">    approximating (pR/p)-1 ~ log(pR/p). This gives a relation that is better behaved than the</span>
+<span class="sd">    logarithmic relation at low flux levels.</span>
 
-<span class="sd">    See for reference Fig. 1 and Fig. 2 of http://arxiv.org/abs/1106.1090. Since :math:`p_R/p`</span>
-<span class="sd">    remains close to unity over a wide range of flux, we convert this relation to a power law by</span>
-<span class="sd">    approximating :math:`p_R/p \approx 1 + \log(p_R/p)`. This gives a relation that is better</span>
-<span class="sd">    behaved than the logarithmic relation at low flux levels.</span>
-
-<span class="sd">    .. math::</span>
-<span class="sd">            \frac{p_R}{p} = \left(\frac{p/t}{p^\prime/t^\prime}\right)^\frac{\alpha}{\log(10)}.</span>
+<span class="sd">            pR/p = ((p/t)/(p&#39;/t&#39;))^(alpha/log(10)).</span>
 
 <span class="sd">    Because of how this function is defined, the input image must have non-negative pixel</span>
 <span class="sd">    values for the resulting image to be well-defined. Negative pixel values result in &#39;nan&#39;s.</span>
@@ -291,8 +286,8 @@
 <span class="sd">                    reciprocity failure given in the docstring.</span>
 <span class="sd">        alpha:      The alpha parameter in the expression for reciprocity failure, in</span>
 <span class="sd">                    units of &#39;per decade&#39;.</span>
-<span class="sd">        base_flux:  The flux (:math:`p^\prime/t^\prime`) at which the gain is calibrated to have</span>
-<span class="sd">                    its nominal value.</span>
+<span class="sd">        base_flux:  The flux (p&#39;/t&#39;) at which the gain is calibrated to have its nominal</span>
+<span class="sd">                    value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
@@ -334,12 +329,12 @@
 <span class="sd">    could be in one of the three ways:</span>
 
 <span class="sd">    1. &#39;extend&#39;: The kernel is convolved with the zero-padded image, leading to a larger</span>
-<span class="sd">       intermediate image. The central portion of this image is returned.  [default]</span>
+<span class="sd">        intermediate image. The central portion of this image is returned.  [default]</span>
 <span class="sd">    2. &#39;crop&#39;: The kernel is convolved with the image, with the kernel inside the image completely.</span>
-<span class="sd">       Pixels at the edges, where the center of the kernel could not be placed, are set to the</span>
-<span class="sd">       value specified by &#39;fill_value&#39;. If &#39;fill_value&#39; is not specified or set to &#39;None&#39;, then</span>
-<span class="sd">       the pixel values in the original image are retained. The user can make the edges invalid</span>
-<span class="sd">       by setting fill_value to numpy.nan.</span>
+<span class="sd">        Pixels at the edges, where the center of the kernel could not be placed, are set to the</span>
+<span class="sd">        value specified by &#39;fill_value&#39;. If &#39;fill_value&#39; is not specified or set to &#39;None&#39;, then</span>
+<span class="sd">        the pixel values in the original image are retained. The user can make the edges invalid</span>
+<span class="sd">        by setting fill_value to numpy.nan.</span>
 <span class="sd">    3. &#39;wrap&#39;: The kernel is convolved with the image, assuming periodic boundary conditions.</span>
 
 <span class="sd">    The size of the image array remains unchanged in all three cases.</span>

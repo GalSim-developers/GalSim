@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -258,6 +258,18 @@ the same directory.) [default: None].</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.des.DES_PSFEx.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">image_file_name=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.des.DES_PSFEx.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.des.DES_PSFEx.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.des.DES_PSFEx.getLocalWCS">
 <code class="sig-name descname">getLocalWCS</code><span class="sig-paren">(</span><em class="sig-param">image_pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getLocalWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getLocalWCS" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the original image was provided to the constructor, this will return the local
@@ -341,6 +353,18 @@ already include it. [default: None]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.des.DES_Shapelet.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.des.DES_Shapelet.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.des.DES_Shapelet.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.des.DES_Shapelet.getB">
 <code class="sig-name descname">getB</code><span class="sig-paren">(</span><em class="sig-param">pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.getB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.getB" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the B vector as a numpy array at position pos</p>
@@ -408,6 +432,18 @@ purpose of writing the images to a MEDS file.</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.des.MultiExposureObject.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">images</em>, <em class="sig-param">weight=None</em>, <em class="sig-param">badpix=None</em>, <em class="sig-param">seg=None</em>, <em class="sig-param">psf=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">id=0</em>, <em class="sig-param">cutout_row=None</em>, <em class="sig-param">cutout_col=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MultiExposureObject.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MultiExposureObject.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.des.MultiExposureObject.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.des.MultiExposureObject.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">

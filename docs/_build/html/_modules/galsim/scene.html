@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -200,13 +200,14 @@
 <div class="viewcode-block" id="COSMOSCatalog"><a class="viewcode-back" href="../../real_gal.html#galsim.COSMOSCatalog">[docs]</a><span class="k">class</span> <span class="nc">COSMOSCatalog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class representing a random subsample of galaxies from the COSMOS sample with F814W&lt;25.2</span>
-<span class="sd">    (default), or alternatively the entire sample with F814W&lt;23.5.</span>
+<span class="sd">    (default for GalSim v1.4), or alternatively the entire sample with F814W&lt;23.5 (which was the</span>
+<span class="sd">    default for GalSim v1.3).</span>
 
 <span class="sd">    Depending on the keyword arguments, particularly ``use_real``, the catalog will either have</span>
 <span class="sd">    information about real galaxies, and/or parametric ones.  To use this with either type of</span>
 <span class="sd">    galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see</span>
 
-<span class="sd">    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data</span>
+<span class="sd">        https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data</span>
 
 <span class="sd">    option (1) for more information.  Note that if you want to make real galaxies you need to</span>
 <span class="sd">    download and store the full tarball with all galaxy images, whereas if you want to make</span>
@@ -215,12 +216,12 @@
 <span class="sd">    postage stamp quality) and can delete the galaxy and PSF image files.</span>
 
 <span class="sd">    Finally, we provide a program that will download the large COSMOS sample for you and</span>
-<span class="sd">    put it in the $PREFIX/share/galsim directory of your installation path.  The program is::</span>
+<span class="sd">    put it in the $PREFIX/share/galsim directory of your installation path.  The program is</span>
 
 <span class="sd">            galsim_download_cosmos</span>
 
 <span class="sd">    which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use</span>
-<span class="sd">    this program to download the COSMOS catalog, then you can use it with::</span>
+<span class="sd">    this program to download the COSMOS catalog, then you can use it with</span>
 
 <span class="sd">            cat = galsim.COSMOSCatalog()</span>
 
@@ -233,8 +234,8 @@
 
 <span class="sd">    After getting the catalogs, there is a method makeGalaxy() that can make a `GSObject`</span>
 <span class="sd">    corresponding to any chosen galaxy in the catalog (whether real or parametric).  See</span>
-<span class="sd">    `makeGalaxy` for more information.  As an interesting application and example of the usage of</span>
-<span class="sd">    these routines, consider the following code::</span>
+<span class="sd">    help(galsim.COSMOSCatalog.makeGalaxy) for more information.  As an interesting application and</span>
+<span class="sd">    example of the usage of these routines, consider the following code::</span>
 
 <span class="sd">        &gt;&gt;&gt; im_size = 64</span>
 <span class="sd">        &gt;&gt;&gt; pix_scale = 0.05</span>
@@ -323,7 +324,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<div class="viewcode-block" id="COSMOSCatalog.__init__"><a class="viewcode-back" href="../../real_gal.html#galsim.COSMOSCatalog.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">use_real</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclusion_level</span><span class="o">=</span><span class="s1">&#39;marginal&#39;</span><span class="p">,</span> <span class="n">min_hlr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_hlr</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">min_flux</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">max_flux</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">_nobjects_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -384,7 +385,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">param_cat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_cat</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_cat</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_exclusion</span><span class="p">(</span><span class="n">exclusion_level</span><span class="p">,</span> <span class="n">min_hlr</span><span class="p">,</span> <span class="n">max_hlr</span><span class="p">,</span> <span class="n">min_flux</span><span class="p">,</span> <span class="n">max_flux</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_exclusion</span><span class="p">(</span><span class="n">exclusion_level</span><span class="p">,</span> <span class="n">min_hlr</span><span class="p">,</span> <span class="n">max_hlr</span><span class="p">,</span> <span class="n">min_flux</span><span class="p">,</span> <span class="n">max_flux</span><span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_apply_exclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclusion_level</span><span class="p">,</span> <span class="n">min_hlr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_hlr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_flux</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_flux</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -907,14 +908,14 @@
         <span class="sd">&quot;&quot;&quot;Is it permissible to call makeGalaxy with gal_type=&#39;real&#39;?&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_real</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="COSMOSCatalog.__eq__"><a class="viewcode-back" href="../../real_gal.html#galsim.COSMOSCatalog.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">COSMOSCatalog</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">use_real</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">use_real</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">use_sample</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">use_sample</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">real_cat</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">real_cat</span> <span class="ow">and</span>
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_cat</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">param_cat</span><span class="p">)</span> <span class="ow">and</span>
-                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">orig_index</span><span class="p">)))</span></div>
+                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">orig_index</span><span class="p">)))</span></div></div>
 </pre></div>
 
            </div>

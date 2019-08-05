@@ -91,22 +91,17 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Special Fields</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#modules">modules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#eval-variables">eval_variables</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#template">template</a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Special Fields</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
 </ul>
@@ -186,8 +181,7 @@
 <h1>Special Fields<a class="headerlink" href="#special-fields" title="Permalink to this headline">¶</a></h1>
 <p>There are a couple of other top level fields that act more in a support role, rather than being
 part of the main processing.</p>
-<div class="section" id="modules">
-<h2>modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
+<p><strong>modules</strong>:</p>
 <p>Almost all aspects of the file building can be customized by the user if the existing GalSim
 types do not do precisely what you need.  How to do this is described in the pages about
 each of the different top-level fields.  In all cases, you need to tell GalSim what Python
@@ -204,9 +198,7 @@ need to be located in a directory in <code class="docutils literal notranslate">
 <li><p><a class="reference download internal" download="" href="_downloads/f2b30d40a89c1c39718c2a64f0894b58/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a></p></li>
 </ul>
 <p>for some examples of this field.</p>
-</div>
-<div class="section" id="eval-variables">
-<h2>eval_variables<a class="headerlink" href="#eval-variables" title="Permalink to this headline">¶</a></h2>
+<p><strong>eval_variables</strong>:</p>
 <p>Sometimes, it can be useful to define some configuration parameters right at the top of the
 config file that might be used farther down in the file somewhere to highlight them.
 Or sometimes, there are calculations that are needed by several different values in the
@@ -220,9 +212,7 @@ items, but they can be placed separately from those evaluations.</p>
 <li><p><a class="reference download internal" download="" href="_downloads/46c5dd7b07579c6dff7a9d685ec2532e/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a></p></li>
 <li><p><a class="reference download internal" download="" href="_downloads/f2b30d40a89c1c39718c2a64f0894b58/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a></p></li>
 </ul>
-</div>
-<div class="section" id="template">
-<h2>template<a class="headerlink" href="#template" title="Permalink to this headline">¶</a></h2>
+<p><strong>template</strong></p>
 <p>This feature directs the config processing to first load in some other file (or specific
 field with that file) and then possibly modify some components of that dict.</p>
 <p>To load in some other config file named <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, you would write:</p>
@@ -296,7 +286,6 @@ E.g. To have a bulge plus disk that have the same kinds of parameters, except th
 <li><p><a class="reference download internal" download="" href="_downloads/b06d696f13310734c255a97eff088d67/cgc_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc_psf.yaml</span></code></a></p></li>
 </ul>
 <p>for examples of this feature.</p>
-</div>
 </div>
 
 

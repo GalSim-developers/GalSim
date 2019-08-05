@@ -91,6 +91,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Spectral Energy Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bandpass.html">Bandpass Filters</a></li>
@@ -98,11 +100,9 @@
 <li class="toctree-l2"><a class="reference internal" href="spectral.html">Spectral Correlated Noise</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -282,35 +282,45 @@ dimensionless normalization if self.dimensionless.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SED.__mul__">
-<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__mul__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Multiply the SED by something.</p>
-<p>There are several possibilities:</p>
-<ol class="arabic simple">
-<li><p>SED * SED -&gt; SED (at least one must be dimensionless)</p></li>
-<li><p>SED * GSObject -&gt; ChromaticObject</p></li>
-<li><p>SED * Bandpass -&gt; SED (treating throughput similarly to dimensionless SED)</p></li>
-<li><p>SED * callable function -&gt; SED (treating function as dimensionless SED)</p></li>
-<li><p>SED * scalar -&gt; SED</p></li>
-</ol>
+<dt id="galsim.SED.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SED._mul_sed">
-<code class="sig-name descname">_mul_sed</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_sed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_sed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to self * other when other is an SED, but no sanity checks.</p>
+<dt id="galsim.SED.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SED._mul_bandpass">
-<code class="sig-name descname">_mul_bandpass</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_bandpass" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to self * other when other is a Bandpass</p>
+<dt id="galsim.SED.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">spec</em>, <em class="sig-param">wave_type</em>, <em class="sig-param">flux_type</em>, <em class="sig-param">redshift=0.0</em>, <em class="sig-param">fast=True</em>, <em class="sig-param">_blue_limit=0.0</em>, <em class="sig-param">_red_limit=inf</em>, <em class="sig-param">_wave_list=None</em>, <em class="sig-param">_spectral=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SED._mul_scalar">
-<code class="sig-name descname">_mul_scalar</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_scalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_scalar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to self * other when other is a scalar</p>
+<dt id="galsim.SED.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.SED.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.SED.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.SED.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.SED.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
@@ -338,15 +348,15 @@ refraction (DCR).</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bandpass</strong> – <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> through which object is being imaged.</p></li>
-<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith</p></li>
+<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith</p></li>
 <li><p><strong>parallactic_angle</strong> – Parallactic angle, i.e. the position angle of the zenith,
 measured from North through East.  [default: 0]</p></li>
 <li><p><strong>obj_coord</strong> – Celestial coordinates of the object being drawn as a
-<a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
-<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
+<a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
+<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
 [default: None]</p></li>
-<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
-<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
 <li><p><strong>pressure</strong> – Air pressure in kiloPascals.  [default: 69.328 kPa]</p></li>
 <li><p><strong>temperature</strong> – Temperature in Kelvins.  [default: 293.15 K]</p></li>
 <li><p><strong>H2O_pressure</strong> – Water vapor pressure in kiloPascals.  [default: 1.067 kPa]</p></li>
@@ -432,12 +442,6 @@ PSF size.  [default: 500]</p></li>
 <dt id="galsim.SED.check_spectral">
 <code class="sig-name descname">check_spectral</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.check_spectral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.check_spectral" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return boolean indicating if SED has units compatible with a spectral density.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SED.dimensionless">
-<em class="property">property </em><code class="sig-name descname">dimensionless</code><a class="headerlink" href="#galsim.SED.dimensionless" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether the object is dimensionless (rather than spectral).</p>
 </dd></dl>
 
 <dl class="method">

@@ -91,6 +91,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sed.html">Spectral Energy Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bandpass.html">Bandpass Filters</a></li>
@@ -98,11 +100,9 @@
 <li class="toctree-l2"><a class="reference internal" href="spectral.html">Spectral Correlated Noise</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -241,7 +241,7 @@ dimensionless itself (see discussion on ChromaticObject dimensions below).  The 
 <p>Subclasses that instantiate a ChromaticObject directly, such as <a class="reference internal" href="#galsim.ChromaticAtmosphere" title="galsim.ChromaticAtmosphere"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAtmosphere</span></code></a>, also
 exist.  Even in this case, however, the underlying implementation always eventually wraps one
 or more <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances.</p>
-<p><strong>Dimensions</strong>:</p>
+<p>Dimensions:</p>
 <p>ChromaticObjects can generally be sorted into two distinct types: those that represent galaxies
 or stars and have dimensions of [photons/wavelength-interval/area/time/solid-angle], and those
 that represent other types of wavelength dependence besides flux, like chromatic PSFs (these
@@ -254,7 +254,7 @@ at most one spectral ChromaticObject can be part of a <a class="reference intern
 <p>Multiplying a dimensionless ChromaticObject a spectral <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> produces a spectral ChromaticObject
 (though note that the new object’s <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> may not be equal to the SED being multiplied by since
 the original ChromaticObject may not have had unit normalization.)</p>
-<p><strong>Methods</strong>:</p>
+<p>Methods:</p>
 <p><a class="reference internal" href="#galsim.ChromaticObject.evaluateAtWavelength" title="galsim.ChromaticObject.evaluateAtWavelength"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluateAtWavelength</span></code></a> returns the monochromatic surface brightness profile (as a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>)
 at a given wavelength (in nanometers).</p>
 <p><a class="reference internal" href="#galsim.ChromaticObject.interpolate" title="galsim.ChromaticObject.interpolate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">interpolate</span></code></a> can be used for non-separable ChromaticObjects to expedite the image rendering
@@ -268,6 +268,24 @@ want from that.</p>
 object with the appropriate spatially integrated flux, flux density, or magnitude.</p>
 <p>The <a class="reference internal" href="#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> method draws the object as observed through a particular bandpass, so the
 arguments are somewhat different.  See the docstring of <a class="reference internal" href="#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> for more details.</p>
+<dl class="method">
+<dt id="galsim.ChromaticObject.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticObject.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticObject.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.ChromaticObject.__mul__">
 <code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param">flux_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.__mul__" title="Permalink to this definition">¶</a></dt>
@@ -292,6 +310,56 @@ the flux ratio for that wavelength, or an <a class="reference internal" href="se
 <dd class="field-even"><p>a new object with scaled flux.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticObject.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticObject.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticObject.__rmul__">
+<code class="sig-name descname">__rmul__</code><span class="sig-paren">(</span><em class="sig-param">flux_ratio</em><span class="sig-paren">)</span><a class="headerlink" href="#galsim.ChromaticObject.__rmul__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale the flux of the object by the given flux ratio, which may be an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, a float, or
+a univariate callable function (of wavelength in nanometers) that returns a float.</p>
+<p>The normalization of a <a class="reference internal" href="#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> is tracked through its <code class="docutils literal notranslate"><span class="pre">.SED</span></code> attribute, which
+may have dimensions of either [photons/wavelength-interval/area/time/solid-angle] or
+[1/solid-angle].</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code> is a spectral <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> (i.e., <code class="docutils literal notranslate"><span class="pre">flux_ratio.spectral==True</span></code>), then self.SED
+must be dimensionless for dimensional consistency.  The returned object will have a
+spectral SED attribute.  On the other hand, if <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code> is a dimensionless <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>,
+float, or univariate callable function, then the returned object will have <code class="docutils literal notranslate"><span class="pre">.spectral</span></code>
+and <code class="docutils literal notranslate"><span class="pre">.dimensionless</span></code> matching <code class="docutils literal notranslate"><span class="pre">self.spectral</span></code> and <code class="docutils literal notranslate"><span class="pre">self.dimensionless</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux_ratio</strong> – The factor by which to scale the normalization of the object.
+<code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code> may be a float, univariate callable function, in which
+case the argument should be wavelength in nanometers and return value
+the flux ratio for that wavelength, or an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new object with scaled flux.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticObject.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.ChromaticObject.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.ChromaticObject.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
@@ -502,12 +570,6 @@ wavelength.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.ChromaticObject.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticObject.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.ChromaticObject.interpolate">
 <code class="sig-name descname">interpolate</code><span class="sig-paren">(</span><em class="sig-param">waves</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.interpolate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.interpolate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build interpolation images to (possibly) speed up subsequent <a class="reference internal" href="#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> calls.</p>
@@ -658,13 +720,13 @@ and a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="
 <dl class="method">
 <dt id="galsim.ChromaticObject.rotate">
 <code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.rotate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rotate this object by an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
+<dd><p>Rotate this object by an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object, +ve anticlockwise). In addition, <code class="docutils literal notranslate"><span class="pre">theta</span></code>
+<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object, +ve anticlockwise). In addition, <code class="docutils literal notranslate"><span class="pre">theta</span></code>
 may be a callable function, in which case the argument should be wavelength
 in nanometers and the return value the rotation angle for that wavelength,
-returned as a <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance.</p>
+returned as a <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the rotated object.</p>
@@ -848,15 +910,15 @@ the zenith measured from North through East) of the object being drawn, these mu
 via keywords.  There are four ways to specify these values:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>explicitly provide <code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> as a keyword of type <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and
+<li><p>explicitly provide <code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> as a keyword of type <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and
 <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code> will be assumed to be 0 by default.</p></li>
 <li><p>explicitly provide both <code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> and <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code> as keywords of type
-<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
+<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
 <li><p>provide the coordinates of the object <code class="docutils literal notranslate"><span class="pre">obj_coord</span></code> and the coordinates of the zenith
-<code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> as keywords of type <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.</p></li>
-<li><p>provide the coordinates of the object <code class="docutils literal notranslate"><span class="pre">obj_coord</span></code> as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>, the hour angle
-of the object <code class="docutils literal notranslate"><span class="pre">HA</span></code> as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and the latitude of the observer <code class="docutils literal notranslate"><span class="pre">latitude</span></code> as an
-<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> as keywords of type <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.</p></li>
+<li><p>provide the coordinates of the object <code class="docutils literal notranslate"><span class="pre">obj_coord</span></code> as a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>, the hour angle
+of the object <code class="docutils literal notranslate"><span class="pre">HA</span></code> as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and the latitude of the observer <code class="docutils literal notranslate"><span class="pre">latitude</span></code> as an
+<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
 </ol>
 </div></blockquote>
 <p>DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
@@ -881,21 +943,51 @@ point source multiplied by an <a class="reference internal" href="sed.html#galsi
 [default: galsim.arcsec]</p></li>
 <li><p><strong>alpha</strong> – Power law index for wavelength-dependent seeing.  [default: -0.2,
 the prediction for Kolmogorov turbulence]</p></li>
-<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith [default: 0]</p></li>
+<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith [default: 0]</p></li>
 <li><p><strong>parallactic_angle</strong> – Parallactic angle, i.e. the position angle of the zenith, measured
 from North through East.  [default: 0]</p></li>
 <li><p><strong>obj_coord</strong> – Celestial coordinates of the object being drawn as a
-<a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
-<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
+<a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
+<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
 [default: None]</p></li>
-<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
-<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
 <li><p><strong>pressure</strong> – Air pressure in kiloPascals.  [default: 69.328 kPa]</p></li>
 <li><p><strong>temperature</strong> – Temperature in Kelvins.  [default: 293.15 K]</p></li>
 <li><p><strong>H2O_pressure</strong> – Water vapor pressure in kiloPascals.  [default: 1.067 kPa]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.ChromaticAtmosphere.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAtmosphere.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAtmosphere.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">base_obj</em>, <em class="sig-param">base_wavelength</em>, <em class="sig-param">scale_unit=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAtmosphere.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAtmosphere.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.ChromaticAtmosphere.build_obj">
 <code class="sig-name descname">build_obj</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.build_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.build_obj" title="Permalink to this definition">¶</a></dt>
@@ -917,12 +1009,6 @@ Building this is quite fast, so we do it on the fly in <a class="reference inter
 <dd class="field-even"><p>the monochromatic object at the given wavelength.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticAtmosphere.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticAtmosphere.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -989,6 +1075,36 @@ docstring for a complete list of options.</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticOpticalPSF.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticOpticalPSF.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticOpticalPSF.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">diam=None</em>, <em class="sig-param">lam_over_diam=None</em>, <em class="sig-param">aberrations=None</em>, <em class="sig-param">scale_unit=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticOpticalPSF.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticOpticalPSF.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticOpticalPSF.evaluateAtWavelength">
 <code class="sig-name descname">evaluateAtWavelength</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.evaluateAtWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.evaluateAtWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to directly instantiate a monochromatic instance of this object.</p>
@@ -997,12 +1113,6 @@ docstring for a complete list of options.</p></li>
 <dd class="field-odd"><p><strong>wave</strong> – Wavelength in nanometers.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticOpticalPSF.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticOpticalPSF.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1047,6 +1157,36 @@ options.</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticAiry.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAiry.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAiry.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">diam=None</em>, <em class="sig-param">lam_over_diam=None</em>, <em class="sig-param">scale_unit=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAiry.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAiry.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticAiry.evaluateAtWavelength">
 <code class="sig-name descname">evaluateAtWavelength</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.evaluateAtWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.evaluateAtWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to directly instantiate a monochromatic instance of this object.</p>
@@ -1055,12 +1195,6 @@ options.</p></li>
 <dd class="field-odd"><p><strong>wave</strong> – Wavelength in nanometers.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticAiry.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticAiry.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1209,6 +1343,42 @@ them.  [default: None]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticRealGalaxy.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#ChromaticRealGalaxy.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticRealGalaxy.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticRealGalaxy.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#ChromaticRealGalaxy.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticRealGalaxy.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticRealGalaxy.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">real_galaxy_catalogs</em>, <em class="sig-param">index=None</em>, <em class="sig-param">id=None</em>, <em class="sig-param">random=False</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#ChromaticRealGalaxy.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticRealGalaxy.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticRealGalaxy.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#ChromaticRealGalaxy.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticRealGalaxy.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticRealGalaxy.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#ChromaticRealGalaxy.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticRealGalaxy.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticRealGalaxy.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#ChromaticRealGalaxy.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticRealGalaxy.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticRealGalaxy.makeFromImages">
 <em class="property">classmethod </em><code class="sig-name descname">makeFromImages</code><span class="sig-paren">(</span><em class="sig-param">images</em>, <em class="sig-param">bands</em>, <em class="sig-param">PSFs</em>, <em class="sig-param">xis</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/real.html#ChromaticRealGalaxy.makeFromImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticRealGalaxy.makeFromImages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#galsim.ChromaticRealGalaxy" title="galsim.ChromaticRealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticRealGalaxy</span></code></a> directly from images, bandpasses, PSFs, and noise
@@ -1312,6 +1482,36 @@ object should be correct, at the possible expense of other features.
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.InterpolatedChromaticObject.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InterpolatedChromaticObject.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InterpolatedChromaticObject.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">original</em>, <em class="sig-param">waves</em>, <em class="sig-param">oversample_fac=1.0</em>, <em class="sig-param">use_exact_SED=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InterpolatedChromaticObject.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InterpolatedChromaticObject.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.InterpolatedChromaticObject.drawImage">
 <code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em>, <em class="sig-param">image=None</em>, <em class="sig-param">integrator='trapezoidal'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw an image as seen through a particular bandpass using the stored interpolated
@@ -1348,12 +1548,6 @@ for details.)  [default: None]</p></li>
 <dd class="field-even"><p>the monochromatic object at the given wavelength, as a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.InterpolatedChromaticObject.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.InterpolatedChromaticObject.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1399,6 +1593,36 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticSum.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticSum.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticSum.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticSum.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticSum.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticSum.drawImage">
 <code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em>, <em class="sig-param">image=None</em>, <em class="sig-param">integrator='trapezoidal'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Slightly optimized draw method for <a class="reference internal" href="#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> instances.</p>
@@ -1443,18 +1667,6 @@ trapezoidal integration rule automatically.]</p></li>
 <dd class="field-even"><p>the monochromatic object at the given wavelength.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticSum.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticSum.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticSum.obj_list">
-<em class="property">property </em><code class="sig-name descname">obj_list</code><a class="headerlink" href="#galsim.ChromaticSum.obj_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>The list of objects being added.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1514,6 +1726,36 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticConvolution.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticConvolution.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticConvolution.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticConvolution.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticConvolution.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticConvolution.drawImage">
 <code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em>, <em class="sig-param">image=None</em>, <em class="sig-param">integrator='trapezoidal'</em>, <em class="sig-param">iimult=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optimized draw method for the <a class="reference internal" href="#galsim.ChromaticConvolution" title="galsim.ChromaticConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticConvolution</span></code></a> class.</p>
@@ -1566,18 +1808,6 @@ effective profiles by this amount. [default: None]</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.ChromaticConvolution.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticConvolution.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticConvolution.obj_list">
-<em class="property">property </em><code class="sig-name descname">obj_list</code><a class="headerlink" href="#galsim.ChromaticConvolution.obj_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>The list of objects being convolved.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.ChromaticConvolution.resize_effective_prof_cache">
 <em class="property">static </em><code class="sig-name descname">resize_effective_prof_cache</code><span class="sig-paren">(</span><em class="sig-param">maxsize</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.resize_effective_prof_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.resize_effective_prof_cache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resize the cache containing effective profiles.</p>
@@ -1624,6 +1854,36 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticDeconvolution.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticDeconvolution.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticDeconvolution.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticDeconvolution.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticDeconvolution.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticDeconvolution.evaluateAtWavelength">
 <code class="sig-name descname">evaluateAtWavelength</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.evaluateAtWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.evaluateAtWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this chromatic object at a particular wavelength <code class="docutils literal notranslate"><span class="pre">wave</span></code>.</p>
@@ -1635,12 +1895,6 @@ would not want to do this. [default: True]</p></li>
 <dd class="field-even"><p>the monochromatic object at the given wavelength.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticDeconvolution.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticDeconvolution.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1678,6 +1932,36 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticAutoConvolution.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoConvolution.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoConvolution.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoConvolution.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoConvolution.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticAutoConvolution.evaluateAtWavelength">
 <code class="sig-name descname">evaluateAtWavelength</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.evaluateAtWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.evaluateAtWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this chromatic object at a particular wavelength <code class="docutils literal notranslate"><span class="pre">wave</span></code>.</p>
@@ -1689,12 +1973,6 @@ would not want to do this. [default: True]</p></li>
 <dd class="field-even"><p>the monochromatic object at the given wavelength.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticAutoConvolution.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticAutoConvolution.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1735,6 +2013,36 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticAutoCorrelation.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoCorrelation.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoCorrelation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoCorrelation.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticAutoCorrelation.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticAutoCorrelation.evaluateAtWavelength">
 <code class="sig-name descname">evaluateAtWavelength</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.evaluateAtWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.evaluateAtWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this chromatic object at a particular wavelength <code class="docutils literal notranslate"><span class="pre">wave</span></code>.</p>
@@ -1746,12 +2054,6 @@ would not want to do this. [default: True]</p></li>
 <dd class="field-even"><p>the monochromatic object at the given wavelength.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticAutoCorrelation.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1796,6 +2098,36 @@ would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.ChromaticTransformation.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticTransformation.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj, jac=array([[1., 0.],        [0., 1.]]), offset=(0.0, 0.0), flux_ratio=1.0, gsparams=None, propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticTransformation.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticTransformation.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.ChromaticTransformation.drawImage">
 <code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em>, <em class="sig-param">image=None</em>, <em class="sig-param">integrator='trapezoidal'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.drawImage" title="Permalink to this definition">¶</a></dt>
@@ -1844,18 +2176,6 @@ then <code class="docutils literal notranslate"><span class="pre">integrator</sp
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.ChromaticTransformation.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticTransformation.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticTransformation.original">
-<em class="property">property </em><code class="sig-name descname">original</code><a class="headerlink" href="#galsim.ChromaticTransformation.original" title="Permalink to this definition">¶</a></dt>
-<dd><p>The original object that was transformed.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.ChromaticTransformation.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
@@ -1894,6 +2214,36 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.ChromaticFourierSqrtProfile.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticFourierSqrtProfile.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticFourierSqrtProfile.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticFourierSqrtProfile.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.ChromaticFourierSqrtProfile.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.ChromaticFourierSqrtProfile.evaluateAtWavelength">
 <code class="sig-name descname">evaluateAtWavelength</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.evaluateAtWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.evaluateAtWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this chromatic object at a particular wavelength <code class="docutils literal notranslate"><span class="pre">wave</span></code>.</p>
@@ -1905,12 +2255,6 @@ would not want to do this. [default: True]</p></li>
 <dd class="field-even"><p>the monochromatic object at the given wavelength.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.ChromaticFourierSqrtProfile.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
 </dd></dl>
 
 <dl class="method">

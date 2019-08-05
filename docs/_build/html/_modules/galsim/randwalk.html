@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -236,6 +236,13 @@
 <span class="sd">         gsparams:          Optional `GSParams` for the objects representing each point source.</span>
 <span class="sd">                            [default: None]</span>
 
+<span class="sd">    This class inherits from galsim.Sum. Additional methods are</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        calculateHLR:   Calculate the actual half light radius of the generated points</span>
+
+<span class="sd">    There are also &quot;getters&quot;,  implemented as read-only properties</span>
+
 <span class="sd">    Attributes:</span>
 <span class="sd">        npoints:                    The number of random walk points</span>
 <span class="sd">        input_half_light_radius:    The input half_light_radius</span>
@@ -269,7 +276,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomWalk.__init__"><a class="viewcode-back" href="../../gal.html#galsim.RandomWalk.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="o">=</span><span class="n">npoints</span>
@@ -338,7 +345,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_points</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_points</span><span class="p">()</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -370,14 +377,10 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">npoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The number of point sources.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A list of the locations (x,y) of the point sources.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>
 
 <div class="viewcode-block" id="RandomWalk.calculateHLR"><a class="viewcode-back" href="../../gal.html#galsim.RandomWalk.calculateHLR">[docs]</a>    <span class="k">def</span> <span class="nf">calculateHLR</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -410,6 +413,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        We must use a galsim random number generator, in order for</span>
 <span class="sd">        this profile to be used in the configuration file context.</span>
+
+<span class="sd">        The most efficient way is to write into an image</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">photons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">shoot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span>
         <span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span> <span class="n">photons</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="p">])</span>
@@ -433,7 +438,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;npoints must be &gt; 0&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomWalk.__str__"><a class="viewcode-back" href="../../gal.html#galsim.RandomWalk.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">rep</span><span class="o">=</span><span class="s1">&#39;galsim.RandomWalk(</span><span class="si">%(npoints)d</span><span class="s1">, profile=</span><span class="si">%(profile)s</span><span class="s1">, gsparams=</span><span class="si">%(gsparams)s</span><span class="s1">)&#39;</span>
         <span class="n">rep</span> <span class="o">=</span> <span class="n">rep</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="n">npoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span>
@@ -441,9 +446,9 @@
             <span class="n">gsparams</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">),</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">rep</span>
+        <span class="k">return</span> <span class="n">rep</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomWalk.__repr__"><a class="viewcode-back" href="../../gal.html#galsim.RandomWalk.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">rep</span><span class="o">=</span><span class="s1">&#39;galsim.RandomWalk(</span><span class="si">%(npoints)d</span><span class="s1">, profile=</span><span class="si">%(profile)s</span><span class="s1">, gsparams=</span><span class="si">%(gsparams)s</span><span class="s1">)&#39;</span>
         <span class="n">rep</span> <span class="o">=</span> <span class="n">rep</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="n">npoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span>
@@ -451,19 +456,19 @@
             <span class="n">gsparams</span><span class="o">=</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">),</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">rep</span>
+        <span class="k">return</span> <span class="n">rep</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomWalk.__eq__"><a class="viewcode-back" href="../../gal.html#galsim.RandomWalk.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RandomWalk</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_npoints</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_flux</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomWalk.__hash__"><a class="viewcode-back" href="../../gal.html#galsim.RandomWalk.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.RandomWalk&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

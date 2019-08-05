@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="“Real” Galaxies" href="real_gal.html" />
-    <link rel="prev" title="Aribtrary Profiles" href="arbitrary.html" /> 
+    <link rel="next" title="Galaxies" href="gal.html" />
+    <link rel="prev" title="Point-spread functions" href="psf.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,23 +92,24 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -192,10 +193,8 @@ define things like the aperture and the effect of the various screens.</p>
 <p>For PSFs drawn using real-space or Fourier methods, these utilities essentially evaluate the
 Fourier optics diffraction equation:</p>
 <div class="math notranslate nohighlight">
-\[PSF(x,y) = \int \left| {\cal F}\left(A(u, v) e^{i \phi(u, v, x, y, t)} \right) \right|^2 dt\]</div>
-<p>where <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span> are focal plane coordinates and <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span> are
-pupil plane coordinates, <span class="math notranslate nohighlight">\(A\)</span> is the aperture, <span class="math notranslate nohighlight">\(\phi\)</span> is the phase of the
-incident wavefront, and <span class="math notranslate nohighlight">\(\cal F\)</span> is the Fourier transform operator.</p>
+\[PSF(x,y) = \int |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2 dt\]</div>
+<p>where x, y are focal plane coordinates and u, v are pupil plane coordinates.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>, two possible strategies are available.</p>
 <ol class="arabic simple">
 <li><p>The first strategy is to draw the PSF using Fourier methods into an <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>,
@@ -234,16 +233,210 @@ optical model, you generally don’t need to bother with building any of the scr
 manually.  The <a class="reference internal" href="psf.html#galsim.OpticalPSF" title="galsim.OpticalPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalPSF</span></code></a> class constructor will handle this for you.</p>
 </div>
 </dd>
-<dt><a class="reference internal" href="#galsim.SecondKick" title="galsim.SecondKick"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SecondKick</span></code></a></dt><dd><p>A <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> describing the kigh-k turbulence portion of an atmospheric PSF convolved by
-an <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> PSF.  When using photon shooting with a <a class="reference internal" href="#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a>, small scale (high-k)
-features are not well approximated by the geometric optics approximation, since this is
-where Fourier effects such as diffaction become important.  The <a class="reference internal" href="#galsim.SecondKick" title="galsim.SecondKick"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SecondKick</span></code></a> class can
-compensate by simulating the appropriate behavior at high k values.</p>
-</dd>
 <dt><a class="reference internal" href="#galsim.Atmosphere" title="galsim.Atmosphere"><code class="xref any py py-func docutils literal notranslate"><span class="pre">Atmosphere</span></code></a></dt><dd><p>Convenience function to quickly assemble multiple <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> instances into a
 <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
 </dd>
 </dl>
+<dl class="class">
+<dt id="galsim.PhaseScreenPSF">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PhaseScreenPSF</code><span class="sig-paren">(</span><em class="sig-param">screen_list</em>, <em class="sig-param">lam</em>, <em class="sig-param">t0=0.0</em>, <em class="sig-param">exptime=0.0</em>, <em class="sig-param">time_step=0.025</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em>, <em class="sig-param">interpolant=None</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">ii_pad_factor=4.0</em>, <em class="sig-param">suppress_warning=False</em>, <em class="sig-param">geometric_shooting=True</em>, <em class="sig-param">aper=None</em>, <em class="sig-param">second_kick=None</em>, <em class="sig-param">kcrit=0.2</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">_force_stepk=0.0</em>, <em class="sig-param">_force_maxk=0.0</em>, <em class="sig-param">_bar=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
+derived from a set of phase screens and an aperture.</p>
+<p>There are two equivalent ways to construct a PhaseScreenPSF given a <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">screen_list</span><span class="o">.</span><span class="n">makePSF</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">PhaseScreenPSF</span><span class="p">(</span><span class="n">screen_list</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Computing a PSF from a phase screen also requires an <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> be specified.  This can be done
+either directly via the <code class="docutils literal notranslate"><span class="pre">aper</span></code> keyword, or by setting a number of keywords that will be passed
+to the <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> constructor.  The <code class="docutils literal notranslate"><span class="pre">aper</span></code> keyword always takes precedence.</p>
+<p>There are effectively three ways to draw a PhaseScreenPSF (or <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> that includes a
+PhaseScreenPSF):</p>
+<ol class="arabic">
+<li><p>Fourier optics</p>
+<blockquote>
+<div><p>This is the default, and is performed for all drawImage methods except method=’phot’.  This
+is generally the most accurate option.  For a <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> that includes an
+<a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>, however, this can be prohibitively slow.  For <a class="reference internal" href="psf.html#galsim.OpticalPSF" title="galsim.OpticalPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalPSF</span></code></a>, though,
+this can sometimes be a good option.</p>
+</div></blockquote>
+</li>
+<li><p>Photon-shooting from an image produced using Fourier optics.</p>
+<blockquote>
+<div><p>This is done if geometric_shooting=False when creating the PhaseScreenPSF, and method=’phot’
+when calling drawImage.  This actually performs the same calculations as the Fourier optics
+option above, but then proceeds by shooting photons from that result.  This can sometimes be
+a good option for OpticalPSFs, especially if the same OpticalPSF can be reused for may
+objects, since the Fourier part of the process would only be performed once in this case.</p>
+</div></blockquote>
+</li>
+<li><p>Photon-shooting using the “geometric approximation”.</p>
+<blockquote>
+<div><p>This is done if geometric_shooting=True when creating the PhaseScreenPSF, and method=’phot’
+when calling drawImage.  In this case, a completely different algorithm is used make an
+image.  Photons are uniformly generated in the <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> pupil, and then the phase gradient
+at that location is used to deflect each photon in the image plane.  This method, which
+corresponds to geometric optics, is broadly accurate for phase screens that vary slowly
+across the aperture, and is usually several orders of magnitude or more faster than Fourier
+optics (depending on the flux of the object, of course, but much faster even for rather
+bright flux levels).</p>
+<p>One short-coming of this method is that it neglects interference effects, i.e. diffraction.
+For <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> that include at least one <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>, a correction, dubbed
+the “second kick”, will automatically be applied to handle both the quickly varying modes
+of the screens and the diffraction pattern of the <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a>.  For PhaseScreenLists without
+an <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>, the correction is simply an Airy function.  Note that this
+correction can be overridden using the second_kick keyword argument, and also tuned to some
+extent using the kcrit keyword argument.</p>
+</div></blockquote>
+</li>
+</ol>
+<p>Note also that calling drawImage on a PhaseScreenPSF that uses a <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> with any
+uninstantiated <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> will perform that instantiation, and that the details of the
+instantiation depend on the drawing method used, and also the kcrit keyword argument to
+PhaseScreenPSF.  See the <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> docstring for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>screen_list</strong> – <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> object from which to create PSF.</p></li>
+<li><p><strong>lam</strong> – Wavelength in nanometers at which to compute PSF.</p></li>
+<li><p><strong>t0</strong> – Time at which to start exposure in seconds.  [default: 0.0]</p></li>
+<li><p><strong>exptime</strong> – Time in seconds over which to accumulate evolving instantaneous PSF.
+[default: 0.0]</p></li>
+<li><p><strong>time_step</strong> – Time interval in seconds with which to sample phase screens when
+drawing using real-space or Fourier methods, or when using
+photon-shooting without the geometric optics approximation.  Note
+that the default value of 0.025 is fairly arbitrary.  For careful
+studies, we recommend checking that results are stable when
+decreasing time_step.  Also note that when drawing using
+photon-shooting with the geometric optics approximation this
+keyword is ignored, as the phase screen can be sampled
+continuously in this case instead of at discrete intervals.
+[default: 0.025]</p></li>
+<li><p><strong>flux</strong> – Flux of output PSF [default: 1.0]</p></li>
+<li><p><strong>theta</strong> – Field angle of PSF as a 2-tuple of <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instances.
+[default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</p></li>
+<li><p><strong>interpolant</strong> – Either an Interpolant instance or a string indicating which
+interpolant should be used.  Options are ‘nearest’, ‘sinc’, ‘linear’,
+‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the integer order
+to use.  [default: galsim.Quintic()]</p></li>
+<li><p><strong>scale_unit</strong> – Units to use for the sky coordinates of the output profile.
+[default: galsim.arcsec]</p></li>
+<li><p><strong>ii_pad_factor</strong> – Zero-padding factor by which to extend the image of the PSF when
+creating the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>.  See the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>
+docstring for more details.  [default: 4.]</p></li>
+<li><p><strong>suppress_warning</strong> – If <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> is too small, the code will emit a warning telling
+you its best guess about how high you might want to raise it.
+However, you can suppress this warning by using
+<code class="docutils literal notranslate"><span class="pre">suppress_warning=True</span></code>.  [default: False]</p></li>
+<li><p><strong>geometric_shooting</strong> – If True, then when drawing using photon shooting, use geometric
+optics approximation where the photon angles are derived from the
+phase screen gradient.  If False, then first draw using Fourier
+optics and then shoot from the derived InterpolatedImage.
+[default: True]</p></li>
+<li><p><strong>aper</strong> – <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> to use to compute PSF(s).  [default: None]</p></li>
+<li><p><strong>second_kick</strong> – An optional second kick to also convolve by when using geometric
+photon-shooting.  (This can technically be any <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>, though
+usually it should probably be a SecondKick object).  If None, then a
+good second kick will be chosen automatically based on
+<code class="docutils literal notranslate"><span class="pre">screen_list</span></code>.  If False, then a second kick won’t be applied.
+[default: None]</p></li>
+<li><p><strong>kcrit</strong> – Critical Fourier scale (in units of 1/r0) at which to separate low-k
+and high-k turbulence.  The default value was chosen based on
+comparisons between Fourier optics and geometric optics with a second
+kick correction.  While most values of kcrit smaller than the default
+produce similar results, we caution the user to compare the affected
+geometric PSFs against Fourier optics PSFs carefully before changing
+this value.  [default: 0.2]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The following are optional keywords to use to setup the aperture if <code class="docutils literal notranslate"><span class="pre">aper</span></code> is not provided:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>diam</strong> – Aperture diameter in meters. [default: None]</p></li>
+<li><p><strong>circular_pupil</strong> – Adopt a circular pupil?  [default: True]</p></li>
+<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture
+linear dimension. [0., 1.).  [default: 0.0]</p></li>
+<li><p><strong>nstruts</strong> – Number of radial support struts to add to the central obscuration.
+[default: 0]</p></li>
+<li><p><strong>strut_thick</strong> – Thickness of support struts as a fraction of aperture diameter.
+[default: 0.05]</p></li>
+<li><p><strong>strut_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to it,
+defined to be positive in the counter-clockwise direction; must be an
+<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
+<li><p><strong>oversampling</strong> – Optional oversampling factor <em>in the image plane</em> for the PSF
+eventually constructed using this <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a>.  Setting
+<code class="docutils literal notranslate"><span class="pre">oversampling</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> will produce aliasing in the PSF (not good).
+[default: 1.0]</p></li>
+<li><p><strong>pad_factor</strong> – Additional multiple by which to extend the PSF image to avoid
+folding.  [default: 1.0]</p></li>
+<li><p><strong>pupil_plane_im</strong> – The GalSim.Image, NumPy array, or name of file containing the pupil
+plane image, to be used instead of generating one based on the
+obscuration and strut parameters.  [default: None]</p></li>
+<li><p><strong>pupil_angle</strong> – If <code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> is not None, rotation angle for the pupil plane
+(positive in the counter-clockwise direction).  Must be an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>
+instance. [default: 0. * galsim.degrees]</p></li>
+<li><p><strong>pupil_plane_scale</strong> – Sampling interval in meters to use for the pupil plane array.  In
+most cases, it’s a good idea to leave this as None, in which case
+GalSim will attempt to find a good value automatically.  The
+exception is when specifying the pupil arrangement via an image, in
+which case this keyword can be used to indicate the sampling of that
+image.  See also <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> for adjusting the pupil sampling
+scale.  [default: None]</p></li>
+<li><p><strong>pupil_plane_size</strong> – Size in meters to use for the pupil plane array.  In most cases, it’s
+a good idea to leave this as None, in which case GalSim will attempt
+to find a good value automatically.  See also <code class="docutils literal notranslate"><span class="pre">oversampling</span></code> for
+adjusting the pupil size.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="galsim.PhaseScreenPSF.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenPSF.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenPSF.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">screen_list</em>, <em class="sig-param">lam</em>, <em class="sig-param">t0=0.0</em>, <em class="sig-param">exptime=0.0</em>, <em class="sig-param">time_step=0.025</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em>, <em class="sig-param">interpolant=None</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">ii_pad_factor=4.0</em>, <em class="sig-param">suppress_warning=False</em>, <em class="sig-param">geometric_shooting=True</em>, <em class="sig-param">aper=None</em>, <em class="sig-param">second_kick=None</em>, <em class="sig-param">kcrit=0.2</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">_force_stepk=0.0</em>, <em class="sig-param">_force_maxk=0.0</em>, <em class="sig-param">_bar=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenPSF.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenPSF.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenPSF.flux">
+<em class="property">property </em><code class="sig-name descname">flux</code><a class="headerlink" href="#galsim.PhaseScreenPSF.flux" title="Permalink to this definition">¶</a></dt>
+<dd><p>The flux of the profile</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenPSF.withGSParams">
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.withGSParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with the given gsparams</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="galsim.Aperture">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Aperture</code><span class="sig-paren">(</span><em class="sig-param">diam</em>, <em class="sig-param">lam=None</em>, <em class="sig-param">circular_pupil=True</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">nstruts=0</em>, <em class="sig-param">strut_thick=0.05</em>, <em class="sig-param">strut_angle=coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">oversampling=1.0</em>, <em class="sig-param">pad_factor=1.0</em>, <em class="sig-param">screen_list=None</em>, <em class="sig-param">pupil_plane_im=None</em>, <em class="sig-param">pupil_angle=coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">pupil_plane_scale=None</em>, <em class="sig-param">pupil_plane_size=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#Aperture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Aperture" title="Permalink to this definition">¶</a></dt>
@@ -253,7 +446,7 @@ with the <a class="reference internal" href="#galsim.PhaseScreenPSF" title="gals
 illuminated pixels.  Pupil plane arrays can be specified either geometrically or using an image
 to indicate the illuminated pixels.  In both cases, various options exist to control the pupil
 plane size and sampling interval.</p>
-<p><strong>Geometric pupil specification</strong>:</p>
+<p>Geometric pupil specification:</p>
 <p>The first way to specify the details of the telescope aperture is through a series of keywords
 indicating the diameter, size of the central obscuration, and the nature of the struts
 holding up the secondary mirror (or prime focus cage, etc.).  The struts are assumed to be
@@ -294,7 +487,7 @@ turbulent atmospheric screens.</p>
 to <code class="docutils literal notranslate"><span class="pre">pupil_plane_scale</span></code> in order to produce an array with a good size for FFTs.  If your
 application depends on knowing the size and scale used with the Fourier optics framework, you
 can obtain these from the <code class="docutils literal notranslate"><span class="pre">aper.pupil_plane_size</span></code> and <code class="docutils literal notranslate"><span class="pre">aper.pupil_plane_scale</span></code> attributes.</p>
-<p><strong>Pupil image specification</strong>:</p>
+<p>Pupil image specification:</p>
 <p>The second way to specify the pupil plane configuration is by passing in an image of it.  This
 can be useful, for example, if the struts are not evenly spaced or are not radially directed, as
 is assumed by the simple model for struts described above.  In this case, an exception is raised
@@ -334,9 +527,9 @@ linear dimension. [0., 1.).  [default: 0.0]</p></li>
 [default: 0]</p></li>
 <li><p><strong>strut_thick</strong> – Thickness of support struts as a fraction of aperture diameter.
 [default: 0.05]</p></li>
-<li><p><strong>strut_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to it,
+<li><p><strong>strut_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to it,
 defined to be positive in the counter-clockwise direction; must be an
-<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
+<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
 <li><p><strong>oversampling</strong> – Optional oversampling factor <em>in the image plane</em> for the PSF
 eventually constructed using this <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a>.  Setting
 <code class="docutils literal notranslate"><span class="pre">oversampling</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> will produce aliasing in the PSF (not good).
@@ -349,7 +542,7 @@ pupil sampling interval using this object.  [default: None]</p></li>
 plane image, to be used instead of generating one based on the
 obscuration and strut parameters.  [default: None]</p></li>
 <li><p><strong>pupil_angle</strong> – If <code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> is not None, rotation angle for the pupil plane
-(positive in the counter-clockwise direction).  Must be an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>
+(positive in the counter-clockwise direction).  Must be an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>
 instance. [default: 0. * galsim.degrees]</p></li>
 <li><p><strong>pupil_plane_scale</strong> – Sampling interval in meters to use for the pupil plane array.  In
 most cases, it’s a good idea to leave this as None, in which case
@@ -367,15 +560,45 @@ adjusting the pupil size.  [default: None]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Aperture.diam">
-<em class="property">property </em><code class="sig-name descname">diam</code><a class="headerlink" href="#galsim.Aperture.diam" title="Permalink to this definition">¶</a></dt>
-<dd><p>Aperture diameter in meters</p>
+<dt id="galsim.Aperture.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#Aperture.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Aperture.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Aperture.gsparams">
-<em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.Aperture.gsparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> of this object.</p>
+<dt id="galsim.Aperture.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#Aperture.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Aperture.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Aperture.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">diam</em>, <em class="sig-param">lam=None</em>, <em class="sig-param">circular_pupil=True</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">nstruts=0</em>, <em class="sig-param">strut_thick=0.05</em>, <em class="sig-param">strut_angle=coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">oversampling=1.0</em>, <em class="sig-param">pad_factor=1.0</em>, <em class="sig-param">screen_list=None</em>, <em class="sig-param">pupil_plane_im=None</em>, <em class="sig-param">pupil_angle=coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">pupil_plane_scale=None</em>, <em class="sig-param">pupil_plane_size=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#Aperture.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Aperture.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Aperture.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#Aperture.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Aperture.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Aperture.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#Aperture.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Aperture.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Aperture.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Aperture.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Aperture.diam">
+<em class="property">property </em><code class="sig-name descname">diam</code><a class="headerlink" href="#galsim.Aperture.diam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aperture diameter in meters</p>
 </dd></dl>
 
 <dl class="method">
@@ -385,27 +608,9 @@ adjusting the pupil size.  [default: None]</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Aperture.npix">
-<em class="property">property </em><code class="sig-name descname">npix</code><a class="headerlink" href="#galsim.Aperture.npix" title="Permalink to this definition">¶</a></dt>
-<dd><p>The number of pixels in each direction of the pupil-plane image.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.Aperture.obscuration">
 <em class="property">property </em><code class="sig-name descname">obscuration</code><a class="headerlink" href="#galsim.Aperture.obscuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fraction linear obscuration of pupil.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Aperture.pupil_plane_scale">
-<em class="property">property </em><code class="sig-name descname">pupil_plane_scale</code><a class="headerlink" href="#galsim.Aperture.pupil_plane_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p>The scale_size of the pupil-plane image.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Aperture.pupil_plane_size">
-<em class="property">property </em><code class="sig-name descname">pupil_plane_size</code><a class="headerlink" href="#galsim.Aperture.pupil_plane_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>The size of the pupil-plane image.</p>
 </dd></dl>
 
 <dl class="method">
@@ -424,6 +629,380 @@ adjusting the pupil size.  [default: None]</p></li>
 <dt id="galsim.Aperture.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#Aperture.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Aperture.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current aperture with the given gsparams</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.PhaseScreenList">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PhaseScreenList</code><span class="sig-paren">(</span><em class="sig-param">*layers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of phase screens that can be turned into a PSF.  Screens can be either atmospheric
+layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using
+the function <a class="reference internal" href="#galsim.Atmosphere" title="galsim.Atmosphere"><code class="xref any py py-func docutils literal notranslate"><span class="pre">Atmosphere</span></code></a>.  Layers can be added, removed, appended, etc. just like items can
+be manipulated in a python list.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an atmosphere with three layers.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">screens</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PhaseScreenList</span><span class="p">([</span><span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+                                      <span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+                                      <span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">)])</span>
+<span class="c1"># Add another layer</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">screens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+<span class="c1"># Remove the second layer</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">screens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="c1"># Switch the first and second layer.  Silly, but works...</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">screens</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">screens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">screens</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">screens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="galsim.PhaseScreenList.makePSF">
+<code class="sig-name descname">makePSF</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.makePSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.makePSF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain a PSF from this set of phase screens.  See <a class="reference internal" href="#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a>
+docstring for more details.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenList.wavefront">
+<code class="sig-name descname">wavefront</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.wavefront"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.wavefront" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the cumulative wavefront due to all screens.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenList.wavefront_gradient">
+<code class="sig-name descname">wavefront_gradient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.wavefront_gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.wavefront_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the cumulative wavefront gradient due to all screens.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layers</strong> – Sequence of phase screens.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="galsim.PhaseScreenList.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenList.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*layers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenList.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenList.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenList.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.PhaseScreenList.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.PhaseScreenList.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PhaseScreenList.instantiate">
+<code class="sig-name descname">instantiate</code><span class="sig-paren">(</span><em class="sig-param">pool=None</em>, <em class="sig-param">_bar=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.instantiate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate the screens in this <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pool</strong> – A multiprocessing.Pool object to use to instantiate screens in parallel.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments to forward to screen.instantiate().</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">makePSF</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.makePSF"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Create a PSF from the current <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lam</strong> – Wavelength in nanometers at which to compute PSF.</p></li>
+<li><p><strong>t0</strong> – Time at which to start exposure in seconds.  [default: 0.0]</p></li>
+<li><p><strong>exptime</strong> – Time in seconds over which to accumulate evolving instantaneous
+PSF.  [default: 0.0]</p></li>
+<li><p><strong>time_step</strong> – Time interval in seconds with which to sample phase screens when
+drawing using real-space or Fourier methods, or when using
+photon-shooting without the geometric optics approximation.  Note
+that the default value of 0.025 is fairly arbitrary.  For careful
+studies, we recommend checking that results are stable when
+decreasing time_step.  Also note that when drawing using
+photon-shooting with the geometric optics approximation this
+keyword is ignored, as the phase screen can be sampled
+continuously in this case instead of at discrete intervals.
+[default: 0.025]</p></li>
+<li><p><strong>flux</strong> – Flux of output PSF.  [default: 1.0]</p></li>
+<li><p><strong>theta</strong> – Field angle of PSF as a 2-tuple of <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instances.
+[default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</p></li>
+<li><p><strong>interpolant</strong> – Either an Interpolant instance or a string indicating which
+interpolant should be used.  Options are ‘nearest’, ‘sinc’,
+‘linear’, ‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the
+integer order to use. [default: galsim.Quintic()]</p></li>
+<li><p><strong>scale_unit</strong> – Units to use for the sky coordinates of the output profile.
+[default: galsim.arcsec]</p></li>
+<li><p><strong>ii_pad_factor</strong> – Zero-padding factor by which to extend the image of the PSF when
+creating the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>.  See the
+<code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code> docstring for more details.  [default: 4.]</p></li>
+<li><p><strong>suppress_warning</strong> – If <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> is too small, the code will emit a warning
+telling you its best guess about how high you might want to raise
+it.  However, you can suppress this warning by using
+<code class="docutils literal notranslate"><span class="pre">suppress_warning=True</span></code>.  [default: False]</p></li>
+<li><p><strong>geometric_shooting</strong> – If True, then when drawing using photon shooting, use geometric
+optics approximation where the photon angles are derived from the
+phase screen gradient.  If False, then first draw using Fourier
+optics and then shoot from the derived InterpolatedImage.
+[default: True]</p></li>
+<li><p><strong>aper</strong> – <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> to use to compute PSF(s).  [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The following are optional keywords to use to setup the aperture if <code class="docutils literal notranslate"><span class="pre">aper</span></code> is not
+provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>diam</strong> – Aperture diameter in meters.</p></li>
+<li><p><strong>circular_pupil</strong> – Adopt a circular pupil?  [default: True]</p></li>
+<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture
+linear dimension. [0., 1.).  [default: 0.0]</p></li>
+<li><p><strong>nstruts</strong> – Number of radial support struts to add to the central
+obscuration. [default: 0]</p></li>
+<li><p><strong>strut_thick</strong> – Thickness of support struts as a fraction of aperture diameter.
+[default: 0.05]</p></li>
+<li><p><strong>strut_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to
+it, defined to be positive in the counter-clockwise direction;
+must be an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
+<li><p><strong>oversampling</strong> – Optional oversampling factor <em>in the image plane</em> for the PSF
+eventually constructed using this <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a>.  Setting
+<code class="docutils literal notranslate"><span class="pre">oversampling</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> will produce aliasing in the PSF (not good).
+[default: 1.0]</p></li>
+<li><p><strong>pad_factor</strong> – Additional multiple by which to extend the PSF image to avoid
+folding.  [default: 1.0]</p></li>
+<li><p><strong>pupil_plane_im</strong> – The GalSim.Image, NumPy array, or name of file containing the
+pupil plane image, to be used instead of generating one based on
+the obscuration and strut parameters.  [default: None]</p></li>
+<li><p><strong>pupil_angle</strong> – If <code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> is not None, rotation angle for the pupil
+plane (positive in the counter-clockwise direction).  Must be an
+<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
+<li><p><strong>pupil_plane_scale</strong> – Sampling interval in meters to use for the pupil plane array.  In
+most cases, it’s a good idea to leave this as None, in which case
+GalSim will attempt to find a good value automatically.  The
+exception is when specifying the pupil arrangement via an image,
+in which case this keyword can be used to indicate the sampling
+of that image.  See also <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> for adjusting the pupil
+sampling scale. [default: None]</p></li>
+<li><p><strong>pupil_plane_size</strong> – Size in meters to use for the pupil plane array.  In most cases,
+it’s a good idea to leave this as None, in which case GalSim will
+attempt to find a good value automatically.  See also
+<code class="docutils literal notranslate"><span class="pre">oversampling</span></code> for adjusting the pupil size.  [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">wavefront</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.wavefront"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute cumulative wavefront due to all phase screens in <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
+<p>Wavefront here indicates the distance by which the physical wavefront lags or leads the
+ideal plane wave (pre-optics) or spherical wave (post-optics).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>t</strong> – Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or an
+iterable.  If None, then the internal time of the phase screens will be used
+for all u, v.  If scalar, then the size will be broadcast up to match that of
+u and v.  If iterable, then the shape must match the shapes of u and v.</p></li>
+<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
+instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+Only a single theta is permitted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of wavefront lag or lead in nanometers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">wavefront_gradient</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.wavefront_gradient"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute cumulative wavefront gradient due to all phase screens in <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>t</strong> – Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
+scalar or an iterable.  If None, then the internal time of the phase screens
+will be used for all u, v.  If scalar, then the size will be broadcast up to
+match that of u and v.  If iterable, then the shape must match the shapes of
+u and v.</p></li>
+<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
+instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+Only a single theta is permitted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="galsim.OpticalScreen">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OpticalScreen</code><span class="sig-paren">(</span><em class="sig-param">diam</em>, <em class="sig-param">tip=0.0</em>, <em class="sig-param">tilt=0.0</em>, <em class="sig-param">defocus=0.0</em>, <em class="sig-param">astig1=0.0</em>, <em class="sig-param">astig2=0.0</em>, <em class="sig-param">coma1=0.0</em>, <em class="sig-param">coma2=0.0</em>, <em class="sig-param">trefoil1=0.0</em>, <em class="sig-param">trefoil2=0.0</em>, <em class="sig-param">spher=0.0</em>, <em class="sig-param">aberrations=None</em>, <em class="sig-param">annular_zernike=False</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">lam_0=500.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to describe optical aberrations in terms of Zernike polynomial coefficients.</p>
+<p>Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
+to the Zernike polynomials in the Noll convention defined in
+Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
+<a class="reference external" href="http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials">http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>diam</strong> – Diameter of pupil in meters.</p></li>
+<li><p><strong>tip</strong> – Tip aberration in units of reference wavelength.  [default: 0]</p></li>
+<li><p><strong>tilt</strong> – Tilt aberration in units of reference wavelength.  [default: 0]</p></li>
+<li><p><strong>defocus</strong> – Defocus in units of reference wavelength. [default: 0]</p></li>
+<li><p><strong>astig1</strong> – Astigmatism (like e2) in units of reference wavelength.
+[default: 0]</p></li>
+<li><p><strong>astig2</strong> – Astigmatism (like e1) in units of reference wavelength.
+[default: 0]</p></li>
+<li><p><strong>coma1</strong> – Coma along y in units of reference wavelength. [default: 0]</p></li>
+<li><p><strong>coma2</strong> – Coma along x in units of reference wavelength. [default: 0]</p></li>
+<li><p><strong>trefoil1</strong> – Trefoil (one of the arrows along y) in units of reference wavelength.
+[default: 0]</p></li>
+<li><p><strong>trefoil2</strong> – Trefoil (one of the arrows along x) in units of reference wavelength.
+[default: 0]</p></li>
+<li><p><strong>spher</strong> – Spherical aberration in units of reference wavelength.
+[default: 0]</p></li>
+<li><p><strong>aberrations</strong> – Optional keyword, to pass in a list, tuple, or NumPy array of
+aberrations in units of reference wavelength (ordered according to
+the Noll convention), rather than passing in individual values for each
+individual aberration.  Note that aberrations[1] is piston (and not
+aberrations[0], which is unused.)  This list can be arbitrarily long to
+handle Zernike polynomial aberrations of arbitrary order.</p></li>
+<li><p><strong>annular_zernike</strong> – Boolean indicating that aberrations specify the amplitudes of annular
+Zernike polynomials instead of circular Zernike polynomials.
+[default: False]</p></li>
+<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture linear
+dimension. [0., 1.).  Note it is the user’s responsibility to ensure
+consistency of <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a> obscuration and <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> obscuration.
+[default: 0.0]</p></li>
+<li><p><strong>lam_0</strong> – Reference wavelength in nanometers at which Zernike aberrations are
+being specified.  [default: 500]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="galsim.OpticalScreen.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OpticalScreen.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OpticalScreen.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">diam</em>, <em class="sig-param">tip=0.0</em>, <em class="sig-param">tilt=0.0</em>, <em class="sig-param">defocus=0.0</em>, <em class="sig-param">astig1=0.0</em>, <em class="sig-param">astig2=0.0</em>, <em class="sig-param">coma1=0.0</em>, <em class="sig-param">coma2=0.0</em>, <em class="sig-param">trefoil1=0.0</em>, <em class="sig-param">trefoil2=0.0</em>, <em class="sig-param">spher=0.0</em>, <em class="sig-param">aberrations=None</em>, <em class="sig-param">annular_zernike=False</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">lam_0=500.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OpticalScreen.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OpticalScreen.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OpticalScreen.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.OpticalScreen.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.OpticalScreen.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OpticalScreen.wavefront">
+<code class="sig-name descname">wavefront</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t=None</em>, <em class="sig-param">theta=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.wavefront"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.wavefront" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute wavefront due to optical phase screen.</p>
+<p>Wavefront here indicates the distance by which the physical wavefront lags or leads the
+ideal plane wave.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>t</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
+<li><p><strong>theta</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of wavefront lag or lead in nanometers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.OpticalScreen.wavefront_gradient">
+<code class="sig-name descname">wavefront_gradient</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t=None</em>, <em class="sig-param">theta=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.wavefront_gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.wavefront_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute gradient of wavefront due to optical phase screen.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>t</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
+<li><p><strong>theta</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -453,7 +1032,7 @@ use the <code class="docutils literal notranslate"><span class="pre">suppress_wa
 instantiate the phase screen array using the <a class="reference internal" href="#galsim.AtmosphericScreen.instantiate" title="galsim.AtmosphericScreen.instantiate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">AtmosphericScreen.instantiate</span></code></a> method.</p>
 <p>Note that once a screen has been instantiated with a particular set of truncation parameters, it
 cannot be re-instantiated with another set of parameters.</p>
-<p><strong>Shared memory</strong>:</p>
+<p>Shared memory:</p>
 <p>Instantiated AtmosphericScreen objects can consume a significant amount of memory.  For example,
 an atmosphere with 6 screens, each extending 819.2 m and with resolution of 10 cm will consume
 3 GB of memory.  In contexts where both a realistic atmospheric PSF and high throughput via
@@ -462,12 +1041,18 @@ accessible to each subprocess (as opposed to once per subprocess) is highly desi
 provide a few functions here to enable such usage:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>The mp_context keyword argument to AtmosphericScreen.
-This is used to indicate which multiprocessing process launching context will be used.
-This is important for setting up the shared memory correctly.</p></li>
-<li><p>The <a class="reference internal" href="#galsim.phase_screens.initWorker" title="galsim.phase_screens.initWorker"><code class="xref any py py-func docutils literal notranslate"><span class="pre">initWorker</span></code></a> and <a class="reference internal" href="#galsim.phase_screens.initWorkerArgs" title="galsim.phase_screens.initWorkerArgs"><code class="xref any py py-func docutils literal notranslate"><span class="pre">initWorkerArgs</span></code></a> functions.
-These should be used in a call to multiprocessing.Pool to correctly inform the worker
-process where to find AtmosphericScreen shared memory.</p></li>
+<li><dl class="simple">
+<dt>The mp_context keyword argument to AtmosphericScreen.</dt><dd><p>This is used to indicate which multiprocessing process launching context will be used.
+This is important for setting up the shared memory correctly.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The galsim.phase_screens.initWorker() and initWorkerArgs() functions.</dt><dd><p>These should be used in a call to multiprocessing.Pool to correctly inform the worker
+process where to find AtmosphericScreen shared memory.</p>
+</dd>
+</dl>
+</li>
 </ul>
 </div></blockquote>
 <p>A template example might look something like:</p>
@@ -573,9 +1158,45 @@ Alexander R. Rudy, UCSC; S. Mark Ammons, LLNL
 Published in Proceedings Volume 9148: Adaptive Optics Systems IV
 September 2014</p>
 <dl class="method">
-<dt id="galsim.AtmosphericScreen.altitude">
-<em class="property">property </em><code class="sig-name descname">altitude</code><a class="headerlink" href="#galsim.AtmosphericScreen.altitude" title="Permalink to this definition">¶</a></dt>
-<dd><p>The altitude of the screen in km.</p>
+<dt id="galsim.AtmosphericScreen.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#AtmosphericScreen.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AtmosphericScreen.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AtmosphericScreen.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#AtmosphericScreen.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AtmosphericScreen.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AtmosphericScreen.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">screen_size</em>, <em class="sig-param">screen_scale=None</em>, <em class="sig-param">altitude=0.0</em>, <em class="sig-param">r0_500=0.2</em>, <em class="sig-param">L0=25.0</em>, <em class="sig-param">vx=0.0</em>, <em class="sig-param">vy=0.0</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">time_step=None</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">suppress_warning=False</em>, <em class="sig-param">mp_context=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#AtmosphericScreen.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AtmosphericScreen.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AtmosphericScreen.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#AtmosphericScreen.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AtmosphericScreen.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AtmosphericScreen.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#AtmosphericScreen.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AtmosphericScreen.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.AtmosphericScreen.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#AtmosphericScreen.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AtmosphericScreen.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.AtmosphericScreen.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.AtmosphericScreen.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
@@ -602,18 +1223,6 @@ self.suppress_warning is True.</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.AtmosphericScreen.kmax">
-<em class="property">property </em><code class="sig-name descname">kmax</code><a class="headerlink" href="#galsim.AtmosphericScreen.kmax" title="Permalink to this definition">¶</a></dt>
-<dd><p>The maximum k value being used.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.AtmosphericScreen.kmin">
-<em class="property">property </em><code class="sig-name descname">kmin</code><a class="headerlink" href="#galsim.AtmosphericScreen.kmin" title="Permalink to this definition">¶</a></dt>
-<dd><p>The minimum k value being used.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.AtmosphericScreen.wavefront">
 <code class="sig-name descname">wavefront</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t=None</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#AtmosphericScreen.wavefront"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AtmosphericScreen.wavefront" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute wavefront due to atmospheric phase screen.</p>
@@ -631,7 +1240,7 @@ an iterable.  If None, then the internal time of the phase screens will be
 used for all u, v.  If scalar, then the size will be broadcast up to match
 that of u and v.  If iterable, then the shape must match the shapes of u and
 v.  [default: None]</p></li>
-<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
+<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
 instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single
 theta is permitted.</p></li>
 </ul>
@@ -658,7 +1267,7 @@ scalar or an iterable.  If None, then the internal time of the phase screens
 will be used for all u, v.  If scalar, then the size will be broadcast up to
 match that of u and v.  If iterable, then the shape must match the shapes of
 u and v.  [default: None]</p></li>
-<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
+<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
 instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single
 theta is permitted.</p></li>
 </ul>
@@ -667,562 +1276,6 @@ theta is permitted.</p></li>
 <dd class="field-even"><p>Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</p>
 </dd>
 </dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="galsim.OpticalScreen">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OpticalScreen</code><span class="sig-paren">(</span><em class="sig-param">diam</em>, <em class="sig-param">tip=0.0</em>, <em class="sig-param">tilt=0.0</em>, <em class="sig-param">defocus=0.0</em>, <em class="sig-param">astig1=0.0</em>, <em class="sig-param">astig2=0.0</em>, <em class="sig-param">coma1=0.0</em>, <em class="sig-param">coma2=0.0</em>, <em class="sig-param">trefoil1=0.0</em>, <em class="sig-param">trefoil2=0.0</em>, <em class="sig-param">spher=0.0</em>, <em class="sig-param">aberrations=None</em>, <em class="sig-param">annular_zernike=False</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">lam_0=500.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class to describe optical aberrations in terms of Zernike polynomial coefficients.</p>
-<p>Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
-to the Zernike polynomials in the Noll convention defined in
-Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
-<a class="reference external" href="http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials">http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials</a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>diam</strong> – Diameter of pupil in meters.</p></li>
-<li><p><strong>tip</strong> – Tip aberration in units of reference wavelength.  [default: 0]</p></li>
-<li><p><strong>tilt</strong> – Tilt aberration in units of reference wavelength.  [default: 0]</p></li>
-<li><p><strong>defocus</strong> – Defocus in units of reference wavelength. [default: 0]</p></li>
-<li><p><strong>astig1</strong> – Astigmatism (like e2) in units of reference wavelength.
-[default: 0]</p></li>
-<li><p><strong>astig2</strong> – Astigmatism (like e1) in units of reference wavelength.
-[default: 0]</p></li>
-<li><p><strong>coma1</strong> – Coma along y in units of reference wavelength. [default: 0]</p></li>
-<li><p><strong>coma2</strong> – Coma along x in units of reference wavelength. [default: 0]</p></li>
-<li><p><strong>trefoil1</strong> – Trefoil (one of the arrows along y) in units of reference wavelength.
-[default: 0]</p></li>
-<li><p><strong>trefoil2</strong> – Trefoil (one of the arrows along x) in units of reference wavelength.
-[default: 0]</p></li>
-<li><p><strong>spher</strong> – Spherical aberration in units of reference wavelength.
-[default: 0]</p></li>
-<li><p><strong>aberrations</strong> – Optional keyword, to pass in a list, tuple, or NumPy array of
-aberrations in units of reference wavelength (ordered according to
-the Noll convention), rather than passing in individual values for each
-individual aberration.  Note that aberrations[1] is piston (and not
-aberrations[0], which is unused.)  This list can be arbitrarily long to
-handle Zernike polynomial aberrations of arbitrary order.</p></li>
-<li><p><strong>annular_zernike</strong> – Boolean indicating that aberrations specify the amplitudes of annular
-Zernike polynomials instead of circular Zernike polynomials.
-[default: False]</p></li>
-<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture linear
-dimension. [0., 1.).  Note it is the user’s responsibility to ensure
-consistency of <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a> obscuration and <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> obscuration.
-[default: 0.0]</p></li>
-<li><p><strong>lam_0</strong> – Reference wavelength in nanometers at which Zernike aberrations are
-being specified.  [default: 500]</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.OpticalScreen.wavefront">
-<code class="sig-name descname">wavefront</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t=None</em>, <em class="sig-param">theta=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.wavefront"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.wavefront" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute wavefront due to optical phase screen.</p>
-<p>Wavefront here indicates the distance by which the physical wavefront lags or leads the
-ideal plane wave.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>t</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
-<li><p><strong>theta</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Array of wavefront lag or lead in nanometers.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.OpticalScreen.wavefront_gradient">
-<code class="sig-name descname">wavefront_gradient</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t=None</em>, <em class="sig-param">theta=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#OpticalScreen.wavefront_gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalScreen.wavefront_gradient" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute gradient of wavefront due to optical phase screen.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>t</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
-<li><p><strong>theta</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="galsim.PhaseScreenList">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PhaseScreenList</code><span class="sig-paren">(</span><em class="sig-param">*layers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of phase screens that can be turned into a PSF.  Screens can be either atmospheric
-layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using
-the function <a class="reference internal" href="#galsim.Atmosphere" title="galsim.Atmosphere"><code class="xref any py py-func docutils literal notranslate"><span class="pre">Atmosphere</span></code></a>.  Layers can be added, removed, appended, etc. just like items can
-be manipulated in a python list.  For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an atmosphere with three layers.</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">screens</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PhaseScreenList</span><span class="p">([</span><span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
-                                      <span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
-                                      <span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">)])</span>
-<span class="c1"># Add another layer</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">screens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
-<span class="c1"># Remove the second layer</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">screens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="c1"># Switch the first and second layer.  Silly, but works...</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">screens</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">screens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">screens</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">screens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>layers</strong> – Sequence of phase screens.</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.PhaseScreenList.instantiate">
-<code class="sig-name descname">instantiate</code><span class="sig-paren">(</span><em class="sig-param">pool=None</em>, <em class="sig-param">_bar=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.instantiate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate the screens in this <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pool</strong> – A multiprocessing.Pool object to use to instantiate screens in parallel.</p></li>
-<li><p><strong>**kwargs</strong> – Keyword arguments to forward to screen.instantiate().</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PhaseScreenList.makePSF">
-<code class="sig-name descname">makePSF</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.makePSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.makePSF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a PSF from the current <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lam</strong> – Wavelength in nanometers at which to compute PSF.</p></li>
-<li><p><strong>t0</strong> – Time at which to start exposure in seconds.  [default: 0.0]</p></li>
-<li><p><strong>exptime</strong> – Time in seconds over which to accumulate evolving instantaneous
-PSF.  [default: 0.0]</p></li>
-<li><p><strong>time_step</strong> – Time interval in seconds with which to sample phase screens when
-drawing using real-space or Fourier methods, or when using
-photon-shooting without the geometric optics approximation.  Note
-that the default value of 0.025 is fairly arbitrary.  For careful
-studies, we recommend checking that results are stable when
-decreasing time_step.  Also note that when drawing using
-photon-shooting with the geometric optics approximation this
-keyword is ignored, as the phase screen can be sampled
-continuously in this case instead of at discrete intervals.
-[default: 0.025]</p></li>
-<li><p><strong>flux</strong> – Flux of output PSF.  [default: 1.0]</p></li>
-<li><p><strong>theta</strong> – Field angle of PSF as a 2-tuple of <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instances.
-[default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</p></li>
-<li><p><strong>interpolant</strong> – Either an Interpolant instance or a string indicating which
-interpolant should be used.  Options are ‘nearest’, ‘sinc’,
-‘linear’, ‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the
-integer order to use. [default: galsim.Quintic()]</p></li>
-<li><p><strong>scale_unit</strong> – Units to use for the sky coordinates of the output profile.
-[default: galsim.arcsec]</p></li>
-<li><p><strong>ii_pad_factor</strong> – Zero-padding factor by which to extend the image of the PSF when
-creating the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>.  See the
-<code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code> docstring for more details.  [default: 4.]</p></li>
-<li><p><strong>suppress_warning</strong> – If <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> is too small, the code will emit a warning
-telling you its best guess about how high you might want to raise
-it.  However, you can suppress this warning by using
-<code class="docutils literal notranslate"><span class="pre">suppress_warning=True</span></code>.  [default: False]</p></li>
-<li><p><strong>geometric_shooting</strong> – If True, then when drawing using photon shooting, use geometric
-optics approximation where the photon angles are derived from the
-phase screen gradient.  If False, then first draw using Fourier
-optics and then shoot from the derived InterpolatedImage.
-[default: True]</p></li>
-<li><p><strong>aper</strong> – <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> to use to compute PSF(s).  [default: None]</p></li>
-<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-<p>The following are optional keywords to use to setup the aperture if <code class="docutils literal notranslate"><span class="pre">aper</span></code> is not
-provided.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>diam</strong> – Aperture diameter in meters.</p></li>
-<li><p><strong>circular_pupil</strong> – Adopt a circular pupil?  [default: True]</p></li>
-<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture
-linear dimension. [0., 1.).  [default: 0.0]</p></li>
-<li><p><strong>nstruts</strong> – Number of radial support struts to add to the central
-obscuration. [default: 0]</p></li>
-<li><p><strong>strut_thick</strong> – Thickness of support struts as a fraction of aperture diameter.
-[default: 0.05]</p></li>
-<li><p><strong>strut_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to
-it, defined to be positive in the counter-clockwise direction;
-must be an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
-<li><p><strong>oversampling</strong> – Optional oversampling factor <em>in the image plane</em> for the PSF
-eventually constructed using this <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a>.  Setting
-<code class="docutils literal notranslate"><span class="pre">oversampling</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> will produce aliasing in the PSF (not good).
-[default: 1.0]</p></li>
-<li><p><strong>pad_factor</strong> – Additional multiple by which to extend the PSF image to avoid
-folding.  [default: 1.0]</p></li>
-<li><p><strong>pupil_plane_im</strong> – The GalSim.Image, NumPy array, or name of file containing the
-pupil plane image, to be used instead of generating one based on
-the obscuration and strut parameters.  [default: None]</p></li>
-<li><p><strong>pupil_angle</strong> – If <code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> is not None, rotation angle for the pupil
-plane (positive in the counter-clockwise direction).  Must be an
-<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
-<li><p><strong>pupil_plane_scale</strong> – Sampling interval in meters to use for the pupil plane array.  In
-most cases, it’s a good idea to leave this as None, in which case
-GalSim will attempt to find a good value automatically.  The
-exception is when specifying the pupil arrangement via an image,
-in which case this keyword can be used to indicate the sampling
-of that image.  See also <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> for adjusting the pupil
-sampling scale. [default: None]</p></li>
-<li><p><strong>pupil_plane_size</strong> – Size in meters to use for the pupil plane array.  In most cases,
-it’s a good idea to leave this as None, in which case GalSim will
-attempt to find a good value automatically.  See also
-<code class="docutils literal notranslate"><span class="pre">oversampling</span></code> for adjusting the pupil size.  [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PhaseScreenList.wavefront">
-<code class="sig-name descname">wavefront</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.wavefront"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.wavefront" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute cumulative wavefront due to all phase screens in <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
-<p>Wavefront here indicates the distance by which the physical wavefront lags or leads the
-ideal plane wave (pre-optics) or spherical wave (post-optics).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>t</strong> – Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or an
-iterable.  If None, then the internal time of the phase screens will be used
-for all u, v.  If scalar, then the size will be broadcast up to match that of
-u and v.  If iterable, then the shape must match the shapes of u and v.</p></li>
-<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
-instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-Only a single theta is permitted.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Array of wavefront lag or lead in nanometers.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PhaseScreenList.wavefront_gradient">
-<code class="sig-name descname">wavefront_gradient</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">t</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenList.wavefront_gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenList.wavefront_gradient" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute cumulative wavefront gradient due to all phase screens in <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
-be a scalar or an iterable.  The shapes of u and v must match.</p></li>
-<li><p><strong>t</strong> – Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
-scalar or an iterable.  If None, then the internal time of the phase screens
-will be used for all u, v.  If scalar, then the size will be broadcast up to
-match that of u and v.  If iterable, then the shape must match the shapes of
-u and v.</p></li>
-<li><p><strong>theta</strong> – Field angle at which to evaluate wavefront, as a 2-tuple of <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a>
-instances. [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-Only a single theta is permitted.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="galsim.PhaseScreenPSF">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PhaseScreenPSF</code><span class="sig-paren">(</span><em class="sig-param">screen_list</em>, <em class="sig-param">lam</em>, <em class="sig-param">t0=0.0</em>, <em class="sig-param">exptime=0.0</em>, <em class="sig-param">time_step=0.025</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">theta=(coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">coord.Angle(0.0</em>, <em class="sig-param">coord.radians))</em>, <em class="sig-param">interpolant=None</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">ii_pad_factor=4.0</em>, <em class="sig-param">suppress_warning=False</em>, <em class="sig-param">geometric_shooting=True</em>, <em class="sig-param">aper=None</em>, <em class="sig-param">second_kick=None</em>, <em class="sig-param">kcrit=0.2</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">_force_stepk=0.0</em>, <em class="sig-param">_force_maxk=0.0</em>, <em class="sig-param">_bar=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
-<p>A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
-derived from a set of phase screens and an aperture.</p>
-<p>There are two equivalent ways to construct a PhaseScreenPSF given a <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">screen_list</span><span class="o">.</span><span class="n">makePSF</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">PhaseScreenPSF</span><span class="p">(</span><span class="n">screen_list</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Computing a PSF from a phase screen also requires an <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> be specified.  This can be done
-either directly via the <code class="docutils literal notranslate"><span class="pre">aper</span></code> keyword, or by setting a number of keywords that will be passed
-to the <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> constructor.  The <code class="docutils literal notranslate"><span class="pre">aper</span></code> keyword always takes precedence.</p>
-<p>There are effectively three ways to draw a PhaseScreenPSF (or <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> that includes a
-PhaseScreenPSF):</p>
-<ol class="arabic">
-<li><p>Fourier optics</p>
-<blockquote>
-<div><p>This is the default, and is performed for all drawImage methods except method=’phot’.  This
-is generally the most accurate option.  For a <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> that includes an
-<a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>, however, this can be prohibitively slow.  For <a class="reference internal" href="psf.html#galsim.OpticalPSF" title="galsim.OpticalPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalPSF</span></code></a>, though,
-this can sometimes be a good option.</p>
-</div></blockquote>
-</li>
-<li><p>Photon-shooting from an image produced using Fourier optics.</p>
-<blockquote>
-<div><p>This is done if geometric_shooting=False when creating the PhaseScreenPSF, and method=’phot’
-when calling drawImage.  This actually performs the same calculations as the Fourier optics
-option above, but then proceeds by shooting photons from that result.  This can sometimes be
-a good option for OpticalPSFs, especially if the same OpticalPSF can be reused for may
-objects, since the Fourier part of the process would only be performed once in this case.</p>
-</div></blockquote>
-</li>
-<li><p>Photon-shooting using the “geometric approximation”.</p>
-<blockquote>
-<div><p>This is done if geometric_shooting=True when creating the PhaseScreenPSF, and method=’phot’
-when calling drawImage.  In this case, a completely different algorithm is used make an
-image.  Photons are uniformly generated in the <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> pupil, and then the phase gradient
-at that location is used to deflect each photon in the image plane.  This method, which
-corresponds to geometric optics, is broadly accurate for phase screens that vary slowly
-across the aperture, and is usually several orders of magnitude or more faster than Fourier
-optics (depending on the flux of the object, of course, but much faster even for rather
-bright flux levels).</p>
-<p>One short-coming of this method is that it neglects interference effects, i.e. diffraction.
-For <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> that include at least one <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>, a correction, dubbed
-the “second kick”, will automatically be applied to handle both the quickly varying modes
-of the screens and the diffraction pattern of the <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a>.  For PhaseScreenLists without
-an <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a>, the correction is simply an Airy function.  Note that this
-correction can be overridden using the second_kick keyword argument, and also tuned to some
-extent using the kcrit keyword argument.</p>
-</div></blockquote>
-</li>
-</ol>
-<p>Note also that calling drawImage on a PhaseScreenPSF that uses a <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> with any
-uninstantiated <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> will perform that instantiation, and that the details of the
-instantiation depend on the drawing method used, and also the kcrit keyword argument to
-PhaseScreenPSF.  See the <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> docstring for more details.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>screen_list</strong> – <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> object from which to create PSF.</p></li>
-<li><p><strong>lam</strong> – Wavelength in nanometers at which to compute PSF.</p></li>
-<li><p><strong>t0</strong> – Time at which to start exposure in seconds.  [default: 0.0]</p></li>
-<li><p><strong>exptime</strong> – Time in seconds over which to accumulate evolving instantaneous PSF.
-[default: 0.0]</p></li>
-<li><p><strong>time_step</strong> – Time interval in seconds with which to sample phase screens when
-drawing using real-space or Fourier methods, or when using
-photon-shooting without the geometric optics approximation.  Note
-that the default value of 0.025 is fairly arbitrary.  For careful
-studies, we recommend checking that results are stable when
-decreasing time_step.  Also note that when drawing using
-photon-shooting with the geometric optics approximation this
-keyword is ignored, as the phase screen can be sampled
-continuously in this case instead of at discrete intervals.
-[default: 0.025]</p></li>
-<li><p><strong>flux</strong> – Flux of output PSF [default: 1.0]</p></li>
-<li><p><strong>theta</strong> – Field angle of PSF as a 2-tuple of <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instances.
-[default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]</p></li>
-<li><p><strong>interpolant</strong> – Either an Interpolant instance or a string indicating which
-interpolant should be used.  Options are ‘nearest’, ‘sinc’, ‘linear’,
-‘cubic’, ‘quintic’, or ‘lanczosN’ where N should be the integer order
-to use.  [default: galsim.Quintic()]</p></li>
-<li><p><strong>scale_unit</strong> – Units to use for the sky coordinates of the output profile.
-[default: galsim.arcsec]</p></li>
-<li><p><strong>ii_pad_factor</strong> – Zero-padding factor by which to extend the image of the PSF when
-creating the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>.  See the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>
-docstring for more details.  [default: 4.]</p></li>
-<li><p><strong>suppress_warning</strong> – If <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> is too small, the code will emit a warning telling
-you its best guess about how high you might want to raise it.
-However, you can suppress this warning by using
-<code class="docutils literal notranslate"><span class="pre">suppress_warning=True</span></code>.  [default: False]</p></li>
-<li><p><strong>geometric_shooting</strong> – If True, then when drawing using photon shooting, use geometric
-optics approximation where the photon angles are derived from the
-phase screen gradient.  If False, then first draw using Fourier
-optics and then shoot from the derived InterpolatedImage.
-[default: True]</p></li>
-<li><p><strong>aper</strong> – <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a> to use to compute PSF(s).  [default: None]</p></li>
-<li><p><strong>second_kick</strong> – An optional second kick to also convolve by when using geometric
-photon-shooting.  (This can technically be any <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>, though
-usually it should probably be a SecondKick object).  If None, then a
-good second kick will be chosen automatically based on
-<code class="docutils literal notranslate"><span class="pre">screen_list</span></code>.  If False, then a second kick won’t be applied.
-[default: None]</p></li>
-<li><p><strong>kcrit</strong> – Critical Fourier scale (in units of 1/r0) at which to separate low-k
-and high-k turbulence.  The default value was chosen based on
-comparisons between Fourier optics and geometric optics with a second
-kick correction.  While most values of kcrit smaller than the default
-produce similar results, we caution the user to compare the affected
-geometric PSFs against Fourier optics PSFs carefully before changing
-this value.  [default: 0.2]</p></li>
-<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-<p>The following are optional keywords to use to setup the aperture if <code class="docutils literal notranslate"><span class="pre">aper</span></code> is not provided:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>diam</strong> – Aperture diameter in meters. [default: None]</p></li>
-<li><p><strong>circular_pupil</strong> – Adopt a circular pupil?  [default: True]</p></li>
-<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture
-linear dimension. [0., 1.).  [default: 0.0]</p></li>
-<li><p><strong>nstruts</strong> – Number of radial support struts to add to the central obscuration.
-[default: 0]</p></li>
-<li><p><strong>strut_thick</strong> – Thickness of support struts as a fraction of aperture diameter.
-[default: 0.05]</p></li>
-<li><p><strong>strut_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to it,
-defined to be positive in the counter-clockwise direction; must be an
-<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
-<li><p><strong>oversampling</strong> – Optional oversampling factor <em>in the image plane</em> for the PSF
-eventually constructed using this <a class="reference internal" href="#galsim.Aperture" title="galsim.Aperture"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Aperture</span></code></a>.  Setting
-<code class="docutils literal notranslate"><span class="pre">oversampling</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> will produce aliasing in the PSF (not good).
-[default: 1.0]</p></li>
-<li><p><strong>pad_factor</strong> – Additional multiple by which to extend the PSF image to avoid
-folding.  [default: 1.0]</p></li>
-<li><p><strong>pupil_plane_im</strong> – The GalSim.Image, NumPy array, or name of file containing the pupil
-plane image, to be used instead of generating one based on the
-obscuration and strut parameters.  [default: None]</p></li>
-<li><p><strong>pupil_angle</strong> – If <code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> is not None, rotation angle for the pupil plane
-(positive in the counter-clockwise direction).  Must be an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>
-instance. [default: 0. * galsim.degrees]</p></li>
-<li><p><strong>pupil_plane_scale</strong> – Sampling interval in meters to use for the pupil plane array.  In
-most cases, it’s a good idea to leave this as None, in which case
-GalSim will attempt to find a good value automatically.  The
-exception is when specifying the pupil arrangement via an image, in
-which case this keyword can be used to indicate the sampling of that
-image.  See also <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> for adjusting the pupil sampling
-scale.  [default: None]</p></li>
-<li><p><strong>pupil_plane_size</strong> – Size in meters to use for the pupil plane array.  In most cases, it’s
-a good idea to leave this as None, in which case GalSim will attempt
-to find a good value automatically.  See also <code class="docutils literal notranslate"><span class="pre">oversampling</span></code> for
-adjusting the pupil size.  [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.PhaseScreenPSF.flux">
-<em class="property">property </em><code class="sig-name descname">flux</code><a class="headerlink" href="#galsim.PhaseScreenPSF.flux" title="Permalink to this definition">¶</a></dt>
-<dd><p>The flux of the profile.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PhaseScreenPSF.kcrit">
-<em class="property">property </em><code class="sig-name descname">kcrit</code><a class="headerlink" href="#galsim.PhaseScreenPSF.kcrit" title="Permalink to this definition">¶</a></dt>
-<dd><p>The critical Fourier scale being used for this object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PhaseScreenPSF.screen_list">
-<em class="property">property </em><code class="sig-name descname">screen_list</code><a class="headerlink" href="#galsim.PhaseScreenPSF.screen_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> being used for this object.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PhaseScreenPSF.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.withGSParams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="galsim.SecondKick">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SecondKick</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">r0</em>, <em class="sig-param">diam</em>, <em class="sig-param">obscuration=0</em>, <em class="sig-param">kcrit=0.2</em>, <em class="sig-param">flux=1</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
-<p>Class describing the expectation value of the high-k turbulence portion of an atmospheric
-PSF convolved by an <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> PSF.</p>
-<p>The power spectrum of atmospheric phase fluctuations is assumed to follow the von Karman
-prescription, but possibly modified by the addition of a critical scale below which the power
-is zero.  (See the <a class="reference internal" href="psf.html#galsim.VonKarman" title="galsim.VonKarman"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VonKarman</span></code></a> docstring for more details).</p>
-<p>As an expectation value, this profile is formally only exact in the infinite-exposure limit.
-However, at least for large apertures, we have found that this expectation value is approached
-rapidly, and can be applied for even fairly small exposure times.</p>
-<p>The intended use for this profile is as a correction to applying the geometric approximation to
-<a class="reference internal" href="#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a> objects when drawing using geometric photon shooting. In this case, the
-<a class="reference internal" href="#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a> will simulate the effects of the low frequency turbulence modes, which can be
-treated purely using refraction, while the SecondKick handles the high frequency modes.</p>
-<p>The geometric approximation is only valid for length scales larger than some critical scale
-where the effects of interference are unimportant.  For smaller length scales, interference
-(diffraction) must be handled using an optical paradigm that acknowledges the wave nature of
-light, such as Fourier optics.</p>
-<p>Fourier optics calculations are many orders of magnitude slower than geometric optics
-calculations for typical flux levels, however, so we implement a scale-splitting algorithm first
-described in Peterson et al. (2015) for the LSST PhoSim package.  Essentially, phase
-fluctuations below a critical mode in Fourier space, labeled <code class="docutils literal notranslate"><span class="pre">kcrit</span></code>, are handled by the fast
-geometric optics calculations present in <a class="reference internal" href="#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a>.  Fluctuations for Fourier modes above
-<code class="docutils literal notranslate"><span class="pre">kcrit</span></code> are then calculated analytically by SecondKick.  Because very many oscillations of
-these high-k modes both fit within a given telescope aperture and pass by the aperture during a
-moderate length exposure time, we can use the same analytic expectation value calculation for
-the high-k component of all PSFs across a field of view, thus incurring the somewhat expensive
-calculation for Fourier optics only once.</p>
-<p>There are two limiting cases for this profile that may helpful for readers trying to understand
-how this class works.  When kcrit = 0, then all turbulent modes are included, and this surface
-brightness profile becomes identical to the convolution of an <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> profile and a Von Karman
-profile.  In contrast, when kcrit = inf, then none of the turbulent modes are included, and this
-surface brightness profile is just an <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> profile.  In other words, the full effect of an
-<a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> profile, and additionally some portion (which depends on kcrit) of a <a class="reference internal" href="psf.html#galsim.VonKarman" title="galsim.VonKarman"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VonKarman</span></code></a> profile
-are modeled.</p>
-<p>For more details, we refer the reader to the original implementation described in</p>
-<blockquote>
-<div><p>Peterson et al.  2015  ApJSS  vol. 218</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lam</strong> – Wavelength in nanometers</p></li>
-<li><p><strong>r0</strong> – Fried parameter in meters.</p></li>
-<li><p><strong>diam</strong> – Aperture diameter in meters.</p></li>
-<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture
-linear dimension. [0., 1.).  [default: 0.0]</p></li>
-<li><p><strong>kcrit</strong> – Critical Fourier mode (in units of 1/r0) below which the turbulence
-power spectrum will be truncated.  [default: 0.2]</p></li>
-<li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
-<li><p><strong>scale_unit</strong> – Units assumed when drawing this profile or evaluating xValue, kValue,
-etc.  Should be a <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to
-construct one (e.g., ‘arcsec’, ‘radians’, etc.). [default: galsim.arcsec]</p></li>
-<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.SecondKick.diam">
-<em class="property">property </em><code class="sig-name descname">diam</code><a class="headerlink" href="#galsim.SecondKick.diam" title="Permalink to this definition">¶</a></dt>
-<dd><p>The input diam value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SecondKick.kcrit">
-<em class="property">property </em><code class="sig-name descname">kcrit</code><a class="headerlink" href="#galsim.SecondKick.kcrit" title="Permalink to this definition">¶</a></dt>
-<dd><p>The input kcrit value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SecondKick.lam">
-<em class="property">property </em><code class="sig-name descname">lam</code><a class="headerlink" href="#galsim.SecondKick.lam" title="Permalink to this definition">¶</a></dt>
-<dd><p>The input lam value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SecondKick.obscuration">
-<em class="property">property </em><code class="sig-name descname">obscuration</code><a class="headerlink" href="#galsim.SecondKick.obscuration" title="Permalink to this definition">¶</a></dt>
-<dd><p>The input obscuration value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SecondKick.r0">
-<em class="property">property </em><code class="sig-name descname">r0</code><a class="headerlink" href="#galsim.SecondKick.r0" title="Permalink to this definition">¶</a></dt>
-<dd><p>The input r0 value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SecondKick.scale_unit">
-<em class="property">property </em><code class="sig-name descname">scale_unit</code><a class="headerlink" href="#galsim.SecondKick.scale_unit" title="Permalink to this definition">¶</a></dt>
-<dd><p>The input scale_unit value.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1240,17 +1293,15 @@ which can then be used to evaluate PSFs through various columns of atmosphere at
 angles.</p>
 <p>The atmospheric screens currently available represent turbulence following a von Karman power
 spectrum.  Specifically, the phase power spectrum in each screen can be written</p>
-<div class="math notranslate nohighlight">
-\[\psi(\nu) = 0.023 r_0^{-5/3} \left(\nu^2 + \frac{1}{L_0^2}\right)^{11/6}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\psi(\nu)\)</span> is the power spectral density at spatial frequency <span class="math notranslate nohighlight">\(\nu\)</span>,
-<span class="math notranslate nohighlight">\(r_0\)</span> is the Fried parameter (which has dimensions of length) and sets the amplitude of
-the turbulence, and <span class="math notranslate nohighlight">\(L_0\)</span> is the outer scale (also dimensions of length) beyond which the
-power asymptotically flattens.</p>
-<p>Typical values for <span class="math notranslate nohighlight">\(r_0\)</span> are ~0.1 to 0.2 meters, which corresponds roughly to PSF FWHMs
-of ~0.5 to 1.0 arcsec for optical wavelengths.  Note that <span class="math notranslate nohighlight">\(r_0\)</span> is a function of
-wavelength, scaling like <span class="math notranslate nohighlight">\(r_0 \sim \lambda^{6/5}\)</span>.  To reduce confusion, the input
-parameter here is named <code class="docutils literal notranslate"><span class="pre">r0_500</span></code> and refers explicitly to the Fried parameter at a wavelength
-of 500 nm.  The outer scale is typically in the 10s of meters and does not vary with wavelength.</p>
+<p>psi(nu) = 0.023 r0^(-5/3) (nu^2 + 1/L0^2)^(11/6)</p>
+<p>where psi(nu) is the power spectral density at spatial frequency nu, r0 is the Fried parameter
+(which has dimensions of length) and sets the amplitude of the turbulence, and L0 is the outer
+scale (also dimensions of length) beyond which the power asymptotically flattens.  Typical
+values for r0 are ~0.1 to 0.2 meters, which corresponds roughly to PSF FWHMs of ~0.5 to 1.0
+arcsec for optical wavelengths.  Note that r0 is a function of wavelength, scaling like
+r0 ~ wavelength^(6/5).  To reduce confusion, the input parameter here is named r0_500 and refers
+explicitly to the Fried parameter at a wavelength of 500 nm.  The outer scale is typically in
+the 10s of meters and does not vary with wavelength.</p>
 <p>To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
 (works for all arguments except <code class="docutils literal notranslate"><span class="pre">rng</span></code>).  If, for any of these keyword arguments, you want to
 use the same value for each layer, then you can just specify the argument as a scalar and the
@@ -1258,11 +1309,8 @@ function will automatically broadcast it into a list with length equal to the lo
 keyword argument list.  Note that it is an error to specify keywords with lists of different
 lengths (unless only one of them has length &gt; 1).</p>
 <p>The one exception to the above is the keyword <code class="docutils literal notranslate"><span class="pre">r0_500</span></code>.  The effective Fried parameter for a
-set of atmospheric layers is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">r0_500_effective</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">5.</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">r0_500s</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">3.</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Providing <code class="docutils literal notranslate"><span class="pre">r0_500</span></code> as a scalar or single-element list will result in broadcasting such that
+set of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
+Providing <code class="docutils literal notranslate"><span class="pre">r0_500</span></code> as a scalar or single-element list will result in broadcasting such that
 the effective Fried parameter for the whole set of layers equals the input argument.  You can
 weight the contribution of each layer with the <code class="docutils literal notranslate"><span class="pre">r0_weights</span></code> keyword.</p>
 <p>As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
@@ -1327,7 +1375,7 @@ sea-level.  [default: 0.0]</p></li>
 approach a constant at scales larger than L0.  Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">np.inf</span></code>
 for a power spectrum without an outer scale.  [default: 25.0]</p></li>
 <li><p><strong>speed</strong> – Wind speed in meters/second.  [default: 0.0]</p></li>
-<li><p><strong>direction</strong> – Wind direction as <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> [default: 0.0 * galsim.degrees]</p></li>
+<li><p><strong>direction</strong> – Wind direction as <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> [default: 0.0 * galsim.degrees]</p></li>
 <li><p><strong>alpha</strong> – Square root of fraction of phase that is “remembered” between time_steps
 (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
 is then the amount of turbulence freshly generated in each step.  Setting
@@ -1346,20 +1394,6 @@ clock time or system entropy to seed a new generator.  [default: None]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="galsim.phase_screens.initWorkerArgs">
-<code class="sig-prename descclassname">galsim.phase_screens.</code><code class="sig-name descname">initWorkerArgs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#initWorkerArgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.phase_screens.initWorkerArgs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function used to generate worker arguments to pass to multiprocessing.Pool initializer.</p>
-<p>See <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> docstring for more information.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="galsim.phase_screens.initWorker">
-<code class="sig-prename descclassname">galsim.phase_screens.</code><code class="sig-name descname">initWorker</code><span class="sig-paren">(</span><em class="sig-param">share</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#initWorker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.phase_screens.initWorker" title="Permalink to this definition">¶</a></dt>
-<dd><p>Worker initialization function to pass to multiprocessing.Pool initializer.</p>
-<p>See <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> docstring for more information.</p>
-</dd></dl>
-
 </div>
 
 
@@ -1370,10 +1404,10 @@ clock time or system entropy to seed a new generator.  [default: None]</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="real_gal.html" class="btn btn-neutral float-right" title="“Real” Galaxies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="gal.html" class="btn btn-neutral float-right" title="Galaxies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="arbitrary.html" class="btn btn-neutral float-left" title="Aribtrary Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="psf.html" class="btn btn-neutral float-left" title="Point-spread functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

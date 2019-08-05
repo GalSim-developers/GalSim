@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -329,6 +329,36 @@ just returns an already existing object.</p>
 in ipython since attributes are actually added to __dict__.</p>
 <p>HOWEVER this means the __dict__ attribute has been redefined to be a collections.defaultdict()
 so that Jim’s previous default attribute behaviour is also replicated.</p>
+<dl class="method">
+<dt id="galsim.utilities.AttributeDict.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#AttributeDict.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.utilities.AttributeDict.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.utilities.AttributeDict.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#AttributeDict.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.utilities.AttributeDict.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.utilities.AttributeDict.__setattr__">
+<code class="sig-name descname">__setattr__</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#AttributeDict.__setattr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.utilities.AttributeDict.__setattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement setattr(self, name, value).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.utilities.AttributeDict.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#galsim.utilities.AttributeDict.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.utilities.AttributeDict.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.utilities.AttributeDict.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -355,22 +385,6 @@ A + x(B + x(C + x(D)))</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="galsim.utilities._horner">
-<code class="sig-prename descclassname">galsim.utilities.</code><code class="sig-name descname">_horner</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">coef</em>, <em class="sig-param">result</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#_horner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.utilities._horner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.utilities.horner" title="galsim.utilities.horner"><code class="xref any py py-func docutils literal notranslate"><span class="pre">horner</span></code></a>, but <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">coeff</span></code>, and <code class="docutils literal notranslate"><span class="pre">result</span></code> must be contiguous arrays
-with dtype == float.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – A numpy array of values at which to evaluate the polynomial.</p></li>
-<li><p><strong>coef</strong> – Polynomial coefficients of increasing powers of x.</p></li>
-<li><p><strong>result</strong> – Numpy array into which to write the result.  Must be same shape as x.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
 <dt id="galsim.utilities.horner2d">
 <code class="sig-prename descclassname">galsim.utilities.</code><code class="sig-name descname">horner2d</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">coefs</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">triangle=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#horner2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.utilities.horner2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate bivariate polynomial using nested Horner’s method.</p>
@@ -389,28 +403,6 @@ of the array. [default: False]</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a numpy array of the evaluated polynomial.  Will be the same shape as x and y.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="galsim.utilities._horner2d">
-<code class="sig-prename descclassname">galsim.utilities.</code><code class="sig-name descname">_horner2d</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">coefs</em>, <em class="sig-param">result</em>, <em class="sig-param">temp</em>, <em class="sig-param">triangle=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#_horner2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.utilities._horner2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.utilities.horner2d" title="galsim.utilities.horner2d"><code class="xref any py py-func docutils literal notranslate"><span class="pre">horner2d</span></code></a>, but <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">coeff</span></code>, <code class="docutils literal notranslate"><span class="pre">result</span></code>, and <code class="docutils literal notranslate"><span class="pre">temp</span></code>
-must be contiguous arrays with dtype == float.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – A numpy array of the x values at which to evaluate the polynomial.</p></li>
-<li><p><strong>y</strong> – A numpy array of the y values at which to evaluate the polynomial.</p></li>
-<li><p><strong>coefs</strong> – 2D array-like of coefficients in increasing powers of x and y.
-The first axis corresponds to increasing the power of y, and the second to
-increasing the power of x.</p></li>
-<li><p><strong>result</strong> – Numpy array into which to write the result.  Must be same shape as x.</p></li>
-<li><p><strong>temp</strong> – Numpy array to hold temporary results.  Must be the same shape as x.</p></li>
-<li><p><strong>triangle</strong> – If True, then the coefs are only non-zero in the upper-left triangle
-of the array. [default: False]</p></li>
-</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -480,7 +472,7 @@ the origin of the Cartesian coordinate system.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> – NumPy array of input x coordinates</p></li>
 <li><p><strong>y</strong> – NumPy array of input y coordinates</p></li>
-<li><p><strong>theta</strong> – Rotation angle (+ve counter clockwise) as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance</p></li>
+<li><p><strong>theta</strong> – Rotation angle (+ve counter clockwise) as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

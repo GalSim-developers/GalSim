@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -199,13 +199,10 @@ that call out to the backend C++ FFTW functions.</p>
 </pre></div>
 </div>
 <p>but should be a bit faster.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The GalSim versions often only implement the normal use case without many of the
+<p>Note that the GalSim versions often only implement the normal use case without many of the
 advanced options available with the numpy functions.  This is mostly laziness on our part –
 we only implemented the functions that we needed.  If your usage requires some option available
 in the numpy version, feel free to post a feature request on our GitHub page.</p>
-</div>
 <dl class="function">
 <dt id="galsim.fft.fft2">
 <code class="sig-prename descclassname">galsim.fft.</code><code class="sig-name descname">fft2</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">shift_in=False</em>, <em class="sig-param">shift_out=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fft.html#fft2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fft.fft2" title="Permalink to this definition">¶</a></dt>

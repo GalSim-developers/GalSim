@@ -90,12 +90,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -394,7 +394,7 @@ using the config functionality. (#792)</p></li>
 <li><p>Fixed bug that could cause Kolmogorov to go into an endless loop. (#952)</p></li>
 </ul>
 <p><em>Deprecated Features</em></p>
-<ul>
+<ul class="simple">
 <li><p>Deprecated simReal function. (#787)</p></li>
 <li><p>Deprecated Chromatic class. (#789)</p></li>
 <li><p>Deprecated .copy() methods for immutable classes, including GSObject,
@@ -422,9 +422,8 @@ e.g. obj.getFlux() -&gt; obj.flux, etc. (#904)</p></li>
 <li><p>Changed the objlist attribute of ChromaticSum and ChromaticConvolution to
 obj_list. (#904)</p></li>
 <li><p>Deprecated OpticalScreen.coef_array. (#904)</p></li>
-<li><p>Changed a number of GSObject methods to properties. (#904)</p>
-<blockquote>
-<div><ul class="simple">
+<li><dl class="simple">
+<dt>Changed a number of GSObject methods to properties. (#904)</dt><dd><ul>
 <li><p>obj.stepK() -&gt; obj.stepk</p></li>
 <li><p>obj.maxK() -&gt; obj.maxk</p></li>
 <li><p>obj.nyquistScale() -&gt; obj.nyquist_scale</p></li>
@@ -437,17 +436,18 @@ obj_list. (#904)</p></li>
 <li><p>obj.isAnalyticK() -&gt; obj.is_analytic_k</p></li>
 <li><p>obj.hasHardEdges() -&gt; obj.has_hard_edges</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 <li><p>Renamed ChromaticObject.centroid(bandpass) to calculateCentroid. (#904)</p></li>
-<li><p>Changed a few Image methods to properties. (#904)</p>
-<blockquote>
-<div><ul class="simple">
+<li><dl class="simple">
+<dt>Changed a few Image methods to properties. (#904)</dt><dd><ul>
 <li><p>image.center() -&gt; image.center</p></li>
 <li><p>image.trueCenter() -&gt; image.true_center</p></li>
 <li><p>image.origin() -&gt; image.origin</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 </ul>
 <p><em>New Features</em></p>
@@ -837,14 +837,11 @@ galsim.des explicitly or load with galsim -m des … (#460)</p></li>
 <li><p>Added Shapelet class. (#350)</p></li>
 <li><p>Added ability to truncate Sersic profiles. (#388)</p></li>
 <li><p>Added trefoil and struts to OpticalPSF. (#302, #390)</p></li>
-<li><p>Updates to lensing engine:</p>
-<ul>
-<li><p>Added document describing how lensing engine code works. (#248)</p></li>
-<li><p>Added ability to draw (gamma,kappa) from same power spectrum. (#304)</p></li>
-<li><p>Added kmin_factor and kmax_factor parameters to buildGrid. (#377)</p></li>
-<li><p>Added PowerSpectrumEstimator class in pse module. (#382)</p></li>
-</ul>
-</li>
+<li><p>Updates to lensing engine:
+- Added document describing how lensing engine code works. (#248)
+- Added ability to draw (gamma,kappa) from same power spectrum. (#304)
+- Added kmin_factor and kmax_factor parameters to buildGrid. (#377)
+- Added PowerSpectrumEstimator class in pse module. (#382)</p></li>
 <li><p>Added GSParams (#343, #426) and HSMParams (#365) classes.</p></li>
 <li><p>Added des module and example scripts. (#350)</p></li>
 <li><p>Added applyWhiteningTo method to CorrelatedNoise class. (#352)</p></li>
@@ -879,13 +876,10 @@ image_pos, and added a new sky_pos item. (#380)</p></li>
 correlated or uncorrelated noise. (#238)</p></li>
 <li><p>Added python-level LookupTable class which wraps the existing C++ Table
 class. (#305)</p></li>
-<li><p>Lensing engine updates: (#305)</p>
-<ul>
-<li><p>Added the option of drawing shears from a tabulated P(k)</p></li>
-<li><p>Added ability to handle conversions between different angular units.</p></li>
-<li><p>Fixed an important bug in the normalization of the generated shears.</p></li>
-</ul>
-</li>
+<li><p>Lensing engine updates: (#305)
+- Added the option of drawing shears from a tabulated P(k)
+- Added ability to handle conversions between different angular units.
+- Fixed an important bug in the normalization of the generated shears.</p></li>
 <li><p>Added a DistDeviate class. (#306)</p></li>
 <li><p>Added galsim.correlatednoise.get_COSMOS_CorrFunc(…). (#345)</p></li>
 <li><p>Added im.addNoiseSNR(). (#349)</p></li>

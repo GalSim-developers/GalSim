@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Point-spread functions" href="psf.html" />
-    <link rel="prev" title="The GSObject base class" href="gsobject.html" /> 
+    <link rel="next" title="Aribtrary Profiles" href="arbitrary.html" />
+    <link rel="prev" title="“Real” Galaxies" href="real_gal.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,6 +92,10 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Simple Profiles</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#gaussian-profile">Gaussian Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pixel-profile">Pixel Profile</a></li>
@@ -100,22 +104,19 @@
 <li class="toctree-l3"><a class="reference internal" href="#delta-function">Delta Function</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -202,9 +203,7 @@
 <p>A class describing a 2D Gaussian surface brightness profile.</p>
 <p>The Gaussian surface brightness profile is characterized by two properties, its <code class="docutils literal notranslate"><span class="pre">flux</span></code>
 and the characteristic size <code class="docutils literal notranslate"><span class="pre">sigma</span></code> where the radial profile of the circular Gaussian
-drops off as</p>
-<div class="math notranslate nohighlight">
-\[I(r) \sim e^{-\frac{r^2}{2 \sigma^2}}\]</div>
+drops off as <code class="docutils literal notranslate"><span class="pre">exp[-r^2</span> <span class="pre">/</span> <span class="pre">(2.</span> <span class="pre">*</span> <span class="pre">sigma^2)]</span></code>.</p>
 <p>A Gaussian can be initialized using one (and only one) of three possible size parameters:
 <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>, or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.  Exactly one of these three is required.</p>
 <dl class="field-list simple">
@@ -221,22 +220,62 @@ drops off as</p>
 </ul>
 </dd>
 </dl>
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods, Gaussian has the following access properties:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sigma</strong> – The value of sigma for the profile</p></li>
+<li><p><strong>fwhm</strong> – The full-width half-max size</p></li>
+<li><p><strong>half_light_radius</strong> – The half-light radius of the profile</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="galsim.Gaussian.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gaussian.html#Gaussian.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Gaussian.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Gaussian.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gaussian.html#Gaussian.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Gaussian.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Gaussian.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">sigma=None</em>, <em class="sig-param">fwhm=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gaussian.html#Gaussian.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Gaussian.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Gaussian.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gaussian.html#Gaussian.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Gaussian.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Gaussian.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gaussian.html#Gaussian.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Gaussian.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Gaussian.fwhm">
 <em class="property">property </em><code class="sig-name descname">fwhm</code><a class="headerlink" href="#galsim.Gaussian.fwhm" title="Permalink to this definition">¶</a></dt>
-<dd><p>The FWHM of this Gaussian profile</p>
+<dd><p>Return the FWHM of this Gaussian profile</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="galsim.Gaussian.half_light_radius">
 <em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.Gaussian.half_light_radius" title="Permalink to this definition">¶</a></dt>
-<dd><p>The half-light radius of this Gaussian profile</p>
+<dd><p>Return the half-light radius of this Gaussian profile</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="galsim.Gaussian.sigma">
 <em class="property">property </em><code class="sig-name descname">sigma</code><a class="headerlink" href="#galsim.Gaussian.sigma" title="Permalink to this definition">¶</a></dt>
-<dd><p>The sigma of this Gaussian profile</p>
+<dd><p>Return the sigma of this Gaussian profile</p>
 </dd></dl>
 
 </dd></dl>
@@ -262,10 +301,29 @@ certainly be left at the default value of 1. [default: 1]</p></li>
 </ul>
 </dd>
 </dl>
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, Pixel has the following access
+property:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><p><strong>scale</strong> – The linear scale size of the pixel.</p>
+</dd>
+</dl>
 <dl class="method">
-<dt id="galsim.Pixel.scale">
-<em class="property">property </em><code class="sig-name descname">scale</code><a class="headerlink" href="#galsim.Pixel.scale" title="Permalink to this definition">¶</a></dt>
-<dd><p>The linear scale size of the <a class="reference internal" href="#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a>.</p>
+<dt id="galsim.Pixel.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">scale</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Pixel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Pixel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Pixel.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Pixel.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Pixel.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Pixel.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Pixel.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Pixel.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -289,16 +347,44 @@ width and height are allowed to be different.</p>
 </ul>
 </dd>
 </dl>
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, Box has the following access
+properties:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – The width of the Box</p></li>
+<li><p><strong>height</strong> – The height of the Box</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="method">
-<dt id="galsim.Box.height">
-<em class="property">property </em><code class="sig-name descname">height</code><a class="headerlink" href="#galsim.Box.height" title="Permalink to this definition">¶</a></dt>
-<dd><p>The height of the <a class="reference internal" href="#galsim.Box" title="galsim.Box"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Box</span></code></a>.</p>
+<dt id="galsim.Box.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Box.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Box.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Box.width">
-<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#galsim.Box.width" title="Permalink to this definition">¶</a></dt>
-<dd><p>The width of the <a class="reference internal" href="#galsim.Box" title="galsim.Box"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Box</span></code></a>.</p>
+<dt id="galsim.Box.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Box.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Box.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Box.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">width</em>, <em class="sig-param">height</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Box.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Box.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Box.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Box.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Box.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Box.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Box.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Box.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -321,10 +407,41 @@ radius, and zero outside this radius.</p>
 </ul>
 </dd>
 </dl>
+<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, TopHat has the following access
+property:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><p><strong>radius</strong> – The radius of the TopHat</p>
+</dd>
+</dl>
 <dl class="method">
-<dt id="galsim.TopHat.radius">
-<em class="property">property </em><code class="sig-name descname">radius</code><a class="headerlink" href="#galsim.TopHat.radius" title="Permalink to this definition">¶</a></dt>
-<dd><p>The radius of the <a class="reference internal" href="#galsim.TopHat" title="galsim.TopHat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TopHat</span></code></a> profile.</p>
+<dt id="galsim.TopHat.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#TopHat.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.TopHat.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.TopHat.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#TopHat.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.TopHat.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.TopHat.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">radius</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#TopHat.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.TopHat.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.TopHat.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#TopHat.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.TopHat.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.TopHat.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#TopHat.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.TopHat.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
@@ -348,6 +465,36 @@ its <code class="docutils literal notranslate"><span class="pre">flux</span></co
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.DeltaFunction.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/deltafunction.html#DeltaFunction.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeltaFunction.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.DeltaFunction.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/deltafunction.html#DeltaFunction.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeltaFunction.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.DeltaFunction.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/deltafunction.html#DeltaFunction.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeltaFunction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.DeltaFunction.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/deltafunction.html#DeltaFunction.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeltaFunction.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.DeltaFunction.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/deltafunction.html#DeltaFunction.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeltaFunction.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -361,10 +508,10 @@ its <code class="docutils literal notranslate"><span class="pre">flux</span></co
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="psf.html" class="btn btn-neutral float-right" title="Point-spread functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="arbitrary.html" class="btn btn-neutral float-right" title="Aribtrary Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="gsobject.html" class="btn btn-neutral float-left" title="The GSObject base class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="real_gal.html" class="btn btn-neutral float-left" title="“Real” Galaxies" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
