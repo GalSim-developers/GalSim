@@ -15,17 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file des_psfex.py
-
-Part of the DES module.  This file implements one way that DES measures the PSF.
-
-The DES_PSFEx class handles interpolated PCA images, which are generally stored in *_psfcat.psf
-files.
-
-See documentation here:
-
-    https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf
-"""
 
 import os
 import numpy as np
@@ -37,10 +26,10 @@ class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
     of the PSF.  These are usually stored as ``*_psfcat.psf`` files.
 
-    PSFEx is software written by Emmanuel Bertin.  If you want more detail about it, please
+    PSFEx is software written by Emmanuel Bertin.  If you want more detail about PSFEx, please
     check out the web site:
 
-        `<http://www.astromatic.net/software/psfex>`_
+    http://www.astromatic.net/software/psfex
 
     It builds PSF objects from images of stars in a given exposure, finds a reasonable basis
     set to describe those images, and then fits the coefficient of these bases as a function
@@ -83,24 +72,24 @@ class DES_PSFEx(object):
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
-    (nor integrate over the pixel).  This would effectively include the pixel twice!  
-    
+    (nor integrate over the pixel).  This would effectively include the pixel twice!
+
     In GalSim, you should always pass ``method='no_pixel'`` when drawing images of objects
     convolved with PSFs produced with this class.  Other drawing methods, such as photon shooting
     (``method='phot'``) or an FFT (``method='fft'``), will result in convolving the pixel twice.
 
     Parameters:
-       file_name (string):       The file name to be read in, or a pyfits HDU in which case it is used
-                                 directly instead of being opened.
-       image_file_name (string): The name of the fits file of the original image (needed for the
-                                 WCS information in the header).  If unavailable, you may omit this
-                                 (or use None), but then the returned profiles will be in image
-                                 coordinates, not world coordinates.  (Default ``image_file_name = None``)
-       wcs (object):             Optional way to provide the WCS if you already have it loaded from the
-                                 image file. (Default ``wcs = None``)
-       dir (string):             Optionally a directory name can be provided if the file_name does not
-                                 already include it.  (The image file is assumed to be in the same
-                                 directory.) (Default ``dir = None``).  Cannot pass an HDU with this option.
+       file_name:       The file name to be read in, or a pyfits HDU in which case it is
+                        used directly instead of being opened.
+       image_file_name: The name of the fits file of the original image (needed for the
+                        WCS information in the header).  If unavailable, you may omit this
+                        (or use None), but then the returned profiles will be in image
+                        coordinates, not world coordinates. [default: None]
+       wcs:             Optional way to provide the WCS if you already have it loaded from
+                        the image file. [default: None]
+       dir:              Optionally a directory name can be provided if the ``file_name``
+                        does not already include it.  (The image file is assumed to be in
+                        the same directory.) [default: None].
     """
     # For config, image_file_name is required, since that always works in world coordinates.
     _req_params = { 'file_name' : str }
@@ -246,11 +235,11 @@ class DES_PSFEx(object):
         """If the original image was provided to the constructor, this will return the local
         WCS at a given location in that original image.  If not, this will return None.
 
-        Args:
-           image_pos (object): position in pixels in the image.
+        Parameter:
+           image_pos (Position):    The position in pixels in the image.
 
         Returns:
-           Local WCS.
+           A LocalWCS or None
         """
         if self.wcs:
             return self.wcs.local(image_pos)
@@ -260,9 +249,10 @@ class DES_PSFEx(object):
     def getPSF(self, image_pos, gsparams=None):
         """Returns the PSF at position ``image_pos``.
 
-        Args:
-           image_pos (object):    The position in image coordinates at which to build the PSF.
-           gsparams (object):     A ``GSParams`` instance to pass to the constructed GSObject. [Defualt is None].
+        Parameters:
+           image_pos:   The position in image coordinates at which to build the PSF.
+           gsparams:    A `GSParams` instance to pass to the constructed `GSObject`.
+                        [defualt: None]
 
         Returns:
            the PSF as a `GSObject`
@@ -333,7 +323,12 @@ galsim.config.RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx))
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
 def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
-    """@brief Build a RealGalaxy type GSObject from user input.
+    """Build a GSObject representing the PSFex model at the correct location in the image in a
+    config-processing context.
+
+    This is used as object type ``DES_PSFEx`` in a config file.
+
+    It requires the use of the ``des_psfex`` input field.
     """
     des_psfex = galsim.config.GetInputObj('des_psfex', config, base, 'DES_PSFEx')
 

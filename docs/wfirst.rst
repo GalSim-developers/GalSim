@@ -8,9 +8,12 @@ some of the routines are more generically simulating aspects of the HgCdTe detec
 be used on WFIRST.  These routines might therefore be useful for simulating observations from
 other telescopes that will use these detectors.
 
-.. note::
+The demo script demo13.py illustrates the use of most of this functionality.
 
-   One of the demo scripts, demo13.py, illustrates the use of most of this functionality.
+.. note::
+    To use this module, you must separately ``import galsim.wfirst``.  These functions are
+    not automatically imported when you ``import galsim``.
+
 
 Module-level Attributes
 =======================

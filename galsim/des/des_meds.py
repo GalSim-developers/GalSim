@@ -15,15 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file des_meds.py  Module for generating DES Multi-Epoch Data Structures (MEDS) in GalSim.
-
-This module defines the MultiExposureObject class for representing multiple exposure data for a
-single object.  The WriteMEDS function can be used to write a list of MultiExposureObject
-instances to a single MEDS file.
-
-Importing this module also adds these data structures to the config framework, so that MEDS file
-output can subsequently be simulated directly using a config file.
-"""
 
 import numpy as np
 import galsim
@@ -49,24 +40,28 @@ class MultiExposureObject(object):
     """
     A class containing exposures for single object, along with other information.
 
-    Parameters:
-       images:       List of images of the object.
-       weight:       List of weight images. [default: None]
-       badpix:       List of bad pixel masks. [default: None]
-       seg:          List of segmentation maps. [default: None]
-       psf:          List of psf images. [default: None]
-       wcs:          List of WCS transformations. [default: None]
-       id:            Galaxy id. [default: 0]
+    The MultiExposureObject class represents multiple exposure data for a single object for the
+    purpose of writing the images to a MEDS file.
 
-    Attributes
-    ----------
-    self.images:         List of images of the object.
-    self.weight:         List of weight maps.
-    self.seg:            List of segmentation maps.
-    self.psf:            List of psf images.
-    self.wcs:            List of WCS transformations.
-    self.n_cutouts:      Number of exposures.
-    self.box_size:       Size of each exposure image.
+    The `WriteMEDS` function can be used to write a list of MultiExposureObjects to a MEDS file.
+
+    Parameters:
+       images:      List of images of the object.
+       weight:      List of weight images. [default: None]
+       badpix:      List of bad pixel masks. [default: None]
+       seg:         List of segmentation maps. [default: None]
+       psf:         List of psf images. [default: None]
+       wcs:         List of WCS transformations. [default: None]
+       id:          Galaxy id. [default: 0]
+
+    Attributes:
+        self.images:        List of images of the object.
+        self.weight:        List of weight maps.
+        self.seg:           List of segmentation maps.
+        self.psf:           List of psf images.
+        self.wcs:           List of WCS transformations.
+        self.n_cutouts:     Number of exposures.
+        self.box_size:      Size of each exposure image.
     """
 
     def __init__(self, images, weight=None, badpix=None, seg=None, psf=None,
@@ -183,12 +178,13 @@ class MultiExposureObject(object):
 
 def WriteMEDS(obj_list, file_name, clobber=True):
     """
-    Writes a MEDS file from a list of MultiExposureObjects.
+    Writes a MEDS file from a list of `MultiExposureObject` instances.
 
     Parameters:
-       obj_list (list):     List of MultiExposureObjects test
-       file_name (string):    Name of meds file to be written
-       clobber (bool):      Setting ``clobber=True`` when ``file_name`` is given will silently overwrite existing files. (Default ``clobber = True``.)
+       obj_list:    List of `MultiExposureObject` instances
+       file_name:   Name of meds file to be written
+       clobber:     Setting ``clobber=True`` when ``file_name`` is given will silently overwrite
+                    existing files. [default True]
     """
 
     from galsim._pyfits import pyfits
@@ -437,19 +433,25 @@ def WriteMEDS(obj_list, file_name, clobber=True):
 
 # Make the class that will
 class MEDSBuilder(galsim.config.OutputBuilder):
+    """This class lets you use the `MultiExposureObject` very simply as a special ``output``
+    type when using config processing.
+
+    It requires the use of ``galsim.des`` in the config files ``modules`` section.
+    """
 
     def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
         """
         Build a meds file as specified in config.
 
         Parameters:
-           config (dict):           The configuration dict for the output field.
-           base (dict):             The base configuration dict.
-           file_num (int):          The current file_num.
-           image_num (int):         The current image_num.
-           obj_num (int):           The current obj_num.
-           ignore (list):           A list of parameters that are allowed to be in config that we can ignore here.
-           logger (object):         If given, a logger object to log progress.
+           config:      The configuration dict for the output field.
+           base:        The base configuration dict.
+           file_num:    The current file_num.
+           image_num:   The current image_num.
+           obj_num:     The current obj_num.
+           ignore:      A list of parameters that are allowed to be in config that we can ignore
+                        here.
+           logger:      If given, a logger object to log progress.
 
         Returns:
            A list of MultiExposureObjects.
@@ -510,7 +512,14 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         return obj_list
 
     def writeFile(self, data, file_name, config, base, logger):
-        """Wrapper for `WriteMEDS`.
+        """Write the data to a file.  In this case a MEDS file.
+
+        Parameters:
+            data:           The data to write.  Here, this is a list of `MultiExposureObject`.
+            file_name:      The file_name to write to.
+            config:         The configuration dict for the output field.
+            base:           The base configuration dict.
+            logger:         If given, a logger object to log progress.
         """
         WriteMEDS(data, file_name)
 
@@ -539,7 +548,11 @@ class MEDSBuilder(galsim.config.OutputBuilder):
 # This extra output type simply saves the values of the image offsets when an
 # object is drawn into the stamp.
 class OffsetBuilder(galsim.config.ExtraOutputBuilder):
-    """This saves the stamp offset values for later use. Subclass of ``ExtraOutputBuilder``."""
+    """This "extra" output builder saves the stamp offset values for later use.
+
+    It is used as a ``meds_get_offset`` field in the ``output`` section.
+    """
+
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):
         offset = base['stamp_offset']
