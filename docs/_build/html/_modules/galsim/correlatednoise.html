@@ -1175,7 +1175,7 @@
 <span class="sd">        wcs:                If provided, use this as the wcs for the image.  At most one of</span>
 <span class="sd">                            ``scale`` or ``wcs`` may be provided. [default: None]</span>
 <span class="sd">        x_interpolant:      The interpolant to use for interpolating the image of the correlation</span>
-<span class="sd">                            function. (See below.) [default: galsim.Linear(tol=1.e-4)]</span>
+<span class="sd">                            function. (See below.) [default: galsim.Linear()]</span>
 <span class="sd">        correct_periodicity: Whether to correct for the effects of periodicity.  (See below.)</span>
 <span class="sd">                            [default: True]</span>
 <span class="sd">        subtract_mean:      Whether to subtract off the mean value from the image before computing</span>
@@ -1198,16 +1198,16 @@
 <span class="sd">    The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale</span>
 <span class="sd">    ``scale`` to set the units of the internal lookup table.::</span>
 
-<span class="sd">        &gt;&gt;&gt; cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5, tol=1.e-4))</span>
+<span class="sd">        &gt;&gt;&gt; cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5))</span>
 
 <span class="sd">    The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant</span>
 <span class="sd">    for interpolation of the internal lookup table in real space.</span>
 
-<span class="sd">    The default ``x_interpolant`` is ``galsim.Linear(tol=1.e-4)``, which uses bilinear</span>
-<span class="sd">    interpolation.  The use of this interpolant is an approximation that gives good empirical</span>
-<span class="sd">    results without requiring internal convolution of the correlation function profile by a `Pixel`</span>
-<span class="sd">    object when applying correlated noise to images: such an internal convolution has been found to</span>
-<span class="sd">    be computationally costly in practice, requiring the Fourier transform of very large arrays.</span>
+<span class="sd">    The default ``x_interpolant`` is ``galsim.Linear()``, which uses bilinear interpolation.</span>
+<span class="sd">    The use of this interpolant is an approximation that gives good empirical results without</span>
+<span class="sd">    requiring internal convolution of the correlation function profile by a `Pixel` object when</span>
+<span class="sd">    applying correlated noise to images: such an internal convolution has been found to be</span>
+<span class="sd">    computationally costly in practice, requiring the Fourier transform of very large arrays.</span>
 
 <span class="sd">    The use of the bilinear interpolants means that the representation of correlated noise will be</span>
 <span class="sd">    noticeably inaccurate in at least the following two regimes:</span>
@@ -1418,7 +1418,7 @@
 
         <span class="c1"># If x_interpolant not specified on input, use bilinear</span>
         <span class="k">if</span> <span class="n">x_interpolant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">x_interpolant</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+            <span class="n">x_interpolant</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">x_interpolant</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">convert_interpolant</span><span class="p">(</span><span class="n">x_interpolant</span><span class="p">)</span>
 
@@ -1507,14 +1507,13 @@
 <span class="sd">                        noise fields.]</span>
 <span class="sd">        x_interpolant:  Forces use of a non-default interpolant for interpolation of the</span>
 <span class="sd">                        internal lookup table in real space.  See below for more details.</span>
-<span class="sd">                        [default: galsim.Linear(tol=1.e-4)]</span>
+<span class="sd">                        [default: galsim.Linear()]</span>
 <span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        a `BaseCorrelatedNoise` instance representing correlated noise in F814W COSMOS images.</span>
 
-<span class="sd">    The default ``x_interpolant`` is a ``galsim.Linear(tol=1.e-4)``, which uses bilinear</span>
-<span class="sd">    interpolation.</span>
+<span class="sd">    The default ``x_interpolant`` is a ``galsim.Linear()``, which uses bilinear interpolation.</span>
 <span class="sd">    The use of this interpolant is an approximation that gives good empirical results without</span>
 <span class="sd">    requiring internal convolution of the correlation function profile by a `Pixel` object when</span>
 <span class="sd">    applying correlated noise to images: such an internal convolution has been found to be</span>
@@ -1596,7 +1595,7 @@
 
     <span class="c1"># If x_interpolant not specified on input, use bilinear</span>
     <span class="k">if</span> <span class="n">x_interpolant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">x_interpolant</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">)</span>
+        <span class="n">x_interpolant</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">x_interpolant</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">convert_interpolant</span><span class="p">(</span><span class="n">x_interpolant</span><span class="p">)</span>
 

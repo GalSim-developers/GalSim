@@ -1313,7 +1313,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span> <span class="o">=</span> <span class="n">SEDs</span>
 
         <span class="k">if</span> <span class="n">k_interpolant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">k_interpolant</span> <span class="o">=</span> <span class="n">Quintic</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+            <span class="n">k_interpolant</span> <span class="o">=</span> <span class="n">Quintic</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">k_interpolant</span> <span class="o">=</span> <span class="n">convert_interpolant</span><span class="p">(</span><span class="n">k_interpolant</span><span class="p">)</span>
 

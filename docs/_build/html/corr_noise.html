@@ -764,7 +764,7 @@ else 1.0, unless <code class="docutils literal notranslate"><span class="pre">wc
 <li><p><strong>wcs</strong> – If provided, use this as the wcs for the image.  At most one of
 <code class="docutils literal notranslate"><span class="pre">scale</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code> may be provided. [default: None]</p></li>
 <li><p><strong>x_interpolant</strong> – The interpolant to use for interpolating the image of the correlation
-function. (See below.) [default: galsim.Linear(tol=1.e-4)]</p></li>
+function. (See below.) [default: galsim.Linear()]</p></li>
 <li><p><strong>correct_periodicity</strong> – Whether to correct for the effects of periodicity.  (See below.)
 [default: True]</p></li>
 <li><p><strong>subtract_mean</strong> – Whether to subtract off the mean value from the image before computing
@@ -787,16 +787,16 @@ setting the random number generation for the noise.</p>
 </div>
 <p>The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale
 <code class="docutils literal notranslate"><span class="pre">scale</span></code> to set the units of the internal lookup table.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
 for interpolation of the internal lookup table in real space.</p>
-<p>The default <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> is <code class="docutils literal notranslate"><span class="pre">galsim.Linear(tol=1.e-4)</span></code>, which uses bilinear
-interpolation.  The use of this interpolant is an approximation that gives good empirical
-results without requiring internal convolution of the correlation function profile by a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a>
-object when applying correlated noise to images: such an internal convolution has been found to
-be computationally costly in practice, requiring the Fourier transform of very large arrays.</p>
+<p>The default <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> is <code class="docutils literal notranslate"><span class="pre">galsim.Linear()</span></code>, which uses bilinear interpolation.
+The use of this interpolant is an approximation that gives good empirical results without
+requiring internal convolution of the correlation function profile by a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> object when
+applying correlated noise to images: such an internal convolution has been found to be
+computationally costly in practice, requiring the Fourier transform of very large arrays.</p>
 <p>The use of the bilinear interpolants means that the representation of correlated noise will be
 noticeably inaccurate in at least the following two regimes:</p>
 <blockquote>
@@ -1004,7 +1004,7 @@ to its value at zero separation distance, matches this value.
 noise fields.]</p></li>
 <li><p><strong>x_interpolant</strong> – Forces use of a non-default interpolant for interpolation of the
 internal lookup table in real space.  See below for more details.
-[default: galsim.Linear(tol=1.e-4)]</p></li>
+[default: galsim.Linear()]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
@@ -1012,8 +1012,7 @@ internal lookup table in real space.  See below for more details.
 <dd class="field-even"><p>a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance representing correlated noise in F814W COSMOS images.</p>
 </dd>
 </dl>
-<p>The default <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> is a <code class="docutils literal notranslate"><span class="pre">galsim.Linear(tol=1.e-4)</span></code>, which uses bilinear
-interpolation.
+<p>The default <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> is a <code class="docutils literal notranslate"><span class="pre">galsim.Linear()</span></code>, which uses bilinear interpolation.
 The use of this interpolant is an approximation that gives good empirical results without
 requiring internal convolution of the correlation function profile by a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> object when
 applying correlated noise to images: such an internal convolution has been found to be
