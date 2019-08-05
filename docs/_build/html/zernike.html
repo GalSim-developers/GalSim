@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -193,20 +193,21 @@
 (<a class="reference external" href="http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials">http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials</a>).</p>
 <p>Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is
 for the normality constant to equal the area of integration, which is pi for the unit circle.
-I.e.,</p>
-<div class="math notranslate nohighlight">
-\[\int_\mathrm{unit circle} Z_i Z_j dA = \pi \delta_{i, j}.\]</div>
+I.e.,:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">int_</span><span class="p">{</span><span class="n">unit</span> <span class="n">circle</span><span class="p">}</span> <span class="n">Z_i</span> <span class="n">Z_j</span> <span class="n">dA</span> <span class="o">=</span> \<span class="n">pi</span> \<span class="n">delta_</span><span class="p">{</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">}</span><span class="o">.</span>
+</pre></div>
+</div>
 <p>Two generalizations of the unit circle Zernike polynomials are also available in this class:
 annular Zernike polynomials, and polynomials defined over non-unit-radius circles.</p>
 <p>Annular Zernikes are orthonormal over an annulus instead of a circle (see Mahajan, J. Opt. Soc.
 Am. 71, 1, (1981)).  Similarly, the non-unit-radius polynomials are orthonormal over a region
 with outer radius not equal to 1.  Taken together, these generalizations yield the
 orthonormality condition:</p>
-<div class="math notranslate nohighlight">
-\[\int_\mathrm{annulus} Z_i Z_j dA =
-\pi \left(R_\mathrm{outer}^2 - R_\mathrm{inner}^2\right) \delta_{i, j}\]</div>
-<p>where <span class="math notranslate nohighlight">\(0 &lt;= R_\mathrm{inner} &lt; R_\mathrm{outer}\)</span> indicate the inner and outer radii of
-the annulus over which the polynomials are orthonormal.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">int_</span><span class="p">{</span><span class="n">annulus</span><span class="p">}</span> <span class="n">Z_i</span> <span class="n">Z_j</span> <span class="n">dA</span> <span class="o">=</span> \<span class="n">pi</span> <span class="p">(</span><span class="n">R_outer</span><span class="o">^</span><span class="mi">2</span> <span class="o">-</span> <span class="n">R_inner</span><span class="o">^</span><span class="mi">2</span><span class="p">)</span> \<span class="n">delta_</span><span class="p">{</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>where 0 &lt;= R_inner &lt; R_outer indicate the inner and outer radii of the annulus over which the
+polynomials are orthonormal.</p>
 <p>The indexing convention for i and j above is that from Noll, J. Opt. Soc. Am. 66, 207-211(1976).
 Note that the Noll indices begin at 1; there is no Z_0.  Because of this, the series
 coefficients argument <code class="docutils literal notranslate"><span class="pre">coef</span></code> effectively begins with <code class="docutils literal notranslate"><span class="pre">coef[1]</span></code> (<code class="docutils literal notranslate"><span class="pre">coef[0]</span></code> is ignored).
@@ -250,6 +251,36 @@ coef[4] is ‘defocus’, …)</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.zernike.Zernike.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">coef</em>, <em class="sig-param">R_outer=1.0</em>, <em class="sig-param">R_inner=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.zernike.Zernike.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.zernike.Zernike.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.zernike.Zernike.evalCartesian">
 <code class="sig-name descname">evalCartesian</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</p>
@@ -274,7 +305,7 @@ coef[4] is ‘defocus’, …)</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>rho</strong> – radial coordinate of evaluation points.  Can be list-like.</p></li>
-<li><p><strong>theta</strong> – azimuthal coordinate in radians (or as <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object) of evaluation points.
+<li><p><strong>theta</strong> – azimuthal coordinate in radians (or as <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object) of evaluation points.
 Can be list-like.</p></li>
 </ul>
 </dd>
@@ -312,15 +343,13 @@ Can be list-like.</p></li>
 <dd><p>Convert linear Noll index to tuple of Zernike indices.
 j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
 index.</p>
-<p>c.f. <a class="reference external" href="https://oeis.org/A176988">https://oeis.org/A176988</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>j</strong> – Zernike mode Noll index</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(n, m) tuple of Zernike indices</p>
-</dd>
 </dl>
+<p>&#64;return (n, m) tuple of Zernike indices
+&#64;see &lt;<a class="reference external" href="https://oeis.org/A176988">https://oeis.org/A176988</a>&gt;.</p>
 </dd></dl>
 
 <dl class="function">

@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -404,15 +404,15 @@
 <span class="sd">    HOWEVER this means the __dict__ attribute has been redefined to be a collections.defaultdict()</span>
 <span class="sd">    so that Jim&#39;s previous default attribute behaviour is also replicated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="AttributeDict.__init__"><a class="viewcode-back" href="../../misc.html#galsim.utilities.AttributeDict.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">collections</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;__dict__&quot;</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="n">AttributeDict</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;__dict__&quot;</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="n">AttributeDict</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+<div class="viewcode-block" id="AttributeDict.__setattr__"><a class="viewcode-back" href="../../misc.html#galsim.utilities.AttributeDict.__setattr__">[docs]</a>    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
 
     <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
@@ -427,10 +427,10 @@
     <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="AttributeDict.__repr__"><a class="viewcode-back" href="../../misc.html#galsim.utilities.AttributeDict.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_write</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span></div>
 
     <span class="fm">__str__</span> <span class="o">=</span> <span class="fm">__repr__</span>
 
@@ -826,15 +826,7 @@
     <span class="n">_horner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="_horner"><a class="viewcode-back" href="../../misc.html#galsim.utilities._horner">[docs]</a><span class="k">def</span> <span class="nf">_horner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `horner`, but ``x``, ``coeff``, and ``result`` must be contiguous arrays</span>
-<span class="sd">    with dtype == float.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        x:      A numpy array of values at which to evaluate the polynomial.</span>
-<span class="sd">        coef:   Polynomial coefficients of increasing powers of x.</span>
-<span class="sd">        result: Numpy array into which to write the result.  Must be same shape as x.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">_horner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
         <span class="n">_galsim</span><span class="o">.</span><span class="n">Horner</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">coef</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">coef</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -845,7 +837,7 @@
         <span class="n">result</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">coef</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coef</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">result</span> <span class="o">*=</span> <span class="n">x</span>
-            <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="n">result</span> <span class="o">+=</span> <span class="n">c</span></div>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="n">result</span> <span class="o">+=</span> <span class="n">c</span>
 
 <div class="viewcode-block" id="horner2d"><a class="viewcode-back" href="../../misc.html#galsim.utilities.horner2d">[docs]</a><span class="k">def</span> <span class="nf">horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Evaluate bivariate polynomial using nested Horner&#39;s method.</span>
@@ -888,21 +880,7 @@
     <span class="n">_horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">triangle</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="_horner2d"><a class="viewcode-back" href="../../misc.html#galsim.utilities._horner2d">[docs]</a><span class="k">def</span> <span class="nf">_horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `horner2d`, but ``x``, ``y``, ``coeff``, ``result``, and ``temp``</span>
-<span class="sd">    must be contiguous arrays with dtype == float.</span>
-
-<span class="sd">    Parameters:</span>
-<span class="sd">        x:          A numpy array of the x values at which to evaluate the polynomial.</span>
-<span class="sd">        y:          A numpy array of the y values at which to evaluate the polynomial.</span>
-<span class="sd">        coefs:      2D array-like of coefficients in increasing powers of x and y.</span>
-<span class="sd">                    The first axis corresponds to increasing the power of y, and the second to</span>
-<span class="sd">                    increasing the power of x.</span>
-<span class="sd">        result:     Numpy array into which to write the result.  Must be same shape as x.</span>
-<span class="sd">        temp:       Numpy array to hold temporary results.  Must be the same shape as x.</span>
-<span class="sd">        triangle:   If True, then the coefs are only non-zero in the upper-left triangle</span>
-<span class="sd">                    of the array. [default: False]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">_horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
         <span class="c1"># Note: the c++ implementation doesn&#39;t need to care about triangle.</span>
         <span class="c1"># It is able to trivially account for the zeros without special handling.</span>
@@ -921,7 +899,7 @@
             <span class="k">for</span> <span class="n">coef</span> <span class="ow">in</span> <span class="n">coefs</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
                 <span class="n">result</span> <span class="o">*=</span> <span class="n">x</span>
                 <span class="n">_horner</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
-                <span class="n">result</span> <span class="o">+=</span> <span class="n">temp</span></div>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">temp</span>
 
 
 <div class="viewcode-block" id="deInterleaveImage"><a class="viewcode-back" href="../../misc.html#galsim.utilities.deInterleaveImage">[docs]</a><span class="k">def</span> <span class="nf">deInterleaveImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">conserve_flux</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">suppress_warnings</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1963,6 +1941,45 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="n">y</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
     <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;No out-of-bounds position&quot;</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">set_omp_threads</span><span class="p">(</span><span class="n">num_threads</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set the number of OpenMP threads to use in the C++ layer.</span>
+
+<span class="sd">    :param num_threads: The target number of threads to use (If None or &lt;=0, then try to use the</span>
+<span class="sd">                        numer of cpus.)</span>
+<span class="sd">    :param logger:      If desired, a logger object for logging any warnings here. (default: None)</span>
+
+<span class="sd">    :returns:           The  number of threads OpenMP reports that it will use.  Typically this</span>
+<span class="sd">                        matches the input, but OpenMP reserves the right not to comply with</span>
+<span class="sd">                        the requested number of threads.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># This function was copied shamelessly from TreeCorr&#39;s function of the same name.</span>
+
+    <span class="n">input_num_threads</span> <span class="o">=</span> <span class="n">num_threads</span>  <span class="c1"># Save the input value.</span>
+
+    <span class="c1"># If num_threads is auto, get it from cpu_count</span>
+    <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">num_threads</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">multiprocessing</span>
+        <span class="n">num_threads</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;multiprocessing.cpu_count() = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">num_threads</span><span class="p">)</span>
+
+    <span class="c1"># Tell OpenMP to use this many threads</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Telling OpenMP to use </span><span class="si">%d</span><span class="s1"> threads&#39;</span><span class="p">,</span><span class="n">num_threads</span><span class="p">)</span>
+    <span class="n">num_threads</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SetOMPThreads</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
+
+    <span class="c1"># Report back appropriately.</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;OpenMP reports that it will use </span><span class="si">%d</span><span class="s1"> threads&#39;</span><span class="p">,</span><span class="n">num_threads</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_threads</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using </span><span class="si">%d</span><span class="s1"> threads.&#39;</span><span class="p">,</span><span class="n">num_threads</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">input_num_threads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">input_num_threads</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Only warn if the user specifically asked for num_threads != 1.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unable to use multiple threads, since OpenMP is not enabled.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">num_threads</span>
+
 </pre></div>
 
            </div>

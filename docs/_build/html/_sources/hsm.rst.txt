@@ -53,9 +53,11 @@ HSM output
 
 .. autoclass:: galsim.hsm.ShapeData
     :members:
+    :special-members:
 
 HSM parameters
 ==============
 
 .. autoclass:: galsim.hsm.HSMParams
     :members:
+    :special-members:

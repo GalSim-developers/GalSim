@@ -91,10 +91,9 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="wl.html">Weak Lensing</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="shear.html">The Shear class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="powerspectrum.html">Power Spectrum Shears</a></li>
@@ -103,6 +102,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -207,81 +207,45 @@ of the universe, in units of M_solar/h.</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.NFWHalo._getShear">
-<code class="sig-name descname">_getShear</code><span class="sig-paren">(</span><em class="sig-param">pos_x</em>, <em class="sig-param">pos_y</em>, <em class="sig-param">z_s</em>, <em class="sig-param">reduced=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getShear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getShear" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getShear" title="galsim.NFWHalo.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, but without some sanity checks and the positions must be
-given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>z_s</strong> – Source redshift(s).</p></li>
-<li><p><strong>reduced</strong> – Whether returned shear(s) should be reduced shears. [default: True]</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)</p>
-</dd>
-</dl>
+<dt id="galsim.NFWHalo.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.NFWHalo._getConvergence">
-<code class="sig-name descname">_getConvergence</code><span class="sig-paren">(</span><em class="sig-param">pos_x</em>, <em class="sig-param">pos_y</em>, <em class="sig-param">z_s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getConvergence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getConvergence" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getConvergence" title="galsim.NFWHalo.getConvergence"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getConvergence</span></code></a>, but without some sanity checks and the positions must be
-given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>z_s</strong> – Source redshift(s).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the convergence as either a scalar or a numpy array</p>
-</dd>
-</dl>
+<dt id="galsim.NFWHalo.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.NFWHalo._getMagnification">
-<code class="sig-name descname">_getMagnification</code><span class="sig-paren">(</span><em class="sig-param">pos_x</em>, <em class="sig-param">pos_y</em>, <em class="sig-param">z_s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getMagnification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getMagnification" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getMagnification" title="galsim.NFWHalo.getMagnification"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getMagnification</span></code></a>, but without some sanity checks and the positions must
-be given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>z_s</strong> – Source redshift(s).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the magnification as either a scalar or a numpy array</p>
-</dd>
-</dl>
+<dt id="galsim.NFWHalo.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mass</em>, <em class="sig-param">conc</em>, <em class="sig-param">redshift</em>, <em class="sig-param">halo_pos=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">omega_m=None</em>, <em class="sig-param">omega_lam=None</em>, <em class="sig-param">cosmo=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.NFWHalo._getLensing">
-<code class="sig-name descname">_getLensing</code><span class="sig-paren">(</span><em class="sig-param">pos_x</em>, <em class="sig-param">pos_y</em>, <em class="sig-param">z_s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getLensing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getLensing" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getLensing" title="galsim.NFWHalo.getLensing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getLensing</span></code></a>, but without some sanity checks and the positions must
-be given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pos_x</strong> – x position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>pos_y</strong> – y position in arcsec (either a scalar or a numpy array)</p></li>
-<li><p><strong>z_s</strong> – Source redshift(s).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the reduced shears and magnifications as a tuple (g1,g2,mu) (each being
-either a scalar or a numpy array)</p>
-</dd>
-</dl>
+<dt id="galsim.NFWHalo.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.NFWHalo.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.NFWHalo.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.NFWHalo.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.NFWHalo.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
@@ -442,6 +406,48 @@ quintessence), but curvature is arbitrary.</p>
 <dd class="field-odd"><p><strong>a</strong> – Scale factor.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Cosmology.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Cosmology.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Cosmology.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">omega_m=0.3</em>, <em class="sig-param">omega_lam=0.7</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Cosmology.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Cosmology.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Cosmology.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Cosmology.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Cosmology.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">

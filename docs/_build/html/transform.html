@@ -92,12 +92,12 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Transformed Profiles</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#affine-transformations">Affine Transformations</a></li>
@@ -106,14 +106,15 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -243,27 +244,33 @@ would not want to do this. [default: True]</p></li>
 be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
 threshold parameters will simply be ignored).</p>
 <dl class="method">
-<dt id="galsim.Transformation.flux_ratio">
-<em class="property">property </em><code class="sig-name descname">flux_ratio</code><a class="headerlink" href="#galsim.Transformation.flux_ratio" title="Permalink to this definition">¶</a></dt>
-<dd><p>The flux ratio of the transformation.</p>
+<dt id="galsim.Transformation.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Transformation.jac">
-<em class="property">property </em><code class="sig-name descname">jac</code><a class="headerlink" href="#galsim.Transformation.jac" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Jacobian of the transforamtion.</p>
+<dt id="galsim.Transformation.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Transformation.offset">
-<em class="property">property </em><code class="sig-name descname">offset</code><a class="headerlink" href="#galsim.Transformation.offset" title="Permalink to this definition">¶</a></dt>
-<dd><p>The offset of the transformation.</p>
+<dt id="galsim.Transformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">jac=(1.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">1.0)</em>, <em class="sig-param">offset=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">flux_ratio=1.0</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Transformation.original">
-<em class="property">property </em><code class="sig-name descname">original</code><a class="headerlink" href="#galsim.Transformation.original" title="Permalink to this definition">¶</a></dt>
-<dd><p>The original object being transformed.</p>
+<dt id="galsim.Transformation.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Transformation.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 <dl class="method">
@@ -349,9 +356,33 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Deconvolution.orig_obj">
-<em class="property">property </em><code class="sig-name descname">orig_obj</code><a class="headerlink" href="#galsim.Deconvolution.orig_obj" title="Permalink to this definition">¶</a></dt>
-<dd><p>The original object that is being deconvolved.</p>
+<dt id="galsim.Deconvolution.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Deconvolution.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Deconvolution.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Deconvolution.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Deconvolution.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 <dl class="method">
@@ -421,9 +452,33 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.FourierSqrtProfile.orig_obj">
-<em class="property">property </em><code class="sig-name descname">orig_obj</code><a class="headerlink" href="#galsim.FourierSqrtProfile.orig_obj" title="Permalink to this definition">¶</a></dt>
-<dd><p>The original object being Fourier sqrt-ed.</p>
+<dt id="galsim.FourierSqrtProfile.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.FourierSqrtProfile.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.FourierSqrtProfile.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.FourierSqrtProfile.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.FourierSqrtProfile.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
 </dd></dl>
 
 <dl class="method">

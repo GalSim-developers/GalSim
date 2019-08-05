@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -338,7 +338,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delta2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__init__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delta2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
         <span class="c1"># Check that at least one power function is not None</span>
         <span class="k">if</span> <span class="n">e_power_function</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">b_power_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -369,9 +369,9 @@
         <span class="k">if</span> <span class="n">units</span> <span class="o">==</span> <span class="n">arcsec</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">units</span> <span class="o">/</span> <span class="n">arcsec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">units</span> <span class="o">/</span> <span class="n">arcsec</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__repr__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.PowerSpectrum(e_power_function=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, b_power_function=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span>
@@ -380,25 +380,25 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="n">arcsec</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, units=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__str__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.PowerSpectrum(e_power_function=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, b_power_function=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrum.__eq__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PowerSpectrum</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">e_power_function</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">delta2</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">delta2</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span></div>
+<div class="viewcode-block" id="PowerSpectrum.__ne__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+<div class="viewcode-block" id="PowerSpectrum.__hash__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
     <span class="k">def</span> <span class="nf">_get_scale_fac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1033,9 +1033,8 @@
         <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getShear&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getShear</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">reduced</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PowerSpectrum._getShear"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getShear">[docs]</a>    <span class="k">def</span> <span class="nf">_getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getShear`, but without some sanity checks and the positions must be</span>
-<span class="sd">        given as ``pos_x``, ``pos_y`` in arcsec.</span>
+    <span class="k">def</span> <span class="nf">_getShear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``getShear(pos.x, pos.y, reduced, periodic)``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
@@ -1062,7 +1061,7 @@
                                <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
 
         <span class="n">ret</span> <span class="o">=</span> <span class="n">lut_g1</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_g2</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
+        <span class="k">return</span> <span class="n">ret</span>
 
 <div class="viewcode-block" id="PowerSpectrum.getConvergence"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1110,9 +1109,8 @@
         <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getConvergence&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getConvergence</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PowerSpectrum._getConvergence"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getConvergence">[docs]</a>    <span class="k">def</span> <span class="nf">_getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getConvergence`, but without some sanity checks and the positions must be</span>
-<span class="sd">        given as ``pos_x``, ``pos_y`` in arcsec.</span>
+    <span class="k">def</span> <span class="nf">_getConvergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to getConvergence(pos.x, pos.y, periodic)</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
@@ -1129,7 +1127,7 @@
                                   <span class="n">edge_mode</span><span class="o">=</span><span class="s1">&#39;wrap&#39;</span> <span class="k">if</span> <span class="n">periodic</span> <span class="k">else</span> <span class="s1">&#39;warn&#39;</span><span class="p">,</span>
                                   <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">lut_kappa</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">lut_kappa</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PowerSpectrum.getMagnification"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1178,9 +1176,8 @@
         <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getMagnification&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMagnification</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PowerSpectrum._getMagnification"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getMagnification">[docs]</a>    <span class="k">def</span> <span class="nf">_getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getMagnification`, but without some sanity checks and the positions must</span>
-<span class="sd">        be given as ``pos_x``, ``pos_y`` in arcsec.</span>
+    <span class="k">def</span> <span class="nf">_getMagnification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``getMagnification(pos.x, pos.y, periodic)``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
@@ -1196,7 +1193,7 @@
                                <span class="n">edge_mode</span><span class="o">=</span><span class="s1">&#39;wrap&#39;</span> <span class="k">if</span> <span class="n">periodic</span> <span class="k">else</span> <span class="s1">&#39;warn&#39;</span><span class="p">,</span>
                                <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">lut_mu</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span></div>
+        <span class="k">return</span> <span class="n">lut_mu</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
 <div class="viewcode-block" id="PowerSpectrum.getLensing"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum.getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1247,9 +1244,8 @@
         <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_convertPositions</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="s1">&#39;getLensing&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getLensing</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PowerSpectrum._getLensing"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrum._getLensing">[docs]</a>    <span class="k">def</span> <span class="nf">_getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to `getLensing`, but without some sanity checks and the positions must</span>
-<span class="sd">        be given as ``pos_x``, ``pos_y`` in arcsec.</span>
+    <span class="k">def</span> <span class="nf">_getLensing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to ``getLensing(pos.x, pos.y, periodic)``</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos_x:      x position in arcsec (either a scalar or a numpy array)</span>
@@ -1274,9 +1270,9 @@
                                <span class="n">edge_mode</span><span class="o">=</span><span class="s1">&#39;wrap&#39;</span> <span class="k">if</span> <span class="n">periodic</span> <span class="k">else</span> <span class="s1">&#39;warn&#39;</span><span class="p">,</span>
                                <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">lut_g1</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_g2</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_mu</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span></div></div>
+        <span class="k">return</span> <span class="n">lut_g1</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_g2</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">),</span> <span class="n">lut_mu</span><span class="p">(</span><span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span></div>
 
-<div class="viewcode-block" id="PowerSpectrumRealizer"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrumRealizer">[docs]</a><span class="k">class</span> <span class="nc">PowerSpectrumRealizer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">PowerSpectrumRealizer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class for generating realizations of power spectra with any area and pixel size.</span>
 
 <span class="sd">    This class is not one that end-users should expect to interact with.  It is designed to quickly</span>
@@ -1344,7 +1340,7 @@
         <span class="k">if</span> <span class="n">p_B</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_B</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_power_array</span><span class="p">(</span><span class="n">p_B</span><span class="p">))</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_size</span>
 
-<div class="viewcode-block" id="PowerSpectrumRealizer.__call__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrumRealizer.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gd</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gd</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate a realization of the current power spectrum.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1428,7 +1424,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft2</span><span class="p">(</span><span class="n">E_k</span><span class="p">[:,</span><span class="bp">self</span><span class="o">.</span><span class="n">ikx</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">k</span></div>
+        <span class="k">return</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">k</span>
 
     <span class="k">def</span> <span class="nf">_make_hermitian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P_k</span><span class="p">):</span>
         <span class="c1"># Make P_k[-k] = conj(P_k[k])</span>
@@ -1480,7 +1476,7 @@
         <span class="n">ksq</span> <span class="o">=</span> <span class="n">kz</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">kz</span><span class="p">)</span>
         <span class="c1"># Need to adjust denominator for kz=0 to avoid division by 0.</span>
         <span class="n">ksq</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">exp2ipsi</span> <span class="o">=</span> <span class="n">kz</span><span class="o">*</span><span class="n">kz</span><span class="o">/</span><span class="n">ksq</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp2ipsi</span> <span class="o">=</span> <span class="n">kz</span><span class="o">*</span><span class="n">kz</span><span class="o">/</span><span class="n">ksq</span>
         <span class="c1"># Note: this leaves exp2ipsi[0,0] = 0, but it turns out that&#39;s ok, since we only</span>
         <span class="c1"># ever multiply it by something that is 0 anyway (amplitude[0,0] = 0).</span>
 

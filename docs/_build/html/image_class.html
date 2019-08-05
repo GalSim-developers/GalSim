@@ -96,12 +96,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -251,7 +251,7 @@ array, you can force a copy with:</p>
 <p>You can see a list of valid values for dtype in <code class="docutils literal notranslate"><span class="pre">galsim.Image.valid_dtypes</span></code>.
 Without the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> argument, this is equivalent to <code class="docutils literal notranslate"><span class="pre">image.copy()</span></code>, which makes
 a deep copy.  If you want a copy that shares data with the original, see
-the <a class="reference internal" href="#galsim.Image.view" title="galsim.Image.view"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">view</span></code></a> method.</p>
+the image.view() method.</p>
 <p>If you only want to enforce the image to have a given type and not make a copy
 if the array is already the correct type, you can use, e.g.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image_double</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -313,113 +313,102 @@ while the Image class’s own accessor uses either <code class="docutils literal
 </pre></div>
 </div>
 <dl class="method">
-<dt id="galsim.Image.__getitem__">
-<code class="sig-name descname">__getitem__</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__getitem__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return either a subimage or a single pixel value.</p>
-<p>For example,:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">subimage</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">BoundsI</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
-</pre></div>
-</div>
+<dt>
+<code class="sig-name descname">`view`</code></dt>
+<dd><p>Return a view of the image, possibly giving it a new scale or wcs.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.__setitem__">
-<code class="sig-name descname">__setitem__</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__setitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__setitem__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set either a subimage or a single pixel to new values.</p>
-<p>For example,:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">BoundsI</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">)]</span> <span class="o">=</span> <span class="n">im2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">17.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">17.</span>
-</pre></div>
-</div>
+<dt id="galsim.Image.subImage">
+<code class="sig-name descname">subImage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.subImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.subImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a view of a portion of the full image.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._wrap">
-<code class="sig-name descname">_wrap</code><span class="sig-paren">(</span><em class="sig-param">bounds</em>, <em class="sig-param">hermx</em>, <em class="sig-param">hermy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._wrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._wrap" title="Permalink to this definition">¶</a></dt>
-<dd><p>A version of <a class="reference internal" href="#galsim.Image.wrap" title="galsim.Image.wrap"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">wrap</span></code></a> without the sanity checks.</p>
-<p>Equivalent to <code class="docutils literal notranslate"><span class="pre">image.wrap(bounds,</span> <span class="pre">hermitian=='x',</span> <span class="pre">hermitian=='y')</span></code>.</p>
+<dt id="galsim.Image.wrap">
+<code class="sig-name descname">wrap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.wrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.wrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap the values in a image onto a given subimage and return the subimage.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._view">
-<code class="sig-name descname">_view</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._view" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.Image.view" title="galsim.Image.view"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">view</span></code></a>, but without some of the sanity checks and extra options.</p>
+<dt id="galsim.Image.bin">
+<code class="sig-name descname">bin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.bin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bin the image pixels in blocks of nx x ny pixels.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._shift">
-<code class="sig-name descname">_shift</code><span class="sig-paren">(</span><em class="sig-param">delta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._shift" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.Image.shift" title="galsim.Image.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shift</span></code></a>, but without some of the sanity checks and <code class="docutils literal notranslate"><span class="pre">delta</span></code> must
-be a <a class="reference internal" href="pos.html#galsim.PositionI" title="galsim.PositionI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionI</span></code></a> instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>delta</strong> – The amount to shift as a <a class="reference internal" href="pos.html#galsim.PositionI" title="galsim.PositionI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionI</span></code></a>.</p>
-</dd>
-</dl>
+<dt id="galsim.Image.subsample">
+<code class="sig-name descname">subsample</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.subsample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.subsample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subdivide the image pixels into nx x ny sub-pixels.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__call__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the pixel value at given position</p>
-<p>The arguments here may be either (x, y) or a PositionI instance.
-Or you can provide x, y as named kwargs.</p>
+<dt id="galsim.Image.shift">
+<code class="sig-name descname">shift</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.shift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shift the origin of the image by (dx,dy).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._getValue">
-<code class="sig-name descname">_getValue</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._getValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._getValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.Image.getValue" title="galsim.Image.getValue"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getValue</span></code></a>, except there are no checks that the values fall
-within the bounds of the image.</p>
+<dt id="galsim.Image.setCenter">
+<code class="sig-name descname">setCenter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setCenter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setCenter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a new position for the center of the image.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._setValue">
-<code class="sig-name descname">_setValue</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._setValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.Image.setValue" title="galsim.Image.setValue"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">setValue</span></code></a> except that there are no checks that the values
-fall within the bounds of the image, and the coordinates must be given as <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – The x coordinate of the pixel to set.</p></li>
-<li><p><strong>y</strong> – The y coordinate of the pixel to set.</p></li>
-<li><p><strong>value</strong> – The value to set the pixel to.</p></li>
-</ul>
-</dd>
-</dl>
+<dt id="galsim.Image.setOrigin">
+<code class="sig-name descname">setOrigin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setOrigin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setOrigin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a new position for the origin (x,y) = (0,0) of the image.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._addValue">
-<code class="sig-name descname">_addValue</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._addValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._addValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.Image.addValue" title="galsim.Image.addValue"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">addValue</span></code></a> except that there are no checks that the values
-fall within the bounds of the image, and the coordinates must be given as <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – The x coordinate of the pixel to add to.</p></li>
-<li><p><strong>y</strong> – The y coordinate of the pixel to add to.</p></li>
-<li><p><strong>value</strong> – The value to add to this pixel.</p></li>
-</ul>
-</dd>
-</dl>
+<dt id="galsim.Image.getValue">
+<code class="sig-name descname">getValue</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.getValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.getValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of a single pixel.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._fill">
-<code class="sig-name descname">_fill</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._fill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._fill" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.Image.fill" title="galsim.Image.fill"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">fill</span></code></a>, except that there are no checks that the bounds are defined.</p>
+<dt id="galsim.Image.setValue">
+<code class="sig-name descname">setValue</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the value of a single pixel.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image._invertSelf">
-<code class="sig-name descname">_invertSelf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image._invertSelf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image._invertSelf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to <a class="reference internal" href="#galsim.Image.invertSelf" title="galsim.Image.invertSelf"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">invertSelf</span></code></a>, except that there are no checks that the bounds are defined.</p>
+<dt id="galsim.Image.addValue">
+<code class="sig-name descname">addValue</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.addValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.addValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add to the value of a single pixel.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="galsim.Image.resize">
+<code class="sig-name descname">resize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.resize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.resize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize the image to have a new bounds.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.fill">
+<code class="sig-name descname">fill</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.fill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill the image with the same value in all pixels.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.setZero">
+<code class="sig-name descname">setZero</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setZero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setZero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill the image with zeros.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.invertSelf">
+<code class="sig-name descname">invertSelf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.invertSelf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.invertSelf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert each value x to 1/x.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a deep copy of the image.</p>
+</dd></dl>
+
+<p>See their documentation for more details.</p>
 <dl class="method">
 <dt id="galsim.Image.FindAdaptiveMom">
 <code class="sig-name descname">FindAdaptiveMom</code><span class="sig-paren">(</span><em class="sig-param">weight=None</em>, <em class="sig-param">badpix=None</em>, <em class="sig-param">guess_sig=5.0</em>, <em class="sig-param">precision=1e-06</em>, <em class="sig-param">guess_centroid=None</em>, <em class="sig-param">strict=True</em>, <em class="sig-param">round_moments=False</em>, <em class="sig-param">hsmparams=None</em><span class="sig-paren">)</span><a class="headerlink" href="#galsim.Image.FindAdaptiveMom" title="Permalink to this definition">¶</a></dt>
@@ -512,6 +501,74 @@ for more information. [default: None]</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="galsim.Image.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the pixel value at given position</p>
+<p>The arguments here may be either (x, y) or a PositionI instance.
+Or you can provide x, y as named kwargs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.__getitem__">
+<code class="sig-name descname">__getitem__</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return either a subimage or a single pixel value.</p>
+<p>For example,:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">subimage</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">BoundsI</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.__setitem__">
+<code class="sig-name descname">__setitem__</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__setitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__setitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set either a subimage or a single pixel to new values.</p>
+<p>For example,:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">BoundsI</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">)]</span> <span class="o">=</span> <span class="n">im2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">17.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">17.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Image.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Image.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Image.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.Image.addNoise">
 <code class="sig-name descname">addNoise</code><span class="sig-paren">(</span><em class="sig-param">noise</em><span class="sig-paren">)</span><a class="headerlink" href="#galsim.Image.addNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add noise to the image according to a supplied noise model.</p>
@@ -584,22 +641,22 @@ astrometry, although to an extent much lesser than the photographic films, are f
 exhibit reciprocity failure at low flux levels. The exact mechanism of this effect is unknown
 and hence we lack a good theoretical model. Many models that fit the empirical data exist and
 a common relation is</p>
-<div class="math notranslate nohighlight">
-\[\frac{p_R}{p} = \left(1 + \alpha \log_{10}\left(\frac{p}{t}\right)
-                   - \alpha \log_{10}\left(\frac{p^\prime}{t^\prime}\right)\right)\]</div>
-<p>where <span class="math notranslate nohighlight">\(t\)</span> is the exposure time (in units of seconds), <span class="math notranslate nohighlight">\(p\)</span> is the pixel response
-(in units of electrons) and <span class="math notranslate nohighlight">\(p_R\)</span> is the response if the reciprocity relation fails to
-hold. <span class="math notranslate nohighlight">\(p^\prime/t^\prime\)</span> is the count rate (in electrons/second) corresponding to the
-photon flux (base flux) at which the detector is calibrated to have its nominal gain.
-alpha is the parameter in the model, measured in units of per decade and varies with detectors
-and the operating temperature. The functional form for the reciprocity failure is motivated
-empirically from the tests carried out on H2RG detectors.</p>
-<p>See for reference Fig. 1 and Fig. 2 of <a class="reference external" href="http://arxiv.org/abs/1106.1090">http://arxiv.org/abs/1106.1090</a>. Since <span class="math notranslate nohighlight">\(p_R/p\)</span>
-remains close to unity over a wide range of flux, we convert this relation to a power law by
-approximating <span class="math notranslate nohighlight">\(p_R/p \approx 1 + \log(p_R/p)\)</span>. This gives a relation that is better
-behaved than the logarithmic relation at low flux levels.</p>
-<div class="math notranslate nohighlight">
-\[\frac{p_R}{p} = \left(\frac{p/t}{p^\prime/t^\prime}\right)^\frac{\alpha}{\log(10)}.\]</div>
+<blockquote>
+<div><p>pR/p = (1 + alpha*log10(p/t) - alpha*log10(p’/t’))</p>
+</div></blockquote>
+<p>where t is the exposure time (in units of seconds), p is the pixel response (in units of
+electrons) and pR is the response if the reciprocity relation fails to hold. p’/t’ is count
+rate (in electrons/second) corresponding to the photon flux (base flux) at which the detector
+is calibrated to have its nominal gain. alpha is the parameter in the model, measured in units
+of per decade and varies with detectors and the operating temperature. The functional form for
+the reciprocity failure is motivated empirically from the tests carried out on H2RG detectors.
+See for reference Fig. 1 and Fig. 2 of <a class="reference external" href="http://arxiv.org/abs/1106.1090">http://arxiv.org/abs/1106.1090</a>. Since pR/p remains
+close to unity over a wide range of flux, we convert this relation to a power law by
+approximating (pR/p)-1 ~ log(pR/p). This gives a relation that is better behaved than the
+logarithmic relation at low flux levels.</p>
+<blockquote>
+<div><p>pR/p = ((p/t)/(p’/t’))^(alpha/log(10)).</p>
+</div></blockquote>
 <p>Because of how this function is defined, the input image must have non-negative pixel
 values for the resulting image to be well-defined. Negative pixel values result in ‘nan’s.
 The image should be in units of electrons, or if it is in ADU, then the value passed to
@@ -613,16 +670,16 @@ nonlinearity should occur after including the effect of reciprocity failure.</p>
 reciprocity failure given in the docstring.</p></li>
 <li><p><strong>alpha</strong> – The alpha parameter in the expression for reciprocity failure, in
 units of ‘per decade’.</p></li>
-<li><p><strong>base_flux</strong> – The flux (<span class="math notranslate nohighlight">\(p^\prime/t^\prime\)</span>) at which the gain is calibrated to have
-its nominal value.</p></li>
+<li><p><strong>base_flux</strong> – The flux (p’/t’) at which the gain is calibrated to have its nominal
+value.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.addValue">
-<code class="sig-name descname">addValue</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.addValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.addValue" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">addValue</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.addValue"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Add some amount to the pixel value at given (x,y) position</p>
 <p>The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
 Or you can provide x, y, value as named kwargs.</p>
@@ -647,13 +704,19 @@ from the charges to its left and so on.</p>
 <p>The argument ‘edge_treatment’ specifies how the edges of the image should be treated, which
 could be in one of the three ways:</p>
 <ol class="arabic simple">
-<li><p>‘extend’: The kernel is convolved with the zero-padded image, leading to a larger
-intermediate image. The central portion of this image is returned.  [default]</p></li>
-<li><p>‘crop’: The kernel is convolved with the image, with the kernel inside the image completely.
-Pixels at the edges, where the center of the kernel could not be placed, are set to the
+<li><dl class="simple">
+<dt>‘extend’: The kernel is convolved with the zero-padded image, leading to a larger</dt><dd><p>intermediate image. The central portion of this image is returned.  [default]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>‘crop’: The kernel is convolved with the image, with the kernel inside the image completely.</dt><dd><p>Pixels at the edges, where the center of the kernel could not be placed, are set to the
 value specified by ‘fill_value’. If ‘fill_value’ is not specified or set to ‘None’, then
 the pixel values in the original image are retained. The user can make the edges invalid
-by setting fill_value to numpy.nan.</p></li>
+by setting fill_value to numpy.nan.</p>
+</dd>
+</dl>
+</li>
 <li><p>‘wrap’: The kernel is convolved with the image, assuming periodic boundary conditions.</p></li>
 </ol>
 <p>The size of the image array remains unchanged in all three cases.</p>
@@ -749,14 +812,8 @@ each <a class="reference internal" href="#galsim.Image" title="galsim.Image"><co
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.array">
-<em class="property">property </em><code class="sig-name descname">array</code><a class="headerlink" href="#galsim.Image.array" title="Permalink to this definition">¶</a></dt>
-<dd><p>The underlying numpy array.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.bin">
-<code class="sig-name descname">bin</code><span class="sig-paren">(</span><em class="sig-param">nx</em>, <em class="sig-param">ny</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.bin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.bin" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">bin</code><span class="sig-paren">(</span><em class="sig-param">nx</em>, <em class="sig-param">ny</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.bin"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bin the image pixels in blocks of nx x ny pixels.</p>
 <p>This returns a new image that is a binned version of the current image.
 Adjacent pixel values in nx x ny blocks are added together to produce the flux in each
@@ -780,12 +837,6 @@ output pixel.</p></li>
 <dd class="field-even"><p>a new <a class="reference internal" href="#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.bounds">
-<em class="property">property </em><code class="sig-name descname">bounds</code><a class="headerlink" href="#galsim.Image.bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>The bounds of the <a class="reference internal" href="#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -930,15 +981,9 @@ or row, so the convention we adopt in this case is to round up.  For example:</p
 <dt id="galsim.Image.conjugate">
 <em class="property">property </em><code class="sig-name descname">conjugate</code><a class="headerlink" href="#galsim.Image.conjugate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the complex conjugate of an image.</p>
-<p>This works for real or complex.  For real images, it acts the same as <a class="reference internal" href="#galsim.Image.view" title="galsim.Image.view"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">view</span></code></a>.</p>
+<p>This works for real or complex.  For real images, it acts the same as view().</p>
 <p>Note that for complex images, this is not a conjugate view into the original image.
 So changing the original image does not change the conjugate (or vice versa).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Make a copy of the <a class="reference internal" href="#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a></p>
 </dd></dl>
 
 <dl class="method">
@@ -948,35 +993,17 @@ So changing the original image does not change the conjugate (or vice versa).</p
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.dtype">
-<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#galsim.Image.dtype" title="Permalink to this definition">¶</a></dt>
-<dd><p>The dtype of the underlying numpy array.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.fill">
-<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.fill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.fill" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.fill"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Set all pixel values to the given <code class="docutils literal notranslate"><span class="pre">value</span></code></p>
-<dl class="simple">
-<dt>Parameter:</dt><dd><p>value:  The value to set all the pixels to.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.getValue">
-<code class="sig-name descname">getValue</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.getValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.getValue" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">getValue</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.getValue"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim
 does not have to parse the different options available for __call__.  (i.e. im(x,y) or
 im(pos) or im(x=x,y=y))</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – The x coordinate of the pixel to get.</p></li>
-<li><p><strong>y</strong> – The y coordinate of the pixel to get.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
@@ -992,29 +1019,17 @@ the FFT.</p>
 <dt id="galsim.Image.imag">
 <em class="property">property </em><code class="sig-name descname">imag</code><a class="headerlink" href="#galsim.Image.imag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the imaginary part of an image.</p>
-<p>This is a property, not a function.  So write <code class="docutils literal notranslate"><span class="pre">im.imag</span></code>, not <code class="docutils literal notranslate"><span class="pre">im.imag()</span></code>.</p>
+<p>This is a property, not a function.  So im.imag, not im.imag().</p>
 <p>This works for real or complex.  For real images, the returned array is read-only and
 all elements are 0.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.invertSelf">
-<code class="sig-name descname">invertSelf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.invertSelf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.invertSelf" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">invertSelf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.invertSelf"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Set all pixel values to their inverse: x -&gt; 1/x.</p>
 <p>Note: any pixels whose value is 0 originally are ignored.  They remain equal to 0
 on the output, rather than turning into inf.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.iscomplex">
-<em class="property">property </em><code class="sig-name descname">iscomplex</code><a class="headerlink" href="#galsim.Image.iscomplex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether the <a class="reference internal" href="#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> values are complex.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.isconst">
-<em class="property">property </em><code class="sig-name descname">isconst</code><a class="headerlink" href="#galsim.Image.isconst" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether the <a class="reference internal" href="#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> is constant.  I.e. modifying its values is an error.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1023,12 +1038,6 @@ on the output, rather than turning into inf.</p>
 <dd><p>Indicates whether each row of the image is contiguous in memory.</p>
 <p>Note: it is ok for the end of one row to not be contiguous with the start of the
 next row.  This just checks that each individual row has a stride of 1.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.isinteger">
-<em class="property">property </em><code class="sig-name descname">isinteger</code><a class="headerlink" href="#galsim.Image.isinteger" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether the <a class="reference internal" href="#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> values are integral.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1086,8 +1095,8 @@ easily do so by doing:</p>
 <dt id="galsim.Image.real">
 <em class="property">property </em><code class="sig-name descname">real</code><a class="headerlink" href="#galsim.Image.real" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the real part of an image.</p>
-<p>This is a property, not a function.  So write <code class="docutils literal notranslate"><span class="pre">im.real</span></code>, not <code class="docutils literal notranslate"><span class="pre">im.real()</span></code>.</p>
-<p>This works for real or complex.  For real images, it acts the same as <a class="reference internal" href="#galsim.Image.view" title="galsim.Image.view"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">view</span></code></a>.</p>
+<p>This is a property, not a function.  So im.real, not im.real().</p>
+<p>This works for real or complex.  For real images, it acts the same as view().</p>
 </dd></dl>
 
 <dl class="method">
@@ -1104,8 +1113,8 @@ some purposes.  This method replaces those values with 0 or some other value if 
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.resize">
-<code class="sig-name descname">resize</code><span class="sig-paren">(</span><em class="sig-param">bounds</em>, <em class="sig-param">wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.resize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.resize" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">resize</code><span class="sig-paren">(</span><em class="sig-param">bounds</em>, <em class="sig-param">wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.resize"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Resize the image to have a new bounds (must be a <a class="reference internal" href="bounds.html#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a> instance)</p>
 <p>Note that the resized image will have uninitialized data.  If you want to preserve
 the existing data values, you should either use <a class="reference internal" href="#galsim.Image.subImage" title="galsim.Image.subImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">subImage</span></code></a> (if you want a smaller
@@ -1123,19 +1132,8 @@ which means keep the existing wcs]</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.scale">
-<em class="property">property </em><code class="sig-name descname">scale</code><a class="headerlink" href="#galsim.Image.scale" title="Permalink to this definition">¶</a></dt>
-<dd><p>The pixel scale of the <a class="reference internal" href="#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.  Only valid if the wcs is a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>.</p>
-<p>If the WCS is either not set (i.e. it is <code class="docutils literal notranslate"><span class="pre">None</span></code>) or it is a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>, then
-it is permissible to change the scale with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">new_pixel_scale</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.setCenter">
-<code class="sig-name descname">setCenter</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setCenter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setCenter" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">setCenter</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setCenter"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Set the center of the image to the given (integral) (xcen, ycen)</p>
 <p>The arguments here may be either (xcen, ycen) or a PositionI instance.
 Or you can provide xcen, ycen as named kwargs.</p>
@@ -1170,8 +1168,8 @@ or row, so the convention we adopt in this case is to round up.  For example:</p
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.setOrigin">
-<code class="sig-name descname">setOrigin</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setOrigin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setOrigin" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">setOrigin</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setOrigin"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Set the origin of the image to the given (integral) (x0, y0)</p>
 <p>The arguments here may be either (x0, y0) or a PositionI instance.
 Or you can provide x0, y0 as named kwargs.</p>
@@ -1212,8 +1210,8 @@ and y0 is the new y value of the first row.  For example:</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.setValue">
-<code class="sig-name descname">setValue</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setValue" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">setValue</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setValue"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Set the pixel value at given (x,y) position</p>
 <p>The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
 Or you can provide x, y, value as named kwargs.</p>
@@ -1221,14 +1219,14 @@ Or you can provide x, y, value as named kwargs.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.setZero">
-<code class="sig-name descname">setZero</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setZero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.setZero" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">setZero</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.setZero"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Set all pixel values to zero.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.shift">
-<code class="sig-name descname">shift</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.shift" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">shift</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.shift"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Shift the pixel coordinates by some (integral) dx,dy.</p>
 <p>The arguments here may be either (dx, dy) or a PositionI instance.
 Or you can provide dx, dy as named kwargs.</p>
@@ -1244,15 +1242,15 @@ used for that pixel:</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.subImage">
-<code class="sig-name descname">subImage</code><span class="sig-paren">(</span><em class="sig-param">bounds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.subImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.subImage" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">subImage</code><span class="sig-paren">(</span><em class="sig-param">bounds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.subImage"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Return a view of a portion of the full image</p>
 <p>This is equivalent to self[bounds]</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.subsample">
-<code class="sig-name descname">subsample</code><span class="sig-paren">(</span><em class="sig-param">nx</em>, <em class="sig-param">ny</em>, <em class="sig-param">dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.subsample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.subsample" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">subsample</code><span class="sig-paren">(</span><em class="sig-param">nx</em>, <em class="sig-param">ny</em>, <em class="sig-param">dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.subsample"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Subdivide the image pixels into nx x ny sub-pixels.</p>
 <p>This returns a new image that is a subsampled version of the current image.
 Each pixel’s flux is split (uniformly) into nx x ny smaller pixels.</p>
@@ -1363,8 +1361,8 @@ to make the final noise white.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Image.wrap">
-<code class="sig-name descname">wrap</code><span class="sig-paren">(</span><em class="sig-param">bounds</em>, <em class="sig-param">hermitian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.wrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.wrap" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">wrap</code><span class="sig-paren">(</span><em class="sig-param">bounds</em>, <em class="sig-param">hermitian=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.wrap"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Wrap the values in a image onto a given subimage and return the subimage.</p>
 <p>This would typically be used on a k-space image where you initially draw a larger image
 than you want for the FFT and then wrap it onto a smaller subset.  This will cause
@@ -1374,16 +1372,19 @@ without wrapping.</p>
 implicit understanding that the function is Hermitian, so im(-x,-y) == im(x,y).conjugate().
 In this case, the wrapping needs to work slightly differently, so you can specify
 that your image is implicitly Hermitian with the <code class="docutils literal notranslate"><span class="pre">hermitian</span></code> argument.  Options are:</p>
-<dl class="simple">
-<dt>hermitian=False</dt><dd><p>(default) Normal non-Hermitian image.</p>
-</dd>
-<dt>hermitian=’x’</dt><dd><p>Only x&gt;=0 values are stored with x&lt;0 values being implicitly Hermitian.
-In this case im.bounds.xmin and bounds.xmin must be 0.</p>
-</dd>
-<dt>hermitian=’y’</dt><dd><p>Only y&gt;=0 values are stored with y&lt;0 values being implicitly Hermitian.
-In this case im.bounds.ymin and bounds.ymin must be 0.</p>
+<ul class="simple">
+<li><p>hermitian=False  (default) Normal non-Hermitian image.</p></li>
+<li><dl class="simple">
+<dt>hermitian=’x’    Only x&gt;=0 values are stored with x&lt;0 values being implicitly Hermitian.</dt><dd><p>In this case im.bounds.xmin and bounds.xmin must be 0.</p>
 </dd>
 </dl>
+</li>
+<li><dl class="simple">
+<dt>hermitian=’y’    Only y&gt;=0 values are stored with y&lt;0 values being implicitly Hermitian.</dt><dd><p>In this case im.bounds.ymin and bounds.ymin must be 0.</p>
+</dd>
+</dl>
+</li>
+</ul>
 <p>Also, in the two Hermitian cases, the direction that is not implicitly Hermitian must be
 symmetric in the image’s bounds.  The wrap bounds must be almost symmetric, but missing
 the most negative value.  For example,:</p>
@@ -1438,8 +1439,8 @@ then the <a class="reference internal" href="#galsim.Image" title="galsim.Image"
 that case, the user is responsible for calling either
 <code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writeFile(...)</span></code> afterwards.
 [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
-<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
-[default: True]</p></li>
+<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> when <code class="docutils literal notranslate"><span class="pre">file_name</span></code> is given will silently overwrite
+existing files. [default: True]</p></li>
 <li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
 <ul>
 <li><p>None or ‘none’ = no compression</p></li>
@@ -1449,14 +1450,14 @@ that case, the user is responsible for calling either
 <li><p>’gzip_tile’ = use gzip in tiles (preserves header readability)</p></li>
 <li><p>’hcompress’ = use hcompress in tiles (only valid for 2-d images)</p></li>
 <li><p>’plio’ = use plio compression in tiles (only valid for pos integer data)</p></li>
-<li><p>’auto’ = determine the compression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the compression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):
+- ‘.fz’ =&gt; ‘rice’
+- ‘.gz’ =&gt; ‘gzip’
+- ‘.bz2’ =&gt; ‘bzip2’
+- otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>[default: ‘auto’]</p>
@@ -1464,30 +1465,6 @@ that case, the user is responsible for calling either
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.xmax">
-<em class="property">property </em><code class="sig-name descname">xmax</code><a class="headerlink" href="#galsim.Image.xmax" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for self.bounds.xmax.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.xmin">
-<em class="property">property </em><code class="sig-name descname">xmin</code><a class="headerlink" href="#galsim.Image.xmin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for self.bounds.xmin.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.ymax">
-<em class="property">property </em><code class="sig-name descname">ymax</code><a class="headerlink" href="#galsim.Image.ymax" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for self.bounds.ymax.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Image.ymin">
-<em class="property">property </em><code class="sig-name descname">ymin</code><a class="headerlink" href="#galsim.Image.ymin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for self.bounds.ymin.</p>
 </dd></dl>
 
 </dd></dl>

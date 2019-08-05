@@ -91,10 +91,9 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="photon.html">Photon Shooting</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="photon_array.html">Photon Arrays</a></li>
@@ -102,6 +101,7 @@
 <li class="toctree-l2"><a class="reference internal" href="surface.html">Surface Operators</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -191,6 +191,42 @@ bottom of the detector.</p>
 <dd><p>The base class for other sensor models, and also an implementation of the simplest possible
 sensor model that just converts each photon into an electron and drops it in the appropriate
 pixel.</p>
+<dl class="method">
+<dt id="galsim.Sensor.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sensor.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sensor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sensor.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sensor.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Sensor.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Sensor.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Sensor.accumulate">
 <code class="sig-name descname">accumulate</code><span class="sig-paren">(</span><em class="sig-param">photons</em>, <em class="sig-param">image</em>, <em class="sig-param">orig_center=None</em>, <em class="sig-param">resume=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.accumulate" title="Permalink to this definition">¶</a></dt>
@@ -293,6 +329,30 @@ stronger along the x direction. [default: False]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.SiliconSensor.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.SiliconSensor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">name='lsst_itl_8'</em>, <em class="sig-param">strength=1.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">diffusion_factor=1.0</em>, <em class="sig-param">qdist=3</em>, <em class="sig-param">nrecalc=10000</em>, <em class="sig-param">treering_func=None</em>, <em class="sig-param">treering_center=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">transpose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.SiliconSensor.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.SiliconSensor.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.SiliconSensor.accumulate">
 <code class="sig-name descname">accumulate</code><span class="sig-paren">(</span><em class="sig-param">photons</em>, <em class="sig-param">image</em>, <em class="sig-param">orig_center=galsim.PositionI(x=0</em>, <em class="sig-param">y=0)</em>, <em class="sig-param">resume=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.accumulate" title="Permalink to this definition">¶</a></dt>

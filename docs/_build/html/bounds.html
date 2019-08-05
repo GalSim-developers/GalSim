@@ -96,12 +96,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -188,7 +188,7 @@
 <p>The bounds are stored as four numbers in each instance, (xmin, xmax, ymin, ymax), with an
 additional boolean switch to say whether or not the Bounds rectangle has been defined.  The
 rectangle is undefined if the min value &gt; the max value in either direction.</p>
-<p><em>Initialization</em>:</p>
+<p>Initialization:</p>
 <p>A <a class="reference internal" href="#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a> or <a class="reference internal" href="#galsim.BoundsD" title="galsim.BoundsD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsD</span></code></a> instance can be initialized in a variety of ways.  The most direct is
 via four scalars:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bounds</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">BoundsD</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)</span>
@@ -235,6 +235,48 @@ the edge of the other image:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="p">[</span><span class="n">overlap</span><span class="p">]</span> <span class="o">+=</span> <span class="n">stamp</span><span class="p">[</span><span class="n">overlap</span><span class="p">]</span>
 </pre></div>
 </div>
+<dl class="method">
+<dt id="galsim.Bounds.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Bounds.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Bounds.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Bounds.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Bounds.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Bounds.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.Bounds.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Bounds.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.Bounds.area">
 <code class="sig-name descname">area</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.area" title="Permalink to this definition">¶</a></dt>
@@ -355,6 +397,12 @@ this may not necessarily be an integer <a class="reference internal" href="pos.h
 <p>Typically used to define the bounding box of an image.</p>
 <p>See the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> doc string for more details.</p>
 <dl class="method">
+<dt id="galsim.BoundsI.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsI.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BoundsI.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.BoundsI.numpyShape">
 <code class="sig-name descname">numpyShape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsI.numpyShape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BoundsI.numpyShape" title="Permalink to this definition">¶</a></dt>
 <dd><p>A simple utility function to get the numpy shape that corresponds to this <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> object.</p>
@@ -368,6 +416,12 @@ this may not necessarily be an integer <a class="reference internal" href="pos.h
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.bounds.Bounds</span></code></p>
 <p>A <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> that takes floating point values.</p>
 <p>See the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> doc string for more details.</p>
+<dl class="method">
+<dt id="galsim.BoundsD.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsD.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BoundsD.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">

@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -246,14 +246,14 @@ want.)]</p></li>
 <li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
 <li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
 <li><p>’plio’ = use plio decompression in tiles</p></li>
-<li><p>’auto’ = determine the decompression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the decompression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).
+- ‘.fz’ =&gt; ‘rice’
+- ‘.gz’ =&gt; ‘gzip’
+- ‘.bz2’ =&gt; ‘bzip2’
+- otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>[default: ‘auto’]</p>
@@ -297,14 +297,14 @@ already include it. [default: None]</p></li>
 <li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
 <li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
 <li><p>’plio’ = use plio decompression in tiles</p></li>
-<li><p>’auto’ = determine the decompression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the decompression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).
+- ‘.fz’ =&gt; ‘rice’
+- ‘.gz’ =&gt; ‘gzip’
+- ‘.bz2’ =&gt; ‘bzip2’
+- otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>[default: ‘auto’]</p>
@@ -351,14 +351,14 @@ want.)]</p></li>
 <li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
 <li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
 <li><p>’plio’ = use plio decompression in tiles</p></li>
-<li><p>’auto’ = determine the decompression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the decompression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).
+- ‘.fz’ =&gt; ‘rice’
+- ‘.gz’ =&gt; ‘gzip’
+- ‘.bz2’ =&gt; ‘bzip2’
+- otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>[default: ‘auto’]</p>
@@ -408,14 +408,14 @@ want.)]</p></li>
 <li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
 <li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
 <li><p>’plio’ = use plio decompression in tiles</p></li>
-<li><p>’auto’ = determine the decompression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the decompression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).
+- ‘.fz’ =&gt; ‘rice’
+- ‘.gz’ =&gt; ‘gzip’
+- ‘.bz2’ =&gt; ‘bzip2’
+- otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>[default: ‘auto’]</p>
@@ -465,8 +465,8 @@ then the <a class="reference internal" href="image_class.html#galsim.Image" titl
 that case, the user is responsible for calling either
 <code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writeFile(...)</span></code> afterwards.
 [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
-<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
-[default: True]</p></li>
+<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> when <code class="docutils literal notranslate"><span class="pre">file_name</span></code> is given will silently overwrite
+existing files. [default: True]</p></li>
 <li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
 <ul>
 <li><p>None or ‘none’ = no compression</p></li>
@@ -476,14 +476,14 @@ that case, the user is responsible for calling either
 <li><p>’gzip_tile’ = use gzip in tiles (preserves header readability)</p></li>
 <li><p>’hcompress’ = use hcompress in tiles (only valid for 2-d images)</p></li>
 <li><p>’plio’ = use plio compression in tiles (only valid for pos integer data)</p></li>
-<li><p>’auto’ = determine the compression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the compression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):
+- ‘.fz’ =&gt; ‘rice’
+- ‘.gz’ =&gt; ‘gzip’
+- ‘.bz2’ =&gt; ‘bzip2’
+- otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>[default: ‘auto’]</p>
@@ -513,29 +513,8 @@ then the <a class="reference internal" href="image_class.html#galsim.Image" titl
 that case, the user is responsible for calling either
 <code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writeFile(...)</span></code> afterwards.
 [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
-<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
-[default: True]</p></li>
-<li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
-<ul>
-<li><p>None or ‘none’ = no compression</p></li>
-<li><p>’rice’ = use rice compression in tiles (preserves header readability)</p></li>
-<li><p>’gzip’ = use gzip to compress the full file</p></li>
-<li><p>’bzip2’ = use bzip2 to compress the full file</p></li>
-<li><p>’gzip_tile’ = use gzip in tiles (preserves header readability)</p></li>
-<li><p>’hcompress’ = use hcompress in tiles (only valid for 2-d images)</p></li>
-<li><p>’plio’ = use plio compression in tiles (only valid for pos integer data)</p></li>
-<li><p>’auto’ = determine the compression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
-</li>
-</ul>
-<p>[default: ‘auto’]</p>
-</p></li>
+<li><p><strong>clobber</strong> – See documentation for this parameter on the galsim.fits.write() method.</p></li>
+<li><p><strong>compression</strong> – See documentation for this parameter on the galsim.fits.write() method.</p></li>
 </ul>
 </dd>
 </dl>
@@ -571,29 +550,8 @@ then the cube is appended to the end of the HDUList as a new HDU. In that
 case, the user is responsible for calling either <code class="docutils literal notranslate"><span class="pre">hdu_list.writeto(...)</span></code>
 or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writeFile(...)</span></code> afterwards.  [Either <code class="docutils literal notranslate"><span class="pre">file_name</span></code> or
 <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code> is required.]</p></li>
-<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> will silently overwrite existing files.
-[default: True]</p></li>
-<li><p><strong>compression</strong> – <p>Which compression scheme to use (if any).  Options are:</p>
-<ul>
-<li><p>None or ‘none’ = no compression</p></li>
-<li><p>’rice’ = use rice compression in tiles (preserves header readability)</p></li>
-<li><p>’gzip’ = use gzip to compress the full file</p></li>
-<li><p>’bzip2’ = use bzip2 to compress the full file</p></li>
-<li><p>’gzip_tile’ = use gzip in tiles (preserves header readability)</p></li>
-<li><p>’hcompress’ = use hcompress in tiles (only valid for 2-d images)</p></li>
-<li><p>’plio’ = use plio compression in tiles (only valid for pos integer data)</p></li>
-<li><p>’auto’ = determine the compression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
-</li>
-</ul>
-<p>[default: ‘auto’]</p>
-</p></li>
+<li><p><strong>clobber</strong> – See documentation for this parameter on the galsim.fits.write() method.</p></li>
+<li><p><strong>compression</strong> – See documentation for this parameter on the galsim.fits.write() method.</p></li>
 </ul>
 </dd>
 </dl>
@@ -622,13 +580,13 @@ already include it. [default: None]</p></li>
 <li><p>None or ‘none’ = no compression</p></li>
 <li><p>’gzip’ = use gzip to compress the full file</p></li>
 <li><p>’bzip2’ = use bzip2 to compress the full file</p></li>
-<li><p>’auto’ = determine the compression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):</p>
-<ul>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the compression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given):
+‘.gz’ =&gt; ‘gzip’
+‘.bz2’ =&gt; ‘bzip2’
+otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>Note that the other options, such as ‘rice’, that operate on the image
@@ -725,14 +683,14 @@ want.)]</p></li>
 <li><p>’gzip_tile’ = use gzip decompression in tiles</p></li>
 <li><p>’hcompress’ = use hcompress decompression in tiles</p></li>
 <li><p>’plio’ = use plio decompression in tiles</p></li>
-<li><p>’auto’ = determine the decompression from the extension of the file name
-(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).</p>
-<ul>
-<li><p>’.fz’ =&gt; ‘rice’</p></li>
-<li><p>’.gz’ =&gt; ‘gzip’</p></li>
-<li><p>’.bz2’ =&gt; ‘bzip2’</p></li>
-<li><p>otherwise None</p></li>
-</ul>
+<li><dl class="simple">
+<dt>’auto’ = determine the decompression from the extension of the file name</dt><dd><p>(requires <code class="docutils literal notranslate"><span class="pre">file_name</span></code> to be given).
+- ‘.fz’ =&gt; ‘rice’
+- ‘.gz’ =&gt; ‘gzip’
+- ‘.bz2’ =&gt; ‘bzip2’
+- otherwise None</p>
+</dd>
+</dl>
 </li>
 </ul>
 <p>[default: ‘auto’]</p>
@@ -744,6 +702,48 @@ to parse the file this way.  [default: False]</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">header=None</em>, <em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">text_file=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.fits.FitsHeader.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.fits.FitsHeader.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.fits.FitsHeader.append">
 <code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value=''</em>, <em class="sig-param">useblanks=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.append" title="Permalink to this definition">¶</a></dt>

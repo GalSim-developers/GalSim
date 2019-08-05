@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -202,6 +202,18 @@ underlying physics of the effect.</p>
 <dd><p>Base class for the most generic, i.e. no with symmetries or distance scaling relationships
 assumed, pixel boundary charge deflection model (as per Antilogus et al 2014).</p>
 <dl class="method">
+<dt id="galsim.cdmodel.BaseCDModel.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.cdmodel.BaseCDModel.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.cdmodel.BaseCDModel.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">a_l</em>, <em class="sig-param">a_r</em>, <em class="sig-param">a_b</em>, <em class="sig-param">a_t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a generic CDModel (charge deflection model).</p>
@@ -234,6 +246,24 @@ applyForward or applyBackward.</p>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.cdmodel.BaseCDModel.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.cdmodel.BaseCDModel.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.cdmodel.BaseCDModel.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
@@ -282,10 +312,10 @@ from affected pixel border.</p>
 modelled independently by the parameters <code class="docutils literal notranslate"><span class="pre">r0</span></code>, <code class="docutils literal notranslate"><span class="pre">t0</span></code> (directly adjacent to borders
 between two pixels in the same row=y / column=x) and <code class="docutils literal notranslate"><span class="pre">rx</span></code>, <code class="docutils literal notranslate"><span class="pre">tx</span></code> (pixels on the corner
 of pixel borders).</p>
-<p>Deflections due to charges further away are modelled as a power-law:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">r_distance</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span>
-</pre></div>
-</div>
+<p>Deflections due to charges further away are modelled as a power-law</p>
+<blockquote>
+<div><p>a = A * numpy.sin(theta) * (r_distance)**(-alpha)</p>
+</div></blockquote>
 <p>where A is a power-law amplitude (<code class="docutils literal notranslate"><span class="pre">r</span></code> for a_l / a_b and <code class="docutils literal notranslate"><span class="pre">t</span></code> for a_b / a_t), theta is
 the angle between the pixel border line and the line from border center to the other pixel
 center.</p>

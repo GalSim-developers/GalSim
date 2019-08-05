@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Units" href="units.html" />
+    <link rel="next" title="Weak Lensing" href="wl.html" />
     <link rel="prev" title="Chromatic Profiles" href="chromaticobject.html" /> 
 </head>
 
@@ -91,6 +91,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sed.html">Spectral Energy Distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bandpass.html">Bandpass Filters</a></li>
@@ -98,11 +100,9 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Spectral Correlated Noise</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -202,6 +202,48 @@ described by the corresponding <a class="reference internal" href="gsobject.html
 </dd>
 </dl>
 <dl class="method">
+<dt id="galsim.CovarianceSpectrum.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CovarianceSpectrum.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CovarianceSpectrum.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">Sigma</em>, <em class="sig-param">SEDs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CovarianceSpectrum.__ne__">
+<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.__ne__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self!=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CovarianceSpectrum.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.CovarianceSpectrum.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="galsim.CovarianceSpectrum.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.CovarianceSpectrum.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.CovarianceSpectrum.toNoise">
 <code class="sig-name descname">toNoise</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em>, <em class="sig-param">PSF</em>, <em class="sig-param">wcs</em>, <em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.toNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.toNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derive the <a class="reference internal" href="corr_noise.html#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a> object for the associated <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> when convolved
@@ -233,7 +275,7 @@ with <code class="docutils literal notranslate"><span class="pre">PSF</span></co
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="units.html" class="btn btn-neutral float-right" title="Units" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="wl.html" class="btn btn-neutral float-right" title="Weak Lensing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="chromaticobject.html" class="btn btn-neutral float-left" title="Chromatic Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
