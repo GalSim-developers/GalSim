@@ -5,7 +5,7 @@ Deprecated Features
 -------------------
 
 - Deprecated the nominally private class galsim.correlatednoise._BaseCorrelatedNoise.  If you
-  were using it for any purpose, you should now use galsim.BaseCorrelatedNoise. (#160)
+  were using it for any purpose, you should now use `galsim.BaseCorrelatedNoise`. (#160)
 - Deprecated the ``tol`` parameter of the various Interpolant classes.  Users should use the
   ``kvalue_accuracy`` parameter of ``gsparams`` instead. (#1038)
 
@@ -14,6 +14,15 @@ API Changes
 
 - Removed functionality to store and re-load WFIRST PSFs, and to obtain multiple WFIRST
   PSFs simultaneously. (#919)
+- The RealGalaxy COSMOS catalog is now hosted at `Zenodo <https://zenodo.org/record/3242143>`_,
+  which seems to have solved some flakiness in the previous hosting at the University of
+  Manchester. (#1033)
+
+Documentaion Updates
+--------------------
+
+- The documentation is now rendered in Sphinx, rather than Doxygen, which looks much nicer.  The
+  new docs are accessible at http://galsim-developers.github.io/GalSim/.  (#160)
 
 New Features
 ------------
@@ -24,14 +33,15 @@ New Features
   within the SCA. (#919)
 - Added WFIRST fermi persistence model. (#992)
 - Added ``r0_500`` argument to VonKarman. (#1005)
-- Added array versions of ``wcs.toWorld`` and ``wcs.toImage``. (#1026)
-- Exposed some methods of Interpolants that had only been in the C++ layer. (#1038)
+- Use OpenMP when appropriate in `SiliconSensor.accumulate` (#1008)
+- Added array versions of `BaseWCS.toWorld` and `BaseWCS.toImage`. (#1026)
+- Exposed some methods of `Interpolant` classes that had only been in the C++ layer. (#1038)
 
 Bug Fixes
 ---------
 
-- Fixed error in ``wcs.makeSkyImage`` when crossing ra=0 line for some WCS classes. (#1030)
+- Fixed error in `BaseWCS.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
 - Fixed slight error in the realized flux of some profiles when using photon shooting.
   The bug was most apparent for Kolmogorov and VonKarman, where the realized flux
   could be too small by about 1.e-3. (#1036)
-- Fixed error in Sersic class when n is very, very close to 0.5. (#1041)
+- Fixed error in `Sersic` class when n is very, very close to 0.5. (#1041)
