@@ -60,7 +60,7 @@ RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
 # The gsobject type coupled to this is COSMOSGalaxy.
 
 def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
-    """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
+    """Build a COSMOS galaxy using the cosmos_catalog input item.
     """
     cosmos_cat = galsim.config.GetInputObj('cosmos_catalog', config, base, 'COSMOSGalaxy')
 

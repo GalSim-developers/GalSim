@@ -23,7 +23,7 @@ import galsim
 # This file adds input type fits_header and value type FitsHeader.
 
 def _GenerateFromFitsHeader(config, base, value_type):
-    """@brief Return a value read from a FITS header
+    """Return a value read from a FITS header
     """
     header = galsim.config.GetInputObj('fits_header', config, base, 'FitsHeader')
 

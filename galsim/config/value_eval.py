@@ -64,7 +64,7 @@ def _isWordInString(w, s):
     return re.search(r'\b({0})\b'.format(w),s) is not None
 
 def _GenerateFromEval(config, base, value_type):
-    """@brief Evaluate a string as the provided type
+    """Evaluate a string as the provided type
     """
     #print('Start Eval')
     #print('config = ',galsim.config.CleanConfig(config))

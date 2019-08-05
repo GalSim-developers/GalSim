@@ -30,15 +30,17 @@ class TiledImageBuilder(ImageBuilder):
 
         This figures out the size that the image will be, but doesn't actually build it yet.
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
-        @param obj_num      The first object number in the image.
-        @param ignore       A list of parameters that are allowed to be in config that we can
-                            ignore here. i.e. it won't be an error if these parameters are present.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
+            obj_num:    The first object number in the image.
+            ignore:     A list of parameters that are allowed to be in config that we can
+                        ignore here. i.e. it won't be an error if these parameters are present.
+            logger:     If given, a logger object to log progress.
 
-        @returns xsize, ysize
+        Returns:
+            xsize, ysize
         """
         logger.debug('image %d: Building Tiled: image, obj = %d,%d',image_num,image_num,obj_num)
 
@@ -96,13 +98,15 @@ class TiledImageBuilder(ImageBuilder):
         """
         Build an Image consisting of a tiled array of postage stamps.
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
-        @param obj_num      The first object number in the image.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
+            obj_num:    The first object number in the image.
+            logger:     If given, a logger object to log progress.
 
-        @returns the final image and the current noise variance in the image as a tuple
+        Returns:
+            the final image and the current noise variance in the image as a tuple
         """
         full_xsize = base['image_xsize']
         full_ysize = base['image_ysize']
@@ -177,26 +181,29 @@ class TiledImageBuilder(ImageBuilder):
 
         Here we just have one job per task.
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param jobs         A list of jobs to split up into tasks.  Each job in the list is a
-                            dict of parameters that includes 'image_num' and 'obj_num'.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            jobs:       A list of jobs to split up into tasks.  Each job in the list is a
+                        dict of parameters that includes 'image_num' and 'obj_num'.
+            logger:     If given, a logger object to log progress.
 
-        @returns a list of tasks
+        Returns:
+            a list of tasks
         """
         return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
     def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to a Tiled image
 
-        @param image        The image onto which to add the noise.
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
-        @param obj_num      The first object number in the image.
-        @param current_var  The current noise variance in each postage stamps.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            image:          The image onto which to add the noise.
+            config:         The configuration dict for the image field.
+            base:           The base configuration dict.
+            image_num:      The current image number.
+            obj_num:        The first object number in the image.
+            current_var:    The current noise variance in each postage stamps.
+            logger:         If given, a logger object to log progress.
         """
         # If didn't do noise above in the stamps, then need to do it here.
         if not self.do_noise_in_stamps:
@@ -208,11 +215,13 @@ class TiledImageBuilder(ImageBuilder):
     def getNObj(self, config, base, image_num):
         """Get the number of objects that will be built for this image.
 
-        @param config       The configuration dict for the image field.
-        @param base         The base configuration dict.
-        @param image_num    The current image number.
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
 
-        @returns the number of objects
+        Returns:
+            the number of objects
         """
         orig_index_key = base.get('index_key',None)
         base['index_key'] = 'image_num'

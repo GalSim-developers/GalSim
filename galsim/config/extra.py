@@ -39,8 +39,9 @@ def SetupExtraOutput(config, logger=None):
     space so they can work safely in multi-processing mode.  Each builder will be placed in
     config['extra_builder'][key] where key is the key in galsim.config.valid_extra_outputs.
 
-    @param config       The configuration dict.
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict.
+        logger:     If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     output = config['output']
@@ -111,8 +112,9 @@ def SetupExtraOutput(config, logger=None):
 def SetupExtraOutputsForImage(config, logger=None):
     """Perform any necessary setup for the extra output items at the start of a new image.
 
-    @param config       The configuration dict.
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict.
+        logger:     If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
         if 'extra_builder' not in config:
@@ -129,9 +131,10 @@ def ProcessExtraOutputsForStamp(config, skip, logger=None):
     This gets called after all the object flux is added to the stamp, but before the sky level
     and noise are added.
 
-    @param config       The configuration dict.
-    @param skip         Was the drawing of this object skipped?
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict.
+        skip:       Was the drawing of this object skipped?
+        logger:     If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
         obj_num = config['obj_num']
@@ -149,8 +152,9 @@ def ProcessExtraOutputsForImage(config, logger=None):
     """Run the appropriate processing code for any extra output items that need to do something
     at the end of building each image
 
-    @param config       The configuration dict.
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict.
+        logger:     If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
         obj_nums = None
@@ -180,9 +184,10 @@ def WriteExtraOutputs(config, main_data, logger=None):
 
     This gets run at the end of the functions for building the regular output files.
 
-    @param config       The configuration dict.
-    @param main_data    The main file data in case it is needed.
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict.
+        main_data:  The main file data in case it is needed.
+        logger:     If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     output = config['output']
@@ -258,12 +263,14 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     Note: the extra items must have hdu numbers ranging continuously (in any order) starting
     at len(data).  Typically first = 1, since the main image is the primary HDU, numbered 0.
 
-    @param config       The configuration dict.
-    @param main_data    The main file data as a list of images.  Usually just [image] where
-                        image is the primary image to be written to the output file.
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     The configuration dict.
+        main_data:  The main file data as a list of images.  Usually just [image] where
+                    image is the primary image to be written to the output file.
+        logger:     If given, a logger object to log progress. [default: None]
 
-    @returns data with additional hdus added
+    Returns:
+        data with additional hdus added
     """
     output = config['output']
     hdus = {}
@@ -297,6 +304,12 @@ def CheckNoExtraOutputHDUs(config, output_type, logger=None):
     """Check that none of the extra output objects want to add to the HDU list.
 
     Raises an exception if one of them has an hdu field.
+
+    Parameters:
+        config:         The configuration dict.
+        output_type:    A string to use in the error message to indicate which output type
+                        had a problem.
+        logger:         If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     output = config['output']
@@ -312,12 +325,14 @@ def CheckNoExtraOutputHDUs(config, output_type, logger=None):
 def GetFinalExtraOutput(key, config, main_data=[], logger=None):
     """Get the finalized output object for the given extra output key
 
-    @param key          The name of the output field in config['output']
-    @param config       The configuration dict.
-    @param main_data    The main file data in case it is needed.  [default: []]
-    @param logger       If given, a logger object to log progress. [default: None]
+    Parameters:
+        key:        The name of the output field in config['output']
+        config:     The configuration dict.
+        main_data:  The main file data in case it is needed.  [default: []]
+        logger:     If given, a logger object to log progress. [default: None]
 
-    @returns the final data to be output.
+    Returns:
+        the final data to be output.
     """
     field = config['output'][key]
     return config['extra_builder'][key].ensureFinalized(field, config, main_data, logger)
@@ -349,11 +364,12 @@ class ExtraOutputBuilder(object):
         The base class implementation saves two work space items into self.data and self.scratch
         that can be used to safely communicate across multiple processes.
 
-        @param data         An empty list of length nimages to use as work space.
-        @param scratch      An empty dict that can be used as work space.
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            data:       An empty list of length nimages to use as work space.
+            scratch:    An empty dict that can be used as work space.
+            config:     The configuration field for this output object.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress. [default: None]
         """
         self.data = data
         self.scratch = scratch
@@ -365,9 +381,10 @@ class ExtraOutputBuilder(object):
         This function will be called at the start of each image to allow for any setup that
         needs to happen at this point in the processing.
 
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            config:     The configuration field for this output object.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress. [default: None]
         """
         pass
 
@@ -382,10 +399,10 @@ class ExtraOutputBuilder(object):
         is safe, even if multiprocessing is being used.
 
         Parameters:
-           obj_num:     The object number
-           config:      The configuration field for this output object.
-           base:        The base configuration dict.
-           logger:      If given, a logger object to log progress. [default: None]
+           obj_num:    The object number
+           config:     The configuration field for this output object.
+           base:       The base configuration dict.
+           logger:     If given, a logger object to log progress. [default: None]
         """
         pass  # pragma: no cover  (all our ExtraBuilders override this function.)
 
@@ -397,10 +414,11 @@ class ExtraOutputBuilder(object):
         these cases, but in case some module needs to do something in these cases as well, this
         method can be overridden.
 
-        @param obj_num      The object number
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            obj_num:    The object number
+            config:     The configuration field for this output object.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress. [default: None]
         """
         pass
 
@@ -414,14 +432,15 @@ class ExtraOutputBuilder(object):
         access self.data[k], where k = base['image_num'] - base['start_image_num'] is the
         appropriate index to use for this image.
 
-        @param index        The index in self.data to use for this image.  This isn't the image_num
-                            (which can be accessed at base['image_num'] if needed), but rather
-                            an index that starts at 0 for the first image being worked on and
-                            goes up to nimages-1.
-        @param obj_nums     The object numbers that were used for this image.
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            index:      The index in self.data to use for this image.  This isn't the image_num
+                        (which can be accessed at base['image_num'] if needed), but rather
+                        an index that starts at 0 for the first image being worked on and
+                        goes up to nimages-1.
+            obj_nums:   The object numbers that were used for this image.
+            config:     The configuration field for this output object.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress. [default: None]
         """
         pass
 
@@ -429,12 +448,14 @@ class ExtraOutputBuilder(object):
         """A helper function in the base class to make sure finalize only gets called once by the
         different possible locations that might need it to have been called.
 
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param main_data    The main file data in case it is needed.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            config:     The configuration field for this output object.
+            base:       The base configuration dict.
+            main_data:  The main file data in case it is needed.
+            logger:     If given, a logger object to log progress. [default: None]
 
-        @returns the final version of the object.
+        Returns:
+            the final version of the object.
         """
         if self.final_data is None:
             self.final_data = self.finalize(config, base, main_data, logger)
@@ -450,10 +471,10 @@ class ExtraOutputBuilder(object):
         more appropriate.
 
         Parameters:
-           config:      The configuration field for this output object.
-           base:        The base configuration dict.
-           main_data:   The main file data in case it is needed.
-           logger:      If given, a logger object to log progress. [default: None]
+           config:     The configuration field for this output object.
+           base:       The base configuration dict.
+           main_data:  The main file data in case it is needed.
+           logger:     If given, a logger object to log progress. [default: None]
 
         Returns:
            The final version of the object.
@@ -466,10 +487,11 @@ class ExtraOutputBuilder(object):
         The base class implementation is appropriate for the cas that the result of finalize
         is a list of images to be written to a FITS file.
 
-        @param file_name    The file to write to.
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            file_name:  The file to write to.
+            config:     The configuration field for this output object.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress. [default: None]
         """
         galsim.fits.writeMulti(self.final_data, file_name)
 
@@ -479,11 +501,13 @@ class ExtraOutputBuilder(object):
         The base class implementation is appropriate for the cas that the result of finalize
         is a list of images of length 1 to be written to a FITS file.
 
-        @param config       The configuration field for this output object.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress. [default: None]
+        Parameters:
+            config:     The configuration field for this output object.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress. [default: None]
 
-        @returns an HDU with the output data.
+        Returns:
+            an HDU with the output data.
         """
         if len(self.data) != 1:  # pragma: no cover  (Not sure if this is possible.)
             raise galsim.GalSimError(
@@ -499,9 +523,10 @@ def RegisterExtraOutput(key, builder):
     Not all functions need to be overridden.  If nothing needs to be done at a particular place
     in the processing, you can leave the base class function, which doesn't do anything.
 
-    @param key              The name of the output field in config['output']
-    @param builder          A builder object to use for building the extra output object.
-                            It should be an instance of a subclass of ExtraOutputBuilder.
+    Parameters:
+        key:        The name of the output field in config['output']
+        builder:    A builder object to use for building the extra output object.
+                    It should be an instance of a subclass of ExtraOutputBuilder.
     """
     builder._extra_output_key = key
     valid_extra_outputs[key] = builder

@@ -37,7 +37,7 @@ RegisterInputType('nfw_halo', NFWLoader(galsim.NFWHalo))
 
 
 def _GenerateFromNFWHaloShear(config, base, value_type):
-    """@brief Return a shear calculated from an NFWHalo object.
+    """Return a shear calculated from an NFWHalo object.
     """
     nfw_halo = galsim.config.GetInputObj('nfw_halo', config, base, 'NFWHaloShear')
     logger = nfw_halo.logger
@@ -70,7 +70,7 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
 
 
 def _GenerateFromNFWHaloMagnification(config, base, value_type):
-    """@brief Return a magnification calculated from an NFWHalo object.
+    """Return a magnification calculated from an NFWHalo object.
     """
     nfw_halo = galsim.config.GetInputObj('nfw_halo', config, base, 'NFWHaloMagnification')
     logger = nfw_halo.logger

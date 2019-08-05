@@ -38,12 +38,13 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     """
     Build a number of output files as specified in config.
 
-    @param nfiles           The number of files to build.
-    @param config           A configuration dict.
-    @param file_num         If given, the first file_num. [default: 0]
-    @param logger           If given, a logger object to log progress. [default: None]
-    @param except_abort     Whether to abort processing when a file raises an exception (True)
-                            or just report errors and continue on (False). [default: False]
+    Parameters:
+        nfiles:         The number of files to build.
+        config:         A configuration dict.
+        file_num:       If given, the first file_num. [default: 0]
+        logger:         If given, a logger object to log progress. [default: None]
+        except_abort:   Whether to abort processing when a file raises an exception (True)
+                        or just report errors and continue on (False). [default: False]
     """
     logger = galsim.config.LoggerWrapper(logger)
     import time
@@ -172,14 +173,16 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     """
     Build an output file as specified in config.
 
-    @param config           A configuration dict.
-    @param file_num         If given, the current file_num. [default: 0]
-    @param image_num        If given, the current image_num. [default: 0]
-    @param obj_num          If given, the current obj_num. [default: 0]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         A configuration dict.
+        file_num:       If given, the current file_num. [default: 0]
+        image_num:      If given, the current image_num. [default: 0]
+        obj_num:        If given, the current obj_num. [default: 0]
+        logger:         If given, a logger object to log progress. [default: None]
 
-    @returns a tuple of the file name and the time taken to build file: (file_name, t)
-    Note: t==0 indicates that this file was skipped.
+    Returns:
+        (file_name, t), a tuple of the file name and the time taken to build file
+        Note: t==0 indicates that this file was skipped.
     """
     logger = galsim.config.LoggerWrapper(logger)
     import time
@@ -259,9 +262,11 @@ def GetNFiles(config):
     """
     Get the number of files that will be made, based on the information in the config dict.
 
-    @param config           The configuration dict.
+    Parameters:
+        config:     The configuration dict.
 
-    @returns the number of files
+    Returns:
+        the number of files
     """
     output = config.get('output',{})
     output_type = output.get('type','Fits')
@@ -276,10 +281,12 @@ def GetNImagesForFile(config, file_num):
     Get the number of images that will be made for the file number file_num, based on the
     information in the config dict.
 
-    @param config           The configuration dict.
-    @param file_num         The current file number.
+    Parameters:
+        config:     The configuration dict.
+        file_num:   The current file number.
 
-    @returns the number of images
+    Returns:
+        the number of images
     """
     output = config.get('output',{})
     output_type = output.get('type','Fits')
@@ -294,11 +301,13 @@ def GetNObjForFile(config, file_num, image_num):
     Get the number of objects that will be made for each image built as part of the file file_num,
     which starts at image number image_num, based on the information in the config dict.
 
-    @param config           The configuration dict.
-    @param file_num         The current file number.
-    @param image_num        The current image number.
+    Parameters:
+        config:     The configuration dict.
+        file_num:   The current file number.
+        image_num:  The current image number.
 
-    @returns a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
+    Returns:
+        a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
     """
     output = config.get('output',{})
     output_type = output.get('type','Fits')
@@ -322,12 +331,13 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
     - Set default config['output']['type'] to 'Fits' if not specified
     - Check that the specified output type is valid.
 
-    @param config           A configuration dict.
-    @param file_num         The current file_num. (If file_num=None, then don't set file_num or
-                            start_obj_num items in the config dict.)
-    @param image_num        The current image_num.
-    @param obj_num          The current obj_num.
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:     A configuration dict.
+        file_num:   The current file_num. (If file_num=None, then don't set file_num or
+                    start_obj_num items in the config dict.)
+        image_num:  The current image_num.
+        obj_num:    The current obj_num.
+        logger:     If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     config['file_num'] = file_num
@@ -352,18 +362,20 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
 def SetDefaultExt(config, default_ext):
     """Set a default ext in a config 'file_name' field if appropriate.
 
-    @param config           The configuration dict for the item that might need to be given
-                            a default 'ext' value.
-    @param default_ext      The default extension to set in the config dict if one is not set.
+    Parameters:
+        config:         The configuration dict for the item that might need to be given
+                        a default 'ext' value.
+        default_ext:    The default extension to set in the config dict if one is not set.
     """
     if ( isinstance(config,dict) and 'type' in config and
         config['type'] == 'NumberedFile' and 'ext' not in config ):
         config['ext'] = default_ext
 
 
-# A helper function to retry io commands
 _sleep_mult = 1  # 1 second normally, but make it a variable, so I can change it when unit testing.
 def RetryIO(func, args, ntries, file_name, logger):
+    """A helper function to retry I/O commands
+    """
     itry = 0
     while True:
         itry += 1
@@ -401,10 +413,11 @@ class OutputBuilder(object):
         The base class just calls SetupConfigRNG, but this provides a hook for sub-classes to
         do more things before any processing gets started on this file.
 
-        @param config           The configuration dict for the output type.
-        @param base             The base configuration dict.
-        @param file_num         The current file_num.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the output type.
+            base:       The base configuration dict.
+            file_num:   The current file_num.
+            logger:     If given, a logger object to log progress.
         """
         seed = galsim.config.SetupConfigRNG(base, logger=logger)
         logger.debug('file %d: seed = %d',file_num,seed)
@@ -415,11 +428,13 @@ class OutputBuilder(object):
         Note that the base class defines a default extension = '.fits'.
         This can be overridden by subclasses by changing the default_ext property.
 
-        @param config           The configuration dict for the output type.
-        @param base             The base configuration dict.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the output type.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.
 
-        @returns the filename to build.
+        Returns:
+            the filename to build.
         """
         if 'file_name' in config:
             SetDefaultExt(config['file_name'], self.default_ext)
@@ -446,16 +461,18 @@ class OutputBuilder(object):
         In the base class, this function just calls BuildImage to build the single image to
         put in the output file.  So the returned list only has one item.
 
-        @param config       The configuration dict for the output field.
-        @param base         The base configuration dict.
-        @param file_num     The current file_num.
-        @param image_num    The current image_num.
-        @param obj_num      The current obj_num.
-        @param ignore       A list of parameters that are allowed to be in config that we can
-                            ignore here.  i.e. it won't be an error if they are present.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the output field.
+            base:       The base configuration dict.
+            file_num:   The current file_num.
+            image_num:  The current image_num.
+            obj_num:    The current obj_num.
+            ignore:     A list of parameters that are allowed to be in config that we can
+                        ignore here.  i.e. it won't be an error if they are present.
+            logger:     If given, a logger object to log progress.
 
-        @returns a list of the images built
+        Returns:
+            a list of the images built
         """
         # There are no extra parameters to get, so just check that there are no invalid parameters
         # in the config dict.
@@ -470,10 +487,12 @@ class OutputBuilder(object):
 
         In the base class, this is just output.nfiles.
 
-        @param config       The configuration dict for the output field.
-        @param base         The base configuration dict.
+        Parameters:
+            config:     The configuration dict for the output field.
+            base:       The base configuration dict.
 
-        @returns the number of files to build.
+        Returns:
+            the number of files to build.
         """
         if 'nfiles' in config:
             return galsim.config.ParseValue(config, 'nfiles', base, int)[0]
@@ -486,9 +505,9 @@ class OutputBuilder(object):
         In the base class, we only build a single image, so it returns 1.
 
         Parameters:
-           config:          The configuration dict for the output field.
-           base:            The base configuration dict.
-           file_num:        The current file number.
+           config:      The configuration dict for the output field.
+           base:        The base configuration dict.
+           file_num:    The current file number.
 
         Returns:
            the number of images to build.
@@ -501,12 +520,14 @@ class OutputBuilder(object):
         file_num, which starts at image number image_num, based on the information in the config
         dict.
 
-        @param config           The configuration dict.
-        @param base             The base configuration dict.
-        @param file_num         The current file number.
-        @param image_num        The current image number (the first one for this file).
+        Parameters:
+            config:         The configuration dict.
+            base:           The base configuration dict.
+            file_num:       The current file number.
+            image_num:      The current image number (the first one for this file).
 
-        @returns a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
+        Returns:
+            a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
         """
         nimages = self.getNImages(config, base, file_num)
         nobj = [ galsim.config.GetNObjForImage(base, image_num+j) for j in range(nimages) ]
@@ -523,11 +544,13 @@ class OutputBuilder(object):
     def addExtraOutputHDUs(self, config, data, logger):
         """If appropriate, add any extra output items that go into HDUs to the data list.
 
-        @param config           The configuration dict for the output field.
-        @param data             The data to write.  Usually a list of images.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the output field.
+            data:       The data to write.  Usually a list of images.
+            logger:     If given, a logger object to log progress.
 
-        @returns data (possibly updated with additional items)
+        Returns:
+            data (possibly updated with additional items)
         """
         if self.canAddHdus():
             data = galsim.config.AddExtraOutputHDUs(config, data, logger)
@@ -538,22 +561,24 @@ class OutputBuilder(object):
     def writeFile(self, data, file_name, config, base, logger):
         """Write the data to a file.
 
-        @param data             The data to write.  Usually a list of images returned by
-                                buildImages, but possibly with extra HDUs tacked onto the end
-                                from the extra output items.
-        @param file_name        The file_name to write to.
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            data:           The data to write.  Usually a list of images returned by
+                            buildImages, but possibly with extra HDUs tacked onto the end
+                            from the extra output items.
+            file_name:      The file_name to write to.
+            config:         The configuration dict for the output field.
+            base:           The base configuration dict.
+            logger:         If given, a logger object to log progress.
         """
         galsim.fits.writeMulti(data,file_name)
 
     def writeExtraOutputs(self, config, data, logger):
         """If appropriate, write any extra output items that write their own files.
 
-        @param config           The configuration dict for the output field.
-        @param data             The data to write.  Usually a list of images.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the output field.
+            data:       The data to write.  Usually a list of images.
+            logger:     If given, a logger object to log progress.
         """
         galsim.config.WriteExtraOutputs(config, data, logger)
 
@@ -561,9 +586,10 @@ class OutputBuilder(object):
 def RegisterOutputType(output_type, builder):
     """Register an output type for use by the config apparatus.
 
-    @param output_type      The name of the type in config['output']
-    @param builder          A builder object to use for building and writing the output file.
-                            It should be an instance of OutputBuilder or a subclass thereof.
+    Parameters:
+        output_type:    The name of the type in config['output']
+        builder:        A builder object to use for building and writing the output file.
+                        It should be an instance of OutputBuilder or a subclass thereof.
     """
     # Make a concrete instance of the builder.
     valid_output_types[output_type] = builder

@@ -29,7 +29,8 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
     """
     Draw an image using the given psf profile.
 
-    @returns the resulting image.
+    Returns:
+        the resulting image.
     """
     if 'draw_method' in config:
         method = galsim.config.ParseValue(config,'draw_method',base,str)[0]

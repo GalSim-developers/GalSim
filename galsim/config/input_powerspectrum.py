@@ -37,11 +37,13 @@ class PowerSpectrumLoader(InputLoader):
     def getKwargs(self, config, base, logger):
         """Parse the config dict and return the kwargs needed to build the PowerSpectrum object.
 
-        @param config       The configuration dict for 'power_spectrum'
-        @param base         The base configuration dict
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for 'power_spectrum'
+            base:       The base configuration dict
+            logger:     If given, a logger object to log progress.
 
-        @returns kwargs, safe
+        Returns:
+            kwargs, safe
         """
         logger = galsim.config.LoggerWrapper(logger)
 
@@ -89,10 +91,11 @@ class PowerSpectrumLoader(InputLoader):
         """Set up the PowerSpectrum input object's gridded values based on the
         size of the image and the grid spacing.
 
-        @param input_obj    The PowerSpectrum object to use
-        @param config       The configuration dict for 'power_spectrum'
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            input_obj:  The PowerSpectrum object to use
+            config:     The configuration dict for 'power_spectrum'
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.
         """
         logger = galsim.config.LoggerWrapper(logger)
         # Attach the logger to the input_obj so we can use it when evaluating values.
@@ -178,7 +181,7 @@ RegisterInputType('power_spectrum', PowerSpectrumLoader(galsim.PowerSpectrum))
 # PowerSpectrumMagnification.
 
 def _GenerateFromPowerSpectrumShear(config, base, value_type):
-    """@brief Return a shear calculated from a PowerSpectrum object.
+    """Return a shear calculated from a PowerSpectrum object.
     """
     power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base, 'PowerSpectrumShear')
     logger = power_spectrum.logger
@@ -217,7 +220,7 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     return shear, False
 
 def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
-    """@brief Return a magnification calculated from a PowerSpectrum object.
+    """Return a magnification calculated from a PowerSpectrum object.
     """
     power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base,
                                                'PowerSpectrumMagnification')

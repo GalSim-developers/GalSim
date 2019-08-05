@@ -33,16 +33,18 @@ class DataCubeBuilder(OutputBuilder):
         This function builds the first image alone, finds out its size and then forces
         all subsequent images to be the same size.
 
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
-        @param file_num         The current file_num.
-        @param image_num        The current image_num.
-        @param obj_num          The current obj_num.
-        @param ignore           A list of parameters that are allowed to be in config that we can
-                                ignore here.  i.e. it won't be an error if they are present.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            config:         The configuration dict for the output field.
+            base:           The base configuration dict.
+            file_num:       The current file_num.
+            image_num:      The current image_num.
+            obj_num:        The current obj_num.
+            ignore:         A list of parameters that are allowed to be in config that we can
+                            ignore here.  i.e. it won't be an error if they are present.
+            logger:         If given, a logger object to log progress.
 
-        @returns a list of the images built
+        Returns:
+            a list of the images built
         """
         import time
         nimages = self.getNImages(config, base, file_num)
@@ -82,11 +84,13 @@ class DataCubeBuilder(OutputBuilder):
     def getNImages(self, config, base, file_num):
         """Returns the number of images to be built.
 
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
-        @param file_num         The current file number.
+        Parameters:
+            config:         The configuration dict for the output field.
+            base:           The base configuration dict.
+            file_num:       The current file number.
 
-        @returns the number of images to build.
+        Returns:
+            the number of images to build.
         """
         # Allow nimages to be automatic based on input catalog if image type is Single
         if ( 'nimages' not in config and
@@ -103,13 +107,14 @@ class DataCubeBuilder(OutputBuilder):
     def writeFile(self, data, file_name, config, base, logger):
         """Write the data to a file.
 
-        @param data             The data to write.  Usually a list of images returned by
-                                buildImages, but possibly with extra HDUs tacked onto the end
-                                from the extra output items.
-        @param file_name        The file_name to write to.
-        @param config           The configuration dict for the output field.
-        @param base             The base configuration dict.
-        @param logger           If given, a logger object to log progress.
+        Parameters:
+            data:           The data to write.  Usually a list of images returned by
+                            buildImages, but possibly with extra HDUs tacked onto the end
+                            from the extra output items.
+            file_name:      The file_name to write to.
+            config:         The configuration dict for the output field.
+            base:           The base configuration dict.
+            logger:         If given, a logger object to log progress.
         """
         galsim.fits.writeCube(data,file_name)
 

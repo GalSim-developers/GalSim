@@ -40,22 +40,24 @@ def BuildStamps(nobjects, config, obj_num=0,
     """
     Build a number of postage stamp images as specified by the config dict.
 
-    @param nobjects         How many postage stamps to build.
-    @param config           A configuration dict.
-    @param obj_num          If given, the current obj_num. [default: 0]
-    @param xsize            The size of a single stamp in the x direction. [default: 0,
-                            which means to look first for config.stamp.xsize, then for
-                            config.image.stamp_xsize, and if neither are given, then use
-                            automatic sizing.]
-    @param ysize            The size of a single stamp in the y direction. [default: 0,
-                            which means to look first for config.stamp.ysize, then for
-                            config.image.stamp_ysize, and if neither are given, then use
-                            automatic sizing.]
-    @param do_noise         Whether to add noise to the image (according to config['noise']).
-                            [default: True]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        nobjects:       How many postage stamps to build.
+        config:         A configuration dict.
+        obj_num:        If given, the current obj_num. [default: 0]
+        xsize:          The size of a single stamp in the x direction. [default: 0,
+                        which means to look first for config.stamp.xsize, then for
+                        config.image.stamp_xsize, and if neither are given, then use
+                        automatic sizing.]
+        ysize:          The size of a single stamp in the y direction. [default: 0,
+                        which means to look first for config.stamp.ysize, then for
+                        config.image.stamp_ysize, and if neither are given, then use
+                        automatic sizing.]
+        do_noise:       Whether to add noise to the image (according to config['noise']).
+                        [default: True]
+        logger:         If given, a logger object to log progress. [default: None]
 
-    @returns the tuple (images, current_vars).  Both are lists.
+    Returns:
+        the tuple (images, current_vars).  Both are lists.
     """
     logger = galsim.config.LoggerWrapper(logger)
     logger.debug('image %d: BuildStamps nobjects = %d: obj = %d',
@@ -123,6 +125,7 @@ def SetupConfigObjNum(config, obj_num, logger=None):
     """Do the basic setup of the config dict at the stamp (or object) processing level.
 
     Includes:
+
     - Set config['obj_num'] = obj_num
     - Set config['index_key'] = 'obj_num'
     - Make sure config['stamp'] exists
@@ -131,9 +134,10 @@ def SetupConfigObjNum(config, obj_num, logger=None):
       in config['stamp'].
     - Set config['stamp']['draw_method'] to 'auto' if not given.
 
-    @param config           A configuration dict.
-    @param obj_num          The current obj_num.
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         A configuration dict.
+        obj_num:        The current obj_num.
+        logger:         If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     config['obj_num'] = obj_num
@@ -176,6 +180,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
     the stamp size and position in either image or world coordinates.
 
     Includes:
+
     - If given, set config['stamp_xsize'] = xsize
     - If given, set config['stamp_ysize'] = ysize
     - If only image_pos or world_pos is given, compute the other from config['wcs']
@@ -188,12 +193,13 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
       any config['stamp']['offset'] item that may be present in the config dict.
       Save this as config['stamp_offset']
 
-    @param config           A configuration dict.
-    @param xsize            The size of the stamp in the x-dimension. [may be None]
-    @param ysize            The size of the stamp in the y-dimension. [may be None]
-    @param image_pos        The position of the stamp in image coordinates. [may be None]
-    @param world_pos        The position of the stamp in world coordinates. [may be None]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         A configuration dict.
+        xsize:          The size of the stamp in the x-dimension. [may be None]
+        ysize:          The size of the stamp in the y-dimension. [may be None]
+        image_pos:      The position of the stamp in image coordinates. [may be None]
+        world_pos:      The position of the stamp in world coordinates. [may be None]
+        logger:         If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
 
@@ -270,15 +276,17 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
     Build a single stamp image using the given config file
 
-    @param config           A configuration dict.
-    @param obj_num          If given, the current obj_num [default: 0]
-    @param xsize            The xsize of the stamp to build (if known). [default: 0]
-    @param ysize            The ysize of the stamp to build (if known). [default: 0]
-    @param do_noise         Whether to add noise to the image (according to config['noise']).
-                            [default: True]
-    @param logger           If given, a logger object to log progress. [default: None]
+    Parameters:
+        config:         A configuration dict.
+        obj_num:        If given, the current obj_num [default: 0]
+        xsize:          The xsize of the stamp to build (if known). [default: 0]
+        ysize:          The ysize of the stamp to build (if known). [default: 0]
+        do_noise:       Whether to add noise to the image (according to config['noise']).
+                        [default: True]
+        logger:         If given, a logger object to log progress. [default: None]
 
-    @returns the tuple (image, current_var)
+    Returns:
+        the tuple (image, current_var)
     """
     logger = galsim.config.LoggerWrapper(logger)
     SetupConfigObjNum(config, obj_num, logger)
@@ -454,19 +462,21 @@ def MakeStampTasks(config, jobs, logger):
 
     See the doc string for galsim.config.MultiProcess for the meaning of this distinction.
 
-    For the Basic stamp type, there is just one job per task, so the tasks list is just:
+    For the Basic stamp type, there is just one job per task, so the tasks list is just::
 
         tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
     But other stamp types may need groups of jobs to be done sequentially by the same process.
     cf. stamp type=Ring.
 
-    @param config           The configuration dict
-    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
-                            dict of parameters that includes 'obj_num'.
-    @param logger           If given, a logger object to log progress.
+    Parameters:
+        config:         The configuration dict
+        jobs:           A list of jobs to split up into tasks.  Each job in the list is a
+                        dict of parameters that includes 'obj_num'.
+        logger:         If given, a logger object to log progress.
 
-    @returns a list of tasks
+    Returns:
+        a list of tasks
     """
     stamp = config.get('stamp', {})
     stamp_type = stamp.get('type', 'Basic')
@@ -484,16 +494,18 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     This version also allows for additional kwargs, which are passed on to the drawImage function.
     e.g. you can add add_to_image=True or setup_only=True if these are helpful.
 
-    @param prof         The profile to draw.
-    @param image        The image onto which to draw the profile (which may be None).
-    @param method       The method to use in drawImage.
-    @param offset       The offset to apply when drawing.
-    @param config       The configuration dict for the stamp field.
-    @param base         The base configuration dict.
-    @param logger       If given, a logger object to log progress.
-    @param **kwargs     Any additional kwargs are passed along to the drawImage function.
+    Parameters:
+        prof:       The profile to draw.
+        image:      The image onto which to draw the profile (which may be None).
+        method:     The method to use in drawImage.
+        offset:     The offset to apply when drawing.
+        config:     The configuration dict for the stamp field.
+        base:       The base configuration dict.
+        logger:     If given, a logger object to log progress.
+        **kwargs:   Any additional kwargs are passed along to the drawImage function.
 
-    @returns the resulting image
+    Returns:
+        the resulting image
     """
     logger = galsim.config.LoggerWrapper(logger)
     # Setup the kwargs to pass to drawImage
@@ -559,7 +571,7 @@ def ParseWorldPos(config, param_name, base, logger):
     image center (a PositionD).
 
     1. For the RA/Dec option, the world_pos field should use the type RADec, which includes two
-       values named ra and dec, each of which should be an Angle type.  e.g.
+       values named ra and dec, each of which should be an Angle type.  e.g.::
 
             world_pos:
                 type : RADec
@@ -570,19 +582,21 @@ def ParseWorldPos(config, param_name, base, logger):
        only one that is defined natively in GalSim.
 
     2. For the relative position in the local tangent plane (where 0,0 is the position of the
-       image center), you can use any PositionD type.  e.g.
+       image center), you can use any PositionD type.  e.g.::
 
             world_pos:
                 type : RandomCircle
                 radius : 12       # arcsec
                 inner_radius : 3  # arcsec
 
-    @param config       The configuration dict for the stamp field.
-    @param param_name   The name of the field in the config dict to parse as a world_pos.
-                        Normally, this is just 'world_pos'.
-    @param base         The base configuration dict.
+    Parameters:
+        config:     The configuration dict for the stamp field.
+        param_name: The name of the field in the config dict to parse as a world_pos.
+                    Normally, this is just 'world_pos'.
+        base:       The base configuration dict.
 
-    @returns either a CelestialCoord or a PositionD instance.
+    Returns:
+        either a CelestialCoord or a PositionD instance.
     """
     param = config[param_name]
     wcs = base.get('wcs', galsim.PixelScale(1.0)) # should be here, but just in case...
@@ -609,15 +623,17 @@ class StampBuilder(object):
         would be confusing, so probably shouldn't do that, but there might be a use case where it
         would make sense).
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param xsize        The xsize of the image to build (if known).
-        @param ysize        The ysize of the image to build (if known).
-        @param ignore       A list of parameters that are allowed to be in config that we can
-                            ignore here. i.e. it won't be an error if these parameters are present.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            xsize:      The xsize of the image to build (if known).
+            ysize:      The ysize of the image to build (if known).
+            ignore:     A list of parameters that are allowed to be in config that we can
+                        ignore here. i.e. it won't be an error if these parameters are present.
+            logger:     If given, a logger object to log progress.
 
-        @returns xsize, ysize, image_pos, world_pos
+        Returns:
+            xsize, ysize, image_pos, world_pos
         """
         # Check for spurious parameters
         galsim.config.CheckAllParams(config, ignore=ignore)
@@ -668,14 +684,16 @@ class StampBuilder(object):
         it with the psf (if given).  If either the psf or the galaxy is None, then the other one
         is returned as is.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param psf          The PSF, if any.  This may be None, in which case, no PSF is convolved.
-        @param gsparams     A dict of kwargs to use for a GSParams.  More may be added to this
-                            list by the galaxy object.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            psf:        The PSF, if any.  This may be None, in which case, no PSF is convolved.
+            gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this
+                        list by the galaxy object.
+            logger:     If given, a logger object to log progress.
 
-        @returns the final profile
+        Returns:
+            the final profile
         """
         gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
 
@@ -700,13 +718,15 @@ class StampBuilder(object):
         If we don't know xsize, ysize, return None, in which case the stamp will be created
         automatically by the drawImage command based on the natural size of the profile.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param xsize        The xsize of the image to build (if known).
-        @param ysize        The ysize of the image to build (if known).
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            xsize:      The xsize of the image to build (if known).
+            ysize:      The ysize of the image to build (if known).
+            logger:     If given, a logger object to log progress.
 
-        @returns the image
+        Returns:
+            the image
         """
         if xsize and ysize:
             im = galsim.ImageF(xsize, ysize)
@@ -722,15 +742,17 @@ class StampBuilder(object):
         intersection bounds will be undefined.  In this case, don't bother drawing the
         postage stamp for this object.
 
-        @param prof         The profile to draw.
-        @param image        The image onto which to draw the profile (which may be None).
-        @param method       The method to use in drawImage.
-        @param offset       The offset to apply when drawing.
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            prof:       The profile to draw.
+            image:      The image onto which to draw the profile (which may be None).
+            method:     The method to use in drawImage.
+            offset:     The offset to apply when drawing.
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.
 
-        @returns whether to skip drawing this object.
+        Returns:
+            whether to skip drawing this object.
         """
         if isinstance(prof,galsim.GSObject) and base.get('current_image',None) is not None:
             if image is None:
@@ -760,15 +782,17 @@ class StampBuilder(object):
     def draw(self, prof, image, method, offset, config, base, logger):
         """Draw the profile on the postage stamp image.
 
-        @param prof         The profile to draw.
-        @param image        The image onto which to draw the profile (which may be None).
-        @param method       The method to use in drawImage.
-        @param offset       The offset to apply when drawing.
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            prof:       The profile to draw.
+            image:      The image onto which to draw the profile (which may be None).
+            method:     The method to use in drawImage.
+            offset:     The offset to apply when drawing.
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.
 
-        @returns the resulting image
+        Returns:
+            the resulting image
         """
         if prof is None:
             return image
@@ -779,13 +803,15 @@ class StampBuilder(object):
         """If appropriate, whiten the resulting image according to the requested noise profile
         and the amount of noise originally present in the profile.
 
-        @param prof         The profile to draw.
-        @param image        The image onto which to draw the profile.
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            prof:       The profile to draw.
+            image:      The image onto which to draw the profile.
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.
 
-        @returns the variance of the resulting whitened (or symmetrized) image.
+        Returns:
+            the variance of the resulting whitened (or symmetrized) image.
         """
         # If the object has a noise attribute, then check if we need to do anything with it.
         current_var = 0.  # Default if not overwritten
@@ -816,12 +842,14 @@ class StampBuilder(object):
               stamp builder uses some other way to get the profiles, this method should
               probably be overridden.
 
-        @param image        The current image.
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            image:      The current image.
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.
 
-        @returns scale_factor
+        Returns:
+            scale_factor
         """
         if 'gal' in base and 'signal_to_noise' in base['gal']:
             key = 'gal'
@@ -868,13 +896,15 @@ class StampBuilder(object):
         The default implementaion just multiplies each of them, but if prof is not a regular
         GSObject, then you might need to do something different.
 
-        @param image        The current image.
-        @param prof         The profile that was drawn.
-        @param scale_factor The factor by which to scale both image and prof.
-        @param method       The method used by drawImage.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            image:          The current image.
+            prof:           The profile that was drawn.
+            scale_factor:   The factor by which to scale both image and prof.
+            method:         The method used by drawImage.
+            logger:         If given, a logger object to log progress.
 
-        @returns image, prof  (after being properly scaled)
+        Returns:
+            image, prof  (after being properly scaled)
         """
         if scale_factor != 1.0:
             if method == 'phot':
@@ -887,14 +917,16 @@ class StampBuilder(object):
     def reject(self, config, base, prof, psf, image, logger):
         """Check to see if this object should be rejected.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param prof         The profile that was drawn.
-        @param psf          The psf that was used to build the profile.
-        @param image        The postage stamp image.  No noise is on it yet at this point.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            prof:       The profile that was drawn.
+            psf:        The psf that was used to build the profile.
+            image:      The postage stamp image.  No noise is on it yet at this point.
+            logger:     If given, a logger object to log progress.
 
-        @returns whether to reject this object
+        Returns:
+            whether to reject this object
         """
         # Early exit if no profile
         if prof is None:
@@ -945,8 +977,9 @@ class StampBuilder(object):
         """Reset some aspects of the config dict so the object can be rebuilt after rejecting the
         current object.
 
-        @param base         The base configuration dict.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            base:       The base configuration dict.
+            logger:     If given, a logger object to log progress.
         """
         # Clear current values out of psf, gal, and stamp if they are not safe to reuse.
         # This means they are either marked as safe or indexed by something other than obj_num.
@@ -961,16 +994,18 @@ class StampBuilder(object):
         Note: This only gets called if the image type requests that the noise be added to each
             stamp individually, rather than to the full image and the end.
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param image        The current image.
-        @param skip         Are we skipping this image? (Usually this is irrelevant, since we
+        Parameters:
+            config:         The configuration dict for the stamp field.
+            base:           The base configuration dict.
+            image:          The current image.
+            skip:           Are we skipping this image? (Usually this is irrelevant, since we
                             need sky and noise regardless, but user-defined classes might choose
                             to do something different if skipping this object.)
-        @param current_var  The current noise variance present in the image already.
-        @param logger       If given, a logger object to log progress.
+            current_var:    The current noise variance present in the image already.
+            logger:         If given, a logger object to log progress.
 
-        @returns the new values of image, current_var
+        Returns:
+            the new values of image, current_var
         """
         galsim.config.AddSky(base,image)
         base['current_noise_image'] = base['current_stamp']
@@ -984,13 +1019,15 @@ class StampBuilder(object):
 
             tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
-        @param config       The configuration dict for the stamp field.
-        @param base         The base configuration dict.
-        @param jobs         A list of jobs to split up into tasks.  Each job in the list is a
-                            dict of parameters that includes 'obj_num'.
-        @param logger       If given, a logger object to log progress.
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            jobs:       A list of jobs to split up into tasks.  Each job in the list is a
+                        dict of parameters that includes 'obj_num'.
+            logger:     If given, a logger object to log progress.
 
-        @returns a list of tasks
+        Returns:
+            a list of tasks
         """
         return [ [(job, k)] for k, job in enumerate(jobs) ]
 
@@ -998,9 +1035,10 @@ class StampBuilder(object):
 def RegisterStampType(stamp_type, builder):
     """Register an image type for use by the config apparatus.
 
-    @param stamp_type       The name of the type in config['stamp']
-    @param builder          A builder object to use for building the stamp images.  It should be
-                            an instance of StampBuilder or a subclass thereof.
+    Parameters:
+        stamp_type:     The name of the type in config['stamp']
+        builder:        A builder object to use for building the stamp images.  It should be
+                        an instance of StampBuilder or a subclass thereof.
     """
     valid_stamp_types[stamp_type] = builder
 
