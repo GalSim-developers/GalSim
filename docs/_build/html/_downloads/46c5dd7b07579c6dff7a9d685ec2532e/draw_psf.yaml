@@ -1,0 +1,189 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Draw DES PSFs at the locations of observed galaxies.  To run it type:
+#
+#     galsim draw_psf.yaml
+#
+# This demo probably isn't so useful as an actual program, but it does showcase how to
+# use the DES module that comes with GalSim, which can be modified to do what you actually
+# need.
+#
+# It works on a full DES exposure with 62 chip images and the files that are output by the
+# DESDM and WL pipelines.  We don't include these files in the repo, since they total about
+# 700 MB.  You can download a tarball with the files used by this script at:
+#
+#     http://www.sas.upenn.edu/~mjarvis/des_data.html
+#
+# The DESDM pipeline produces a catalog of detected objects for each image, and also an
+# interpolated PSF using Emmanuel Bertin's PSFEx code, which are stored in *_psfcat.psf files.
+# The WL pipeline produces a different estimate of the PSF using Mike Jarvis's shapelet code,
+# which are stored in *_fitpsf.fits files.
+#
+# This script reads the appropriate files for each chip and builds two images, one for each kind
+# of PSF estimate, and draws an image of the PSF at the location of each galaxy.  Normally, you
+# would probably want to draw these with no noise on individual postage stamps or something like
+# that.
+
+# First define the aspects of the configuration that are common to both tasks
+
+# We define a few variables here that will be used multiple times below.
+# Also, it's convenient to define them near the top to make them easy to change to run on
+# different exposures in other directories, etc.
+eval_variables :
+    # Note: the s at the start of sroot means the variable is a str.
+    # This will be used as simply root in the Eval items below that use it.
+    sroot : &root 'DECam_00154912_'
+
+    # Directories in the Galsim repo
+    sdata_dir : &data_dir 'des_data'
+
+    # Set which chips to run on
+    ifirst_chip : &first_chip 1
+    ilast_chip : &last_chip 62
+    #ifirst_chip : &first_chip 12
+    #ilast_chip : &last_chip 12
+
+# This uses the galsim.des module, which is not loaded by default, so we need to tell it
+# to import that module to get the des-specific types.
+modules :
+    - galsim.des
+
+# Define the PSF profile.  For now, just the items common to both shapelet and PSFEx PSFs.
+psf :
+    skip : { type : Catalog, col : 'FLAGS' }
+    flux : { type : Catalog, col : 'FLUX_AUTO' }
+
+
+# Setup input files
+input :
+    catalog :
+        dir : *data_dir
+        file_name :
+            type : NumberedFile
+            root : *root
+            digits : 2
+            ext : '_cat.fits'
+            num : { type : Sequence, first : *first_chip }
+        hdu : 2
+
+    fits_header :
+        dir : *data_dir
+        file_name :
+            type : NumberedFile
+            root : *root
+            digits : 2
+            ext : '.fits.fz'
+            num : { type : Sequence, first : *first_chip }
+
+
+
+# Define some other information about the images
+image :
+    type : Scattered
+
+    xsize : { type : FitsHeader , key : 'NAXIS1' }
+    ysize : { type : FitsHeader , key : 'NAXIS2' }
+    pixel_scale : { type : FitsHeader , key : 'PIXSCAL1' }
+    sky_level_pixel : { type : FitsHeader , key : 'SKYBRITE' }
+
+    noise :
+        type : CCD
+        gain :
+            # This is an approximation, since GAINA, GAINB are missing in SV files.
+            type : Eval
+            str : 'sky / sig**2'
+            fsky : { type : FitsHeader , key : 'SKYBRITE' }
+            fsig : { type : FitsHeader , key : 'SKYSIGMA' }
+
+    image_pos :
+        type : XY
+        x : { type : Catalog , col : 'X_IMAGE' }
+        y : { type : Catalog , col : 'Y_IMAGE' }
+
+    draw_method : no_pixel  # The PSFs here already include the pixel response.
+
+    wcs :
+        type : Fits
+        dir : *data_dir
+        file_name :
+            type : Current
+            key : input.fits_header.file_name
+
+    random_seed : 1339201
+
+
+# Define the names and format of the output files
+output :
+    nfiles : { type : Eval, str : 'last_chip - first_chip + 1' }
+
+    file_name :
+        type : NumberedFile
+        root : *root
+        digits : 2
+        num : { type : Sequence, first : *first_chip }
+        # ext is defined below, since it is different for the two runs
+
+    dir : 'output_yaml'
+
+    nproc : -1
+
+---
+# Next the particulars that are specific to the shapelet PSFs
+
+psf :
+    type : DES_Shapelet
+
+input :
+    des_shapelet :
+        # Can't use *data_dir here, since the anchors don't follow across yaml documents.
+        dir : { type : Eval, str : 'data_dir' }
+        file_name :
+            type : NumberedFile
+            root : { type : Eval, str : 'root' }
+            digits : 2
+            ext : '_fitpsf.fits'
+            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
+
+output :
+    file_name :
+        ext : '_fitpsf_image.fits'
+
+---
+# Now the particulars that are specific to PSFEx
+
+psf :
+    type : DES_PSFEx
+
+input :
+    des_psfex :
+        dir : { type : Eval, str : 'data_dir' }
+        file_name :
+            type : NumberedFile
+            root : { type : Eval, str : 'root' }
+            digits : 2
+            ext : '_psfcat.psf'
+            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
+        image_file_name :
+            type : Current
+            key : input.fits_header.file_name
+
+output :
+    file_name :
+        ext : '_psfex_image.fits'
+

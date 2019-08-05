@@ -7,6 +7,7 @@ GalSim: The modular galaxy image simulation toolkit
 
     overview
     install
+    tutorials
 
     image
     sb

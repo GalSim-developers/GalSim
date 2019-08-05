@@ -1,0 +1,335 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+
+# The Great3 control-ground-constant branch configuration file
+# Note: This configuration will not produce images _identical_ to the ones used for Great3,
+# since the order of random number generation is different.  However, it is intended to
+# produce an _equivalent_ simulation as the one produced for Great3.
+modules:
+    - great3_reject
+
+    # Custom module (cf. noise_free.py in this directory) that enables the output.noise_free item.
+    - noise_free
+
+psf:
+    type: Convolve
+
+    # This means the psf should change per image, not per object as would be the default.
+    index_key : image_num
+
+    items:
+    # The atmospheric component
+    -   type: Kolmogorov
+        # To avoid PSFs that were "too round", the ellipticity was drawn from a uniform
+        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the
+        # typical variance of e in ground-based imaging.
+        ellip:
+            type: EBeta
+            e:
+                type: Random
+                min: 0.01
+                max: 0.03
+            beta:
+                type: Random
+
+        # The seeing is taken from a plausible distribution of seeing values
+        # ranging from 0.45 to 0.95.
+        fwhm:
+            type: RandomDistribution
+            x: [ 0.45, 0.55, 0.65, 0.75, 0.85, 0.95 ]
+            f: [ 0.,   20.,  17.,  13.,  9.,   0.   ]
+
+    # The optical component
+    -   type: OpticalPSF
+        # The Optical component for ground is based sort of on the Blanco 4m telescope at
+        # Cerro Tololo.  However, we allow a fairly wide range of lambda/D values that cover
+        # a plausible range of visible wavelengths and large ground-based telescopes.
+        lam_over_diam: { type: Random, min: 0.013, max: 0.083 }
+
+        # Also a range of obscuration fractions.
+        obscuration: { type: Random, min: 0.1, max: 0.5 }
+
+        # Despite sort of modeling off of DECam (with 4 struts), they didn't use
+        # any struts for the ground psfs.  This choice was made because the inclusion of struts
+        # required stricter numerical accuracy settings (=more expensive calculations) to avoid
+        # numerical artifacts, without making a very noticable difference in the final overall PSF.
+        nstruts: 0
+
+        # The aberrations are taken to have an rms of 0.41 waves
+        # Great3 put a lot more weight into the defocus than the others.
+        # Unfortunately, this makes a couple PSFs into donuts, which was a problem.
+        # According to Aaron Roodman, for DES the appropriate rms values are closer to
+        # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
+        # which has an rms of 0.26 waves, so probably 0.41 was too large a target.
+        defocus: { type: RandomGaussian, sigma: 0.36 }
+        astig1: { type: RandomGaussian, sigma: 0.07 }
+        astig2: { type: RandomGaussian, sigma: 0.07 }
+        coma1: { type: RandomGaussian, sigma: 0.07 }
+        coma2: { type: RandomGaussian, sigma: 0.07 }
+        trefoil1: { type: RandomGaussian, sigma: 0.07 }
+        trefoil2: { type: RandomGaussian, sigma: 0.07 }
+        spher: { type: RandomGaussian, sigma: 0.07 }
+
+        # The original GREAT3 runs used a keyword max_size to improve the efficiency of OpticalPSF.
+        # However, we now believe that this keyword introduces additional aliasing and have
+        # deprecated its use in GalSim v1.4.  We have retained the original description in the
+        # doubly commented block below.
+
+        # # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
+        # # PSF image is larger than the postage stamp onto which we will draw the object,
+        # # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
+        # # we will eventually draw onto helps avoid wasted calculations.
+        # # This is in arcsec, so max_size = stamp_size * pixel_scale
+        # max_size: "$@image.stamp_size * @image.pixel_scale"
+
+        suppress_warning: true
+
+gal:
+    # Galaxies were based on parametric fits to COSMOS galaxies.
+    type: COSMOSGalaxy
+    gal_type: parametric
+    index: { type: Random }
+
+    # Randomly spin the original profile
+    rotate: { type: Random }
+
+    # The COSMOS galaxies are a bit brighter than was wanted for Great3, so make them
+    # a bit smaller to simulate a fainter sample.
+    # However, in the great3 scripts, only the size is rescaled, not the flux.
+    # The reason for this choice was that the flux level in the Great3 simulations was
+    # essentially arbitrary. Instead, the noise level was tuned to achieve the expected S/N for
+    # reasonably deep images with galaxies going down to I<25.
+    dilate: 0.6
+    scale_flux: 1.0
+
+stamp:
+    # Use a Ring type with num=2 to do pairs of 90 degree rotated galaxies.
+    # Note that selection criteria get imposed in a way that eliminates either both galaxies in
+    # the pair, or neither.
+    type: Ring
+    num: 2
+
+    # This was just 1 for constant shear branches.
+    magnification: 1
+
+    # The shear was chosen randomly within an annulus with 0.01 < |g| < 0.05.
+    shear:
+        type: GBeta
+        # Change the shear every image, not every object.
+        index_key : image_num
+        g:
+            # The probability distribution is linear in |g|: P(g) ~ g. So equal probability per
+            # area within the annulus.  (RandomDistribution automatically renormalizes to have
+            # the total integrated probability equal to 1.0.)
+            type: RandomDistribution
+            function: x
+            x_min: 0.01
+            x_max: 0.05
+        beta: { type: Random }
+
+    # Specify a minimum flux fraction in each postage stamp.
+    # The idea is that if the galaxy is drawn into the postage stamp of size stamp_size (see image
+    # field) then the galaxy gets chucked out and a new one is selected.  This will depend not only
+    # on the galaxy parameters but the PSF as well, since the cut is imposed on the PSF-convolved
+    # object.
+    min_flux_frac: 0.99
+
+    # Also use a custom module to apply other GREAT3 cuts: SNR and resolution.
+    reject:
+        type: Great3Reject
+
+eval_variables:
+    # We use the fwhm of the PSF in a couple of other places.  To make sure the config parser
+    # knows it's a float variable, we put it here with the f code.
+    fpsf_fwhm: { type: Current, key : 'psf.items.0.fwhm' }
+
+    # Here is the line in the original great3 scripts:
+    # https://github.com/barnabytprowe/great3-public/blob/master/great3sims/noise.py#L97
+    # The point was to have a consistent lower limit on the S/N level of the galaxies for
+    # different seeing sizes.  When the seeing is larger, a given flux galaxy will have
+    # lower S/N.  To compensate, they added less noise in those cases.  The formula that was used
+    # was based on running experiments with different seeing values, and checking how the S/N varied
+    # at fixed noise variance.  The results of those experiments were used to create a LookupTable
+    # in the GREAT3 scripts, but the formula below is pretty close.
+    fmax_var: '$0.004 * math.exp(2.9 * (1.1-psf_fwhm) * (0.95-psf_fwhm))'
+
+
+image:
+    type: Tiled
+    nx_tiles: 100
+    ny_tiles: 100
+    stamp_size: 48
+    pixel_scale: 0.2
+
+    random_seed: 31415
+
+    # Scramble the order of the ring pairs, so they aren't next to each other
+    order: random
+
+    # Simple Gaussian noise.  Although there is a weird thing they did to have the noise
+    # variance be larger for smaller PSF fwhm.  cf. fmax_var in eval_variables above.
+    noise:
+        type: Gaussian
+        variance:
+            # Vary 5% around the nominal variance level.
+            # The implicit index_key here is image_num, so this will be the same for all
+            # postage stamps on an image, but then change for the next image.
+            type: Random
+            min: '$0.95 * max_var'
+            max: '$1.05 * max_var'
+
+    # Offset
+    offset:
+        type: XY
+        x: { type: Random, min: -1.0, max: 1.0 }
+        y: { type: Random, min: -1.0, max: 1.0 }
+
+    # This means the code will parallelize the creation of a single output file,
+    # splitting up the postage stamps among the available cores.
+    # This is normally overridden by the output.nproc item below, so the parellelization
+    # will be done over files instead.  But if you modify this to only do one file or
+    # set output.nproc=1, then this stamp-based parallelization will turn on.
+    nproc: -1
+
+    # Sometimes the ffts need to be a bit bigger than is allowed by default...
+    gsparams: {maximum_fft_size: 10240}
+
+input:
+    cosmos_catalog :
+        # If the command galsim_download_cosmos has been run for the F814W<23.5 sample,
+        # the catalog will have been downloaded from the GalSim web site and saved in a
+        # directory that GalSim knows about.  (This requires use of the "-s 23.5" option
+        # when running galsim_download_cosmos, to make sure you get the right one.)
+        # So file_name and dir are not necessary, but we do need to say which sample to use.
+        # Note that we could use the F814W<25.2 sample that is now available.  However, for
+        # real galaxy branches, we would have to be careful to avoid issues with the noise
+        # in the input images being greater than the desired final noise level.  This would
+        # require messing with some settings, so for now we avoid this and always use the 23.5
+        # sample.
+        sample: 23.5
+
+        # Make sure we use some cuts on postage stamp and fit quality as in GREAT3, specified using
+        # the exclusion_level keyword.  Currently the selected value "marginal" is in fact the
+        # default, but specify it in case that changes in future.
+        exclusion_level: marginal
+
+        # The Great3Reject code (in great3_reject.py) rejects a large fraction of the objects
+        # in the COSMOS catalog.  Mostly because they are too small compared to the PSF.
+        # We can apply a preselection based on the half-light-radius that cuts out about
+        # 80% of the galaxies that would otherwise get cut by the resolution check, while
+        # only removing 5% of the galaxies that would have passed.  This helps to significantly
+        # speed up the calculation, because these galaxies never get selected in the first place,
+        # so they don't get drawn and then rejected.
+        # The code that estimates this is in GalSim/devel/external/radius_flux_cuts.py
+        # Note that the min_hlr is referring to the half-light-radius in the COSMOS catalog,
+        # so without the dilation factor of 0.6 applied above.
+        min_hlr : '$(psf_fwhm * 0.085/0.45 + 0.064) / 0.6'
+
+        # Great3 also imposed a maximum S/N of 100 and a minimum of 17.  A similar preselection
+        # on the flux can cut out most of the objects that would otherwise be rejected for the
+        # S/N cut while only cutting out a small fraction of the objects that would pass.
+        #min_flux : 8
+        max_flux : '$63.9 + 75.8*(psf_fwhm-0.76)**2'
+
+output:
+    type: Fits
+    dir: control/ground/constant
+    file_name:
+        type: FormattedStr
+        # The numbers in the file_name are subfield and epoch number.
+        # This branch only has one epoch, so epoch is always 0 here.
+        format: image-%03d-%1d.fits
+        items:
+        - { type: Sequence, nitems: 200 }
+        - 0
+
+    # The full Great3 had 200 files.  Note that to run fewer files than this, you can change this
+    # from the command line as `galsim cgc.yaml output.nfiles=10` say.  Likewise for any other
+    # parameters in the configuration.  This is often more convenient than changing the original
+    # YAML configuration file.
+    nfiles: 200
+
+    # This means the code will parallelize across the different files, doing a full
+    # output file in each core at a time.
+    # This is generally better than image.nproc, since it doesn't require as much interprocess
+    # communication, which can be rather slow.
+    nproc: -1
+
+    # This lets you rerun the code if there were I/O issues and it will just write the
+    # missing files.  (Potentially ones that have been deleted because they were corrupted.)
+    noclobber: true
+
+    # This wasn't part of the Great3 processing, but it can be useful for developing shear
+    # algorithms to have access to a noise-free version of the image.  This uses a custom
+    # "extra output" item, which we name "noise_free".  The output image will be written to
+    # a separate hdu in the output file with a noise-free version of the main image.
+    noise_free:
+        hdu: 1  # hdu 0 is the main image.
+
+    # Output truth catalogs with some of the generated values
+    truth:
+        file_name :
+            type: FormattedStr
+            format: epoch_catalog-%03d-%1d.fits
+            items:
+            - { type: Sequence, nitems: 200 }
+            - 0
+        columns:
+            num: obj_num
+            x: "$image_pos.x"
+            y: "$image_pos.y"
+            dx: image.offset.x
+            dy: image.offset.y
+            atmos_psf_e1: "$(@psf.items.0.ellip).e1"
+            atmos_psf_e2: "$(@psf.items.0.ellip).e2"
+            atmos_psf_fwhm: psf.items.0.fwhm
+            opt_lam_over_diam: psf.items.1.lam_over_diam
+            opt_obscuration: psf.items.1.obscuration
+            opt_n_struts: psf.items.1.nstruts
+            opt_strut_angle: 0
+            opt_psf_defocus: psf.items.1.defocus
+            opt_psf_astig1: psf.items.1.astig1
+            opt_psf_astig2: psf.items.1.astig2
+            opt_psf_coma1: psf.items.1.coma1
+            opt_psf_coma2: psf.items.1.coma2
+            opt_psf_trefoil1: psf.items.1.trefoil1
+            opt_psf_trefoil2: psf.items.1.trefoil2
+            opt_psf_spher: psf.items.1.spher
+            cosmos_index: "$(@gal).original.index"
+            theta: "$(@gal.rotate + @stamp.index * math.pi/@stamp.num * galsim.radians).rad"
+            mu: stamp.magnification
+            g1: "$(@stamp.shear).g1"
+            g2: "$(@stamp.shear).g2"
+            # The parametric components aren't really available here.
+            # So we don't have:
+            #   bulge_beta_radians
+            #   bulge_q
+            #   bulge_flux
+            #   bulge_hlr
+            #   bulge_n
+            #   dist_beta_radians
+            #   disk_q
+            #   disk_flux
+            #   disk_hlr
+            # Instead, we only have cosmos_index and theta, which covers the same
+            # information, but in a less specific way.  Here cosmos_index is the
+            # index into the full COSMOS catalog, before application of any cuts at all.
+            # (Not even the rejection of marginal postage stamps.)
+            # So if you want to retrieve the true galaxy properties for the galaxies,
+            # you should read in the COSMOSCatalog using exclusion_level=None, in which
+            # case you can use these indices, or just read in the catalog directly using
+            # pyfits.

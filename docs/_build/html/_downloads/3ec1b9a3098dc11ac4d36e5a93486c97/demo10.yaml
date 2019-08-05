@@ -1,0 +1,318 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #10
+#
+# The tenth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script uses both a variable PSF and variable shear, taken from a power spectrum, along
+# the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed on a grid
+# (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
+# is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
+# as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
+# RealGalaxy objects, selected to be 5 particularly irregular ones.  (These are taken from
+# the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring
+# test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the
+# correct applied shear for each object (among other information).
+#
+# New features introduced in this demo:
+#
+# - stamp type : Ring (..., full_rotation)
+# - obj type : RealGalaxy (..., id)
+# - type : Eval using world_pos variable, user-defined variables and math functions
+# - type : Current
+# - shear_value : PowerSpectrumShear
+# - pos_value : RTheta (r, theta)
+# - image type : Tiled (..., order)
+# - input : power_spectrum (e_power_function, b_power_function)
+# - output.psf : hdu, signal_to_noise, draw_method, offset
+# - output.truth : hdu
+#
+# - Evaluated values in output.truth.columns
+
+# Define the PSF profile
+psf :
+    type : Gaussian
+    fwhm :
+        # We saw the Eval type before (in demo3.yaml) as a way to do simple arithmetic.
+        # It becomes much more powerful when you include variables in your equation.
+        # One variable that is usable is `world_pos`, which is the position of the current
+        # object "on the sky" relative to the center of the image in arcsec.
+        # This lets you define any arbitrary function for a particular variable in terms of (x,y).
+        # For a list of the other GalSim-privided variables, see
+        # https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation
+        type : Eval
+        # 0.9 + 0.5 * (r/100 arcsec)^2
+        str : '0.9 + 0.5 * (world_pos.x**2 + world_pos.y**2) / 100**2'
+
+    ellip:
+        type : EBeta
+        e :
+            type : Eval
+            # We also allow any number of user-defined variables.
+            # The first letter of the variable name indicates what type it is expected to be:
+            #     f = float
+            #     i = int
+            #     b = bool
+            #     s = string
+            #     a = Angle
+            #     p = PositionD
+            #     g = Shear
+            #     x = GSObject
+            # Thus, fr here is a float variable named r.
+            # (Examples of i, p, g, and x codes can be seen below in the output.truth field.)
+            fr : { type : Eval , str : '(world_pos.x**2 + world_pos.y**2)**0.5' }
+            # Now we can use this variable (as r, not fr) in our string:
+            str : '0.4 * (r/100)**1.5'   # large value at the edge, so visible by eye.
+        beta:
+            type : Eval
+            # And you can also use anything in the Python math module:
+            # This makes the PSF shapes have a tangential pattern
+            str : '(math.atan2(world_pos.y,world_pos.x) + math.pi/2.) * galsim.radians'
+
+
+# Make the galaxies in a Ring test.
+stamp :
+
+    # Last time we used Ring (demo5), we had num=2 to make pairs of 90 degree rotated
+    # galaxies.  This example is more like a typical ring test where the same galaxy profile
+    # is drawn at many orientations stepped uniformly in angle, making a ring in e1-e2 space.
+    type : Ring
+
+    num : 20
+
+    # If your underlying galaxy (defined in gal) has rotational symmetry (e.g. a sheared
+    # exponential profile), then you would typically want the full rotation spanned by the
+    # ring test to be 180 degrees.  However, in this case, the underlying real galaxies
+    # do not have this symmetry.  So we want the ring to span a full rotation of 360 degrees.
+    full_rotation : 360 deg
+
+    # Again, these transformations happen after the Ring rotation.
+
+    # Make the galaxies a factor of 3 larger (in linear size, not area) than their
+    # original observed size.
+    dilation : 3
+
+    # For this demo, we use shears drawn from a power spectrum P(k) = k^1.8.
+    # The power spectrum is set up below using input : power_spectrum.  See below.
+    shear :
+        type : PowerSpectrumShear
+
+    shift :
+        type : RTheta
+        # Half a pixel in a random direction.
+        r :
+            type : Eval
+            str : 'pixel_scale * 0.5'
+            # We again use the Current type, this time to access image.pixel_scale defined below.
+            fpixel_scale : { type : Current, key : image.pixel_scale }
+        theta : { type : Random }
+
+
+# Define the galaxy profile
+gal :
+    type : RealGalaxy
+    id :
+        type : List
+        items : [ 106416, 106731, 108402, 116045, 116448 ]
+        # Because this is in a Ring, the gal field only gets processed every 20 objects.
+        # However, sequences are indexed by the overall object number, so in order to
+        # step through the items in this list once for each time it gets to the gal processing,
+        # we need to set the index to repeat 20 times before incrementing.
+        index :
+            type : Sequence
+            # You can access the current value of any other item in the config dict using
+            # type = Current.  The syntax for the key is to treat the config levels as
+            # attributes.  So the number of galaxies in the ring defined above is gal.num.
+            # You can use any value this way.  If it hasn't actually been evaluated yet,
+            # it will evaluate it as needed for the current object.
+            repeat : { type : Current, key : stamp.num }
+
+    signal_to_noise : 100
+
+
+# Define some other information about the images
+image :
+    # Note: The corresponding python script, demo10.py, is only done using a single process
+    # to make it a little easier to follow the GalSim code.  See demo9.py for an example of
+    # how to do this with multiple processes.
+    nproc : 5
+
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 10
+
+    stamp_size : 48  # pixels
+
+    # image type = Tiled has an optional field called "order".
+    # The default order in which to place the tiles is row-based: order = 'row'.
+    # i.e. First the bottom row, then the next one up, and so on until the top row.
+    # Other options for the order parameters are 'column' and 'random'.
+    # order = 'column' specifies to start with the left column and proceeding to the right
+    # order = 'random' specifies to place the postage stamps in a random order.
+    # We use 'random' here so the ring test galaxies don't appear in order along the rows.
+    order : 'random'
+
+    pixel_scale : 0.44  # arcsec / pixel
+
+    wcs :
+        # This time, we only want to set the world coordinates to be (0,0) at the center
+        # of the image.  So we again use the origin item in the wcs field.  This will
+        # use the default wcs type 'PixelScale', but with the origin in the image coordinate
+        # system offset from the normal (0,0).
+        # The origin keyword is always available for any WCS type and always has the
+        # effect of defining where in the image coordinate system the origin should be.
+        origin : center
+
+    noise :
+        sky_level : 1.e6  # ADU / arcsec^2
+
+    # The random seed is used for both the power spectrum realization and the random
+    # properties of the galaxies.
+    random_seed : 3339201
+
+
+# Define the input files
+input :
+    # In this case, we need to define where the real galaxy input catalog is.
+    real_catalog :
+        dir : data
+        file_name : real_galaxy_catalog_23.5_example.fits
+
+    # We also initialize the power spectrum here.
+    # There are two possible attributes for a power_spectrum: e_power_function and
+    # b_power_function.  You must specify at least one of them.
+    # They are each strings that define a function of k.
+    power_spectrum :
+        e_power_function : 'k**1.8'
+        # In this case we leave off b_power_function, so it is taken to be 0.
+
+
+# Define the names and format of the output files
+output :
+
+    dir : output_yaml
+    file_name : power_spectrum.fits
+
+    # Put the PSF image in hdu=1 (the first extension after the primary HDU)
+    psf :
+        hdu : 1
+        # We use real space convolution to avoid some of the
+        # artifacts that can show up with Fourier convolution.
+        # The level of the artifacts is quite low, but when drawing with
+        # no noise, they are apparent with ds9's zscale viewing.
+        draw_method : real_space
+
+        # For cases where there is only a PSF, it too may have a signal_to_noise item.
+        # This can be here (output.psf) or in the main psf field if there is no gal field.
+        # If there is no signal_to_noise set here, then the default is to have no noise.
+        # If there is a signal_to_noise value, then it uses the same kind of noise as in the
+        # main image.
+        signal_to_noise : 1000
+
+        # Offset the PSF images randomly within the central pixel to better sample the
+        # sub-pixel surface brightness profile.  Note: as with the output.psf.shift parameter
+        # (cf. demo5.yaml), the output field may also take the value 'galaxy', which would mean
+        # to apply the same offset as was applied to the galaxy.  In this case, there is no
+        # such offset, so it wouldn't apply here, but it's an option if you want to match the
+        # offsets of the PSF and galaxy.
+        offset:
+            type : XY
+            x : { type: Random, min: -0.5, max: 0.5 }
+            y : { type: Random, min: -0.5, max: 0.5 }
+
+
+    # Make a truth catalog as a binary table in hdu 2
+    truth :
+        hdu : 2
+
+        columns :
+            gal_num : obj_num
+
+            # We saw in demo9 that position values in the output catalog get converted into two
+            # float values, and the column names get '.x' and '.y' appended to the given name.
+            # If you want, you can instead specify the x and y column names directly, but you
+            # need to do a little calculation to get the values, since these aren't natively
+            # stored anywhere.  To enable this, truth columns can be calculated quantities,
+            # just like any other field in the configuration.  However, only Eval and Current
+            # types are allowed.
+            x_image : { type : Eval, str : 'image_pos.x' }
+            y_image : { type : Eval, str : 'image_pos.y' }
+
+            # Similarly, shear values append '.g1' and '.g2' to the name and output a column
+            # for each of the two components.  However, this isn't necessarily what you want.
+            # E.g. you might want to catalog the e1,e2 definitions of the shape rather than g1,g2.
+            psf_e1 :
+                type : Eval
+                str : 'ellip.e1'
+                # Reminder g is the Eval code for Shear types. (s = str was already taken)
+                gellip : { type : Current, key : 'psf.ellip' }
+            psf_e2 :
+                type : Eval
+                str : 'ellip.e2'
+                gellip : { type : Current, key : 'psf.ellip' }
+
+            psf_fwhm : psf.fwhm
+
+            cosmos_id : gal.id
+
+            # Even though we accessed the catalog by id, we can still get the index number
+            # in the catalog via the RealGalaxy index attribute.
+            cosmos_index :
+                type : Eval
+                str : 'orig_gal.index'
+                # The orig_gal variable uses the x code, which is a little different from the
+                # other codes we've seen.  It refers to a GSObject, which needs to already be
+                # built by some other part of the code; the only type that works for these then
+                # is Current.  Here we take the current value stored in the gal field, which is
+                # the RealGalaxy object that was built for the first item in the Ring pattern.
+                # It doesn't have any transformations applied to it, so it still has the index
+                # attribute.
+                xorig_gal : { type : Current, key : 'gal' }
+
+            # Fields that are automatically generated are also available.
+            # List, Ring, and Catalog all have an index parameter, but it is often omitted
+            # from the configuration file because the ordering is obvious, so the default is
+            # what you want.  However, we can still use the Ring index here to compute the
+            # rotation angle that was applied.
+            theta :
+                type : Eval
+                str : "index * 360. / num"
+                iindex : { type : Current, key : 'stamp.index' }
+                inum : { type : Current, key : 'stamp.num' }
+
+            g1 :
+                type : Eval
+                str : 'shear.g1'
+                gshear : { type : Current, key : 'stamp.shear' }
+            g2 :
+                type : Eval
+                str : 'shear.g2'
+                gshear : { type : Current, key : 'stamp.shear' }
+
+            shift_x :
+                type : Eval
+                str : 'shift.x'
+                pshift : { type : Current, key : 'stamp.shift' }
+            shift_y :
+                type : Eval
+                str : 'shift.y'
+                pshift : { type : Current, key : 'stamp.shift' }
+
+

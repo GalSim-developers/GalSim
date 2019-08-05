@@ -1,0 +1,308 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+
+
+# A simulation based on the Great3 rgc branch, but tailored to DES specifics including
+# outputing to MEDS files.
+#
+# For the psf, we use a combination of Kolmogorov for the atmospheric component, and an
+# OpticalPSF for the optics, using parameters appropriate for DECam and the Blanco telescope.
+#
+# The galaxies are real galaxies from the COSMOS catalog using the I<25.2 sample.
+#
+# For the wcs, we use a random location within a full DES focal plane, which we take from 62
+# images files from SV data.  We don't include these files in the repo, since they total about
+# 700 MB.  You can download a tarball with the files used by this script at
+#
+#    http://www.sas.upenn.edu/~mjarvis/des_data.html
+#
+# The output files are MEDS files using the new psf extension to store images of the
+# PSF, so no interpolation is necessary.  In this sim, the PSF is actually a constant, but
+# when we start making the PSF variable, this will be useful.
+#
+# Notably, this config file uses a couple of custom types, the code for which is also in this
+# directory in the files hsm_shape.py and des_wcs.py.  So this serves as an example for how to
+# write custom extensions to the GalSim config apparatus.
+
+modules:
+    # The GalSim config processor will import each of these at the start of processing this
+    # file, so it provides a way to have custom types for anything (values, objects, inputs,
+    # output files, etc.).  In this case, two of these are in the current directory, so if
+    # you run `galsim meds.yaml` in this directory, it will find them.  But they can be anywhere
+    # in your PYTHONPATH.
+
+    # Use the extra features from the galsim.des module
+    - galsim.des
+
+    # A custom package in this directory for measuring shapes with HSM
+    - hsm_shape
+
+    # Read the WCS from a (in this case random) location within a real DES focal place observation.
+    - des_wcs
+
+psf:
+    type: Convolve
+
+    # This means the psf should change per output file, not per object as would be the default.
+    index_key : file_num
+
+    items:
+    # The atmospheric component
+    -   type: Kolmogorov
+        # To avoid PSFs that were "too round", the ellipticity was drawn from a uniform
+        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the
+        # typical variance of e in ground-based imaging.
+        ellip:
+            type: EBeta
+            e:
+                type: Random
+                min: 0.01
+                max: 0.03
+            beta:
+                type: Random
+
+        # The seeing is taken from a plausible distribution of seeing values
+        # ranging from 0.6 to 1.1.
+        fwhm:
+            type: RandomDistribution
+            x: [ 0.6, 0.7, 0.8, 0.9, 1.0, 1.1 ]
+            f: [  0., 10., 20., 40., 30.,  0. ]
+
+    # The optical component
+    -   type: OpticalPSF
+        # Take lambda = 800 nm.  D = 4 m.  lam/D = 0.04 arcsec
+        lam_over_diam: "$800 * 1.e-9 / 4 * 206265"
+
+        # I don't know what the right value of this is.  This is a guess.
+        obscuration: 0.3
+
+        # DECam has 4 struts.  Not sure what strut_thick or strut_angle is appropriate here.
+        # So these are just guesses.
+        nstruts: 4
+        strut_thick: 0.05  # In units of pupil diameter.
+        strut_angle: 10 degrees
+
+        # According to Aaron Roodman, for DES the appropriate rms values are
+        # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
+        defocus: { type: RandomGaussian, sigma: 0.13 }
+        astig1: { type: RandomGaussian, sigma: 0.13 }
+        astig2: { type: RandomGaussian, sigma: 0.14 }
+        coma1: { type: RandomGaussian, sigma: 0.06 }
+        coma2: { type: RandomGaussian, sigma: 0.06 }
+        trefoil1: { type: RandomGaussian, sigma: 0.05 }
+        trefoil2: { type: RandomGaussian, sigma: 0.06 }
+        spher: { type: RandomGaussian, sigma: 0.03 }
+
+        # The original GREAT3 runs used a keyword max_size to improve the efficiency of OpticalPSF.
+        # However, we now believe that this keyword introduces additional aliasing and have
+        # deprecated its use in GalSim v1.4.  We have retained the original description in the
+        # doubly commented block below.
+
+        # # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
+        # # PSF image is larger than the postage stamp onto which we will draw the object,
+        # # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
+        # # we will eventually draw onto helps avoid wasted calculations.
+        # # This is in arcsec, so max_size = stamp_size * pixel_scale
+        # # We're using a non-square wcs, so there isn't a well-defined pixel scale.  Use
+        # # the maxLinearScale to get the maximum "pixel scale" for the parallelogram.
+        # max_size: "$@image.size * wcs.maxLinearScale()"
+
+        suppress_warning: true
+
+gal:
+    # This little trick lets us keep a copy of the raw COSMOS galaxy, so we can grab its
+    # index and id for the truth file.  It's a sum of 1 object.  So just that object.
+    type: Sum
+    items:
+      -
+        type: COSMOSGalaxy
+        gal_type: real
+        index: { type: Random }
+
+    # Randomly spin the original profile
+    rotate: { type: Random }
+
+    # The shear is chosen randomly with a log-normal distribution in eta.
+    shear:
+        type: GBeta
+        # Change the shear every file, not every object.
+        index_key : file_num
+        g:
+            type: RandomDistribution
+            # Using p(g) = |g| means uniform in the annulus.
+            function: x
+            x_min: 0.01
+            x_max: 0.08
+        beta: { type: Random }
+
+stamp:
+    # Make sure we get most of the flux in the postage stamps.
+    min_flux_frac: 0.99
+
+    # Also impose a minimum S/N.
+    min_snr: 5
+
+image:
+    # Eventually, it would be nice to have variable stamp sizes based on the galaxy size, but
+    # don't bother with that for now.
+    size: 48
+
+    # Use a real wcs from some random location within a DES focal plane.
+    wcs :
+        type : DES_Local  # Defined in des_wcs.py in this directory.
+
+        # We could specify a chipnum here if we wanted.  The default is to pick a random chipnum
+        # from 1-62, excluding the bad chips specified in input.des_Wcs.
+
+        # This also optionally takes image_pos, but we'll use the default here, which is to pick
+        # a random location on the chip.
+
+    random_seed: 8675309   # Jenny
+
+    # Simple Gaussian noise.  The range here is much larger than the range used for Great3 to
+    # simulate the wide range in sky levels we get in real data.
+    # This might need some work to tune to a reasonable average S/N level.
+    noise:
+        type: Gaussian
+        variance:
+            type: Random
+            min: 0.002
+            max: 0.006
+
+    # Offset is just random within central pixel.
+    offset:
+        type: XY
+        x: { type: Random, min: -0.5, max: 0.5 }
+        y: { type: Random, min: -0.5, max: 0.5 }
+
+    # This means the code will parallelize the creation of a single output file,
+    # splitting up the postage stamps among the available cores.
+    # This is normally overridden by the output.nproc item below, so the parellelization
+    # will be done over files instead.  But if you modify this to only do one file or
+    # set output.nproc=1, then this stamp-based parallelization will turn on.
+    nproc: -1
+
+    # Great3 found that some stamps needed a larger fft size than default.  I don't think it's
+    # necessary here, but it doesn't hurt to put this in.
+    gsparams: {maximum_fft_size: 10240}
+
+input:
+    cosmos_catalog :
+        # If the command galsim_download_cosmos has been run for the F814W<25.2 sample,
+        # the catalog will have been downloaded from the GalSim web site and saved in a
+        # directory that GalSim knows about.
+        # So file_name and dir are not necessary, and we don't even need to set sample
+        # to 25.2, since that's the default.  But in the interest of being explicit...
+        sample: 25.2
+
+        # Make sure we use some cuts on postage stamp and fit quality as in GREAT3, specified using
+        # the exclusion_level keyword.  Currently the selected value "marginal" is in fact the
+        # default, but specify it in case that changes in future.
+        exclusion_level: marginal
+
+        # We need some parameters to tell it which galaxies to include in the selection.
+        # For now, just a maximum hlr to exclude objects that are too big for the stamp.
+        # We'll probably eventually want to allow larger galaxies and let them automatically
+        # use a larger stamp size.
+        # This still leaves in a lot of bright objects that visibly overflow the edge of the
+        # postage stamps.  Hence, we also use stamp.min_flux_frac.
+        max_hlr : 2.5  # arcsec
+
+        # We can also avoid very bright and very dim objects using a flux selection.
+        # The Great3 cuts are much more sophisticated than this (cf. examples/great3/cgc.yaml),
+        # but this is quicker, since it applies the cuts to the original catalog rather than
+        # rejecting objects after drawing the postage stamps.
+        min_flux : 8
+        max_flux : 50
+
+        # Opening the files with the RealGalaxy images strangely takes a huge amount of time.
+        # This parameter determines whether this overhead is done at the beginning to load
+        # all the files at the start or if the overhead happens for each file the first time it
+        # is needed.  It used to be much faster to preload, but I think a number of changes to
+        # the code (that happened a while ago -- see issue #474) made it so not preloading is
+        # actually better now.  Possibly worth checking though, since it may be system-specific.
+        #preload: True
+
+    des_wcs:
+        # This is used by the DES_Local wcs type.
+        # It reads in a full field worth of WCS objects, which DES_Local will select from
+        # and get a local WCS at some (in this case random) image position.
+        dir : des_data
+        root : "DECam_00154912"
+        ext : ".fits.fz"  # This is the default, but might as well be explicit here.
+
+        # Some of the chips on DES images are unusable, so we exclude them from use by this
+        # class.  The default is to exclude chips 2, 31, 61, but this particular exposure was
+        # taken during SV, when only chip 61 was bad, so we only exclude that one here.
+        bad_ccds : [ 61 ]
+
+output:
+    type: MEDS
+    nobjects: 10000  # nobj per file
+    nstamps_per_object: 1  # For now, single epoch sim.
+
+    dir: output
+    file_name:
+        type: FormattedStr
+        format: "sim-v001-%03d.fits"
+        items:
+        - { type: Sequence, nitems: '@output.nfiles' }
+
+    # Note: This can be changed from the command line as `galsim meds.yaml output.nfiles=10` say.
+    # Likewise for any other parameters in the configuration.  This is often more convenient than
+    # changing the original YAML configuration file.  Especially for temporary modifications.
+    nfiles: 200
+
+    # This means the code will parallelize across the different files, doing a full
+    # output file in each core at a time.
+    # This is generally better than image.nproc, since it doesn't require as much interprocess
+    # communication, which can be rather slow.
+    nproc: -1
+
+    # Output truth catalogs with some of the generated values
+    truth:
+        file_name :
+            type: FormattedStr
+            format: truth_catalog-%03d-%1d.fits
+            items:
+            - { type: Sequence, nitems: '@output.nfiles' }
+            - 0
+        columns:
+            num: obj_num
+            x: image.offset.x
+            y: image.offset.y
+
+            psf_hlr: "$(@psf).calculateHLR()"
+            # Use hsm to get PSF shape estimates
+            psf_e1:
+                type: Eval
+                str: "psfe.e1"
+                gpsfe :
+                    index_key: file_num  # Only remeasure for each new file num.
+                    type: HSM_Shape_Measure  # Defined in hsm_shape.py in this directory.
+                    obj: 'psf'
+            psf_e2: "$(@output.truth.columns.psf_e1.gpsfe).e2"
+
+            cosmos_index: "$(@gal.items.0).index"
+
+            # This isn't the same thing.  The above index is the one in the file.  This index
+            # is just an index into the list of galaxies that pass our cuts.
+            alt_cosmos_index: gal.items.0.index
+
+            theta: "$(@gal.rotate).rad"
+            g1: "$(@gal.shear).g1"
+            g2: "$(@gal.shear).g2"

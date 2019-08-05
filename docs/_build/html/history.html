@@ -87,6 +87,7 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
@@ -106,6 +107,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-1-to-v2-2">Changes from v2.1 to v2.2</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#deprecated-features">Deprecated Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api-changes">API Changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documentaion-updates">Documentaion Updates</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#new-features">New Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
 </ul>
@@ -201,7 +203,7 @@
 <h3>Deprecated Features<a class="headerlink" href="#deprecated-features" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Deprecated the nominally private class galsim.correlatednoise._BaseCorrelatedNoise.  If you
-were using it for any purpose, you should now use galsim.BaseCorrelatedNoise. (#160)</p></li>
+were using it for any purpose, you should now use <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BaseCorrelatedNoise</span></code></a>. (#160)</p></li>
 </ul>
 </div>
 <div class="section" id="api-changes">
@@ -209,6 +211,16 @@ were using it for any purpose, you should now use galsim.BaseCorrelatedNoise. (#
 <ul class="simple">
 <li><p>Removed functionality to store and re-load WFIRST PSFs, and to obtain multiple WFIRST
 PSFs simultaneously. (#919)</p></li>
+<li><p>The RealGalaxy COSMOS catalog is now hosted at <a class="reference external" href="https://zenodo.org/record/3242143">Zenodo</a>,
+which seems to have solved some flakiness in the previous hosting at the University of
+Manchester. (#1033)</p></li>
+</ul>
+</div>
+<div class="section" id="documentaion-updates">
+<h3>Documentaion Updates<a class="headerlink" href="#documentaion-updates" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>The documentation is now rendered in Sphinx, rather than Doxygen, which looks much nicer.  The
+new docs are accessible at <a class="reference external" href="http://galsim-developers.github.io/GalSim/">http://galsim-developers.github.io/GalSim/</a>.  (#160)</p></li>
 </ul>
 </div>
 <div class="section" id="new-features">
@@ -221,13 +233,17 @@ pupil plane image for shorter- and longer-wavelength bands.  (#919)</p></li>
 within the SCA. (#919)</p></li>
 <li><p>Added WFIRST fermi persistence model. (#992)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">r0_500</span></code> argument to VonKarman. (#1005)</p></li>
-<li><p>Added array versions of <code class="docutils literal notranslate"><span class="pre">wcs.toWorld</span></code> and <code class="docutils literal notranslate"><span class="pre">wcs.toImage</span></code>. (#1026)</p></li>
+<li><p>Added array versions of <a class="reference internal" href="wcs.html#galsim.BaseWCS.toWorld" title="galsim.BaseWCS.toWorld"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.toWorld</span></code></a> and <a class="reference internal" href="wcs.html#galsim.BaseWCS.toImage" title="galsim.BaseWCS.toImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.toImage</span></code></a>. (#1026)</p></li>
+<li><p>Exposed some functionality of <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> classes to Python. (#1038)</p></li>
+<li><p>Use OpenMP when appropriate in <a class="reference internal" href="sensor.html#galsim.SiliconSensor.accumulate" title="galsim.SiliconSensor.accumulate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SiliconSensor.accumulate</span></code></a> (#1008)</p></li>
 </ul>
 </div>
 <div class="section" id="bug-fixes">
 <h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>Fixed error in <code class="docutils literal notranslate"><span class="pre">wcs.makeSkyImage</span></code> when crossing ra=0 line for some WCS classes. (#1030)</p></li>
+<li><p>Fixed error in <a class="reference internal" href="wcs.html#galsim.BaseWCS.makeSkyImage" title="galsim.BaseWCS.makeSkyImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.makeSkyImage</span></code></a> when crossing ra=0 line for some WCS classes. (#1030)</p></li>
+<li><p>Fixed a slight error in the fluxes of photon-shot objects. (#1036)</p></li>
+<li><p>Fixed an error for <a class="reference internal" href="gal.html#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> galaxies with n very close to 0.5. (#1041)</p></li>
 </ul>
 </div>
 </div>

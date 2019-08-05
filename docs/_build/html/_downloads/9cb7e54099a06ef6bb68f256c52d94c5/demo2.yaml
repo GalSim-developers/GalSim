@@ -1,0 +1,94 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #2
+#
+# The second YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script is a bit more sophisticated, but still pretty basic.  We're still only making
+# a single image, but now the galaxy has an exponential radial profile and is sheared.
+# The PSF is a circular Moffat profile.  The noise is drawn from a Poisson distribution
+# using the flux from both the object and a background sky level to determine the
+# variance in each pixel.
+#
+# New features introduced in this demo:
+#
+# - obj type : Exponential (flux, scale_radius)
+# - obj type : Moffat (flux, beta, half_light_radius)
+# - obj : shear
+# - shear type : G1G2 (g1, g2)
+# - noise type : Poisson (sky_level)
+# - image : random_seed
+
+
+# Define the galaxy profile
+gal :
+    # Exponential requires one of scale_radius, fwhm, or half_light_radius.
+    type : Exponential
+    scale_radius : 2.7  # arcsec
+    flux : 1.e5         # counts
+
+    shear :
+        # Shear the galaxy by some value.
+        # There are several ways to specify shears, so we need to start by defining a type
+        # again.  (This is a theme in our configuration grammar.)
+        # G1G2 means to use the so-called "reduced shear" definition, commonly
+        # written as (g1,g2).
+        type : G1G2
+        g1 : 0.1
+        g2 : 0.2
+
+
+# Define the PSF profile
+psf :
+    # A Moffat is a better approximation of ground-based PSFs than a Gaussian.
+    # F(r) = (1+(r/rd)^2)^(-beta)
+    # It requires the beta parameter to be specified.
+    # It also requires one of scale_radius, fwhm, or half_light_radius.
+    type : Moffat
+    beta : 5.0
+    half_light_radius : 1.0  # arcsec
+
+
+# Define some other information about the images
+image :
+    pixel_scale : 0.2  # arcsec / pixel
+
+    noise :
+        # Poisson noise models how noise normally happens on CCD images -- each pixel
+        # has Poisson noise according to the number of photons hitting it.
+        type : Poisson
+        # Most of the noise in the image is normally from the sky flux, rather than each
+        # object's flux, so you need to specify what the sky level should be.
+        # Note: the final image will be "sky subtracted", so the mean background level
+        # will be 0.  This just specifies the sky level to use for the noise.
+        sky_level : 2.5e3  # counts / arcsec^2
+
+    # If you want the random values to be deterministic, you can provide an initial seed.
+    # If this isn't set, then it will use the current time to create an initial seed.
+    # This is the same seed that is used in demo2.py, which means the images produced
+    # by the two methods will be precisely identical.
+    random_seed : 1534225
+
+
+# Define the name and format of the output file
+output :
+    dir : output_yaml
+    file_name : demo2.fits
+

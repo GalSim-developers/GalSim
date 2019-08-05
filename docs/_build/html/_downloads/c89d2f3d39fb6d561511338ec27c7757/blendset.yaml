@@ -1,0 +1,202 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+
+
+# A simulation of sets of blended galaxies written to a MEDS file.
+# As in blend.yaml, there are two output files, one with the blended images and one with
+# the neighbors removed.  i.e. what you might get from a perfect deblender.
+# This time each galaxy in the set is given a postage stamp where it is at the center.
+# The same noise realization is used for each full set of blended objects, so this corresponds
+# to multiple cutouts from a larger image where each detection is at the center, as you would
+# get for a normal MEDS file from real data.
+
+modules:
+    # Use the extra features from the galsim.des module
+    - galsim.des
+
+    # A module in this directory that defines some custom types related to blending
+    - blend
+
+    # Another module in this directory that defines the ExcludedRandom type
+    - excluded_random
+
+psf:
+    # Use a PSFEx PSF as measured from DES SV data.
+    type: DES_PSFEx
+
+    # The image_pos doesn't matter much for the MEDS output, but it is used to get the
+    # right PSF from the PSFEx file.
+    image_pos :
+        type : XY
+        x : { type : Random, min: 1, max: 2048 }
+        y : { type : Random, min: 1, max: 4096 }
+
+
+gal:
+    # Choose random galaxies from the COSMOS catalog.
+    type: COSMOSGalaxy
+    index: { type: Random }
+
+    # Either of these will work here, but the real galaxies are much slower on such a small
+    # simulation, since they require a lot of setup time to read in each of the RealGalaxy
+    # image files.  On a typically large simulation, this time gets amortized over a lot
+    # of objects, so the difference isn't as huge.  So to keep the running time reasonable,
+    # we use parameteric here.
+    gal_type: parametric
+    #gal_type: real
+
+    # Randomly spin the original profile
+    rotate: { type: Random }
+
+    # This works out about right for the sky level we chose below.  The galaxies mostly seem
+    # to have pretty decent S/N based on visual inspection of image.
+    scale_flux: 1000
+
+    # Just a constant shear for now.
+    shear:
+        type: G1G2
+        g1: 0.03
+        g2: -0.02
+
+stamp:
+    # In blend.py (loaded by the modules field above), we define a custom stamp type
+    # called BlendSet.
+    # The first stamp is similar to what we did in blend.yaml with the stamp type Blend.
+    # It has one galaxy centered (more or less -- cf image.offset) on the stamp, and then
+    # some number of neighbors also appearing on the stamp placed randomly within some range
+    # of allowed separations.
+    # However, then BlendSet repeats the image n_neighbors more times centering on each of the
+    # neighbors in turn.
+    type: BlendSet
+
+    # Up to 5 neighbors.  Each neighbor has a prob of p=0.3 of being included.
+    n_neighbors:
+        type: RandomBinomial
+        N: 5
+        p: 0.3
+
+    # The neighbors cannot be too close (assume they are rejected as unusable) or too far
+    # (not really a blend).
+    min_sep: 2   # arcsec -- clearly overlapping.  Too hard to deblend.
+    max_sep: 10  # arcsec -- this would be off the edge of the stamp.  Not really blended.
+
+    # Offset is just random within central pixel.
+    offset:
+        type: XY
+        x: { type: Random, min: -0.5, max: 0.5 }
+        y: { type: Random, min: -0.5, max: 0.5 }
+
+
+image:
+    pixel_scale : 0.26
+
+    random_seed: 8675309
+
+    # Poisson noise
+    noise:
+        type: Poisson
+        sky_level: 800
+        whiten: True  # Only relevant for gal_type = real, but it doesn't hurt to leave this in.
+
+
+input:
+    cosmos_catalog :
+        # Use the same COSMOS catalog choices we made in meds.yaml
+        template : "meds.yaml:input.cosmos_catalog"
+
+        # Also impose a minimum size, which we didn't there, to avoid very small galaxies.
+        # This is just a cosmetic choice for this example to make the galaxies easier to see.
+        # You probably wouldn't want to do this for something that was attempting to be realistic.
+        min_hlr : 0.5  # arcsec
+
+    des_psfex :
+        dir : 'des_data'
+        file_name :
+            type : NumberedFile
+            root : 'DECam_00154912_'
+            digits : 2
+            ext : '_psfcat.psf'
+            num :
+                # Pick a random chip, but not either of our bad chips.
+                type : ExcludedRandom  # This is a custom type defined in exclude_random.py
+                min: 1
+                max : 62
+                exclude: [ 61, 31 ]
+
+
+# We have two separate runs, one writing to a MEDS file and the other writing a Tiled image.
+# These have different output fields, defined in the two sections below.  We also put the
+# parts of the iamge field that differ there as well.
+
+---
+
+# The first output file is a MEDS file, as would be made from DES data.
+
+image:
+    size: 64
+
+
+output:
+    type: MEDS
+    nobjects: 100
+    nstamps_per_object: 1
+
+    nfiles: 1
+
+    dir: output
+    file_name:
+        type: FormattedStr
+        format: "blendset-v001-%03d.fits"
+        items:
+        - { type: Sequence, nitems: '@output.nfiles' }
+
+    # Need a different specification of the deblend output to get it to write a MEDS file.
+    deblend_meds:
+        file_name:
+            template: :output.file_name   # template with no filename uses current config.
+            format: "blendset-deblend-v001-%03d.fits"
+
+---
+
+# The second output file is a tiled image, just to make it easier to view the stamps in ds9.
+
+image:
+    type: Tiled
+    stamp_size : 64
+    nx_tiles : 10
+    ny_tiles : 10
+
+output:
+    type: Fits
+
+    nfiles: 1
+
+    dir: output
+    file_name:
+        type: FormattedStr
+        format: "blendset-tiled-v001-%03d.fits"
+        items:
+        - { type: Sequence, nitems: '@output.nfiles' }
+
+    # This is the same output specification we used in blend.yaml.
+    deblend:
+        file_name:
+            type: FormattedStr
+            format: "blendset-tiled-deblend-v001-%03d.fits"
+            items:
+            - { type: Sequence, nitems: '@output.nfiles' }
+

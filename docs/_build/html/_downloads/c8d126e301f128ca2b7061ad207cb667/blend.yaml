@@ -1,0 +1,120 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+
+
+# A simulation of blended pairs of galaxies at various separations and flux ratios.
+# There are two parallel runs, one normal and the other where the neighbor only contributes
+# to the noise, not the flux.  So this simulates a perfect deblender that removes the flux
+# correctly, but there is still the extra noise from the neighbor.
+
+modules:
+
+    # A module in this directory that defines some custom types related to blending
+    - blend
+
+    # A module that defines the LogNormal distribution.
+    # This optionally uses the ngmix module: https://github.com/esheldon/ngmix
+    # to show how that can work.  But if you don't have it, it has its own implementation
+    # as well (since it's pretty simple).
+    - log_normal
+
+
+psf:
+    # Simple Moffat PSF
+    type: Moffat
+    fwhm: 0.9
+    beta: 3.0   # Typical beta values are between 2.5 and 4 according to this paper:
+                # http://adsabs.harvard.edu/abs/1993MNRAS.264..961S
+
+    # This means the psf should change per output file, not per object as would be the default.
+    index_key : file_num
+
+
+gal:
+    # Simple Exponential galaxies this time.
+    type: Exponential
+    half_light_radius:
+        type: LogNormal
+        mean: 1.2
+        sigma: 0.4
+
+    ellip:
+        type: Eta1Eta2
+        eta1: { type: RandomGaussian, sigma: 0.2 }
+        eta2: { type: RandomGaussian, sigma: 0.2 }
+
+    flux:
+        type: LogNormal
+        mean: 1000.
+        sigma: 500.
+
+stamp:
+    # In blend.py (loaded by the modules field above), we define a custom stamp type
+    # called Blend.
+    # It has one galaxy centered (more or less -- cf image.offset) on the stamp, and then
+    # some number of neighbors also appearing on the stamp placed randomly within some range
+    # of allowed separations.
+    type: Blend
+
+    # Up to 5 neighbors.  Each neighbor has a probability p=0.3 of being included.
+    n_neighbors:
+        type: RandomBinomial
+        N: 5
+        p: 0.3
+
+    # The neighbors cannot be too close (assume they are rejected as unusable) or too far
+    # (not really a blend).
+    min_sep: 2   # arcsec -- clearly overlapping.  Too hard to deblend.
+    max_sep: 10  # arcsec -- this would be off the edge of the stamp.  Not really blended.
+
+    # Offset is just random within central pixel.
+    offset:
+        type: XY
+        x: { type: Random, min: -0.5, max: 0.5 }
+        y: { type: Random, min: -0.5, max: 0.5 }
+
+
+image:
+    type: Tiled
+    stamp_size : 64
+    nx_tiles : 10
+    ny_tiles : 10
+
+    pixel_scale : 0.26
+
+    random_seed: 8675309   # Jenny
+
+    # Poisson noise with whitening.
+    noise:
+        type: Poisson
+        sky_level: 100
+
+output:
+    type: Fits
+
+    dir: output
+    file_name: "blend.fits"
+
+    deblend:
+        # This is a custom extra output field to write a second file that is identical
+        # except for not including the flux of the neigbors.  We do this by grabbing the
+        # pre-noise postage stamp of the neighbors and then subtracting this off from the
+        # final image that includes all the noise.  So the Poisson noise of the neighbors
+        # is still there.  Just not any of the flux from the neighbors.
+        # This represents the result of a perfect deblender.
+        file_name: "deblend.fits"
+

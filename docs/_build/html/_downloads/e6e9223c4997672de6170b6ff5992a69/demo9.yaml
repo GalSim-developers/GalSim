@@ -1,0 +1,525 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #9
+#
+# The ninth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
+# applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations
+# of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
+# has its own file, organized into 4 directories (one for each mass).  For each cluster, we
+# draw 20 lensed galaxies located at random positions in the image.  The PSF is appropriate for a
+# space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
+# a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each
+# +output image that could be used for testing the accuracy of shape or flux measurements.
+#
+# New features introduced in this demo:
+#
+# - obj type : OpticalPSF (lam, diam, ..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
+# - obj type : InclinedExponential (scale_radius, scale_h_over_r, inclination)
+# - angle type : Radians
+# - shear type : NFWHaloShear (redshift)
+# - float type : NFWHaloMagnification (redshift)
+# - float type : RandomDistribution(function, x_min, x_max)
+# - input : nfw_halo (mass, conc, redshift)
+# - shear type : Sum (items)
+# - image type : Scattered (size, nobjects)
+# - wcs type : UVFunction (ufunc, vfunc, xfunc, yfunc, origin)
+# - str type : NumberedFile (root, num, ext, digits)
+# - str type : FormattedStr (format, items)
+# - pos type : RandomCircle (..., inner_radius)
+# - value type : Sequence (..., nitems)
+# - value type : List as a simple list
+# - output : nproc
+# - output : weight
+# - output : badpix
+# - output : truth
+# - output : skip
+# - output : noclobber
+
+
+# We again use the multiple document feature.  So start with the common information:
+
+# Define the PSF profile
+psf :
+    # We use OpticalPSF with a few new features we haven't mentioned before:
+    # 1) We separately specify the light wavelength and telescope diameter, relying on OpticalPSF to
+    #    convert to appropriate units (arcsec by default, though the routine can be told otherwise).
+    # 2) We introduce the parameters trefoil1 and trefoil2, which are 3rd order Zernike terms.
+    # 3) We specify support struts that hold the secondary mirror.  You can specify how
+    #    many struts to have, their thickness relative to the diameter, and the angle of the
+    #    first one relative to the vertical axis.  Here, we use 4 supports.
+    type : OpticalPSF
+    lam : 900.0               # nanometers
+    diam : 2.4                # meters: (900e-9m / 2.4m) * 206265 arcsec/rad = 0.077 arcsec
+    obscuration : 0.125       # (0.3m / 2.4m) = 0.125
+    nstruts : 4
+    strut_thick : 0.07        # The default is 0.05
+    strut_angle : 15 degrees  # The default is 0
+
+    defocus : 0.04            # The aberrations are all taken to be quite modest here.
+    astig1 : 0.03             # (I don't actually know what are appropriate for HST...)
+    astig2 : -0.01
+    coma1 : 0.02
+    coma2 : 0.04
+    trefoil1 : -0.02
+    trefoil2 : 0.04
+
+
+# Define the galaxy profile
+gal :
+    # Note: The randomized positions are specifyed below with image.type = 'Scattered'
+    # rather than gal.shift as we used in demo4 and demo5.  The gal.shift field should be
+    # reserved for shifts of a few pixels or less, nor for setting the position of the
+    # object in a large image.
+
+    # We introduce here another surface brightness profile, called InclidedExponential.
+    # It represents a typical 3D galaxy disk profile inclined at an arbitrary angle relative
+    # to face on.
+    #     inclination = 0 degrees corresponds to a face-on disk, which is equivalent to the
+    #                             regular Exponential profile.
+    #     inclination = 90 degrees corresponds to an edge-on disk.
+
+    type : InclinedExponential
+    scale_radius : { type : Random , min : 0.05 , max : 0.2 }
+
+    # You can specify either a scale_height value or the ratio height/radius using scale_h_over_r.
+    # The latter is probably the more typically useful value to specify, especially when the
+    # radius is a random variate.
+    scale_h_over_r : { type : Random , min : 0.1 , max : 0.2 }
+
+    flux :
+        # We draw the flux from a power law distribution with values from 1.e4 to 1.e6.
+        # You can use any arbitrary function here, along with a min and max value,
+        # and values will be drawn within this probability distribution.
+        # The function should be given in terms of the variable x, since internally
+        # it is parsed with eval('lambda x : ' + function).
+        type : RandomDistribution
+        function : x**-1.5
+        x_min : 1.0e4
+        x_max : 1.0e6
+
+    inclination :
+        # The inclination is defined such that 0 corresponds to face on and 90 degrees
+        # corresponds to edge on.  The appropriate probability distribution that matches
+        # an isotropic distribution of orientations in the sky is P(theta) = 0.5 sin(theta).
+        type : Radians
+        theta :
+            type : RandomDistribution
+            # We are allowed to use math or numpy functions (either as e.g. numpy.sin or np.sin)
+            # in the definition of the function for a RandomDistribution.  This is true in
+            # general for places in GalSim where a string is evaluated...
+            function : "0.5 * math.sin(x)"
+            x_min : 0
+            # ... such as the Eval type.
+            x_max : { type : Eval, str : "math.pi" }
+
+    rotation:
+        # The InclidedExponential always inclines the galaxy around the x-axis.  We want it to
+        # be inclined around a random axis, so we rotate the galaxy by a random angle.
+        type : Random
+
+    magnification :
+        # For this demo, we use a model of an NFW halo for our magnification and shear.
+        # Both require that the galaxy have a redshift attribute.
+        # We put the redshift at the gal level, rather than here, since we want to use the
+        # same value for both mag and shear.
+        # They also require an input.nfw_halo field.  See below.
+        type : NFWHaloMagnification
+
+    shear:
+        # All value types that can be added up can use a Sum type to list the items to be
+        # added together.  The only one that can be slightly non-intuitive is the Sum of
+        # Shear items.  Shear addition is not commutative, so the order of the elements
+        # matters.  The items in the Sum should be listed in order from the observer
+        # to the source.  This is a somewhat standard convention for what g_a + g_b means
+        # in shear space.  g_b is applied to the profile first, and then g_a is applied.
+        # In our case, we have a field shear (a constant value across the field) that is
+        # taken to be a kind of cosmic shear component behind the foreground cluster, so
+        # it is listed second.
+        type : Sum
+        items :
+            - { type : NFWHaloShear }
+            - { type : G1G2, g1 : 0.03, g2 : 0.01 }
+
+    # Note: the redshift could be variable for each galaxy.  We just use a constant here.
+    redshift : 0.6
+
+
+# Setup the NFW Halo:
+# This isn't really an "input" in the normal sense, but we put in input anything that
+# requires an initial setup.  That includes setting up the NFW Halo parameters.
+input :
+    nfw_halo :
+        # Note: the input field gets processed each time we start a new output file
+        # So any non-constant variables here will change with that cadence.
+        # For our mass, we use each value for 5 sequential files, then change
+        # to the next mass in the list.
+        mass :
+            type : List
+            items : [ 7.0e14, 4.0e14, 2.0e14, 1.0e14 ]
+            index :
+                type : Sequence
+                # Note: this is a good example of when the YAML named variables come in handy.
+                # We'll use this variable below when setting up the output files.
+                repeat : &n_clusters_per_mass 5
+
+        conc : 4  # The concentration parameter = virial radius / NFW scale radius
+        redshift : 0.3  # The redshift of the halo.
+
+        # These next two are optional.  If they are omitted, then (0.3, 0.7) are actually the
+        # defaults.  If you only specify one of them, the other is set so that the total is 1.
+        # But you can define both values so that the total is not 1 if you want.
+        # Radiation is assumed to be zero and dark energy equation of state w = -1.
+        # If you want to include either radiation or more complicated dark energy models,
+        # you'll need to define your own cosmology class and use that in a Python script.
+        # There is no way to include them currently from a config script.
+        omega_m : 0.3
+        omega_lam : 0.7
+
+        # Another optional parameter for nfw_halo is halo_pos, which specifies the location
+        # of the halo with respect to the center of the image.  The default is (0,0).
+        # halo_pos : 0,0
+
+
+
+# Define some other information about the images
+image :
+    # A Scattered image means that the objects can be placed arbitrarily at any (x,y) value.
+    type : Scattered
+
+    # Either size or (xsize,ysize) is required to specify the size of the image.
+    size : 512  # pixels
+
+    # nobjects is required to specify how many objects to place on the image.
+    # It could just be a number (say, 20), but in this case, we let the number
+    # of sources be different for each cluster.
+    nobjects :
+        type : Random
+        min : 15
+        max : 30
+
+    # You can optionally specify stamp_size or (stamp_xsize,stamp_ysize) to set the size of
+    # the postage stamp image to draw for each object.  However, if you omit these,
+    # then GalSim will automatically determine a good size to draw each object -- larger
+    # for larger objects, and smaller for smaller ones.  So this is usually the way to go.
+
+
+    # There are four ways to specify the location of each postage stamp on the full image for
+    # the Scattered image type. You may specify:
+    #
+    #   image_pos = the position in pixels on the full image
+    #   world_pos = (a) the position in arcsec (or whatever sky units you are using) relative
+    #                   to the center of the image
+    #               (b) the celestial coordinates on the sky (i.e. RA, Dec).  This option requires
+    #                   that the WCS of the image be a CelestialWCS (cf. demo11)
+    #   (neither) = let the objects be placed randomly anywhere on the image
+    #
+    # The difference between these and gal.shift is that gal.shift moves the object with
+    # respect to the center of the postage stamp, while these set the position of the
+    # postage stamp on the larger full image.
+    #
+    # In this case we use world_pos to place each object in sky coordinates relative to
+    # the center of the image (option a for world_pos above).  We use RandomCircle with an inner
+    # radius to avoid placing galaxies too close to the halo center where the lensing is not weak.
+    # The outer radius is 21 arcsec, which is large enough to cover all the way to the corners,
+    # although it means occasionally an object will be skipped because its postage stamp falls
+    # completely off the edge of the image.
+    world_pos :
+        type : RandomCircle
+        radius : 21       # arcsec
+        inner_radius : 3  # arcsec
+
+    # Note: the default option if we didn't specify either image_pos or world_pos (described as
+    # neither above) would be equivalent to the following:
+    #
+    # image_pos :
+    #     type : XY
+    #     x : { type : Random , min : 1 , max : xsize }
+    #     y : { type : Random , min : 1 , max : ysize }
+    #
+    # where xsize and ysize are whatever values are used for the size of the image.  In this case,
+    # both are equal to 512, set by the image.size parameter above.
+
+
+    # For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)
+    # and v(x,y) functions.  We use a simple cubic radial function to create a
+    # pincushion distortion.  This is a typical kind of telescope distortion, although
+    # we exaggerate the magnitude of the effect to make it more apparent.
+    # The pixel size in the center of the image is 0.05, but near the corners (r=362),
+    # the pixel size is approximately 0.075, which is much more distortion than is
+    # normally present in typical telescopes.  But it makes the effect of the variable
+    # pixel area obvious when you look at the weight image in the output files.
+    wcs :
+        type : UVFunction
+        # The functions will be evaluated as eval('lambda x,y : '+ufunc), and likewise
+        # for vfunc.
+        ufunc : '0.05 * x * (1. + 2.e-6 * (x**2 + y**2))'
+        vfunc : '0.05 * y * (1. + 2.e-6 * (x**2 + y**2))'
+
+        # It's not required to provide the inverse functions x(u,v) and y(u.v).
+        # However, if we don't, then we would have to provide image_pos rather than
+        # world_pos above for the locations, since the WCS would not know how to translate
+        # the world_pos into image coordinates to know where on the image to put the galaxy.
+        #
+        # They are a bit complicated to express as lambda functions.  See the python script
+        # for the derivation as well as a more intelligible (and equivalent) implementation
+        # using normal function calls.
+        xfunc : '( lambda w: ( 0 if w==0 else
+            100.*u/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) -
+                      ( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )'
+        yfunc : '( lambda w: ( 0 if w==0 else
+            100.*v/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) -
+                      ( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )'
+
+        # In order to get the world coordinates to be (0,0) at the center of the image, we
+        # need to tell it that we want the origin there.  The default origin for the world
+        # coordinates is (x,y) = (0,0).
+        # You can set a particular (x,y) position for the origin, or you can use this special
+        # case that sets the origin to the image center.  This is probably the more typical
+        # usage for the origin keyword.
+        origin : center
+
+    noise :
+        sky_level : 1.0e2  # ADU / arcsec^2
+
+    random_seed : 8383721
+
+
+# Define the names and format of the output files
+output :
+    nfiles : 20
+
+    file_name :
+
+        # A NumberedFile type creates a string of the form rootNNNNext
+        # where the NNNN is a number that will typically be drawn from a Sequence.
+        # In our case, our file_name's will be:
+        #     cluster0000.fits
+        #     cluster0001.fits
+        #     cluster0002.fits
+        #     cluster0003.fits
+        #     cluster0004.fits
+        type : NumberedFile
+
+        # root specifies the text to go before the number
+        root : 'cluster'
+
+        # num specifies how to choose the number for each file.
+        # If omitted, the default is simply a Sequence starting at 0.
+        # i.e. num : { type : Sequence , first : 0 }
+        # However, we want the sequence to start over every 5 files, so we need to define it.
+        num :
+            type : Sequence
+            first : 0
+
+            # An alternate way to set the number of items in a Sequence is nitems instead of
+            # last.  Here, last = nitems-1, so nitems is more convenient, since we have
+            # n_clusters_per mass stored as a named variable (defined above in input.nfw_halo).
+            nitems : *n_clusters_per_mass
+
+        # ext specifies the text to go after the number, if desired.
+        # The extension is usually set to a reasonable default.
+        # For output.file_name, the default is '.fits'.
+        # Similarly for "extra" output fields like badpix or weight if those are written to a
+        # separate file (rather than just another hdu as in this example).
+        # For anything else (e.g. dir below) the default is '' (no extension)
+        #ext : '.fits'
+
+        # digits specifies how many digits to use in writing the number.  The default is
+        # to use as many as necessary, but if your numbers go above 9, then this makes
+        # the file names appear out of order in a directory listing.  So it is common
+        # practice to pad the smaller numbers with 0's so file0099 will appear before file0100.
+        digits : 4
+
+
+    dir :
+        # Our directory names wil be:
+        #     nfw1
+        #     nfw2
+        #     nfw3
+        #     nfw4
+        # as subdirectories of output_yaml.
+        #
+        # This could be done using NumberedFile with
+        #     type : NumberedFile
+        #     root : 'output_yaml/nfw'
+        #     num : <the same as the single item below>
+        #
+        # however, we use FormattedStr instead to show how that works.
+        type : FormattedStr
+
+        # The FormattedStr takes a format string and a list of items to use for
+        # the various %d, %f, etc.  In other words, once we construct a list of items,
+        # the final string is calculated using
+        #     format%tuple(items)
+        format : output_yaml/nfw%d
+
+        items :
+            # Only one item in this case, but in general you would have an item for each
+            # % specified in the format string (except %% of course which is interpreted
+            # as a literal '%').
+            -
+                type : Sequence
+                first : 1
+                last : 4
+                # For our directory name, we have each number in the sequence repeat 5 times
+                # before moving on to the next value, since we have 5 files to put in each
+                # directory.
+                repeat : *n_clusters_per_mass
+
+    # The weight field means that a weight image should be built and written out.
+    # The weights are calculated as the inverse variance in each pixel.
+    weight :
+        # Either file_name or hdu is required for weight.  In this case we write to the
+        # first HDU extension.  The main image is in the primary HDU, which is number 0.
+        # Note: it is an error to skip HDU's, so if weight is the only other image, it must
+        # be in HDU 1.  If weight, badpix and psf all specify an hdu value, then they must be
+        # 1, 2 and 3 in some order.
+        # Also, hdu is only valid for image.type = Fits (which is the default if unspecified).
+        hdu : 2
+
+        # The default behavior for a weight image is to not include the Poisson noise from
+        # the objects themselves, but rather just the variance from the sky and/or read_noise.
+        # If you would rather include the object noise, change this to True.
+        #include_obj_var : False
+
+    # It is common for astrometric images to also have a bad pixel mask.  We don't have any
+    # defect simulation currently, so our bad pixel masks are currently all zeros.
+    # But someday, we plan to add defect functionality to GalSim, at which point, we'll
+    # be able to mark those defects on a bad pixel mask.
+    badpix :
+        hdu : 1
+
+    # We also draw a PSF image at the location of every galaxy.  This isn't normally done,
+    # and since some of the PSFs overlap, it's not necessarily so useful to have this kind
+    # of image.  But in this case, it's fun to look at the psf image, especially with
+    # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with
+    # struts can look when there is no atmospheric component to blur it out.
+    psf :
+        hdu : 3
+
+    # nproc in the output field indicates that multiple processes should be used to
+    # build the files.  This is a much more efficient way to parallelize than putting
+    # nproc in the image field (as in demo8.yaml), since it requires less communication
+    # between the processes.  Unless you are building enormous files such that only one
+    # at a time can fit in memory, this will be the normal way you'll want to parallelize.
+    #
+    # Also, this time, we set nproc <= 0.  This means that GalSim should try to automatically
+    # determine the number of CPUs you have and use that many processes.
+    nproc : -1
+
+    # A truth catalog records a number of calculated values for each object made by the script.
+    # We make a truth catalog file for each output file.
+    truth :
+        file_name :
+            type : NumberedFile
+            root : 'truth'
+            num :
+                type : Sequence
+                first : 0
+                nitems : *n_clusters_per_mass
+            digits : 4
+
+            # Again, the default extension is '.fits', in which case it will build a fits
+            # binary table.  However, if you use ext : '.dat' (or anything that doesn't
+            # start with '.fit'), it will make an ASCII file instead.
+            ext : '.dat'
+
+        # You can also specify dir, as the output directory, but the default is to use
+        # the same directory as the main output files, so we'll just do that.
+
+        columns :
+            # The columns are specified as a dict giving the name of the output column
+            # and which calculated value to use for the data.
+
+            # There are some special values that can be used that the config apparatus
+            # calculates automatically.  Some useful ones are:
+            #
+            # - obj_num is the running object number, starting at 0
+            # - image_num is the running image number, starting at 0
+            # - file_num is the running file number, starting at 0
+            #
+            # See the documentation of the Eval type for the complete list:
+            # https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation-v1.3#eval-type
+            object_id : obj_num
+            halo_id : file_num
+
+            # Most items will typically be given by their location in the config dict.
+            # e.g. gal.flux accesses the calculated value of the galaxy flux.
+            flux : gal.flux
+            radius : gal.scale_radius
+            h_over_r : gal.scale_h_over_r
+
+            # Angle values will be stored in radians and their name will have .rad appended to it
+            # to make it clear what the value means.  i.e. the columns in the output file for
+            # these two items will be inclination.rad and theta.rad.
+            inclination : gal.inclination
+            theta : gal.rotation
+
+            mu : gal.magnification
+            redshift : gal.redshift
+
+            # For positions and shears, the data will be split into two columns, and the given
+            # column name will have ('.g1', '.g2) or ('.x', '.y') appended to what is listed here.
+            # i.e. There will be output columns named 'shear.g1', 'shear.g2', 'pos.x', 'pos.y'.
+            shear : gal.shear
+            pos : image.world_pos
+
+            # The world position is an explicit generated value in the config dict in this case,
+            # but image_pos and world_pos are always available values (like obj_num, file_num
+            # above), since GalSim will generate them itself if necessary.  Here, we output
+            # image_pos, which is generated from world_pos and the WCS.
+            image_pos : image_pos
+
+            # Things in the input field don't change for each object, but they can
+            # still be placed in the truth catalog.  These columns will have all identical
+            # values within each catalog, but different across catalogs.
+            halo_mass : input.nfw_halo.mass
+            halo_conc : input.nfw_halo.conc
+            halo_redshift : input.nfw_halo.redshift
+
+---
+
+output :
+
+    # It is possible to skip particular output files if you want.
+    # This example is a bit contrived for the sake of the example.  It skips every 6th file.
+    # Also, this is a shorthand notation for
+    #
+    #     skip :
+    #         type : List
+    #         items : [ 0, 0, 0, 0, 0, 1 ]
+    #
+    # For simple lists where you don't need to do anything special with the indexing, repeat, etc.
+    # then you can just write it this way.
+    skip: [ 0, 0, 0, 0, 0, 1 ]
+
+---
+
+output :
+
+    # Another option is to skip any file that is already written.
+    # This might be useful if you ran out of memory for a few files on a really big job using
+    # multiprocessing (nproc != 1).  You could follow this up with a run with nproc = 1 to get
+    # the full machine memory and noclobber = True to only do the files that failed in the
+    # previous run.
+    # Here we do all the files that weren't done above because of the skip option.
+    noclobber : True

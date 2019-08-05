@@ -1,0 +1,236 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #7
+#
+# The seventh YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script introduces drawing profiles with photon shooting rather than doing the
+# convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
+# kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so
+# each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
+# The profiles are drawn twice: once with the FFT method, and once with photon shooting.
+# The two images are drawn side by side into the same larger image so it is easy to
+# visually compare the results. The 100 total profiles are written to a FITS data cube,
+# which makes it easy to scroll through the images comparing the two drawing methods.
+#
+# New features introduced in this demo:
+#
+# - obj type : List (items)
+# - obj type : Airy (lam_over_diam)
+# - obj type : Sersic (..., trunc)
+# - obj : dilate
+# - value type : Sequence (..., repeat, index_key)
+# - value type : Random (min, max)
+# - image type : Tiled (..., stamp_size, xborder, yborder)
+# - stamp : draw_method (fft or phot)
+# - stamp : gsparams
+# - output : file_name with .gz, .bz2 or .fz extension automatically uses compression.
+
+
+# Define the PSF profiles
+psf :
+    type : List
+    items :
+        -
+            type : Gaussian
+            fwhm : 0.65
+        -
+            type : Moffat
+            fwhm : 0.65
+            beta : 2.4
+        -
+            type : Sum
+            items :
+                - { type : Gaussian , flux : 0.8 , fwhm : 0.65 }
+                - { type : Gaussian , flux : 0.2 , fwhm : 1.3 }
+        -
+            type : Convolution
+            items :
+                - { type : Gaussian , fwhm : 0.65 }
+
+                # The OpticalPSF and set of Zernike values chosen below correspond to a reasonably
+                # well aligned, smallish ~0.3m / 12 inch diameter telescope with a central
+                # obscuration of ~0.12m or 5 inches diameter, being used in optical wavebands.
+                # In the Noll convention, the value of the Zernike coefficient also gives the RMS
+                # optical path difference across a circular pupil.  An RMS difference of ~0.5 or
+                # larger indicates that parts of the wavefront are in fully destructive
+                # interference, and so we might expect aberrations to become strong when Zernike
+                # aberrations summed in quadrature approach 0.5 wave.
+                # The aberrations chosen in this case correspond to operating close to a 0.25 wave
+                # RMS optical path difference:
+                -
+                    type : OpticalPSF
+                    lam_over_diam : 0.39
+                    obscuration : 0.4
+                    aberrations:
+                        # This should be a list of coefficients in the Noll index convention
+                        # starting with index 4.
+                        # c.f. http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials
+                        - 0.06   # Noll index 4 = Defocus
+                        - 0.12   # Noll index 5,6 = Astigmatism
+                        - -0.08
+                        - 0.07   # Noll index 7,8 = Coma
+                        - 0.04
+                        - 0.0    # Noll index 9,10 = Trefoil -- unused here
+                        - 0.0
+                        - -0.13  # Noll index 11 = Spherical
+        -
+            type : Convolution
+            items :
+                - { type : Kolmogorov , fwhm : 0.65 }
+                - { type : Airy , lam_over_diam : 0.195 }
+
+    index :
+        type : Sequence
+        first : 0
+        last : 4
+        repeat : 40  # How many times to repeat the same value before moving on.
+
+
+# Define the galaxy profiles
+gal :
+    type : List
+    items :
+        # The sizes here start as 1, but we dilate the profile below:
+        - { type : Gaussian , half_light_radius : 1 }
+        - { type : Exponential , half_light_radius : 1 }
+        - { type : DeVaucouleurs , half_light_radius : 1 }
+        - { type : Sersic , n : 2.5 , half_light_radius : 1 }
+        -
+            type : Sum
+            items :
+                # Sersics can be truncated if desired.
+                # The units for this are expected to be arcsec (or specifically -- whatever units
+                # you are using for all the size values as defined by the pixel_scale).
+                - { type : Sersic , n : 3.2 , half_light_radius : 0.7 , flux : 0.4 , trunc : 8.5 }
+                - { type : Sersic , n : 1.5 , half_light_radius : 1.2 , flux : 0.6 }
+    index :
+        type : Sequence
+        # The index item for a List automatically has first and last set appropriately
+        # (0 and 4 in this case).  So we can omit them, and just specify repeat.
+        # This will repeat each 8 times, but also go through the full list 5 times
+        repeat : 8
+
+    flux : { type : Random , min : 1.e4 , max : 1.e5 }
+    dilate : { type : Random , min : 0.3 , max : 1.3 }
+    ellip :
+        type : EBeta
+        e : { type : Random , min : 0.0 , max : 0.8 }
+        beta : { type : Random }
+
+
+# Define some other information about the images
+image :
+    # Each image in the data cube has two tiles.
+    type : Tiled
+    nx_tiles : 2
+    ny_tiles : 1
+
+    # Use a 2 pixel border between fft and phot images.
+    # Rather than specify a single border for both directions, you can also specify
+    # xborder and/or yborder separately.  Here we use xborder.
+    xborder : 2
+
+    # Rather than specify stamp_xsize and stamp_ysize separately, you can also just
+    # specify a single stamp_size.
+    stamp_size : 64
+
+    pixel_scale : 0.28  # arcsec / pixel
+
+    # Define what kind of noise to use
+    noise :
+        sky_level : 1.e4  # ADU / arcsec^2
+
+    # This is pretty contrived.  It is really only relevant for this particular demo.
+    # The usual case is to just set a single number, which really means that each object
+    # gets a sequential value starting with this number.  In this case we want to use the
+    # same value for both the fft and phot images to get the same values for the random
+    # parameters. To implement this, we tell it to use the image_num for the sequencing key
+    # rather than the usual obj_num.
+    random_seed : { type : Sequence , first : 553728 , index_key : 'image_num' }
+
+
+# Define some image properties that are specific to the stamp generation phase:
+# In particular, these are things that by default use the obj_num indexing to determine
+# when they change if they are given some kind of variable specification.
+# e.g. draw_method below will alternate back and forth between 'fft' and 'phot' for each stamp.
+stamp :
+
+    # Define which method we want to use to draw the stamp.
+    # This is a bit contrived for this demo.  Normally, you would just choose either fft or phot.
+    # But here we alternate between the two of them to make images that compare the same object
+    # drawn both ways.
+    draw_method :
+        type : List
+
+        # Here we introduce another notation for specifying a list in YAML.  The list of items
+        # may be indicated with square brackets with the items separated by commas rather
+        # than using the - notation with one item per line.  This is equivalent to
+        # items :
+        #     - fft
+        #     - phot
+        items : [ fft , phot ]
+
+        # The following sequence for index is automatically generated:
+        #index : { type : Sequence , first : 0 , last : 1 }
+
+    # For bright objects, it can be quite slow to shoot all the photons from the object.
+    # Shooting fewer photons with flux > 1 each will be faster, but will add some extra
+    # Poisson noise due to the smaller number of photons.
+    # The max_extra_noise parameter indicates how much extra noise per pixel we are
+    # willing to tolerate as a fraction of the noise that we will be adding from the
+    # sky (cf. the image.noise field).  In this case, we allow an extra 1% larger variance,
+    # but only for photon shooting.  We use None here when the draw_method is fft.
+    max_extra_noise :
+        type: List
+        items: [ None, 0.01 ]
+
+
+    # This script is set up as a comparison between using FFTs for doing the convolutions and
+    # shooting photons.  The two methods have trade-offs in speed and accuracy which vary
+    # with the kind of profile being drawn and the S/N of the object, among other factors.
+    # In addition, for each method, there are a number of parameters GalSim uses that control
+    # aspects of the calculation that further affect the speed and accuracy.
+    #
+    # These parametsrs can be adjusted from the defaults with a gsparams item, either in
+    # image (in which case the values apply to all objects) or in the gal or psf layer
+    # in which case the values apply to just that object.  For this script, we just apply a
+    # global change to some of the values, just to demonstrate how it works.
+    #
+    # See the config documentation for the complete list of parameters and more detailed
+    # documentation, including the default values for each parameter.
+    gsparams :
+        folding_threshold : 1.0e-2 # maximum fractional flux that may be folded around edge of FFT
+        maxk_threshold : 2.0e-3    # k-values less than this may be excluded off edge of FFT
+        xvalue_accuracy : 1.0e-4   # approximations in real space aim to be this accurate
+        kvalue_accuracy : 1.0e-4   # approximations in fourier space aim to be this accurate
+        shoot_accuracy : 1.0e-4    # approximations in photon shooting aim to be this accurate
+        minimum_fft_size : 64      # minimum size of ffts
+
+
+# Define the name and format of the output file
+output :
+    type : DataCube
+    dir : output_yaml
+    # Adding a .gz to the end of the file_name automatically uses gzip to compress the
+    # output file.
+    # Other options are .bz2 to use bzip2 and .fz to use rice compression.
+    file_name : cube_phot.fits.gz
+    nimages : 100

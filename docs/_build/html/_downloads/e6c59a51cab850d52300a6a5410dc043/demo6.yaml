@@ -1,0 +1,184 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #6
+#
+# The sixth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy
+# images distributed with GalSim only includes 100 galaxies, but you can download a much
+# larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
+# to the download page.
+#
+# The galaxy images are already convolved with the effective PSF for the original observations,
+# so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF
+# (also distributed with the galaxy data).  In this case, we then randomly rotate the galaxies,
+# apply a given gravitational shear as well as gravitational magnification, and then finally
+# convolve by a double Gaussian PSF.  The final image can of course have any pixel scale, not
+# just that of the original images.  The output for this script is to a FITS "data cube".
+# With DS9, this can be viewed with a slider to quickly move through the different images.
+#
+# New features introduced in this demo:
+#
+# - input : real_catalog (file_name, dir, image_dir)
+# - obj type : RealGalaxy (index)
+# - obj : rotate
+# - obj : magnify
+# - image : sky_level
+# - image : offset
+# - value type : Sequence (first, last, step)
+# - output type : DataCube (file_name, dir, nimages)
+#
+# - Using YAML's multiple document feature to do more than one thing
+
+
+# In this file, we use yaml's multiple documents feature.
+# This can be useful if you are doing similar things, but have a couple differences
+# for the different output files.
+# In this case, we output the PSF image in the first document, and the data cube of the galaxies
+# in the second document.
+
+# The multiple yaml documents are separated by a line with three dashes "---"
+# The first document has all the parts that are common to all the output files.
+# Then each subsequent document defines its particular additions to that base.
+# These are combined with the first document's information for processing.
+# So if we start numbering the documents at 0, we effectively process:
+#   doc[0] + doc[1]
+#   doc[0] + doc[2]
+#   doc[0] + doc[3]
+#   ...
+
+# So start with the common information:
+
+# Define the PSF profile
+psf :
+    type : Sum
+    items :
+        # Note: in this case, each item is small enough that we can put the whole dict on a
+        # single line with the -.  No need for further indentation.
+        - { type : Gaussian, fwhm : 0.6, flux : 0.8 }
+        - { type : Gaussian, fwhm : 2.3, flux : 0.2 }
+
+
+# Define some other information about the images
+image :
+    # The pixel size applies to both outputs, so put that here in the first document.
+    pixel_scale : 0.16  # arcsec / pixel
+
+    # This time, we'll leave the size unspecified to let GalSim automatically choose
+    # an appropriate size.  So no image : size item.
+
+
+---
+
+# The first specialization document is for the PSF output.
+
+# Define the name and format of the output file
+output :
+    dir : output_yaml
+    file_name : psf_real.fits
+
+---
+
+# The next document is for the galaxy output.
+
+# Define the galaxy profile
+gal :
+    type : RealGalaxy
+    flux : 1.e5
+
+    index :
+        type : Sequence
+        # Sequence can optionally take first, last, and step, however, the defaults
+        # are fine here:
+        #   first = 0
+        #   last = <num entries in catalog> - 1
+        #   step = 1
+        # If the sequential values exceed last, they will repeat back starting at first, so it's
+        # ok to have nobjects greater than the number of real galaxies in the catalog.
+
+    rotate :
+        # An angle of type Random means uniform within 0 .. 2pi radians
+        type : Random
+
+    shear :
+        type : G1G2
+        g1 : -0.027
+        g2 : 0.031
+
+    # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
+    # This conserves surface brightness, so it scales both the area and flux.
+    magnify : 1.082
+
+# Define some other information about the images
+image :
+
+    # If we specify the sky_level as an image attribute, it will be used
+    # as a background level for the image.  (The background level per pixel is
+    # 1.e6 * (0.15)^2 = 2250.)
+    sky_level : 1.e6  # ADU / arcsec^2
+
+    # Since we already specified a sky_level for the whole image, we don't need
+    # to repeat it for the noise.  So in fact, everything is default here.
+    # So we can just set the noise to an empty dictionary, which means use all defaults.
+    # (If we omit it entirely, that would mean no noise, which isn't what we want.)
+    #
+    # Also, if we include a sky_level in noise in addition to the above image sky_level,
+    # then both of them (added together) will be used for the noise, but only the
+    # image.sky_level will remain as the background level in the final image.
+    noise : {}
+
+    # We can also offset the object from the center of the image.  We had previously
+    # (in demo4 and demo5) used galaxy.shift as a way to shift the center of the image.
+    # Since that is applied to the galaxy, the units are arcsec (since the galaxy profile
+    # itself doesn't know about the pixel scale).  Here, the offset applies to the drawn
+    # image, which does know about the pixel scale, so the units of offset are pixels,
+    # not arcsec.  Here, we apply an offset of up to half a pixel in each direction.
+    offset :
+        type : XY
+        x : { type : Random, min : -0.5, max : 0.5 }
+        y : { type : Random, min : -0.5, max : 0.5 }
+
+    random_seed : 1512413
+
+    # Note: since the output includes a data_cube output, which requires all the
+    # images to be the same size, GalSim will choose the size of the first image
+    # automatically from the profile (since we aren't setting any image : size here),
+    # but then subsequent images will be forced to be the same size as the first one.
+
+
+# Define the input files
+input :
+    # In this case, we need to define where the real galaxy input catalog is.
+    # Note: dir is the directory both for the catalog itself and also the directory prefix
+    # for the image files listed in the catalog.
+    # If the images are in a different directory, you may also specify image_dir, which gives
+    # the relative path from dir to wherever the images are located.
+    real_catalog :
+        dir : data
+        file_name : real_galaxy_catalog_23.5_example.fits
+
+
+# Define the name and format of the output file
+output :
+    type : DataCube
+    dir : output_yaml
+    file_name : cube_real.fits
+    nimages : 100
+

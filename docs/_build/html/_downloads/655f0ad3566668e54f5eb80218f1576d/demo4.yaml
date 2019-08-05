@@ -1,0 +1,214 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #4
+#
+# The fourth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script is our first one to create multiple images.  Typically, you would
+# want each object to have at least some of its attributes vary when you are
+# drawing multiple images (although not necessarily -- you might just want
+# different noise realization of the same profile).  The easiest way to do this
+# is to read in the properties from a catalog, which is what we do in this
+# script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus
+# disk, with added knots of star formation.  Both components get many of their
+# parameters from an input catalog.  We also shift the profile by a fraction of
+# a pixel in each direction so the effect of pixelization varies among the
+# images.  Each galaxy has the same applied shear.  The noise is simple Poisson
+# noise.  We write the images out into a multi-extension fits file.
+#
+# New features introduced in this demo:
+#
+# - obj type : Moffat (..., trunc)
+# - obj type : DeVaucouleurs (flux, half_light_radius)
+# - obj type : RandomWalk (npoints, half_light_radius, flux)
+# - value type : Catalog (col)
+# - obj : shift
+# - shift type : XY (x, y)
+# - shear type : E1E2 (e1, e2)
+# - image : xsize, ysize
+# - top level field input
+# - input : catalog (file_name, dir)
+# - output type : MultiFits (file_name, dir)
+#
+# - Using both ellip and shear for the same object
+# - Using variables in a YAML file
+ 
+
+# You can define variables to be used later using the & symbol here.
+# Later they will be used with the * symbol.
+# This can be useful since you can put things you want to change often near the top of the 
+# file so you don't have to scroll down to find the right place to edit something each time 
+# you want to change it.
+some_variables :
+    - &sky_level  1.e6                # ADU / arcsec^2
+    - &pixel_scale  1.0               # arcsec / pixel  (size units in input catalog are pixels)
+    - &gal_flux  1.e6                 # arbitrary choice, makes nice (not too) noisy images
+    - &gal_g1  -0.009                 #
+    - &gal_g2  0.011                  #
+    - &image_size  64                 # pixels
+
+# Define the PSF profile
+psf : 
+    type : Moffat
+    beta : 3.5   # Exponent of Moffat profile
+    fwhm : 
+        # Parameters do not need to be constant.  There are a number of ways to
+        # specify variables that might change from object to object.
+        # In this case, the parameter specification also has a "type".
+        # type = Catalog means read the value from a catalog:
+        type : Catalog
+
+        # Catalog requires the extra value of which column to use in the catalog:
+        # Note: the first column is called 0, not 1, as per the usual python 
+        # 0-based indexing scheme.
+        col : 1
+
+    # A Moffat profile may be truncated if desired
+    # The units for this are expected to be arcsec (or specifically -- whatever units
+    # you are using for all the size values as defined by the pixel_scale).
+    # Note: You can also specify a type along with all of its parameters using {}
+    trunc : { type : Catalog , col : 4 }
+
+    # The nesting goes as deep as it needs to
+    ellip :
+        type : E1E2 
+        e1 : 
+            type : Catalog 
+            col : 2
+        e2 : 
+            type : Catalog 
+            col : 3
+
+    # If you don't specify a parameter, and there is a reasonable default, then it 
+    # will be used instead.  If there is no reasonable default, you will get an error.
+    #flux : 1  # Unnecessary
+
+
+# Define the galaxy profile
+gal :
+    type : Sum
+
+    items :
+
+        # 0.6 of the flux is in the total disk.  Further divide this into a
+        # smooth disk and knots of star formation, modeled as point sources
+        # distributed via a random walk
+        #
+        # Note the knots get the same hlr as the smooth disk, and get sheared
+        # by the same ellipticity, but the knots will themselves have
+        # additional shape noise.
+        #
+        # To simulate a nice irregular (all the flux is in knots) we find ~100
+        # is a minimum number needed, but we will just use 10 here to make the
+        # demo run fast.
+        #
+        # See demo11.yaml for examples of how to specify variables relative to
+        # one another rather than hard coding them.
+        -  # disk
+            type : Sum
+            items :
+                -  # smooth component
+                    type : Exponential
+                    half_light_radius : { type : Catalog , col : 5 }
+                    flux : 0.18
+                -  # knots
+                    type : RandomWalk
+                    npoints: 10
+                    half_light_radius : { type : Catalog , col : 5 }
+                    flux : 0.42
+            ellip : 
+                type : E1E2 
+                e1 : { type : Catalog , col : 6 }  
+                e2 : { type : Catalog , col : 7 }
+
+        - # bulge
+            type : DeVaucouleurs
+            half_light_radius : { type : Catalog , col : 8 }
+            ellip : 
+                type : E1E2 
+                e1 : { type : Catalog , col : 9 }  
+                e2 : { type : Catalog , col : 10 }
+            flux : 0.4
+
+    # Note: If you want to use a variable defined above, you use a *
+    flux : *gal_flux
+
+    # An object may have an ellip and a shear, each of which can be specified in any format:
+    #   - E1E2 or EBeta (distortion)
+    #   - G1G2 or GBeta (reduced shear)
+    #   - Eta1Eta2 or EtaBeta (conformal shear, cf. demo9)
+    #   - QBeta (axis ratio, cf. demo3)
+    # Furthermore, the shear operations do not commute, so it matters which one is applied first.
+    # We use ellip to mean the intrinsic shape of the object and shear to mean the shear that
+    # is applied by lensing or other sources.  These also don't commute with either rotations or
+    # shifts, so here is the full list of transformations in the order that they are applied:
+    #
+    # - dilate or dilation        = scale linear size of the object preserving flux
+    # - ellip                     = set the intrinsic shape of the object
+    # - rotate or rotation        = rotate by some angle
+    # - magnify or magnification  = scale linear size of object preserving surface brightness
+    # - shear                     = apply the gravitational shear
+    # - shift                     = shift the centroid of the object
+    shear : 
+        type : G1G2 
+        g1 : *gal_g1
+        g2 : *gal_g2
+
+    shift : 
+        type : XY 
+        x : { type : Catalog , col : 11 } 
+        y : { type : Catalog , col : 12 }
+
+
+# Define some other information about the images 
+image :
+    pixel_scale : *pixel_scale
+    xsize : *image_size
+    ysize : *image_size
+
+    noise : 
+        # Since the default type is Poisson, we may omit it.
+        sky_level : *sky_level
+
+    random_seed : 8241573
+
+
+# Define the input files
+input :
+    # In this case, we just have a catalog to read in.
+    catalog :
+        dir : input
+        file_name : galsim_default_input.asc
+
+
+# Define the name and format of the output file
+output :
+
+    # type = MultiFits means to use a multi-extension fits file
+    type : MultiFits
+
+    dir : output_yaml
+    file_name : multi.fits
+    
+    # You can specify how many extensions to write to the file with nimages, 
+    # but in this case, since we are using an input catalog, the default 
+    # value is to do the number of entries in the catalog.
+    #nimages : 100
+

@@ -1,0 +1,173 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #5
+#
+# The fifth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.
+# We produce a single image made up of tiles of postage stamps for each individual object.
+# (We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)
+# Each postage stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
+# The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.
+# (Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to
+# make things simpler. However, see demo3 for an example of using bulge+disk galaxies.)
+# The galaxies are oriented randomly, but in 90 degree-rotated pairs to cancel the effect of
+# shape noise.  The applied shear is the same for each galaxy.
+#
+# New features introduced in this demo:
+#
+# - gal : resolution
+# - gal : signal_to_noise
+# - stamp type : Ring (first, num)
+# - value type : RandomGaussian (sigma, min, max)
+# - angle type : Random
+# - shift type : RandomCircle (radius)
+# - image type : Tiled (nx_tiles, ny_tiles, stamp_xsize, stamp_ysize, border)
+# - output type : Fits (file_name, dir)
+# - output.psf : shift
+
+
+# Define the PSF profile
+psf :
+    type : Moffat
+    beta : 3
+    fwhm : 2.85
+
+    # The Great08 images used a truncated Moffat profile
+    trunc : 5.70  # = 2 * FWHM
+
+    ellip :
+        type : E1E2
+        e1 : -0.019
+        e2 : -0.007
+
+
+
+# For this demo, we have pairs of galaxies that are 90 degree rotations of each other
+# to eliminate the effect of shape noise.  (To first order at least.)
+# In GalSim, we declare this as a "Ring" stamp type.  We haven't specified the stamp field
+# in previous demos.  When it is not given, it defaults to the "Basic" stamp type, which
+# simply builds the galaxy and the psf objects as given and convolves them together.
+# The ring type does the same thing on the first galaxy, but then for some number of subsequent
+# stamps, uses a rotated version of the same galaxy.  After completing the ring, using num
+# stamps in total, then a new galaxy is built.
+# The ring can have any number of values set around a ring in e1-e2 space.  For 90 degree rotated
+# pairs, this corresponds to only 2 values on the "ring" so num = 2 here.
+# It is up to the user to make sure the total number of objects in an image is a multiple of num,
+# otherwise the last "ring" won't get completed.  In this case 100 is divisible by 2, so it's fine.
+stamp :
+    type : Ring
+    num : 2
+
+
+    # Any transformations that appear in the stamp field are applied to the galaxy after
+    # any rotations due to the ring test.  Here we apply a constant shear to all galaxies.
+    shear :
+        type : G1G2
+        g1 : 0.013
+        g2 : -0.008
+
+    # Positions are shifted randomly inside a circle of radius 1 arcsec
+    shift :
+        type : RandomCircle
+        radius : 1 # arcsec
+
+
+# Define the galaxy profile for the first item in each pair.
+gal :
+
+    # Great08 mixed pure bulge and pure disk for its LowNoise run.
+    # We're just doing disks to make things simpler.
+    type : Exponential
+
+    # r_gal / r_psf  (use r = half_light_radius)
+    # This is in lieu of setting a size parameter directly.
+    # Note: The Great08 definition of resolution was based on the observed size,
+    #       r_obs ~= sqrt(r_gal^2 + r_psf^2).
+    #       So this value approximately corresponds to their resolution = r_obs/r_psf = 1.4.
+    resolution : 0.98
+
+    ellip :
+        # The first value in each pair has an ellipticity drawn from a
+        # Gaussian distribution with rms=0.2.
+        # We clip this at a maximum of 0.6 to keep the ellipticities from
+        # getting too extreme.
+        type : EBeta
+        e :
+            type : RandomGaussian
+            sigma : 0.2
+            min : 0
+            max : 0.6
+        beta :
+            # An angle of type Random means uniform within 0 .. 2pi radians
+            type : Random
+
+    # Here we specify the desired signal-to-noise of the drawn image, rather than
+    # a flux value.
+    # Our definition of the S/N derives from a weighted integral of the flux:
+    # S = sum W(x,y) I(x,y) / sum W(x,y)
+    # Where W(x,y) is taken to be a matched filter, so W(x,y) = I(x,y).
+    signal_to_noise : 200
+
+# Define some other information about the images
+image :
+
+    # The type field defines what kind of image to build.
+    # The default is Single, which means one postage stamp per image .
+    # Tiled means to make an image with nx_tiles x ny_tiles of postage stamps
+    # on a single image.
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 10
+
+    # This is the size of the postage stamps.
+    stamp_xsize : 39
+    stamp_ysize : 39
+
+    # Put a 1 pixel border between tiles
+    border : 1
+
+    pixel_scale : 1.0  # arcsec / pixel
+
+    # Define what kind of noise to use
+    noise :
+        sky_level : 1.e6  # ADU / arcsec^2
+
+    # Define the initial random number seed
+    random_seed : 6424512
+
+
+# Define the names and format of the output files
+output :
+    # type defines what kind of file.
+    # Fits is actually the default if not specified, but we set it here anyway.
+    type : Fits
+
+    dir : output_yaml
+    file_name : g08_gal.fits
+
+    psf :
+        file_name : g08_psf.fits
+
+        # The psf output is also allowed to specify a shift if desired.
+        # There is a special allowed value here: 'galaxy' means to copy the same shift that was
+        # applied to the galaxy.  Whatever shift was chosen for the galaxy will be applied to the
+        # PSF as well.
+        shift : galaxy

@@ -1,0 +1,130 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #1
+#
+# The first YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# Each of these demo*.yaml files are designed to be equivalent to the corresponding
+# demo*.py file.  We expect that the config file usage will be easier for many people
+# to get going with GalSim, especially those who aren't very comfortable with writing
+# python code.  And even advanced pythonistas may find it more useful for many tasks than
+# writing the corresponding python code.
+#
+# The executable that reads these YAML files is called galsim, which should be installed
+# by either `pip install galsim` or `python setup.py install`.  If you used the latter,
+# the output should end with a line something along the lines of:
+#
+#     scripts installed into  /usr/local/bin
+#
+# telling you which directory they were installed in.  If that directory is not in your
+# path, then there should also be a message telling you to add it to your $PATH
+# environment variable.  If you used `pip install galsim --user`, then it was probably
+# installed into a directory called .local/bin in your home directory.  You can have
+# pip tell you where it is installing things by adding the `-v` option.
+#
+# In any case, you can confirm that `galsim` is in your path by typing
+#
+#     which galsim
+#
+# which should show you which executable will be used.  (If nothing shows up, then `galsim`
+# is not in your path.)
+#
+# Then to run this config file, you should be able to type simply:
+#
+#     galsim demo1.yaml
+#
+# If you don't have PyYAML installed, you can use JSON files instead.  The directory json has
+# JSON configuration files that are exactly equivalent to these YAML files.  The YAML format
+# is a superset of the JSON format, so they are quite similar, but the YAML format is easier
+# to read and has a few extra nice features.  But if you don't want to install PyYAML for some
+# reason, you can use the json/demo*.json instead by typing (for demo1):
+#
+#     galsim json/demo1.json
+#
+# See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation for
+# more complete documentation about how to use the GalSim configuration machinery.
+#
+#
+# This first config file is about as simple as it gets.  We draw an image of a single galaxy
+# convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the
+# PSF and the galaxy, and add a constant level of Gaussian noise to the image.
+#
+# In each demo, we list the new features introduced in that demo file.  These will differ somewhat
+# between the .py and .yaml versions, since the two methods implement things in different ways.
+# (demo*.py are python scripts, while demo*.yaml are configuration files.)
+#
+# New features introduced in this demo:
+#
+# - top level fields gal, psf, image, output
+# - obj type : Gaussian (flux, sigma)
+# - image : pixel_scale
+# - image : noise
+# - noise type : Gaussian (sigma)
+# - output : dir, file_name
+
+
+# The gal field defines what kind of galaxy profile to use.
+gal :
+    # One of the simplest profiles is a Gaussian.
+    type : Gaussian
+
+    # Gaussian profiles have a number of possible size parameters, but
+    # sigma is the most basic one.
+    # The others are fwhm and half_light_radius.  At least one of these must be specified.
+    sigma : 2  # arcsec
+
+    # The default flux would be 1, but you would typically want to define the flux
+    # to be something other than that.
+    flux : 1.e5
+
+
+# Technically, the psf field isn't required, but for astronomical images we always have a PSF
+# so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved
+# by anything, so effectively a delta function PSF.)
+# We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.
+psf :
+    type : Gaussian
+    sigma : 1  # arcsec
+    # No need to specify a flux, since flux=1 is the right thing for a PSF.
+
+
+# The image field specifies some other information about the image to be drawn.
+image :
+    # If pixel_scale isn't specified, then pixel_scale = 1 is assumed.
+    pixel_scale : 0.2  # arcsec / pixel
+
+    # If you want noise in the image (which is typical) you specify that here.
+    # In this case we use gaussian noise.
+    noise :
+        type : Gaussian
+        sigma : 30  # standard deviation of the counts in each pixel
+
+    # You can also specify the size of the image if you want, but if you omit it
+    # (as we do here), then GalSim will automatically size the image appropriately.
+
+
+# Typically, you will want to specify the output format and file name.
+# If this is omitted, the output will be to a fits file with the same root name as the
+# config file (so demo1.fits in this case), but that's usually not a great choice.
+# So at the very least, you would typically want to specify at least the file_name.
+output :
+    dir : output_yaml
+    file_name : demo1.fits
+

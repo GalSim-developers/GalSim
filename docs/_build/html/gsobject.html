@@ -88,6 +88,7 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">The GSObject base class</a></li>
@@ -100,6 +101,7 @@
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
@@ -736,8 +738,8 @@ converts between photons and ADU (so-called analog-to-digital units), the units 
 pixel values in real images.  Normally, the gain of a CCD is in electrons/ADU, but in
 GalSim, we fold the quantum efficiency into the gain as well, so the units are photons/ADU.</p>
 <p>Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
-So if you want, you can keep track of this properly and provide an <code class="docutils literal notranslate"><span class="pre">area</span></code> and <code class="docutils literal notranslate"><span class="pre">exposure</span></code>
-time here. This detail is more important with chromatic objects where the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> is typically
+So if you want, you can keep track of this properly and provide an <code class="docutils literal notranslate"><span class="pre">area</span></code> and <code class="docutils literal notranslate"><span class="pre">exptime</span></code>
+here. This detail is more important with chromatic objects where the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> is typically
 given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
 objects however, it is often more convenient to ignore these details and just consider the
 flux to be the total number of photons for this exposure, in which case, you would leave the

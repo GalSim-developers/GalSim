@@ -1,0 +1,331 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Units &mdash; GalSim 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="World Coordinate Systems" href="wcs.html" />
+    <link rel="prev" title="The GSParams class" href="gsparams.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GalSim
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Units</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#size-units">Size Units</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flux-units">Flux Units</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sed-units">SED Units</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="sb.html">Surface Brightness Profiles</a> &raquo;</li>
+        
+      <li>Units</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/units.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="units">
+<h1>Units<a class="headerlink" href="#units" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="size-units">
+<h2>Size Units<a class="headerlink" href="#size-units" title="Permalink to this headline">¶</a></h2>
+<p>GalSim models surface brightnesses of objects in sky coordinates.  The physical size of a
+galaxy in light years or kpc is not really relevant to its appearance in the sky.  Rather,
+the size is an angle, being the angle subtended by the galaxy as seen from Earth.</p>
+<p>The most common choice of unit for these objects is arcseconds.  This happens to be the
+right order of magnitude for most objects of astronomical interest.  The smallest objects
+we typically observe are somewhat less than an arcsecond in size.  The largest objects
+(e.g. M31) are more than a degree, but by far the majority of the objects of interest are
+only a few arcseconds across.</p>
+<p>So this is usually the units one would use for the various <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> size parameters
+(e.g. <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>, <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> and so forth) when you are building them.  However,
+this choice is actually up to the user.  You may choose to define all your sizes in
+degrees or radians if you want.  You just need to be consistent with the unit you use
+for the sizes of all your objects and with the units of the pixel scale when you are
+building your <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> (via the <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter of the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> constructor) or when
+drawing (the <code class="docutils literal notranslate"><span class="pre">scale</span></code> argument to <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are using a more complicated WCS than a simple <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> (i.e. using <code class="docutils literal notranslate"><span class="pre">wcs</span></code> when
+building the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> rather than <code class="docutils literal notranslate"><span class="pre">scale</span></code>), then you need to be even more careful about this.
+Some of the FITS-based WCS classes assume you are using arcseconds for the distance unit,
+and it is not always easy to coerce them into using a different unit.  In these cases,
+you are probably well-advised to just stick with arcseconds for your sizes.</p>
+</div>
+<p>Some classes specify their angular sizes somewhat indirectly.  For the <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> class, for instance,
+you can specify <code class="docutils literal notranslate"><span class="pre">lam</span></code> as the wavelength of the light (<span class="math notranslate nohighlight">\(\lambda\)</span>, say
+at the middle of the bandpass) in nm, and <code class="docutils literal notranslate"><span class="pre">diam</span></code>, the telescope diameter (<span class="math notranslate nohighlight">\(D\)</span>) in meters.
+The ratio of these <span class="math notranslate nohighlight">\(\lambda / D\)</span> (after putting them into the same units) gives the
+fundamental scale radius for an <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> profile.  But this angle is in radians, which is normally
+not particularly convenient to use for the image pixel scale.  The <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> constructor thus takes
+another parameter, <code class="docutils literal notranslate"><span class="pre">scale_unit</span></code>, which defaults to arcsec to specify the unit you want to
+convert this angle to.</p>
+</div>
+<div class="section" id="flux-units">
+<h2>Flux Units<a class="headerlink" href="#flux-units" title="Permalink to this headline">¶</a></h2>
+<p>The units for the <code class="docutils literal notranslate"><span class="pre">flux</span></code> of a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> are nominally photons/cm^2/s, and the units for an
+image are ADUs (analog-to-digital units).  There are thus four conversion factors to apply to
+go from one to the other.</p>
+<ol class="arabic simple">
+<li><p>The exposure time (s)</p></li>
+<li><p>The effective collecting area of the telescope (cm^2)</p></li>
+<li><p>The quantum efficiency (QE) of the collector (e-/photon)</p></li>
+<li><p>The gain of the read-out amplifier (e-/ADU)</p></li>
+</ol>
+<p>In GalSim, we generally just lump the QE in with the gain, so our gain is taken to have units of
+photons/ADU, and it really represents gain / QE.</p>
+<p>Note, however, that the default exposure time, telescope collecting area, and gain are 1 s, 1 cm^2,
+and 1 ADU/photon respectively, so users who wish to ignore the intricacies of managing exposure
+times, collecting areas, and gains can simply think of the flux of a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> in either ADUs or
+photons.</p>
+<p>However, if you prefer to think of your flux as having physical units, then you can declare
+the appropriate telescope collecting area (<code class="docutils literal notranslate"><span class="pre">area</span></code>), the exposure time (<code class="docutils literal notranslate"><span class="pre">exptime</span></code>), and the
+total effective gain (<code class="docutils literal notranslate"><span class="pre">gain</span></code>) as arguments to <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p>
+</div>
+<div class="section" id="sed-units">
+<h2>SED Units<a class="headerlink" href="#sed-units" title="Permalink to this headline">¶</a></h2>
+<p>These details matter more when working with <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances, where the flux
+normalization is handled with an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> object.  The units of an input <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> can be any of
+several possible options:</p>
+<ol class="arabic simple">
+<li><p>erg/nm/cm^2/s or erg/A/cm^2/s (use <code class="docutils literal notranslate"><span class="pre">flux_type='flambda'</span></code>)</p></li>
+<li><p>erg/Hz/cm^2/s (use <code class="docutils literal notranslate"><span class="pre">flux_typ='fnu'</span></code>)</p></li>
+<li><p>photons/nm/cm^2/s or photons/A/cm^2/s (use <code class="docutils literal notranslate"><span class="pre">flux_typ='fphotons'</span></code>)</p></li>
+<li><p>Any units that qualify as an <code class="docutils literal notranslate"><span class="pre">astropy.units.spectral_density</span></code> using the AstroPy <code class="docutils literal notranslate"><span class="pre">units</span></code>
+module</p></li>
+<li><p>dimensionless (use <code class="docutils literal notranslate"><span class="pre">flux_typ='1'</span></code>)</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The last one is a bit different from the others.  It is generally only appropriate for the
+“SED” of a PSF, not that of a galaxy or star.  The PSF may have a different effect as a
+function of wavelength, in which case that can be treated similarly to how we treat an SED.
+In any object that is a convolution of several components, only one of them should have a
+spectral SED.  The rest should be dimensionless (possibly flat).  The net SED of the
+composite object will then also be spectral.</p>
+</div>
+<p>Internally, all spectral units are converted to photons/nm/cm^2/s.  Then when drawing a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>, spectrum is integrated over the <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> to obtain the normal units of
+photons/cm^2/s.  If you trust your SED, you can then just draw with the appropriate <code class="docutils literal notranslate"><span class="pre">area</span></code>,
+<code class="docutils literal notranslate"><span class="pre">exptime</span></code> and <code class="docutils literal notranslate"><span class="pre">gain</span></code> when you call <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ChromaticObject.drawImage</span></code></a>.</p>
+<p>However, it is often more convenient to target a particular flux or magnitude of your object
+as observed through a particular <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> (probably in ADU) and then ignore all of these
+parameters when you are drawing.  This is possible using the methods <a class="reference internal" href="sed.html#galsim.SED.withFlux" title="galsim.SED.withFlux"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SED.withFlux</span></code></a> or
+<a class="reference internal" href="sed.html#galsim.SED.withMagnitude" title="galsim.SED.withMagnitude"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SED.withMagnitude</span></code></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="wcs.html" class="btn btn-neutral float-right" title="World Coordinate Systems" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gsparams.html" class="btn btn-neutral float-left" title="The GSParams class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, GalSim-developers
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

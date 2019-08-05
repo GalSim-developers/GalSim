@@ -1,0 +1,136 @@
+# Copyright (c) 2012-2018 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #8
+#
+# The eighth YAML configuration file in our tutorial about using Galsim config files
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# In this script, we show how to run the GalSim config processing using a python dict rather
+# than using a config file.  The parallel tutorial examples/demo*.py files have shown how to
+# do the same thing as these demo*.yaml files directly in python.  Now we turn the tables
+# and show how to use some of the machinery in the GalSim configuration processing
+# from within python itself.  As such, this config file doesn't add much in the way
+# of new features -- just an option to retry building objects that fail the first time,
+# and the ability to build an image using multiple processes.  We intentionally have the
+# ellipticity occasionally come out larger than 1, so we redo these objects.
+# And we build the same image using a single process and again using 4 processes.
+#
+# New features introduced in this demo:
+#
+# - stamp : retry_failures
+# - shear type : Eta1Eta2 (eta1, eta2)
+# - image : nproc
+
+
+# We again use the multiple document feature.  So start with the common information:
+
+# Define the PSF profile
+psf :
+    type : Moffat
+    beta : 2.4
+    fwhm : 0.65  # arcsec
+
+
+# Define the galaxy profile
+gal :
+    type : Sum
+    items :
+        -   # The disk component
+            type : Sersic
+            n : 1.5
+            # Remember, the flux here is the fractional flux.  The total flux is given
+            # below for the sum of the two components.
+            flux : { type : Random , min : 0.5 , max : 0.9 }
+            half_light_radius : { type : Random , min : 0.5 , max : 1.5 }
+            ellip :
+                type : E1E2
+                e1 : { type : RandomGaussian , sigma : 0.4 }
+                e2 : { type : RandomGaussian , sigma : 0.4 }
+                # These will sometimes have |e| > 1.
+                # In the past, we've dealt with this by truncating the distribution with
+                # min/max.  This time, we let the values generated exceed 1, which internally
+                # will fail the stamp generation process.  We set retry_failures = 2 below to
+                # indicate that the object generation stage should just try again (up to 2
+                # times) whenever a failure is encountered.
+
+        -   # The bulge component
+            type : Sersic
+            n : 3.6
+            # Special: if the last item in a Sum doesn't have a flux specified,
+            # then it is given whatever is needed to bring the total to 1.
+            # This is especially useful when other components have a random value.
+            half_light_radius : { type : Random , min : 0.3 , max : 0.9 }
+            ellip :
+                # An alternative to the above solution for |e| > 1 is to use conformal shear,
+                # usually designated as eta.  The eta definition of shear is |eta| = ln(a/b),
+                # where a and b are (as usual) the semi-major and semi-minor axes.
+                # This definition has the advantage that it is well defined for all values from
+                # 0 to infinity, so we don't need to worry about getting |e| > 1.
+                type : Eta1Eta2
+                eta1 : { type : RandomGaussian , sigma : 0.3 }
+                eta2 : { type : RandomGaussian , sigma : 0.3 }
+
+    flux : { type : Random , min : 1.0e4 , max : 1.0e5 }
+
+
+# Define some other information about the images
+image :
+    type : Tiled
+    nx_tiles : 10
+    ny_tiles : 10
+
+    stamp_size : 64  # pixels
+
+    pixel_scale : 0.28  # arcsec / pixel
+
+    noise :
+        sky_level : 1.0e4  # ADU / arcsec^2
+
+    random_seed : 22345921
+
+
+# Define some image properties that are specific to the stamp generation phase.
+stamp :
+    draw_method : phot
+
+    # If the stamp generation fails for some reason, just try again this many times.
+    retry_failures: 2
+
+
+# Define the names and format of the output files
+output :
+    dir : output_yaml
+
+---
+
+# The first version of this uses a single process
+
+output :
+    file_name : bpd_single.fits
+
+---
+
+# The second version of this uses 4 processes
+
+image :
+    nproc : 4
+
+output :
+    file_name : bpd_multi.fits
+
