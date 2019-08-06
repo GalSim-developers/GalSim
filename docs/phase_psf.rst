@@ -66,24 +66,19 @@ The main classes of note are:
 
 .. autoclass:: galsim.PhaseScreenPSF
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.Aperture
     :members:
-    :special-members:
 
 .. autoclass:: galsim.PhaseScreenList
     :members:
-    :special-members:
 
 .. autoclass:: galsim.OpticalScreen
     :members:
-    :special-members:
 
 .. autoclass:: galsim.AtmosphericScreen
     :members:
-    :special-members:
 
 .. autofunction:: galsim.Atmosphere
 

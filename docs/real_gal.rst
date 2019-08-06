@@ -30,16 +30,13 @@ or parametric models based on those images.
 
 .. autoclass:: galsim.RealGalaxy
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.RealGalaxyCatalog
     :members:
-    :special-members:
 
 .. autoclass:: galsim.COSMOSCatalog
     :members:
-    :special-members:
 
 
 Downloading the COSMOS Catalog

@@ -659,6 +659,14 @@ def horner(x, coef, dtype=None):
     return result
 
 def _horner(x, coef, result):
+    """Equivalent to `horner`, but ``x``, ``coeff``, and ``result`` must be contiguous arrays
+    with dtype == float.
+
+    Parameters:
+        x:      A numpy array of values at which to evaluate the polynomial.
+        coef:   Polynomial coefficients of increasing powers of x.
+        result: Numpy array into which to write the result.  Must be same shape as x.
+    """
     if result.dtype == float:
         _galsim.Horner(x.ctypes.data, x.size, coef.ctypes.data, coef.size, result.ctypes.data)
     else:
@@ -713,6 +721,20 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
     return result
 
 def _horner2d(x, y, coefs, result, temp, triangle=False):
+    """Equivalent to `horner2d`, but ``x``, ``y``, ``coeff``, ``result``, and ``temp``
+    must be contiguous arrays with dtype == float.
+
+    Parameters:
+        x:          A numpy array of the x values at which to evaluate the polynomial.
+        y:          A numpy array of the y values at which to evaluate the polynomial.
+        coefs:      2D array-like of coefficients in increasing powers of x and y.
+                    The first axis corresponds to increasing the power of y, and the second to
+                    increasing the power of x.
+        result:     Numpy array into which to write the result.  Must be same shape as x.
+        temp:       Numpy array to hold temporary results.  Must be the same shape as x.
+        triangle:   If True, then the coefs are only non-zero in the upper-left triangle
+                    of the array. [default: False]
+    """
     if result.dtype == float:
         # Note: the c++ implementation doesn't need to care about triangle.
         # It is able to trivially account for the zeros without special handling.

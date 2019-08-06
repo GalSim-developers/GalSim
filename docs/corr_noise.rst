@@ -42,17 +42,14 @@ noise that results form these manipulations.
 
 .. autoclass:: galsim.BaseCorrelatedNoise
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.CorrelatedNoise
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.UncorrelatedNoise
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autofunction:: galsim.getCOSMOSNoise

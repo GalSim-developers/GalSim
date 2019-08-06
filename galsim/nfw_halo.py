@@ -308,7 +308,8 @@ class NFWHalo(object):
         return self._getShear(pos_x, pos_y, z_s, reduced)
 
     def _getShear(self, pos_x, pos_y, z_s, reduced=True):
-        """Equivalent to getShear(pos.x, pos.y, z_s, galsim.arcsec, reduced)
+        """Equivalent to `getShear`, but without some sanity checks and the positions must be
+        given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)
@@ -370,7 +371,8 @@ class NFWHalo(object):
         return self._getConvergence(pos_x, pos_y, z_s)
 
     def _getConvergence(self, pos_x, pos_y, z_s):
-        """Equivalent to getConvergence(pos.x, pos.y, z_s, galsim.arcsec)
+        """Equivalent to `getConvergence`, but without some sanity checks and the positions must be
+        given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)
@@ -414,7 +416,8 @@ class NFWHalo(object):
         return self._getMagnification(pos_x, pos_y, z_s)
 
     def _getMagnification(self, pos_x, pos_y, z_s):
-        """Equivalent to getMagnification(pos.x, pos.y, z_s, galsim.arcsec)
+        """Equivalent to `getMagnification`, but without some sanity checks and the positions must
+        be given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)
@@ -462,7 +465,8 @@ class NFWHalo(object):
         return self._getLensing(pos_x, pos_y, z_s)
 
     def _getLensing(self, pos_x, pos_y, z_s):
-        """Equivalent to getLensing(pos.x, pos.y, z_s, galsim.arcsec)
+        """Equivalent to `getLensing`, but without some sanity checks and the positions must
+        be given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)

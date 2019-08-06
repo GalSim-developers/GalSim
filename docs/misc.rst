@@ -31,7 +31,6 @@ Other Possibly Useful Classes
 
 .. autoclass:: galsim.utilities.AttributeDict
     :members:
-    :special-members:
 
 
 Math Calculations
@@ -39,7 +38,11 @@ Math Calculations
 
 .. autofunction:: galsim.utilities.horner
 
+.. autofunction:: galsim.utilities._horner
+
 .. autofunction:: galsim.utilities.horner2d
+
+.. autofunction:: galsim.utilities._horner2d
 
 .. autofunction:: galsim.utilities.binomial
 

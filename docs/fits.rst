@@ -48,5 +48,4 @@ FITS Headers
 
 .. autoclass:: galsim.fits.FitsHeader
     :members:
-    :special-members:
 

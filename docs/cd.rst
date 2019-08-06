@@ -13,10 +13,11 @@ the so-called "Brighter-Fatter Effect", you can use this.
 
 .. autoclass:: galsim.cdmodel.BaseCDModel
     :members:
-    :special-members:
+
+    .. automethod:: galsim.cdmodel.BaseCDModel.__init__
 
 .. autoclass:: galsim.cdmodel.PowerLawCD
     :members:
-    :special-members:
     :show-inheritance:
 
+    .. automethod:: galsim.cdmodel.PowerLawCD.__init__

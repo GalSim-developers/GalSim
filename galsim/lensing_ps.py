@@ -866,7 +866,8 @@ class PowerSpectrum(object):
         return self._getShear(pos_x, pos_y, reduced, periodic)
 
     def _getShear(self, pos_x, pos_y, reduced=True, periodic=False):
-        """Equivalent to ``getShear(pos.x, pos.y, reduced, periodic)``
+        """Equivalent to `getShear`, but without some sanity checks and the positions must be
+        given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)
@@ -942,7 +943,8 @@ class PowerSpectrum(object):
         return self._getConvergence(pos_x, pos_y, periodic)
 
     def _getConvergence(self, pos_x, pos_y, periodic=False):
-        """Equivalent to getConvergence(pos.x, pos.y, periodic)
+        """Equivalent to `getConvergence`, but without some sanity checks and the positions must be
+        given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)
@@ -1009,7 +1011,8 @@ class PowerSpectrum(object):
         return self._getMagnification(pos_x, pos_y, periodic)
 
     def _getMagnification(self, pos_x, pos_y, periodic=False):
-        """Equivalent to ``getMagnification(pos.x, pos.y, periodic)``
+        """Equivalent to `getMagnification`, but without some sanity checks and the positions must
+        be given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)
@@ -1077,7 +1080,8 @@ class PowerSpectrum(object):
         return self._getLensing(pos_x, pos_y, periodic)
 
     def _getLensing(self, pos_x, pos_y, periodic=False):
-        """Equivalent to ``getLensing(pos.x, pos.y, periodic)``
+        """Equivalent to `getLensing`, but without some sanity checks and the positions must
+        be given as ``pos_x``, ``pos_y`` in arcsec.
 
         Parameters:
             pos_x:      x position in arcsec (either a scalar or a numpy array)

@@ -3,5 +3,5 @@ Bandpass Filters
 
 .. autoclass:: galsim.Bandpass
     :members:
-    :special-members:
 
+    .. automethod:: galsim.Bandpass.__call__

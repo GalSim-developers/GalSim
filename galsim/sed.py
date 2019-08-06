@@ -535,6 +535,16 @@ class SED(object):
 
 
     def __mul__(self, other):
+        """Multiply the SED by something.
+
+        There are several possibilities:
+
+        1. SED * SED -> SED (at least one must be dimensionless)
+        2. SED * GSObject -> ChromaticObject
+        3. SED * Bandpass -> SED (treating throughput similarly to dimensionless SED)
+        4. SED * callable function -> SED (treating function as dimensionless SED)
+        5. SED * scalar -> SED
+        """
         from .transform import Transform
         from .bandpass import Bandpass
         # Watch out for 5 types of `other`:

@@ -709,10 +709,8 @@ class Image(object):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         # Get this at the start to check for invalid bounds and raise the exception before
         # possibly writing data past the edge of the image.
-        ret = self.subImage(bounds)
         if not hermitian:
-            with convert_cpp_errors():
-                _galsim.wrapImage(self._image, bounds._b, False, False)
+            return self._wrap(bounds, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
                 raise GalSimIncompatibleValuesError(
@@ -722,8 +720,7 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires bounds.xmin == 0",
                     hermitian=hermitian, bounds=bounds)
-            with convert_cpp_errors():
-                _galsim.wrapImage(self._image, bounds._b, True, False)
+            return self._wrap(bounds, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise GalSimIncompatibleValuesError(
@@ -733,15 +730,14 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires bounds.ymin == 0",
                     hermitian=hermitian, bounds=bounds)
-            with convert_cpp_errors():
-                _galsim.wrapImage(self._image, bounds._b, False, True)
+            return self._wrap(bounds, False, True)
         else:
             raise GalSimValueError("Invalid value for hermitian", hermitian, (False, 'x', 'y'))
-        return ret;
 
     def _wrap(self, bounds, hermx, hermy):
-        """Essentially equivalent to ``Image.wrap(bounds, hermitian=='x', hermitian=='y')``,
-        but without some of the sanity checks that the regular function does.
+        """A version of `wrap` without the sanity checks.
+
+        Equivalent to ``image.wrap(bounds, hermitian=='x', hermitian=='y')``.
         """
         ret = self.subImage(bounds)
         with convert_cpp_errors():
@@ -1040,7 +1036,7 @@ class Image(object):
         return ret
 
     def _view(self):
-        """Equivalent to im.view(), but without some of the sanity checks and extra options.
+        """Equivalent to `view`, but without some of the sanity checks and extra options.
         """
         return _Image(self.array.view(), self.bounds, self.wcs)
 
@@ -1063,10 +1059,11 @@ class Image(object):
         self._shift(delta)
 
     def _shift(self, delta):
-        """Equivalent to im.shift(delta), but without some of the sanity checks and extra options.
+        """Equivalent to `shift`, but without some of the sanity checks and ``delta`` must
+        be a `PositionI` instance.
 
         Parameters:
-            delta:  The amount to shift.  Must be a galsim.PositionI instance.
+            delta:  The amount to shift as a `PositionI`.
         """
         # The parse_pos_args function is a bit slow, so go directly to this point when we
         # call shift from setCenter or setOrigin.
@@ -1231,6 +1228,10 @@ class Image(object):
         """This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim
         does not have to parse the different options available for __call__.  (i.e. im(x,y) or
         im(pos) or im(x=x,y=y))
+
+        Parameters:
+            x:      The x coordinate of the pixel to get.
+            y:      The y coordinate of the pixel to get.
         """
         if not self.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Attempt to access values of an undefined image")
@@ -1240,7 +1241,7 @@ class Image(object):
         return self._getValue(x,y)
 
     def _getValue(self, x, y):
-        """Equivalent to self.getValue(x,y), except there are no checks that the values fall
+        """Equivalent to `getValue`, except there are no checks that the values fall
         within the bounds of the image.
         """
         return self._array[y-self.ymin, x-self.xmin]
@@ -1265,8 +1266,13 @@ class Image(object):
         self._setValue(pos.x,pos.y,value)
 
     def _setValue(self, x, y, value):
-        """Equivalent to self.setValue(x,y,value) except that there are no checks that the values
-        fall within the bounds of the image.
+        """Equivalent to `setValue` except that there are no checks that the values
+        fall within the bounds of the image, and the coordinates must be given as ``x``, ``y``.
+
+        Parameters:
+            x:      The x coordinate of the pixel to set.
+            y:      The y coordinate of the pixel to set.
+            value:  The value to set the pixel to.
         """
         self._array[y-self.ymin, x-self.xmin] = value
 
@@ -1290,13 +1296,21 @@ class Image(object):
         self._addValue(pos.x,pos.y,value)
 
     def _addValue(self, x, y, value):
-        """Equivalent to self.addValue(x,y,value) except that there are no checks that the values
-        fall within the bounds of the image.
+        """Equivalent to `addValue` except that there are no checks that the values
+        fall within the bounds of the image, and the coordinates must be given as ``x``, ``y``.
+
+        Parameters:
+            x:      The x coordinate of the pixel to add to.
+            y:      The y coordinate of the pixel to add to.
+            value:  The value to add to this pixel.
         """
         self._array[y-self.ymin, x-self.xmin] += value
 
     def fill(self, value):
         """Set all pixel values to the given ``value``
+
+        Parameter:
+            value:  The value to set all the pixels to.
         """
         if self.isconst:
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
@@ -1305,8 +1319,7 @@ class Image(object):
         self._fill(value)
 
     def _fill(self, value):
-        """Equivalent to self.fill(value), except that there are no checks that the bounds
-        are defined.
+        """Equivalent to `fill`, except that there are no checks that the bounds are defined.
         """
         self._array[:,:] = value
 
@@ -1330,8 +1343,7 @@ class Image(object):
         self._invertSelf()
 
     def _invertSelf(self):
-        """Equivalent to self.invertSelf(), except that there are no checks that the bounds
-        are defined.
+        """Equivalent to `invertSelf`, except that there are no checks that the bounds are defined.
         """
         # C++ version skips 0's to 1/0 -> 0 instead of inf.
         with convert_cpp_errors():
