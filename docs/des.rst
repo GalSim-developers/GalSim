@@ -16,12 +16,10 @@ DES PSF models
 
 .. autoclass:: galsim.des.DES_PSFEx
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.des.DES_Shapelet
     :members:
-    :special-members:
     :show-inheritance:
 
 
@@ -34,16 +32,13 @@ Importing this module also adds these data structures to the config framework, s
 
 .. autoclass:: galsim.des.MultiExposureObject
     :members:
-    :special-members:
 
 .. autoclass:: galsim.des.MEDSBuilder
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.des.OffsetBuilder
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autofunction:: galsim.des.WriteMEDS

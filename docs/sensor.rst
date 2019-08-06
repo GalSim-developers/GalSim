@@ -13,10 +13,8 @@ bottom of the detector.
 
 .. autoclass:: galsim.Sensor
     :members:
-    :special-members:
 
 .. autoclass:: galsim.SiliconSensor
     :members:
-    :special-members:
     :show-inheritance:
 

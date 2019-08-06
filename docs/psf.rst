@@ -11,7 +11,6 @@ Airy Profile
 
 .. autoclass:: galsim.Airy
     :members:
-    :special-members:
     :show-inheritance:
 
 Moffat Profile
@@ -19,7 +18,6 @@ Moffat Profile
 
 .. autoclass:: galsim.Moffat
     :members:
-    :special-members:
     :show-inheritance:
 
 Kolmogorov Profile
@@ -27,7 +25,6 @@ Kolmogorov Profile
 
 .. autoclass:: galsim.Kolmogorov
     :members:
-    :special-members:
     :show-inheritance:
 
 Von Karman Profile
@@ -35,7 +32,6 @@ Von Karman Profile
 
 .. autoclass:: galsim.VonKarman
     :members:
-    :special-members:
     :show-inheritance:
 
 Second Kick
@@ -43,7 +39,6 @@ Second Kick
 
 .. autoclass:: galsim.SecondKick
     :members:
-    :special-members:
     :show-inheritance:
 
 Optical PSF
@@ -51,7 +46,6 @@ Optical PSF
 
 .. autoclass:: galsim.OpticalPSF
     :members:
-    :special-members:
     :show-inheritance:
 
 

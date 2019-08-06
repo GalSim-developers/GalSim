@@ -18,29 +18,26 @@ API for all of these classes.
 
 .. autoclass:: galsim.BaseNoise
     :members:
-    :special-members:
+
+    .. automethod:: galsim.BaseNoise.__mul__
+    .. automethod:: galsim.BaseNoise.__div__
 
 .. autoclass:: galsim.GaussianNoise
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.PoissonNoise
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.CCDNoise
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.VariableGaussianNoise
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.DeviateNoise
     :members:
-    :special-members:
     :show-inheritance:

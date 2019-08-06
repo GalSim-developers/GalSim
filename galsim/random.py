@@ -84,7 +84,7 @@ class BaseDeviate(object):
             raise TypeError("BaseDeviate seed must be an integer.  Got %s"%seed)
 
     def _seed(self, seed=0):
-        """Equivalent to self.seed(seed), but without any type checking.
+        """Equivalent to `seed`, but without any type checking.
         """
         self._rng.seed(seed)
 
@@ -114,7 +114,7 @@ class BaseDeviate(object):
                             "BaseDeviate")
 
     def _reset(self, rng):
-        """Equivalent to self.reset(rng), but rng must be a `BaseDeviate` (not an int), and there
+        """Equivalent to `reset`, but rng must be a `BaseDeviate` (not an int), and there
         is no type checking.
         """
         with convert_cpp_errors():
@@ -786,6 +786,8 @@ class DistDeviate(BaseDeviate):
         return self._inverse_cdf(p)
 
     def __call__(self):
+        """Draw a new random number from the distribution.
+        """
         return self._inverse_cdf(self._rng.generate1())
 
     def generate(self, array):

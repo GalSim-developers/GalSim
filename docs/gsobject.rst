@@ -13,6 +13,16 @@ will be raised.
 
 .. autoclass:: galsim.GSObject
     :members:
-    :special-members:
 
+    .. automethod:: galsim.GSObject.__mul__
+    .. automethod:: galsim.GSObject.__rmul__
+    .. automethod:: galsim.GSObject.__div__
+    .. automethod:: galsim.GSObject._xValue
+    .. automethod:: galsim.GSObject._kValue
+    .. automethod:: galsim.GSObject._shear
+    .. automethod:: galsim.GSObject._shift
+    .. automethod:: galsim.GSObject._drawReal
+    .. automethod:: galsim.GSObject._calculate_nphotons
+    .. automethod:: galsim.GSObject._shoot
+    .. automethod:: galsim.GSObject._drawKImage
 

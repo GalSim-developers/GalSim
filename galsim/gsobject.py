@@ -446,12 +446,12 @@ class GSObject(object):
         return self.withScaledFlux(other)
 
     def __rmul__(self, other):
-        """Equivalent to obj * other"""
+        """Equivalent to obj * other.  See `__mul__` for details."""
         return self.__mul__(other)
 
     # Likewise for op/
     def __div__(self, other):
-        """Equivalent to obj * (1/other)"""
+        """Equivalent to obj * (1/other).  See `__mul__` for details."""
         return self * (1. / other)
 
     __truediv__ = __div__
@@ -671,7 +671,7 @@ class GSObject(object):
         return self._xValue(pos)
 
     def _xValue(self, pos):
-        """Equivalent to xValue(pos), but pos must be a galsim.PositionD instance
+        """Equivalent to `xValue`, but ``pos`` must be a `galsim.PositionD` instance
 
         Parameters:
             pos:        The position at which you want the surface brightness of the object.
@@ -703,7 +703,7 @@ class GSObject(object):
         return self._kValue(kpos)
 
     def _kValue(self, kpos):  # pragma: no cover  (all our classes override this)
-        """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
+        """Equivalent to `kValue`, but ``kpos`` must be a `galsim.PositionD` instance.
         """
         raise NotImplementedError("%s does not implement kValue"%self.__class__.__name__)
 
@@ -883,11 +883,11 @@ class GSObject(object):
         return Transform(self, jac=shear.getMatrix().ravel().tolist())
 
     def _shear(self, shear):
-        """Equivalent to self.shear(shear), but without the overhead of sanity checks or other
-        ways to input the shear value.
+        """Equivalent to `GSObject.shear`, but without the overhead of sanity checks or other
+        ways to input the ``shear`` value.
 
         This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
-        `shear` method.
+        `GSObject.shear` method.
 
         Also, it won't propagate any noise attribute.
 
@@ -1015,7 +1015,7 @@ class GSObject(object):
         return Transform(self, offset=offset)
 
     def _shift(self, offset):
-        """Equivalent to ``self.shift(shift)``, but without the overhead of sanity checks or option
+        """Equivalent to `shift`, but without the overhead of sanity checks or option
         to give the shift as (dx,dy).
 
         This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
@@ -1024,7 +1024,7 @@ class GSObject(object):
         Also, it won't propagate any noise attribute.
 
         Parameters:
-            offset:     The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)
+            offset:     The shift to apply, given as a `PositionD`
 
         Returns:
             the shifted object.
@@ -1748,9 +1748,11 @@ class GSObject(object):
             return im1.array.sum(dtype=float)
 
     def _drawReal(self, image):
-        """Equivalent to the regular ``drawReal(image, add_to_image=False)``, but without the usual
-        sanity checks, and the image's dtype must be either float32 or float64, and it must
-        have a c_contiguous array (image.iscontiguous must be True).
+        """A version of `drawReal` without the sanity checks or some options.
+
+        This is nearly equivalent to the regular ``drawReal(image, add_to_image=False)``, but
+        the image's dtype must be either float32 or float64, and it must have a c_contiguous array
+        (``image.iscontiguous`` must be True).
         """
         raise NotImplementedError("%s does not implement drawReal"%self.__class__.__name__)
 
@@ -2199,7 +2201,9 @@ class GSObject(object):
         return photons
 
     def _shoot(self, photons, rng):
-        """Shoot photons into the given `PhotonArray`
+        """Shoot photons into the given `PhotonArray`.
+
+        This is the backend implementation of `shoot` once the `PhotonArray` has been constructed.
 
         Parameters:
             photons:    A `PhotonArray` instance into which the photons should be placed.
@@ -2322,8 +2326,10 @@ class GSObject(object):
         return image
 
     def _drawKImage(self, image):  # pragma: no cover  (all our classes override this)
-        """Equivalent to ``drawKImage(image, add_to_image, recenter=False, add_to_image=False)``,
-        but without the normal sanity checks or the option to create the image automatically.
+        """A version of `drawKImage` without the sanity checks or some options.
+
+        Equivalent to ``drawKImage(image, add_to_image=False, recenter=False, add_to_image=False)``,
+        but without the option to create the image automatically.
 
         The input image must be provided as a complex `Image` instance (dtype=complex64 or
         complex128), and the bounds should be set up appropriately (e.g. with 0,0 in the center if
