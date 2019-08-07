@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Units" href="units.html" />
+    <link rel="next" title="Wavelength-dependent Profiles" href="chromatic.html" />
     <link rel="prev" title="Transformed Profiles" href="transform.html" /> 
 </head>
 
@@ -92,24 +92,23 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">The GSParams class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -285,42 +284,7 @@ most this much. [default: 1.e-5]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt id="galsim.GSParams.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.GSParams.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.GSParams.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">minimum_fft_size=128</em>, <em class="sig-param">maximum_fft_size=8192</em>, <em class="sig-param">folding_threshold=0.005</em>, <em class="sig-param">stepk_minimum_hlr=5</em>, <em class="sig-param">maxk_threshold=0.001</em>, <em class="sig-param">kvalue_accuracy=1e-05</em>, <em class="sig-param">xvalue_accuracy=1e-05</em>, <em class="sig-param">table_spacing=1</em>, <em class="sig-param">realspace_relerr=0.0001</em>, <em class="sig-param">realspace_abserr=1e-06</em>, <em class="sig-param">integration_relerr=1e-06</em>, <em class="sig-param">integration_abserr=1e-08</em>, <em class="sig-param">shoot_accuracy=1e-05</em>, <em class="sig-param">allowed_flux_variation=0.81</em>, <em class="sig-param">range_division_for_extrema=32</em>, <em class="sig-param">small_fraction_of_flux=0.0001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.GSParams.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.GSParams.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.GSParams.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.GSParams.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
+<p>After construction, all of the above parameters are available as read-only attributes.</p>
 <dl class="method">
 <dt id="galsim.GSParams.check">
 <em class="property">static </em><code class="sig-name descname">check</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.check" title="Permalink to this definition">¶</a></dt>
@@ -349,7 +313,7 @@ maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr.<
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="units.html" class="btn btn-neutral float-right" title="Units" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="chromatic.html" class="btn btn-neutral float-right" title="Wavelength-dependent Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="transform.html" class="btn btn-neutral float-left" title="Transformed Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

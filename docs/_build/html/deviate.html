@@ -91,6 +91,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="random.html">Noise and Random Values</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Random Deviates</a></li>
@@ -98,10 +100,8 @@
 <li class="toctree-l2"><a class="reference internal" href="corr_noise.html">Correlated Noise</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -236,7 +236,7 @@ the series of “random” values will be deterministic.</p></li>
 <p><strong>Usage</strong>:</p>
 <p>There is not much you can do with something that is only known to be a BaseDeviate rather than
 one of the derived classes other than construct it and change the seed, and use it as an
-argument to pass to other BaseDeviate constructors.:</p>
+argument to pass to other BaseDeviate constructors:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; rng = galsim.BaseDeviate(215324)
 &gt;&gt;&gt; rng()
 Traceback (most recent call last):
@@ -251,39 +251,16 @@ TypeError: &#39;BaseDeviate&#39; object is not callable
 </pre></div>
 </div>
 <dl class="method">
-<dt id="galsim.BaseDeviate.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.BaseDeviate._seed">
+<code class="sig-name descname">_seed</code><span class="sig-paren">(</span><em class="sig-param">seed=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate._seed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate._seed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to <a class="reference internal" href="#galsim.BaseDeviate.seed" title="galsim.BaseDeviate.seed"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">seed</span></code></a>, but without any type checking.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.BaseDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.BaseDeviate.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.BaseDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.BaseDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.BaseDeviate.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.BaseDeviate.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
+<dt id="galsim.BaseDeviate._reset">
+<code class="sig-name descname">_reset</code><span class="sig-paren">(</span><em class="sig-param">rng</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate._reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate._reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to <a class="reference internal" href="#galsim.BaseDeviate.reset" title="galsim.BaseDeviate.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a>, but rng must be a <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> (not an int), and there
+is no type checking.</p>
 </dd></dl>
 
 <dl class="method">
@@ -309,9 +286,8 @@ use for the next output value.</p>
 <dl class="method">
 <dt id="galsim.BaseDeviate.duplicate">
 <code class="sig-name descname">duplicate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.duplicate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.duplicate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a duplicate of the current <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.  The subsequent series from each
-copy of the <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> will produce identical values.</p>
-<p class="rubric">Example</p>
+<dd><p>Create a duplicate of the current <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.</p>
+<p>The subsequent series from each copy of the <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> will produce identical values:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">UniformDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">()</span>
 <span class="go">0.17100770119577646</span>
@@ -380,8 +356,8 @@ means to generate a seed from the system. [default: 0]</p>
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">UniformDeviate</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UniformDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random number generator with uniform distribution in interval [0.,1.).</p>
-<p>Successive calls to u() generate pseudo-random values distributed uniformly in the interval
-[0., 1.).:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">u()</span></code> generate pseudo-random values distributed uniformly in the interval
+[0., 1.):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">UniformDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">()</span>
 <span class="go">0.17100770119577646</span>
@@ -403,24 +379,6 @@ means to generate a seed from the system. [default: 0]</p>
 <p>Returns a uniform deviate between 0 and 1.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="galsim.UniformDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UniformDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.UniformDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UniformDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.UniformDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UniformDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -429,8 +387,8 @@ means to generate a seed from the system. [default: 0]</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random number generator with Gaussian distribution.</p>
 <p>See <a class="reference external" href="http://en.wikipedia.org/wiki/Gaussian_distribution">http://en.wikipedia.org/wiki/Gaussian_distribution</a> for further details.</p>
-<p>Successive calls to g() generate pseudo-random values distributed according to a Gaussian
-distribution with the provided <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma</span></code>.:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">g()</span></code> generate pseudo-random values distributed according to a Gaussian
+distribution with the provided <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GaussianDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">()</span>
 <span class="go">0.5533754000847082</span>
@@ -457,28 +415,22 @@ distribution with the provided <code class="docutils literal notranslate"><span 
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.GaussianDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em>, <em class="sig-param">mean=0.0</em>, <em class="sig-param">sigma=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.GaussianDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.GaussianDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.GaussianDeviate.generate_from_variance">
 <code class="sig-name descname">generate_from_variance</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.generate_from_variance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianDeviate.generate_from_variance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many Gaussian deviate values using the existing array values as the
 variance for each.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GaussianDeviate.mean">
+<em class="property">property </em><code class="sig-name descname">mean</code><a class="headerlink" href="#galsim.GaussianDeviate.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mean of the Gaussian distribution.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.GaussianDeviate.sigma">
+<em class="property">property </em><code class="sig-name descname">sigma</code><a class="headerlink" href="#galsim.GaussianDeviate.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sigma of the Gaussian distribution.</p>
 </dd></dl>
 
 </dd></dl>
@@ -491,8 +443,8 @@ variance for each.</p>
 <p>The input <code class="docutils literal notranslate"><span class="pre">mean</span></code> sets the mean and variance of the Poisson deviate.  An integer deviate with
 this distribution is returned after each call.
 See <a class="reference external" href="http://en.wikipedia.org/wiki/Poisson_distribution">http://en.wikipedia.org/wiki/Poisson_distribution</a> for more details.</p>
-<p>Successive calls to p() generate pseudo-random integer values distributed according to a Poisson
-distribution with the specified <code class="docutils literal notranslate"><span class="pre">mean</span></code>.:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">p()</span></code> generate pseudo-random integer values distributed according to a
+Poisson distribution with the specified <code class="docutils literal notranslate"><span class="pre">mean</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PoissonDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">()</span>
 <span class="go">94</span>
@@ -518,28 +470,16 @@ distribution with the specified <code class="docutils literal notranslate"><span
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.PoissonDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em>, <em class="sig-param">mean=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PoissonDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.PoissonDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.PoissonDeviate.generate_from_expectation">
 <code class="sig-name descname">generate_from_expectation</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.generate_from_expectation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonDeviate.generate_from_expectation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many Poisson deviate values using the existing array values as the
 expectation value (aka mean) for each.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.PoissonDeviate.mean">
+<em class="property">property </em><code class="sig-name descname">mean</code><a class="headerlink" href="#galsim.PoissonDeviate.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mean of the distribution.</p>
 </dd></dl>
 
 </dd></dl>
@@ -552,8 +492,8 @@ expectation value (aka mean) for each.</p>
 <p><code class="docutils literal notranslate"><span class="pre">N</span></code> is number of ‘coin flips,’ <code class="docutils literal notranslate"><span class="pre">p</span></code> is probability of ‘heads,’ and each call returns an
 integer value where 0 &lt;= value &lt;= N gives the number of heads.  See
 <a class="reference external" href="http://en.wikipedia.org/wiki/Binomial_distribution">http://en.wikipedia.org/wiki/Binomial_distribution</a> for more information.</p>
-<p>Successive calls to b() generate pseudo-random integer values distributed according to a
-binomial distribution with the provided <code class="docutils literal notranslate"><span class="pre">N</span></code>, <code class="docutils literal notranslate"><span class="pre">p</span></code>.:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">b()</span></code> generate pseudo-random integer values distributed according to a
+binomial distribution with the provided <code class="docutils literal notranslate"><span class="pre">N</span></code>, <code class="docutils literal notranslate"><span class="pre">p</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">BinomialDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">()</span>
 <span class="go">2</span>
@@ -580,21 +520,15 @@ binomial distribution with the provided <code class="docutils literal notranslat
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.BinomialDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em>, <em class="sig-param">N=1</em>, <em class="sig-param">p=0.5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BinomialDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BinomialDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.BinomialDeviate.n">
+<em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.BinomialDeviate.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of ‘coin flips’.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.BinomialDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BinomialDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BinomialDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.BinomialDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BinomialDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BinomialDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.BinomialDeviate.p">
+<em class="property">property </em><code class="sig-name descname">p</code><a class="headerlink" href="#galsim.BinomialDeviate.p" title="Permalink to this definition">¶</a></dt>
+<dd><p>The probability of success per ‘coin flip’.</p>
 </dd></dl>
 
 </dd></dl>
@@ -607,8 +541,8 @@ binomial distribution with the provided <code class="docutils literal notranslat
 <p>See <a class="reference external" href="http://en.wikipedia.org/wiki/Chi-squared_distribution">http://en.wikipedia.org/wiki/Chi-squared_distribution</a> (note that k=n in the notation
 adopted in the Boost.Random routine called by this class).  The Chi^2 distribution is a
 real-valued distribution producing deviates &gt;= 0.</p>
-<p>Successive calls to chi2() generate pseudo-random values distributed according to a chi-square
-distribution with the specified degrees of freedom, <code class="docutils literal notranslate"><span class="pre">n</span></code>.:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">chi2()</span></code> generate pseudo-random values distributed according to a
+chi-square distribution with the specified degrees of freedom, <code class="docutils literal notranslate"><span class="pre">n</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">chi2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Chi2Deviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">chi2</span><span class="p">()</span>
 <span class="go">7.9182211987712385</span>
@@ -635,21 +569,9 @@ Must be &gt; 0]</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Chi2Deviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em>, <em class="sig-param">n=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#Chi2Deviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Chi2Deviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Chi2Deviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#Chi2Deviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Chi2Deviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Chi2Deviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#Chi2Deviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Chi2Deviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.Chi2Deviate.n">
+<em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.Chi2Deviate.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of degrees of freedom.</p>
 </dd></dl>
 
 </dd></dl>
@@ -662,8 +584,8 @@ Must be &gt; 0]</p></li>
 See <a class="reference external" href="http://en.wikipedia.org/wiki/Gamma_distribution">http://en.wikipedia.org/wiki/Gamma_distribution</a>.
 (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
 The Gamma distribution is a real valued distribution producing deviates &gt;= 0.</p>
-<p>Successive calls to p() generate pseudo-random values distributed according to a gamma
-distribution with the specified shape and scale parameters <code class="docutils literal notranslate"><span class="pre">k</span></code> and <code class="docutils literal notranslate"><span class="pre">theta</span></code>.:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">g()</span></code> generate pseudo-random values distributed according to a gamma
+distribution with the specified shape and scale parameters <code class="docutils literal notranslate"><span class="pre">k</span></code> and <code class="docutils literal notranslate"><span class="pre">theta</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gam</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GammaDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gam</span><span class="p">()</span>
 <span class="go">0.37508882726316</span>
@@ -690,21 +612,15 @@ distribution with the specified shape and scale parameters <code class="docutils
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.GammaDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em>, <em class="sig-param">k=1.0</em>, <em class="sig-param">theta=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GammaDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GammaDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.GammaDeviate.k">
+<em class="property">property </em><code class="sig-name descname">k</code><a class="headerlink" href="#galsim.GammaDeviate.k" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shape parameter, k.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.GammaDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GammaDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GammaDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.GammaDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GammaDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GammaDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.GammaDeviate.theta">
+<em class="property">property </em><code class="sig-name descname">theta</code><a class="headerlink" href="#galsim.GammaDeviate.theta" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale parameter, theta.</p>
 </dd></dl>
 
 </dd></dl>
@@ -720,8 +636,8 @@ distribution (a=2).
 See <a class="reference external" href="http://en.wikipedia.org/wiki/Weibull_distribution">http://en.wikipedia.org/wiki/Weibull_distribution</a> (a=k and b=lambda in the notation adopted
 in the Wikipedia article) for more details.  The Weibull distribution is real valued and
 produces deviates &gt;= 0.</p>
-<p>Successive calls to p() generate pseudo-random values distributed according to a Weibull
-distribution with the specified shape and scale parameters <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>.:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">w()</span></code> generate pseudo-random values distributed according to a Weibull
+distribution with the specified shape and scale parameters <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">WeibullDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">w</span><span class="p">()</span>
 <span class="go">1.1038481241018219</span>
@@ -748,21 +664,15 @@ distribution with the specified shape and scale parameters <code class="docutils
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.WeibullDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em>, <em class="sig-param">a=1.0</em>, <em class="sig-param">b=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#WeibullDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WeibullDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.WeibullDeviate.a">
+<em class="property">property </em><code class="sig-name descname">a</code><a class="headerlink" href="#galsim.WeibullDeviate.a" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shape parameter, a.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.WeibullDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#WeibullDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WeibullDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.WeibullDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#WeibullDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WeibullDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.WeibullDeviate.b">
+<em class="property">property </em><code class="sig-name descname">b</code><a class="headerlink" href="#galsim.WeibullDeviate.b" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale parameter, b.</p>
 </dd></dl>
 
 </dd></dl>
@@ -790,26 +700,27 @@ more finely gridded probabilities for generating the cumulative probability tabl
 <code class="docutils literal notranslate"><span class="pre">interpolant</span></code> is linear, but any interpolant understood by <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> may be used.  We
 caution against the use of splines because they can cause non-monotonic behavior.  Passing the
 <code class="docutils literal notranslate"><span class="pre">interpolant</span></code> keyword next to anything but a table in a file will result in an error.</p>
-<p>Examples:</p>
+<p><strong>Examples</strong>:</p>
 <p>Some sample initialization calls:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">DistDeviate</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="n">x_max</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Initializes d to be a DistDeviate instance with a distribution given by the callable function
-<code class="docutils literal notranslate"><span class="pre">f(x)</span></code> from <code class="docutils literal notranslate"><span class="pre">x=x_min</span></code> to <code class="docutils literal notranslate"><span class="pre">x=x_max</span></code> and seeds the PRNG using current time.:</p>
+<code class="docutils literal notranslate"><span class="pre">f(x)</span></code> from <code class="docutils literal notranslate"><span class="pre">x=x_min</span></code> to <code class="docutils literal notranslate"><span class="pre">x=x_max</span></code> and seeds the PRNG using current time:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">DistDeviate</span><span class="p">(</span><span class="mi">1062533</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;floor&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Initializes d to be a DistDeviate instance with a distribution given by the data in file
 <code class="docutils literal notranslate"><span class="pre">file_name</span></code>, which must be a 2-column ASCII table, and seeds the PRNG using the integer
-seed 1062533. It generates probabilities from <code class="docutils literal notranslate"><span class="pre">file_name</span></code> using the interpolant ‘floor’.:</p>
+seed 1062533. It generates probabilities from <code class="docutils literal notranslate"><span class="pre">file_name</span></code> using the interpolant ‘floor’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">DistDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">LookupTable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">p</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
 arrays <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">p</span></code> which are used to make a callable <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a>, and links the
 DistDeviate PRNG to the already-existing random number generator <code class="docutils literal notranslate"><span class="pre">rng</span></code>.</p>
-<p>Successive calls to d() generate pseudo-random values with the given probability distribution.:</p>
+<p>Successive calls to <code class="docutils literal notranslate"><span class="pre">d()</span></code> generate pseudo-random values with the given probability
+distribution:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">DistDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x_min</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">()</span>
 <span class="go">-0.4151921102709466</span>
@@ -844,31 +755,7 @@ which case it uses the table’s x values]</p></li>
 <dl class="method">
 <dt id="galsim.DistDeviate.__call__">
 <code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.__call__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call self as a function.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.DistDeviate.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.DistDeviate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">seed=None</em>, <em class="sig-param">function=None</em>, <em class="sig-param">x_min=None</em>, <em class="sig-param">x_max=None</em>, <em class="sig-param">interpolant=None</em>, <em class="sig-param">npoints=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.DistDeviate.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.DistDeviate.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dd><p>Draw a new random number from the distribution.</p>
 </dd></dl>
 
 <dl class="method">

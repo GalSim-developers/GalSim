@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -314,8 +314,11 @@
 
 
 <div class="viewcode-block" id="ImageIntegrator"><a class="viewcode-back" href="../../integ.html#galsim.integ.ImageIntegrator">[docs]</a><span class="k">class</span> <span class="nc">ImageIntegrator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<div class="viewcode-block" id="ImageIntegrator.__init__"><a class="viewcode-back" href="../../integ.html#galsim.integ.ImageIntegrator.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Must instantiate subclass of ImageIntegrator&quot;</span><span class="p">)</span></div>
+    <span class="sd">&quot;&quot;&quot;A base class for integrators used by `ChromaticObject` to integrate the drawn images</span>
+<span class="sd">    over wavelengthh using a `Bandpass` as a weight function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Must instantiate subclass of ImageIntegrator&quot;</span><span class="p">)</span>
     <span class="c1"># subclasses must define</span>
     <span class="c1"># 1) a method `.calculateWaves(bandpass)` which will return the wavelengths at which to</span>
     <span class="c1">#    evaluate the integrand</span>
@@ -367,8 +370,8 @@
 <span class="sd">                    - galsim.integ.trapzRule: Use the trapezoidal integration rule</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="SampleIntegrator.__init__"><a class="viewcode-back" href="../../integ.html#galsim.integ.SampleIntegrator.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rule</span> <span class="o">=</span> <span class="n">rule</span></div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rule</span> <span class="o">=</span> <span class="n">rule</span>
 
     <span class="k">def</span> <span class="nf">calculateWaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">wave_list</span></div>
@@ -400,10 +403,10 @@
 <span class="sd">                        its nearest interior point is sampled), thus ``use_endpoints`` should be</span>
 <span class="sd">                        set to False in this case.  [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="ContinuousIntegrator.__init__"><a class="viewcode-back" href="../../integ.html#galsim.integ.ContinuousIntegrator.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">use_endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">use_endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rule</span> <span class="o">=</span> <span class="n">rule</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">use_endpoints</span> <span class="o">=</span> <span class="n">use_endpoints</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_endpoints</span> <span class="o">=</span> <span class="n">use_endpoints</span>
 
     <span class="k">def</span> <span class="nf">calculateWaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
         <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="o">*</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span>

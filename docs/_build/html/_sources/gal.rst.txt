@@ -10,7 +10,6 @@ Exponenatial Profile
 
 .. autoclass:: galsim.Exponential
     :members:
-    :special-members:
     :show-inheritance:
 
 De Vaucouleurs Profile
@@ -18,7 +17,6 @@ De Vaucouleurs Profile
 
 .. autoclass:: galsim.DeVaucouleurs
     :members:
-    :special-members:
     :show-inheritance:
 
 Sersic Profile
@@ -26,7 +24,6 @@ Sersic Profile
 
 .. autoclass:: galsim.Sersic
     :members:
-    :special-members:
     :show-inheritance:
 
 Inclined Exponential Profile
@@ -34,7 +31,6 @@ Inclined Exponential Profile
 
 .. autoclass:: galsim.InclinedExponential
     :members:
-    :special-members:
     :show-inheritance:
 
 Inclined Sersic Profile
@@ -42,7 +38,6 @@ Inclined Sersic Profile
 
 .. autoclass:: galsim.InclinedSersic
     :members:
-    :special-members:
     :show-inheritance:
 
 Spergel Profile
@@ -50,7 +45,6 @@ Spergel Profile
 
 .. autoclass:: galsim.Spergel
     :members:
-    :special-members:
     :show-inheritance:
 
 Knots defined by a "random walk"
@@ -58,7 +52,6 @@ Knots defined by a "random walk"
 
 .. autoclass:: galsim.RandomWalk
     :members:
-    :special-members:
     :show-inheritance:
 
 

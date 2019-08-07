@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -435,7 +435,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="InterpolatedImage.__init__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span>
                  <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise_pad</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">calculate_stepk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">calculate_maxk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -518,7 +518,7 @@
         <span class="c1"># Process the different options for flux, stepk, maxk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getFlux</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">normalization</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getStepK</span><span class="p">(</span><span class="n">calculate_stepk</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="n">calculate_maxk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="n">calculate_maxk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InterpolatedImage.withGSParams"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
@@ -563,14 +563,20 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">x_interpolant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The real-space `Interpolant` for this profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">k_interpolant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Fourier-space `Interpolant` for this profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The underlying `Image` being interpolated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span>
 
     <span class="k">def</span> <span class="nf">_buildRealImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pad_factor</span><span class="p">,</span> <span class="n">pad_image</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="p">,</span> <span class="n">noise_pad</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">use_cache</span><span class="p">):</span>
@@ -763,7 +769,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span><span class="o">.</span><span class="n">krange</span> <span class="o">/</span> <span class="n">max_scale</span>
 
-<div class="viewcode-block" id="InterpolatedImage.__eq__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">InterpolatedImage</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_xim</span> <span class="ow">and</span>
@@ -773,9 +779,9 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_offset</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_stepk</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_maxk</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_maxk</span><span class="p">))</span>
 
-<div class="viewcode-block" id="InterpolatedImage.__hash__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Definitely want to cache this, since the size of the image could be large.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.InterpolatedImage&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">))</span>
@@ -792,9 +798,9 @@
             <span class="c1"># Just hash the diagonal.  Much faster, and usually is unique enough.</span>
             <span class="c1"># (Let python handle collisions as needed if multiple similar IIs are used as keys.)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span><span class="o">.</span><span class="n">array</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
 
-<div class="viewcode-block" id="InterpolatedImage.__repr__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.InterpolatedImage(</span><span class="si">%r</span><span class="s1">, </span><span class="si">%r</span><span class="s1">, </span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">)</span>
         <span class="c1"># Most things we keep even if not required, but the pad_image is large, so skip it</span>
@@ -804,9 +810,9 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, pad_factor=</span><span class="si">%f</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, offset=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, use_true_center=False, gsparams=</span><span class="si">%r</span><span class="s1">, _force_stepk=</span><span class="si">%r</span><span class="s1">, _force_maxk=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">return</span> <span class="n">s</span>
 
-<div class="viewcode-block" id="InterpolatedImage.__str__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedImage(image=</span><span class="si">%s</span><span class="s1">, flux=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedImage(image=</span><span class="si">%s</span><span class="s1">, flux=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -1019,7 +1025,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="InterpolatedKImage.__init__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stepk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stepk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">real_kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">imag_kimage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">real_hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">imag_hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">kimage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">real_kimage</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">imag_kimage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1100,14 +1106,18 @@
         <span class="k">if</span> <span class="n">k_interpolant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">Quintic</span><span class="p">(</span><span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">convert_interpolant</span><span class="p">(</span><span class="n">k_interpolant</span><span class="p">)</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">convert_interpolant</span><span class="p">(</span><span class="n">k_interpolant</span><span class="p">)</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">kimage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The underlying `Image` being interpolated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">k_interpolant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Fourier-space `Interpolant` for this profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span>
 
 <div class="viewcode-block" id="InterpolatedKImage.withGSParams"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
@@ -1135,30 +1145,30 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbiki</span>
 
-<div class="viewcode-block" id="InterpolatedKImage.__eq__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">InterpolatedKImage</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">scale</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">k_interpolant</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">stepk</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-<div class="viewcode-block" id="InterpolatedKImage.__hash__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Definitely want to cache this, since the kimage could be large.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.InterpolatedKImage&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span><span class="p">,</span>
                                <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">wcs</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
 
-<div class="viewcode-block" id="InterpolatedKImage.__repr__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.InterpolatedKImage(</span><span class="se">\n</span><span class="si">%r</span><span class="s1">,</span><span class="se">\n</span><span class="si">%r</span><span class="s1">, stepk=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
-<div class="viewcode-block" id="InterpolatedKImage.__str__"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedKImage(kimage=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedKImage(kimage=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># The SBInterpolatedKImage is picklable, but that is pretty inefficient, due to the large</span>

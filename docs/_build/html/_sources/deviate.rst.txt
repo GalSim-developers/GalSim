@@ -41,44 +41,55 @@ random number seed.  See the docstring of `BaseDeviate` for details.
 
 .. autoclass:: galsim.BaseDeviate
     :members:
-    :special-members:
+
+    .. automethod:: galsim.BaseDeviate._seed
+    .. automethod:: galsim.BaseDeviate._reset
 
 .. autoclass:: galsim.UniformDeviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.UniformDeviate.__call__
 
 .. autoclass:: galsim.GaussianDeviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.GaussianDeviate.__call__
 
 .. autoclass:: galsim.PoissonDeviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.PoissonDeviate.__call__
 
 .. autoclass:: galsim.BinomialDeviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.BinomialDeviate.__call__
 
 .. autoclass:: galsim.Chi2Deviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.Chi2Deviate.__call__
 
 .. autoclass:: galsim.GammaDeviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.GammaDeviate.__call__
 
 .. autoclass:: galsim.WeibullDeviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.WeibullDeviate.__call__
 
 .. autoclass:: galsim.DistDeviate
     :members:
-    :special-members:
     :show-inheritance:
+
+    .. automethod:: galsim.DistDeviate.__call__
+

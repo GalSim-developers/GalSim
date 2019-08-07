@@ -8,7 +8,6 @@ Gaussian Profile
 
 .. autoclass:: galsim.Gaussian
     :members:
-    :special-members:
     :show-inheritance:
 
 Pixel Profile
@@ -16,7 +15,6 @@ Pixel Profile
 
 .. autoclass:: galsim.Pixel
     :members:
-    :special-members:
     :show-inheritance:
 
 Box Profile
@@ -24,7 +22,6 @@ Box Profile
 
 .. autoclass:: galsim.Box
     :members:
-    :special-members:
     :show-inheritance:
 
 TopHat Profile
@@ -32,7 +29,6 @@ TopHat Profile
 
 .. autoclass:: galsim.TopHat
     :members:
-    :special-members:
     :show-inheritance:
 
 Delta Function
@@ -40,6 +36,5 @@ Delta Function
 
 .. autoclass:: galsim.DeltaFunction
     :members:
-    :special-members:
     :show-inheritance:
 

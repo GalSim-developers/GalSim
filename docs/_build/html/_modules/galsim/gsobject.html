@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -359,8 +359,8 @@
                       <span class="s1">&#39;range_division_for_extrema&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                       <span class="s1">&#39;small_fraction_of_flux&#39;</span> <span class="p">:</span> <span class="nb">float</span>
                     <span class="p">}</span>
-<div class="viewcode-block" id="GSObject.__init__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The GSObject base class should not be instantiated directly.&quot;</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The GSObject base class should not be instantiated directly.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Note: subclasses are expected to define the following attributes or properties:</span>
     <span class="c1">#</span>
@@ -412,27 +412,32 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;The flux of the profile&quot;</span>
+        <span class="sd">&quot;&quot;&quot;The flux of the profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gsparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;A `GSParams` object that sets various parameters relevant for speed/accuracy trade-offs&quot;</span>
+        <span class="sd">&quot;&quot;&quot;A `GSParams` object that sets various parameters relevant for speed/accuracy trade-offs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;The value of k beyond which aliasing can be neglected.&quot;</span>
+        <span class="sd">&quot;&quot;&quot;The value of k beyond which aliasing can be neglected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;The sampling in k space necessary to avoid folding of image in x space.&quot;</span>
+        <span class="sd">&quot;&quot;&quot;The sampling in k space necessary to avoid folding of image in x space.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nyquist_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;The pixel spacing that does not alias maxk.&quot;</span>
+        <span class="sd">&quot;&quot;&quot;The pixel spacing that does not alias maxk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxk</span>
 
     <span class="nd">@property</span>
@@ -444,7 +449,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_axisymmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;Wthether the profile is axially symmetric; affects efficiency of evaluation.&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Whether the profile is axially symmetric; affects efficiency of evaluation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_axisymmetric</span>
 
     <span class="nd">@property</span>
@@ -463,7 +469,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;The (x, y) centroid of an object as a Position.&quot;</span>
+        <span class="sd">&quot;&quot;&quot;The (x, y) centroid of an object as a `PositionD`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span>
 
     <span class="nd">@lazy_property</span>
@@ -563,7 +570,7 @@
         <span class="c1"># Most profiles don&#39;t have any noise.</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="c1"># a couple of definitions for using GSObjects as duck-typed ChromaticObjects</span>
+    <span class="c1"># a few definitions for using GSObjects as duck-typed ChromaticObjects</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">separable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="kc">True</span>
     <span class="nd">@property</span>
@@ -582,22 +589,28 @@
     <span class="k">def</span> <span class="nf">wave_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
     <span class="c1"># Also need this method to duck-type as a ChromaticObject</span>
-<div class="viewcode-block" id="GSObject.evaluateAtWavelength"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return profile at a given wavelength.  For `GSObject` instances, this is just ``self``.</span>
-<span class="sd">        This allows `GSObject` instances to be duck-typed as `ChromaticObject` instances.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
+    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
     <span class="c1"># Make op+ of two GSObjects work to return an Add object</span>
     <span class="c1"># Note: we don&#39;t define __iadd__ and similar.  Let python handle this automatically</span>
     <span class="c1"># to make obj += obj2 be equivalent to obj = obj + obj2.</span>
-    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__add__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__add__">[docs]</a>    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add to GSObjects.</span>
+
+<span class="sd">        Equivalent to Add(self, other)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.sum</span> <span class="k">import</span> <span class="n">Add</span>
-        <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span></div>
 
     <span class="c1"># op- is unusual, but allowed.  It subtracts off one profile from another.</span>
-    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__sub__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__sub__">[docs]</a>    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtract to GSObjects.</span>
+
+<span class="sd">        Equivalent to Add(self, -1 * other)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.sum</span> <span class="k">import</span> <span class="n">Add</span>
-        <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">other</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">other</span><span class="p">)])</span></div>
 
     <span class="c1"># Make op* work to adjust the flux of an object</span>
 <div class="viewcode-block" id="GSObject.__mul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -614,12 +627,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GSObject.__rmul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__rmul__">[docs]</a>    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to obj * other&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to obj * other.  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
     <span class="c1"># Likewise for op/</span>
 <div class="viewcode-block" id="GSObject.__div__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__div__">[docs]</a>    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to obj * (1/other)&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to obj * (1/other).  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span></div>
 
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
@@ -813,7 +826,7 @@
         <span class="sd">&quot;&quot;&quot;Returns the value of the object at a chosen 2D position in real space.</span>
 
 <span class="sd">        This function returns the surface brightness of the object at a particular position</span>
-<span class="sd">        in real space.  The position argument may be provided as a PositionD or PositionI</span>
+<span class="sd">        in real space.  The position argument may be provided as a `PositionD` or `PositionI`</span>
 <span class="sd">        argument, or it may be given as x,y (either as a tuple or as two arguments).</span>
 
 <span class="sd">        The object surface brightness profiles are typically defined in world coordinates, so</span>
@@ -838,8 +851,8 @@
         <span class="n">pos</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span><span class="n">kwargs</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xValue</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to xValue(pos), but pos must be a galsim.PositionD instance</span>
+<div class="viewcode-block" id="GSObject._xValue"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._xValue">[docs]</a>    <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to `xValue`, but ``pos`` must be a `galsim.PositionD` instance</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            pos:        The position at which you want the surface brightness of the object.</span>
@@ -847,15 +860,14 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the surface brightness at that position.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement xValue&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement xValue&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GSObject.kValue"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.kValue">[docs]</a>    <span class="k">def</span> <span class="nf">kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the value of the object at a chosen 2D position in k space.</span>
 
 <span class="sd">        This function returns the amplitude of the fourier transform of the surface brightness</span>
 <span class="sd">        profile at a given position in k space.  The position argument may be provided as a</span>
-<span class="sd">        PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two</span>
-<span class="sd">        arguments).</span>
+<span class="sd">        `Position` argument, or it may be given as kx,ky (either as a tuple or as two arguments).</span>
 
 <span class="sd">        Technically, kValue() is available if and only if the given obj has ``obj.is_analytic_k</span>
 <span class="sd">        == True``, but this is the case for all `GSObject` classes currently, so that should never</span>
@@ -870,13 +882,13 @@
         <span class="n">kpos</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span><span class="n">kwargs</span><span class="p">,</span><span class="s1">&#39;kx&#39;</span><span class="p">,</span><span class="s1">&#39;ky&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kValue</span><span class="p">(</span><span class="n">kpos</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.</span>
+<div class="viewcode-block" id="GSObject._kValue"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._kValue">[docs]</a>    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to `kValue`, but ``kpos`` must be a `galsim.PositionD` instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement kValue&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement kValue&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GSObject.withGSParams"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
+        <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given `GSParams`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Note to developers: objects that wrap other objects should override this in order</span>
         <span class="c1"># to apply the new gsparams to the components.</span>
@@ -1050,12 +1062,12 @@
             <span class="n">shear</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span></div>
 
-    <span class="k">def</span> <span class="nf">_shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to self.shear(shear), but without the overhead of sanity checks or other</span>
-<span class="sd">        ways to input the shear value.</span>
+<div class="viewcode-block" id="GSObject._shear"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shear">[docs]</a>    <span class="k">def</span> <span class="nf">_shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to `GSObject.shear`, but without the overhead of sanity checks or other</span>
+<span class="sd">        ways to input the ``shear`` value.</span>
 
 <span class="sd">        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular</span>
-<span class="sd">        `shear` method.</span>
+<span class="sd">        `GSObject.shear` method.</span>
 
 <span class="sd">        Also, it won&#39;t propagate any noise attribute.</span>
 
@@ -1067,7 +1079,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
         <span class="n">new_obj</span> <span class="o">=</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">new_obj</span>
+        <span class="k">return</span> <span class="n">new_obj</span></div>
 
 <div class="viewcode-block" id="GSObject.lens"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.lens">[docs]</a>    <span class="k">def</span> <span class="nf">lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current object with both a lensing shear and magnification</span>
@@ -1148,7 +1160,7 @@
 <span class="sd">        longer available.</span>
 
 <span class="sd">        Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,</span>
-<span class="sd">        or as a PositionD or PositionI object.</span>
+<span class="sd">        or as a `Position` object.</span>
 
 <span class="sd">        The shift coordinates here are sky coordinates.  `GSObject` profiles are always defined in</span>
 <span class="sd">        sky coordinates and only later (when they are drawn) is the connection to pixel coordinates</span>
@@ -1169,7 +1181,7 @@
 <span class="sd">            dx:         Horizontal shift to apply.</span>
 <span class="sd">            dy:         Vertical shift to apply.</span>
 
-<span class="sd">        Alternatively, you may supply a single parameter as a Position instance, rather than</span>
+<span class="sd">        Alternatively, you may supply a single parameter as a `Position` instance, rather than</span>
 <span class="sd">        the two components separately if that is more convenient.</span>
 
 <span class="sd">        Parameter:</span>
@@ -1182,8 +1194,8 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="s1">&#39;dx&#39;</span><span class="p">,</span> <span class="s1">&#39;dy&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to ``self.shift(shift)``, but without the overhead of sanity checks or option</span>
+<div class="viewcode-block" id="GSObject._shift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shift">[docs]</a>    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to `shift`, but without the overhead of sanity checks or option</span>
 <span class="sd">        to give the shift as (dx,dy).</span>
 
 <span class="sd">        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular</span>
@@ -1192,14 +1204,14 @@
 <span class="sd">        Also, it won&#39;t propagate any noise attribute.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            offset:     The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)</span>
+<span class="sd">            offset:     The shift to apply, given as a `PositionD`</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the shifted object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
         <span class="n">new_obj</span> <span class="o">=</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">new_obj</span>
+        <span class="k">return</span> <span class="n">new_obj</span></div>
 
     <span class="c1"># Make sure the image is defined with the right size and wcs for drawImage()</span>
     <span class="k">def</span> <span class="nf">_setup_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1915,12 +1927,14 @@
                 <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="n">im1</span><span class="o">.</span><span class="n">array</span>
             <span class="k">return</span> <span class="n">im1</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to the regular ``drawReal(image, add_to_image=False)``, but without the usual</span>
-<span class="sd">        sanity checks, and the image&#39;s dtype must be either float32 or float64, and it must</span>
-<span class="sd">        have a c_contiguous array (image.iscontiguous must be True).</span>
+<div class="viewcode-block" id="GSObject._drawReal"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawReal">[docs]</a>    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A version of `drawReal` without the sanity checks or some options.</span>
+
+<span class="sd">        This is nearly equivalent to the regular ``drawReal(image, add_to_image=False)``, but</span>
+<span class="sd">        the image&#39;s dtype must be either float32 or float64, and it must have a c_contiguous array</span>
+<span class="sd">        (``image.iscontiguous`` must be True).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawReal&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawReal&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GSObject.getGoodImageSize"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.getGoodImageSize">[docs]</a>    <span class="k">def</span> <span class="nf">getGoodImageSize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a good size to use for drawing this profile.</span>
@@ -2073,7 +2087,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawFFT_finish</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">kimage</span><span class="p">,</span> <span class="n">wrap_size</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_calculate_nphotons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject._calculate_nphotons"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._calculate_nphotons">[docs]</a>    <span class="k">def</span> <span class="nf">_calculate_nphotons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate how many photons to shoot and what flux_ratio (called g) each one should</span>
 <span class="sd">        have in order to produce an image with the right S/N and total flux.</span>
 
@@ -2189,7 +2203,7 @@
                                 <span class="n">n_photons</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">g</span><span class="p">))</span>
             <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.</span>
 
-        <span class="k">return</span> <span class="n">iN</span><span class="p">,</span> <span class="n">g</span>
+        <span class="k">return</span> <span class="n">iN</span><span class="p">,</span> <span class="n">g</span></div>
 
 
 <div class="viewcode-block" id="GSObject.drawPhot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawPhot">[docs]</a>    <span class="k">def</span> <span class="nf">drawPhot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -2366,14 +2380,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">photons</span></div>
 
-    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Shoot photons into the given `PhotonArray`</span>
+<div class="viewcode-block" id="GSObject._shoot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shoot">[docs]</a>    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shoot photons into the given `PhotonArray`.</span>
+
+<span class="sd">        This is the backend implementation of `shoot` once the `PhotonArray` has been constructed.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            photons:    A `PhotonArray` instance into which the photons should be placed.</span>
 <span class="sd">            rng:        A `BaseDeviate` instance to use for the photon shooting,</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement shoot&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement shoot&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GSObject.drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recenter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -2489,9 +2505,11 @@
             <span class="n">image</span> <span class="o">+=</span> <span class="n">im2</span>
         <span class="k">return</span> <span class="n">image</span></div>
 
-    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
-        <span class="sd">&quot;&quot;&quot;Equivalent to ``drawKImage(image, add_to_image, recenter=False, add_to_image=False)``,</span>
-<span class="sd">        but without the normal sanity checks or the option to create the image automatically.</span>
+<div class="viewcode-block" id="GSObject._drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
+        <span class="sd">&quot;&quot;&quot;A version of `drawKImage` without the sanity checks or some options.</span>
+
+<span class="sd">        Equivalent to ``drawKImage(image, add_to_image=False, recenter=False, add_to_image=False)``,</span>
+<span class="sd">        but without the option to create the image automatically.</span>
 
 <span class="sd">        The input image must be provided as a complex `Image` instance (dtype=complex64 or</span>
 <span class="sd">        complex128), and the bounds should be set up appropriately (e.g. with 0,0 in the center if</span>
@@ -2501,10 +2519,10 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">            image:      The `Image` onto which to draw the k-space image. [required]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawKImage&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawKImage&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
     <span class="c1"># Derived classes should define the __eq__ function</span>
-<div class="viewcode-block" id="GSObject.__ne__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
