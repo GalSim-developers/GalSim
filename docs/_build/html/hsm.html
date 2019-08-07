@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -451,42 +451,6 @@ PSF-correction.</p></li>
 <p>The <a class="reference internal" href="#galsim.hsm.ShapeData" title="galsim.hsm.ShapeData"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ShapeData</span></code></a> object can be initialized completely empty, or can be returned from the
 routines that measure object moments (<a class="reference internal" href="#galsim.hsm.FindAdaptiveMom" title="galsim.hsm.FindAdaptiveMom"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FindAdaptiveMom</span></code></a>) and carry out PSF correction
 (<a class="reference internal" href="#galsim.hsm.EstimateShear" title="galsim.hsm.EstimateShear"><code class="xref any py py-func docutils literal notranslate"><span class="pre">EstimateShear</span></code></a>).</p>
-<dl class="method">
-<dt id="galsim.hsm.ShapeData.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.ShapeData.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.ShapeData.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">image_bounds=galsim.BoundsI()</em>, <em class="sig-param">moments_status=-1</em>, <em class="sig-param">observed_shape=galsim.Shear(0j)</em>, <em class="sig-param">moments_sigma=-1.0</em>, <em class="sig-param">moments_amp=-1.0</em>, <em class="sig-param">moments_centroid=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">moments_rho4=-1.0</em>, <em class="sig-param">moments_n_iter=0</em>, <em class="sig-param">correction_status=-10</em>, <em class="sig-param">corrected_e1=-10.0</em>, <em class="sig-param">corrected_e2=-10.0</em>, <em class="sig-param">corrected_g1=-10.0</em>, <em class="sig-param">corrected_g2=-10.0</em>, <em class="sig-param">meas_type='None'</em>, <em class="sig-param">corrected_shape_err=-1.0</em>, <em class="sig-param">correction_method='None'</em>, <em class="sig-param">resolution_factor=-1.0</em>, <em class="sig-param">psf_sigma=-1.0</em>, <em class="sig-param">psf_shape=galsim.Shear(0j)</em>, <em class="sig-param">error_message=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.ShapeData.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.ShapeData.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#ShapeData.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.ShapeData.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.hsm.ShapeData.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.hsm.ShapeData.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -582,42 +546,7 @@ measurement fails. [default: -1000.]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt id="galsim.hsm.HSMParams.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.HSMParams.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.HSMParams.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">nsig_rg=3.0</em>, <em class="sig-param">nsig_rg2=3.6</em>, <em class="sig-param">max_moment_nsig2=25.0</em>, <em class="sig-param">regauss_too_small=1</em>, <em class="sig-param">adapt_order=2</em>, <em class="sig-param">convergence_threshold=1e-06</em>, <em class="sig-param">max_mom2_iter=400</em>, <em class="sig-param">num_iter_default=-1</em>, <em class="sig-param">bound_correct_wt=0.25</em>, <em class="sig-param">max_amoment=8000.0</em>, <em class="sig-param">max_ashift=15.0</em>, <em class="sig-param">ksb_moments_max=4</em>, <em class="sig-param">ksb_sig_weight=0.0</em>, <em class="sig-param">ksb_sig_factor=1.0</em>, <em class="sig-param">failed_moments=-1000.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.HSMParams.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.hsm.HSMParams.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.hsm.HSMParams.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.hsm.HSMParams.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
+<p>After construction, all of the above are available as read-only attributes.</p>
 <dl class="method">
 <dt id="galsim.hsm.HSMParams.check">
 <em class="property">static </em><code class="sig-name descname">check</code><span class="sig-paren">(</span><em class="sig-param">hsmparams</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/hsm.html#HSMParams.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.hsm.HSMParams.check" title="Permalink to this definition">¶</a></dt>

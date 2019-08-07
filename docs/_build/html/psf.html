@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Phase-screen PSFs" href="phase_psf.html" />
-    <link rel="prev" title="The GSObject base class" href="gsobject.html" /> 
+    <link rel="next" title="Galaxies" href="gal.html" />
+    <link rel="prev" title="Simple Profiles" href="simple.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,32 +92,30 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Point-spread functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#airy-profile">Airy Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#moffat-profile">Moffat Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#kolmogorov-profile">Kolmogorov Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#von-karman-profile">Von Karman Profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#second-kick">Second Kick</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#optical-psf">Optical PSF</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -246,65 +244,34 @@ pupil dimension.  [default: 0]</p></li>
 <li><p><strong>scale_unit</strong> – Units to use for the sky coordinates when calculating lam/diam if these
 are supplied separately.  Note that the results of using properties like
 <a class="reference internal" href="#galsim.Airy.fwhm" title="galsim.Airy.fwhm"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">fwhm</span></code></a> will be returned in units of <code class="docutils literal notranslate"><span class="pre">scale_unit</span></code> as well.  Should
-be either a <a class="reference internal" href="coord.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to construct
+be either a <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to construct
 one (e.g., ‘arcsec’, ‘radians’, etc.).  [default: galsim.arcsec]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, Airy has the following access
-properties:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lam_over_diam</strong> – The input lambda / diam value</p></li>
-<li><p><strong>fwhm</strong> – The full-width half-max size</p></li>
-<li><p><strong>half_light_radius</strong> – The half-light radius</p></li>
-</ul>
-</dd>
-</dl>
-<p>The latter two are only available if the obscuration is 0.</p>
-<dl class="method">
-<dt id="galsim.Airy.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/airy.html#Airy.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Airy.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Airy.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/airy.html#Airy.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Airy.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Airy.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">lam_over_diam=None</em>, <em class="sig-param">lam=None</em>, <em class="sig-param">diam=None</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">scale_unit=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/airy.html#Airy.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Airy.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Airy.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/airy.html#Airy.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Airy.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Airy.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/airy.html#Airy.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Airy.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="galsim.Airy.fwhm">
 <em class="property">property </em><code class="sig-name descname">fwhm</code><a class="headerlink" href="#galsim.Airy.fwhm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the FWHM of this Airy profile (only supported for obscuration = 0.).</p>
+<dd><p>The FWHM of this Airy profile (only supported for obscuration = 0.).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="galsim.Airy.half_light_radius">
 <em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.Airy.half_light_radius" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the half light radius of this Airy profile (only supported for
-obscuration = 0.).</p>
+<dd><p>The half light radius of this Airy profile (only supported for obscuration = 0.).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Airy.lam_over_diam">
+<em class="property">property </em><code class="sig-name descname">lam_over_diam</code><a class="headerlink" href="#galsim.Airy.lam_over_diam" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input lambda/diam value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Airy.obscuration">
+<em class="property">property </em><code class="sig-name descname">obscuration</code><a class="headerlink" href="#galsim.Airy.obscuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input obscuration.</p>
 </dd></dl>
 
 </dd></dl>
@@ -317,9 +284,12 @@ obscuration = 0.).</p>
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Moffat</code><span class="sig-paren">(</span><em class="sig-param">beta</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">fwhm=None</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/moffat.html#Moffat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Moffat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class describing a Moffat surface brightness profile.</p>
-<p>The Moffat surface brightness profile is I(R) ~ [1 + (r/scale_radius)^2]^(-beta).  The
-GalSim representation of a Moffat profile also includes an optional truncation beyond a given
-radius.</p>
+<p>The Moffat surface brightness profile is</p>
+<div class="math notranslate nohighlight">
+\[I(R) \sim \left(1 + (r/r_0)^2\right)^{-\beta}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r_0\)</span> is <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.</p>
+<p>The GalSim representation of a Moffat profile also includes an optional truncation beyond a
+given radius.</p>
 <p>For more information, refer to</p>
 <blockquote>
 <div><p><a class="reference external" href="http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html">http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html</a></p>
@@ -347,45 +317,28 @@ zero, in the same units as the size parameter.
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods, Moffat has the following access properties:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>beta</strong> – The beta parameter</p></li>
-<li><p><strong>scale_radius</strong> – The scale radius</p></li>
-<li><p><strong>fwhm</strong> – The full-width half-max size</p></li>
-<li><p><strong>half_light_radius</strong> – The half-light radius</p></li>
-</ul>
-</dd>
-</dl>
 <dl class="method">
-<dt id="galsim.Moffat.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/moffat.html#Moffat.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Moffat.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.Moffat.beta">
+<em class="property">property </em><code class="sig-name descname">beta</code><a class="headerlink" href="#galsim.Moffat.beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>The beta parameter of this <a class="reference internal" href="#galsim.Moffat" title="galsim.Moffat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Moffat</span></code></a> profile.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Moffat.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/moffat.html#Moffat.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Moffat.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
+<dt id="galsim.Moffat.half_light_radius">
+<em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.Moffat.half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius of this <a class="reference internal" href="#galsim.Moffat" title="galsim.Moffat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Moffat</span></code></a> profile.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Moffat.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">beta</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">fwhm=None</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/moffat.html#Moffat.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Moffat.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.Moffat.scale_radius">
+<em class="property">property </em><code class="sig-name descname">scale_radius</code><a class="headerlink" href="#galsim.Moffat.scale_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale radius of this <a class="reference internal" href="#galsim.Moffat" title="galsim.Moffat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Moffat</span></code></a> profile.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Moffat.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/moffat.html#Moffat.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Moffat.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Moffat.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/moffat.html#Moffat.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Moffat.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.Moffat.trunc">
+<em class="property">property </em><code class="sig-name descname">trunc</code><a class="headerlink" href="#galsim.Moffat.trunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The truncation radius (if any) of this <a class="reference internal" href="#galsim.Moffat" title="galsim.Moffat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Moffat</span></code></a> profile.</p>
 </dd></dl>
 
 </dd></dl>
@@ -399,16 +352,23 @@ zero, in the same units as the size parameter.
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class describing a Kolmogorov surface brightness profile, which represents a long
 exposure atmospheric PSF.</p>
+<p>The Kolmogorov profile is defined in Fourier space.  Its transfer function is:</p>
+<div class="math notranslate nohighlight">
+\[T(k) \sim \exp(-D(k)/2)\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[D(k) = 6.8839 \left(\frac{\lambda k}{2\pi r_0} \right)^{5/3},\]</div>
+<p><span class="math notranslate nohighlight">\(\lambda\)</span> is the wavelength of the light (say in the middle of the bandpass you are
+using), and <span class="math notranslate nohighlight">\(r_0\)</span> is the Fried parameter.  Typical values for the Fried parameter are on
+the order of 0.1 m for most observatories and up to 0.2 m for excellent sites. The values are
+usually quoted at <span class="math notranslate nohighlight">\(\lambda\)</span> = 500nm and <span class="math notranslate nohighlight">\(r_0\)</span> depends on wavelength as
+<span class="math notranslate nohighlight">\(r_0 \sim \lambda^{6/5}\)</span>.</p>
 <p>For more information, refer to</p>
 <blockquote>
 <div><p><a class="reference external" href="http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence">http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence</a></p>
 </div></blockquote>
-<p>The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is
-the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
-Fried parameter.  Typical values for the Fried parameter are on the order of 0.1 m for
-most observatories and up to 0.2 m for excellent sites. The values are usually quoted at
-lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(6/5)].</p>
-<p>The natural units for this ratio is radians, which is not normally a convenient unit to use for
+<p>The Kolmogorov profile is normally defined in terms of the ratio <span class="math notranslate nohighlight">\(\lambda / r_0\)</span>.
+The natural units for this ratio is radians, which is not normally a convenient unit to use for
 other <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> dimensions.  Assuming that the other sky coordinates you are using are all in
 arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
 should convert this to arcsec as well:</p>
@@ -434,7 +394,8 @@ parameter separately using the parameters <code class="docutils literal notransl
 e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as <code class="docutils literal notranslate"><span class="pre">pixel_scale=0.2</span></code>.</p>
 <p>A Kolmogorov object may also be initialized using <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.  Exactly
 one of these four ways to define the size is required.</p>
-<p>The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 arcsec (e.g., Racine 1996, PASP 699, 108).</p>
+<p>The FWHM of the Kolmogorov PSF is <span class="math notranslate nohighlight">\(\sim 0.976 \lambda/r_0\)</span> arcsec.
+(e.g., Racine 1996, PASP 699, 108).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -461,7 +422,7 @@ relation r0 = r0_500 * (lam/500)**1.2.</p></li>
 <li><p><strong>scale_unit</strong> – Units to use for the sky coordinates when calculating lam/r0 if these
 are supplied separately.  Note that the results of using properties
 like <a class="reference internal" href="#galsim.Kolmogorov.fwhm" title="galsim.Kolmogorov.fwhm"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">fwhm</span></code></a> will be returned in units of <code class="docutils literal notranslate"><span class="pre">scale_unit</span></code> as well.  Should
-be either a <a class="reference internal" href="coord.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to construct
+be either a <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to construct
 one (e.g., ‘arcsec’, ‘radians’, etc.).  [default: galsim.arcsec]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
@@ -478,45 +439,21 @@ one (e.g., ‘arcsec’, ‘radians’, etc.).  [default: galsim.arcsec]</p></li
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Kolmogorov.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/kolmogorov.html#Kolmogorov.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Kolmogorov.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Kolmogorov.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/kolmogorov.html#Kolmogorov.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Kolmogorov.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Kolmogorov.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">lam_over_r0=None</em>, <em class="sig-param">fwhm=None</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">lam=None</em>, <em class="sig-param">r0=None</em>, <em class="sig-param">r0_500=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">scale_unit=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/kolmogorov.html#Kolmogorov.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Kolmogorov.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Kolmogorov.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/kolmogorov.html#Kolmogorov.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Kolmogorov.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Kolmogorov.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/kolmogorov.html#Kolmogorov.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Kolmogorov.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.Kolmogorov.fwhm">
 <em class="property">property </em><code class="sig-name descname">fwhm</code><a class="headerlink" href="#galsim.Kolmogorov.fwhm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the FWHM of this Kolmogorov profile.</p>
+<dd><p>The FWHM of this <a class="reference internal" href="#galsim.Kolmogorov" title="galsim.Kolmogorov"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Kolmogorov</span></code></a> profile.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="galsim.Kolmogorov.half_light_radius">
 <em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.Kolmogorov.half_light_radius" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the half light radius of this Kolmogorov profile.</p>
+<dd><p>The half light radius of this <a class="reference internal" href="#galsim.Kolmogorov" title="galsim.Kolmogorov"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Kolmogorov</span></code></a> profile.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Kolmogorov.lam_over_r0">
+<em class="property">property </em><code class="sig-name descname">lam_over_r0</code><a class="headerlink" href="#galsim.Kolmogorov.lam_over_r0" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input lambda / r0 for this <a class="reference internal" href="#galsim.Kolmogorov" title="galsim.Kolmogorov"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Kolmogorov</span></code></a> profile.</p>
 </dd></dl>
 
 </dd></dl>
@@ -534,12 +471,12 @@ profile is that the von Karman profile includes a parameter for the outer scale 
 turbulence, which is a physical scale beyond which fluctuations in the refractive index stop
 growing, typically between 10 and 100 meters.  Quantitatively, the von Karman phase fluctuation
 power spectrum at spatial frequency f is proportional to</p>
-<blockquote>
-<div><p>r0^(-5/3) (f^2 + L0^-2)^(-11/6)</p>
-</div></blockquote>
-<p>where r0 is the Fried parameter which sets the overall turbulence amplitude and L0 is the outer
-scale in meters.  The Kolmogorov power spectrum proportional to r0^(-5/3) f^(-11/3) is recovered
-as L0 -&gt; infinity.</p>
+<div class="math notranslate nohighlight">
+\[P(f) = r_0^{-5/3} \left(f^2 + L_0^{-2}\right)^{-11/6}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r_0\)</span> is the Fried parameter which sets the overall turbulence amplitude and
+<span class="math notranslate nohighlight">\(L_0\)</span> is the outer scale in meters.
+The Kolmogorov power spectrum proportional to <span class="math notranslate nohighlight">\(r_0^{-5/3} f^{-11/3}\)</span> is recovered
+as <span class="math notranslate nohighlight">\(L_0 \rightarrow \infty\)</span>.</p>
 <p>For more information, we recommend the following references:</p>
 <blockquote>
 <div><p>Martinez et al.  2010  A&amp;A  vol. 516
@@ -549,15 +486,14 @@ Conan  2008  JOSA  vol. 25</p>
 <p class="admonition-title">Note</p>
 <p>If one blindly follows the math for converting the von Karman power spectrum into a PSF, one
 finds that the PSF contains a delta-function at the origin with fractional flux of:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="mf">0.172</span><span class="o">*</span><span class="p">(</span><span class="n">r0</span><span class="o">/</span><span class="n">L0</span><span class="p">)</span><span class="o">^</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="o">/</span><span class="mi">3</span><span class="p">))</span>
-</pre></div>
-</div>
+<div class="math notranslate nohighlight">
+\[F_\mathrm{delta} = e^{-0.086 (r_0/L_0)^{-5/3}}\]</div>
 <p>In almost all cases of interest this evaluates to something tiny, often on the order of
-10^-100 or smaller.  By default, GalSim will ignore this delta function entirely since it
-usually doesn’t make any difference, but can complicate some calculations like drawing
-using method=’real_space’ or by formally requiring huge Fourier transforms for drawing
-using method=’fft’.  If for some reason you want to keep the delta function, though, then
-you can pass the do_delta=True argument to the VonKarman initializer.</p>
+<span class="math notranslate nohighlight">\(10^{-100}\)</span> or smaller.  By default, GalSim will ignore this delta function entirely
+since it usually doesn’t make any difference, but can complicate some calculations like
+drawing using method=’real_space’ or by formally requiring huge Fourier transforms for
+drawing using method=’fft’.  If for some reason you want to keep the delta function
+though, then you can pass the do_delta=True argument to the VonKarman initializer.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -570,7 +506,7 @@ should be specified.</p></li>
 <li><p><strong>L0</strong> – Outer scale in meters.  [default: 25.0]</p></li>
 <li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
 <li><p><strong>scale_unit</strong> – Units assumed when drawing this profile or evaluating xValue, kValue,
-etc.  Should be a <a class="reference internal" href="coord.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to
+etc.  Should be a <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to
 construct one (e.g., ‘arcsec’, ‘radians’, etc.).
 [default: galsim.arcsec]</p></li>
 <li><p><strong>do_delta</strong> – Include delta-function at origin? (not recommended; see above).
@@ -585,133 +521,51 @@ keyword.  [default: False]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.VonKarman.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/vonkarman.html#VonKarman.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VonKarman.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.VonKarman.L0">
+<em class="property">property </em><code class="sig-name descname">L0</code><a class="headerlink" href="#galsim.VonKarman.L0" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input L0 value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.VonKarman.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/vonkarman.html#VonKarman.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VonKarman.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
+<dt id="galsim.VonKarman.delta_amplitude">
+<em class="property">property </em><code class="sig-name descname">delta_amplitude</code><a class="headerlink" href="#galsim.VonKarman.delta_amplitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>The amplitude of the delta function at the center.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.VonKarman.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">r0=None</em>, <em class="sig-param">r0_500=None</em>, <em class="sig-param">L0=25.0</em>, <em class="sig-param">flux=1</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">do_delta=False</em>, <em class="sig-param">suppress_warning=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/vonkarman.html#VonKarman.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VonKarman.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.VonKarman.do_delta">
+<em class="property">property </em><code class="sig-name descname">do_delta</code><a class="headerlink" href="#galsim.VonKarman.do_delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether to include the delta function at the center.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.VonKarman.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/vonkarman.html#VonKarman.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VonKarman.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
+<dt id="galsim.VonKarman.half_light_radius">
+<em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.VonKarman.half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.VonKarman.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/vonkarman.html#VonKarman.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VonKarman.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="second-kick">
-<h2>Second Kick<a class="headerlink" href="#second-kick" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="galsim.SecondKick">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SecondKick</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">r0</em>, <em class="sig-param">diam</em>, <em class="sig-param">obscuration=0</em>, <em class="sig-param">kcrit=0.2</em>, <em class="sig-param">flux=1</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
-<p>Class describing the expectation value of the high-k turbulence portion of an atmospheric
-PSF convolved by an <a class="reference internal" href="#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> PSF.</p>
-<p>The power spectrum of atmospheric phase fluctuations is assumed to follow the von Karman
-prescription, but possibly modified by the addition of a critical scale below which the power
-is zero.  (See the <a class="reference internal" href="#galsim.VonKarman" title="galsim.VonKarman"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VonKarman</span></code></a> docstring for more details).</p>
-<p>As an expectation value, this profile is formally only exact in the infinite-exposure limit.
-However, at least for large apertures, we have found that this expectation value is approached
-rapidly, and can be applied for even fairly small exposure times.</p>
-<p>The intended use for this profile is as a correction to applying the geometric approximation to
-<a class="reference internal" href="phase_psf.html#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a> objects when drawing using geometric photon shooting. In this case, the
-<a class="reference internal" href="phase_psf.html#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a> will simulate the effects of the low frequency turbulence modes, which can be
-treated purely using refraction, while the SecondKick handles the high frequency modes.</p>
-<p>The geometric approximation is only valid for length scales larger than some critical scale
-where the effects of interference are unimportant.  For smaller length scales, interference
-(diffraction) must be handled using an optical paradigm that acknowledges the wave nature of
-light, such as Fourier optics.</p>
-<p>Fourier optics calculations are many orders of magnitude slower than geometric optics
-calculations for typical flux levels, however, so we implement a scale-splitting algorithm first
-described in Peterson et al. (2015) for the LSST PhoSim package.  Essentially, phase
-fluctuations below a critical mode in Fourier space, labeled <code class="docutils literal notranslate"><span class="pre">kcrit</span></code>, are handled by the fast
-geometric optics calculations present in <a class="reference internal" href="phase_psf.html#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a>.  Fluctuations for Fourier modes above
-<code class="docutils literal notranslate"><span class="pre">kcrit</span></code> are then calculated analytically by SecondKick.  Because very many oscillations of
-these high-k modes both fit within a given telescope aperture and pass by the aperture during a
-moderate length exposure time, we can use the same analytic expectation value calculation for
-the high-k component of all PSFs across a field of view, thus incurring the somewhat expensive
-calculation for Fourier optics only once.</p>
-<p>There are two limiting cases for this profile that may helpful for readers trying to understand
-how this class works.  When kcrit = 0, then all turbulent modes are included, and this surface
-brightness profile becomes identical to the convolution of an <a class="reference internal" href="#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> profile and a Von Karman
-profile.  In contrast, when kcrit = inf, then none of the turbulent modes are included, and this
-surface brightness profile is just an <a class="reference internal" href="#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> profile.  In other words, the full effect of an
-<a class="reference internal" href="#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> profile, and additionally some portion (which depends on kcrit) of a <a class="reference internal" href="#galsim.VonKarman" title="galsim.VonKarman"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VonKarman</span></code></a> profile
-are modeled.</p>
-<p>For more details, we refer the reader to the original implementation described in</p>
-<blockquote>
-<div><p>Peterson et al.  2015  ApJSS  vol. 218</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lam</strong> – Wavelength in nanometers</p></li>
-<li><p><strong>r0</strong> – Fried parameter in meters.</p></li>
-<li><p><strong>diam</strong> – Aperture diameter in meters.</p></li>
-<li><p><strong>obscuration</strong> – Linear dimension of central obscuration as fraction of aperture
-linear dimension. [0., 1.).  [default: 0.0]</p></li>
-<li><p><strong>kcrit</strong> – Critical Fourier mode (in units of 1/r0) below which the turbulence
-power spectrum will be truncated.  [default: 0.2]</p></li>
-<li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
-<li><p><strong>scale_unit</strong> – Units assumed when drawing this profile or evaluating xValue, kValue,
-etc.  Should be a <a class="reference internal" href="coord.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to
-construct one (e.g., ‘arcsec’, ‘radians’, etc.). [default: galsim.arcsec]</p></li>
-<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.SecondKick.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.VonKarman.lam">
+<em class="property">property </em><code class="sig-name descname">lam</code><a class="headerlink" href="#galsim.VonKarman.lam" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input lam value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SecondKick.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
+<dt id="galsim.VonKarman.r0">
+<em class="property">property </em><code class="sig-name descname">r0</code><a class="headerlink" href="#galsim.VonKarman.r0" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input r0 value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SecondKick.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">lam</em>, <em class="sig-param">r0</em>, <em class="sig-param">diam</em>, <em class="sig-param">obscuration=0</em>, <em class="sig-param">kcrit=0.2</em>, <em class="sig-param">flux=1</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.VonKarman.r0_500">
+<em class="property">property </em><code class="sig-name descname">r0_500</code><a class="headerlink" href="#galsim.VonKarman.r0_500" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input r0_500 value.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.SecondKick.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SecondKick.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.SecondKick.flux">
-<em class="property">property </em><code class="sig-name descname">flux</code><a class="headerlink" href="#galsim.SecondKick.flux" title="Permalink to this definition">¶</a></dt>
-<dd><p>The flux of the profile</p>
+<dt id="galsim.VonKarman.scale_unit">
+<em class="property">property </em><code class="sig-name descname">scale_unit</code><a class="headerlink" href="#galsim.VonKarman.scale_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>The input scale_units.</p>
 </dd></dl>
 
 </dd></dl>
@@ -870,14 +724,14 @@ optics and then shoot from the derived InterpolatedImage.
 [default: 0]</p></li>
 <li><p><strong>strut_thick</strong> – Thickness of support struts as a fraction of pupil diameter.
 [default: 0.05]</p></li>
-<li><p><strong>strut_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to it,
+<li><p><strong>strut_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> made between the vertical and the strut starting closest to it,
 defined to be positive in the counter-clockwise direction; must be an
-<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
+<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance. [default: 0. * galsim.degrees]</p></li>
 <li><p><strong>pupil_plane_im</strong> – The GalSim.Image, NumPy array, or name of file containing the pupil
 plane image, to be used instead of generating one based on the
 obscuration and strut parameters.  [default: None]</p></li>
 <li><p><strong>pupil_angle</strong> – If <code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> is not None, rotation angle for the pupil plane
-(positive in the counter-clockwise direction).  Must be an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>
+(positive in the counter-clockwise direction).  Must be an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>
 instance. [default: 0. * galsim.degrees]</p></li>
 <li><p><strong>pupil_plane_scale</strong> – Sampling interval in meters to use for the pupil plane array.  In
 most cases, it’s a good idea to leave this as None, in which case
@@ -891,43 +745,13 @@ a good idea to leave this as None, in which case GalSim will attempt
 to find a good value automatically.  See also <code class="docutils literal notranslate"><span class="pre">oversampling</span></code> for
 adjusting the pupil size.  [default: None]</p></li>
 <li><p><strong>scale_unit</strong> – Units to use for the sky coordinates when calculating lam/diam if these
-are supplied separately.  Should be either a <a class="reference internal" href="coord.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a
+are supplied separately.  Should be either a <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a
 string that can be used to construct one (e.g., ‘arcsec’, ‘radians’,
 etc.).  [default: galsim.arcsec]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt id="galsim.OpticalPSF.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#OpticalPSF.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalPSF.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.OpticalPSF.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#OpticalPSF.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalPSF.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.OpticalPSF.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">lam_over_diam=None</em>, <em class="sig-param">lam=None</em>, <em class="sig-param">diam=None</em>, <em class="sig-param">tip=0.0</em>, <em class="sig-param">tilt=0.0</em>, <em class="sig-param">defocus=0.0</em>, <em class="sig-param">astig1=0.0</em>, <em class="sig-param">astig2=0.0</em>, <em class="sig-param">coma1=0.0</em>, <em class="sig-param">coma2=0.0</em>, <em class="sig-param">trefoil1=0.0</em>, <em class="sig-param">trefoil2=0.0</em>, <em class="sig-param">spher=0.0</em>, <em class="sig-param">aberrations=None</em>, <em class="sig-param">annular_zernike=False</em>, <em class="sig-param">aper=None</em>, <em class="sig-param">circular_pupil=True</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">interpolant=None</em>, <em class="sig-param">oversampling=1.5</em>, <em class="sig-param">pad_factor=1.5</em>, <em class="sig-param">ii_pad_factor=4.0</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">nstruts=0</em>, <em class="sig-param">strut_thick=0.05</em>, <em class="sig-param">strut_angle=coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">pupil_plane_im=None</em>, <em class="sig-param">pupil_plane_scale=None</em>, <em class="sig-param">pupil_plane_size=None</em>, <em class="sig-param">pupil_angle=coord.Angle(0.0</em>, <em class="sig-param">coord.radians)</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">_force_stepk=0.0</em>, <em class="sig-param">_force_maxk=0.0</em>, <em class="sig-param">suppress_warning=False</em>, <em class="sig-param">geometric_shooting=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#OpticalPSF.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalPSF.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.OpticalPSF.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#OpticalPSF.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalPSF.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.OpticalPSF.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#OpticalPSF.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalPSF.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -941,10 +765,10 @@ etc.).  [default: galsim.arcsec]</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="phase_psf.html" class="btn btn-neutral float-right" title="Phase-screen PSFs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="gal.html" class="btn btn-neutral float-right" title="Galaxies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="gsobject.html" class="btn btn-neutral float-left" title="The GSObject base class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="simple.html" class="btn btn-neutral float-left" title="Simple Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

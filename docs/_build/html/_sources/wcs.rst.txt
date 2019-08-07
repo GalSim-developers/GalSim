@@ -28,26 +28,21 @@ WCS Base Classes
 
 .. autoclass:: galsim.BaseWCS
     :members:
-    :special-members:
 
 .. autoclass:: galsim.wcs.CelestialWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.wcs.EuclideanWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.wcs.UniformWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.wcs.LocalWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 Euclidean WCS's
@@ -55,37 +50,30 @@ Euclidean WCS's
 
 .. autoclass:: galsim.PixelScale
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.OffsetWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.ShearWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.OffsetShearWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.JacobianWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.AffineTransform
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.UVFunction
     :members:
-    :special-members:
     :show-inheritance:
 
 
@@ -94,32 +82,41 @@ Celestial WCS's
 
 .. autoclass:: galsim.RaDecFunction
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.AstropyWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.PyAstWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.WcsToolsWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autoclass:: galsim.GSFitsWCS
     :members:
-    :special-members:
     :show-inheritance:
 
 .. autofunction:: galsim.FitsWCS
 
 .. autofunction:: galsim.TanWCS
+
+Celestial Coordinates
+=====================
+
+Our `CelestialCoord` class is currently hosted as part of the ``LSSTDESC.Coord`` package:
+
+https://github.com/LSSTDESC/Coord
+
+An earlier version of this code was originally implemented in GalSim, so we
+still import the relevant classes into the ``galsim`` namespace.  You may therefore
+use either ``galsim.CelestialCoord`` or ``coord.CelestialCoord`` as they are equivalent.
+
+.. autoclass:: galsim.CelestialCoord
+    :members:
 
 
 WCS Utilities
@@ -128,3 +125,5 @@ WCS Utilities
 .. autofunction:: galsim.wcs.readFromFitsHeader
 
 .. autofunction:: galsim.wcs.compatible
+
+

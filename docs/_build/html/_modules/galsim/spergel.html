@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -196,46 +196,52 @@
 
 
 <div class="viewcode-block" id="Spergel"><a class="viewcode-back" href="../../gal.html#galsim.Spergel">[docs]</a><span class="k">class</span> <span class="nc">Spergel</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing a Spergel profile.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Spergel profile.</span>
 
 <span class="sd">    The Spergel surface brightness profile is characterized by three properties: its Spergel index</span>
 <span class="sd">    ``nu``, its ``flux``, and either the ``half_light_radius`` or ``scale_radius``.  Given these</span>
-<span class="sd">    properties, the surface brightness profile scales as I(r) ~ (r/scale_radius)^{nu} *</span>
-<span class="sd">    K_{nu}(r/scale_radius), where K_{nu} is the modified Bessel function of the second kind.</span>
+<span class="sd">    properties, the surface brightness profile scales as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        I(r) \sim \left(\frac{r}{r_0}\right)^\nu K_\nu\left(\frac{r}{r_0}\right)</span>
+
+<span class="sd">    where :math:`r_0` is the ``scale_radius`` and :math:`K_\nu` is the modified Bessel function of</span>
+<span class="sd">    the second kind.</span>
 
 <span class="sd">    The Spergel profile is intended as a generic galaxy profile, somewhat like a `Sersic` profile,</span>
-<span class="sd">    but with the advantage of being analytic in both real space and Fourier space.  The Spergel index</span>
-<span class="sd">    ``nu`` plays a similar role to the Sersic index ``n``, in that it adjusts the relative peakiness</span>
-<span class="sd">    of the profile core and the relative prominence of the profile wings.  At ``nu = 0.5``, the</span>
-<span class="sd">    Spergel profile is equivalent to an `Exponential` profile (or alternatively an ``n = 1.0``</span>
-<span class="sd">    `Sersic` profile).  At ``nu = -0.6`` (and in the radial range near the half-light radius), the</span>
-<span class="sd">    Spergel profile is similar to a DeVaucouleurs profile or ``n = 4.0`` `Sersic` profile.</span>
+<span class="sd">    but with the advantage of being analytic in both real space and Fourier space.  The Spergel</span>
+<span class="sd">    index :math:`\nu` plays a similar role to the Sersic index :math:`n`, in that it adjusts the</span>
+<span class="sd">    relative peakiness of the profile core and the relative prominence of the profile wings.</span>
+<span class="sd">    At :math:`\nu = 0.5`, the Spergel profile is equivalent to an `Exponential` profile (or</span>
+<span class="sd">    alternatively an :math`n = 1` `Sersic` profile).  At :math:`\nu = -0.6` (and in the radial</span>
+<span class="sd">    range near the half-light radius), the Spergel profile is similar to a `DeVaucouleurs` profile</span>
+<span class="sd">    or :math:`n = 4` `Sersic` profile.</span>
 
-<span class="sd">    Note that for ``nu &lt;= 0.0``, the Spergel profile surface brightness diverges at the origin.</span>
+<span class="sd">    Note that for :math:`\nu &lt;= 0`, the Spergel profile surface brightness diverges at the origin.</span>
 <span class="sd">    This may lead to rendering problems if the profile is not convolved by either a PSF or a pixel</span>
 <span class="sd">    and the profile center is precisely on a pixel center.</span>
 
-<span class="sd">    Due to its analytic Fourier transform and depending on the indices ``n`` and ``nu``, the Spergel</span>
-<span class="sd">    profile can be considerably faster to draw than the roughly equivalent `Sersic` profile.  For</span>
-<span class="sd">    example, the ``nu = -0.6`` Spergel profile is roughly 3x faster to draw than an ``n = 4.0``</span>
-<span class="sd">    `Sersic` profile once the `Sersic` profile cache has been set up.  However, if not taking</span>
-<span class="sd">    advantage of the cache, for example, if drawing `Sersic` profiles with ``n`` continuously</span>
-<span class="sd">    varying near 4.0 and Spergel profiles with ``nu`` continuously varying near -0.6, then the</span>
-<span class="sd">    Spergel profiles are about 50x faster to draw.  At the other end of the galaxy profile</span>
-<span class="sd">    spectrum, the ``nu = 0.5`` Spergel profile, ``n = 1.0`` `Sersic` profile, and the `Exponential`</span>
-<span class="sd">    profile all take about the same amount of time to draw if cached, and the Spergel profile is</span>
-<span class="sd">    about 2x faster than the `Sersic` profile if uncached.</span>
+<span class="sd">    Due to its analytic Fourier transform and depending on the indices :math:`n` and :math:`\nu`,</span>
+<span class="sd">    the Spergel profile can be considerably faster to draw than the roughly equivalent `Sersic`</span>
+<span class="sd">    profile.  For example, the :math:`\nu = -0.6` Spergel profile is roughly 3x faster to draw than</span>
+<span class="sd">    an :math:`n = 4` `Sersic` profile once the `Sersic` profile cache has been set up.  However, if</span>
+<span class="sd">    not taking advantage of the cache, for example, if drawing `Sersic` profiles with :math:`n`</span>
+<span class="sd">    continuously varying near 4.0 and Spergel profiles with :math:`\nu` continuously varying near</span>
+<span class="sd">    -0.6, then the Spergel profiles are about 50x faster to draw.  At the other end of the galaxy</span>
+<span class="sd">    profile spectrum, the :math:`\nu = 0.5` Spergel profile, :math:`n = 1` `Sersic` profile, and</span>
+<span class="sd">    the `Exponential` profile all take about the same amount of time to draw if cached, and the</span>
+<span class="sd">    Spergel profile is about 2x faster than the `Sersic` profile if uncached.</span>
 
 <span class="sd">    For more information, refer to</span>
 
 <span class="sd">        D. N. Spergel, &quot;ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,&quot;</span>
 <span class="sd">        ASTROPHYS J SUPPL S 191(1), 58-65 (2010) [doi:10.1088/0067-0049/191/1/58].</span>
 
-<span class="sd">    The allowed range of values for the ``nu`` parameter is -0.85 &lt;= nu &lt;= 4.  An exception will be</span>
-<span class="sd">    thrown if you provide a value outside that range.  The lower limit is set above the theoretical</span>
-<span class="sd">    lower limit of -1 due to numerical difficulties integrating the *very* peaky nu &lt; -0.85</span>
-<span class="sd">    profiles.  The upper limit is set to avoid numerical difficulties evaluating the modified</span>
-<span class="sd">    Bessel function of the second kind.</span>
+<span class="sd">    The allowed range of values for the ``nu`` parameter is -0.85 &lt;= ``nu`` &lt;= 4.  An exception</span>
+<span class="sd">    will be thrown if you provide a value outside that range.  The lower limit is set above the</span>
+<span class="sd">    theoretical lower limit of -1 due to numerical difficulties integrating the *very* peaky</span>
+<span class="sd">    ``nu`` &lt; -0.85 profiles.  The upper limit is set to avoid numerical difficulties evaluating the</span>
+<span class="sd">    modified Bessel function of the second kind.</span>
 
 <span class="sd">    A Spergel profile can be initialized using one (and only one) of two possible size parameters:</span>
 <span class="sd">    ``scale_radius`` or ``half_light_radius``.  Exactly one of these two is required.</span>
@@ -248,14 +254,6 @@
 <span class="sd">                            [One of ``scale_radius`` or ``half_light_radius`` is required.]</span>
 <span class="sd">        flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]</span>
 <span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
-
-<span class="sd">    In addition to the usual `GSObject` methods and attributes, the Spergel profile has the</span>
-<span class="sd">    following access properties:</span>
-
-<span class="sd">    Atrributes:</span>
-<span class="sd">        nu:                 The Spergel index, nu</span>
-<span class="sd">        scale_radius:       The scale radius</span>
-<span class="sd">        half_light_radius:  The half-light radius</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;nu&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;flux&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">}</span>
@@ -274,7 +272,7 @@
     <span class="n">_minimum_nu</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.85</span>
     <span class="n">_maximum_nu</span> <span class="o">=</span> <span class="mf">4.0</span>
 
-<div class="viewcode-block" id="Spergel.__init__"><a class="viewcode-back" href="../../gal.html#galsim.Spergel.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nu</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
@@ -302,7 +300,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                 <span class="s2">&quot;Either scale_radius or half_light_radius must be specified for Spergel&quot;</span><span class="p">,</span>
-                <span class="n">half_light_radius</span><span class="o">=</span><span class="n">half_light_radius</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="n">scale_radius</span><span class="p">)</span></div>
+                <span class="n">half_light_radius</span><span class="o">=</span><span class="n">half_light_radius</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="n">scale_radius</span><span class="p">)</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -310,11 +308,21 @@
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBSpergel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">nu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nu</span>
+    <span class="k">def</span> <span class="nf">nu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Spergel index, nu</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nu</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">scale_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
+    <span class="k">def</span> <span class="nf">scale_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The scale radius</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The half-light radius</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">*</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SpergelCalculateHLR</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nu</span><span class="p">)</span>
@@ -328,27 +336,27 @@
         <span class="sd">&quot;&quot;&quot;Return the radius within which the total flux is f&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">calculateFluxRadius</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Spergel.__eq__"><a class="viewcode-back" href="../../gal.html#galsim.Spergel.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Spergel</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">nu</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_radius</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Spergel.__hash__"><a class="viewcode-back" href="../../gal.html#galsim.Spergel.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Spergel&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Spergel&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Spergel.__repr__"><a class="viewcode-back" href="../../gal.html#galsim.Spergel.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Spergel(nu=</span><span class="si">%r</span><span class="s1">, scale_radius=</span><span class="si">%r</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Spergel.__str__"><a class="viewcode-back" href="../../gal.html#galsim.Spergel.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.Spergel(nu=</span><span class="si">%s</span><span class="s1">, half_light_radius=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">half_light_radius</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, flux=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">return</span> <span class="n">s</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

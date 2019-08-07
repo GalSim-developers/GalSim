@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -226,7 +226,7 @@ radians, even though the apparent zenith angle technically decreases due to this
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>wave</strong> – Wavelength array in nanometers</p></li>
-<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith</p></li>
+<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments to pass to air_refractive_index() to override default
 pressure, temperature, and/or H2O_pressure.</p></li>
 </ul>
@@ -246,16 +246,16 @@ the latitude of the observer.  This is useful for the function <a class="referen
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj_coord</strong> – A <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> object for which the zenith and parallactic
+<li><p><strong>obj_coord</strong> – A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> object for which the zenith and parallactic
 angles will be computed.</p></li>
-<li><p><strong>zenith_coord</strong> – A <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> indicating the coordinates of the zenith.</p></li>
-<li><p><strong>HA</strong> – The hour angle (as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>) of the coordinate for which the
+<li><p><strong>zenith_coord</strong> – A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> indicating the coordinates of the zenith.</p></li>
+<li><p><strong>HA</strong> – The hour angle (as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>) of the coordinate for which the
 zenith and parallactic angles will be computed.</p></li>
-<li><p><strong>latitude</strong> – The observer’s latitude, as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
+<li><p><strong>latitude</strong> – The observer’s latitude, as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the tuple (zenith_angle, parallactic_angle), each of which is an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p>
+<dd class="field-even"><p>the tuple (zenith_angle, parallactic_angle), each of which is an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -268,15 +268,15 @@ in <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAtmo
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith [default: 0]</p></li>
+<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith [default: 0]</p></li>
 <li><p><strong>parallactic_angle</strong> – Parallactic angle, i.e. the position angle of the zenith, measured
 from North through East.  [default: 0]</p></li>
 <li><p><strong>obj_coord</strong> – Celestial coordinates of the object being drawn as a
-<a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
-<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
+<a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
+<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
 [default: None]</p></li>
-<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
-<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
 <li><p><strong>**kwargs</strong> – For convenience, any other kwargs are returned back for further
 processing.</p></li>
 </ul>

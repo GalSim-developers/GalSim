@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Transformed Profiles" href="transform.html" />
-    <link rel="prev" title="Aribtrary Profiles" href="arbitrary.html" /> 
+    <link rel="prev" title="“Real” Galaxies" href="real_gal.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,12 +92,12 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Composite Profiles</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sums-of-gsobjects">Sums of GSObjects</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#convolutions-of-gsobjects">Convolutions of GSObjects</a></li>
@@ -105,15 +105,14 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -237,33 +236,9 @@ However, if you want to keep the existing gsparams of the component objects (e.g
 one object is much fainter and can thus use looser accuracy tolerances), then you may
 set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>.</p>
 <dl class="method">
-<dt id="galsim.Sum.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sum.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sum.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sum.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sum.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sum.html#Sum.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sum.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.Sum.obj_list">
+<em class="property">property </em><code class="sig-name descname">obj_list</code><a class="headerlink" href="#galsim.Sum.obj_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of objects being added.</p>
 </dd></dl>
 
 <dl class="method">
@@ -370,33 +345,16 @@ another in a Convolution, so this ensures that they all have consistent renderin
 However, if you want to keep the existing gsparams of the component objects, then you may
 set <code class="docutils literal notranslate"><span class="pre">propagate_gsparams=False</span></code>.</p>
 <dl class="method">
-<dt id="galsim.Convolution.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.Convolution.obj_list">
+<em class="property">property </em><code class="sig-name descname">obj_list</code><a class="headerlink" href="#galsim.Convolution.obj_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of objects being convolved.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Convolution.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Convolution.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Convolution.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Convolution.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Convolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Convolution.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.Convolution.real_space">
+<em class="property">property </em><code class="sig-name descname">real_space</code><a class="headerlink" href="#galsim.Convolution.real_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether this <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> should be drawn using real-space convolution rather
+than FFT convolution.</p>
 </dd></dl>
 
 <dl class="method">
@@ -464,33 +422,16 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.AutoConvolution.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.AutoConvolution.orig_obj">
+<em class="property">property </em><code class="sig-name descname">orig_obj</code><a class="headerlink" href="#galsim.AutoConvolution.orig_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original object that is being auto-convolved.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.AutoConvolution.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.AutoConvolution.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.AutoConvolution.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.AutoConvolution.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoConvolution.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoConvolution.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.AutoConvolution.real_space">
+<em class="property">property </em><code class="sig-name descname">real_space</code><a class="headerlink" href="#galsim.AutoConvolution.real_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether this <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> should be drawn using real-space convolution rather
+than FFT convolution.</p>
 </dd></dl>
 
 <dl class="method">
@@ -563,33 +504,16 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.AutoCorrelation.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.AutoCorrelation.orig_obj">
+<em class="property">property </em><code class="sig-name descname">orig_obj</code><a class="headerlink" href="#galsim.AutoCorrelation.orig_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original object that is being auto-correlated.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.AutoCorrelation.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.AutoCorrelation.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">real_space=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.AutoCorrelation.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.AutoCorrelation.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#AutoCorrelation.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AutoCorrelation.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.AutoCorrelation.real_space">
+<em class="property">property </em><code class="sig-name descname">real_space</code><a class="headerlink" href="#galsim.AutoCorrelation.real_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether this <a class="reference internal" href="#galsim.Convolution" title="galsim.Convolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Convolution</span></code></a> should be drawn using real-space convolution rather
+than FFT convolution.</p>
 </dd></dl>
 
 <dl class="method">
@@ -645,7 +569,7 @@ would not want to do this. [default: True]</p></li>
         <a href="transform.html" class="btn btn-neutral float-right" title="Transformed Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="arbitrary.html" class="btn btn-neutral float-left" title="Aribtrary Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="real_gal.html" class="btn btn-neutral float-left" title="“Real” Galaxies" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -197,18 +197,21 @@
 
 
 <div class="viewcode-block" id="VonKarman"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman">[docs]</a><span class="k">class</span> <span class="nc">VonKarman</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class describing a von Karman surface brightness profile, which represents a long exposure</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class describing a von Karman surface brightness profile, which represents a long exposure</span>
 <span class="sd">    atmospheric PSF.  The difference between the von Karman profile and the related `Kolmogorov`</span>
 <span class="sd">    profile is that the von Karman profile includes a parameter for the outer scale of atmospheric</span>
 <span class="sd">    turbulence, which is a physical scale beyond which fluctuations in the refractive index stop</span>
 <span class="sd">    growing, typically between 10 and 100 meters.  Quantitatively, the von Karman phase fluctuation</span>
 <span class="sd">    power spectrum at spatial frequency f is proportional to</span>
 
-<span class="sd">        r0^(-5/3) (f^2 + L0^-2)^(-11/6)</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">    where r0 is the Fried parameter which sets the overall turbulence amplitude and L0 is the outer</span>
-<span class="sd">    scale in meters.  The Kolmogorov power spectrum proportional to r0^(-5/3) f^(-11/3) is recovered</span>
-<span class="sd">    as L0 -&gt; infinity.</span>
+<span class="sd">        P(f) = r_0^{-5/3} \left(f^2 + L_0^{-2}\right)^{-11/6}</span>
+
+<span class="sd">    where :math:`r_0` is the Fried parameter which sets the overall turbulence amplitude and</span>
+<span class="sd">    :math:`L_0` is the outer scale in meters.</span>
+<span class="sd">    The Kolmogorov power spectrum proportional to :math:`r_0^{-5/3} f^{-11/3}` is recovered</span>
+<span class="sd">    as :math:`L_0 \rightarrow \infty`.</span>
 
 <span class="sd">    For more information, we recommend the following references:</span>
 
@@ -218,16 +221,18 @@
 <span class="sd">    .. note::</span>
 
 <span class="sd">        If one blindly follows the math for converting the von Karman power spectrum into a PSF, one</span>
-<span class="sd">        finds that the PSF contains a delta-function at the origin with fractional flux of::</span>
+<span class="sd">        finds that the PSF contains a delta-function at the origin with fractional flux of:</span>
 
-<span class="sd">            exp(-0.5*0.172*(r0/L0)^(-5/3))</span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            F_\mathrm{delta} = e^{-0.086 (r_0/L_0)^{-5/3}}</span>
 
 <span class="sd">        In almost all cases of interest this evaluates to something tiny, often on the order of</span>
-<span class="sd">        10^-100 or smaller.  By default, GalSim will ignore this delta function entirely since it</span>
-<span class="sd">        usually doesn&#39;t make any difference, but can complicate some calculations like drawing</span>
-<span class="sd">        using method=&#39;real_space&#39; or by formally requiring huge Fourier transforms for drawing</span>
-<span class="sd">        using method=&#39;fft&#39;.  If for some reason you want to keep the delta function, though, then</span>
-<span class="sd">        you can pass the do_delta=True argument to the VonKarman initializer.</span>
+<span class="sd">        :math:`10^{-100}` or smaller.  By default, GalSim will ignore this delta function entirely</span>
+<span class="sd">        since it usually doesn&#39;t make any difference, but can complicate some calculations like</span>
+<span class="sd">        drawing using method=&#39;real_space&#39; or by formally requiring huge Fourier transforms for</span>
+<span class="sd">        drawing using method=&#39;fft&#39;.  If for some reason you want to keep the delta function</span>
+<span class="sd">        though, then you can pass the do_delta=True argument to the VonKarman initializer.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        lam:                Wavelength in nanometers.</span>
@@ -260,7 +265,7 @@
     <span class="c1">#_is_analytic_x = True  # = not do_delta  defined below.</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="VonKarman.__init__"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">r0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r0_500</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">L0</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">r0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r0_500</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">L0</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span>
                  <span class="n">do_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># We lose stability if L0 gets too large.  This should be close enough to infinity for</span>
         <span class="c1"># all practical purposes though.</span>
@@ -291,7 +296,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_do_delta</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">do_delta</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_suppress</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">suppress_warning</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbvk</span>  <span class="c1"># Make this now, so we get the warning if appropriate.</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbvk</span>  <span class="c1"># Make this now, so we get the warning if appropriate.</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbvk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -325,26 +330,38 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">lam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input lam value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">r0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input r0 value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">r0_500</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input r0_500 value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="o">/</span><span class="mf">500.</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.2</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">L0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input L0 value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_L0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">scale_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input scale_units.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">do_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether to include the delta function at the center.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_delta</span>
 
     <span class="nd">@property</span>
@@ -353,17 +370,21 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">delta_amplitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The amplitude of the delta function at the center.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sbvk</span>  <span class="c1"># This is where _delta is calculated.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The half-light radius.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbvk</span><span class="o">.</span><span class="n">getHalfLightRadius</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_structure_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbvk</span><span class="o">.</span><span class="n">structureFunction</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VonKarman.__eq__"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">VonKarman</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">lam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lam</span> <span class="ow">and</span>
@@ -372,13 +393,13 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_unit</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">do_delta</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">do_delta</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-<div class="viewcode-block" id="VonKarman.__hash__"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.VonKarman&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">do_delta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">do_delta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-<div class="viewcode-block" id="VonKarman.__repr__"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;galsim.VonKarman(lam=</span><span class="si">%r</span><span class="s2">, r0=</span><span class="si">%r</span><span class="s2">, L0=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L0</span><span class="p">)</span>
         <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, flux=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">!=</span> <span class="n">arcsec</span><span class="p">:</span>
@@ -389,10 +410,10 @@
             <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, suppress_warning=True&quot;</span>
         <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, gsparams=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span>
         <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
-        <span class="k">return</span> <span class="n">out</span></div>
+        <span class="k">return</span> <span class="n">out</span>
 
-<div class="viewcode-block" id="VonKarman.__str__"><a class="viewcode-back" href="../../psf.html#galsim.VonKarman.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;galsim.VonKarman(lam=</span><span class="si">%r</span><span class="s2">, r0=</span><span class="si">%r</span><span class="s2">, L0=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L0</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.VonKarman(lam=</span><span class="si">%r</span><span class="s2">, r0=</span><span class="si">%r</span><span class="s2">, L0=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L0</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

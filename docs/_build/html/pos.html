@@ -96,12 +96,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -223,48 +223,6 @@ so the trailing D or I indicate the type.</p>
 </div>
 <p>Note though that the types generally need to match.  For example, you cannot multiply
 a PositionI by a float add a PositionD to a PositionI in place.</p>
-<dl class="method">
-<dt id="galsim.Position.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Position.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Position.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Position.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Position.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Position.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.Position.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Position.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -274,12 +232,6 @@ a PositionI by a float add a PositionD to a PositionI in place.</p>
 <p>A Position that takes only integer values.</p>
 <p>Typically used for coordinate positions on an image.</p>
 <p>See the Position doc string for more details.</p>
-<dl class="method">
-<dt id="galsim.PositionI.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionI.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PositionI.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -288,12 +240,6 @@ a PositionI by a float add a PositionD to a PositionI in place.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.position.Position</span></code></p>
 <p>A Position that takes floating point values.</p>
 <p>See the Position doc string for more details.</p>
-<dl class="method">
-<dt id="galsim.PositionD.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionD.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PositionD.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
 </dd></dl>
 
 </div>

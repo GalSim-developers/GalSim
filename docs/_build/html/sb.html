@@ -92,24 +92,23 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Surface Brightness Profiles</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -198,16 +197,22 @@ the classes you would actually use when building the profile for an  astronomica
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simple.html">Simple Profiles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simple.html#gaussian-profile">Gaussian Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html#pixel-profile">Pixel Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html#box-profile">Box Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html#tophat-profile">TopHat Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html#delta-function">Delta Function</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="psf.html">Point-spread functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="psf.html#airy-profile">Airy Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html#moffat-profile">Moffat Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html#kolmogorov-profile">Kolmogorov Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html#von-karman-profile">Von Karman Profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="psf.html#second-kick">Second Kick</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html#optical-psf">Optical PSF</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gal.html">Galaxies</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="gal.html#exponenatial-profile">Exponenatial Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gal.html#de-vaucouleurs-profile">De Vaucouleurs Profile</a></li>
@@ -218,23 +223,18 @@ the classes you would actually use when building the profile for an  astronomica
 <li class="toctree-l2"><a class="reference internal" href="gal.html#knots-defined-by-a-random-walk">Knots defined by a “random walk”</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog">Downloading the COSMOS Catalog</a></li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html#hsc-postage-stamp-data">HSC Postage Stamp Data</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="simple.html">Simple Profiles</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="simple.html#gaussian-profile">Gaussian Profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html#pixel-profile">Pixel Profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html#box-profile">Box Profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html#tophat-profile">TopHat Profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html#delta-function">Delta Function</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html#interpolated-images">Interpolated Images</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html#interpolated-fourier-space-images">Interpolated Fourier-space Images</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html#shapelet-decomposition">Shapelet Decomposition</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html#individual-real-galaxies">Individual Real Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html#realistic-scene">Realistic Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog">Downloading the COSMOS Catalog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html#hsc-postage-stamp-data">HSC Postage Stamp Data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="composite.html">Composite Profiles</a><ul>
@@ -249,12 +249,6 @@ the classes you would actually use when building the profile for an  astronomica
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="units.html#size-units">Size Units</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html#flux-units">Flux Units</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html#sed-units">SED Units</a></li>
-</ul>
-</li>
 </ul>
 </div>
 </div>
