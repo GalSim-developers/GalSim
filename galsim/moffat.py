@@ -63,14 +63,6 @@ class Moffat(GSObject):
                             [default: 0, indicating no truncation]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods, Moffat has the following access properties:
-
-    Attributes:
-        beta:               The beta parameter
-        scale_radius:       The scale radius
-        fwhm:               The full-width half-max size
-        half_light_radius:  The half-light radius
     """
     _req_params = { "beta" : float }
     _opt_params = { "trunc" : float , "flux" : float }
@@ -134,20 +126,33 @@ class Moffat(GSObject):
                                     self.gsparams._gsp)
 
     @property
-    def beta(self): return self._beta
+    def beta(self):
+        """The beta parameter of this `Moffat` profile.
+        """
+        return self._beta
     @property
-    def scale_radius(self): return self._r0
+    def scale_radius(self):
+        """The scale radius of this `Moffat` profile.
+        """
+        return self._r0
     @property
-    def trunc(self): return self._trunc
+    def trunc(self):
+        """The truncation radius (if any) of this `Moffat` profile.
+        """
+        return self._trunc
 
     @property
     def half_light_radius(self):
+        """The half-light radius of this `Moffat` profile.
+        """
         if self._hlr == 0.:
             self._hlr = self._sbp.getHalfLightRadius()
         return self._hlr
 
     @lazy_property
     def fwhm(self):
+        """The FWHM of this `Moffat` profle.
+        """
         if self._fwhm == 0.:
             self._fwhm = self._r0 * (2. * math.sqrt(2.**(1./self._beta) - 1.))
         return self._fwhm

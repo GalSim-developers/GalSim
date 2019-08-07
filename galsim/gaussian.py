@@ -49,13 +49,6 @@ class Gaussian(GSObject):
                             [One of ``sigma``, ``fwhm``, or ``half_light_radius`` is required.]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods, Gaussian has the following access properties:
-
-    Attributes:
-        sigma:              The value of sigma for the profile
-        fwhm:               The full-width half-max size
-        half_light_radius:  The half-light radius of the profile
     """
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.
@@ -114,19 +107,19 @@ class Gaussian(GSObject):
 
     @property
     def sigma(self):
-        """Return the sigma of this Gaussian profile
+        """The sigma of this Gaussian profile
         """
         return self._sigma
 
     @property
     def half_light_radius(self):
-        """Return the half-light radius of this Gaussian profile
+        """The half-light radius of this Gaussian profile
         """
         return self.sigma * Gaussian._hlr_factor
 
     @property
     def fwhm(self):
-        """Return the FWHM of this Gaussian profile
+        """The FWHM of this Gaussian profile
         """
         return self.sigma * Gaussian._fwhm_factor
 

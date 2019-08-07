@@ -49,13 +49,6 @@ class Exponential(GSObject):
                             [One of ``scale_radius`` or ``half_light_radius`` is required.]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, Exponential has the following access
-    properties:
-
-    Attributes:
-        scale_radius:       The scale radius of the profile
-        half_light_radius:  The half-light radius of the profile
     """
     _req_params = {}
     _opt_params = { "flux" : float }
@@ -98,9 +91,15 @@ class Exponential(GSObject):
             return _galsim.SBExponential(self._r0, self._flux, self.gsparams._gsp)
 
     @property
-    def scale_radius(self): return self._r0
+    def scale_radius(self):
+        """The scale radius of the profile.
+        """
+        return self._r0
     @property
-    def half_light_radius(self): return self._r0 * Exponential._hlr_factor
+    def half_light_radius(self):
+        """The half-light radius of the profile.
+        """
+        return self._r0 * Exponential._hlr_factor
 
     def __eq__(self, other):
         return (self is other or

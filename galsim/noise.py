@@ -126,6 +126,8 @@ class BaseNoise(object):
 
     @property
     def rng(self):
+        """The `BaseDeviate` of this noise object.
+        """
         return self._rng
 
     def getVariance(self):
@@ -248,6 +250,8 @@ class GaussianNoise(BaseNoise):
 
     @property
     def sigma(self):
+        """The input sigma value.
+        """
         return self._sigma
 
     def _applyTo(self, image):
@@ -319,6 +323,8 @@ class PoissonNoise(BaseNoise):
 
     @property
     def sky_level(self):
+        """The input sky_level.
+        """
         return self._sky_level
 
     def _applyTo(self, image):
@@ -438,14 +444,20 @@ class CCDNoise(BaseNoise):
 
     @property
     def sky_level(self):
+        """The input sky_level.
+        """
         return self._sky_level
 
     @property
     def gain(self):
+        """The input gain.
+        """
         return self._gain
 
     @property
     def read_noise(self):
+        """The input read_noise.
+        """
         return self._read_noise
 
     def _applyTo(self, image):
@@ -603,6 +615,8 @@ class VariableGaussianNoise(BaseNoise):
 
     @property
     def var_image(self):
+        """The input var_image.
+        """
         return self._var_image
 
     # Repeat this here, since we want to add an extra sanity check, which should go in the

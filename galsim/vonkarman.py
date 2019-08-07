@@ -162,26 +162,38 @@ class VonKarman(GSObject):
 
     @property
     def lam(self):
+        """The input lam value.
+        """
         return self._lam
 
     @property
     def r0(self):
+        """The input r0 value.
+        """
         return self._r0
 
     @property
     def r0_500(self):
+        """The input r0_500 value.
+        """
         return self._r0*(self._lam/500.)**(-1.2)
 
     @property
     def L0(self):
+        """The input L0 value.
+        """
         return self._L0
 
     @property
     def scale_unit(self):
+        """The input scale_units.
+        """
         return self._scale_unit
 
     @property
     def do_delta(self):
+        """Whether to include the delta function at the center.
+        """
         return self._do_delta
 
     @property
@@ -190,11 +202,15 @@ class VonKarman(GSObject):
 
     @property
     def delta_amplitude(self):
+        """The amplitude of the delta function at the center.
+        """
         self._sbvk  # This is where _delta is calculated.
         return self._delta
 
     @property
     def half_light_radius(self):
+        """The half-light radius.
+        """
         return self._sbvk.getHalfLightRadius()
 
     def _structure_function(self, rho):

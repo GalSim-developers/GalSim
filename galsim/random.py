@@ -294,10 +294,14 @@ class GaussianDeviate(BaseDeviate):
 
     @property
     def mean(self):
+        """The mean of the Gaussian distribution.
+        """
         return self._rng_args[0]
 
     @property
     def sigma(self):
+        """The sigma of the Gaussian distribution.
+        """
         return self._rng_args[1]
 
     def __call__(self):
@@ -355,10 +359,14 @@ class BinomialDeviate(BaseDeviate):
 
     @property
     def n(self):
+        """The number of 'coin flips'.
+        """
         return self._rng_args[0]
 
     @property
     def p(self):
+        """The probability of success per 'coin flip'.
+        """
         return self._rng_args[1]
 
     def __call__(self):
@@ -405,6 +413,8 @@ class PoissonDeviate(BaseDeviate):
 
     @property
     def mean(self):
+        """The mean of the distribution.
+        """
         return self._rng_args[0]
 
     def __call__(self):
@@ -466,10 +476,14 @@ class WeibullDeviate(BaseDeviate):
 
     @property
     def a(self):
+        """The shape parameter, a.
+        """
         return self._rng_args[0]
 
     @property
     def b(self):
+        """The scale parameter, b.
+        """
         return self._rng_args[1]
 
     def __call__(self):
@@ -514,10 +528,14 @@ class GammaDeviate(BaseDeviate):
 
     @property
     def k(self):
+        """The shape parameter, k.
+        """
         return self._rng_args[0]
 
     @property
     def theta(self):
+        """The scale parameter, theta.
+        """
         return self._rng_args[1]
 
     def __call__(self):
@@ -564,6 +582,8 @@ class Chi2Deviate(BaseDeviate):
 
     @property
     def n(self):
+        """The number of degrees of freedom.
+        """
         return self._rng_args[0]
 
     def __call__(self):

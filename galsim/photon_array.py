@@ -51,7 +51,7 @@ class PhotonArray(object):
         flux:       The flux of the photons
         dxdz:       The tangent of the inclination angles in the x direction
         dydz:       The tangent of the inclination angles in the y direction
-        wavelength  The wavelength of the photons
+        wavelength  The wavelength of the photons (in nm)
 
     Unlike most GalSim objects (but like `Image`), PhotonArrays are mutable.  It is permissible
     to write values to the above attributes with code like::
@@ -83,7 +83,7 @@ class PhotonArray(object):
         flux:       Optionally, the initial flux values. [default: None]
         dxdz:       Optionally, the initial dxdz values. [default: None]
         dydz:       Optionally, the initial dydz values. [default: None]
-        wavelength: Optionally, the initial wavelength values. [default: None]
+        wavelength: Optionally, the initial wavelength values (in nm). [default: None]
     """
     def __init__(self, N, x=None, y=None, flux=None, dxdz=None, dydz=None, wavelength=None):
         # Only x, y, flux are built by default, since these are always required.
@@ -105,6 +105,8 @@ class PhotonArray(object):
         if wavelength is not None: self.wavelength = wavelength
 
     def size(self):
+        """Return the size of the photon array.  Equivalent to ``len(self)``.
+        """
         return len(self._x)
 
     def __len__(self):
@@ -112,6 +114,8 @@ class PhotonArray(object):
 
     @property
     def x(self):
+        """The incidence x position at the top of the detector.
+        """
         return self._x
     @x.setter
     def x(self, value):
@@ -119,6 +123,8 @@ class PhotonArray(object):
 
     @property
     def y(self):
+        """The incidence y position at the top of the detector.
+        """
         return self._y
     @y.setter
     def y(self, value):
@@ -126,6 +132,8 @@ class PhotonArray(object):
 
     @property
     def flux(self):
+        """The flux of the photons.
+        """
         return self._flux
     @flux.setter
     def flux(self, value):
@@ -133,6 +141,8 @@ class PhotonArray(object):
 
     @property
     def dxdz(self):
+        """The tangent of the inclination angles in the x direction: dx/dz.
+        """
         self.allocateAngles()
         return self._dxdz
     @dxdz.setter
@@ -142,6 +152,8 @@ class PhotonArray(object):
 
     @property
     def dydz(self):
+        """The tangent of the inclination angles in the y direction: dy/dz.
+        """
         self.allocateAngles()
         return self._dydz
     @dydz.setter
@@ -151,6 +163,8 @@ class PhotonArray(object):
 
     @property
     def wavelength(self):
+        """The wavelength of the photons (in nm).
+        """
         self.allocateWavelengths()
         return self._wave
     @wavelength.setter
@@ -159,43 +173,75 @@ class PhotonArray(object):
         self._wave[:] = value
 
     def hasAllocatedAngles(self):
+        """Returns whether the arrays for the incidence angles `dxdz` and `dydz` have been
+        allocated.
+        """
         return self._dxdz is not None and self._dydz is not None
+
     def allocateAngles(self):
+        """Allocate memory for the incidence angles, `dxdz` and `dydz`.
+        """
         if self._dxdz is None:
             self._dxdz = np.zeros_like(self._x)
             self._dydz = np.zeros_like(self._x)
             self.__dict__.pop('_pa', None)
 
     def hasAllocatedWavelengths(self):
+        """Returns whether the `wavelength` array has been allocated.
+        """
         return self._wave is not None
+
     def allocateWavelengths(self):
+        """Allocate the memory for the `wavelength` array.
+        """
         if self._wave is None:
             self._wave = np.zeros_like(self._x)
             self.__dict__.pop('_pa', None)
 
     def isCorrelated(self):
-        "Returns whether the photons are correlated"
+        """Returns whether the photons are correlated
+        """
         return self._is_corr
+
     def setCorrelated(self, is_corr=True):
-        "Set whether the photons are correlated"
+        """Set whether the photons are correlated
+        """
         self._is_corr = is_corr
         self.__dict__.pop('_pa', None)
 
     def getTotalFlux(self):
+        """Return the total flux of all the photons.
+        """
         return self.flux.sum()
 
     def setTotalFlux(self, flux):
+        """Rescale the photon fluxes to achieve the given total flux.
+
+        Parameter:
+            flux:       The target flux
+        """
         self.scaleFlux(flux / self.getTotalFlux())
 
     def scaleFlux(self, scale):
+        """Rescale the photon fluxes by the given factor.
+
+        Parameter:
+            scale:      The factor by which to scale the fluxes.
+        """
         self._flux *= scale
 
     def scaleXY(self, scale):
+        """Scale the photon positions (`x` and `y`) by the given factor.
+
+        Parameter:
+            scale:      The factor by which to scale the positions.
+        """
         self._x *= float(scale)
         self._y *= float(scale)
 
     def assignAt(self, istart, rhs):
-        "Assign the contents of another `PhotonArray` to this one starting at istart."
+        """Assign the contents of another `PhotonArray` to this one starting at istart.
+        """
         if istart + rhs.size() > self.size():
             raise GalSimValueError(
                 "The given rhs does not fit into this array starting at %d"%istart, rhs)
@@ -210,7 +256,8 @@ class PhotonArray(object):
             self.wavelength[s] = rhs.wavelength
 
     def convolve(self, rhs, rng=None):
-        "Convolve this `PhotonArray` with another."
+        """Convolve this `PhotonArray` with another.
+        """
         if rhs.size() != self.size():
             raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
                                                 self_pa=self, rhs=rhs)

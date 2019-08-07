@@ -36,13 +36,6 @@ class Box(GSObject):
         height:         The height of the Box.
         flux:           The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:       An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, Box has the following access
-    properties:
-
-    Attributes:
-        width:      The width of the Box
-        height:     The height of the Box
     """
     _req_params = { "width" : float, "height" : float }
     _opt_params = { "flux" : float }
@@ -67,9 +60,15 @@ class Box(GSObject):
             return _galsim.SBBox(self._width, self._height, self._flux, self.gsparams._gsp)
 
     @property
-    def width(self): return self._width
+    def width(self):
+        """The width of the `Box`.
+        """
+        return self._width
     @property
-    def height(self): return self._height
+    def height(self):
+        """The height of the `Box`.
+        """
+        return self._height
 
     def __eq__(self, other):
         return (self is other or
@@ -149,12 +148,6 @@ class Pixel(Box):
         flux:       The flux (in photons/cm^2/s) of the profile.  This should almost
                     certainly be left at the default value of 1. [default: 1]
         gsparams:   An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, Pixel has the following access
-    property:
-
-    Attributes:
-        scale:      The linear scale size of the pixel.
     """
     _req_params = { "scale" : float }
     _opt_params = { "flux" : float }
@@ -165,7 +158,10 @@ class Pixel(Box):
         super(Pixel, self).__init__(width=scale, height=scale, flux=flux, gsparams=gsparams)
 
     @property
-    def scale(self): return self.width
+    def scale(self):
+        """The linear scale size of the `Pixel`.
+        """
+        return self.width
 
     def __repr__(self):
         return 'galsim.Pixel(scale=%r, flux=%r, gsparams=%r)'%(
@@ -187,12 +183,6 @@ class TopHat(GSObject):
         radius:     The radius of the TopHat, where the surface brightness drops to 0.
         flux:       The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:   An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, TopHat has the following access
-    property:
-
-    Attributes:
-        radius:     The radius of the TopHat
     """
     _req_params = { "radius" : float }
     _opt_params = { "flux" : float }
@@ -217,7 +207,10 @@ class TopHat(GSObject):
             return _galsim.SBTopHat(self._radius, self._flux, self.gsparams._gsp)
 
     @property
-    def radius(self): return self._radius
+    def radius(self):
+        """The radius of the `TopHat` profile.
+        """
+        return self._radius
 
     def __eq__(self, other):
         return (self is other or

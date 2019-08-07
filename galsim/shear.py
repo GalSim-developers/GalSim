@@ -236,33 +236,83 @@ class Shear(object):
                 "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
 
     @property
-    def g1(self): return self._g.real
+    def g1(self):
+        """The first component of the shear in the "reduced shear" definition.
+        """
+        return self._g.real
 
     @property
-    def g2(self): return self._g.imag
-    @property
-    def g(self): return abs(self._g)
-    @property
-    def beta(self): return _Angle(0.5 * np.angle(self._g))
+    def g2(self):
+        """The second component of the shear in the "reduced shear" definition.
+        """
+        return self._g.imag
 
     @property
-    def shear(self): return self._g
+    def g(self):
+        """The magnitude of the shear in the "reduced shear" definition.
+        """
+        return abs(self._g)
 
     @property
-    def e1(self): return self._g.real * self._g2e(self.g**2)
-    @property
-    def e2(self): return self._g.imag * self._g2e(self.g**2)
-    @property
-    def e(self): return self.g * self._g2e(self.g**2)
-    @property
-    def esq(self): return self.e**2
+    def beta(self):
+        """The position angle as an `Angle` instance
+        """
+        return _Angle(0.5 * np.angle(self._g))
 
     @property
-    def eta1(self): return self._g.real * self._g2eta(self.g)
+    def shear(self):
+        """The reduced shear as a complex number g1 + 1j * g2.
+        """
+
+        return self._g
+
     @property
-    def eta2(self): return self._g.imag * self._g2eta(self.g)
+    def e1(self):
+        """The first component of the shear in the "distortion" definition.
+        """
+        return self._g.real * self._g2e(self.g**2)
+
     @property
-    def eta(self): return self.g * self._g2eta(self.g)
+    def e2(self):
+        """The second component of the shear in the "distortion" definition.
+        """
+        return self._g.imag * self._g2e(self.g**2)
+
+    @property
+    def e(self):
+        """The magnitude of the shear in the "distortion" definition.
+        """
+        return self.g * self._g2e(self.g**2)
+
+    @property
+    def esq(self):
+        """The square of the magnitude of the shear in the "distortion" definition.
+        """
+        return self.e**2
+
+    @property
+    def eta1(self):
+        """The first component of the shear in the "conformal shear" definition.
+        """
+        return self._g.real * self._g2eta(self.g)
+
+    @property
+    def eta2(self):
+        """The second component of the shear in the "conformal shear" definition.
+        """
+        return self._g.imag * self._g2eta(self.g)
+
+    @property
+    def eta(self):
+        """The magnitude of the shear in the "conformal shear" definition.
+        """
+        return self.g * self._g2eta(self.g)
+
+    @property
+    def q(self):
+        """The minor-to-major axis ratio
+        """
+        return (1.-self.g) / (1.+self.g)
 
     # Helpers to convert between different conventions
     # Note: These return the scale factor by which to multiply.  Not the final value.
@@ -294,18 +344,21 @@ class Shear(object):
             return 0.5 + absetasq*((-1./24.) + absetasq*(1./240.))
 
     # define all the various operators on Shear objects
-    def __neg__(self): return _Shear(-self._g)
+    def __neg__(self):
+        return _Shear(-self._g)
 
     # order of operations: shear by other._shear, then by self._shear
     def __add__(self, other):
         return _Shear((self._g + other._g) / (1. + self._g.conjugate() * other._g))
 
     # order of operations: shear by -other._shear, then by self._shear
-    def __sub__(self, other): return self + (-other)
+    def __sub__(self, other):
+        return self + (-other)
 
     def __eq__(self, other):
         return self is other or (isinstance(other, Shear) and self._g == other._g)
-    def __ne__(self, other): return not self.__eq__(other)
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def getMatrix(self):
         r"""Return the matrix that tells how this shear acts on a position vector:

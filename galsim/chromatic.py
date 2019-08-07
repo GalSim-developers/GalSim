@@ -158,6 +158,8 @@ class ChromaticObject(object):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._obj.gsparams
 
     def withGSParams(self, gsparams):
@@ -1126,6 +1128,8 @@ class InterpolatedChromaticObject(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self.deinterpolated.gsparams
 
     @doc_inherit
@@ -1422,6 +1426,8 @@ class ChromaticAtmosphere(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self.base_obj.gsparams
 
     @doc_inherit
@@ -1604,6 +1610,8 @@ class ChromaticTransformation(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
 
     @doc_inherit
@@ -1622,6 +1630,8 @@ class ChromaticTransformation(ChromaticObject):
 
     @property
     def original(self):
+        """The original object that was transformed.
+        """
         return self._original
 
     def __eq__(self, other):
@@ -1771,6 +1781,8 @@ class ChromaticTransformation(ChromaticObject):
 
     @lazy_property
     def noise(self):
+        """An estimate of the noise already in the profile.
+        """
         from .transform import _Transform
         from .correlatednoise import BaseCorrelatedNoise
         # Condition for being able to propagate noise:
@@ -1910,9 +1922,13 @@ class ChromaticSum(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
     @property
     def obj_list(self):
+        """The list of objects being added.
+        """
         return self._obj_list
 
     @doc_inherit
@@ -2129,9 +2145,13 @@ class ChromaticConvolution(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
     @property
     def obj_list(self):
+        """The list of objects being convolved.
+        """
         return self._obj_list
 
     @doc_inherit
@@ -2368,6 +2388,8 @@ class ChromaticConvolution(ChromaticObject):
 
     @lazy_property
     def noise(self):
+        """An estimate of the noise already in the profile.
+        """
         from .convolve import Convolve
         # Condition for being able to propagate noise:
         # Exactly one of the convolutants has a .covspec attribute.
@@ -2428,6 +2450,8 @@ class ChromaticDeconvolution(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
 
     @doc_inherit
@@ -2514,6 +2538,8 @@ class ChromaticAutoConvolution(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
 
     @doc_inherit
@@ -2606,6 +2632,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
 
     @doc_inherit
@@ -2699,6 +2727,8 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
 
     @doc_inherit
@@ -2841,6 +2871,8 @@ class ChromaticOpticalPSF(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
 
     @doc_inherit
@@ -2961,6 +2993,8 @@ class ChromaticAiry(ChromaticObject):
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._gsparams
 
     @doc_inherit

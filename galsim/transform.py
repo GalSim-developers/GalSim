@@ -158,13 +158,28 @@ class Transformation(GSObject):
             self._original = obj
 
     @property
-    def original(self): return self._original
+    def original(self):
+        """The original object being transformed.
+        """
+        return self._original
+
     @property
-    def jac(self): return self._jac
+    def jac(self):
+        """The Jacobian of the transforamtion.
+        """
+        return self._jac
+
     @property
-    def offset(self): return self._offset
+    def offset(self):
+        """The offset of the transformation.
+        """
+        return self._offset
+
     @property
-    def flux_ratio(self): return self._flux_ratio
+    def flux_ratio(self):
+        """The flux ratio of the transformation.
+        """
+        return self._flux_ratio
 
     @lazy_property
     def _flux(self):

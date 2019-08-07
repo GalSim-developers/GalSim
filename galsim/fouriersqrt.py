@@ -100,7 +100,10 @@ class FourierSqrtProfile(GSObject):
             self._orig_obj = obj
 
     @property
-    def orig_obj(self): return self._orig_obj
+    def orig_obj(self):
+        """The original object being Fourier sqrt-ed.
+        """
+        return self._orig_obj
 
     @property
     def _sbp(self):

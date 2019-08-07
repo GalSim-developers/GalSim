@@ -122,13 +122,19 @@ class BaseCorrelatedNoise(object):
 
     @property
     def rng(self):
+        """The `BaseDeviate` for this object.
+        """
         return self._rng
 
     @property
     def gsparams(self):
+        """The `GSParams` for this object.
+        """
         return self._profile.gsparams
 
     def withGSParams(self, gsparams):
+        """Create a version of the current object with the given `GSParams`.
+        """
         if gsparams == self.gsparams: return self
         return BaseCorrelatedNoise(self.rng, self._profile.withGSParams(gsparams), self.wcs)
 

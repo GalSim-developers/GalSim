@@ -76,16 +76,6 @@ class Airy(GSObject):
                         be either a `galsim.AngleUnit` or a string that can be used to construct
                         one (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
         gsparams:       An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, Airy has the following access
-    properties:
-
-    Attributes:
-        lam_over_diam:      The input lambda / diam value
-        fwhm:               The full-width half-max size
-        half_light_radius:  The half-light radius
-
-    The latter two are only available if the obscuration is 0.
     """
     _req_params = { }
     _opt_params = { "flux" : float , "obscuration" : float, "diam" : float,
@@ -145,14 +135,19 @@ class Airy(GSObject):
             return _galsim.SBAiry(self._lod, self._obscuration, self._flux, self.gsparams._gsp)
 
     @property
-    def lam_over_diam(self): return self._lod
+    def lam_over_diam(self):
+        """The input lambda/diam value.
+        """
+        return self._lod
     @property
-    def obscuration(self): return self._obscuration
+    def obscuration(self):
+        """The input obscuration.
+        """
+        return self._obscuration
 
     @property
     def half_light_radius(self):
-        """Return the half light radius of this Airy profile (only supported for
-        obscuration = 0.).
+        """The half light radius of this Airy profile (only supported for obscuration = 0.).
         """
         if self.obscuration == 0.:
             return self.lam_over_diam * Airy._hlr_factor
@@ -165,7 +160,7 @@ class Airy(GSObject):
 
     @property
     def fwhm(self):
-        """Return the FWHM of this Airy profile (only supported for obscuration = 0.).
+        """The FWHM of this Airy profile (only supported for obscuration = 0.).
         """
         # As above, likewise, FWHM only easy to define for unobscured Airy
         if self.obscuration == 0.:

@@ -202,10 +202,14 @@ class RandomWalk(GSObject):
 
     @property
     def npoints(self):
+        """The number of point sources.
+        """
         return self._npoints
 
     @property
     def points(self):
+        """A list of the locations (x,y) of the point sources.
+        """
         return self._points
 
     def calculateHLR(self):
@@ -238,8 +242,6 @@ class RandomWalk(GSObject):
         """
         We must use a galsim random number generator, in order for
         this profile to be used in the configuration file context.
-
-        The most efficient way is to write into an image
         """
         photons = self._profile.shoot(self._npoints, self._rng)
         ar = np.column_stack([ photons.x, photons.y ])

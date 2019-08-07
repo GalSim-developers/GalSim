@@ -379,17 +379,33 @@ class OutputCatalog(object):
         self.sort_keys = list(_sort_keys)
 
     @property
-    def nobjects(self): return len(self.rows)
+    def nobjects(self):
+        """The number of objects in the `OutputCatalog`.
+        """
+        return len(self.rows)
     @property
-    def ncols(self): return len(self.names)
+    def ncols(self):
+        """The number of columns in the `OutputCatalog`.
+        """
+        return len(self.names)
     def __len__(self): return self.nobjects
 
     # Again, when we use this through a proxy, we need getters for the attributes.
-    def getNames(self): return self.names
-    def getTypes(self): return self.types
-    def setTypes(self, types): self.types = types
-    def getNObjects(self): return self.nobjects
-    def getNCols(self): return self.ncols
+    def getNames(self):
+        """Equivalent to sef.names."""
+        return self.names
+    def getTypes(self):
+        """Equivalent to sef.types."""
+        return self.types
+    def setTypes(self, types):
+        """Equivalent to sef.types = types."""
+        self.types = types
+    def getNObjects(self):
+        """Equivalent to sef.nobjects."""
+        return self.nobjects
+    def getNCols(self):
+        """Equivalent to sef.ncols."""
+        return self.ncols
 
     def addRow(self, row, sort_key=None):
         """Add a row of data to the catalog.

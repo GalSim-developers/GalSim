@@ -244,27 +244,32 @@ class GSObject(object):
 
     @property
     def flux(self):
-        "The flux of the profile"
+        """The flux of the profile.
+        """
         return self._flux
 
     @property
     def gsparams(self):
-        "A `GSParams` object that sets various parameters relevant for speed/accuracy trade-offs"
+        """A `GSParams` object that sets various parameters relevant for speed/accuracy trade-offs.
+        """
         return self._gsparams
 
     @property
     def maxk(self):
-        "The value of k beyond which aliasing can be neglected."
+        """The value of k beyond which aliasing can be neglected.
+        """
         return self._maxk
 
     @property
     def stepk(self):
-        "The sampling in k space necessary to avoid folding of image in x space."
+        """The sampling in k space necessary to avoid folding of image in x space.
+        """
         return self._stepk
 
     @property
     def nyquist_scale(self):
-        "The pixel spacing that does not alias maxk."
+        """The pixel spacing that does not alias maxk.
+        """
         return math.pi / self.maxk
 
     @property
@@ -276,7 +281,8 @@ class GSObject(object):
 
     @property
     def is_axisymmetric(self):
-        "Wthether the profile is axially symmetric; affects efficiency of evaluation."
+        """Whether the profile is axially symmetric; affects efficiency of evaluation.
+        """
         return self._is_axisymmetric
 
     @property
@@ -295,7 +301,8 @@ class GSObject(object):
 
     @property
     def centroid(self):
-        "The (x, y) centroid of an object as a `PositionD`."
+        """The (x, y) centroid of an object as a `PositionD`.
+        """
         return self._centroid
 
     @lazy_property
@@ -395,7 +402,7 @@ class GSObject(object):
         # Most profiles don't have any noise.
         return None
 
-    # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
+    # a few definitions for using GSObjects as duck-typed ChromaticObjects
     @property
     def separable(self): return True
     @property
@@ -415,19 +422,25 @@ class GSObject(object):
 
     # Also need this method to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
-        """Return profile at a given wavelength.  For `GSObject` instances, this is just ``self``.
-        This allows `GSObject` instances to be duck-typed as `ChromaticObject` instances."""
         return self
 
     # Make op+ of two GSObjects work to return an Add object
     # Note: we don't define __iadd__ and similar.  Let python handle this automatically
     # to make obj += obj2 be equivalent to obj = obj + obj2.
     def __add__(self, other):
+        """Add to GSObjects.
+
+        Equivalent to Add(self, other)
+        """
         from .sum import Add
         return Add([self, other])
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
+        """Subtract to GSObjects.
+
+        Equivalent to Add(self, -1 * other)
+        """
         from .sum import Add
         return Add([self, (-1. * other)])
 
@@ -707,7 +720,7 @@ class GSObject(object):
         raise NotImplementedError("%s does not implement kValue"%self.__class__.__name__)
 
     def withGSParams(self, gsparams):
-        """Create a version of the current object with the given gsparams
+        """Create a version of the current object with the given `GSParams`.
         """
         # Note to developers: objects that wrap other objects should override this in order
         # to apply the new gsparams to the components.

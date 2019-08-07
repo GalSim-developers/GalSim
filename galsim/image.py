@@ -425,17 +425,35 @@ class Image(object):
 
     # Read-only attributes:
     @property
-    def dtype(self): return self._dtype
+    def dtype(self):
+        """The dtype of the underlying numpy array.
+        """
+        return self._dtype
     @property
-    def bounds(self): return self._bounds
+    def bounds(self):
+        """The bounds of the `Image`.
+        """
+        return self._bounds
     @property
-    def array(self): return self._array
+    def array(self):
+        """The underlying numpy array.
+        """
+        return self._array
     @property
-    def isconst(self): return self._array.flags.writeable == False
+    def isconst(self):
+        """Whether the `Image` is constant.  I.e. modifying its values is an error.
+        """
+        return self._array.flags.writeable == False
     @property
-    def iscomplex(self): return self._array.dtype.kind == 'c'
+    def iscomplex(self):
+        """Whether the `Image` values are complex.
+        """
+        return self._array.dtype.kind == 'c'
     @property
-    def isinteger(self): return self._array.dtype.kind in ('i','u')
+    def isinteger(self):
+        """Whether the `Image` values are integral.
+        """
+        return self._array.dtype.kind in ('i','u')
 
     @property
     def iscontiguous(self):
@@ -457,6 +475,13 @@ class Image(object):
     # Allow scale to work as a PixelScale wcs.
     @property
     def scale(self):
+        """The pixel scale of the `Image`.  Only valid if the wcs is a `PixelScale`.
+
+        If the WCS is either not set (i.e. it is ``None``) or it is a `PixelScale`, then
+        it is permissible to change the scale with::
+
+            >>> image.scale = new_pixel_scale
+        """
         if self.wcs:
             if self.wcs.isPixelScale():
                 return self.wcs.scale
@@ -474,13 +499,21 @@ class Image(object):
 
     # Convenience functions
     @property
-    def xmin(self): return self._bounds.xmin
+    def xmin(self):
+        """Alias for self.bounds.xmin."""
+        return self._bounds.xmin
     @property
-    def xmax(self): return self._bounds.xmax
+    def xmax(self):
+        """Alias for self.bounds.xmax."""
+        return self._bounds.xmax
     @property
-    def ymin(self): return self._bounds.ymin
+    def ymin(self):
+        """Alias for self.bounds.ymin."""
+        return self._bounds.ymin
     @property
-    def ymax(self): return self._bounds.ymax
+    def ymax(self):
+        """Alias for self.bounds.ymax."""
+        return self._bounds.ymax
 
     @property
     def outer_bounds(self):

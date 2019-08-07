@@ -85,11 +85,6 @@ class Shapelet(GSObject):
         bvec:       The initial vector of coefficients.  [default: None, which means to use
                     all zeros]
         gsparams:   An optional `GSParams` argument. [default: None]
-
-    Attributes:
-        sigma:      The scale size
-        order:      The order of the shapelet decomposition
-        bvec:       The vector of shapelet coefficients
     """
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}
@@ -125,16 +120,38 @@ class Shapelet(GSObject):
 
     @classmethod
     def size(cls, order):
+        """The size of the shapelet vector.
+        """
         return (order+1)*(order+2)//2;
 
     @property
-    def sigma(self): return self._sigma
+    def sigma(self):
+        """The scale size, sigma.
+        """
+        return self._sigma
+
     @property
-    def order(self): return self._order
+    def order(self):
+        """The shapelet order.
+        """
+        return self._order
+
     @property
-    def bvec(self): return self._bvec
+    def bvec(self):
+        """The vector of shapelet coefficients
+        """
+        return self._bvec
 
     def getPQ(self,p,q):
+        """Return the (p,q) coefficient.
+
+        Parameters:
+            p:      The p index to get.
+            q:      The q index to get.
+
+        Returns:
+            a tuple (Re(b_pq), Im(b_pq))
+        """
         pq = (p+q)*(p+q+1)//2 + 2*min(p,q)
         if p == q:
             return self._bvec[pq], 0
@@ -144,6 +161,15 @@ class Shapelet(GSObject):
             return self._bvec[pq], -self._bvec[pq+1]
 
     def getNM(self,N,m):
+        """Return the coefficient according to N,m rather than p,q where N=p+q and m=p-q.
+
+        Parameters:
+            N:      The value of N=p+q to get.
+            m:      The value of m=p-q to get.
+
+        Returns:
+            a tuple (Re(b_pq), Im(b_pq))
+        """
         return self.getPQ((N+m)//2,(N-m)//2)
 
     def __eq__(self, other):

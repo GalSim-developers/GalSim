@@ -217,19 +217,27 @@ class Aperture(object):
     # array, so access that (lazy) property first.
     @property
     def pupil_plane_scale(self):
+        """The scale_size of the pupil-plane image.
+        """
         self._illuminated
         return self._pupil_plane_scale
     @property
     def pupil_plane_size(self):
+        """The size of the pupil-plane image.
+        """
         self._illuminated
         return self._pupil_plane_size
     @property
     def npix(self):
+        """The number of pixels in each direction of the pupil-plane image.
+        """
         self._illuminated
         return self._npix
 
     @lazy_property
     def good_pupil_size(self):
+        """An estimate of a good pupil-plane image size.
+        """
         # Although the user can set the pupil plane size and scale directly if desired, in most
         # cases it's nicer to have GalSim try to pick good values for these.
 
@@ -245,6 +253,8 @@ class Aperture(object):
 
     @lazy_property
     def good_pupil_scale(self):
+        """An estimate of a good pupil-plane image scale.
+        """
         from .airy import Airy
         # For the pupil plane sampling interval, details like the obscuration and GSParams *are*
         # important as they affect the amount of aliasing encountered.  (An Airy profile has an
@@ -436,6 +446,8 @@ class Aperture(object):
 
     @property
     def gsparams(self):
+        """The `GSParams` of this object.
+        """
         return self._gsparams
 
     def withGSParams(self, gsparams):
@@ -538,13 +550,13 @@ class Aperture(object):
     # So we make a thin wrapper here.
     @property
     def illuminated(self):
-        """  A boolean array indicating which positions in the pupil plane are exposed to the sky.
+        """A boolean array indicating which positions in the pupil plane are exposed to the sky.
         """
         return self._illuminated
 
     @lazy_property
     def rho(self):
-        """ Unit-disk normalized pupil plane coordinate as a complex number:
+        """Unit-disk normalized pupil plane coordinate as a complex number:
         (x, y) => x + 1j * y.
         """
         self._illuminated
@@ -574,10 +586,14 @@ class Aperture(object):
 
     @lazy_property
     def u_illuminated(self):
+        """The u values for only the `illuminated` pixels.
+        """
         return self.u[self.illuminated]
 
     @lazy_property
     def v_illuminated(self):
+        """The v values for only the `illuminated` pixels.
+        """
         return self.v[self.illuminated]
 
     @lazy_property
@@ -1295,10 +1311,14 @@ class PhaseScreenPSF(GSObject):
 
     @property
     def kcrit(self):
+        """The critical Fourier scale being used for this object.
+        """
         return self._kcrit
 
     @lazy_property
     def screen_kmax(self):
+        """The maximum k value to use in the screen.  Typically `kcrit`/r0.
+        """
         r0_500 = self._screen_list.r0_500_effective
         if r0_500 is None:
             return np.inf
@@ -1328,10 +1348,14 @@ class PhaseScreenPSF(GSObject):
 
     @property
     def flux(self):
+        """The flux of the profile.
+        """
         return self._flux
 
     @property
     def screen_list(self):
+        """The `PhaseScreenList` being used for this object.
+        """
         return self._screen_list
 
     @doc_inherit

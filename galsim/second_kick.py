@@ -135,31 +135,39 @@ class SecondKick(GSObject):
             return _galsim.SBConvolve([full_sbs, self._sba], False, self._gsparams._gsp)
 
     @property
-    def flux(self):
-        return self._flux
-
-    @property
     def lam(self):
+        """The input lam value.
+        """
         return self._lam
 
     @property
     def r0(self):
+        """The input r0 value.
+        """
         return self._r0;
 
     @property
     def diam(self):
+        """The input diam value.
+        """
         return self._diam;
 
     @property
     def obscuration(self):
+        """The input obscuration value.
+        """
         return self._obscuration;
 
     @property
     def kcrit(self):
+        """The input kcrit value.
+        """
         return self._kcrit;
 
     @property
     def scale_unit(self):
+        """The input scale_unit value.
+        """
         return self._scale_unit
 
     def _structure_function(self, rho):

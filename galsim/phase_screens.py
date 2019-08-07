@@ -316,6 +316,8 @@ class AtmosphericScreen(object):
 
     @property
     def altitude(self):
+        """The altitude of the screen in km.
+        """
         return self._altitude / 1000.  # convert back to km
 
     @lazy_property
@@ -415,10 +417,14 @@ class AtmosphericScreen(object):
 
     @property
     def kmin(self):
+        """The minimum k value being used.
+        """
         return self._objDict['kmin'].value
 
     @property
     def kmax(self):
+        """The maximum k value being used.
+        """
         return self._objDict['kmax'].value
 
     # Note the magic number 0.00058 is actually ... wait for it ...

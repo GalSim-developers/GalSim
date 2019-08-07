@@ -117,7 +117,6 @@ class Convolution(GSObject):
     another in a Convolution, so this ensures that they all have consistent rendering behavior.
     However, if you want to keep the existing gsparams of the component objects, then you may
     set ``propagate_gsparams=False``.
-
     """
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
@@ -210,10 +209,17 @@ class Convolution(GSObject):
             self._obj_list = args
 
     @property
-    def obj_list(self): return self._obj_list
+    def obj_list(self):
+        """The list of objects being convolved.
+        """
+        return self._obj_list
 
     @property
-    def real_space(self): return self._real_space
+    def real_space(self):
+        """Whether this `Convolution` should be drawn using real-space convolution rather
+        than FFT convolution.
+        """
+        return self._real_space
 
     @lazy_property
     def _sbp(self):
@@ -481,7 +487,6 @@ class Deconvolution(GSObject):
         propagate_gsparams: Whether to propagate gsparams to the deconvolved object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
-
     """
     _has_hard_edges = False
     _is_analytic_x = False
@@ -506,7 +511,10 @@ class Deconvolution(GSObject):
             return _galsim.SBDeconvolve(self.orig_obj._sbp, self.gsparams._gsp)
 
     @property
-    def orig_obj(self): return self._orig_obj
+    def orig_obj(self):
+        """The original object that is being deconvolved.
+        """
+        return self._orig_obj
 
     @property
     def _noise(self):
@@ -676,7 +684,6 @@ class AutoConvolution(Convolution):
         propagate_gsparams: Whether to propagate gsparams to the auto-convolved object.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
-
     """
     def __init__(self, obj, real_space=None, gsparams=None, propagate_gsparams=True):
         if not isinstance(obj, GSObject):
@@ -722,9 +729,16 @@ class AutoConvolution(Convolution):
             return _galsim.SBAutoConvolve(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
 
     @property
-    def orig_obj(self): return self._orig_obj
+    def orig_obj(self):
+        """The original object that is being auto-convolved.
+        """
+        return self._orig_obj
     @property
-    def real_space(self): return self._real_space
+    def real_space(self):
+        """Whether this `Convolution` should be drawn using real-space convolution rather
+        than FFT convolution.
+        """
+        return self._real_space
 
     @property
     def _noise(self):
@@ -885,9 +899,16 @@ class AutoCorrelation(Convolution):
             return _galsim.SBAutoCorrelate(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
 
     @property
-    def orig_obj(self): return self._orig_obj
+    def orig_obj(self):
+        """The original object that is being auto-correlated.
+        """
+        return self._orig_obj
     @property
-    def real_space(self): return self._real_space
+    def real_space(self):
+        """Whether this `Convolution` should be drawn using real-space convolution rather
+        than FFT convolution.
+        """
+        return self._real_space
 
     @property
     def _noise(self):

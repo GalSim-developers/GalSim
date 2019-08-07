@@ -33,7 +33,7 @@ class Bounds(object):
     additional boolean switch to say whether or not the Bounds rectangle has been defined.  The
     rectangle is undefined if the min value > the max value in either direction.
 
-    Initialization:
+    *Initialization*:
 
     A `BoundsI` or `BoundsD` instance can be initialized in a variety of ways.  The most direct is
     via four scalars::
