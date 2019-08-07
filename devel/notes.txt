@@ -1,0 +1,37 @@
+
+Checklist for making a new release:
+
+- Run test suite on as many machines as possible.
+- On each machine, run:
+  - python setup.py tests
+  - run_all_tests (in tests directory. go get some coffee...)
+  - check_yaml (in examples directory)
+  - check_json (in examples directory)
+  - check_des (in examples directory)
+- Update the version number to the new M.m.r value in galsim/_version.py
+- Read over the CHANGELOG.rst file and edit as needed.
+- Update any docs that might need updating.
+- Make sure the current code is installed:
+    python setup.py install
+- Generate current docs
+    update_docs
+- Commit and push new docs.  (Assuming there were any changes from the last time this was done.)
+    git add docs/_build
+    git commit -m "update docs"
+- Tag the current version
+    git tag -a vM.m.r -m "vM.m.r"
+    git push --tags
+- Make the corresponding release branch in case we need to do any bug fixes.  (Assuming this is
+  a new minor release, not just a revision.)
+    git checkout -b releases/M.m
+    git push -u origin releases/M.m
+- Get the current version onto pip.  (Maybe check again that the current version is installed!)
+    rm -r GalSim.egg-info
+    python setup.py sdist
+    tar tvfz dist/GalSim-M.m.r.tar.gz
+    twine upload dist/GalSim-M.m.r.tar.gz
+    pip install -UI galsim  (To test that it worked)
+- Back in master, update version number to M.(m+1) (i.e. no .r)
+- Move the CHANGELOG information into docs/history.rst and clear out the current CHANGELOG.rst
+  file for the next version.
+- Email galsim-announce list about the new version.
