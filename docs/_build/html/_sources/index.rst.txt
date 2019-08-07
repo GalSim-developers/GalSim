@@ -11,12 +11,12 @@ GalSim: The modular galaxy image simulation toolkit
 
     image
     sb
+    chromatic
+    units
     wcs
     random
-    chromatic
     wl
     photon
-    coord
     utilities
     errors
 

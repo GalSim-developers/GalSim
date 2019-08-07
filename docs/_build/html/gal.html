@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="“Real” Galaxies" href="real_gal.html" />
-    <link rel="prev" title="Phase-screen PSFs" href="phase_psf.html" /> 
+    <link rel="next" title="Aribtrary Profiles" href="arbitrary.html" />
+    <link rel="prev" title="Point-spread functions" href="psf.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,8 +92,8 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Galaxies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#exponenatial-profile">Exponenatial Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#de-vaucouleurs-profile">De Vaucouleurs Profile</a></li>
@@ -104,21 +104,20 @@
 <li class="toctree-l3"><a class="reference internal" href="#knots-defined-by-a-random-walk">Knots defined by a “random walk”</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -205,9 +204,12 @@ if you have another use case for which one would be relevant.</p>
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Exponential</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class describing an exponential profile.</p>
-<p>Surface brightness profile with I(r) ~ exp[-r/scale_radius].  This is a special case of
-the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile, but is given a separate class since the Fourier transform has closed form
-and can be generated without lookup tables.</p>
+<p>Surface brightness profile with</p>
+<div class="math notranslate nohighlight">
+\[I(r) \sim e^{-r/r_0}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.  This is a special case of the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile,
+but is given a separate class since the Fourier transform has closed form and can be generated
+without lookup tables.</p>
 <p>An Exponential can be initialized using one (and only one) of two possible size parameters:
 <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.  Exactly one of these two is required.</p>
 <dl class="field-list simple">
@@ -222,44 +224,16 @@ and can be generated without lookup tables.</p>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, Exponential has the following access
-properties:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>scale_radius</strong> – The scale radius of the profile</p></li>
-<li><p><strong>half_light_radius</strong> – The half-light radius of the profile</p></li>
-</ul>
-</dd>
-</dl>
 <dl class="method">
-<dt id="galsim.Exponential.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.Exponential.half_light_radius">
+<em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.Exponential.half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius of the profile.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Exponential.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Exponential.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Exponential.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Exponential.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.Exponential.scale_radius">
+<em class="property">property </em><code class="sig-name descname">scale_radius</code><a class="headerlink" href="#galsim.Exponential.scale_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale radius of the profile.</p>
 </dd></dl>
 
 </dd></dl>
@@ -272,8 +246,10 @@ properties:</p>
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">DeVaucouleurs</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.sersic.Sersic</span></code></p>
 <p>A class describing DeVaucouleurs profile objects.</p>
-<p>Surface brightness profile with I(r) ~ exp[-(r/scale_radius)^{1/4}].  This is completely
-equivalent to a Sersic with n=4.</p>
+<p>Surface brightness profile with</p>
+<div class="math notranslate nohighlight">
+\[I(r) \sim e^{-(r/r_0)^{1/4}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>. This is completely equivalent to a Sersic with n=4.</p>
 <p>For more information, refer to</p>
 <p><a class="reference external" href="http://en.wikipedia.org/wiki/De_Vaucouleurs'_law">http://en.wikipedia.org/wiki/De_Vaucouleurs’_law</a></p>
 <p>A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
@@ -296,35 +272,6 @@ untruncated profile? See the docstring for Sersic for more details.
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, DeVaucouleurs has the following
-access properties:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>scale_radius</strong> – The scale radius</p></li>
-<li><p><strong>half_light_radius</strong> – The half-light radius</p></li>
-<li><p><strong>trunc</strong> – The truncation radius (if any)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.DeVaucouleurs.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.DeVaucouleurs.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.DeVaucouleurs.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -337,9 +284,14 @@ access properties:</p>
 <p>A class describing a Sersic profile.</p>
 <p>The Sersic surface brightness profile is characterized by three properties: its Sersic index
 <code class="docutils literal notranslate"><span class="pre">n</span></code>, its <code class="docutils literal notranslate"><span class="pre">flux</span></code>, and either the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.  Given these
-properties, the surface brightness profile scales as I(r) ~ exp[-(r/scale_radius)^{1/n}], or
-I(r) ~ exp[-b*(r/half_light_radius)^{1/n}] (where b is calculated to give the right
-half-light radius).</p>
+properties, the surface brightness profile scales as</p>
+<div class="math notranslate nohighlight">
+\[I(r) \sim e^{-(r/r_0)^{1/n}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>, or</p>
+<div class="math notranslate nohighlight">
+\[I(r) \sim e^{-b (r/r_e)^{1/n}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r_e\)</span> is the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> and <span class="math notranslate nohighlight">\(b\)</span> is calculated to give the right
+half-light radius.</p>
 <p>For more information, refer to</p>
 <p><a class="reference external" href="http://en.wikipedia.org/wiki/Sersic_profile">http://en.wikipedia.org/wiki/Sersic_profile</a></p>
 <p>The allowed range of values for the <code class="docutils literal notranslate"><span class="pre">n</span></code> parameter is 0.3 &lt;= n &lt;= 6.2.  An exception will be
@@ -374,7 +326,7 @@ by the flux property.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj1</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">10.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj3</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> \
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj3</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> \\
 <span class="go">                                flux_untruncated=True)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj1</span><span class="o">.</span><span class="n">xValue</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">))</span>
@@ -424,7 +376,7 @@ The flux normalization is the only difference between <code class="docutils lite
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj1</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj2</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">10.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj3</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> \
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj3</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Sersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">40.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> \\
 <span class="go">                                flux_untruncated=True)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sersic_obj1</span><span class="o">.</span><span class="n">xValue</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">))</span>
@@ -475,48 +427,6 @@ untruncated profile? See below for more details. [default: False]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, Sersic has the following access
-properties:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> – The Sersic parameter n</p></li>
-<li><p><strong>scale_raddius</strong> – The scale radius</p></li>
-<li><p><strong>half_light_radius</strong> – The half-light radius</p></li>
-<li><p><strong>trunc</strong> – The truncation radius (if any)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.Sersic.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sersic.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sersic.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sersic.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Sersic.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="galsim.Sersic.calculateHLRFactor">
 <code class="sig-name descname">calculateHLRFactor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.calculateHLRFactor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.calculateHLRFactor" title="Permalink to this definition">¶</a></dt>
@@ -527,6 +437,30 @@ properties:</p>
 <dt id="galsim.Sersic.calculateIntegratedFlux">
 <code class="sig-name descname">calculateIntegratedFlux</code><span class="sig-paren">(</span><em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.calculateIntegratedFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.calculateIntegratedFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the fraction of the total flux enclosed within a given radius, r</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.half_light_radius">
+<em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.Sersic.half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.n">
+<em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.Sersic.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Sersic parameter n.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.scale_radius">
+<em class="property">property </em><code class="sig-name descname">scale_radius</code><a class="headerlink" href="#galsim.Sersic.scale_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale radius.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Sersic.trunc">
+<em class="property">property </em><code class="sig-name descname">trunc</code><a class="headerlink" href="#galsim.Sersic.trunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The truncation radius (if any).</p>
 </dd></dl>
 
 </dd></dl>
@@ -542,13 +476,12 @@ properties:</p>
 <p>The Inclined Exponential surface brightness profile is characterized by three properties: its
 inclination angle (where 0 degrees = face-on and 90 degrees = edge-on), its scale radius, and
 its scale height. The 3D light distribution function is:</p>
-<blockquote>
-<div><p>I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s)</p>
-</div></blockquote>
-<p>where z is the distance along the minor axis, R is the radial distance from the minor axis,
-R_s is the scale radius of the disk, h_s is the scale height of the disk, and I_0 is the central
-surface brightness of the face-on disk. The 2D light distribution function is then determined
-from the scale height and radius here, along with the inclination angle.</p>
+<div class="math notranslate nohighlight">
+\[I(R,z) \sim \mathrm{sech}^2 (z/h_s) \, \exp\left(-R/R_s\right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(z\)</span> is the distance along the minor axis, <span class="math notranslate nohighlight">\(R\)</span> is the radial distance from the
+minor axis, <span class="math notranslate nohighlight">\(R_s\)</span> is the scale radius of the disk, and <span class="math notranslate nohighlight">\(h_s\)</span> is the scale height of
+the disk. The 2D light distribution function is then determined from the scale height and
+radius here, along with the inclination angle.</p>
 <p>In this implementation, the profile is inclined along the y-axis. This means that it will likely
 need to be rotated in most circumstances.</p>
 <p>At present, this profile is not enabled for photon-shooting.</p>
@@ -561,7 +494,7 @@ scale_h_over_r will be assumed to refer to the scale radius, not the half-light 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inclination</strong> – The inclination angle, which must be a <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance</p></li>
+<li><p><strong>inclination</strong> – The inclination angle, which must be a <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance</p></li>
 <li><p><strong>scale_radius</strong> – The scale radius of the exponential disk.  Typically given in
 arcsec. This can be compared to the ‘scale_radius’ parameter of the
 <a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Exponential</span></code></a> class, and in the face-on case, the same scale
@@ -578,47 +511,34 @@ scale height to the scale radius. [default: 0.1]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, InclinedExponential has the
-following access properties:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inclination</strong> – The inclination angle</p></li>
-<li><p><strong>scale_radius</strong> – The scale radius of the exponential disk</p></li>
-<li><p><strong>disk_half_light_radius</strong> – The half-light radius of the exponential disk</p></li>
-<li><p><strong>scale_height</strong> – The scale height of the disk</p></li>
-<li><p><strong>scale_h_over_r</strong> – The ratio scale_height / scale_radius</p></li>
-</ul>
-</dd>
-</dl>
 <dl class="method">
-<dt id="galsim.InclinedExponential.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.InclinedExponential.disk_half_light_radius">
+<em class="property">property </em><code class="sig-name descname">disk_half_light_radius</code><a class="headerlink" href="#galsim.InclinedExponential.disk_half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius of the exponential disk.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedExponential.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
+<dt id="galsim.InclinedExponential.inclination">
+<em class="property">property </em><code class="sig-name descname">inclination</code><a class="headerlink" href="#galsim.InclinedExponential.inclination" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inclination angle.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedExponential.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">inclination</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">scale_height=None</em>, <em class="sig-param">scale_h_over_r=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.InclinedExponential.scale_h_over_r">
+<em class="property">property </em><code class="sig-name descname">scale_h_over_r</code><a class="headerlink" href="#galsim.InclinedExponential.scale_h_over_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>The ratio scale_height / scale_radius</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedExponential.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
+<dt id="galsim.InclinedExponential.scale_height">
+<em class="property">property </em><code class="sig-name descname">scale_height</code><a class="headerlink" href="#galsim.InclinedExponential.scale_height" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale height of the disk.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedExponential.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.InclinedExponential.scale_radius">
+<em class="property">property </em><code class="sig-name descname">scale_radius</code><a class="headerlink" href="#galsim.InclinedExponential.scale_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale radius of the exponential disk.</p>
 </dd></dl>
 
 </dd></dl>
@@ -638,13 +558,12 @@ efficient.</p>
 <p>The InclinedSersic surface brightness profile is characterized by four properties: its
 Sersic index <code class="docutils literal notranslate"><span class="pre">n</span></code>, its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
 its scale radius, and its scale height. The 3D light distribution function is:</p>
-<blockquote>
-<div><p>I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp[-b*(R/r_s)^{1/n}]</p>
-</div></blockquote>
-<p>where z is the distance along the minor axis, R is the radial distance from the minor axis,
-r_s is the scale radius of the disk, h_s is the scale height of the disk, and I_0 is the central
-surface brightness of the face-on disk. The 2D light distribution function is then determined
-from the scale height and radius here, along with the inclination angle.</p>
+<div class="math notranslate nohighlight">
+\[I(R,z) \sim \mathrm{sech}^2 (z/h_s) \, \exp\left(-(R/R_s)^{1/n}\right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(z\)</span> is the distance along the minor axis, <span class="math notranslate nohighlight">\(R\)</span> is the radial distance from the
+minor axis, <span class="math notranslate nohighlight">\(R_s\)</span> is the scale radius of the disk, and <span class="math notranslate nohighlight">\(h_s\)</span> is the scale height of
+the disk. The 2D light distribution function is then determined from the scale height and
+radius here, along with the inclination angle.</p>
 <p>In this implementation, the profile is inclined along the y-axis. This means that it will likely
 need to be rotated in most circumstances.</p>
 <p>At present, this profile is not enabled for photon-shooting.</p>
@@ -662,7 +581,7 @@ scale_h_over_r will be assumed to refer to the scale radius, not the half-light 
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n</strong> – The Sersic index, n.</p></li>
-<li><p><strong>inclination</strong> – The inclination angle, which must be a <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance</p></li>
+<li><p><strong>inclination</strong> – The inclination angle, which must be a <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> instance</p></li>
 <li><p><strong>scale_radius</strong> – The scale radius of the disk.  Typically given in arcsec.
 This can be compared to the ‘scale_radius’ parameter of the
 <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Sersic</span></code></a> class, and in the face-on case, the same scale
@@ -685,49 +604,46 @@ more details. [default: False]</p></li>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, InclinedSersic has the following
-access properties:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n                       The Sersic parameter n</strong></p></li>
-<li><p><strong>inclination</strong> – The inclination angle</p></li>
-<li><p><strong>scale_radius</strong> – The scale radius of the exponential disk</p></li>
-<li><p><strong>disk_half_light_radius</strong> – The half-light radius of the exponential disk</p></li>
-<li><p><strong>scale_height</strong> – The scale height of the disk</p></li>
-<li><p><strong>scale_h_over_r</strong> – The ratio scale_height / scale_radius</p></li>
-<li><p><strong>trunc</strong> – The truncation radius (if any)</p></li>
-</ul>
-</dd>
-</dl>
 <dl class="method">
-<dt id="galsim.InclinedSersic.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.InclinedSersic.disk_half_light_radius">
+<em class="property">property </em><code class="sig-name descname">disk_half_light_radius</code><a class="headerlink" href="#galsim.InclinedSersic.disk_half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius of the exponential disk.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedSersic.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
+<dt id="galsim.InclinedSersic.inclination">
+<em class="property">property </em><code class="sig-name descname">inclination</code><a class="headerlink" href="#galsim.InclinedSersic.inclination" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inclination angle.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedSersic.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">inclination</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">scale_height=None</em>, <em class="sig-param">scale_h_over_r=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">trunc=0.0</em>, <em class="sig-param">flux_untruncated=False</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="galsim.InclinedSersic.n">
+<em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.InclinedSersic.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Sersic parameter n.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedSersic.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
+<dt id="galsim.InclinedSersic.scale_h_over_r">
+<em class="property">property </em><code class="sig-name descname">scale_h_over_r</code><a class="headerlink" href="#galsim.InclinedSersic.scale_h_over_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>The ratio scale_height / scale_radius.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InclinedSersic.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.InclinedSersic.scale_height">
+<em class="property">property </em><code class="sig-name descname">scale_height</code><a class="headerlink" href="#galsim.InclinedSersic.scale_height" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale height of the disk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedSersic.scale_radius">
+<em class="property">property </em><code class="sig-name descname">scale_radius</code><a class="headerlink" href="#galsim.InclinedSersic.scale_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale radius of the exponential disk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedSersic.trunc">
+<em class="property">property </em><code class="sig-name descname">trunc</code><a class="headerlink" href="#galsim.InclinedSersic.trunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The truncation radius (if any).</p>
 </dd></dl>
 
 </dd></dl>
@@ -742,38 +658,42 @@ access properties:</p>
 <p>A class describing a Spergel profile.</p>
 <p>The Spergel surface brightness profile is characterized by three properties: its Spergel index
 <code class="docutils literal notranslate"><span class="pre">nu</span></code>, its <code class="docutils literal notranslate"><span class="pre">flux</span></code>, and either the <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.  Given these
-properties, the surface brightness profile scales as I(r) ~ (r/scale_radius)^{nu} *
-K_{nu}(r/scale_radius), where K_{nu} is the modified Bessel function of the second kind.</p>
+properties, the surface brightness profile scales as</p>
+<div class="math notranslate nohighlight">
+\[I(r) \sim \left(\frac{r}{r_0}\right)^\nu K_\nu\left(\frac{r}{r_0}\right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> and <span class="math notranslate nohighlight">\(K_\nu\)</span> is the modified Bessel function of
+the second kind.</p>
 <p>The Spergel profile is intended as a generic galaxy profile, somewhat like a <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile,
-but with the advantage of being analytic in both real space and Fourier space.  The Spergel index
-<code class="docutils literal notranslate"><span class="pre">nu</span></code> plays a similar role to the Sersic index <code class="docutils literal notranslate"><span class="pre">n</span></code>, in that it adjusts the relative peakiness
-of the profile core and the relative prominence of the profile wings.  At <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">0.5</span></code>, the
-Spergel profile is equivalent to an <a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a> profile (or alternatively an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1.0</span></code>
-<a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile).  At <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">-0.6</span></code> (and in the radial range near the half-light radius), the
-Spergel profile is similar to a DeVaucouleurs profile or <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">4.0</span></code> <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile.</p>
-<p>Note that for <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">&lt;=</span> <span class="pre">0.0</span></code>, the Spergel profile surface brightness diverges at the origin.
+but with the advantage of being analytic in both real space and Fourier space.  The Spergel
+index <span class="math notranslate nohighlight">\(\nu\)</span> plays a similar role to the Sersic index <span class="math notranslate nohighlight">\(n\)</span>, in that it adjusts the
+relative peakiness of the profile core and the relative prominence of the profile wings.
+At <span class="math notranslate nohighlight">\(\nu = 0.5\)</span>, the Spergel profile is equivalent to an <a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a> profile (or
+alternatively an :math`n = 1` <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile).  At <span class="math notranslate nohighlight">\(\nu = -0.6\)</span> (and in the radial
+range near the half-light radius), the Spergel profile is similar to a <a class="reference internal" href="#galsim.DeVaucouleurs" title="galsim.DeVaucouleurs"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DeVaucouleurs</span></code></a> profile
+or <span class="math notranslate nohighlight">\(n = 4\)</span> <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile.</p>
+<p>Note that for <span class="math notranslate nohighlight">\(\nu &lt;= 0\)</span>, the Spergel profile surface brightness diverges at the origin.
 This may lead to rendering problems if the profile is not convolved by either a PSF or a pixel
 and the profile center is precisely on a pixel center.</p>
-<p>Due to its analytic Fourier transform and depending on the indices <code class="docutils literal notranslate"><span class="pre">n</span></code> and <code class="docutils literal notranslate"><span class="pre">nu</span></code>, the Spergel
-profile can be considerably faster to draw than the roughly equivalent <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile.  For
-example, the <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">-0.6</span></code> Spergel profile is roughly 3x faster to draw than an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">4.0</span></code>
-<a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile once the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile cache has been set up.  However, if not taking
-advantage of the cache, for example, if drawing <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profiles with <code class="docutils literal notranslate"><span class="pre">n</span></code> continuously
-varying near 4.0 and Spergel profiles with <code class="docutils literal notranslate"><span class="pre">nu</span></code> continuously varying near -0.6, then the
-Spergel profiles are about 50x faster to draw.  At the other end of the galaxy profile
-spectrum, the <code class="docutils literal notranslate"><span class="pre">nu</span> <span class="pre">=</span> <span class="pre">0.5</span></code> Spergel profile, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1.0</span></code> <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile, and the <a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a>
-profile all take about the same amount of time to draw if cached, and the Spergel profile is
-about 2x faster than the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile if uncached.</p>
+<p>Due to its analytic Fourier transform and depending on the indices <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(\nu\)</span>,
+the Spergel profile can be considerably faster to draw than the roughly equivalent <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a>
+profile.  For example, the <span class="math notranslate nohighlight">\(\nu = -0.6\)</span> Spergel profile is roughly 3x faster to draw than
+an <span class="math notranslate nohighlight">\(n = 4\)</span> <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile once the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile cache has been set up.  However, if
+not taking advantage of the cache, for example, if drawing <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profiles with <span class="math notranslate nohighlight">\(n\)</span>
+continuously varying near 4.0 and Spergel profiles with <span class="math notranslate nohighlight">\(\nu\)</span> continuously varying near
+-0.6, then the Spergel profiles are about 50x faster to draw.  At the other end of the galaxy
+profile spectrum, the <span class="math notranslate nohighlight">\(\nu = 0.5\)</span> Spergel profile, <span class="math notranslate nohighlight">\(n = 1\)</span> <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile, and
+the <a class="reference internal" href="#galsim.Exponential" title="galsim.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a> profile all take about the same amount of time to draw if cached, and the
+Spergel profile is about 2x faster than the <a class="reference internal" href="#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> profile if uncached.</p>
 <p>For more information, refer to</p>
 <blockquote>
 <div><p>D. N. Spergel, “ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,”
 ASTROPHYS J SUPPL S 191(1), 58-65 (2010) [doi:10.1088/0067-0049/191/1/58].</p>
 </div></blockquote>
-<p>The allowed range of values for the <code class="docutils literal notranslate"><span class="pre">nu</span></code> parameter is -0.85 &lt;= nu &lt;= 4.  An exception will be
-thrown if you provide a value outside that range.  The lower limit is set above the theoretical
-lower limit of -1 due to numerical difficulties integrating the <em>very</em> peaky nu &lt; -0.85
-profiles.  The upper limit is set to avoid numerical difficulties evaluating the modified
-Bessel function of the second kind.</p>
+<p>The allowed range of values for the <code class="docutils literal notranslate"><span class="pre">nu</span></code> parameter is -0.85 &lt;= <code class="docutils literal notranslate"><span class="pre">nu</span></code> &lt;= 4.  An exception
+will be thrown if you provide a value outside that range.  The lower limit is set above the
+theoretical lower limit of -1 due to numerical difficulties integrating the <em>very</em> peaky
+<code class="docutils literal notranslate"><span class="pre">nu</span></code> &lt; -0.85 profiles.  The upper limit is set to avoid numerical difficulties evaluating the
+modified Bessel function of the second kind.</p>
 <p>A Spergel profile can be initialized using one (and only one) of two possible size parameters:
 <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.  Exactly one of these two is required.</p>
 <dl class="field-list simple">
@@ -789,44 +709,6 @@ Bessel function of the second kind.</p>
 </ul>
 </dd>
 </dl>
-<p>In addition to the usual <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> methods and attributes, the Spergel profile has the
-following access properties:</p>
-<dl class="simple">
-<dt>Atrributes:</dt><dd><p>nu:                 The Spergel index, nu
-scale_radius:       The scale radius
-half_light_radius:  The half-light radius</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="galsim.Spergel.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Spergel.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Spergel.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">nu</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">scale_radius=None</em>, <em class="sig-param">flux=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Spergel.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Spergel.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="galsim.Spergel.calculateFluxRadius">
 <code class="sig-name descname">calculateFluxRadius</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.calculateFluxRadius"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.calculateFluxRadius" title="Permalink to this definition">¶</a></dt>
@@ -837,6 +719,24 @@ half_light_radius:  The half-light radius</p>
 <dt id="galsim.Spergel.calculateIntegratedFlux">
 <code class="sig-name descname">calculateIntegratedFlux</code><span class="sig-paren">(</span><em class="sig-param">r</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.calculateIntegratedFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.calculateIntegratedFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the integrated flux out to a given radius, r</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Spergel.half_light_radius">
+<em class="property">property </em><code class="sig-name descname">half_light_radius</code><a class="headerlink" href="#galsim.Spergel.half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Spergel.nu">
+<em class="property">property </em><code class="sig-name descname">nu</code><a class="headerlink" href="#galsim.Spergel.nu" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Spergel index, nu</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Spergel.scale_radius">
+<em class="property">property </em><code class="sig-name descname">scale_radius</code><a class="headerlink" href="#galsim.Spergel.scale_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale radius</p>
 </dd></dl>
 
 </dd></dl>
@@ -881,18 +781,8 @@ None, the rng is created internally.  [default: None]</p></li>
 [default: None]</p></li>
 </ul>
 </dd>
-</dl>
-<p>This class inherits from galsim.Sum. Additional methods are</p>
-<dl class="method">
-<dt id="galsim.RandomWalk.calculateHLR">
-<code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.calculateHLR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.calculateHLR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the actual half light radius of the generated points</p>
-</dd></dl>
-
-<p>There are also “getters”,  implemented as read-only properties</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><ul class="simple">
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>npoints</strong> – The number of random walk points</p></li>
 <li><p><strong>input_half_light_radius</strong> – The input half_light_radius</p></li>
 <li><p><strong>flux</strong> – The flux</p></li>
@@ -911,38 +801,8 @@ None, the rng is created internally.  [default: None]</p></li>
 </ul>
 </div>
 <dl class="method">
-<dt id="galsim.RandomWalk.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RandomWalk.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RandomWalk.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">npoints</em>, <em class="sig-param">**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RandomWalk.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.RandomWalk.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.calculateHLR"><span class="viewcode-link">[source]</span></a></dt>
+<dt id="galsim.RandomWalk.calculateHLR">
+<code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.calculateHLR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.calculateHLR" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculate the half-light radius of the generated points</p>
 </dd></dl>
 
@@ -958,6 +818,18 @@ it has been sheared, its flux set, etc), then this value will be None.</p>
 method.  That value will be valid in all cases.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="galsim.RandomWalk.npoints">
+<em class="property">property </em><code class="sig-name descname">npoints</code><a class="headerlink" href="#galsim.RandomWalk.npoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of point sources.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomWalk.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#galsim.RandomWalk.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of the locations (x,y) of the point sources.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -971,10 +843,10 @@ method.  That value will be valid in all cases.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="real_gal.html" class="btn btn-neutral float-right" title="“Real” Galaxies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="arbitrary.html" class="btn btn-neutral float-right" title="Aribtrary Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="phase_psf.html" class="btn btn-neutral float-left" title="Phase-screen PSFs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="psf.html" class="btn btn-neutral float-left" title="Point-spread functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

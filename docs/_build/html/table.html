@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Lookup Tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
@@ -286,48 +286,6 @@ tuple, list, or arbitrarily shaped 1- or 2-dimensional NumPy array.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.LookupTable.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">f</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.LookupTable.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.LookupTable.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.LookupTable.from_file">
 <em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em>, <em class="sig-param">amplitude=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.from_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> from a file of x, f values.</p>
@@ -371,6 +329,18 @@ rather than their raw values. [default: False]</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.x_max">
+<em class="property">property </em><code class="sig-name descname">x_max</code><a class="headerlink" href="#galsim.LookupTable.x_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum x value in the lookup table.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.LookupTable.x_min">
+<em class="property">property </em><code class="sig-name descname">x_min</code><a class="headerlink" href="#galsim.LookupTable.x_min" title="Permalink to this definition">¶</a></dt>
+<dd><p>The minimum x value in the lookup table.</p>
 </dd></dl>
 
 </dd></dl>
@@ -526,48 +496,6 @@ array will be congruent to x and y.</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.LookupTable2D.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable2D.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable2D.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">f</em>, <em class="sig-param">dfdx=None</em>, <em class="sig-param">dfdy=None</em>, <em class="sig-param">d2fdxdy=None</em>, <em class="sig-param">interpolant='linear'</em>, <em class="sig-param">edge_mode='raise'</em>, <em class="sig-param">constant=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable2D.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable2D.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.LookupTable2D.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.LookupTable2D.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.LookupTable2D.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.LookupTable2D.gradient">
 <code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.gradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the gradient of the function at an arbitrary point or points.</p>
@@ -590,6 +518,13 @@ values) or numpy arrays.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="function">
+<dt id="galsim.table._LookupTable2D">
+<code class="sig-prename descclassname">galsim.table.</code><code class="sig-name descname">_LookupTable2D</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">f</em>, <em class="sig-param">interpolant</em>, <em class="sig-param">edge_mode</em>, <em class="sig-param">constant</em>, <em class="sig-param">dfdx=None</em>, <em class="sig-param">dfdy=None</em>, <em class="sig-param">d2fdxdy=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">y0=None</em>, <em class="sig-param">xperiod=None</em>, <em class="sig-param">yperiod=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#_LookupTable2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.table._LookupTable2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a <a class="reference internal" href="#galsim.LookupTable2D" title="galsim.LookupTable2D"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable2D</span></code></a> but without using any of the sanity checks or array manipulation used
+in the normal initializer.</p>
 </dd></dl>
 
 </div>

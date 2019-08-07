@@ -94,3 +94,24 @@ However, it is often more convenient to target a particular flux or magnitude of
 as observed through a particular `Bandpass` (probably in ADU) and then ignore all of these
 parameters when you are drawing.  This is possible using the methods `SED.withFlux` or
 `SED.withMagnitude`.
+
+Angles
+------
+
+For nearly all angular values, we require the argument to be an `Angle` instance.
+We use the ``LSSTDESC.Coord`` package for this (and its `CelestialCoord` class):
+
+https://github.com/LSSTDESC/Coord
+
+An earlier version of this code was originally implemented in GalSim, so we
+still import the relevant classes into the ``galsim`` namespace, so for example
+``gasim.Angle`` is a valid alias for ``coord.Angle``.  You may therefor use either namespace
+for your use of these classes.
+
+.. autoclass:: galsim.Angle
+    :members:
+
+.. autofunction:: galsim._Angle
+
+.. autoclass:: galsim.AngleUnit
+    :members:

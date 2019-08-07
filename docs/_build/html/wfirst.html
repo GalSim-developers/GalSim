@@ -91,12 +91,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -608,10 +608,10 @@ the diagram on the GalSim wiki,
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>world_pos</strong> – A <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> indicating the position to observe at the center
+<li><p><strong>world_pos</strong> – A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> indicating the position to observe at the center
 of the focal plane array (FPA).  Note that if the given position is not
 observable on the given date, then the routine will raise an exception.</p></li>
-<li><p><strong>PA</strong> – A <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> representing the position angle of the observatory +Y
+<li><p><strong>PA</strong> – A <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a> representing the position angle of the observatory +Y
 axis, unless <code class="docutils literal notranslate"><span class="pre">PA_is_FPA=True</span></code>, in which case it’s the position angle of
 the FPA.  For users to do not care about this, then leaving this as None
 will result in the routine using the supplied <code class="docutils literal notranslate"><span class="pre">date</span></code> and <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> to

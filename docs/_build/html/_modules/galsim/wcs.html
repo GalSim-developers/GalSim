@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -192,6 +192,7 @@
 <span class="kn">from</span> <span class="nn">.shear</span> <span class="k">import</span> <span class="n">Shear</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimValueError</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">doc_inherit</span>
 
 <div class="viewcode-block" id="BaseWCS"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS">[docs]</a><span class="k">class</span> <span class="nc">BaseWCS</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The base class for all other kinds of WCS transformations.</span>
@@ -234,7 +235,7 @@
 <span class="sd">       - `AffineTransform`</span>
 
 <span class="sd">    3. `EuclideanWCS` classes use a regular Euclidean coordinate system for the world coordinates,</span>
-<span class="sd">       using PositionD for the world positions.  We use the notation (u,v) for the world</span>
+<span class="sd">       using `PositionD` for the world positions.  We use the notation (u,v) for the world</span>
 <span class="sd">       coordinates and (x,y) for the image coordinates.</span>
 
 <span class="sd">       Currently we define the following non-uniform, `EuclideanWCS` class::</span>
@@ -275,9 +276,9 @@
 <span class="sd">      implemented.  If it is not implemented for a particular WCS class, a NotImplementedError</span>
 <span class="sd">      will be raised.</span>
 
-<span class="sd">      The ``image_pos`` parameter should be a PositionD.  However, ``world_pos`` will</span>
+<span class="sd">      The ``image_pos`` parameter should be a `PositionD`.  However, ``world_pos`` will</span>
 <span class="sd">      be a `CelestialCoord` if the transformation is in terms of celestial coordinates</span>
-<span class="sd">      (if ``wcs.isCelestial() == True``).  Otherwise, it will be a PositionD as well.</span>
+<span class="sd">      (if ``wcs.isCelestial() == True``).  Otherwise, it will be a `PositionD` as well.</span>
 
 <span class="sd">    - Convert a `GSObject` that is defined in world coordinates to the equivalent profile defined</span>
 <span class="sd">      in terms of image coordinates (or vice versa)::</span>
@@ -427,9 +428,9 @@
 <span class="sd">        There are essentially three overloaded versions of this function here.</span>
 
 <span class="sd">        1. The first converts a position from world coordinates to image coordinates.</span>
-<span class="sd">           If the WCS is a `EuclideanWCS`, the argument may be either a PositionD or PositionI</span>
+<span class="sd">           If the WCS is a `EuclideanWCS`, the argument may be either a `PositionD` or `PositionI`</span>
 <span class="sd">           argument.  If it is a `CelestialWCS`, then the argument must be a `CelestialCoord`.</span>
-<span class="sd">           It returns the corresponding position in image coordinates as a PositionD::</span>
+<span class="sd">           It returns the corresponding position in image coordinates as a `PositionD`::</span>
 
 <span class="sd">               &gt;&gt;&gt; image_pos = wcs.toImage(world_pos)</span>
 
@@ -874,8 +875,8 @@
 <div class="viewcode-block" id="readFromFitsHeader"><a class="viewcode-back" href="../../wcs.html#galsim.readFromFitsHeader">[docs]</a><span class="k">def</span> <span class="nf">readFromFitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Read a WCS function from a FITS header.</span>
 
-<span class="sd">    This is normally called automatically from within the galsim.fits.read() function, but</span>
-<span class="sd">    you can also call it directly as</span>
+<span class="sd">    This is normally called automatically from within the `galsim.fits.read` function, but</span>
+<span class="sd">    you can also call it directly as::</span>
 
 <span class="sd">        wcs, origin = galsim.wcs.readFromFitsHeader(header)</span>
 
@@ -959,19 +960,34 @@
 <div class="viewcode-block" id="EuclideanWCS"><a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS">[docs]</a><span class="k">class</span> <span class="nc">EuclideanWCS</span><span class="p">(</span><span class="n">BaseWCS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A EuclideanWCS is a `BaseWCS` whose world coordinates are on a Euclidean plane.</span>
 <span class="sd">    We usually use the notation (u,v) to refer to positions in world coordinates, and</span>
-<span class="sd">    they use the class PositionD.</span>
+<span class="sd">    they use the class `PositionD`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># All EuclideanWCS classes must define origin and world_origin.</span>
     <span class="c1"># Sometimes it is convenient to access x0,y0,u0,v0 directly.</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">x0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">x</span>
+    <span class="k">def</span> <span class="nf">x0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The x component of self.origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">x</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">y0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">y</span>
+    <span class="k">def</span> <span class="nf">y0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The y component of self.origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">y</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">u0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="o">.</span><span class="n">x</span>
+    <span class="k">def</span> <span class="nf">u0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The x component of self.world_origin (aka u).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="o">.</span><span class="n">x</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">v0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="o">.</span><span class="n">y</span>
+    <span class="k">def</span> <span class="nf">v0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The y component of self.world_origin (aka v).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="o">.</span><span class="n">y</span>
 
 <div class="viewcode-block" id="EuclideanWCS.xyTouv"><a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS.xyTouv">[docs]</a>    <span class="k">def</span> <span class="nf">xyTouv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convert x,y from image coordinates to world coordinates.</span>
@@ -1153,13 +1169,14 @@
         <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="n">area</span> <span class="o">*</span> <span class="n">sky_level</span>
 
     <span class="c1"># Each class should define the __eq__ function.  Then __ne__ is obvious.</span>
-<div class="viewcode-block" id="EuclideanWCS.__ne__"><a class="viewcode-back" href="../../wcs.html#galsim.EuclideanWCS.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="UniformWCS"><a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS">[docs]</a><span class="k">class</span> <span class="nc">UniformWCS</span><span class="p">(</span><span class="n">EuclideanWCS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A UniformWCS is a `EuclideanWCS` which has a uniform pixel size and shape.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="UniformWCS.isUniform"><a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS.isUniform">[docs]</a>    <span class="k">def</span> <span class="nf">isUniform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="kc">True</span></div>
+<div class="viewcode-block" id="UniformWCS.isUniform"><a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS.isUniform">[docs]</a>    <span class="k">def</span> <span class="nf">isUniform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="c1"># These can also just pass through to the _localwcs attribute.</span>
     <span class="k">def</span> <span class="nf">_u</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1192,25 +1209,35 @@
         <span class="n">image</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">sky_level</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">())</span>
 
     <span class="c1"># Just check if the locals match and if the origins match.</span>
-<div class="viewcode-block" id="UniformWCS.__eq__"><a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">world_origin</span><span class="p">))</span></div></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">world_origin</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="LocalWCS"><a class="viewcode-back" href="../../wcs.html#galsim.LocalWCS">[docs]</a><span class="k">class</span> <span class="nc">LocalWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A LocalWCS is a `UniformWCS` in which (0,0) in image coordinates is at the same place</span>
 <span class="sd">    as (0,0) in world coordinates</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="LocalWCS.isLocal"><a class="viewcode-back" href="../../wcs.html#galsim.LocalWCS.isLocal">[docs]</a>    <span class="k">def</span> <span class="nf">isLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LocalWCS.isLocal"><a class="viewcode-back" href="../../wcs.html#galsim.LocalWCS.isLocal">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">isLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="c1"># The origins are definitionally (0,0) for these.  So just define them here.</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The image coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The world coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="c1"># For LocalWCS, there is no origin to worry about.</span>
     <span class="k">def</span> <span class="nf">_posToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
@@ -1239,13 +1266,23 @@
     <span class="sd">&quot;&quot;&quot;A CelestialWCS is a `BaseWCS` whose world coordinates are on the celestial sphere.</span>
 <span class="sd">    We use the `CelestialCoord` class for the world coordinates.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="CelestialWCS.isCelestial"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.isCelestial">[docs]</a>    <span class="k">def</span> <span class="nf">isCelestial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="CelestialWCS.isCelestial"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.isCelestial">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">isCelestial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="c1"># CelestialWCS classes still have origin, but not world_origin.</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">x0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">x</span>
+    <span class="k">def</span> <span class="nf">x0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The x coordinate of self.origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">x</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">y0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">y</span>
+    <span class="k">def</span> <span class="nf">y0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The y coordinate of self.origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">y</span>
 
 <div class="viewcode-block" id="CelestialWCS.xyToradec"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.xyToradec">[docs]</a>    <span class="k">def</span> <span class="nf">xyToradec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convert x,y from image coordinates to world coordinates.</span>
@@ -1429,7 +1466,7 @@
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
 
     <span class="c1"># Each class should define the __eq__ function.  Then __ne__ is obvious.</span>
-<div class="viewcode-block" id="CelestialWCS.__ne__"><a class="viewcode-back" href="../../wcs.html#galsim.CelestialWCS.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 
 
@@ -1487,15 +1524,19 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="PixelScale.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.PixelScale.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
 
     <span class="c1"># Help make sure PixelScale is read-only.</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The pixel scale</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
 
-<div class="viewcode-block" id="PixelScale.isPixelScale"><a class="viewcode-back" href="../../wcs.html#galsim.PixelScale.isPixelScale">[docs]</a>    <span class="k">def</span> <span class="nf">isPixelScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PixelScale.isPixelScale"><a class="viewcode-back" href="../../wcs.html#galsim.PixelScale.isPixelScale">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">isPixelScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="k">def</span> <span class="nf">_u</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1551,13 +1592,13 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">PixelScale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PixelScale.__eq__"><a class="viewcode-back" href="../../wcs.html#galsim.PixelScale.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">)</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span>
 
-<div class="viewcode-block" id="PixelScale.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.PixelScale.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.PixelScale(</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span></div>
-<div class="viewcode-block" id="PixelScale.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.PixelScale.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.PixelScale(</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="ShearWCS"><a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS">[docs]</a><span class="k">class</span> <span class="nc">ShearWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
@@ -1581,7 +1622,7 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        scale:      The pixel scale, typically in units of arcsec/pixel.</span>
-<span class="sd">        shear:      The shear, which should be a Shear instance.</span>
+<span class="sd">        shear:      The shear, which should be a `Shear` instance.</span>
 
 <span class="sd">    The Shear transformation conserves object area, so if the input ``scale == 1`` then the</span>
 <span class="sd">    transformation represented by the ShearWCS will conserve object area also.</span>
@@ -1591,7 +1632,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="ShearWCS.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shear</span> <span class="o">=</span> <span class="n">shear</span>
@@ -1599,13 +1640,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_g2</span> <span class="o">=</span> <span class="n">shear</span><span class="o">.</span><span class="n">g2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2</span><span class="o">**</span><span class="mi">2</span>
         <span class="kn">import</span> <span class="nn">math</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_gfactor</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsq</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gfactor</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsq</span><span class="p">)</span>
 
     <span class="c1"># Help make sure ShearWCS is read-only.</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The pixel scale.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shear</span>
+    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The applied `Shear`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shear</span>
 
     <span class="k">def</span> <span class="nf">_u</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">u</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_g1</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_g2</span>
@@ -1676,14 +1724,14 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ShearWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shear</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ShearWCS.__eq__"><a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ShearWCS</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">shear</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shear</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">shear</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shear</span><span class="p">))</span>
 
-<div class="viewcode-block" id="ShearWCS.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.ShearWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">)</span></div>
-<div class="viewcode-block" id="ShearWCS.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.ShearWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="JacobianWCS"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS">[docs]</a><span class="k">class</span> <span class="nc">JacobianWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
@@ -1721,23 +1769,38 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="JacobianWCS.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dudx</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dudy</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dvdx</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dvdx</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dvdy</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_det</span> <span class="o">=</span> <span class="n">dudx</span> <span class="o">*</span> <span class="n">dvdy</span> <span class="o">-</span> <span class="n">dudy</span> <span class="o">*</span> <span class="n">dvdx</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_det</span> <span class="o">=</span> <span class="n">dudx</span> <span class="o">*</span> <span class="n">dvdy</span> <span class="o">-</span> <span class="n">dudy</span> <span class="o">*</span> <span class="n">dvdx</span>
 
     <span class="c1"># Help make sure JacobianWCS is read-only.</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dudx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span>
+    <span class="k">def</span> <span class="nf">dudx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;du/dx</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dudy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span>
+    <span class="k">def</span> <span class="nf">dudy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;du/dy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dvdx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdx</span>
+    <span class="k">def</span> <span class="nf">dvdx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;dv/dx</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdx</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dvdy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span>
+    <span class="k">def</span> <span class="nf">dvdy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;dv/dy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span>
 
     <span class="k">def</span> <span class="nf">_u</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span> <span class="o">*</span> <span class="n">y</span>
@@ -1912,17 +1975,17 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JacobianWCS.__eq__"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">JacobianWCS</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dudx</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">dudy</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dudy</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dvdx</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dvdy</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dvdy</span><span class="p">))</span>
 
-<div class="viewcode-block" id="JacobianWCS.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.JacobianWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.JacobianWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">)</span>
-<div class="viewcode-block" id="JacobianWCS.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <span class="c1">#########################################################################################</span>
@@ -1966,10 +2029,10 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        scale:          The pixel scale, typically in units of arcsec/pixel.</span>
 <span class="sd">        origin:         Optional origin position for the image coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD or PositionI.</span>
+<span class="sd">                        If provided, it should be a `PositionD` or `PositionI`.</span>
 <span class="sd">                        [default: PositionD(0., 0.)]</span>
 <span class="sd">        world_origin:   Optional origin position for the world coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD.</span>
+<span class="sd">                        If provided, it should be a `PositionD`.</span>
 <span class="sd">                        [default: galsim.PositionD(0., 0.)]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;scale&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
@@ -1977,21 +2040,32 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="OffsetWCS.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetWCS.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">scale</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The pixel scale.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
+    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The image coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
 
-<div class="viewcode-block" id="OffsetWCS.isPixelScale"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetWCS.isPixelScale">[docs]</a>    <span class="k">def</span> <span class="nf">isPixelScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The world coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
+
+<div class="viewcode-block" id="OffsetWCS.isPixelScale"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetWCS.isPixelScale">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">isPixelScale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="k">def</span> <span class="nf">_writeHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
@@ -2018,9 +2092,9 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">OffsetWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OffsetWCS.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetWCS.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.OffsetWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.OffsetWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
-<div class="viewcode-block" id="OffsetWCS.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetWCS.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="OffsetShearWCS"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetShearWCS">[docs]</a><span class="k">class</span> <span class="nc">OffsetShearWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
@@ -2041,12 +2115,12 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        scale:          The pixel scale, typically in units of arcsec/pixel.</span>
-<span class="sd">        shear:          The shear, which should be a Shear instance.</span>
+<span class="sd">        shear:          The shear, which should be a `Shear` instance.</span>
 <span class="sd">        origin:         Optional origin position for the image coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD or PositionI.</span>
+<span class="sd">                        If provided, it should be a `PositionD` or `PositionI`.</span>
 <span class="sd">                        [default: PositionD(0., 0.)]</span>
 <span class="sd">        world_origin:   Optional origin position for the world coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD.</span>
+<span class="sd">                        If provided, it should be a `PositionD`.</span>
 <span class="sd">                        [default: PositionD(0., 0.)]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;scale&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;shear&quot;</span> <span class="p">:</span> <span class="n">Shear</span> <span class="p">}</span>
@@ -2054,23 +2128,37 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="OffsetShearWCS.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetShearWCS.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
         <span class="c1"># The shear stuff is not too complicated, but enough so that it is worth</span>
         <span class="c1"># encapsulating in the ShearWCS class.  So here, we just create one of those</span>
         <span class="c1"># and we&#39;ll pass along any shear calculations to that.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">=</span> <span class="n">ShearWCS</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">=</span> <span class="n">ShearWCS</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">scale</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">shear</span>
+    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The pixel scale.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">scale</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
+    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The applied `Shear`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">shear</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
+    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The image coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The world coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
 
     <span class="k">def</span> <span class="nf">_writeHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
         <span class="n">header</span><span class="p">[</span><span class="s2">&quot;GS_WCS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;OffsetShearWCS&quot;</span><span class="p">,</span> <span class="s2">&quot;GalSim WCS name&quot;</span><span class="p">)</span>
@@ -2100,10 +2188,10 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">OffsetShearWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OffsetShearWCS.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetShearWCS.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.OffsetShearWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span></div>
-<div class="viewcode-block" id="OffsetShearWCS.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetShearWCS.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="AffineTransform"><a class="viewcode-back" href="../../wcs.html#galsim.AffineTransform">[docs]</a><span class="k">class</span> <span class="nc">AffineTransform</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
@@ -2131,10 +2219,10 @@
 <span class="sd">        dvdx:           dv/dx</span>
 <span class="sd">        dvdy:           dv/dy</span>
 <span class="sd">        origin:         Optional origin position for the image coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD or PositionI.</span>
+<span class="sd">                        If provided, it should be a `PositionD` or `PositionI`.</span>
 <span class="sd">                        [default: PositionD(0., 0.)]</span>
 <span class="sd">        world_origin:   Optional origin position for the world coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD.</span>
+<span class="sd">                        If provided, it should be a `PositionD`.</span>
 <span class="sd">                        [default: PositionD(0., 0.)]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dudx&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;dudy&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;dvdx&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;dvdy&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
@@ -2142,25 +2230,47 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="AffineTransform.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.AffineTransform.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
         <span class="c1"># As with OffsetShearWCS, we store a JacobianWCS, rather than reimplement everything.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">=</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">=</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dudx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dudx</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dudy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dudy</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dvdx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dvdx</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dvdy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dvdy</span>
+    <span class="k">def</span> <span class="nf">dudx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;du/dx</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dudx</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
+    <span class="k">def</span> <span class="nf">dudy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;du/dy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dudy</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
+    <span class="k">def</span> <span class="nf">dvdx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;dv/dx</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dvdx</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dvdy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;dv/dy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="o">.</span><span class="n">dvdy</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The image coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The world coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
 
     <span class="k">def</span> <span class="nf">_writeHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
         <span class="n">header</span><span class="p">[</span><span class="s2">&quot;GS_WCS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;AffineTransform&quot;</span><span class="p">,</span> <span class="s2">&quot;GalSim WCS name&quot;</span><span class="p">)</span>
@@ -2209,10 +2319,10 @@
         <span class="k">return</span> <span class="n">AffineTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">,</span>
                                <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AffineTransform.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.AffineTransform.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.AffineTransform(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, origin=</span><span class="si">%r</span><span class="s2">, world_origin=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span></div>
-<div class="viewcode-block" id="AffineTransform.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.AffineTransform.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <span class="c1">#########################################################################################</span>
@@ -2410,10 +2520,10 @@
 <span class="sd">        xfunc:          The function x(u,v) (optional)</span>
 <span class="sd">        yfunc:          The function y(u,v) (optional)</span>
 <span class="sd">        origin:         Optional origin position for the image coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD or PositionI.</span>
+<span class="sd">                        If provided, it should be a `PositionD` or `PositionI`.</span>
 <span class="sd">                        [default: PositionD(0., 0.)]</span>
 <span class="sd">        world_origin    Optional origin position for the world coordinate system.</span>
-<span class="sd">                        If provided, it should be a PositionD.</span>
+<span class="sd">                        If provided, it should be a `PositionD`.</span>
 <span class="sd">                        [default: PositionD(0., 0.)]</span>
 <span class="sd">        uses_color:     If True, then the functions take three parameters (x,y,c) or (u,v,c)</span>
 <span class="sd">                        where the third term is some kind of color value.  (The exact meaning</span>
@@ -2426,7 +2536,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="UVFunction.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.UVFunction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ufunc</span><span class="p">,</span> <span class="n">vfunc</span><span class="p">,</span> <span class="n">xfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ufunc</span><span class="p">,</span> <span class="n">vfunc</span><span class="p">,</span> <span class="n">xfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">uses_color</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
@@ -2439,7 +2549,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span> <span class="o">=</span> <span class="n">uses_color</span>
 
         <span class="c1"># Turn these into the real functions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_initialize_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">galsim</span>
@@ -2478,18 +2588,40 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_yfunc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_yfunc</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">ufunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ufunc</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">vfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vfunc</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">xfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xfunc</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">yfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yfunc</span>
+    <span class="k">def</span> <span class="nf">ufunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input ufunc</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ufunc</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
+    <span class="k">def</span> <span class="nf">vfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input vfunc</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vfunc</span>
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
+    <span class="k">def</span> <span class="nf">xfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input xfunc</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xfunc</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">yfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input yfunc</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yfunc</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The image coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">world_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The world coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world_origin</span>
 
     <span class="k">def</span> <span class="nf">_u</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">:</span>
@@ -2609,7 +2741,7 @@
         <span class="k">return</span> <span class="n">UVFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_vfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_xfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_yfunc</span><span class="p">,</span>
                           <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">)</span>
 
-<div class="viewcode-block" id="UVFunction.__eq__"><a class="viewcode-back" href="../../wcs.html#galsim.UVFunction.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">UVFunction</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_ufunc</span> <span class="ow">and</span>
@@ -2618,14 +2750,14 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_yfunc</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_yfunc</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">world_origin</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">))</span>
 
-<div class="viewcode-block" id="UVFunction.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.UVFunction.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.UVFunction(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_vfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_xfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_yfunc</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">)</span>
 
-<div class="viewcode-block" id="UVFunction.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.UVFunction.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -2675,7 +2807,7 @@
 <span class="sd">        dec_func:   Either a function dec(x,y) returning dec in radians, or None (in which</span>
 <span class="sd">                    case ``ra_func`` is expected to return both ra and dec. [default: None]</span>
 <span class="sd">        origin:     Optional origin position for the image coordinate system.</span>
-<span class="sd">                    If provided, it should be a PositionD or PositionI.</span>
+<span class="sd">                    If provided, it should be a `PositionD` or `PositionI`.</span>
 <span class="sd">                    [default: PositionD(0., 0.)]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;ra_func&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;dec_func&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
@@ -2683,7 +2815,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="RaDecFunction.__init__"><a class="viewcode-back" href="../../wcs.html#galsim.RaDecFunction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra_func</span><span class="p">,</span> <span class="n">dec_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra_func</span><span class="p">,</span> <span class="n">dec_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
 
@@ -2692,7 +2824,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span> <span class="o">=</span> <span class="n">dec_func</span>
 
         <span class="c1"># Turn these into the real functions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_initialize_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">galsim</span>
@@ -2715,10 +2847,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_radec_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="p">:</span> <span class="p">(</span><span class="n">ra_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">dec_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">radec_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radec_func</span>
+    <span class="k">def</span> <span class="nf">radec_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input radec_func</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radec_func</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
+    <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The image coordinate position to use as the origin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span>
 
     <span class="k">def</span> <span class="nf">_radec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -2760,18 +2898,18 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">RaDecFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RaDecFunction.__eq__"><a class="viewcode-back" href="../../wcs.html#galsim.RaDecFunction.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RaDecFunction</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_ra_func</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_dec_func</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">))</span>
 
-<div class="viewcode-block" id="RaDecFunction.__repr__"><a class="viewcode-back" href="../../wcs.html#galsim.RaDecFunction.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.RaDecFunction(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RaDecFunction.__hash__"><a class="viewcode-back" href="../../wcs.html#galsim.RaDecFunction.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

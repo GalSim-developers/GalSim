@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Angles and Coordinates" href="coord.html" />
+    <link rel="next" title="Helper Functions and Classes" href="utilities.html" />
     <link rel="prev" title="Sensor Models" href="sensor.html" /> 
 </head>
 
@@ -91,9 +91,10 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="photon.html">Photon Shooting</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="photon_array.html">Photon Arrays</a></li>
@@ -101,7 +102,6 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Surface Operators</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -198,18 +198,6 @@ tables. [default: None, which uses the <a class="reference internal" href="devia
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.WavelengthSampler.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">sed</em>, <em class="sig-param">bandpass</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">npoints=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WavelengthSampler.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.WavelengthSampler.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.WavelengthSampler.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.WavelengthSampler.applyTo">
 <code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">photon_array</em>, <em class="sig-param">local_wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WavelengthSampler.applyTo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign wavelengths to the photons sampled from the SED * Bandpass.</p>
@@ -238,18 +226,6 @@ will be automatically constructed for you. [default: None]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.FRatioAngles.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fratio</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FRatioAngles.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.FRatioAngles.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.FRatioAngles.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.FRatioAngles.applyTo">
 <code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">photon_array</em>, <em class="sig-param">local_wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FRatioAngles.applyTo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign directions to the photons in photon_array.</p>
@@ -270,15 +246,15 @@ implemented by wavelength-dependent shifts of the photons.</p>
 the zenith measured from North through East) of the object being drawn, these must be specified
 via keywords.  There are four ways to specify these values:</p>
 <ol class="arabic simple">
-<li><p>explicitly provide <code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> as a keyword of type <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code>
+<li><p>explicitly provide <code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> as a keyword of type <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code>
 will be assumed to be 0 by default.</p></li>
 <li><p>explicitly provide both <code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> and <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code> as keywords of type
-<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
+<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
 <li><p>provide the coordinates of the object <code class="docutils literal notranslate"><span class="pre">obj_coord</span></code> and the coordinates of the zenith
-<code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> as keywords of type <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.</p></li>
-<li><p>provide the coordinates of the object <code class="docutils literal notranslate"><span class="pre">obj_coord</span></code> as a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>, the hour angle
-of the object <code class="docutils literal notranslate"><span class="pre">HA</span></code> as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and the latitude of the observer <code class="docutils literal notranslate"><span class="pre">latitude</span></code> as an
-<a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> as keywords of type <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.</p></li>
+<li><p>provide the coordinates of the object <code class="docutils literal notranslate"><span class="pre">obj_coord</span></code> as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>, the hour angle
+of the object <code class="docutils literal notranslate"><span class="pre">HA</span></code> as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>, and the latitude of the observer <code class="docutils literal notranslate"><span class="pre">latitude</span></code> as an
+<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
 </ol>
 <p>DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
 default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
@@ -302,33 +278,21 @@ appropriate for Kolmogorov turbulence.</p>
 <li><p><strong>alpha</strong> – Power law index for wavelength-dependent seeing.  This should only
 be used if doing a star-only simulation.  It is not correct when
 drawing galaxies. [default: 0.]</p></li>
-<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith, expressed as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: 0]</p></li>
+<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith, expressed as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: 0]</p></li>
 <li><p><strong>parallactic_angle</strong> – Parallactic angle, i.e. the position angle of the zenith, measured
 from North through East.  [default: 0]</p></li>
-<li><p><strong>obj_coord</strong> – Celestial coordinates of the object being drawn as a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
+<li><p><strong>obj_coord</strong> – Celestial coordinates of the object being drawn as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
 [default: None]</p></li>
-<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="coord.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
+<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
 [default: None]</p></li>
-<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
-<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="coord.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
 <li><p><strong>pressure</strong> – Air pressure in kiloPascals.  [default: 69.328 kPa]</p></li>
 <li><p><strong>temperature</strong> – Temperature in Kelvins.  [default: 293.15 K]</p></li>
 <li><p><strong>H2O_pressure</strong> – Water vapor pressure in kiloPascals.  [default: 1.067 kPa]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt id="galsim.PhotonDCR.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">base_wavelength</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhotonDCR.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.PhotonDCR.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.PhotonDCR.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="galsim.PhotonDCR.applyTo">
 <code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">photon_array</em>, <em class="sig-param">local_wcs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhotonDCR.applyTo" title="Permalink to this definition">¶</a></dt>
@@ -347,7 +311,7 @@ from North through East.  [default: 0]</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="coord.html" class="btn btn-neutral float-right" title="Angles and Coordinates" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="utilities.html" class="btn btn-neutral float-right" title="Helper Functions and Classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="sensor.html" class="btn btn-neutral float-left" title="Sensor Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

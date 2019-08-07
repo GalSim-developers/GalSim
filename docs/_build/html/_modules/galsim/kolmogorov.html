@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -196,19 +196,30 @@
 
 
 <div class="viewcode-block" id="Kolmogorov"><a class="viewcode-back" href="../../psf.html#galsim.Kolmogorov">[docs]</a><span class="k">class</span> <span class="nc">Kolmogorov</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class describing a Kolmogorov surface brightness profile, which represents a long</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Kolmogorov surface brightness profile, which represents a long</span>
 <span class="sd">    exposure atmospheric PSF.</span>
+
+<span class="sd">    The Kolmogorov profile is defined in Fourier space.  Its transfer function is:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        T(k) \sim \exp(-D(k)/2)</span>
+
+<span class="sd">    where</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        D(k) = 6.8839 \left(\frac{\lambda k}{2\pi r_0} \right)^{5/3},</span>
+
+<span class="sd">    :math:`\lambda` is the wavelength of the light (say in the middle of the bandpass you are</span>
+<span class="sd">    using), and :math:`r_0` is the Fried parameter.  Typical values for the Fried parameter are on</span>
+<span class="sd">    the order of 0.1 m for most observatories and up to 0.2 m for excellent sites. The values are</span>
+<span class="sd">    usually quoted at :math:`\lambda` = 500nm and :math:`r_0` depends on wavelength as</span>
+<span class="sd">    :math:`r_0 \sim \lambda^{6/5}`.</span>
 
 <span class="sd">    For more information, refer to</span>
 
 <span class="sd">        http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence</span>
 
-<span class="sd">    The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is</span>
-<span class="sd">    the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the</span>
-<span class="sd">    Fried parameter.  Typical values for the Fried parameter are on the order of 0.1 m for</span>
-<span class="sd">    most observatories and up to 0.2 m for excellent sites. The values are usually quoted at</span>
-<span class="sd">    lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(6/5)].</span>
-
+<span class="sd">    The Kolmogorov profile is normally defined in terms of the ratio :math:`\lambda / r_0`.</span>
 <span class="sd">    The natural units for this ratio is radians, which is not normally a convenient unit to use for</span>
 <span class="sd">    other `GSObject` dimensions.  Assuming that the other sky coordinates you are using are all in</span>
 <span class="sd">    arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you</span>
@@ -237,7 +248,8 @@
 <span class="sd">    A Kolmogorov object may also be initialized using ``fwhm`` or ``half_light_radius``.  Exactly</span>
 <span class="sd">    one of these four ways to define the size is required.</span>
 
-<span class="sd">    The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 arcsec (e.g., Racine 1996, PASP 699, 108).</span>
+<span class="sd">    The FWHM of the Kolmogorov PSF is :math:`\sim 0.976 \lambda/r_0` arcsec.</span>
+<span class="sd">    (e.g., Racine 1996, PASP 699, 108).</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        lam_over_r0:        The parameter that governs the scale size of the profile.</span>
@@ -309,7 +321,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="Kolmogorov.__init__"><a class="viewcode-back" href="../../psf.html#galsim.Kolmogorov.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_r0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_r0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">r0_500</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">AngleUnit</span>
@@ -355,7 +367,7 @@
                 <span class="n">r0</span> <span class="o">=</span> <span class="n">r0_500</span> <span class="o">*</span> <span class="p">(</span><span class="n">lam</span><span class="o">/</span><span class="mf">500.</span><span class="p">)</span><span class="o">**</span><span class="mf">1.2</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.e-9</span><span class="o">*</span><span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">r0</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">radians</span><span class="o">/</span><span class="n">scale_unit</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_k0</span> <span class="o">=</span> <span class="n">Kolmogorov</span><span class="o">.</span><span class="n">_k0_factor</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k0</span> <span class="o">=</span> <span class="n">Kolmogorov</span><span class="o">.</span><span class="n">_k0_factor</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -363,40 +375,43 @@
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBKolmogorov</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">lam_over_r0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span>
+    <span class="k">def</span> <span class="nf">lam_over_r0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input lambda / r0 for this `Kolmogorov` profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fwhm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the FWHM of this Kolmogorov profile.</span>
+        <span class="sd">&quot;&quot;&quot;The FWHM of this `Kolmogorov` profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span> <span class="o">*</span> <span class="n">Kolmogorov</span><span class="o">.</span><span class="n">_fwhm_factor</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the half light radius of this Kolmogorov profile.</span>
+        <span class="sd">&quot;&quot;&quot;The half light radius of this `Kolmogorov` profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lor0</span> <span class="o">*</span> <span class="n">Kolmogorov</span><span class="o">.</span><span class="n">_hlr_factor</span>
 
-<div class="viewcode-block" id="Kolmogorov.__eq__"><a class="viewcode-back" href="../../psf.html#galsim.Kolmogorov.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Kolmogorov</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_r0</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lam_over_r0</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Kolmogorov.__hash__"><a class="viewcode-back" href="../../psf.html#galsim.Kolmogorov.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Kolmogorov&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Kolmogorov&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Kolmogorov.__repr__"><a class="viewcode-back" href="../../psf.html#galsim.Kolmogorov.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Kolmogorov(lam_over_r0=</span><span class="si">%r</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Kolmogorov.__str__"><a class="viewcode-back" href="../../psf.html#galsim.Kolmogorov.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.Kolmogorov(lam_over_r0=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_over_r0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, flux=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">return</span> <span class="n">s</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

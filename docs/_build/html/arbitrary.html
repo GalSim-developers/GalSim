@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Composite Profiles" href="composite.html" />
-    <link rel="prev" title="Simple Profiles" href="simple.html" /> 
+    <link rel="next" title="Phase-screen PSFs" href="phase_psf.html" />
+    <link rel="prev" title="Galaxies" href="gal.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,29 +92,28 @@
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Aribtrary Profiles</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#interpolated-images">Interpolated Images</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#interpolated-fourier-space-images">Interpolated Fourier-space Images</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shapelet-decomposition">Shapelet Decomposition</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="units.html">Units</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -408,39 +407,27 @@ select a particular HDU in the file. [default: None]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.InterpolatedImage.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.InterpolatedImage.image">
+<em class="property">property </em><code class="sig-name descname">image</code><a class="headerlink" href="#galsim.InterpolatedImage.image" title="Permalink to this definition">¶</a></dt>
+<dd><p>The underlying <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> being interpolated.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InterpolatedImage.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.InterpolatedImage.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">x_interpolant=None</em>, <em class="sig-param">k_interpolant=None</em>, <em class="sig-param">normalization='flux'</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">flux=None</em>, <em class="sig-param">pad_factor=4.0</em>, <em class="sig-param">noise_pad_size=0</em>, <em class="sig-param">noise_pad=0.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">pad_image=None</em>, <em class="sig-param">calculate_stepk=True</em>, <em class="sig-param">calculate_maxk=True</em>, <em class="sig-param">use_cache=True</em>, <em class="sig-param">use_true_center=True</em>, <em class="sig-param">offset=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">_force_stepk=0.0</em>, <em class="sig-param">_force_maxk=0.0</em>, <em class="sig-param">hdu=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.InterpolatedImage.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.InterpolatedImage.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.InterpolatedImage.k_interpolant">
+<em class="property">property </em><code class="sig-name descname">k_interpolant</code><a class="headerlink" href="#galsim.InterpolatedImage.k_interpolant" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Fourier-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="galsim.InterpolatedImage.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.withGSParams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a version of the current object with the given gsparams</p>
+<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InterpolatedImage.x_interpolant">
+<em class="property">property </em><code class="sig-name descname">x_interpolant</code><a class="headerlink" href="#galsim.InterpolatedImage.x_interpolant" title="Permalink to this definition">¶</a></dt>
+<dd><p>The real-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
 </dd></dl>
 
 </dd></dl>
@@ -552,39 +539,21 @@ select a particular HDU in the file. [default: None]</p></li>
 </dd>
 </dl>
 <dl class="method">
-<dt id="galsim.InterpolatedKImage.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
+<dt id="galsim.InterpolatedKImage.k_interpolant">
+<em class="property">property </em><code class="sig-name descname">k_interpolant</code><a class="headerlink" href="#galsim.InterpolatedKImage.k_interpolant" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Fourier-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.InterpolatedKImage.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.InterpolatedKImage.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kimage=None</em>, <em class="sig-param">k_interpolant=None</em>, <em class="sig-param">stepk=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">real_kimage=None</em>, <em class="sig-param">imag_kimage=None</em>, <em class="sig-param">real_hdu=None</em>, <em class="sig-param">imag_hdu=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.InterpolatedKImage.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.InterpolatedKImage.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.InterpolatedKImage.kimage">
+<em class="property">property </em><code class="sig-name descname">kimage</code><a class="headerlink" href="#galsim.InterpolatedKImage.kimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>The underlying <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> being interpolated.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="galsim.InterpolatedKImage.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.withGSParams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a version of the current object with the given gsparams</p>
+<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -625,24 +594,24 @@ coefficients, <code class="docutils literal notranslate"><span class="pre">b</sp
 (N,m).  In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number
 of quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.</p>
 <p>The 2D image is given by (in polar coordinates):</p>
-<blockquote>
-<div><p>I(r,theta) = 1/sigma^2 Sum_pq b_pq psi_pq(r/sigma, theta)</p>
-</div></blockquote>
-<p>where psi_pq are the shapelet eigenfunctions, given by:</p>
-<blockquote>
-<div><p>psi_pq(r,theta) = (-)^q/sqrt(pi) sqrt(q!/p!) r^m exp(i m theta) exp(-r^2/2) L_q^(m)(r^2)</p>
-</div></blockquote>
-<p>and L_q^(m)(x) are generalized Laguerre polynomials.</p>
-<p>The coeffients b_pq are in general complex.  However, we require that the resulting
-I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
-This further implies that b_pp (i.e. b_pq with p==q) is real.</p>
+<div class="math notranslate nohighlight">
+\[I(r,\theta) = \frac{1}{\sigma^2} \sum_{pq} b_{pq} \psi_{pq}(r/\sigma, \theta)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\psi_{pq}\)</span> are the shapelet eigenfunctions, given by:</p>
+<div class="math notranslate nohighlight">
+\[\psi_pq(r,\theta) = \frac{(-)^q}{\sqrt{\pi}} \sqrt{\frac{q!}{p!}}
+                    r^m \exp(i m \theta) \exp(-r^2/2) L_q^{(m)}(r^2)\]</div>
+<p>and <span class="math notranslate nohighlight">\(L_q^{(m)}(x)\)</span> are generalized Laguerre polynomials.</p>
+<p>The coeffients <span class="math notranslate nohighlight">\(b_{pq}\)</span> are in general complex.  However, we require that the resulting
+<span class="math notranslate nohighlight">\(I(r,\theta)\)</span> be purely real, which implies that <span class="math notranslate nohighlight">\(b_{pq} = b_{qp}^*\)</span>
+(where <span class="math notranslate nohighlight">\({}^*\)</span> means complex conjugate).
+This further implies that <span class="math notranslate nohighlight">\(b_{pp}\)</span> (i.e. <span class="math notranslate nohighlight">\(b_{pq}\)</span> with <span class="math notranslate nohighlight">\(p==q\)</span>) is real.</p>
 <ol class="arabic">
-<li><p>Make a blank Shapelet instance with all b_pq = 0.:</p>
+<li><p>Make a blank Shapelet instance with all <span class="math notranslate nohighlight">\(b_{pq} = 0.\)</span>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">shapelet</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shapelet</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
-<li><p>Make a Shapelet instance using a given vector for the b_pq values.:</p>
+<li><p>Make a Shapelet instance using a given vector for the <span class="math notranslate nohighlight">\(b_{pq}\)</span> values.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bvec</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">shapelet</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shapelet</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">bvec</span><span class="p">)</span>
@@ -666,62 +635,11 @@ all zeros]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
-<dt class="field-even">Attributes</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>sigma</strong> – The scale size</p></li>
-<li><p><strong>order</strong> – The order of the shapelet decomposition</p></li>
-<li><p><strong>bvec</strong> – The vector of shapelet coefficients</p></li>
-</ul>
-</dd>
-</dl>
-<p>In addition the following access methods are sometimes useful:</p>
-<dl class="method">
-<dt id="galsim.Shapelet.getPQ">
-<code class="sig-name descname">getPQ</code><span class="sig-paren">(</span><em class="sig-param">p</em>, <em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getPQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getPQ" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the value of b_pq as a tuple (re, im) (even if p==q)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Shapelet.getNM">
-<code class="sig-name descname">getNM</code><span class="sig-paren">(</span><em class="sig-param">N</em>, <em class="sig-param">m</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getNM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getNM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the value of b_Nm as a tuple (re, im) (even if m==0)</p>
-</dd></dl>
-
-<dl class="simple">
-<dt>Class Methods:</dt><dd><dl class="simple">
-<dt>Shapelet.fit(sigma, order, image):  A factory function that measures the shapelet</dt><dd><p>decomposition of a given image.</p>
-</dd>
-</dl>
-</dd>
 </dl>
 <dl class="method">
-<dt id="galsim.Shapelet.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Shapelet.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Shapelet.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">sigma</em>, <em class="sig-param">order</em>, <em class="sig-param">bvec=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Shapelet.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Shapelet.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
+<dt id="galsim.Shapelet.bvec">
+<em class="property">property </em><code class="sig-name descname">bvec</code><a class="headerlink" href="#galsim.Shapelet.bvec" title="Permalink to this definition">¶</a></dt>
+<dd><p>The vector of shapelet coefficients</p>
 </dd></dl>
 
 <dl class="method">
@@ -762,6 +680,58 @@ N=p+q included in the decomposition.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="galsim.Shapelet.getNM">
+<code class="sig-name descname">getNM</code><span class="sig-paren">(</span><em class="sig-param">N</em>, <em class="sig-param">m</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getNM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getNM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the coefficient according to N,m rather than p,q where N=p+q and m=p-q.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – The value of N=p+q to get.</p></li>
+<li><p><strong>m</strong> – The value of m=p-q to get.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple (Re(b_pq), Im(b_pq))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Shapelet.getPQ">
+<code class="sig-name descname">getPQ</code><span class="sig-paren">(</span><em class="sig-param">p</em>, <em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getPQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getPQ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the (p,q) coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> – The p index to get.</p></li>
+<li><p><strong>q</strong> – The q index to get.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple (Re(b_pq), Im(b_pq))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Shapelet.order">
+<em class="property">property </em><code class="sig-name descname">order</code><a class="headerlink" href="#galsim.Shapelet.order" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shapelet order.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Shapelet.sigma">
+<em class="property">property </em><code class="sig-name descname">sigma</code><a class="headerlink" href="#galsim.Shapelet.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scale size, sigma.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Shapelet.size">
+<em class="property">classmethod </em><code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">order</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of the shapelet vector.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -775,10 +745,10 @@ N=p+q included in the decomposition.</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="composite.html" class="btn btn-neutral float-right" title="Composite Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="phase_psf.html" class="btn btn-neutral float-right" title="Phase-screen PSFs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="simple.html" class="btn btn-neutral float-left" title="Simple Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="gal.html" class="btn btn-neutral float-left" title="Galaxies" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

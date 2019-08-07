@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -283,17 +283,19 @@
 
 <span class="sd">        &gt;&gt;&gt; isinstance(noise, galsim.BaseNoise)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="BaseNoise.__init__"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">BaseDeviate</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;rng must be a galsim.BaseDeviate instance.&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">rng</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">rng</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">rng</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The `BaseDeviate` of this noise object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span>
 
 <div class="viewcode-block" id="BaseNoise.getVariance"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.getVariance">[docs]</a>    <span class="k">def</span> <span class="nf">getVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -377,12 +379,12 @@
     <span class="k">def</span> <span class="nf">_applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot call applyTo on a pure BaseNoise object&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BaseNoise.__eq__"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="c1"># Quick and dirty.  Just check reprs are equal.</span>
-        <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BaseNoise.__ne__"><a class="viewcode-back" href="../../noise.html#galsim.BaseNoise.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
     <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span></div>
 
@@ -408,14 +410,16 @@
 <span class="sd">        rng:        The internal random number generator (read-only)</span>
 <span class="sd">        sigma:      The value of the constructor parameter sigma (read-only)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="GaussianNoise.__init__"><a class="viewcode-back" href="../../noise.html#galsim.GaussianNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">GaussianDeviate</span>
         <span class="n">BaseNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span> <span class="o">=</span> <span class="n">sigma</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input sigma value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span>
 
     <span class="k">def</span> <span class="nf">_applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
@@ -444,11 +448,11 @@
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
         <span class="k">return</span> <span class="n">GaussianNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GaussianNoise.__repr__"><a class="viewcode-back" href="../../noise.html#galsim.GaussianNoise.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.GaussianNoise(rng=</span><span class="si">%r</span><span class="s1">, sigma=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.GaussianNoise(rng=</span><span class="si">%r</span><span class="s1">, sigma=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GaussianNoise.__str__"><a class="viewcode-back" href="../../noise.html#galsim.GaussianNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.GaussianNoise(sigma=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span></div></div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.GaussianNoise(sigma=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PoissonNoise"><a class="viewcode-back" href="../../noise.html#galsim.PoissonNoise">[docs]</a><span class="k">class</span> <span class="nc">PoissonNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
@@ -479,14 +483,16 @@
 <span class="sd">        rng:        The internal random number generator (read-only)</span>
 <span class="sd">        sky_level:  The value of the constructor parameter sky_level (read-only)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="PoissonNoise.__init__"><a class="viewcode-back" href="../../noise.html#galsim.PoissonNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_level</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_level</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">PoissonDeviate</span>
         <span class="n">BaseNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sky_level</span> <span class="o">=</span> <span class="n">sky_level</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pd</span> <span class="o">=</span> <span class="n">PoissonDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pd</span> <span class="o">=</span> <span class="n">PoissonDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sky_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input sky_level.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sky_level</span>
 
     <span class="k">def</span> <span class="nf">_applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
@@ -535,11 +541,11 @@
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
         <span class="k">return</span> <span class="n">PoissonNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PoissonNoise.__repr__"><a class="viewcode-back" href="../../noise.html#galsim.PoissonNoise.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.PoissonNoise(rng=</span><span class="si">%r</span><span class="s1">, sky_level=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.PoissonNoise(rng=</span><span class="si">%r</span><span class="s1">, sky_level=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PoissonNoise.__str__"><a class="viewcode-back" href="../../noise.html#galsim.PoissonNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.PoissonNoise(sky_level=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">)</span></div></div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.PoissonNoise(sky_level=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CCDNoise"><a class="viewcode-back" href="../../noise.html#galsim.CCDNoise">[docs]</a><span class="k">class</span> <span class="nc">CCDNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
@@ -592,7 +598,7 @@
 <span class="sd">        gain:           The value of the constructor parameter gain (read-only)</span>
 <span class="sd">        read_noise:     The value of the constructor parameter read_noise (read-only)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="CCDNoise.__init__"><a class="viewcode-back" href="../../noise.html#galsim.CCDNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_level</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">read_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sky_level</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">read_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">PoissonDeviate</span><span class="p">,</span> <span class="n">GaussianDeviate</span>
         <span class="n">BaseNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sky_level</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sky_level</span><span class="p">)</span>
@@ -602,18 +608,24 @@
         <span class="k">if</span> <span class="n">gain</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sky_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input sky_level.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sky_level</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input gain.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">read_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input read_noise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_noise</span>
 
     <span class="k">def</span> <span class="nf">_applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
@@ -676,13 +688,13 @@
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
         <span class="k">return</span> <span class="n">CCDNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CCDNoise.__repr__"><a class="viewcode-back" href="../../noise.html#galsim.CCDNoise.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.CCDNoise(rng=</span><span class="si">%r</span><span class="s1">, sky_level=</span><span class="si">%r</span><span class="s1">, gain=</span><span class="si">%r</span><span class="s1">, read_noise=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CCDNoise.__str__"><a class="viewcode-back" href="../../noise.html#galsim.CCDNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.CCDNoise(sky_level=</span><span class="si">%r</span><span class="s1">, gain=</span><span class="si">%r</span><span class="s1">, read_noise=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span><span class="p">)</span></div></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sky_level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_noise</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DeviateNoise"><a class="viewcode-back" href="../../noise.html#galsim.DeviateNoise">[docs]</a><span class="k">class</span> <span class="nc">DeviateNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
@@ -702,8 +714,8 @@
 <span class="sd">    Attributes:</span>
 <span class="sd">        rng:    The internal random number generator (read-only)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="DeviateNoise.__init__"><a class="viewcode-back" href="../../noise.html#galsim.DeviateNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dev</span><span class="p">):</span>
-        <span class="n">BaseNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dev</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dev</span><span class="p">):</span>
+        <span class="n">BaseNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dev</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
         <span class="n">noise_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -736,11 +748,11 @@
             <span class="n">dev</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">DeviateNoise</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DeviateNoise.__repr__"><a class="viewcode-back" href="../../noise.html#galsim.DeviateNoise.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.DeviateNoise(dev=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.DeviateNoise(dev=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
 
-<div class="viewcode-block" id="DeviateNoise.__str__"><a class="viewcode-back" href="../../noise.html#galsim.DeviateNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.DeviateNoise(dev=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span></div></div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.DeviateNoise(dev=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span></div>
 
 
 <div class="viewcode-block" id="VariableGaussianNoise"><a class="viewcode-back" href="../../noise.html#galsim.VariableGaussianNoise">[docs]</a><span class="k">class</span> <span class="nc">VariableGaussianNoise</span><span class="p">(</span><span class="n">BaseNoise</span><span class="p">):</span>
@@ -761,16 +773,18 @@
 <span class="sd">        rng:        The internal random number generator (read-only)</span>
 <span class="sd">        var_image:  The value of the constructor parameter var_image (read-only)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="VariableGaussianNoise.__init__"><a class="viewcode-back" href="../../noise.html#galsim.VariableGaussianNoise.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">var_image</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">var_image</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">GaussianDeviate</span>
         <span class="n">BaseNoise</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 
         <span class="c1"># Make sure var_image is an ImageD, converting dtype if necessary</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_var_image</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">var_image</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var_image</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">var_image</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input var_image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_image</span>
 
     <span class="c1"># Repeat this here, since we want to add an extra sanity check, which should go in the</span>
@@ -812,11 +826,11 @@
         <span class="c1"># scale the values in the image before constructing VariableGaussianNoise.</span>
         <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Changing the variance is not allowed for VariableGaussianNoise&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VariableGaussianNoise.__repr__"><a class="viewcode-back" href="../../noise.html#galsim.VariableGaussianNoise.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.VariableGaussianNoise(rng=</span><span class="si">%r</span><span class="s1">, var_image</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_image</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.VariableGaussianNoise(rng=</span><span class="si">%r</span><span class="s1">, var_image</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_image</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VariableGaussianNoise.__str__"><a class="viewcode-back" href="../../noise.html#galsim.VariableGaussianNoise.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;galsim.VariableGaussianNoise(var_image</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_image</span><span class="p">)</span></div></div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.VariableGaussianNoise(var_image</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_image</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

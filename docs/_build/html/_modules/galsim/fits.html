@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
@@ -573,8 +573,8 @@
 <span class="sd">                        that case, the user is responsible for calling either</span>
 <span class="sd">                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.</span>
 <span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
-<span class="sd">        clobber:        Setting ``clobber=True`` when ``file_name`` is given will silently overwrite</span>
-<span class="sd">                        existing files. [default: True]</span>
+<span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
+<span class="sd">                        [default: True]</span>
 <span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
 
 <span class="sd">                        - None or &#39;none&#39; = no compression</span>
@@ -585,11 +585,12 @@
 <span class="sd">                        - &#39;hcompress&#39; = use hcompress in tiles (only valid for 2-d images)</span>
 <span class="sd">                        - &#39;plio&#39; = use plio compression in tiles (only valid for pos integer data)</span>
 <span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
-<span class="sd">                                   (requires ``file_name`` to be given):</span>
-<span class="sd">                                   - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
-<span class="sd">                                   - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
-<span class="sd">                                   - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
-<span class="sd">                                   - otherwise None</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -643,8 +644,26 @@
 <span class="sd">                        that case, the user is responsible for calling either</span>
 <span class="sd">                        ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.</span>
 <span class="sd">                        [Either ``file_name`` or ``hdu_list`` is required.]</span>
-<span class="sd">        clobber:        See documentation for this parameter on the galsim.fits.write() method.</span>
-<span class="sd">        compression:    See documentation for this parameter on the galsim.fits.write() method.</span>
+<span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
+<span class="sd">                        [default: True]</span>
+<span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no compression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice compression in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to compress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to compress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress in tiles (only valid for 2-d images)</span>
+<span class="sd">                        - &#39;plio&#39; = use plio compression in tiles (only valid for pos integer data)</span>
+<span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
 
@@ -710,8 +729,26 @@
 <span class="sd">                        case, the user is responsible for calling either ``hdu_list.writeto(...)``</span>
 <span class="sd">                        or ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or</span>
 <span class="sd">                        ``hdu_list`` is required.]</span>
-<span class="sd">        clobber:        See documentation for this parameter on the galsim.fits.write() method.</span>
-<span class="sd">        compression:    See documentation for this parameter on the galsim.fits.write() method.</span>
+<span class="sd">        clobber:        Setting ``clobber=True`` will silently overwrite existing files.</span>
+<span class="sd">                        [default: True]</span>
+<span class="sd">        compression:    Which compression scheme to use (if any).  Options are:</span>
+
+<span class="sd">                        - None or &#39;none&#39; = no compression</span>
+<span class="sd">                        - &#39;rice&#39; = use rice compression in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;gzip&#39; = use gzip to compress the full file</span>
+<span class="sd">                        - &#39;bzip2&#39; = use bzip2 to compress the full file</span>
+<span class="sd">                        - &#39;gzip_tile&#39; = use gzip in tiles (preserves header readability)</span>
+<span class="sd">                        - &#39;hcompress&#39; = use hcompress in tiles (only valid for 2-d images)</span>
+<span class="sd">                        - &#39;plio&#39; = use plio compression in tiles (only valid for pos integer data)</span>
+<span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
+
+<span class="sd">                        [default: &#39;auto&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
     <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsI</span>
@@ -807,10 +844,11 @@
 <span class="sd">                        - &#39;gzip&#39; = use gzip to compress the full file</span>
 <span class="sd">                        - &#39;bzip2&#39; = use bzip2 to compress the full file</span>
 <span class="sd">                        - &#39;auto&#39; = determine the compression from the extension of the file name</span>
-<span class="sd">                                   (requires ``file_name`` to be given):</span>
-<span class="sd">                                   &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
-<span class="sd">                                   &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
-<span class="sd">                                   otherwise None</span>
+<span class="sd">                          (requires ``file_name`` to be given):</span>
+
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        Note that the other options, such as &#39;rice&#39;, that operate on the image</span>
 <span class="sd">                        directly are not available at this point.  If you want to use one of them,</span>
@@ -877,11 +915,12 @@
 <span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
 <span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
 <span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
-<span class="sd">                                   (requires ``file_name`` to be given).</span>
-<span class="sd">                                   - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
-<span class="sd">                                   - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
-<span class="sd">                                   - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
-<span class="sd">                                   - otherwise None</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 
@@ -960,11 +999,12 @@
 <span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
 <span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
 <span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
-<span class="sd">                                   (requires ``file_name`` to be given).</span>
-<span class="sd">                                   - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
-<span class="sd">                                   - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
-<span class="sd">                                   - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
-<span class="sd">                                   - otherwise None</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 
@@ -1042,11 +1082,12 @@
 <span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
 <span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
 <span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
-<span class="sd">                                   (requires ``file_name`` to be given).</span>
-<span class="sd">                                   - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
-<span class="sd">                                   - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
-<span class="sd">                                   - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
-<span class="sd">                                   - otherwise None</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 
@@ -1132,11 +1173,12 @@
 <span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
 <span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
 <span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
-<span class="sd">                                   (requires ``file_name`` to be given).</span>
-<span class="sd">                                   - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
-<span class="sd">                                   - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
-<span class="sd">                                   - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
-<span class="sd">                                   - otherwise None</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 
@@ -1235,11 +1277,12 @@
 <span class="sd">                        - &#39;hcompress&#39; = use hcompress decompression in tiles</span>
 <span class="sd">                        - &#39;plio&#39; = use plio decompression in tiles</span>
 <span class="sd">                        - &#39;auto&#39; = determine the decompression from the extension of the file name</span>
-<span class="sd">                                   (requires ``file_name`` to be given).</span>
-<span class="sd">                                   - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
-<span class="sd">                                   - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
-<span class="sd">                                   - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
-<span class="sd">                                   - otherwise None</span>
+<span class="sd">                          (requires ``file_name`` to be given).</span>
+
+<span class="sd">                          - &#39;.fz&#39; =&gt; &#39;rice&#39;</span>
+<span class="sd">                          - &#39;.gz&#39; =&gt; &#39;gzip&#39;</span>
+<span class="sd">                          - &#39;.bz2&#39; =&gt; &#39;bzip2&#39;</span>
+<span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 <span class="sd">        text_file:      Normally a file is taken to be a fits file, but you can also give it a</span>
@@ -1252,7 +1295,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="FitsHeader.__init__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">text_file</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
 
@@ -1325,7 +1368,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># The rest of the functions are typical non-mutating functions for a dict, for which we</span>
     <span class="c1"># generally just pass the request along to self.header.</span>
@@ -1397,27 +1440,27 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">value</span><span class="p">),</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="FitsHeader.__repr__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span></div>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
 
-<div class="viewcode-block" id="FitsHeader.__str__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=&lt;Header object at </span><span class="si">%s</span><span class="s2">&gt;)&quot;</span><span class="o">%</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span></div>
+            <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
 
-<div class="viewcode-block" id="FitsHeader.__eq__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">FitsHeader</span><span class="p">)</span> <span class="ow">and</span>
-                 <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
+                 <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
 
-<div class="viewcode-block" id="FitsHeader.__ne__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__ne__">[docs]</a>    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-<div class="viewcode-block" id="FitsHeader.__hash__"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.__hash__">[docs]</a>    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div></div>
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
 
 <span class="c1"># inject write as method of Image class</span>
 <span class="n">Image</span><span class="o">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">write</span>

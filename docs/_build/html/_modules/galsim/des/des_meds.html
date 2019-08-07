@@ -89,12 +89,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
@@ -232,7 +232,7 @@
 <span class="sd">        self.box_size:      Size of each exposure image.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MultiExposureObject.__init__"><a class="viewcode-back" href="../../../des.html#galsim.des.MultiExposureObject.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">psf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">badpix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">psf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cutout_row</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cutout_col</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="c1"># Check that images is valid</span>
@@ -341,7 +341,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">cutout_col</span> <span class="o">=</span> <span class="p">[</span> <span class="n">w</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="p">]</span>
 
         <span class="c1"># psf is not required, so leave it as None if not provided.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span></div>
 
 
 <div class="viewcode-block" id="WriteMEDS"><a class="viewcode-back" href="../../../des.html#galsim.des.WriteMEDS">[docs]</a><span class="k">def</span> <span class="nf">WriteMEDS</span><span class="p">(</span><span class="n">obj_list</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>

@@ -91,9 +91,10 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="wl.html">Weak Lensing</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="shear.html">The Shear class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="powerspectrum.html">Power Spectrum Shears</a></li>
@@ -102,7 +103,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -244,6 +244,29 @@ Users must account for the contribution of noise in <code class="docutils litera
 <li><p>The code for this class uses the notation of the GREAT10 handbook (Kitching et al. 2011,
 <a class="reference external" href="http://dx.doi.org/10.1214/11-AOAS484">http://dx.doi.org/10.1214/11-AOAS484</a>), equations 17-21.</p></li>
 </ol>
+<p>galsim.pse.PowerSpectrumEstimator.__init__</p>
+<dl class="method">
+<dt id="galsim.pse.PowerSpectrumEstimator.estimate">
+<code class="sig-name descname">estimate</code><span class="sig-paren">(</span><em class="sig-param">g1</em>, <em class="sig-param">g2</em>, <em class="sig-param">weight_EE=False</em>, <em class="sig-param">weight_BB=False</em>, <em class="sig-param">theory_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/pse.html#PowerSpectrumEstimator.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.pse.PowerSpectrumEstimator.estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the EE, BB, and EB power spectra of two 2D arrays <code class="docutils literal notranslate"><span class="pre">g1</span></code> and <code class="docutils literal notranslate"><span class="pre">g2</span></code>.</p>
+<p>For example usage, see the docstring for the <a class="reference internal" href="#galsim.pse.PowerSpectrumEstimator" title="galsim.pse.PowerSpectrumEstimator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PowerSpectrumEstimator</span></code></a> class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>g1</strong> – The shear component g1 as a square 2D NumPy array.</p></li>
+<li><p><strong>g2</strong> – The shear component g2 as a square 2D NumPy array.</p></li>
+<li><p><strong>weight_EE</strong> – If True, then the E auto-power spectrum is re-computed weighting by
+the power within each logarithmically-spaced ell bin. [default: False]</p></li>
+<li><p><strong>weight_BB</strong> – If True, then the B auto-power spectrum is re-computed weighting by
+the power within each logarithmically-spaced ell bin. [default: False]</p></li>
+<li><p><strong>theory_func</strong> – An optional callable function that can be used to get an idealized
+value of power at each point on the grid, and then see what results
+it gives for our chosen ell binning. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>

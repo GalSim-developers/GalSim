@@ -91,8 +91,6 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="sed.html">Spectral Energy Distributions</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Bandpass Filters</a></li>
@@ -100,9 +98,11 @@
 <li class="toctree-l2"><a class="reference internal" href="spectral.html">Spectral Correlated Noise</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Angles and Coordinates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
@@ -267,48 +267,6 @@ attributes, the throughput is assumed to be zero.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.Bandpass.__eq__">
-<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__eq__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self==value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Bandpass.__hash__">
-<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__hash__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return hash(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Bandpass.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">throughput</em>, <em class="sig-param">wave_type</em>, <em class="sig-param">blue_limit=None</em>, <em class="sig-param">red_limit=None</em>, <em class="sig-param">zeropoint=None</em>, <em class="sig-param">_wave_list=None</em>, <em class="sig-param">_tp=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Bandpass.__ne__">
-<code class="sig-name descname">__ne__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__ne__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__ne__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self!=value.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Bandpass.__repr__">
-<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return repr(self).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="galsim.Bandpass.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return str(self).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="galsim.Bandpass.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#galsim.Bandpass.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="galsim.Bandpass.calculateEffectiveWavelength">
 <code class="sig-name descname">calculateEffectiveWavelength</code><span class="sig-paren">(</span><em class="sig-param">precise=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.calculateEffectiveWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.calculateEffectiveWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate, store, and return the effective wavelength for this bandpass.</p>
@@ -320,6 +278,13 @@ SED-independent.  Units are nanometers.</p>
 a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> rather than the normal trapezoid rule. [default: False]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.Bandpass.effective_wavelength">
+<em class="property">property </em><code class="sig-name descname">effective_wavelength</code><a class="headerlink" href="#galsim.Bandpass.effective_wavelength" title="Permalink to this definition">¶</a></dt>
+<dd><p>The effective wavelength of the <a class="reference internal" href="#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a>.</p>
+<p>An alias for <code class="docutils literal notranslate"><span class="pre">self.calculateEffectiveWavelength()</span></code>.</p>
 </dd></dl>
 
 <dl class="method">

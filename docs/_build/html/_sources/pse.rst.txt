@@ -7,3 +7,6 @@ repository before the code was moved into the GalSim repository, but there are s
 of the performance of this code in devel/modules/lensing_engine.pdf.
 
 .. autoclass:: galsim.pse.PowerSpectrumEstimator
+    :members:
+
+    galsim.pse.PowerSpectrumEstimator.__init__
