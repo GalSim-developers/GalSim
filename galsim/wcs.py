@@ -706,8 +706,8 @@ class BaseWCS(object):
 def readFromFitsHeader(header):
     """Read a WCS function from a FITS header.
 
-    This is normally called automatically from within the galsim.fits.read() function, but
-    you can also call it directly as
+    This is normally called automatically from within the `galsim.fits.read` function, but
+    you can also call it directly as::
 
         wcs, origin = galsim.wcs.readFromFitsHeader(header)
 

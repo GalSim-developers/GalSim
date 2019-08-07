@@ -32,11 +32,13 @@ def noll_to_zern(j):
     j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
     index.
 
+    c.f. https://oeis.org/A176988
+
     Parameters:
         j:      Zernike mode Noll index
 
-    @return (n, m) tuple of Zernike indices
-    @see <https://oeis.org/A176988>.
+    Returns:
+        (n, m) tuple of Zernike indices
     """
     while len(_noll_n) <= j:
         n = _noll_n[-1] + 1
@@ -398,9 +400,10 @@ class Zernike(object):
 
     Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is
     for the normality constant to equal the area of integration, which is pi for the unit circle.
-    I.e.,::
+    I.e.,
 
-        \int_{unit circle} Z_i Z_j dA = \pi \delta_{i, j}.
+    .. math::
+        \int_\mathrm{unit circle} Z_i Z_j dA = \pi \delta_{i, j}.
 
     Two generalizations of the unit circle Zernike polynomials are also available in this class:
     annular Zernike polynomials, and polynomials defined over non-unit-radius circles.
@@ -408,12 +411,14 @@ class Zernike(object):
     Annular Zernikes are orthonormal over an annulus instead of a circle (see Mahajan, J. Opt. Soc.
     Am. 71, 1, (1981)).  Similarly, the non-unit-radius polynomials are orthonormal over a region
     with outer radius not equal to 1.  Taken together, these generalizations yield the
-    orthonormality condition::
+    orthonormality condition:
 
-        \int_{annulus} Z_i Z_j dA = \pi (R_outer^2 - R_inner^2) \delta_{i, j}
+    .. math::
+        \int_\mathrm{annulus} Z_i Z_j dA =
+        \pi \left(R_\mathrm{outer}^2 - R_\mathrm{inner}^2\right) \delta_{i, j}
 
-    where 0 <= R_inner < R_outer indicate the inner and outer radii of the annulus over which the
-    polynomials are orthonormal.
+    where :math:`0 <= R_\mathrm{inner} < R_\mathrm{outer}` indicate the inner and outer radii of
+    the annulus over which the polynomials are orthonormal.
 
     The indexing convention for i and j above is that from Noll, J. Opt. Soc. Am. 66, 207-211(1976).
     Note that the Noll indices begin at 1; there is no Z_0.  Because of this, the series

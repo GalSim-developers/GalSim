@@ -461,7 +461,7 @@ class ImageBuilder(object):
         a calculation to determine where all the overlapping galaxies should go, and the later
         jobs would use the results of this calculation and just place the later galaxies in the
         appropriate place.
-        
+
         Normally, though, each task is just a single job, in which case, this function is very
         simple.
 

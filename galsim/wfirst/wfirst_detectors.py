@@ -137,7 +137,7 @@ Slew between pointings and consecutive resets after illumination are not conside
     fermi model plus a linear tail below half of saturation.
 
     For more info about the fermi model, see:
-    
+
     http://www.stsci.edu/hst/wfc3/ins_performance/persistence/
 
 Parameters:

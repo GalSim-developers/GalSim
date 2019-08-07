@@ -146,6 +146,9 @@ def trapzRule(f, xs):
 
 
 class ImageIntegrator(object):
+    """A base class for integrators used by `ChromaticObject` to integrate the drawn images
+    over wavelengthh using a `Bandpass` as a weight function.
+    """
     def __init__(self):
         raise NotImplementedError("Must instantiate subclass of ImageIntegrator")
     # subclasses must define

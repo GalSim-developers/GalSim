@@ -28,7 +28,7 @@ from .errors import convert_cpp_errors
 
 
 class Shapelet(GSObject):
-    """A class describing polar shapelet surface brightness profiles.
+    r"""A class describing polar shapelet surface brightness profiles.
 
     This class describes an arbitrary profile in terms of a shapelet decomposition.  A shapelet
     decomposition is an eigenfunction decomposition of a 2-d function using the eigenfunctions
@@ -44,23 +44,27 @@ class Shapelet(GSObject):
 
     The 2D image is given by (in polar coordinates):
 
-        I(r,theta) = 1/sigma^2 Sum_pq b_pq psi_pq(r/sigma, theta)
+    .. math::
+        I(r,\theta) = \frac{1}{\sigma^2} \sum_{pq} b_{pq} \psi_{pq}(r/\sigma, \theta)
 
-    where psi_pq are the shapelet eigenfunctions, given by:
+    where :math:`\psi_{pq}` are the shapelet eigenfunctions, given by:
 
-        psi_pq(r,theta) = (-)^q/sqrt(pi) sqrt(q!/p!) r^m exp(i m theta) exp(-r^2/2) L_q^(m)(r^2)
+    .. math::
+        \psi_pq(r,\theta) = \frac{(-)^q}{\sqrt{\pi}} \sqrt{\frac{q!}{p!}}
+                            r^m \exp(i m \theta) \exp(-r^2/2) L_q^{(m)}(r^2)
 
-    and L_q^(m)(x) are generalized Laguerre polynomials.
+    and :math:`L_q^{(m)}(x)` are generalized Laguerre polynomials.
 
-    The coeffients b_pq are in general complex.  However, we require that the resulting
-    I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
-    This further implies that b_pp (i.e. b_pq with p==q) is real.
+    The coeffients :math:`b_{pq}` are in general complex.  However, we require that the resulting
+    :math:`I(r,\theta)` be purely real, which implies that :math:`b_{pq} = b_{qp}^*`
+    (where :math:`{}^*` means complex conjugate).
+    This further implies that :math:`b_{pp}` (i.e. :math:`b_{pq}` with :math:`p==q`) is real.
 
-    1. Make a blank Shapelet instance with all b_pq = 0.::
+    1. Make a blank Shapelet instance with all :math:`b_{pq} = 0.`::
 
         >>> shapelet = galsim.Shapelet(sigma, order)
 
-    2. Make a Shapelet instance using a given vector for the b_pq values.::
+    2. Make a Shapelet instance using a given vector for the :math:`b_{pq}` values.::
 
         >>> order = 2
         >>> bvec = [ 1, 0, 0, 0.2, 0.3, -0.1 ]
@@ -86,17 +90,6 @@ class Shapelet(GSObject):
         sigma:      The scale size
         order:      The order of the shapelet decomposition
         bvec:       The vector of shapelet coefficients
-
-    In addition the following access methods are sometimes useful:
-
-    Methods:
-        getPQ(p,q):     Get the value of b_pq as a tuple (re, im) (even if p==q)
-        getNM(N,m):     Get the value of b_Nm as a tuple (re, im) (even if m==0)
-
-    Class Methods:
-        Shapelet.fit(sigma, order, image):  A factory function that measures the shapelet
-                                            decomposition of a given image.
-
     """
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}

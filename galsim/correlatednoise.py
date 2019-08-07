@@ -71,7 +71,7 @@ class BaseCorrelatedNoise(object):
     """A Base Class describing 2D correlated Gaussian random noise fields.
 
     A BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
-    current `BaseCorrelatedNoise.__init__` interface does not provide any guarantee that the input
+    current ``BaseCorrelatedNoise.__init__`` interface does not provide any guarantee that the input
     `GSObject` represents a physical correlation function, e.g. a profile that is an even function
     (two-fold rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern
     is that users instead instantiate derived classes, such as the `CorrelatedNoise`, which are

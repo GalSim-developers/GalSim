@@ -28,11 +28,16 @@ from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Exponential(GSObject):
-    """A class describing an exponential profile.
+    r"""A class describing an exponential profile.
 
-    Surface brightness profile with I(r) ~ exp[-r/scale_radius].  This is a special case of
-    the `Sersic` profile, but is given a separate class since the Fourier transform has closed form
-    and can be generated without lookup tables.
+    Surface brightness profile with
+
+    .. math::
+        I(r) \sim e^{-r/r_0}
+
+    where :math:`r_0` is the ``scale_radius``.  This is a special case of the `Sersic` profile,
+    but is given a separate class since the Fourier transform has closed form and can be generated
+    without lookup tables.
 
     An Exponential can be initialized using one (and only one) of two possible size parameters:
     ``scale_radius`` or ``half_light_radius``.  Exactly one of these two is required.

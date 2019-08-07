@@ -101,7 +101,7 @@ class AtmosphericScreen(object):
     Note that once a screen has been instantiated with a particular set of truncation parameters, it
     cannot be re-instantiated with another set of parameters.
 
-    Shared memory:
+    **Shared memory**:
 
     Instantiated AtmosphericScreen objects can consume a significant amount of memory.  For example,
     an atmosphere with 6 screens, each extending 819.2 m and with resolution of 10 cm will consume
@@ -111,11 +111,11 @@ class AtmosphericScreen(object):
     provide a few functions here to enable such usage:
 
         - The mp_context keyword argument to AtmosphericScreen.
-            This is used to indicate which multiprocessing process launching context will be used.
-            This is important for setting up the shared memory correctly.
-        - The galsim.phase_screens.initWorker() and initWorkerArgs() functions.
-            These should be used in a call to multiprocessing.Pool to correctly inform the worker
-            process where to find AtmosphericScreen shared memory.
+          This is used to indicate which multiprocessing process launching context will be used.
+          This is important for setting up the shared memory correctly.
+        - The `initWorker` and `initWorkerArgs` functions.
+          These should be used in a call to multiprocessing.Pool to correctly inform the worker
+          process where to find AtmosphericScreen shared memory.
 
     A template example might look something like::
 
@@ -676,7 +676,7 @@ class AtmosphericScreen(object):
 
 
 def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
-    """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
+    r"""Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
     atmosphere model can then be used to simulate atmospheric PSFs.
 
     Simulating an atmospheric PSF is typically accomplished by first representing the 3-dimensional
@@ -689,16 +689,19 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     The atmospheric screens currently available represent turbulence following a von Karman power
     spectrum.  Specifically, the phase power spectrum in each screen can be written
 
-    psi(nu) = 0.023 r0^(-5/3) (nu^2 + 1/L0^2)^(11/6)
+    .. math::
+        \psi(\nu) = 0.023 r_0^{-5/3} \left(\nu^2 + \frac{1}{L_0^2}\right)^{11/6}
 
-    where psi(nu) is the power spectral density at spatial frequency nu, r0 is the Fried parameter
-    (which has dimensions of length) and sets the amplitude of the turbulence, and L0 is the outer
-    scale (also dimensions of length) beyond which the power asymptotically flattens.  Typical
-    values for r0 are ~0.1 to 0.2 meters, which corresponds roughly to PSF FWHMs of ~0.5 to 1.0
-    arcsec for optical wavelengths.  Note that r0 is a function of wavelength, scaling like
-    r0 ~ wavelength^(6/5).  To reduce confusion, the input parameter here is named r0_500 and refers
-    explicitly to the Fried parameter at a wavelength of 500 nm.  The outer scale is typically in
-    the 10s of meters and does not vary with wavelength.
+    where :math:`\psi(\nu)` is the power spectral density at spatial frequency :math:`\nu`,
+    :math:`r_0` is the Fried parameter (which has dimensions of length) and sets the amplitude of
+    the turbulence, and :math:`L_0` is the outer scale (also dimensions of length) beyond which the
+    power asymptotically flattens.
+
+    Typical values for :math:`r_0` are ~0.1 to 0.2 meters, which corresponds roughly to PSF FWHMs
+    of ~0.5 to 1.0 arcsec for optical wavelengths.  Note that :math:`r_0` is a function of
+    wavelength, scaling like :math:`r_0 \sim \lambda^{6/5}`.  To reduce confusion, the input
+    parameter here is named ``r0_500`` and refers explicitly to the Fried parameter at a wavelength
+    of 500 nm.  The outer scale is typically in the 10s of meters and does not vary with wavelength.
 
     To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
     (works for all arguments except ``rng``).  If, for any of these keyword arguments, you want to
@@ -708,7 +711,10 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     lengths (unless only one of them has length > 1).
 
     The one exception to the above is the keyword ``r0_500``.  The effective Fried parameter for a
-    set of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
+    set of atmospheric layers is::
+
+        r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5)
+
     Providing ``r0_500`` as a scalar or single-element list will result in broadcasting such that
     the effective Fried parameter for the whole set of layers equals the input argument.  You can
     weight the contribution of each layer with the ``r0_weights`` keyword.

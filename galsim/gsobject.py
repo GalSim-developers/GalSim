@@ -295,7 +295,7 @@ class GSObject(object):
 
     @property
     def centroid(self):
-        "The (x, y) centroid of an object as a Position."
+        "The (x, y) centroid of an object as a `PositionD`."
         return self._centroid
 
     @lazy_property
@@ -645,7 +645,7 @@ class GSObject(object):
         """Returns the value of the object at a chosen 2D position in real space.
 
         This function returns the surface brightness of the object at a particular position
-        in real space.  The position argument may be provided as a PositionD or PositionI
+        in real space.  The position argument may be provided as a `PositionD` or `PositionI`
         argument, or it may be given as x,y (either as a tuple or as two arguments).
 
         The object surface brightness profiles are typically defined in world coordinates, so
@@ -686,8 +686,7 @@ class GSObject(object):
 
         This function returns the amplitude of the fourier transform of the surface brightness
         profile at a given position in k space.  The position argument may be provided as a
-        PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
-        arguments).
+        `Position` argument, or it may be given as kx,ky (either as a tuple or as two arguments).
 
         Technically, kValue() is available if and only if the given obj has ``obj.is_analytic_k
         == True``, but this is the case for all `GSObject` classes currently, so that should never
@@ -980,7 +979,7 @@ class GSObject(object):
         longer available.
 
         Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
-        or as a PositionD or PositionI object.
+        or as a `Position` object.
 
         The shift coordinates here are sky coordinates.  `GSObject` profiles are always defined in
         sky coordinates and only later (when they are drawn) is the connection to pixel coordinates
@@ -1001,7 +1000,7 @@ class GSObject(object):
             dx:         Horizontal shift to apply.
             dy:         Vertical shift to apply.
 
-        Alternatively, you may supply a single parameter as a Position instance, rather than
+        Alternatively, you may supply a single parameter as a `Position` instance, rather than
         the two components separately if that is more convenient.
 
         Parameter:

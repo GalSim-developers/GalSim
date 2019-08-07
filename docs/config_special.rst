@@ -4,7 +4,8 @@ Special Fields
 There are a couple of other top level fields that act more in a support role, rather than being
 part of the main processing.
 
-**modules**:
+modules
+-------
 
 Almost all aspects of the file building can be customized by the user if the existing GalSim
 types do not do precisely what you need.  How to do this is described in the pages about 
@@ -25,7 +26,8 @@ See:
 
 for some examples of this field.
 
-**eval_variables**:
+eval_variables
+--------------
 
 Sometimes, it can be useful to define some configuration parameters right at the top of the
 config file that might be used farther down in the file somewhere to highlight them.
@@ -42,7 +44,8 @@ For examples of this field, see:
 * :download:`draw_psf.yaml <../examples/des/draw_psf.yaml>`
 * :download:`cgc.yaml <../examples/great3/cgc.yaml>`
 
-**template**
+template
+--------
 
 This feature directs the config processing to first load in some other file (or specific 
 field with that file) and then possibly modify some components of that dict.

@@ -43,7 +43,7 @@ class Aperture(object):
     to indicate the illuminated pixels.  In both cases, various options exist to control the pupil
     plane size and sampling interval.
 
-    Geometric pupil specification:
+    **Geometric pupil specification**:
 
     The first way to specify the details of the telescope aperture is through a series of keywords
     indicating the diameter, size of the central obscuration, and the nature of the struts
@@ -92,7 +92,7 @@ class Aperture(object):
     application depends on knowing the size and scale used with the Fourier optics framework, you
     can obtain these from the ``aper.pupil_plane_size`` and ``aper.pupil_plane_scale`` attributes.
 
-    Pupil image specification:
+    **Pupil image specification**:
 
     The second way to specify the pupil plane configuration is by passing in an image of it.  This
     can be useful, for example, if the struts are not evenly spaced or are not radially directed, as
@@ -688,12 +688,6 @@ class PhaseScreenList(object):
         >>> del screens[1]
         # Switch the first and second layer.  Silly, but works...
         >>> screens[0], screens[1] = screens[1], screens[0]
-
-    Methods:
-        makePSF:            Obtain a PSF from this set of phase screens.  See `PhaseScreenPSF`
-                            docstring for more details.
-        wavefront:          Compute the cumulative wavefront due to all screens.
-        wavefront_gradient: Compute the cumulative wavefront gradient due to all screens.
 
     Parameters:
         layers:     Sequence of phase screens.

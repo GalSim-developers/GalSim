@@ -21,13 +21,12 @@ the classes you would actually use when building the profile for an  astronomica
     :maxdepth: 2
 
     gsobject
-    psf
-    phase_psf
-    gal
-    real_gal
     simple
+    psf
+    gal
     arbitrary
+    phase_psf
+    real_gal
     composite
     transform
     gsparams
-    units

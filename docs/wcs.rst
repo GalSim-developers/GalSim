@@ -104,6 +104,20 @@ Celestial WCS's
 
 .. autofunction:: galsim.TanWCS
 
+Celestial Coordinates
+=====================
+
+Our `CelestialCoord` class is currently hosted as part of the ``LSSTDESC.Coord`` package:
+
+https://github.com/LSSTDESC/Coord
+
+An earlier version of this code was originally implemented in GalSim, so we
+still import the relevant classes into the ``galsim`` namespace.  You may therefore
+use either ``galsim.CelestialCoord`` or ``coord.CelestialCoord`` as they are equivalent.
+
+.. autoclass:: galsim.CelestialCoord
+    :members:
+
 
 WCS Utilities
 =============
@@ -111,3 +125,5 @@ WCS Utilities
 .. autofunction:: galsim.wcs.readFromFitsHeader
 
 .. autofunction:: galsim.wcs.compatible
+
+

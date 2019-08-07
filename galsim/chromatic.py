@@ -85,7 +85,7 @@ class ChromaticObject(object):
     exist.  Even in this case, however, the underlying implementation always eventually wraps one
     or more `GSObject` instances.
 
-    Dimensions:
+    **Dimensions**:
 
     ChromaticObjects can generally be sorted into two distinct types: those that represent galaxies
     or stars and have dimensions of [photons/wavelength-interval/area/time/solid-angle], and those
@@ -101,7 +101,7 @@ class ChromaticObject(object):
     (though note that the new object's `SED` may not be equal to the SED being multiplied by since
     the original ChromaticObject may not have had unit normalization.)
 
-    Methods:
+    **Methods**:
 
     `evaluateAtWavelength` returns the monochromatic surface brightness profile (as a `GSObject`)
     at a given wavelength (in nanometers).

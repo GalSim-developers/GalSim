@@ -293,7 +293,7 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*c
                     vernal equinox in 2025 will be used.  [default: None]
         PA_is_FPA:  If True, then the position angle that was provided was the PA of the focal
                     plane array, not the observatory. [default: False]
-        tol:        Tolerance for errors due to distortions, as a galsim.Angle. 
+        tol:        Tolerance for errors due to distortions, as a galsim.Angle.
                     [default: 0.5*galsim.arcsec]
 
     Returns:

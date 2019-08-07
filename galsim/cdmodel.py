@@ -184,7 +184,7 @@ class PowerLawCD(BaseCDModel):
         between two pixels in the same row=y / column=x) and ``rx``, ``tx`` (pixels on the corner
         of pixel borders).
 
-        Deflections due to charges further away are modelled as a power-law
+        Deflections due to charges further away are modelled as a power-law::
 
             a = A * numpy.sin(theta) * (r_distance)**(-alpha)
 

@@ -32,14 +32,13 @@ cosmos_pix_scale = 0.03
 class COSMOSCatalog(object):
     """
     A class representing a random subsample of galaxies from the COSMOS sample with F814W<25.2
-    (default for GalSim v1.4), or alternatively the entire sample with F814W<23.5 (which was the
-    default for GalSim v1.3).
+    (default), or alternatively the entire sample with F814W<23.5.
 
     Depending on the keyword arguments, particularly ``use_real``, the catalog will either have
     information about real galaxies, and/or parametric ones.  To use this with either type of
     galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see
 
-        https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
+    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
 
     option (1) for more information.  Note that if you want to make real galaxies you need to
     download and store the full tarball with all galaxy images, whereas if you want to make
@@ -48,12 +47,12 @@ class COSMOSCatalog(object):
     postage stamp quality) and can delete the galaxy and PSF image files.
 
     Finally, we provide a program that will download the large COSMOS sample for you and
-    put it in the $PREFIX/share/galsim directory of your installation path.  The program is
+    put it in the $PREFIX/share/galsim directory of your installation path.  The program is::
 
             galsim_download_cosmos
 
     which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
-    this program to download the COSMOS catalog, then you can use it with
+    this program to download the COSMOS catalog, then you can use it with::
 
             cat = galsim.COSMOSCatalog()
 
@@ -66,8 +65,8 @@ class COSMOSCatalog(object):
 
     After getting the catalogs, there is a method makeGalaxy() that can make a `GSObject`
     corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
-    help(galsim.COSMOSCatalog.makeGalaxy) for more information.  As an interesting application and
-    example of the usage of these routines, consider the following code::
+    `makeGalaxy` for more information.  As an interesting application and example of the usage of
+    these routines, consider the following code::
 
         >>> im_size = 64
         >>> pix_scale = 0.05

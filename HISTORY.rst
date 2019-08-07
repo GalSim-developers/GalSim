@@ -173,6 +173,7 @@ v1.5
   obj_list. (#904)
 - Deprecated OpticalScreen.coef_array. (#904)
 - Changed a number of GSObject methods to properties. (#904)
+
     - obj.stepK() -> obj.stepk
     - obj.maxK() -> obj.maxk
     - obj.nyquistScale() -> obj.nyquist_scale
@@ -184,8 +185,10 @@ v1.5
     - obj.isAnalyticX() -> obj.is_analytic_x
     - obj.isAnalyticK() -> obj.is_analytic_k
     - obj.hasHardEdges() -> obj.has_hard_edges
+
 - Renamed ChromaticObject.centroid(bandpass) to calculateCentroid. (#904)
 - Changed a few Image methods to properties. (#904)
+
     - image.center() -> image.center
     - image.trueCenter() -> image.true_center
     - image.origin() -> image.origin
@@ -584,10 +587,12 @@ v0.5
 - Added ability to truncate Sersic profiles. (#388)
 - Added trefoil and struts to OpticalPSF. (#302, #390)
 - Updates to lensing engine:
+
   - Added document describing how lensing engine code works. (#248)
   - Added ability to draw (gamma,kappa) from same power spectrum. (#304)
   - Added kmin_factor and kmax_factor parameters to buildGrid. (#377)
   - Added PowerSpectrumEstimator class in pse module. (#382)
+
 - Added GSParams (#343, #426) and HSMParams (#365) classes.
 - Added des module and example scripts. (#350)
 - Added applyWhiteningTo method to CorrelatedNoise class. (#352)
@@ -623,9 +628,11 @@ v0.4
 - Added python-level LookupTable class which wraps the existing C++ Table
   class. (#305)
 - Lensing engine updates: (#305)
+
   - Added the option of drawing shears from a tabulated P(k)
   - Added ability to handle conversions between different angular units.
   - Fixed an important bug in the normalization of the generated shears.
+
 - Added a DistDeviate class. (#306)
 - Added galsim.correlatednoise.get_COSMOS_CorrFunc(...). (#345)
 - Added im.addNoiseSNR(). (#349)

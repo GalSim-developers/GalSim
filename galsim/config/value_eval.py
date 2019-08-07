@@ -156,7 +156,7 @@ def _GenerateFromEval(config, base, value_type):
         except Exception as e:
             raise galsim.GalSimConfigError(
                 "Unable to evaluate string %r as a %s\n%r"%(string, value_type, e))
- 
+
     # Always need to evaluate any parameters to pass to the function
     opt = {}
     for key in config.keys():
