@@ -207,17 +207,20 @@ class Kolmogorov(GSObject):
             return _galsim.SBKolmogorov(self._lor0, self._flux, self.gsparams._gsp)
 
     @property
-    def lam_over_r0(self): return self._lor0
+    def lam_over_r0(self):
+        """The input lambda / r0 for this `Kolmogorov` profile.
+        """
+        return self._lor0
 
     @property
     def fwhm(self):
-        """Return the FWHM of this Kolmogorov profile.
+        """The FWHM of this `Kolmogorov` profile.
         """
         return self._lor0 * Kolmogorov._fwhm_factor
 
     @property
     def half_light_radius(self):
-        """Return the half light radius of this Kolmogorov profile.
+        """The half light radius of this `Kolmogorov` profile.
         """
         return self._lor0 * Kolmogorov._hlr_factor
 

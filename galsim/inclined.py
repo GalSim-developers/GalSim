@@ -70,16 +70,6 @@ class InclinedExponential(GSObject):
                             scale height to the scale radius. [default: 0.1]
         flux:               The flux (in photons) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, InclinedExponential has the
-    following access properties:
-
-    Attributes:
-        inclination:            The inclination angle
-        scale_radius:           The scale radius of the exponential disk
-        disk_half_light_radius: The half-light radius of the exponential disk
-        scale_height:           The scale height of the disk
-        scale_h_over_r:         The ratio scale_height / scale_radius
     """
     _req_params = { "inclination" : Angle }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
@@ -146,16 +136,31 @@ class InclinedExponential(GSObject):
                                                  self._h0, self._flux, self.gsparams._gsp)
 
     @property
-    def inclination(self): return self._inclination
+    def inclination(self):
+        """The inclination angle.
+        """
+        return self._inclination
     @property
-    def scale_radius(self): return self._r0
+    def scale_radius(self):
+        """The scale radius of the exponential disk.
+        """
+        return self._r0
     @property
-    def scale_height(self): return self._h0
+    def scale_height(self):
+        """The scale height of the disk.
+        """
+        return self._h0
 
     @property
-    def disk_half_light_radius(self): return self._r0 * Exponential._hlr_factor
+    def disk_half_light_radius(self):
+        """The half-light radius of the exponential disk.
+        """
+        return self._r0 * Exponential._hlr_factor
     @property
-    def scale_h_over_r(self): return self._h0 / self._r0
+    def scale_h_over_r(self):
+        """The ratio scale_height / scale_radius
+        """
+        return self._h0 / self._r0
 
     def __eq__(self, other):
         return (self is other or
@@ -271,18 +276,6 @@ class InclinedSersic(GSObject):
                             untruncated profile? See the documentation of the `Sersic` class for
                             more details. [default: False]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, InclinedSersic has the following
-    access properties:
-
-    Attributes:
-        n                       The Sersic parameter n
-        inclination:            The inclination angle
-        scale_radius:           The scale radius of the exponential disk
-        disk_half_light_radius: The half-light radius of the exponential disk
-        scale_height:           The scale height of the disk
-        scale_h_over_r:         The ratio scale_height / scale_radius
-        trunc:                  The truncation radius (if any)
     """
     _req_params = { "inclination" : Angle, "n" : float }
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float,
@@ -375,21 +368,40 @@ class InclinedSersic(GSObject):
                                              self._flux, self._trunc, self.gsparams._gsp)
 
     @property
-    def n(self): return self._n
+    def n(self):
+        """The Sersic parameter n.
+        """
+        return self._n
     @property
-    def inclination(self): return self._inclination
+    def inclination(self):
+        """The inclination angle.
+        """
+        return self._inclination
     @property
-    def scale_radius(self): return self._r0
+    def scale_radius(self):
+        """The scale radius of the exponential disk.
+        """
+        return self._r0
     @property
-    def scale_height(self): return self._h0
+    def scale_height(self):
+        """The scale height of the disk.
+        """
+        return self._h0
     @property
-    def trunc(self): return self._trunc
-
+    def trunc(self):
+        """The truncation radius (if any).
+        """
+        return self._trunc
     @property
-    def scale_h_over_r(self): return self._h0 / self._r0
+    def scale_h_over_r(self):
+        """The ratio scale_height / scale_radius.
+        """
+        return self._h0 / self._r0
 
     @property
     def disk_half_light_radius(self):
+        """The half-light radius of the exponential disk.
+        """
         if self._hlr == 0.:
             with convert_cpp_errors():
                 self._hlr = self._r0 * _galsim.SersicHLR(self._n, self._flux_fraction)

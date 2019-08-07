@@ -77,17 +77,18 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
         test_beta = beta_rad = 0.
 
     vec = [test_shear.g, test_shear.g1, test_shear.g2, test_shear.e, test_shear.e1, test_shear.e2,
-           test_shear.eta, test_shear.eta1, test_shear.eta2, test_shear.esq, beta_rad % np.pi]
+           test_shear.eta, test_shear.eta1, test_shear.eta2, test_shear.esq, test_shear.q,
+           beta_rad % np.pi]
     test_vec = [np.abs(mult_val)*g[index], mult_val*g1[index], mult_val*g2[index],
                 np.abs(mult_val)*e[index], mult_val*e1[index], mult_val*e2[index],
                 np.abs(mult_val)*eta[index], mult_val*eta1[index], mult_val*eta2[index],
-                mult_val*mult_val*e[index]*e[index], test_beta % np.pi]
+                mult_val*mult_val*e[index]*e[index], q[index], test_beta % np.pi]
     np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                          err_msg = "Incorrectly initialized Shear")
     if index == n_shear-1:
         # On the last one with values < 1.e-4, multiply everything by 1.e4 and check again.
-        vec = [1.e4 * v for v in vec[:-1]]  # don't include beta now.
-        test_vec = [1.e4 * v for v in test_vec[:-1]]
+        vec = [1.e4 * v for v in vec[:-2]]  # don't include q or beta now.
+        test_vec = [1.e4 * v for v in test_vec[:-2]]
         np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                              err_msg = "Incorrectly initialized Shear")
     # Test that the utiltiy function g1g2_to_e1e2 is equivalent to the Shear calculation.
@@ -118,6 +119,7 @@ def test_shear_initialization():
     vec_ideal = np.zeros(len(vec))
     np.testing.assert_array_almost_equal(vec, vec_ideal, decimal = decimal,
                                          err_msg = "Incorrectly initialized empty shear")
+    np.testing.assert_equal(s.q, 1.)
     # now loop over shear values and ways of initializing
     for ind in range(n_shear):
         # initialize with reduced shear components

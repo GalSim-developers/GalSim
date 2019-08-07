@@ -322,6 +322,8 @@ class HSMParams(object):
 
         failed_moments:         Value to report for ellipticities and resolution factor if shape
                                 measurement fails. [default: -1000.]
+
+    After construction, all of the above are available as read-only attributes.
     """
     def __init__(self, nsig_rg=3.0, nsig_rg2=3.6, max_moment_nsig2=25.0, regauss_too_small=1,
                  adapt_order=2, convergence_threshold=1.e-6, max_mom2_iter=400,

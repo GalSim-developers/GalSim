@@ -395,14 +395,20 @@ class InterpolatedImage(GSObject):
 
     @property
     def x_interpolant(self):
+        """The real-space `Interpolant` for this profile.
+        """
         return self._x_interpolant
 
     @property
     def k_interpolant(self):
+        """The Fourier-space `Interpolant` for this profile.
+        """
         return self._k_interpolant
 
     @property
     def image(self):
+        """The underlying `Image` being interpolated.
+        """
         return self._image
 
     def _buildRealImage(self, pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache):
@@ -936,10 +942,14 @@ class InterpolatedKImage(GSObject):
 
     @property
     def kimage(self):
+        """The underlying `Image` being interpolated.
+        """
         return self._kimage
 
     @property
     def k_interpolant(self):
+        """The Fourier-space `Interpolant` for this profile.
+        """
         return self._k_interpolant
 
     @doc_inherit

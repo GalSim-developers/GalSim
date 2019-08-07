@@ -346,6 +346,10 @@ class Bandpass(object):
 
     @property
     def effective_wavelength(self):
+        """The effective wavelength of the `Bandpass`.
+
+        An alias for ``self.calculateEffectiveWavelength()``.
+        """
         return self.calculateEffectiveWavelength()
 
     def calculateEffectiveWavelength(self, precise=False):

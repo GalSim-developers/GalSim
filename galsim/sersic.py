@@ -184,15 +184,6 @@ class Sersic(GSObject):
         flux_untruncated:   Should the provided ``flux`` and ``half_light_radius`` refer to the
                             untruncated profile? See below for more details. [default: False]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, Sersic has the following access
-    properties:
-
-    Attributes:
-        n:                  The Sersic parameter n
-        scale_raddius:      The scale radius
-        half_light_radius:  The half-light radius
-        trunc:              The truncation radius (if any)
     """
     _req_params = { "n" : float }
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
@@ -275,14 +266,27 @@ class Sersic(GSObject):
             return _galsim.SBSersic(self._n, self._r0, self._flux, self._trunc, self.gsparams._gsp)
 
     @property
-    def n(self): return self._n
+    def n(self):
+        """The Sersic parameter n.
+        """
+        return self._n
+
     @property
-    def scale_radius(self): return self._r0
+    def scale_radius(self):
+        """The scale radius.
+        """
+        return self._r0
+
     @property
-    def trunc(self): return self._trunc
+    def trunc(self):
+        """The truncation radius (if any).
+        """
+        return self._trunc
 
     @property
     def half_light_radius(self):
+        """The half-light radius.
+        """
         if self._hlr == 0.:
             self._hlr = self._r0 * self.calculateHLRFactor()
         return self._hlr
@@ -391,14 +395,6 @@ class DeVaucouleurs(Sersic):
                             untruncated profile? See the docstring for Sersic for more details.
                             [default: False]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, DeVaucouleurs has the following
-    access properties:
-
-    Attributes:
-        scale_radius:       The scale radius
-        half_light_radius:  The half-light radius
-        trunc:              The truncation radius (if any)
     """
     _req_params = {}
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }

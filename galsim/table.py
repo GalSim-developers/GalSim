@@ -168,9 +168,16 @@ class LookupTable(object):
                                             len(self._x), self.interpolant)
 
     @property
-    def x_min(self): return self._x_min
+    def x_min(self):
+        """The minimum x value in the lookup table.
+        """
+        return self._x_min
+
     @property
-    def x_max(self): return self._x_max
+    def x_max(self):
+        """The maximum x value in the lookup table.
+        """
+        return self._x_max
 
     def __len__(self): return len(self.x)
 

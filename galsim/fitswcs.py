@@ -191,10 +191,16 @@ class AstropyWCS(CelestialWCS):
         return wcs
 
     @property
-    def wcs(self): return self._wcs
+    def wcs(self):
+        """The underlying ``astropy.wcs.WCS`` object.
+        """
+        return self._wcs
 
     @property
-    def origin(self): return self._origin
+    def origin(self):
+        """The origin in image coordinates of the WCS function.
+        """
+        return self._origin
 
     def _radec(self, x, y, color=None):
         x1 = np.atleast_1d(x)
@@ -437,10 +443,16 @@ class PyAstWCS(CelestialWCS):
         return wcsinfo
 
     @property
-    def wcsinfo(self): return self._wcsinfo
+    def wcsinfo(self):
+        """The underlying ``starlink.Ast.FrameSet`` for this object.
+        """
+        return self._wcsinfo
 
     @property
-    def origin(self): return self._origin
+    def origin(self):
+        """The origin in image coordinates of the WCS function.
+        """
+        return self._origin
 
     def _fix_header(self, header):
         # We allow for the option to fix up the header information when a modification can
@@ -629,10 +641,16 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
             raise GalSimError("The WCS read in does not define a pair of celestial axes" )
 
     @property
-    def file_name(self): return self._file_name
+    def file_name(self):
+        """The file name of the FITS file with the WCS information.
+        """
+        return self._file_name
 
     @property
-    def origin(self): return self._origin
+    def origin(self):
+        """The origin in image coordinates of the WCS function.
+        """
+        return self._origin
 
     def _radec(self, x, y, color=None):
         import subprocess
@@ -936,7 +954,10 @@ class GSFitsWCS(CelestialWCS):
     # withOrigin to get the current origin value.  We don't use it in this class, though, so
     # just make origin a dummy property that returns 0,0.
     @property
-    def origin(self): return PositionD(0.,0.)
+    def origin(self):
+        """The origin in image coordinates of the WCS function.
+        """
+        return PositionD(0.,0.)
 
     def _read_header(self, header):
         from .angle import AngleUnit

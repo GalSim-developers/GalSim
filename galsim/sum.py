@@ -168,7 +168,10 @@ class Sum(GSObject):
 
 
     @property
-    def obj_list(self): return self._obj_list
+    def obj_list(self):
+        """The list of objects being added.
+        """
+        return self._obj_list
 
     @lazy_property
     def _sbp(self):

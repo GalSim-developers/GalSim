@@ -110,6 +110,8 @@ class GSParams(object):
                             radial profile. When such approximations need to be made, it makes
                             sure that the resulting fractional error in the flux will be at
                             most this much. [default: 1.e-5]
+
+    After construction, all of the above parameters are available as read-only attributes.
     """
     def __init__(self, minimum_fft_size=128, maximum_fft_size=8192,
                  folding_threshold=5.e-3, stepk_minimum_hlr=5, maxk_threshold=1.e-3,

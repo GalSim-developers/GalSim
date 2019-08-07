@@ -14,6 +14,8 @@ will be raised.
 .. autoclass:: galsim.GSObject
     :members:
 
+    .. automethod:: galsim.GSObject.__add__
+    .. automethod:: galsim.GSObject.__sub__
     .. automethod:: galsim.GSObject.__mul__
     .. automethod:: galsim.GSObject.__rmul__
     .. automethod:: galsim.GSObject.__div__

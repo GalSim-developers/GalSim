@@ -86,14 +86,6 @@ class Spergel(GSObject):
                             [One of ``scale_radius`` or ``half_light_radius`` is required.]
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
-
-    In addition to the usual `GSObject` methods and attributes, the Spergel profile has the
-    following access properties:
-
-    Atrributes:
-        nu:                 The Spergel index, nu
-        scale_radius:       The scale radius
-        half_light_radius:  The half-light radius
     """
     _req_params = { "nu" : float }
     _opt_params = { "flux" : float}
@@ -148,11 +140,21 @@ class Spergel(GSObject):
             return _galsim.SBSpergel(self._nu, self._r0, self._flux, self.gsparams._gsp)
 
     @property
-    def nu(self): return self._nu
+    def nu(self):
+        """The Spergel index, nu
+        """
+        return self._nu
+
     @property
-    def scale_radius(self): return self._r0
+    def scale_radius(self):
+        """The scale radius
+        """
+        return self._r0
+
     @property
     def half_light_radius(self):
+        """The half-light radius
+        """
         if self._hlr == 0.:
             with convert_cpp_errors():
                 self._hlr = self._r0 * _galsim.SpergelCalculateHLR(self._nu)

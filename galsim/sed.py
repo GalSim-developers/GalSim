@@ -357,6 +357,8 @@ class SED(object):
 
     @property
     def dimensionless(self):  # for convenience
+        """Whether the object is dimensionless (rather than spectral).
+        """
         return not self.spectral
 
     def _rest_nm_to_photons(self, wave):

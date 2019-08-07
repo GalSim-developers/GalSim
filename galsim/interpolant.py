@@ -99,6 +99,8 @@ class Interpolant(object):
 
     @property
     def gsparams(self):
+        """The `GSParams` of the `Interpolant`
+        """
         return self._gsparams
 
     @property
@@ -221,14 +223,20 @@ class Delta(Interpolant):
 
     @property
     def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         return 0.
 
     @property
     def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
         return 0
 
     @property
     def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         return 2. * math.pi / self._gsparams.kvalue_accuracy
 
 
@@ -265,14 +273,20 @@ class Nearest(Interpolant):
 
     @property
     def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         return 0.5
 
     @property
     def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
         return 1
 
     @property
     def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         return 2. / self._gsparams.kvalue_accuracy
 
 
@@ -310,15 +324,21 @@ class SincInterpolant(Interpolant):
 
     @property
     def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         # Technically infinity, but truncated by the tolerance.
         return 1./(math.pi * self._gsparams.kvalue_accuracy)
 
     @property
     def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
         return np.inf
 
     @property
     def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         return math.pi
 
 
@@ -354,15 +374,21 @@ class Linear(Interpolant):
 
     @property
     def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         # Reduce range slightly so not including points with zero weight.
         return 1.
 
     @property
     def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
         return 2
 
     @property
     def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         return 2. / self._gsparams.kvalue_accuracy**0.5
 
 
@@ -397,14 +423,20 @@ class Cubic(Interpolant):
 
     @property
     def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         return 2.
 
     @property
     def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
         return 4
 
     @property
     def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         # kmax = 2 * (3sqrt(3)/8 tol)^1/3
         return 1.7320508075688774 / self._gsparams.kvalue_accuracy**(1./3.)
 
@@ -440,14 +472,20 @@ class Quintic(Interpolant):
 
     @property
     def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         return 3.
 
     @property
     def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
         return 6
 
     @property
     def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         # kmax = 2 * (25sqrt(5)/108 tol)^1/3
         return 1.6058208066649935 / self._gsparams.kvalue_accuracy**(1./3.)
 
@@ -493,20 +531,30 @@ class Lanczos(Interpolant):
 
     @property
     def n(self):
+        """The order of the Lanczos function.
+        """
         return self._n
 
     @property
     def conserve_dc(self):
+        """Whether this interpolant is modified to improve flux conservation.
+        """
         return self._conserve_dc
 
     @property
     def xrange(self):
+        """The maximum extent of the interpolant from the origin (in pixels).
+        """
         return self._n
 
     @property
     def ixrange(self):
+        """The total integral range of the interpolant.  Typically 2 * xrange.
+        """
         return 2*self._n
 
     @property
     def krange(self):
+        """The maximum extent of the interpolant in Fourier space (in 1/pixels).
+        """
         return 2. * math.pi * self._i.urange()

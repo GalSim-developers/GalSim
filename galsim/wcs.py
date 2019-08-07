@@ -24,6 +24,7 @@ from .celestial import CelestialCoord
 from .shear import Shear
 from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimNotImplementedError
 from .errors import GalSimValueError
+from .utilities import doc_inherit
 
 class BaseWCS(object):
     """The base class for all other kinds of WCS transformations.
@@ -66,7 +67,7 @@ class BaseWCS(object):
        - `AffineTransform`
 
     3. `EuclideanWCS` classes use a regular Euclidean coordinate system for the world coordinates,
-       using PositionD for the world positions.  We use the notation (u,v) for the world
+       using `PositionD` for the world positions.  We use the notation (u,v) for the world
        coordinates and (x,y) for the image coordinates.
 
        Currently we define the following non-uniform, `EuclideanWCS` class::
@@ -107,9 +108,9 @@ class BaseWCS(object):
       implemented.  If it is not implemented for a particular WCS class, a NotImplementedError
       will be raised.
 
-      The ``image_pos`` parameter should be a PositionD.  However, ``world_pos`` will
+      The ``image_pos`` parameter should be a `PositionD`.  However, ``world_pos`` will
       be a `CelestialCoord` if the transformation is in terms of celestial coordinates
-      (if ``wcs.isCelestial() == True``).  Otherwise, it will be a PositionD as well.
+      (if ``wcs.isCelestial() == True``).  Otherwise, it will be a `PositionD` as well.
 
     - Convert a `GSObject` that is defined in world coordinates to the equivalent profile defined
       in terms of image coordinates (or vice versa)::
@@ -259,9 +260,9 @@ class BaseWCS(object):
         There are essentially three overloaded versions of this function here.
 
         1. The first converts a position from world coordinates to image coordinates.
-           If the WCS is a `EuclideanWCS`, the argument may be either a PositionD or PositionI
+           If the WCS is a `EuclideanWCS`, the argument may be either a `PositionD` or `PositionI`
            argument.  If it is a `CelestialWCS`, then the argument must be a `CelestialCoord`.
-           It returns the corresponding position in image coordinates as a PositionD::
+           It returns the corresponding position in image coordinates as a `PositionD`::
 
                >>> image_pos = wcs.toImage(world_pos)
 
@@ -791,19 +792,34 @@ def readFromFitsHeader(header):
 class EuclideanWCS(BaseWCS):
     """A EuclideanWCS is a `BaseWCS` whose world coordinates are on a Euclidean plane.
     We usually use the notation (u,v) to refer to positions in world coordinates, and
-    they use the class PositionD.
+    they use the class `PositionD`.
     """
 
     # All EuclideanWCS classes must define origin and world_origin.
     # Sometimes it is convenient to access x0,y0,u0,v0 directly.
     @property
-    def x0(self): return self.origin.x
+    def x0(self):
+        """The x component of self.origin.
+        """
+        return self.origin.x
+
     @property
-    def y0(self): return self.origin.y
+    def y0(self):
+        """The y component of self.origin.
+        """
+        return self.origin.y
+
     @property
-    def u0(self): return self.world_origin.x
+    def u0(self):
+        """The x component of self.world_origin (aka u).
+        """
+        return self.world_origin.x
+
     @property
-    def v0(self): return self.world_origin.y
+    def v0(self):
+        """The y component of self.world_origin (aka v).
+        """
+        return self.world_origin.y
 
     def xyTouv(self, x, y, color=None):
         """Convert x,y from image coordinates to world coordinates.
@@ -991,7 +1007,8 @@ class EuclideanWCS(BaseWCS):
 class UniformWCS(EuclideanWCS):
     """A UniformWCS is a `EuclideanWCS` which has a uniform pixel size and shape.
     """
-    def isUniform(self): return True
+    def isUniform(self):
+        return True
 
     # These can also just pass through to the _localwcs attribute.
     def _u(self, x, y, color=None):
@@ -1036,13 +1053,23 @@ class LocalWCS(UniformWCS):
     """A LocalWCS is a `UniformWCS` in which (0,0) in image coordinates is at the same place
     as (0,0) in world coordinates
     """
-    def isLocal(self): return True
+
+    @doc_inherit
+    def isLocal(self):
+        return True
 
     # The origins are definitionally (0,0) for these.  So just define them here.
     @property
-    def origin(self): return PositionD(0,0)
+    def origin(self):
+        """The image coordinate position to use as the origin.
+        """
+        return PositionD(0,0)
+
     @property
-    def world_origin(self): return PositionD(0,0)
+    def world_origin(self):
+        """The world coordinate position to use as the origin.
+        """
+        return PositionD(0,0)
 
     # For LocalWCS, there is no origin to worry about.
     def _posToWorld(self, image_pos, color):
@@ -1071,13 +1098,23 @@ class CelestialWCS(BaseWCS):
     """A CelestialWCS is a `BaseWCS` whose world coordinates are on the celestial sphere.
     We use the `CelestialCoord` class for the world coordinates.
     """
-    def isCelestial(self): return True
+
+    @doc_inherit
+    def isCelestial(self):
+        return True
 
     # CelestialWCS classes still have origin, but not world_origin.
     @property
-    def x0(self): return self.origin.x
+    def x0(self):
+        """The x coordinate of self.origin.
+        """
+        return self.origin.x
+
     @property
-    def y0(self): return self.origin.y
+    def y0(self):
+        """The y coordinate of self.origin.
+        """
+        return self.origin.y
 
     def xyToradec(self, x, y, units=None, color=None):
         """Convert x,y from image coordinates to world coordinates.
@@ -1325,8 +1362,12 @@ class PixelScale(LocalWCS):
 
     # Help make sure PixelScale is read-only.
     @property
-    def scale(self): return self._scale
+    def scale(self):
+        """The pixel scale
+        """
+        return self._scale
 
+    @doc_inherit
     def isPixelScale(self):
         return True
 
@@ -1413,7 +1454,7 @@ class ShearWCS(LocalWCS):
 
     Parameters:
         scale:      The pixel scale, typically in units of arcsec/pixel.
-        shear:      The shear, which should be a Shear instance.
+        shear:      The shear, which should be a `Shear` instance.
 
     The Shear transformation conserves object area, so if the input ``scale == 1`` then the
     transformation represented by the ShearWCS will conserve object area also.
@@ -1435,9 +1476,16 @@ class ShearWCS(LocalWCS):
 
     # Help make sure ShearWCS is read-only.
     @property
-    def scale(self): return self._scale
+    def scale(self):
+        """The pixel scale.
+        """
+        return self._scale
+
     @property
-    def shear(self): return self._shear
+    def shear(self):
+        """The applied `Shear`.
+        """
+        return self._shear
 
     def _u(self, x, y, color=None):
         u = x * (1.-self._g1) - y * self._g2
@@ -1563,13 +1611,28 @@ class JacobianWCS(LocalWCS):
 
     # Help make sure JacobianWCS is read-only.
     @property
-    def dudx(self): return self._dudx
+    def dudx(self):
+        """du/dx
+        """
+        return self._dudx
+
     @property
-    def dudy(self): return self._dudy
+    def dudy(self):
+        """du/dy
+        """
+        return self._dudy
+
     @property
-    def dvdx(self): return self._dvdx
+    def dvdx(self):
+        """dv/dx
+        """
+        return self._dvdx
+
     @property
-    def dvdy(self): return self._dvdy
+    def dvdy(self):
+        """dv/dy
+        """
+        return self._dvdy
 
     def _u(self, x, y, color=None):
         return self._dudx * x + self._dudy * y
@@ -1798,10 +1861,10 @@ class OffsetWCS(UniformWCS):
     Parameters:
         scale:          The pixel scale, typically in units of arcsec/pixel.
         origin:         Optional origin position for the image coordinate system.
-                        If provided, it should be a PositionD or PositionI.
+                        If provided, it should be a `PositionD` or `PositionI`.
                         [default: PositionD(0., 0.)]
         world_origin:   Optional origin position for the world coordinate system.
-                        If provided, it should be a PositionD.
+                        If provided, it should be a `PositionD`.
                         [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "scale" : float }
@@ -1816,13 +1879,24 @@ class OffsetWCS(UniformWCS):
         self._local_wcs = PixelScale(scale)
 
     @property
-    def scale(self): return self._scale
+    def scale(self):
+        """The pixel scale.
+        """
+        return self._scale
 
     @property
-    def origin(self): return self._origin
-    @property
-    def world_origin(self): return self._world_origin
+    def origin(self):
+        """The image coordinate position to use as the origin.
+        """
+        return self._origin
 
+    @property
+    def world_origin(self):
+        """The world coordinate position to use as the origin.
+        """
+        return self._world_origin
+
+    @doc_inherit
     def isPixelScale(self):
         return True
 
@@ -1873,12 +1947,12 @@ class OffsetShearWCS(UniformWCS):
 
     Parameters:
         scale:          The pixel scale, typically in units of arcsec/pixel.
-        shear:          The shear, which should be a Shear instance.
+        shear:          The shear, which should be a `Shear` instance.
         origin:         Optional origin position for the image coordinate system.
-                        If provided, it should be a PositionD or PositionI.
+                        If provided, it should be a `PositionD` or `PositionI`.
                         [default: PositionD(0., 0.)]
         world_origin:   Optional origin position for the world coordinate system.
-                        If provided, it should be a PositionD.
+                        If provided, it should be a `PositionD`.
                         [default: PositionD(0., 0.)]
     """
     _req_params = { "scale" : float, "shear" : Shear }
@@ -1895,14 +1969,28 @@ class OffsetShearWCS(UniformWCS):
         self._local_wcs = ShearWCS(scale, shear)
 
     @property
-    def scale(self): return self._local_wcs.scale
-    @property
-    def shear(self): return self._local_wcs.shear
+    def scale(self):
+        """The pixel scale.
+        """
+        return self._local_wcs.scale
 
     @property
-    def origin(self): return self._origin
+    def shear(self):
+        """The applied `Shear`.
+        """
+        return self._local_wcs.shear
+
     @property
-    def world_origin(self): return self._world_origin
+    def origin(self):
+        """The image coordinate position to use as the origin.
+        """
+        return self._origin
+
+    @property
+    def world_origin(self):
+        """The world coordinate position to use as the origin.
+        """
+        return self._world_origin
 
     def _writeHeader(self, header, bounds):
         header["GS_WCS"] = ("OffsetShearWCS", "GalSim WCS name")
@@ -1963,10 +2051,10 @@ class AffineTransform(UniformWCS):
         dvdx:           dv/dx
         dvdy:           dv/dy
         origin:         Optional origin position for the image coordinate system.
-                        If provided, it should be a PositionD or PositionI.
+                        If provided, it should be a `PositionD` or `PositionI`.
                         [default: PositionD(0., 0.)]
         world_origin:   Optional origin position for the world coordinate system.
-                        If provided, it should be a PositionD.
+                        If provided, it should be a `PositionD`.
                         [default: PositionD(0., 0.)]
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
@@ -1981,18 +2069,40 @@ class AffineTransform(UniformWCS):
         self._local_wcs = JacobianWCS(dudx, dudy, dvdx, dvdy)
 
     @property
-    def dudx(self): return self._local_wcs.dudx
-    @property
-    def dudy(self): return self._local_wcs.dudy
-    @property
-    def dvdx(self): return self._local_wcs.dvdx
-    @property
-    def dvdy(self): return self._local_wcs.dvdy
+    def dudx(self):
+        """du/dx
+        """
+        return self._local_wcs.dudx
 
     @property
-    def origin(self): return self._origin
+    def dudy(self):
+        """du/dy
+        """
+        return self._local_wcs.dudy
+
     @property
-    def world_origin(self): return self._world_origin
+    def dvdx(self):
+        """dv/dx
+        """
+        return self._local_wcs.dvdx
+
+    @property
+    def dvdy(self):
+        """dv/dy
+        """
+        return self._local_wcs.dvdy
+
+    @property
+    def origin(self):
+        """The image coordinate position to use as the origin.
+        """
+        return self._origin
+
+    @property
+    def world_origin(self):
+        """The world coordinate position to use as the origin.
+        """
+        return self._world_origin
 
     def _writeHeader(self, header, bounds):
         header["GS_WCS"] = ("AffineTransform", "GalSim WCS name")
@@ -2242,10 +2352,10 @@ class UVFunction(EuclideanWCS):
         xfunc:          The function x(u,v) (optional)
         yfunc:          The function y(u,v) (optional)
         origin:         Optional origin position for the image coordinate system.
-                        If provided, it should be a PositionD or PositionI.
+                        If provided, it should be a `PositionD` or `PositionI`.
                         [default: PositionD(0., 0.)]
         world_origin    Optional origin position for the world coordinate system.
-                        If provided, it should be a PositionD.
+                        If provided, it should be a `PositionD`.
                         [default: PositionD(0., 0.)]
         uses_color:     If True, then the functions take three parameters (x,y,c) or (u,v,c)
                         where the third term is some kind of color value.  (The exact meaning
@@ -2310,18 +2420,40 @@ class UVFunction(EuclideanWCS):
             self._yfunc = self._orig_yfunc
 
     @property
-    def ufunc(self): return self._ufunc
-    @property
-    def vfunc(self): return self._vfunc
-    @property
-    def xfunc(self): return self._xfunc
-    @property
-    def yfunc(self): return self._yfunc
+    def ufunc(self):
+        """The input ufunc
+        """
+        return self._ufunc
 
     @property
-    def origin(self): return self._origin
+    def vfunc(self):
+        """The input vfunc
+        """
+        return self._vfunc
+
     @property
-    def world_origin(self): return self._world_origin
+    def xfunc(self):
+        """The input xfunc
+        """
+        return self._xfunc
+
+    @property
+    def yfunc(self):
+        """The input yfunc
+        """
+        return self._yfunc
+
+    @property
+    def origin(self):
+        """The image coordinate position to use as the origin.
+        """
+        return self._origin
+
+    @property
+    def world_origin(self):
+        """The world coordinate position to use as the origin.
+        """
+        return self._world_origin
 
     def _u(self, x, y, color=None):
         if self._uses_color:
@@ -2507,7 +2639,7 @@ class RaDecFunction(CelestialWCS):
         dec_func:   Either a function dec(x,y) returning dec in radians, or None (in which
                     case ``ra_func`` is expected to return both ra and dec. [default: None]
         origin:     Optional origin position for the image coordinate system.
-                    If provided, it should be a PositionD or PositionI.
+                    If provided, it should be a `PositionD` or `PositionI`.
                     [default: PositionD(0., 0.)]
     """
     _req_params = { "ra_func" : str, "dec_func" : str }
@@ -2547,10 +2679,16 @@ class RaDecFunction(CelestialWCS):
             self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))
 
     @property
-    def radec_func(self): return self._radec_func
+    def radec_func(self):
+        """The input radec_func
+        """
+        return self._radec_func
 
     @property
-    def origin(self): return self._origin
+    def origin(self):
+        """The image coordinate position to use as the origin.
+        """
+        return self._origin
 
     def _radec(self, x, y, color=None):
         try:
