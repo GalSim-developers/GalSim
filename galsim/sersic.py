@@ -27,13 +27,22 @@ from .position import PositionD
 from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 class Sersic(GSObject):
-    """A class describing a Sersic profile.
+    r"""A class describing a Sersic profile.
 
     The Sersic surface brightness profile is characterized by three properties: its Sersic index
     ``n``, its ``flux``, and either the ``half_light_radius`` or ``scale_radius``.  Given these
-    properties, the surface brightness profile scales as I(r) ~ exp[-(r/scale_radius)^{1/n}], or
-    I(r) ~ exp[-b*(r/half_light_radius)^{1/n}] (where b is calculated to give the right
-    half-light radius).
+    properties, the surface brightness profile scales as
+
+    .. math::
+        I(r) \sim e^{-(r/r_0)^{1/n}}
+
+    where :math:`r_0` is the ``scale_radius``, or
+
+    .. math::
+        I(r) \sim e^{-b (r/r_e)^{1/n}}
+
+    where :math:`r_e` is the ``half_light_radius`` and :math:`b` is calculated to give the right
+    half-light radius.
 
     For more information, refer to
 
@@ -353,10 +362,14 @@ class Sersic(GSObject):
 
 
 class DeVaucouleurs(Sersic):
-    """A class describing DeVaucouleurs profile objects.
+    r"""A class describing DeVaucouleurs profile objects.
 
-    Surface brightness profile with I(r) ~ exp[-(r/scale_radius)^{1/4}].  This is completely
-    equivalent to a Sersic with n=4.
+    Surface brightness profile with
+
+    .. math::
+        I(r) \sim e^{-(r/r_0)^{1/4}}
+
+    where :math:`r_0` is the ``scale_radius``. This is completely equivalent to a Sersic with n=4.
 
     For more information, refer to
 

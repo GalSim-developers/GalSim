@@ -28,11 +28,17 @@ from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp
 
 
 class Moffat(GSObject):
-    """A class describing a Moffat surface brightness profile.
+    r"""A class describing a Moffat surface brightness profile.
 
-    The Moffat surface brightness profile is I(R) ~ [1 + (r/scale_radius)^2]^(-beta).  The
-    GalSim representation of a Moffat profile also includes an optional truncation beyond a given
-    radius.
+    The Moffat surface brightness profile is
+
+    .. math::
+        I(R) \sim \left(1 + (r/r_0)^2\right)^{-\beta}
+
+    where :math:`r_0` is ``scale_radius``.
+
+    The GalSim representation of a Moffat profile also includes an optional truncation beyond a
+    given radius.
 
     For more information, refer to
 

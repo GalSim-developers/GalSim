@@ -303,20 +303,16 @@ It may also be helpful to look at the GalSim implementation of the various inclu
 the ``[source]`` links):
 
 .. autoclass:: galsim.config.SimpleWCSBuilder
-    :members:
     :show-inheritance:
 
 .. autoclass:: galsim.config.OriginWCSBuilder
-    :members:
     :show-inheritance:
 
 
 .. autoclass:: galsim.config.TanWCSBuilder
-    :members:
     :show-inheritance:
 
 .. autoclass:: galsim.config.ListWCSBuilder
-    :members:
     :show-inheritance:
 
 

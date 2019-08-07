@@ -28,19 +28,30 @@ from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Kolmogorov(GSObject):
-    """A class describing a Kolmogorov surface brightness profile, which represents a long
+    r"""A class describing a Kolmogorov surface brightness profile, which represents a long
     exposure atmospheric PSF.
+
+    The Kolmogorov profile is defined in Fourier space.  Its transfer function is:
+
+    .. math::
+        T(k) \sim \exp(-D(k)/2)
+
+    where
+
+    .. math::
+        D(k) = 6.8839 \left(\frac{\lambda k}{2\pi r_0} \right)^{5/3},
+
+    :math:`\lambda` is the wavelength of the light (say in the middle of the bandpass you are
+    using), and :math:`r_0` is the Fried parameter.  Typical values for the Fried parameter are on
+    the order of 0.1 m for most observatories and up to 0.2 m for excellent sites. The values are
+    usually quoted at :math:`\lambda` = 500nm and :math:`r_0` depends on wavelength as
+    :math:`r_0 \sim \lambda^{6/5}`.
 
     For more information, refer to
 
         http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence
 
-    The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is
-    the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
-    Fried parameter.  Typical values for the Fried parameter are on the order of 0.1 m for
-    most observatories and up to 0.2 m for excellent sites. The values are usually quoted at
-    lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(6/5)].
-
+    The Kolmogorov profile is normally defined in terms of the ratio :math:`\lambda / r_0`.
     The natural units for this ratio is radians, which is not normally a convenient unit to use for
     other `GSObject` dimensions.  Assuming that the other sky coordinates you are using are all in
     arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
@@ -69,7 +80,8 @@ class Kolmogorov(GSObject):
     A Kolmogorov object may also be initialized using ``fwhm`` or ``half_light_radius``.  Exactly
     one of these four ways to define the size is required.
 
-    The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 arcsec (e.g., Racine 1996, PASP 699, 108).
+    The FWHM of the Kolmogorov PSF is :math:`\sim 0.976 \lambda/r_0` arcsec.
+    (e.g., Racine 1996, PASP 699, 108).
 
     Parameters:
         lam_over_r0:        The parameter that governs the scale size of the profile.

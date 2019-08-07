@@ -115,7 +115,7 @@ class Image(object):
                 You can see a list of valid values for dtype in ``galsim.Image.valid_dtypes``.
                 Without the ``dtype`` argument, this is equivalent to ``image.copy()``, which makes
                 a deep copy.  If you want a copy that shares data with the original, see
-                the image.view() method.
+                the `view` method.
 
                 If you only want to enforce the image to have a given type and not make a copy
                 if the array is already the correct type, you can use, e.g.::
@@ -130,17 +130,17 @@ class Image(object):
     coordinates, which is how all the GalSim objects are defined, and the pixel coordinates.
     There are three options for this:
 
-        scale       
+        scale
                     You can optionally specify a pixel scale to use.  This would normally have
                     units arcsec/pixel, but it doesn't have to be arcsec.  If you want to
                     use different units for the physical scale of your galsim objects, then
                     the same unit would be used here.
-        wcs         
+        wcs
                     A WCS object that provides a non-trivial mapping between sky units and
                     pixel units.  The ``scale`` parameter is equivalent to
                     ``wcs=PixelScale(scale)``.  But there are a number of more complicated options.
                     See the WCS class for more details.
-        None        
+        None
                     If you do not provide either of the above, then the conversion is undefined.
                     When drawing onto such an image, a suitable pixel scale will be automatically
                     set according to the Nyquist scale of the object being drawn.
@@ -175,27 +175,6 @@ class Image(object):
         >>> image[x,y] = new_ixy
         >>> image.array[y,x] = new_ixy
         >>> image.setValue(x,y,new_ixy)
-
-    Methods:
-
-        `view`:        Return a view of the image, possibly giving it a new scale or wcs.
-        subImage:    Return a view of a portion of the full image.
-        wrap:        Wrap the values in a image onto a given subimage and return the subimage.
-        bin:         Bin the image pixels in blocks of nx x ny pixels.
-        subsample:   Subdivide the image pixels into nx x ny sub-pixels.
-        shift:       Shift the origin of the image by (dx,dy).
-        setCenter:   Set a new position for the center of the image.
-        setOrigin:   Set a new position for the origin (x,y) = (0,0) of the image.
-        getValue:    Get the value of a single pixel.
-        setValue:    Set the value of a single pixel.
-        addValue:    Add to the value of a single pixel.
-        resize:      Resize the image to have a new bounds.
-        fill:        Fill the image with the same value in all pixels.
-        setZero:     Fill the image with zeros.
-        invertSelf:  Convert each value x to 1/x.
-        copy:        Return a deep copy of the image.
-
-    See their documentation for more details.
     """
 
     _cpp_type = { np.uint16 : _galsim.ImageViewUS,
@@ -516,9 +495,9 @@ class Image(object):
     def real(self):
         """Return the real part of an image.
 
-        This is a property, not a function.  So im.real, not im.real().
+        This is a property, not a function.  So write ``im.real``, not ``im.real()``.
 
-        This works for real or complex.  For real images, it acts the same as view().
+        This works for real or complex.  For real images, it acts the same as `view`.
         """
         return _Image(self.array.real, self.bounds, self.wcs)
 
@@ -526,7 +505,7 @@ class Image(object):
     def imag(self):
         """Return the imaginary part of an image.
 
-        This is a property, not a function.  So im.imag, not im.imag().
+        This is a property, not a function.  So write ``im.imag``, not ``im.imag()``.
 
         This works for real or complex.  For real images, the returned array is read-only and
         all elements are 0.
@@ -537,7 +516,7 @@ class Image(object):
     def conjugate(self):
         """Return the complex conjugate of an image.
 
-        This works for real or complex.  For real images, it acts the same as view().
+        This works for real or complex.  For real images, it acts the same as `view`.
 
         Note that for complex images, this is not a conjugate view into the original image.
         So changing the original image does not change the conjugate (or vice versa).
@@ -545,6 +524,8 @@ class Image(object):
         return _Image(self.array.conjugate(), self.bounds, self.wcs)
 
     def copy(self):
+        """Make a copy of the `Image`
+        """
         return _Image(self.array.copy(), self.bounds, self.wcs)
 
     def _make_empty(self, shape, dtype):
@@ -674,11 +655,16 @@ class Image(object):
         In this case, the wrapping needs to work slightly differently, so you can specify
         that your image is implicitly Hermitian with the ``hermitian`` argument.  Options are:
 
-        - hermitian=False  (default) Normal non-Hermitian image.
-        - hermitian='x'    Only x>=0 values are stored with x<0 values being implicitly Hermitian.
-                           In this case im.bounds.xmin and bounds.xmin must be 0.
-        - hermitian='y'    Only y>=0 values are stored with y<0 values being implicitly Hermitian.
-                           In this case im.bounds.ymin and bounds.ymin must be 0.
+        hermitian=False
+                        (default) Normal non-Hermitian image.
+
+        hermitian='x'
+                        Only x>=0 values are stored with x<0 values being implicitly Hermitian.
+                        In this case im.bounds.xmin and bounds.xmin must be 0.
+
+        hermitian='y'
+                        Only y>=0 values are stored with y<0 values being implicitly Hermitian.
+                        In this case im.bounds.ymin and bounds.ymin must be 0.
 
         Also, in the two Hermitian cases, the direction that is not implicitly Hermitian must be
         symmetric in the image's bounds.  The wrap bounds must be almost symmetric, but missing

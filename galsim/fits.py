@@ -405,8 +405,8 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
                         that case, the user is responsible for calling either
                         ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.
                         [Either ``file_name`` or ``hdu_list`` is required.]
-        clobber:        Setting ``clobber=True`` when ``file_name`` is given will silently overwrite
-                        existing files. [default: True]
+        clobber:        Setting ``clobber=True`` will silently overwrite existing files.
+                        [default: True]
         compression:    Which compression scheme to use (if any).  Options are:
 
                         - None or 'none' = no compression
@@ -417,11 +417,12 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
                         - 'hcompress' = use hcompress in tiles (only valid for 2-d images)
                         - 'plio' = use plio compression in tiles (only valid for pos integer data)
                         - 'auto' = determine the compression from the extension of the file name
-                                   (requires ``file_name`` to be given):
-                                   - '.fz' => 'rice'
-                                   - '.gz' => 'gzip'
-                                   - '.bz2' => 'bzip2'
-                                   - otherwise None
+                          (requires ``file_name`` to be given):
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
 
                         [default: 'auto']
     """
@@ -475,8 +476,26 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
                         that case, the user is responsible for calling either
                         ``hdu_list.writeto(...)`` or ``galsim.fits.writeFile(...)`` afterwards.
                         [Either ``file_name`` or ``hdu_list`` is required.]
-        clobber:        See documentation for this parameter on the galsim.fits.write() method.
-        compression:    See documentation for this parameter on the galsim.fits.write() method.
+        clobber:        Setting ``clobber=True`` will silently overwrite existing files.
+                        [default: True]
+        compression:    Which compression scheme to use (if any).  Options are:
+
+                        - None or 'none' = no compression
+                        - 'rice' = use rice compression in tiles (preserves header readability)
+                        - 'gzip' = use gzip to compress the full file
+                        - 'bzip2' = use bzip2 to compress the full file
+                        - 'gzip_tile' = use gzip in tiles (preserves header readability)
+                        - 'hcompress' = use hcompress in tiles (only valid for 2-d images)
+                        - 'plio' = use plio compression in tiles (only valid for pos integer data)
+                        - 'auto' = determine the compression from the extension of the file name
+                          (requires ``file_name`` to be given):
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
+
+                        [default: 'auto']
     """
     from ._pyfits import pyfits
 
@@ -542,8 +561,26 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
                         case, the user is responsible for calling either ``hdu_list.writeto(...)``
                         or ``galsim.fits.writeFile(...)`` afterwards.  [Either ``file_name`` or
                         ``hdu_list`` is required.]
-        clobber:        See documentation for this parameter on the galsim.fits.write() method.
-        compression:    See documentation for this parameter on the galsim.fits.write() method.
+        clobber:        Setting ``clobber=True`` will silently overwrite existing files.
+                        [default: True]
+        compression:    Which compression scheme to use (if any).  Options are:
+
+                        - None or 'none' = no compression
+                        - 'rice' = use rice compression in tiles (preserves header readability)
+                        - 'gzip' = use gzip to compress the full file
+                        - 'bzip2' = use bzip2 to compress the full file
+                        - 'gzip_tile' = use gzip in tiles (preserves header readability)
+                        - 'hcompress' = use hcompress in tiles (only valid for 2-d images)
+                        - 'plio' = use plio compression in tiles (only valid for pos integer data)
+                        - 'auto' = determine the compression from the extension of the file name
+                          (requires ``file_name`` to be given):
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
+
+                        [default: 'auto']
     """
     from ._pyfits import pyfits
     from .bounds import BoundsI
@@ -639,10 +676,11 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
                         - 'gzip' = use gzip to compress the full file
                         - 'bzip2' = use bzip2 to compress the full file
                         - 'auto' = determine the compression from the extension of the file name
-                                   (requires ``file_name`` to be given):
-                                   '.gz' => 'gzip'
-                                   '.bz2' => 'bzip2'
-                                   otherwise None
+                          (requires ``file_name`` to be given):
+
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
 
                         Note that the other options, such as 'rice', that operate on the image
                         directly are not available at this point.  If you want to use one of them,
@@ -709,11 +747,12 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires ``file_name`` to be given).
-                                   - '.fz' => 'rice'
-                                   - '.gz' => 'gzip'
-                                   - '.bz2' => 'bzip2'
-                                   - otherwise None
+                          (requires ``file_name`` to be given).
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
 
                         [default: 'auto']
 
@@ -792,11 +831,12 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires ``file_name`` to be given).
-                                   - '.fz' => 'rice'
-                                   - '.gz' => 'gzip'
-                                   - '.bz2' => 'bzip2'
-                                   - otherwise None
+                          (requires ``file_name`` to be given).
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
 
                         [default: 'auto']
 
@@ -874,11 +914,12 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires ``file_name`` to be given).
-                                   - '.fz' => 'rice'
-                                   - '.gz' => 'gzip'
-                                   - '.bz2' => 'bzip2'
-                                   - otherwise None
+                          (requires ``file_name`` to be given).
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
 
                         [default: 'auto']
 
@@ -964,11 +1005,12 @@ def readFile(file_name, dir=None, hdu=None, compression='auto'):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires ``file_name`` to be given).
-                                   - '.fz' => 'rice'
-                                   - '.gz' => 'gzip'
-                                   - '.bz2' => 'bzip2'
-                                   - otherwise None
+                          (requires ``file_name`` to be given).
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
 
                         [default: 'auto']
 
@@ -1067,11 +1109,12 @@ class FitsHeader(object):
                         - 'hcompress' = use hcompress decompression in tiles
                         - 'plio' = use plio decompression in tiles
                         - 'auto' = determine the decompression from the extension of the file name
-                                   (requires ``file_name`` to be given).
-                                   - '.fz' => 'rice'
-                                   - '.gz' => 'gzip'
-                                   - '.bz2' => 'bzip2'
-                                   - otherwise None
+                          (requires ``file_name`` to be given).
+
+                          - '.fz' => 'rice'
+                          - '.gz' => 'gzip'
+                          - '.bz2' => 'bzip2'
+                          - otherwise None
 
                         [default: 'auto']
         text_file:      Normally a file is taken to be a fits file, but you can also give it a

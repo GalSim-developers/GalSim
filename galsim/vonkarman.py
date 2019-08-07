@@ -29,18 +29,21 @@ from .errors import GalSimIncompatibleValuesError
 
 
 class VonKarman(GSObject):
-    """Class describing a von Karman surface brightness profile, which represents a long exposure
+    r"""Class describing a von Karman surface brightness profile, which represents a long exposure
     atmospheric PSF.  The difference between the von Karman profile and the related `Kolmogorov`
     profile is that the von Karman profile includes a parameter for the outer scale of atmospheric
     turbulence, which is a physical scale beyond which fluctuations in the refractive index stop
     growing, typically between 10 and 100 meters.  Quantitatively, the von Karman phase fluctuation
     power spectrum at spatial frequency f is proportional to
 
-        r0^(-5/3) (f^2 + L0^-2)^(-11/6)
+    .. math::
 
-    where r0 is the Fried parameter which sets the overall turbulence amplitude and L0 is the outer
-    scale in meters.  The Kolmogorov power spectrum proportional to r0^(-5/3) f^(-11/3) is recovered
-    as L0 -> infinity.
+        P(f) = r_0^{-5/3} \left(f^2 + L_0^{-2}\right)^{-11/6}
+
+    where :math:`r_0` is the Fried parameter which sets the overall turbulence amplitude and
+    :math:`L_0` is the outer scale in meters.
+    The Kolmogorov power spectrum proportional to :math:`r_0^{-5/3} f^{-11/3}` is recovered
+    as :math:`L_0 \rightarrow \infty`.
 
     For more information, we recommend the following references:
 
@@ -50,16 +53,18 @@ class VonKarman(GSObject):
     .. note::
 
         If one blindly follows the math for converting the von Karman power spectrum into a PSF, one
-        finds that the PSF contains a delta-function at the origin with fractional flux of::
+        finds that the PSF contains a delta-function at the origin with fractional flux of:
 
-            exp(-0.5*0.172*(r0/L0)^(-5/3))
+        .. math::
+
+            F_\mathrm{delta} = e^{-0.086 (r_0/L_0)^{-5/3}}
 
         In almost all cases of interest this evaluates to something tiny, often on the order of
-        10^-100 or smaller.  By default, GalSim will ignore this delta function entirely since it
-        usually doesn't make any difference, but can complicate some calculations like drawing
-        using method='real_space' or by formally requiring huge Fourier transforms for drawing
-        using method='fft'.  If for some reason you want to keep the delta function, though, then
-        you can pass the do_delta=True argument to the VonKarman initializer.
+        :math:`10^{-100}` or smaller.  By default, GalSim will ignore this delta function entirely
+        since it usually doesn't make any difference, but can complicate some calculations like
+        drawing using method='real_space' or by formally requiring huge Fourier transforms for
+        drawing using method='fft'.  If for some reason you want to keep the delta function
+        though, then you can pass the do_delta=True argument to the VonKarman initializer.
 
     Parameters:
         lam:                Wavelength in nanometers.

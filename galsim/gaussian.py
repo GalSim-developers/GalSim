@@ -28,11 +28,14 @@ from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
 
 class Gaussian(GSObject):
-    """A class describing a 2D Gaussian surface brightness profile.
+    r"""A class describing a 2D Gaussian surface brightness profile.
 
     The Gaussian surface brightness profile is characterized by two properties, its ``flux``
     and the characteristic size ``sigma`` where the radial profile of the circular Gaussian
-    drops off as ``exp[-r^2 / (2. * sigma^2)]``.
+    drops off as
+
+    .. math::
+        I(r) \sim e^{-\frac{r^2}{2 \sigma^2}}
 
     A Gaussian can be initialized using one (and only one) of three possible size parameters:
     ``sigma``, ``fwhm``, or ``half_light_radius``.  Exactly one of these three is required.

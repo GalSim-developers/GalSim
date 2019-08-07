@@ -34,13 +34,6 @@ Von Karman Profile
     :members:
     :show-inheritance:
 
-Second Kick
------------
-
-.. autoclass:: galsim.SecondKick
-    :members:
-    :show-inheritance:
-
 Optical PSF
 -----------
 

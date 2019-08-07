@@ -31,24 +31,25 @@ class Shear(object):
     definitions of shear:
 
     reduced shear
-        :math:`|g| = (a - b)/(a + b)`
+        :math:`|g| = \frac{a - b}{a + b}`
     distortion
-        :math:`|e| = (a^2 - b^2)/(a^2 + b^2)`
+        :math:`|e| = \frac{a^2 - b^2}{a^2 + b^2}`
     conformal shear
-        :math:`\eta = log(b/a)`
+        :math:`\eta = \log(b/a)`
     minor-to-major axis ratio
-        :math:`q = b/a`
+        :math:`q = \frac{b}{a}`
 
-    These can be thought of as a magnitude and a real-space position angle beta, or as two
-    components, e.g., g1 and g2, with:
+    These can be thought of as a magnitude and a real-space position angle :math:`\beta`, or as
+    two components, e.g., :math:`g_1` and :math:`g_2`, with:
 
     .. math::
 
-        g1 = |g| cos(2*beta)
-        g2 = |g| sin(2*beta)
+        g_1 &= |g| \cos(2 \beta) \\
+        g_2 &= |g| \sin(2 \beta)
 
-    Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is
-    g1 + i g2 = g exp(2 i beta).  Likewise for eta or e.  The phase of the complex value is 2 beta.
+    Note: :math:`\beta` is _not_ the phase of a complex valued shear.  Rather, the complex shear is
+    :math:`g_1 + i g_2 = g \exp(2 i \beta)`.  Likewise for :math:`\eta` or :math:`e`.
+    The phase of the complex value is :math:`2 \beta`.
 
     The following are all examples of valid calls to initialize a Shear object::
 
@@ -72,7 +73,7 @@ class Shear(object):
 
     In addition, for use cases where extreme efficiency is required, you can skip all the
     normal sanity checks and branches in the regular Shear constructor by using a leading
-    underscore with the complex shear (g1 + 1j * g2)::
+    underscore with the complex shear ``g1 + 1j * g2``::
 
         >>> s = galsim._Shear(0.05 + 0.03j)  # Equivalent to galsim.Shear(g1=0.05, g2=0.03)
 
@@ -104,7 +105,7 @@ class Shear(object):
 
         .. math::
 
-            \mu = \frac{1}{(1.-\kappa)**2 - (\gamma_1**2 + \gamma_2**2)}
+            \mu = \frac{1}{(1-\kappa)^2 - (\gamma_1^2 + \gamma_2^2)}
 
         which is not equal to 1 for non-zero shear even for convergence :math:`\kappa=0`.
 
@@ -314,10 +315,10 @@ class Shear(object):
 
         .. math::
 
-            \left( \begin{array}{c} x^\prime & y^\prime \end{array} \right)
-            = S \left( \begin{array}{c} x  y \end{array} \right)
+            \left( \begin{array}{c} x^\prime \\ y^\prime \end{array} \right)
+            = S \left( \begin{array}{c} x \\ y \end{array} \right)
 
-        and :math:`S` is the return value of this function ``S = s.getMatrix()``.
+        and :math:`S` is the return value of this function ``S = shear.getMatrix()``.
 
         Specifically, the matrix is
 
@@ -336,15 +337,17 @@ class Shear(object):
         The effect of two shears is not just a single net shear.  There is also a rotation
         associated with it.  This is easiest to understand in terms of the matrix representations:
 
-        If s3 = s1 + s2, and the corresponding shear matrices are S1,S2,S3, then S3 R = S1 S2,
-        where R is a rotation matrix:
+        If ``shear3 = shear1 + shear2`` is a sum of two shears, and the corresponding shear
+        matrices are :math:`S_1`, :math:`S_2`, and :math:`S_3`, then :math:`S_3 R = S_1 S_2`,
+        where :math:`R` is a rotation matrix:
 
         .. math::
 
             R = \left( \begin{array}{cc} cos(\theta) & -sin(\theta) \\
                                          sin(\theta) &  cos(\theta) \end{array} \right)
 
-        and :math:`\theta` is the return value (as a `galsim.Angle`) from ``s1.rotationWith(s2)``.
+        and :math:`\theta` is the return value (as a `galsim.Angle`) from
+        ``shear1.rotationWith(shear2)``.
         """
         # Save a little time by only working on the first column.
         S3 = self.getMatrix().dot(other.getMatrix()[:,:1])

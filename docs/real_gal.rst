@@ -1,6 +1,9 @@
 "Real" Galaxies
 ===============
 
+Individual Real Galaxies
+------------------------
+
 The `RealGalaxy` class uses images of galaxies from real astrophysical data (e.g. the Hubble Space
 Telescope), along with a PSF model of the optical properties of the telescope that took these
 images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A
@@ -11,12 +14,22 @@ relevant to the more recent software used here.
 The `RealGalaxyCatalog` class stores all required information about a real galaxy simulation
 training sample and accompanying PSF model.
 This modelling requires external data for the galaxy images and PSF models, which is read into a
-`RealGalaxyCatalog` or `COSMOSCatalog` object from FITS files. An example catalog of 100 real
-galaxies is in the repository itself at
+`RealGalaxyCatalog` object from FITS files. An example catalog of 100 real galaxies is in the
+repository itself at
 
     GalSim/examples/data/real_galaxy_catalog_23.5_example.fits
 
 For access to larger catalogs of objects, see `Downloading the COSMOS Catalog` below.
+
+.. autoclass:: galsim.RealGalaxy
+    :members:
+    :show-inheritance:
+
+.. autoclass:: galsim.RealGalaxyCatalog
+    :members:
+
+Realistic Scene
+---------------
 
 The `COSMOSCatalog` class is also based on the above `RealGalaxyCatalog`, and has functionality
 for defining a "sky scene", i.e., a galaxy sample with reasonable properties that can then be
@@ -28,16 +41,8 @@ or parametric models based on those images.
    expanded to include star samples as well.
 
 
-.. autoclass:: galsim.RealGalaxy
-    :members:
-    :show-inheritance:
-
-.. autoclass:: galsim.RealGalaxyCatalog
-    :members:
-
 .. autoclass:: galsim.COSMOSCatalog
     :members:
-
 
 Downloading the COSMOS Catalog
 ------------------------------

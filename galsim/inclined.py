@@ -29,18 +29,19 @@ from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp
 
 
 class InclinedExponential(GSObject):
-    """A class describing an inclined exponential profile.
+    r"""A class describing an inclined exponential profile.
 
     The Inclined Exponential surface brightness profile is characterized by three properties: its
     inclination angle (where 0 degrees = face-on and 90 degrees = edge-on), its scale radius, and
     its scale height. The 3D light distribution function is:
 
-        I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s)
+    .. math::
+        I(R,z) \sim \mathrm{sech}^2 (z/h_s) \, \exp\left(-R/R_s\right)
 
-    where z is the distance along the minor axis, R is the radial distance from the minor axis,
-    R_s is the scale radius of the disk, h_s is the scale height of the disk, and I_0 is the central
-    surface brightness of the face-on disk. The 2D light distribution function is then determined
-    from the scale height and radius here, along with the inclination angle.
+    where :math:`z` is the distance along the minor axis, :math:`R` is the radial distance from the
+    minor axis, :math:`R_s` is the scale radius of the disk, and :math:`h_s` is the scale height of
+    the disk. The 2D light distribution function is then determined from the scale height and
+    radius here, along with the inclination angle.
 
     In this implementation, the profile is inclined along the y-axis. This means that it will likely
     need to be rotated in most circumstances.
@@ -212,7 +213,7 @@ class InclinedExponential(GSObject):
 
 
 class InclinedSersic(GSObject):
-    """A class describing an inclined sersic profile. This class is general, and so for certain
+    r"""A class describing an inclined sersic profile. This class is general, and so for certain
     special cases, more specialized classes will be more efficient. For the case where n==1
     with no truncation, the `InclinedExponential` class will be much more efficient. For the case
     where the inclination angle is zero (face-on), the `Sersic` class will be slightly more
@@ -222,12 +223,13 @@ class InclinedSersic(GSObject):
     Sersic index ``n``, its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
     its scale radius, and its scale height. The 3D light distribution function is:
 
-        I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp[-b*(R/r_s)^{1/n}]
+    .. math::
+        I(R,z) \sim \mathrm{sech}^2 (z/h_s) \, \exp\left(-(R/R_s)^{1/n}\right)
 
-    where z is the distance along the minor axis, R is the radial distance from the minor axis,
-    r_s is the scale radius of the disk, h_s is the scale height of the disk, and I_0 is the central
-    surface brightness of the face-on disk. The 2D light distribution function is then determined
-    from the scale height and radius here, along with the inclination angle.
+    where :math:`z` is the distance along the minor axis, :math:`R` is the radial distance from the
+    minor axis, :math:`R_s` is the scale radius of the disk, and :math:`h_s` is the scale height of
+    the disk. The 2D light distribution function is then determined from the scale height and
+    radius here, along with the inclination angle.
 
     In this implementation, the profile is inclined along the y-axis. This means that it will likely
     need to be rotated in most circumstances.

@@ -68,13 +68,6 @@ class RandomWalk(GSObject):
          gsparams:          Optional `GSParams` for the objects representing each point source.
                             [default: None]
 
-    This class inherits from galsim.Sum. Additional methods are
-
-    Methods:
-        calculateHLR:   Calculate the actual half light radius of the generated points
-
-    There are also "getters",  implemented as read-only properties
-
     Attributes:
         npoints:                    The number of random walk points
         input_half_light_radius:    The input half_light_radius
