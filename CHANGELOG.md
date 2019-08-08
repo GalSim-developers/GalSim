@@ -77,3 +77,11 @@ Bug Fixes
 - Fixed FitsHeader to not unnecessarily read data of fits file. (#1024)
 - Switched to yaml.safe_load to avoid PyYAML v5.0 warnings (#1025)
 - Fixed some cases where numpy objected to subtracting floats from ints. (#1025)
+
+Changes from v2.1.5 to v2.1.6
+=============================
+
+Bug Fix
+-------
+
+- Fixed error that pip was not intalling share directory in installed location.
