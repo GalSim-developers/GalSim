@@ -47,10 +47,9 @@ You can also use conda via conda-forge::
 Source Distribution
 ===================
 
-The current released version of GalSim is version 2.1.  To get the code, you
-can grab the tarball (or zip file) from
+To get the latest version of the code, you can grab the tarball (or zip file) from
 
-https://github.com/GalSim-developers/GalSim/releases/tag/v2.1.0
+https://github.com/GalSim-developers/GalSim/releases/
 
 Also, feel free to fork the repository:
 
