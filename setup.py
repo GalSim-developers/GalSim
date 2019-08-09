@@ -70,16 +70,14 @@ if "--debug" in sys.argv:
     undef_macros+=['NDEBUG']
 
 copt =  {
-    'gcc' : ['-O2','-msse2','-ffast-math','-std=c++11','-fvisibility=hidden','-fopenmp'],
+    'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-openmp'],
-    'clang' : ['-O2','-msse2','-ffast-math','-std=c++11',
+    'clang' : ['-O2','-msse2','-std=c++11',
                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ OpenMP' : ['-O2','-msse2','-ffast-math','-std=c++11',
-                         '-Wno-shorten-64-to-32','-fvisibility=hidden',
-                         '-stdlib=libc++','-fopenmp'],
-    'clang w/ manual OpenMP' : ['-O2','-msse2','-ffast-math','-std=c++11',
-                                '-Wno-shorten-64-to-32','-fvisibility=hidden',
-                                '-stdlib=libc++','-Xpreprocessor','-fopenmp'],
+    'clang w/ OpenMP' : ['-O2','-msse2','-std=c++11','-fopenmp',
+                         '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
+    'clang w/ manual OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
+                                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'unknown' : [],
 }
 lopt =  {
