@@ -23,6 +23,7 @@ import ctypes.util
 import types
 import subprocess
 import re
+import tempfile
 
 try:
     from setuptools import setup, Extension, find_packages
@@ -69,19 +70,35 @@ if "--debug" in sys.argv:
     undef_macros+=['NDEBUG']
 
 copt =  {
-    'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
-    'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-fopenmp'],
-    'clang' : ['-O2','-msse2','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden',
-               '-stdlib=libc++','-Xpreprocessor','-fopenmp'],
+    'gcc' : ['-O2','-msse2','-ffast-math','-std=c++11','-fvisibility=hidden','-fopenmp'],
+    'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-openmp'],
+    'clang' : ['-O2','-msse2','-ffast-math','-std=c++11',
+               '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++']
+    'clang w/ OpenMP' : ['-O2','-msse2','-ffast-math','-std=c++11',
+                         '-Wno-shorten-64-to-32','-fvisibility=hidden',
+                         '-stdlib=libc++','-fopenmp'],
+    'clang w/ manual OpenMP' : ['-O2','-msse2','-ffast-math','-std=c++11',
+                                '-Wno-shorten-64-to-32','-fvisibility=hidden',
+                                '-stdlib=libc++','-Xpreprocessor','-fopenmp'],
+    'unknown' : [],
+}
+lopt =  {
+    'gcc' : ['-fopenmp'],
+    'icc' : ['-openmp'],
+    'clang' : [],
+    'clang w/ OpenMP' : ['-fopenmp'],
+    'clang w/ manual OpenMP' : ['-fopenmp'],
     'unknown' : [],
 }
 
 if "--debug" in sys.argv:
-    copt['gcc'].append('-g')
-    copt['icc'].append('-g')
-    copt['clang'].append('-g')
+    for name in copt.keys():
+        if name != 'unknown':
+            copt[name].append('-g')
 
-def get_compiler(cc):
+local_tmp = 'tmp'
+
+def get_compiler(cc, check_unknown=True):
     """Try to figure out which kind of compiler this really is.
     In particular, try to distinguish between clang and gcc, either of which may
     be called cc or gcc.
@@ -99,7 +116,22 @@ def get_compiler(cc):
         line = lines[1].decode(encoding='UTF-8')
 
     if 'clang' in line:
-        return 'clang'
+        # clang 3.7 is the first with openmp support.  But Apple lies about the version
+        # number of clang, so the most reliable thing to do is to just try the compilation
+        # with the openmp flag and see if it works.
+        print('Compiler is Clang.  Checking if it is a version that supports OpenMP.')
+        if try_cc(cc, 'clang w/ OpenMP'):
+            print("Yay! This version of clang supports OpenMP!")
+            return 'clang w/ OpenMP'
+        elif try_cc(cc, 'clang w/ manual OpenMP'):
+            print("Yay! This version of clang supports OpenMP!")
+            return 'clang w/ manual OpenMP'
+        else:
+            print("\nSorry.  This version of clang doesn't seem to support OpenMP.\n")
+            print("If you think it should, you can try the above commands on the command line.")
+            print("You might need to add something to your C_INCLUDE_PATH or LIBRARY_PATH")
+            print("(and probabaly LD_LIBRARY_PATH) to get it to work.\n")
+            return 'clang'
     elif 'gcc' in line:
         return 'gcc'
     elif 'GCC' in line:
@@ -110,6 +142,19 @@ def get_compiler(cc):
         return 'gcc'
     elif 'icc' in cc or 'icpc' in cc:
         return 'icc'
+    elif check_unknown:
+        # OK, the main thing we need to know is what openmp flag we need for this compiler,
+        # so let's just try the various options and see what works.  Don't try icc, since
+        # the -openmp flag there gets treated as '-o penmp' by gcc and clang, which is bad.
+        # Plus, icc should be detected correctly by the above procedure anyway.
+        print('Unknown compiler.')
+        for cc_type in ['gcc', 'clang w/ OpenMP', 'clang w/ manual OpenMP', 'clang']:
+            print('Check if the compiler works like ',cc_type)
+            if try_cc(cc, cc_type):
+                return cc_type
+        # I guess none of them worked.  Now we really do have to bail.
+        print("None of these compile options worked.  Not adding any optimization flags.")
+        return 'unknown'
     else:
         return 'unknown'
 
@@ -249,50 +294,67 @@ def find_eigen_dir(output=False):
 def try_compile(cpp_code, cc, cflags=[], lflags=[]):
     """Check if compiling some code with the given compiler and flags works properly.
     """
-    import tempfile
-    cpp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.cpp')
-    cpp_file.write(cpp_code.encode())
-    cpp_file.close();
-    os_file = tempfile.NamedTemporaryFile(delete=False, suffix='.os')
-    os_file.close()
-    exe_file = tempfile.NamedTemporaryFile(delete=False, suffix='.exe')
-    exe_file.close()
+    # Put the temporary files in a local tmp directory, so that they stick around after failures.
+    if not os.path.exists(local_tmp): os.makedirs(local_tmp)
 
-    # Compile
-    cmd = cc + ' ' + ' '.join(cflags + ['-c',cpp_file.name,'-o',os_file.name])
-    #print('cmd = ',cmd)
+    # We delete these manually if successful.  Otherwise, we leave them in the tmp directory
+    # so the user can troubleshoot the problem if they were expecting it to work.
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.cpp', dir=local_tmp) as cpp_file:
+        cpp_file.write(cpp_code.encode())
+        cpp_name = cpp_file.name
+
+    # Just get a named temporary file to write to:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.os', dir=local_tmp) as o_file:
+        o_name = o_file.name
+
+    # Another named temporary file for the executable
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.exe', dir=local_tmp) as exe_file:
+        exe_name = exe_file.name
+
+    # Try compiling with the given flags
+    cmd = [cc] + cflags + ['-c',cpp_name,'-o',o_name]
+    #print('cmd = ',' '.join(cmd))
     try:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         lines = p.stdout.readlines()
         p.communicate()
         #print('output = ',b''.join(lines).decode())
         if p.returncode != 0:
             print('Trying compile command:')
-            print(cmd)
-            print('output = ',b''.join(lines).decode())
+            print(' '.join(cmd))
+            print('Output was:')
+            print('   ',b'   '.join(lines).decode())
+        returncode = p.returncode
     except (IOError,OSError) as e:
         print('Trying compile command:')
         print(cmd)
         print('Caught error: ',repr(e))
-        p.returncode = 1
-    if p.returncode != 0:
-        os.remove(cpp_file.name)
-        if os.path.exists(os_file.name):
-            os.remove(os_file.name)
+        returncode = 1
+    if returncode != 0:
+        # Don't delete files in case helpful for troubleshooting.
         return False
 
     # Link
-    cmd = cc + ' ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
-    #print('cmd = ',cmd)
+    cmd = [cc] + lflags + [o_name,'-o',exe_name]
+    #print('cmd = ',' '.join(cmd))
     try:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         lines = p.stdout.readlines()
         p.communicate()
         #print('output = ',b''.join(lines).decode())
+        if p.returncode != 0:
+            print('Trying link command:')
+            print(' '.join(cmd))
+            print('Output was:')
+            print('   ',b'   '.join(lines).decode())
+        returncode = p.returncode
     except (IOError,OSError) as e:
-        p.returncode = 1
+        print('Trying link command:')
+        print(' '.join(cmd))
+        print('Caught error: ',repr(e))
+        returncode = 1
 
-    if p.returncode:
+    if eturncode:
         # The linker needs to be a c++ linker, which isn't 'cc'.  However, I couldn't figure
         # out how to get setup.py to tell me the actual command to use for linking.  All the
         # executables available from build_ext.compiler.executables are 'cc', not 'c++'.
@@ -320,29 +382,74 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
                 cpp = 'g++'
             else:
                 cpp = 'c++'
-        cmd = cpp + ' ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
-        #print('cmd = ',cmd)
+        cmd = [cpp] + lflags + [o_name,'-o',exe_name]
+        #print('cmd = ',' '.join(cmd))
         try:
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             lines = p.stdout.readlines()
             p.communicate()
             #print('output = ',b''.join(lines).decode())
             if p.returncode != 0:
                 print('Trying link command:')
-                print(cmd)
-                print('output = ',b''.join(lines).decode())
+                print(' '.join(cmd))
+                print('Output was:')
+                print('   ',b'   '.join(lines).decode())
+            returncode = p.returncode
         except (IOError,OSError) as e:
             print('Trying to link using command:')
-            print(cmd)
+            print(' '.join(cmd))
             print('Caught error: ',repr(e))
-            p.returncode = 1
+            returncode = 1
 
     # Remove the temp files
-    os.remove(cpp_file.name)
-    os.remove(os_file.name)
-    if os.path.exists(exe_file.name):
-        os.remove(exe_file.name)
-    return p.returncode == 0
+    if returncode != 0:
+        # Don't delete files in case helpful for troubleshooting.
+        return False
+    else:
+        os.remove(cpp_name)
+        os.remove(o_name)
+        if os.path.exists(exe_name):
+            os.remove(exe_name)
+        return True
+
+def try_cc(cc, cc_type):
+    """
+    If cc --version is not helpful, the last resort is to try each compiler type and see
+    if it works.
+    """
+    cpp_code = """
+#include <iostream>
+#include <vector>
+#ifdef _OPENMP
+#include "omp.h"
+#endif
+
+int get_max_threads() {
+#ifdef _OPENMP
+    return omp_get_max_threads();
+#else
+    return 1;
+#endif
+}
+
+int main() {
+    int n = 500;
+    std::vector<double> x(n,0.);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+    for (int i=0; i<n; ++i) x[i] = 2*i+1;
+
+    double sum = 0.;
+    for (int i=0; i<n; ++i) sum += x[i];
+    // Sum should be n^2 = 250000
+
+    std::cout<<get_max_threads()<<"  "<<sum<<std::endl;
+    return 0;
+}
+"""
+    return try_compile(cpp_code, cc, copt[cc_type], lopt[cc_type])
 
 
 def try_cpp(cc, cflags=[], lflags=[]):
