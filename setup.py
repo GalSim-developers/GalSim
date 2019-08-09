@@ -73,7 +73,7 @@ copt =  {
     'gcc' : ['-O2','-msse2','-ffast-math','-std=c++11','-fvisibility=hidden','-fopenmp'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-openmp'],
     'clang' : ['-O2','-msse2','-ffast-math','-std=c++11',
-               '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++']
+               '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'clang w/ OpenMP' : ['-O2','-msse2','-ffast-math','-std=c++11',
                          '-Wno-shorten-64-to-32','-fvisibility=hidden',
                          '-stdlib=libc++','-fopenmp'],
@@ -354,7 +354,7 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         print('Caught error: ',repr(e))
         returncode = 1
 
-    if eturncode:
+    if returncode:
         # The linker needs to be a c++ linker, which isn't 'cc'.  However, I couldn't figure
         # out how to get setup.py to tell me the actual command to use for linking.  All the
         # executables available from build_ext.compiler.executables are 'cc', not 'c++'.
