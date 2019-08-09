@@ -100,12 +100,13 @@ if "--debug" in sys.argv:
 
 local_tmp = 'tmp'
 
-def get_compiler(cc, check_unknown=True, output=False):
+def get_compiler_type(compiler, check_unknown=True, output=False):
     """Try to figure out which kind of compiler this really is.
     In particular, try to distinguish between clang and gcc, either of which may
     be called cc or gcc.
     """
     if debug: output=True
+    cc = compiler.compiler_so[0]
     cmd = [cc,'--version']
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     lines = p.stdout.readlines()
@@ -125,11 +126,11 @@ def get_compiler(cc, check_unknown=True, output=False):
         # with the openmp flag and see if it works.
         if output:
             print('Compiler is Clang.  Checking if it is a version that supports OpenMP.')
-        if try_cc(cc, 'clang w/ OpenMP'):
+        if try_openmp(compiler, 'clang w/ OpenMP'):
             if output:
                 print("Yay! This version of clang supports OpenMP!")
             return 'clang w/ OpenMP'
-        elif try_cc(cc, 'clang w/ manual OpenMP'):
+        elif try_openmp(compiler, 'clang w/ manual OpenMP'):
             if output:
                 print("Yay! This version of clang supports OpenMP!")
             return 'clang w/ manual OpenMP'
@@ -161,7 +162,7 @@ def get_compiler(cc, check_unknown=True, output=False):
         for cc_type in ['gcc', 'clang w/ OpenMP', 'clang w/ manual OpenMP', 'clang']:
             if outpu:
                 print('Check if the compiler works like ',cc_type)
-            if try_cc(cc, cc_type):
+            if try_openmp(compiler, cc_type):
                 return cc_type
         # I guess none of them worked.  Now we really do have to bail.
         if output:
@@ -305,7 +306,7 @@ def find_eigen_dir(output=False):
     raise OSError("Could not find Eigen")
 
 
-def try_compile(cpp_code, cc, cflags=[], lflags=[]):
+def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
     """Check if compiling some code with the given compiler and flags works properly.
     """
     # Put the temporary files in a local tmp directory, so that they stick around after failures.
@@ -326,7 +327,10 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         exe_name = exe_file.name
 
     # Try compiling with the given flags
-    cmd = cc.split() + cflags + ['-c',cpp_name,'-o',o_name]
+    cc = [compiler.compiler_so[0]]
+    if prepend:
+        cc = [prepend] + cc
+    cmd = cc + compiler.compiler_so[1:] + cflags + ['-c',cpp_name,'-o',o_name]
     if debug:
         print('cmd = ',' '.join(cmd))
     try:
@@ -350,7 +354,8 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         return False
 
     # Link
-    cmd = cc.split() + lflags + [o_name,'-o',exe_name]
+    cc = [compiler.linker_so[0]]
+    cmd = cc + compiler.linker_so[1:] + lflags + [o_name,'-o',exe_name]
     if debug:
         print('cmd = ',' '.join(cmd))
     try:
@@ -389,7 +394,7 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         elif cc == 'cc':
             cpp = 'c++'
         else:
-            comp_type = get_compiler(cc)
+            comp_type = get_compiler_type(compiler)
             if comp_type == 'gcc':
                 cpp = 'g++'
             elif comp_type == 'clang':
@@ -398,7 +403,7 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
                 cpp = 'g++'
             else:
                 cpp = 'c++'
-        cmd = cpp.split() + lflags + [o_name,'-o',exe_name]
+        cmd = [cpp] + compiler.linker_so[1:] + lflags + [o_name,'-o',exe_name]
         if debug:
             print('cmd = ',' '.join(cmd))
         try:
@@ -429,7 +434,7 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
             os.remove(exe_name)
         return True
 
-def try_cc(cc, cc_type):
+def try_openmp(compiler, cc_type):
     """
     If cc --version is not helpful, the last resort is to try each compiler type and see
     if it works.
@@ -466,10 +471,10 @@ int main() {
     return 0;
 }
 """
-    return try_compile(cpp_code, cc, copt[cc_type], lopt[cc_type])
+    return try_compile(cpp_code, compiler, copt[cc_type], lopt[cc_type])
 
 
-def try_cpp(cc, cflags=[], lflags=[]):
+def try_cpp(compiler, cflags=[], lflags=[], prepend=None):
     """Check if compiling a simple bit of c++ code with the given compiler works properly.
     """
     from textwrap import dedent
@@ -485,9 +490,9 @@ def try_cpp(cc, cflags=[], lflags=[]):
         return sum;
     }
     """)
-    return try_compile(cpp_code, cc, cflags, lflags)
+    return try_compile(cpp_code, compiler, cflags, lflags, prepend=None)
 
-def try_cpp11(cc, cflags=[], lflags=[]):
+def try_cpp11(compiler, cflags=[], lflags=[]):
     """Check if compiling c++11 code with the given compiler works properly.
     """
     from textwrap import dedent
@@ -501,7 +506,7 @@ def try_cpp11(cc, cflags=[], lflags=[]):
         return 0;
     }
     """)
-    return try_compile(cpp_code, cc, cflags, lflags)
+    return try_compile(cpp_code, compiler, cflags, lflags)
 
 
 def cpu_count():
@@ -573,30 +578,24 @@ def fix_compiler(compiler, njobs):
     except (AttributeError, ValueError):
         pass
 
-    # Remove ccache if present so it isn't interpretted as the compiler
-    if compiler.compiler_so[0] == 'ccache':
-        del compiler.compiler_so[0]
-
     # Figure out what compiler it will use
-    #print('compiler = ',compiler.compiler)
+    comp_type = get_compiler_type(compiler, output=True)
     cc = compiler.compiler_so[0]
-    cflags = compiler.compiler_so[1:]
-    comp_type = get_compiler(cc, output=True)
     if cc == comp_type:
         print('Using compiler %s'%(cc))
     else:
         print('Using compiler %s, which is %s'%(cc,comp_type))
 
     # Make sure the compiler works with a simple c++ code
-    if not try_cpp(cc, cflags):
+    if not try_cpp(compiler):
         print("There seems to be something wrong with the compiler or cflags")
-        print("%s %s"%(cc, ' '.join(cflags)))
+        print(str(compiler.compiler_so))
         raise OSError("Compiler does not work for compiling C++ code")
 
     # Check if we can use ccache to speed up repeated compilation.
-    if try_cpp('ccache ' + cc, cflags):
+    if try_cpp(compiler, prepend='ccache'):
         print('Using ccache')
-        compiler.set_executable('compiler_so', ['ccache',cc] + cflags)
+        compiler.set_executable('compiler_so', ['ccache'] + compiler.compiler_so)
 
     if njobs > 1:
         # Global variable for tracking the number of jobs to use.
@@ -608,7 +607,7 @@ def fix_compiler(compiler, njobs):
 
     extra_cflags = copt[comp_type]
 
-    success = try_cpp11(cc, cflags + extra_cflags)
+    success = try_cpp11(compiler, extra_cflags)
     if not success:
         # In case libc++ doesn't work, try letting the system use the default stdlib
         try:
@@ -616,7 +615,7 @@ def fix_compiler(compiler, njobs):
         except (AttributeError, ValueError):
             pass
         else:
-            success = try_cpp11(cc, cflags + extra_cflags)
+            success = try_cpp11(compiler, extra_cflags)
     if not success:
         print('The compiler %s with flags %s did not successfully compile C++11 code'%
               (cc, ' '.join(extra_cflags)))
