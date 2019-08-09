@@ -397,7 +397,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     from numbers import Integral, Real, Complex
     try:
         import cPickle as pickle
-    except:
+    except ImportError:
         import pickle
     import copy
     # In case the repr uses these:
@@ -409,7 +409,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         from distutils.version import LooseVersion
         if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
             irreprable = True
-    except:
+    except ImportError:
         import pyfits
     print('Try pickling ',str(obj1))
 
@@ -429,7 +429,10 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     assert object() != f1
 
     # Test the hash values are equal for two equivalent objects.
-    from collections import Hashable
+    try:
+        from collections.abc import Hashable
+    except ImportError:
+        from collections import Hashable
     if isinstance(obj1, Hashable):
         #print('hash = ',hash(obj1),hash(obj2))
         assert hash(obj1) == hash(obj2)
@@ -488,7 +491,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
 
     try:
         args = obj1.__getinitargs__()
-    except:
+    except Exception:
         pass
     else:
         classname = type(obj1).__name__
@@ -542,7 +545,10 @@ def all_obj_diff(objs, check_hash=True):
     """ Helper function that verifies that each element in `objs` is unique and, if hashable,
     produces a unique hash."""
 
-    from collections import Hashable
+    try:
+        from collections.abc import Hashable
+    except ImportError:
+        from collections import Hashable
     # Check that all objects are unique.
     # Would like to use `assert len(objs) == len(set(objs))` here, but this requires that the
     # elements of objs are hashable (and that they have unique hashes!, which is what we're trying
