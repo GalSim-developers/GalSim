@@ -312,7 +312,7 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         exe_name = exe_file.name
 
     # Try compiling with the given flags
-    cmd = [cc] + cflags + ['-c',cpp_name,'-o',o_name]
+    cmd = cc.split() + cflags + ['-c',cpp_name,'-o',o_name]
     #print('cmd = ',' '.join(cmd))
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -335,7 +335,7 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
         return False
 
     # Link
-    cmd = [cc] + lflags + [o_name,'-o',exe_name]
+    cmd = cc.split() + lflags + [o_name,'-o',exe_name]
     #print('cmd = ',' '.join(cmd))
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -382,7 +382,7 @@ def try_compile(cpp_code, cc, cflags=[], lflags=[]):
                 cpp = 'g++'
             else:
                 cpp = 'c++'
-        cmd = [cpp] + lflags + [o_name,'-o',exe_name]
+        cmd = cpp.split() + lflags + [o_name,'-o',exe_name]
         #print('cmd = ',' '.join(cmd))
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
