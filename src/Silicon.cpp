@@ -103,13 +103,13 @@ namespace galsim {
 
         buildEmptyPoly(_emptypoly, _numVertices);
         // These are mutable Polygons we'll use as scratch space
-	int numThreads = 1;
+        int numThreads = 1;
 #ifdef _OPENMP
-	numThreads = omp_get_max_threads();
+        numThreads = omp_get_max_threads();
 #endif
-	for (int i=0; i < numThreads; i++) {
-	    _testpoly.push_back(_emptypoly);
-	}
+        for (int i=0; i < numThreads; i++) {
+            _testpoly.push_back(_emptypoly);
+        }
         _distortions.resize(_nx*_ny);
         for (int i=0; i<(_nx*_ny); ++i)
             _distortions[i] = _emptypoly;  // These will accumulated the distortions over time.
@@ -189,7 +189,9 @@ namespace galsim {
         // Now we cycle through the pixels in the target image and update any affected
         // pixel shapes.
         std::vector<bool> changed(_imagepolys.size(), false);
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
         for (int j=j1; j<=j2; ++j) {
             const T* ptr = target.getData();
             ptr += (j-j1) * target.getStride();
@@ -217,7 +219,9 @@ namespace galsim {
                 }
             }
         }
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
         for (size_t k=0; k<_imagepolys.size(); ++k) {
             if (changed[k]) _imagepolys[k].updateBounds();
         }
@@ -308,9 +312,9 @@ namespace galsim {
 
         // First do some easy checks if the point isn't terribly close to the boundary.
 #ifdef _OPENMP
-	int t = omp_get_thread_num();
+        int t = omp_get_thread_num();
 #else
-	int t  = 0;
+        int t  = 0;
 #endif
         Point p(x,y);
         bool inside;
@@ -480,11 +484,6 @@ namespace galsim {
     double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
                                Position<int> orig_center, bool resume)
     {
-#ifdef _OPENMP
-        int numThreads = omp_get_max_threads();
-#else
-        int numThreads = 1;
-#endif
         const int nphotons = photons.size();
 
         // Generate random numbers in advance
@@ -574,7 +573,7 @@ namespace galsim {
         const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
 
         double addedFlux = 0.;
-	int startPhoton = 0;
+        int startPhoton = 0;
 
         while (startPhoton < nphotons) {
             // new parallel version of code
@@ -586,13 +585,10 @@ namespace galsim {
                 photonsUntilRecalc++;
             }
 
-#pragma omp parallel for
-            for (int i = startPhoton; i < photonsUntilRecalc; i++) {
 #ifdef _OPENMP
-                int t = omp_get_thread_num();
-#else
-                int t = 0;
+#pragma omp parallel for
 #endif
+            for (int i = startPhoton; i < photonsUntilRecalc; i++) {
                 // Get the location where the photon strikes the silicon:
                 double x0 = photons.getX(i); // in pixels
                 double y0 = photons.getY(i); // in pixels
@@ -705,7 +701,9 @@ namespace galsim {
                     rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
                     Irr0 += flux * rsq;
 #endif
+#ifdef _OPENMP
 #pragma omp atomic
+#endif
                     _delta(ix,iy) += flux;
 
                     // no longer need to update addedFlux as it's done before this loop
