@@ -160,7 +160,7 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
         if output:
             print('Unknown compiler.')
         for cc_type in ['gcc', 'clang w/ OpenMP', 'clang w/ manual OpenMP', 'clang']:
-            if outpu:
+            if output:
                 print('Check if the compiler works like ',cc_type)
             if try_openmp(compiler, cc_type):
                 return cc_type
@@ -354,8 +354,8 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
         return False
 
     # Link
-    cc = [compiler.linker_so[0]]
-    cmd = cc + compiler.linker_so[1:] + lflags + [o_name,'-o',exe_name]
+    cc = compiler.linker_so[0]
+    cmd = [cc] + compiler.linker_so[1:] + lflags + [o_name,'-o',exe_name]
     if debug:
         print('cmd = ',' '.join(cmd))
     try:
