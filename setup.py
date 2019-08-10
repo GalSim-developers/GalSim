@@ -864,7 +864,21 @@ class my_test(test):
                 debug=builder.debug,
                 target_lang='c++')
 
-        p = subprocess.Popen([exe_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        # Might need extra dirs in LD_LIBRARY_PATH.  Just add them to make sure.
+        env = dict(os.environ)
+        for flag in compiler.linker_so:
+            if flag.startswith('-L'):
+                library_dirs.append(flag[2:])
+        if 'LD_LIBRARY_PATH' not in env:
+            env['LD_LIBRARY_PATH'] = env.get('LSST_LIBRARY_PATH','')
+        if 'DYLD_LIBRARY_PATH' not in env:
+            env['DYLD_LIBRARY_PATH'] = env.get('LSST_LIBRARY_PATH','')
+        env['LD_LIBRARY_PATH'] += ':' + ':'.join(library_dirs)
+        env['DYLD_LIBRARY_PATH'] += ':' + ':'.join(library_dirs)
+
+        # Run the test executable.
+        # And pass this env to the execution environment.
+        p = subprocess.Popen([exe_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
         lines = p.stdout.readlines()
         p.communicate()
         for line in lines:
@@ -874,10 +888,6 @@ class my_test(test):
         print("All C++ tests passed.")
 
     def run_tests(self):
-
-        # Build and run the C++ tests
-        self.run_cpp_tests()
-
         njobs = parse_njobs(self.njobs, 'pytest', 'test')
         pytest_args = ['-n=%d'%njobs, '--timeout=60']
 
@@ -898,6 +908,9 @@ class my_test(test):
                 raise RuntimeError("Some Python tests failed")
         os.chdir(original_dir)
         print("All python tests passed.")
+
+        # Build and run the C++ tests
+        self.run_cpp_tests()
 
 
 lib=("galsim", {'sources' : cpp_sources,
