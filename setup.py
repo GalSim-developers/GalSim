@@ -86,9 +86,9 @@ copt =  {
 lopt =  {
     'gcc' : ['-fopenmp'],
     'icc' : ['-openmp'],
-    'clang' : [],
-    'clang w/ OpenMP' : ['-fopenmp'],
-    'clang w/ manual OpenMP' : ['-fopenmp'],
+    'clang' : ['-stdlib=libc++'],
+    'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],
+    'clang w/ manual OpenMP' : ['-stdlib=libc++','-fopenmp'],
     'unknown' : [],
 }
 
@@ -606,8 +606,9 @@ def fix_compiler(compiler, njobs):
         compiler.compile = types.MethodType(parallel_compile, compiler)
 
     extra_cflags = copt[comp_type]
+    extra_lflags = lopt[comp_type]
 
-    success = try_cpp11(compiler, extra_cflags)
+    success = try_cpp11(compiler, extra_cflags, extra_lflags)
     if not success:
         # In case libc++ doesn't work, try letting the system use the default stdlib
         try:
@@ -615,7 +616,7 @@ def fix_compiler(compiler, njobs):
         except (AttributeError, ValueError):
             pass
         else:
-            success = try_cpp11(compiler, extra_cflags)
+            success = try_cpp11(compiler, extra_cflags, extra_lflags)
     if not success:
         print('The compiler %s with flags %s did not successfully compile C++11 code'%
               (cc, ' '.join(extra_cflags)))
@@ -623,7 +624,7 @@ def fix_compiler(compiler, njobs):
 
     # Return the extra cflags, since those will be added to the build step in a different place.
     print('Using extra flags ',extra_cflags)
-    return extra_cflags
+    return extra_cflags, extra_lflags
 
 def add_dirs(builder, output=False):
     if debug: output = True
@@ -735,11 +736,12 @@ class my_build_clib(build_clib):
         build_ext = self.distribution.get_command_obj('build_ext')
         njobs = parse_njobs(self.njobs, 'compiling', 'install')
 
-        cflags = fix_compiler(self.compiler, njobs)
+        cflags, lflags = fix_compiler(self.compiler, njobs)
 
         # Add the appropriate extra flags for that compiler.
         for (lib_name, build_info) in libraries:
             build_info['cflags'] = build_info.get('cflags',[]) + cflags
+            build_info['lflags'] = build_info.get('lflags',[]) + lflags
 
         # Now run the normal build function.
         build_clib.build_libraries(self, libraries)
@@ -768,15 +770,13 @@ class my_build_ext(build_ext):
     def build_extensions(self):
 
         njobs = parse_njobs(self.njobs, 'compiling', 'install')
-        cflags = fix_compiler(self.compiler, njobs)
+        cflags, lflags = fix_compiler(self.compiler, njobs)
 
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
             e.extra_compile_args = cflags
-            for flag in cflags:
-                for addition in ['stdlib', 'Xpreprocessor', 'openmp']:
-                    if addition in flag:
-                        e.extra_link_args.append(flag)
+            for flag in lflags:
+                e.extra_link_args.append(flag)
 
         # Now run the normal build function.
         build_ext.build_extensions(self)
@@ -829,21 +829,19 @@ class my_test(test):
     def run_cpp_tests(self):
         builder = self.distribution.get_command_obj('build_ext')
         compiler = builder.compiler
+        cflags, lflags = fix_compiler(compiler, False)
+
         ext = builder.extensions[0]
         objects = compiler.compile(test_sources,
                 output_dir=builder.build_temp,
                 macros=ext.define_macros,
                 include_dirs=ext.include_dirs,
                 debug=builder.debug,
-                extra_postargs=ext.extra_compile_args,
+                extra_postargs=ext.extra_compile_args + cflags,
                 depends=ext.depends)
 
         if ext.extra_objects:
             objects.extend(ext.extra_objects)
-        extra_args = ext.extra_link_args or []
-
-        cflags = fix_compiler(compiler, False)
-        extra_args.extend(cflags)
 
         libraries = builder.get_libraries(ext)
         libraries.append('galsim')
@@ -862,7 +860,7 @@ class my_test(test):
                 libraries=libraries,
                 library_dirs=library_dirs,
                 runtime_library_dirs=ext.runtime_library_dirs,
-                extra_postargs=extra_args,
+                extra_postargs=ext.extra_link_args + lflags,
                 debug=builder.debug,
                 target_lang='c++')
 
