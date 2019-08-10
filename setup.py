@@ -897,6 +897,7 @@ class my_test(test):
 
         if True:
             import pytest
+            pytest.main(['--version'])
             errno = pytest.main(pytest_args + test_files)
             if errno != 0:
                 raise RuntimeError("Some Python tests failed")
