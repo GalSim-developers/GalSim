@@ -738,6 +738,16 @@ namespace galsim {
         return addedFlux;
     }
 
+    int SetOMPThreads(int num_threads)
+    {
+#ifdef _OPENMP
+        omp_set_num_threads(num_threads);
+        return omp_get_max_threads();
+#else
+        return 1;
+#endif
+    }
+
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                                        ImageView<double> target, bool*) const;
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,

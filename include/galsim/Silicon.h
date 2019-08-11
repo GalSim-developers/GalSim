@@ -76,6 +76,9 @@ namespace galsim
         double _resume_next_recalc;
         ImageAlloc<double> _delta;
     };
+
+    int SetOMPThreads(int num_threads);
+
 }
 
 #endif
