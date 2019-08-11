@@ -81,6 +81,8 @@ copt =  {
                          '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'clang w/ manual OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
+    'clang w/ Intel OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
+                                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'unknown' : [],
 }
 lopt =  {
@@ -89,6 +91,7 @@ lopt =  {
     'clang' : ['-stdlib=libc++'],
     'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],
     'clang w/ manual OpenMP' : ['-stdlib=libc++','-fopenmp'],
+    'clang w/ Intel OpenMP' : ['-stdlib=libc++','-liomp5'],
     'unknown' : [],
 }
 
@@ -134,6 +137,10 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
             if output:
                 print("Yay! This version of clang supports OpenMP!")
             return 'clang w/ manual OpenMP'
+        elif try_openmp(compiler, 'clang w/ Intel OpenMP'):
+            if output:
+                print("Yay! This version of clang supports OpenMP!")
+            return 'clang w/ Intel OpenMP'
         else:
             if output:
                 print("\nSorry.  This version of clang doesn't seem to support OpenMP.\n")
@@ -159,7 +166,8 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
         # Plus, icc should be detected correctly by the above procedure anyway.
         if output:
             print('Unknown compiler.')
-        for cc_type in ['gcc', 'clang w/ OpenMP', 'clang w/ manual OpenMP', 'clang']:
+        for cc_type in ['gcc', 'clang w/ OpenMP', 'clang w/ manual OpenMP', 'clang w/ Intel OpenMP',
+                        'clang']:
             if output:
                 print('Check if the compiler works like ',cc_type)
             if try_openmp(compiler, cc_type):
