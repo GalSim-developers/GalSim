@@ -589,6 +589,10 @@ def fix_compiler(compiler, njobs):
     # Figure out what compiler it will use
     comp_type = get_compiler_type(compiler, output=True)
     cc = compiler.compiler_so[0]
+    already_have_ccache = False
+    if cc == 'ccache':
+        already_have_ccache = True
+        cc = compiler.compiler_so[1]
     if cc == comp_type:
         print('Using compiler %s'%(cc))
     else:
@@ -601,7 +605,7 @@ def fix_compiler(compiler, njobs):
         raise OSError("Compiler does not work for compiling C++ code")
 
     # Check if we can use ccache to speed up repeated compilation.
-    if try_cpp(compiler, prepend='ccache'):
+    if not already_have_ccache and try_cpp(compiler, prepend='ccache'):
         print('Using ccache')
         compiler.set_executable('compiler_so', ['ccache'] + compiler.compiler_so)
 
