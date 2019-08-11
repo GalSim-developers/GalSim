@@ -90,7 +90,7 @@ lopt =  {
     'icc' : ['-openmp'],
     'clang' : ['-stdlib=libc++'],
     'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],
-    'clang w/ manual OpenMP' : ['-stdlib=libc++','-fopenmp'],
+    'clang w/ manual OpenMP' : ['-stdlib=libc++','-lomp'],
     'clang w/ Intel OpenMP' : ['-stdlib=libc++','-liomp5'],
     'unknown' : [],
 }
