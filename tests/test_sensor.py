@@ -408,7 +408,7 @@ def test_silicon_area():
     # Get the area data from the Poisson simulation
     area_filename = silicon.vertex_file.split('/')[-1].strip('.dat')+'_areas.dat'
     area_dir = os.path.join(os.getcwd(),'sensor_validation/')
-    area_data = np.loadtxt(area_dir+area_filename, skiprows = 1)    
+    area_data = np.loadtxt(area_dir+area_filename, skiprows = 1)
     # Now test that they are almost equal
     for line in area_data:
         nx = int(line[0]-4)
@@ -418,7 +418,6 @@ def test_silicon_area():
         #print(nx,ny,poisson_area,galsim_area)
         np.testing.assert_almost_equal(poisson_area/100.0, galsim_area, decimal=3)
 
-    
     # Draw a smallish but very bright Gaussian image
     obj = galsim.Gaussian(flux=5.e5, sigma=0.2)
     im = obj.drawImage(nx=17, ny=17, scale=0.3, dtype=float)
@@ -989,6 +988,87 @@ def test_flat():
     np.testing.assert_allclose(cov20 / counts_total, 0., atol=2*toler)
     np.testing.assert_allclose(cov02 / counts_total, 0., atol=2*toler)
 
+def test_omp():
+    """Test setting the number of omp threads.
+    """
+    import multiprocessing
+
+    # If num_threads <= 0 or None, get num from cpu_count
+    cpus = multiprocessing.cpu_count()
+    assert galsim.set_omp_threads(0) > 0
+    assert galsim.set_omp_threads(0) <= cpus
+    assert galsim.set_omp_threads(None) > 0
+    assert galsim.set_omp_threads(None) <= cpus
+
+    # If num_threads == 1, it should always set to 1
+    assert galsim.set_omp_threads(1) == 1
+
+    # If num_threads > 1, it could be 1 or up to the input num_threads
+    assert galsim.set_omp_threads(2) >= 1
+    assert galsim.set_omp_threads(2) <= 2
+    assert galsim.set_omp_threads(20) >= 1
+    assert galsim.set_omp_threads(20) <= 20
+
+    # Repeat and check that appropriate messages are emitted
+    with CaptureLog() as cl:
+        num_threads = galsim.set_omp_threads(0, logger=cl.logger)
+    assert "multiprocessing.cpu_count() = " in cl.output
+    assert "Telling OpenMP to use %s threads"%cpus in cl.output
+
+    with CaptureLog() as cl:
+        galsim.set_omp_threads(None, logger=cl.logger)
+    assert "multiprocessing.cpu_count() = " in cl.output
+    assert "Telling OpenMP to use %s threads"%cpus in cl.output
+
+    with CaptureLog() as cl:
+        galsim.set_omp_threads(1, logger=cl.logger)
+    assert "multiprocessing.cpu_count() = " not in cl.output
+    assert "Telling OpenMP to use 1 threads" in cl.output
+    assert "Using %s threads"%num_threads not in cl.output
+    assert "Unable to use multiple threads" not in cl.output
+
+    with CaptureLog() as cl:
+        galsim.set_omp_threads(2, logger=cl.logger)
+    assert "multiprocessing.cpu_count() = " not in cl.output
+    assert "Telling OpenMP to use 2 threads" in cl.output
+
+    # It's hard to tell what happens in the next step, since we can't control what
+    # galsim._galsim.SetOMPThreads does.  It depends on whether OpenMP is enabled and
+    # how many cores are available.  So let's mock it up.
+    if sys.version_info < (3,): return  # mock only available on python 3
+    from unittest import mock
+    with mock.patch('galsim.utilities._galsim') as _galsim:
+        # First mock with OpenMP enables and able to use lots of threads
+        _galsim.SetOMPThreads = lambda x: x
+        assert galsim.set_omp_threads(20) == 20
+        with CaptureLog() as cl:
+            galsim.set_omp_threads(20, logger=cl.logger)
+        assert "OpenMP reports that it will use 20 threads" in cl.output
+        assert "Using 20 threads" in cl.output
+
+        # Next only 4 threads available
+        _galsim.SetOMPThreads = lambda x: 4 if x > 4 else x
+        print(galsim.set_omp_threads(20))
+        assert galsim.set_omp_threads(20) == 4
+        with CaptureLog() as cl:
+            galsim.set_omp_threads(20, logger=cl.logger)
+        assert "OpenMP reports that it will use 4 threads" in cl.output
+        assert "Using 4 threads" in cl.output
+
+        assert galsim.set_omp_threads(2) == 2
+        with CaptureLog() as cl:
+            galsim.set_omp_threads(2, logger=cl.logger)
+        assert "OpenMP reports that it will use 2 threads" in cl.output
+
+        # Finally, no OpenMP
+        _galsim.SetOMPThreads = lambda x: 1
+        assert galsim.set_omp_threads(20) == 1
+        with CaptureLog() as cl:
+            galsim.set_omp_threads(20, logger=cl.logger)
+        assert "OpenMP reports that it will use 1 threads" in cl.output
+        assert "Unable to use multiple threads" in cl.output
+
+
 if __name__ == "__main__":
     test_simple()
     test_silicon()
@@ -999,3 +1079,4 @@ if __name__ == "__main__":
     test_treerings()
     test_resume()
     test_flat()
+    test_omp()

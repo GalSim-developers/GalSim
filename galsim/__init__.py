@@ -176,6 +176,7 @@ from .nfw_halo import NFWHalo, Cosmology
 # Detector effects
 from .sensor import Sensor, SiliconSensor
 from . import detectors  # Everything here is a method of Image, so nothing to import by name.
+from .utilities import set_omp_threads  # This one we bring into the main scope.
 
 # Deprecated functionality
 from . import deprecated
