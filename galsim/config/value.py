@@ -672,8 +672,10 @@ def _GenerateFromList(config, base, value_type):
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
     CheckAllParams(config, req=req, opt=opt)
     items = config['items']
-    if not isinstance(items,list):
-        raise galsim.GalSimConfigError("items entry for type=List is not a list.")
+
+    # Any iterable except string.
+    if isinstance(items,str) or not hasattr(items, '__iter__'):
+        raise galsim.GalSimConfigError("items entry for type=List is not list-like.")
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
     SetDefaultIndex(config, len(items))
