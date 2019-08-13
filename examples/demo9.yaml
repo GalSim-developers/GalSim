@@ -302,6 +302,15 @@ image :
 
     random_seed : 8383721
 
+    # The normal behavior is to make a new random number generator for each object.
+    # This allows runs to safely parallelize across objects while still getting deterministic
+    # random numbers for each object.
+    # Here, since we are parallelizing by image, not by object, this isn't necessary.
+    # Turning this off can be an optimization in some cases if many objects are trivial
+    # (e.g. most will be skipped or they are very faint and you are photon shooting), so you
+    # don't want the rng initialization to dominate the run time.
+    obj_rng : false
+
 
 # Define the names and format of the output files
 output :

@@ -123,7 +123,7 @@ def main(argv):
 
     logger.info('Starting demo script 9')
 
-    def build_file(seed, file_name, mass, nobj, rng, truth_file_name, halo_id, first_obj_id):
+    def build_file(file_name, mass, nobj, ud, truth_file_name, halo_id, first_obj_id):
         """A function that does all the work to build a single file.
            Returns the total time taken.
         """
@@ -272,9 +272,6 @@ def main(argv):
             coma1=psf_coma1, coma2=psf_coma2, trefoil1=psf_trefoil1, trefoil2=psf_trefoil2)
 
         for k in range(nobj):
-
-            # Initialize the random number generator we will be using for this object:
-            ud = galsim.UniformDeviate(seed+k+1)
 
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
@@ -451,14 +448,7 @@ def main(argv):
         full_image += weight_image
 
         # Add Poisson noise, given the current full_image.
-        # The config parser uses a different random number generator for file-level and
-        # image-level values than for the individual objects.  This makes it easier to
-        # parallelize the calculation if desired.  In fact, this is why we've been adding 1
-        # to each seed value all along.  The seeds for the objects take the values
-        # random_seed+1 .. random_seed+nobj.  The seed for the image is just random_seed,
-        # which we built already (below) when we calculated how many objects need to
-        # be in each file.  Use the same rng again here, since this is also at image scope.
-        full_image.addNoise(galsim.PoissonNoise(rng))
+        full_image.addNoise(galsim.PoissonNoise(ud))
 
         # Subtract the sky back off.
         full_image -= weight_image
@@ -540,9 +530,10 @@ def main(argv):
             # We put on the task queue the args to the buld_file function and
             # some extra info to pass through to the output queue.
             # Our extra info is just the file name that we use to write out which file finished.
-            args = (seed, file_name, mass, nobj, ud, truth_file_name, halo_id, first_obj_id)
+            args = (file_name, mass, nobj, ud, truth_file_name, halo_id, first_obj_id)
             task_queue.put( (args, file_name) )
-            # Need to step by the number of galaxies in each file.
+            # Need to step by the number of galaxies in each file to match the behavior
+            # of the config parser.
             seed += nobj
             halo_id += 1
             first_obj_id += nobj
