@@ -527,7 +527,7 @@ def test_int_value():
         'seq_obj2' : { 'type' : 'Sequence', 'index_key' : 'obj_num_in_file' },
         'list1' : { 'type' : 'List', 'items' : [ 73, 8, 3 ] },
         'list2' : { 'type' : 'List',
-                    'items' : [ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ],
+                    'items' : np.array([ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ]),
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
         'list3' : [ 1, 2, 3, 4 ],
         'list4' : [],
