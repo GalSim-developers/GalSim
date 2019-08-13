@@ -153,7 +153,7 @@ def test_poisson():
     galsim.config.RemoveCurrent(config)
     config['image']['draw_method'] = 'phot'  # Make sure it gets copied over to stamp properly.
     del config['stamp']['draw_method']
-    del config['_copied_image_keys_to_stamp']
+    del config['stamp']['_done']
     im2b = galsim.config.BuildImage(config)
     np.testing.assert_equal(im2b.array, im2a.array)
 

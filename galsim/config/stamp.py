@@ -147,6 +147,10 @@ def SetupConfigObjNum(config, obj_num, logger=None):
     if 'stamp' not in config:
         config['stamp'] = {}
     stamp = config['stamp']
+    if '_done' in stamp: return
+
+    # Everything after here only needs to be done once.
+
     if not isinstance(stamp, dict):
         raise galsim.GalSimConfigError("config.stamp is not a dict.")
     if 'type' not in stamp:
@@ -161,12 +165,11 @@ def SetupConfigObjNum(config, obj_num, logger=None):
     # These are things that we used to advertise as being in the image field, but now that
     # we have a stamp field, they really make more sense here.  But for backwards compatibility,
     # or just because they can make sense in either place, we allow them to be in 'image' still.
-    if not config.get('_copied_image_keys_to_stamp',False) and 'image' in config:
+    if 'image' in config:
         image = config['image']
         for key in stamp_image_keys:
             if key in image and key not in stamp:
                 stamp[key] = image[key]
-        config['_copied_image_keys_to_stamp'] = True
 
     if 'draw_method' not in stamp:
         stamp['draw_method'] = 'auto'
@@ -174,6 +177,8 @@ def SetupConfigObjNum(config, obj_num, logger=None):
     # In case this hasn't been done yet.
     galsim.config.SetupInput(config, logger)
 
+    # Mark this as done, so later passes can skip a lot of this.
+    stamp['_done'] = True
 
 def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None):
     """Do further setup of the config dict at the stamp (or object) processing level reflecting
@@ -326,23 +331,13 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             xsize, ysize, image_pos, world_pos = builder.setup(
                     stamp, config, xsize, ysize, stamp_ignore, logger)
 
-            # Save these values for possible use in Evals or other modules
-            SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger)
-            stamp_center = config['stamp_center']
-            if xsize:
-                logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
-            if image_pos:
-                logger.debug('obj %d: image_pos = %s',obj_num,image_pos)
-            if world_pos:
-                logger.debug('obj %d: world_pos = %s',obj_num,world_pos)
-            if stamp_center:
-                logger.debug('obj %d: stamp_center = %s',obj_num,stamp_center)
+            # Determine the stamp size and location
+            builder.locateStamp(stamp, config, xsize, ysize, image_pos, world_pos, logger)
 
             # Get the global gsparams kwargs.  Individual objects can add to this.
             gsparams = {}
             if 'gsparams' in stamp:
-                gsparams = galsim.config.UpdateGSParams(
-                    gsparams, stamp['gsparams'], config)
+                gsparams = galsim.config.UpdateGSParams(gsparams, stamp['gsparams'], config)
 
             # Note: Skip is different from Reject.
             #       Skip means we return None for this stamp image and continue on.
@@ -353,52 +348,37 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             #       Skip is also different from prof = None.
             #       If prof is None, then the user indicated that no object should be
             #       drawn on this stamp, but that a noise image is still desired.
-            if 'skip' in stamp:
-                skip = galsim.config.ParseValue(stamp, 'skip', config, bool)[0]
-                logger.info('Skipping object %d',obj_num)
-            else:
-                skip = False
+            if builder.getSkip(stamp, config, logger):
+                raise galsim.config.gsobject.SkipThisObject('')
 
-            if not skip:
-                try :
-                    psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
-                                                      logger=logger)[0]
-                    prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
-                except galsim.config.gsobject.SkipThisObject as e:
-                    logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
-                    logger.info('Skipping object %d',obj_num)
-                    skip = True
+            # Build the object to draw
+            psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
+                                              logger=logger)[0]
+            prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
 
+            # Make an empty image
             im = builder.makeStamp(stamp, config, xsize, ysize, logger)
 
-            if not skip:
-                method = galsim.config.ParseValue(stamp,'draw_method',config,str)[0]
-                if method not in valid_draw_methods:
-                    raise galsim.GalSimConfigValueError("Invalid draw_method.", method,
-                                                        valid_draw_methods)
+            # Determine which draw method to use
+            method = builder.getDrawMethod(stamp, config, logger)
 
-                offset = config['stamp_offset']
-                if 'offset' in stamp:
-                    offset += galsim.config.ParseValue(stamp, 'offset', config, galsim.PositionD)[0]
-                logger.debug('obj %d: stamp_offset = %s, offset = %s',obj_num,
-                             config['stamp_offset'], offset)
+            # Determine the net offset (starting from config['stamp_offset'] typically.
+            offset = builder.getOffset(stamp, config, logger)
 
-                skip = builder.updateSkip(prof, im, method, offset, stamp, config, logger)
+            # At this point, we may want to update whether the object should be skipped
+            # based on other information about the profile and location.
+            if builder.updateSkip(prof, im, method, offset, stamp, config, logger):
+                raise galsim.config.gsobject.SkipThisObject('')
 
-            if not skip:
-                im = builder.draw(prof, im, method, offset, stamp, config, logger)
+            # Draw the object on the postage stamp
+            im = builder.draw(prof, im, method, offset, stamp, config, logger)
 
-                scale_factor = builder.getSNRScale(im, stamp, config, logger)
-                im, prof = builder.applySNRScale(im, prof, scale_factor, method, logger)
+            # Update the drawn image according to the SNR if desired.
+            scale_factor = builder.getSNRScale(im, stamp, config, logger)
+            im, prof = builder.applySNRScale(im, prof, scale_factor, method, logger)
 
             # Set the origin appropriately
-            if im is None:
-                # Note: im might be None here if the stamp size isn't given and skip==True.
-                pass
-            elif stamp_center:
-                im.setCenter(stamp_center)
-            else:
-                im.setOrigin(config.get('image_origin',galsim.PositionI(1,1)))
+            builder.updateOrigin(stamp, config, im)
 
             # Store the current stamp in the base-level config for reference
             config['current_stamp'] = im
@@ -406,37 +386,39 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             config['do_noise_in_stamps'] = do_noise
 
             # Check if this object should be rejected.
-            if not skip:
-                reject = builder.reject(stamp, config, prof, psf, im, logger)
-                if reject:
-                    if itry < ntries:
-                        logger.warning('Object %d: Rejecting this object and rebuilding', obj_num)
-                        builder.reset(config, logger)
-                        continue
-                    else:
-                        raise galsim.GalSimConfigError(
-                                "Rejected an object %d times. If this is expected, "
-                                "you should specify a larger stamp.retry_failures."%(ntries))
+            reject = builder.reject(stamp, config, prof, psf, im, logger)
+            if reject:
+                if itry < ntries:
+                    logger.warning('Object %d: Rejecting this object and rebuilding', obj_num)
+                    builder.reset(config, logger)
+                    continue
+                else:
+                    raise galsim.GalSimConfigError(
+                            "Rejected an object %d times. If this is expected, "
+                            "you should specify a larger stamp.retry_failures."%(ntries))
 
-            galsim.config.ProcessExtraOutputsForStamp(config, skip, logger)
+            galsim.config.ProcessExtraOutputsForStamp(config, False, logger)
 
             # We always need to do the whiten step here in the stamp processing
-            if not skip:
-                current_var = builder.whiten(prof, im, stamp, config, logger)
-                if current_var != 0.:
-                    logger.debug('obj %d: whitening noise brought current var to %f',
-                                 config['obj_num'],current_var)
-            else:
-                current_var = 0.
+            current_var = builder.whiten(prof, im, stamp, config, logger)
+            if current_var != 0.:
+                logger.debug('obj %d: whitening noise brought current var to %f',
+                                config['obj_num'],current_var)
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
-            if do_noise and not skip:
-                im, current_var = builder.addNoise(stamp,config,im,skip,current_var,logger)
+            if do_noise:
+                im, current_var = builder.addNoise(stamp,config,im,current_var,logger)
 
-            return im, current_var
+        except galsim.config.gsobject.SkipThisObject as e:
+            if e.msg != '':
+                logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
+            logger.info('Skipping object %d',obj_num)
+            # If xsize, ysize != 0, then this makes a blank stamp for this object.
+            # Otherwise, it's just None here.
+            im = builder.makeStamp(stamp, config, xsize, ysize, logger)
+            galsim.config.ProcessExtraOutputsForStamp(config, True, logger)
+            return im, 0.
 
-        except KeyboardInterrupt:
-            raise
         except Exception as e:
             if itry >= ntries:
                 # Then this was the last try.  Just re-raise the exception.
@@ -457,6 +439,11 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 builder.reset(config, logger)
                 continue
 
+        else:
+            # No exception.
+            return im, current_var
+
+
 def MakeStampTasks(config, jobs, logger):
     """Turn a list of jobs into a list of tasks.
 
@@ -473,7 +460,7 @@ def MakeStampTasks(config, jobs, logger):
         config:         The configuration dict
         jobs:           A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'obj_num'.
-        logger:         If given, a logger object to log progress.
+        logger:         A logger object to log progress.
 
     Returns:
         a list of tasks
@@ -501,7 +488,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         offset:     The offset to apply when drawing.
         config:     The configuration dict for the stamp field.
         base:       The base configuration dict.
-        logger:     If given, a logger object to log progress.
+        logger:     A logger object to log progress.
         **kwargs:   Any additional kwargs are passed along to the drawImage function.
 
     Returns:
@@ -630,7 +617,7 @@ class StampBuilder(object):
             ysize:      The ysize of the image to build (if known).
             ignore:     A list of parameters that are allowed to be in config that we can
                         ignore here. i.e. it won't be an error if these parameters are present.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             xsize, ysize, image_pos, world_pos
@@ -677,6 +664,121 @@ class StampBuilder(object):
 
         return xsize, ysize, image_pos, world_pos
 
+    def locateStamp(self, config, base, xsize, ysize, image_pos, world_pos, logger):
+        """Determine where and how large the stamp should be.
+
+        The base class version does the followin:
+
+        - If given, set base['stamp_xsize'] = xsize
+        - If given, set base['stamp_ysize'] = ysize
+        - If only image_pos or world_pos is given, compute the other from base['wcs']
+        - Set base['index_pos'] = image_pos
+        - Set base['world_pos'] = world_pos
+        - Calculate the appropriate value of the center of the stamp, to be used with the
+          command: stamp_image.setCenter(stamp_center).  Save this as base['stamp_center']
+        - Calculate the appropriate offset for the position of the object from the center of
+          the stamp due to just the fractional part of the image position, not including
+          any base['stamp']['offset'] item that may be present in the base dict.
+          Save this as base['stamp_offset']
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param xsize        The size of the stamp in the x-dimension. [may be None]
+        @param ysize        The size of the stamp in the y-dimension. [may be None]
+        @param image_pos    The position of the stamp in image coordinates. [may be None]
+        @param world_pos    The position of the stamp in world coordinates. [may be None]
+        @param logger       A logger object to log progress.
+        """
+        logger = galsim.config.LoggerWrapper(logger)
+
+        # Make sure we have a valid wcs in case image-level processing was skipped.
+        if 'wcs' not in base:
+            base['wcs'] = galsim.config.BuildWCS(base['image'], 'wcs', config, logger)
+        wcs = base['wcs']
+
+        if xsize: base['stamp_xsize'] = xsize
+        if ysize: base['stamp_ysize'] = ysize
+
+        if image_pos is not None and world_pos is None:
+            # Calculate and save the position relative to the image center
+            if wcs.isCelestial():
+                # Wherever we use the world position, we expect a Euclidean position, not a
+                # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
+                # image center.
+                world_center = base.get('world_center', wcs.toWorld(base['image_center']))
+                world_pos = wcs.toWorld(image_pos, project_center=world_center,
+                                                projection='gnomonic')
+            else:
+                world_pos = wcs.toWorld(image_pos)
+
+        elif world_pos is not None and image_pos is None:
+            # Calculate and save the position relative to the image center
+            image_pos = wcs.toImage(world_pos)
+
+        # Wherever we use the world position, we expect a Euclidean position, not a
+        # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
+        # image center.
+        if isinstance(world_pos, galsim.CelestialCoord):
+            # Then project this position relative to the image center.
+            world_center = base.get('world_center', wcs.toWorld(base['image_center']))
+            u, v = world_center.project(world_pos, projection='gnomonic')
+            world_pos = galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec)
+
+        if image_pos is not None:
+            # The image_pos refers to the location of the true center of the image, which is
+            # not necessarily the nominal center we need for adding to the final image.  In
+            # particular, even-sized images have their nominal center offset by 1/2 pixel up
+            # and to the right.
+            # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
+            # even sized images.
+            nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
+            nominal_y = image_pos.y        # stored in base['image_pos'].
+            if xsize % 2 == 0: nominal_x += 0.5
+            if ysize % 2 == 0: nominal_y += 0.5
+
+            stamp_center = galsim.PositionI(int(math.floor(nominal_x+0.5)),
+                                            int(math.floor(nominal_y+0.5)))
+            stamp_offset = galsim.PositionD(nominal_x-stamp_center.x,
+                                                    nominal_y-stamp_center.y)
+        else:
+            stamp_center = None
+            stamp_offset = galsim.PositionD(0.,0.)
+            # Set the image_pos to the image center in case the wcs needs it.  Probably, if
+            # there is no image_pos or world_pos defined, then it is unlikely a
+            # non-trivial wcs will have been set.  So anything would actually be fine.
+            image_pos = galsim.PositionD( (xsize+1.)/2, (ysize+1.)/2 )
+
+        base['stamp_center'] = stamp_center
+        base['stamp_offset'] = stamp_offset
+        base['image_pos'] = image_pos
+        base['world_pos'] = world_pos
+
+        if xsize:
+            logger.debug('obj %d: xsize,ysize = %s,%s',base['obj_num'],xsize,ysize)
+        if image_pos:
+            logger.debug('obj %d: image_pos = %s',base['obj_num'],image_pos)
+        if world_pos:
+            logger.debug('obj %d: world_pos = %s',base['obj_num'],world_pos)
+        if stamp_center:
+            logger.debug('obj %d: stamp_center = %s',base['obj_num'],stamp_center)
+
+    def getSkip(self, config, base, logger):
+        """Initial check of whether to skip this object based on the stamp.skip field.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param logger       A logger object to log progress.
+
+        @returns skip
+        """
+        if 'skip' in config:
+            skip = galsim.config.ParseValue(config, 'skip', base, bool)[0]
+            if skip:
+                logger.debug("obj %d: stamp.skip = True",base['obj_num'])
+        else:
+            skip = False
+        return skip
+
     def buildProfile(self, config, base, psf, gsparams, logger):
         """Build the surface brightness profile (a GSObject) to be drawn.
 
@@ -690,7 +792,7 @@ class StampBuilder(object):
             psf:        The PSF, if any.  This may be None, in which case, no PSF is convolved.
             gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this
                         list by the galaxy object.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             the final profile
@@ -723,7 +825,7 @@ class StampBuilder(object):
             base:       The base configuration dict.
             xsize:      The xsize of the image to build (if known).
             ysize:      The ysize of the image to build (if known).
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             the image
@@ -734,6 +836,40 @@ class StampBuilder(object):
             return im
         else:
             return None
+
+    def getDrawMethod(self, config, base, logger):
+        """Determine the draw method to use.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param logger       A logger object to log progress.
+
+        @returns method
+        """
+        method = galsim.config.ParseValue(config,'draw_method',base,str)[0]
+        if method not in valid_draw_methods:
+            raise galsim.GalSimConfigValueError("Invalid draw_method.", method,
+                                                valid_draw_methods)
+        return method
+
+    def getOffset(self, config, base, logger):
+        """Determine the offset to use.
+
+        The base class version adds the stamp_offset, which comes from calculations related to
+        world_pos and image_pos, to the field stamp.offset if any.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param logger       A logger object to log progress.
+
+        @returns offset
+        """
+        offset = base['stamp_offset']
+        if 'offset' in config:
+            offset += galsim.config.ParseValue(config, 'offset', base, galsim.PositionD)[0]
+        logger.debug('obj %d: stamp_offset = %s, offset = %s',base['obj_num'],
+                     base['stamp_offset'], offset)
+        return offset
 
     def updateSkip(self, prof, image, method, offset, config, base, logger):
         """Before drawing the profile, see whether this object can be trivially skipped.
@@ -749,7 +885,7 @@ class StampBuilder(object):
             offset:     The offset to apply when drawing.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             whether to skip drawing this object.
@@ -789,7 +925,7 @@ class StampBuilder(object):
             offset:     The offset to apply when drawing.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             the resulting image
@@ -808,7 +944,7 @@ class StampBuilder(object):
             image:      The image onto which to draw the profile.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             the variance of the resulting whitened (or symmetrized) image.
@@ -846,7 +982,7 @@ class StampBuilder(object):
             image:      The current image.
             config:     The configuration dict for the stamp field.
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             scale_factor
@@ -901,7 +1037,7 @@ class StampBuilder(object):
             prof:           The profile that was drawn.
             scale_factor:   The factor by which to scale both image and prof.
             method:         The method used by drawImage.
-            logger:         If given, a logger object to log progress.
+            logger:         A logger object to log progress.
 
         Returns:
             image, prof  (after being properly scaled)
@@ -914,6 +1050,20 @@ class StampBuilder(object):
             prof *= scale_factor
         return image, prof
 
+    def updateOrigin(self, config, base, image):
+        """Update the image origin to be centered at the right place
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param image        The postage stamp image.
+        """
+        stamp_center = base['stamp_center']
+        if stamp_center:
+            image.setCenter(stamp_center)
+        else:
+            image.setOrigin(base.get('image_origin',galsim.PositionI(1,1)))
+
+
     def reject(self, config, base, prof, psf, image, logger):
         """Check to see if this object should be rejected.
 
@@ -923,7 +1073,7 @@ class StampBuilder(object):
             prof:       The profile that was drawn.
             psf:        The psf that was used to build the profile.
             image:      The postage stamp image.  No noise is on it yet at this point.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             whether to reject this object
@@ -979,7 +1129,7 @@ class StampBuilder(object):
 
         Parameters:
             base:       The base configuration dict.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
         """
         # Clear current values out of psf, gal, and stamp if they are not safe to reuse.
         # This means they are either marked as safe or indexed by something other than obj_num.
@@ -987,7 +1137,7 @@ class StampBuilder(object):
             if field in base:
                 galsim.config.RemoveCurrent(base[field], keep_safe=True, index_key='obj_num')
 
-    def addNoise(self, config, base, image, skip, current_var, logger):
+    def addNoise(self, config, base, image, current_var, logger):
         """
         Add the sky level and the noise to the stamp.
 
@@ -1002,7 +1152,7 @@ class StampBuilder(object):
                             need sky and noise regardless, but user-defined classes might choose
                             to do something different if skipping this object.)
             current_var:    The current noise variance present in the image already.
-            logger:         If given, a logger object to log progress.
+            logger:         A logger object to log progress.
 
         Returns:
             the new values of image, current_var
@@ -1024,7 +1174,7 @@ class StampBuilder(object):
             base:       The base configuration dict.
             jobs:       A list of jobs to split up into tasks.  Each job in the list is a
                         dict of parameters that includes 'obj_num'.
-            logger:     If given, a logger object to log progress.
+            logger:     A logger object to log progress.
 
         Returns:
             a list of tasks
