@@ -111,7 +111,8 @@
     },
 
     "noise" : { "sky_level" : 1.0e2 },
-    "random_seed" : 8383721
+    "random_seed" : 8383721,
+    "rng_by_obj" : "false"
 },
 
 "output" : {

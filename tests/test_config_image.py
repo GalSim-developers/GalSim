@@ -1039,6 +1039,7 @@ def test_tiled():
             'yborder' : yborder,
 
             'random_seed' : 1234,
+            'obj_rng' : False,
 
             'noise' : { 'type': 'Gaussian', 'sigma': 0.5 }
         },
@@ -1051,10 +1052,9 @@ def test_tiled():
 
     seed = 1234
     im1a = galsim.Image(nx * (xsize+xborder) - xborder, ny * (ysize+yborder) - yborder, scale=scale)
+    ud = galsim.UniformDeviate(seed)  # Test obj_rng=False -- one ud for all.
     for j in range(ny):
         for i in range(nx):
-            seed += 1
-            ud = galsim.UniformDeviate(seed)
             xorigin = i * (xsize+xborder) + 1
             yorigin = j * (ysize+yborder) + 1
             x = xorigin + (xsize-1)/2.
@@ -1081,10 +1081,9 @@ def test_tiled():
     config['image']['yborder'] = -yborder
     im2a = galsim.Image(nx * (xsize-xborder) + xborder, ny * (ysize-yborder) + yborder, scale=scale)
     seed = 1234
+    ud = galsim.UniformDeviate(seed)
     for i in range(nx):
         for j in range(ny):
-            seed += 1
-            ud = galsim.UniformDeviate(seed)
             xorigin = i * (xsize-xborder) + 1
             yorigin = j * (ysize-yborder) + 1
             x = xorigin + (xsize-1)/2.
@@ -1097,7 +1096,7 @@ def test_tiled():
             gal = galsim.Gaussian(sigma=sigma, flux=flux)
             gal.drawImage(stamp)
             im2a[stamp.bounds] += stamp
-    im2a.addNoise(galsim.GaussianNoise(sigma=0.5, rng=galsim.BaseDeviate(1234)))
+    im2a.addNoise(galsim.GaussianNoise(sigma=0.5, rng=ud))
 
     # Compare to what config builds
     im2b = galsim.config.BuildImage(config)
@@ -1117,12 +1116,9 @@ def test_tiled():
         for j in range(ny):
             i_list.append(i)
             j_list.append(j)
-    rng = galsim.BaseDeviate(seed)
-    galsim.random.permute(rng, i_list, j_list)
+    ud = galsim.UniformDeviate(seed)
+    galsim.random.permute(ud, i_list, j_list)
     for i,j in zip(i_list,j_list):
-        seed += 1
-        ud = galsim.UniformDeviate(seed)
-
         skip_dev = galsim.BinomialDeviate(ud, N=1, p=0.2)
         if skip_dev() > 0: continue
 
@@ -1138,7 +1134,7 @@ def test_tiled():
         gal = galsim.Gaussian(sigma=sigma, flux=flux)
         gal.drawImage(stamp)
         im3a[stamp.bounds] += stamp
-    im3a.addNoise(galsim.GaussianNoise(sigma=0.5, rng=rng))
+    im3a.addNoise(galsim.GaussianNoise(sigma=0.5, rng=ud))
 
     # Compare to what config builds
     im3b = galsim.config.BuildImage(config)
@@ -1195,6 +1191,7 @@ def test_tiled():
             'pixel_scale' : scale,
 
             'random_seed' : 1234,
+            'obj_rng' : True,     # Gratuitous branch check.  This is the default.
         },
         'gal' : {
             'type' : 'Gaussian',
@@ -2076,7 +2073,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
 @timer
 def test_blend():
     """Test the functionality used by the BlendSet stamp type in examples/des/blend.py.
-    Especially that it's internal "prof" is not just a single GSObject.
+    Especially that its internal "prof" is not just a single GSObject.
     """
     galsim.config.RegisterStampType('BlendSet', BlendSetBuilder())
     config = {

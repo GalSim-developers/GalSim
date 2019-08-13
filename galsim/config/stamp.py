@@ -119,7 +119,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 # and backwards-compatibility reasons.  Any of these present will be copied over to
 # config['stamp'] if they exist in config['image'].
 stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method',
-                    'n_photons', 'max_extra_noise', 'poisson_flux']
+                    'n_photons', 'max_extra_noise', 'poisson_flux', 'obj_rng']
 
 def SetupConfigObjNum(config, obj_num, logger=None):
     """Do the basic setup of the config dict at the stamp (or object) processing level.
@@ -272,8 +272,9 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
-                'n_photons', 'max_extra_noise', 'poisson_flux', 'quick_skip',
-                'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr']
+                'n_photons', 'max_extra_noise', 'poisson_flux',
+                'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr',
+                'quick_skip', 'obj_rng']
 
 valid_draw_methods = ('auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb')
 
@@ -306,9 +307,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         galsim.config.ProcessExtraOutputsForStamp(config, True, logger)
         return None, 0
 
-    # Add 1 to the seed here so the first object has a different rng than the file or image.
-    seed = galsim.config.SetupConfigRNG(config, seed_offset=1, logger=logger)
-    logger.debug('obj %d: seed = %d',obj_num,seed)
+    builder.setupRNG(stamp, config, logger)
 
     if 'retry_failures' in stamp:
         ntries = galsim.config.ParseValue(stamp,'retry_failures',config,int)[0]
@@ -681,6 +680,23 @@ class StampBuilder(object):
         """
         return ('quick_skip' in config and
                 galsim.config.ParseValue(config, 'quick_skip', base, bool)[0])
+
+    def setupRNG(self, config, base, logger):
+        """Setup the RNG for this object.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        """
+        if 'obj_rng' in config:
+            if not galsim.config.ParseValue(config,'obj_rng',base,bool)[0]:
+                # Just use the image_num rng(s).
+                base['obj_num_rngs'] = base.get('image_num_rngs',None)
+                base['obj_num_rng'] = base.get('image_num_rng',None)
+                return
+
+        # Add 1 to the seed here so the first object has a different rng than the file or image.
+        seed = galsim.config.SetupConfigRNG(base, seed_offset=1, logger=logger)
+        logger.debug('obj %d: seed = %d',base['obj_num'],seed)
 
     def locateStamp(self, config, base, xsize, ysize, image_pos, world_pos, logger):
         """Determine where and how large the stamp should be.
