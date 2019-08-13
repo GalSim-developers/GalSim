@@ -233,7 +233,7 @@ def test_phot():
     np.testing.assert_array_equal(im1b.array, im1a.array)
 
     # Use a non-default number of photons
-    del config['_copied_image_keys_to_stamp']
+    del config['stamp']['_done']
     config['image']['n_photons'] = 300
     ud.seed(1234 + 1)
     im2a = gal.drawImage(scale=1, method='phot', n_photons=300, rng=ud)
@@ -243,7 +243,7 @@ def test_phot():
     np.testing.assert_array_equal(im2b.array, im2a.array)
 
     # Allow the flux to vary as a Poisson deviate even though n_photons is given
-    del config['_copied_image_keys_to_stamp']
+    del config['stamp']['_done']
     config['image']['poisson_flux'] = True
     ud.seed(1234 + 1)
     im3a = gal.drawImage(scale=1, method='phot', n_photons=300, rng=ud, poisson_flux=True)
@@ -251,7 +251,7 @@ def test_phot():
     np.testing.assert_array_equal(im3b.array, im3a.array)
 
     # If max_extra_noise is given with n_photons, then ignore it.
-    del config['_copied_image_keys_to_stamp']
+    del config['stamp']['_done']
     config['stamp']['max_extra_noise'] = 0.1
     im3c = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im3c.array, im3a.array)
