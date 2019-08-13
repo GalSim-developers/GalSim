@@ -272,7 +272,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
-                'n_photons', 'max_extra_noise', 'poisson_flux',
+                'n_photons', 'max_extra_noise', 'poisson_flux', 'quick_skip',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
 valid_draw_methods = ('auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb')
@@ -301,6 +301,10 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     if stamp_type not in valid_stamp_types:
         raise galsim.GalSimConfigValueError("Invalid stamp.type.", stamp_type, valid_stamp_types)
     builder = valid_stamp_types[stamp_type]
+
+    if builder.quickSkip(stamp, config):
+        galsim.config.ProcessExtraOutputsForStamp(config, True, logger)
+        return None, 0
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.
     seed = galsim.config.SetupConfigRNG(config, seed_offset=1, logger=logger)
@@ -663,6 +667,20 @@ class StampBuilder(object):
             world_pos = None
 
         return xsize, ysize, image_pos, world_pos
+
+    def quickSkip(self, config, base):
+        """Check whether this object should be skipped before doing any work.
+
+        The base class looks for stamp.quick_skip and returns True if it is preset and
+        evaluates to True.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+
+        @returns skip
+        """
+        return ('quick_skip' in config and
+                galsim.config.ParseValue(config, 'quick_skip', base, bool)[0])
 
     def locateStamp(self, config, base, xsize, ysize, image_pos, world_pos, logger):
         """Determine where and how large the stamp should be.

@@ -24,6 +24,12 @@ Changes to Shared Files
   which seems to have solved some flakiness in the previous hosting at the University of
   Manchester. (#1033)
 
+Config Updates
+--------------
+
+- Added some more cumstomization hooks in the StampBuilder class.
+- Added ``quick_skip`` option to skip an object before doing any work.
+
 Documentation Updates
 ---------------------
 
