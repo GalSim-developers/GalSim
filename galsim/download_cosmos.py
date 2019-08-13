@@ -215,6 +215,9 @@ def download(url, target, unpack_dir, args, logger):
             logger.debug("url's meta information is %s",meta_dict)
             obsolete = False
             for k in meta_dict:
+                # Skip some keys that don't imply obselescence.
+                if k.startswith('X-') or k.startswith('Retry') or k.startswith('Set-Cookie'):
+                    continue
                 if k.lower() == 'date':
                     continue  # This one isn't expected to match.
                 elif k not in saved_meta_dict:
