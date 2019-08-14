@@ -1509,6 +1509,11 @@ def test_eval():
         # A couple more to cover the other various letter prefixes.
         'eval18' : { 'type' : 'Eval', 'str' : 'np.exp(-eval(half) * theta.rad**lit_two)' },
         'eval19' : { 'type' : 'Eval', 'str' : 'np.exp(-shear.g1 * pos.x * coord.ra.rad)' },
+        # Can access the input object as a current.
+        'eval20' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * ((@input.catalog).nobjects*0.6)**2)' },
+        'eval21' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * (@input.dict["f"]*18)**2)' },
+
+        # Some that raise exceptions
         'bad1' : { 'type' : 'Eval', 'str' : 'npexp(-0.5)' },
         'bad2' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * x**2)', 'x' : 1.8 },
         'bad3' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * x**2)', 'qx' : 1.8 },
@@ -1526,10 +1531,16 @@ def test_eval():
         'image_bounds' : galsim.BoundsI(1,180,1,360),
         'image_center' : galsim.PositionD(90.5, 180.5),
         'wcs' : galsim.PixelScale(1.8),
-    }
 
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                    'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
+                  },
+
+     }
+
+    galsim.config.ProcessInput(config)
     true_val = np.exp(-0.5 * 1.8**2)  # All of these should equal this value.
-    for i in range(1,20):
+    for i in range(1,22):
         test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
         print('i = ',i, 'val = ',test_val,true_val)
         np.testing.assert_almost_equal(test_val, true_val)

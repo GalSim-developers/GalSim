@@ -221,7 +221,10 @@ def EvaluateCurrentValue(key, config, base, value_type=None):
         value_type: The value_type expected.  [default: None, which means it won't check
                     that the value is the right type.]
     """
-    if not isinstance(config[key], dict):
+    if config is base.get('input',None):
+        # If we are trying to access a current input, then use GetInputObj instead.
+        return galsim.config.GetInputObj(key, base, base, 'Current'), True
+    elif not isinstance(config[key], dict):
         if value_type is not None or (isinstance(config[key],str) and config[key][0] in ('@','$')):
             # This will work fine to evaluate the current value, but will also
             # compute it if necessary
@@ -714,7 +717,7 @@ def _GenerateFromCurrent(config, base, value_type):
         k, d = config['_kd']
     else:
         req = { 'key' : str }
-        params, safe = GetAllParams(config, base, req=req, ignore=['_kd'])
+        params, safe = GetAllParams(config, base, req=req, ignore=['_kd','num'])
         key = params['key']
         #print('GetCurrent %s.  value_type = %s'%(key,value_type))
 
