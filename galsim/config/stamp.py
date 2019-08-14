@@ -274,7 +274,7 @@ stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
                 'n_photons', 'max_extra_noise', 'poisson_flux',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr',
-                'quick_skip', 'obj_rng']
+                'quick_skip', 'obj_rng', 'index_key', 'rng_index_key', 'rng_num']
 
 valid_draw_methods = ('auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb')
 

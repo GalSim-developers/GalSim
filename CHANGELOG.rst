@@ -30,6 +30,7 @@ Config Updates
 - Added some more cumstomization hooks in the StampBuilder class.
 - Added ``quick_skip`` option to skip an object before doing any work.
 - Added ``obj_rng=False`` option to use the same rng for all objects in image.
+- Added ``rng_index_key`` option to use a different rng just for particular values.
 
 Documentation Updates
 ---------------------

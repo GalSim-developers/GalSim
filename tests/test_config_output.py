@@ -904,8 +904,8 @@ def test_extra_truth():
         },
         'gal' : {
             'type' : 'Gaussian',
-            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
-            'flux' : '$100 * obj_num',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2, 'rng_index_key' : 'image_num' },
+            'flux' : { 'type': 'Random', 'min': '$obj_num', 'max': '$obj_num * 4' },
         },
         'output' : {
             'type' : 'Fits',
@@ -928,19 +928,23 @@ def test_extra_truth():
     galsim.config.Process(config)
 
     sigma_list = []
+    flux_list = []
+    image_ud = galsim.UniformDeviate(1234)
     for k in range(nobjects):
-        ud = galsim.UniformDeviate(1234 + k + 1)
-        sigma = ud() + 1.
-        flux = k * 100
+        gal_ud = galsim.UniformDeviate(1234 + k + 1)
+        sigma = image_ud() + 1.
+        flux = k * (gal_ud() * 3 + 1)
         gal = galsim.Gaussian(sigma=sigma, flux=flux)
         sigma_list.append(sigma)
+        flux_list.append(flux)
     sigma = np.array(sigma_list)
+    flux = np.array(flux_list)
 
     file_name = 'output/test_truth.fits'
     cat = galsim.Catalog(file_name, hdu=1)
     obj_num = np.array(range(nobjects))
     np.testing.assert_almost_equal(cat.data['object_id'], obj_num)
-    np.testing.assert_almost_equal(cat.data['flux'], 100.*obj_num)
+    np.testing.assert_almost_equal(cat.data['flux'], flux)
     np.testing.assert_almost_equal(cat.data['sigma'], sigma)
     np.testing.assert_almost_equal(cat.data['hlr'], sigma * galsim.Gaussian._hlr_factor)
     np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
