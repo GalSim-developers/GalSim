@@ -36,7 +36,7 @@ valid_value_types = {}
 
 # Standard keys to ignore while parsing values:
 standard_ignore = [
-    'type', 'current', 'index_key', 'repeat', 'rng_num', '_gen_fn', '_get',
+    'type', 'current', 'index_key', 'repeat', 'rng_num', '_gen_fn', '_get', 'rng_index_key',
     '#' # When we read in json files, there represent comments
 ]
 

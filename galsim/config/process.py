@@ -1084,8 +1084,14 @@ def GetRNG(config, base, logger=None, tag=''):
         either the appropriate rng for the current index_key or None
     """
     logger = LoggerWrapper(logger)
-    index, index_key = GetIndex(config, base)
-    logger.debug("GetRNG for %s: %s",index_key,index)
+    if 'rng_index_key' in config:
+        index_key = config['rng_index_key']
+        if index_key not in valid_index_keys:
+            raise galsim.GalSimConfigValueError("Invalid rng_index_key.", index_key,
+                                                valid_index_keys)
+    else:
+        index, index_key = GetIndex(config, base)
+    logger.debug("GetRNG for %s",index_key)
 
     rng_num = config.get('rng_num', 0)
     if rng_num != 0:
