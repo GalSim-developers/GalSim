@@ -436,7 +436,7 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
 
     return seed, rng
 
-def PropagateIndexKeyRNGNum(config, index_key, rng_num):
+def PropagateIndexKeyRNGNum(config, index_key=None, rng_num=None, key=None):
     """Propagate any index_key or rng_num specification in a dict to all sub-fields
     """
     if isinstance(config, list):
@@ -456,9 +456,12 @@ def PropagateIndexKeyRNGNum(config, index_key, rng_num):
     elif rng_num is not None:
         config['rng_num'] = rng_num
 
-    for key, field in config.items():
-        if key[0] == '_': continue
-        PropagateIndexKeyRNGNum(field, index_key, rng_num)
+    if key is None:
+        for key, field in config.items():
+            if key[0] == '_': continue
+            PropagateIndexKeyRNGNum(field, index_key, rng_num)
+    else:
+        PropagateIndexKeyRNGNum(config[key], index_key, rng_num)
 
 
 def SetupConfigRNG(config, seed_offset=0, logger=None):
@@ -498,7 +501,7 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     if not config.get('_propagated_index_key_rng_num',False):
         logger.debug('Propagating any index_key or rng_num specifications')
         for field in config.values():
-            PropagateIndexKeyRNGNum(field, None, None)
+            PropagateIndexKeyRNGNum(field)
         config['_propagated_index_key_rng_num'] = True
 
     if 'image' not in config or 'random_seed' not in config['image']:
