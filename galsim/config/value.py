@@ -140,9 +140,11 @@ def ParseValue(config, key, base, value_type):
         if isinstance(param, basestring):
             if param[0] == '$':
                 config[key] = { 'type': 'Eval', 'str': str(param[1:]) }
+                if 'index_key' in config: config[key]['index_key'] = config['index_key']
                 return ParseValue(config, key, base, value_type)
             if param[0] == '@':
                 config[key] = { 'type': 'Current', 'key': str(param[1:]) }
+                if 'index_key' in config: config[key]['index_key'] = config['index_key']
                 return ParseValue(config, key, base, value_type)
 
         # See if it's already the right kind of object, in which case we can just return it.
