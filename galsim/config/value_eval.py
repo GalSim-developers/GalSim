@@ -115,6 +115,7 @@ def _GenerateFromEval(config, base, value_type):
                 string = string.replace(key0,key_name)
                 # Finally, bring the key's variable name into scope.
                 config['x' + key_name] = { 'type' : 'Current', 'key' : key }
+                if 'index_key' in config: config['x' + key_name]['index_key'] = config['index_key']
 
         # The parameters to the function are the keys in the config dict minus their initial char.
         params = [ key[1:] for key in config.keys() if key not in eval_ignore ]
@@ -129,12 +130,14 @@ def _GenerateFromEval(config, base, value_type):
                 if _isWordInString(key[1:],string) and key[1:] not in params:
                     config[key] = { 'type' : 'Current',
                                     'key' : 'eval_variables.' + key }
+                    if 'index_key' in config: config[key]['index_key'] = config['index_key']
                     params.append(key[1:])
 
         # Also check for the allowed base variables:
         for key in eval_base_variables:
             if key in base and _isWordInString(key,string) and key not in params:
                 config['x' + key] = { 'type' : 'Current', 'key' : key }
+                if 'index_key' in config: config['x' + key]['index_key'] = config['index_key']
                 params.append(key)
         #print('params = ',params)
         #print('config = ',config)
