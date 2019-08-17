@@ -45,6 +45,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         logger:         If given, a logger object to log progress. [default: None]
         except_abort:   Whether to abort processing when a file raises an exception (True)
                         or just report errors and continue on (False). [default: False]
+
+    Returns:
+        the final config dict that was used.
     """
     logger = galsim.config.LoggerWrapper(logger)
     import time

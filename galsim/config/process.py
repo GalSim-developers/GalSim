@@ -749,6 +749,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
                         dict after any template loading (if any). [default: None]
         except_abort:   Whether to abort processing when a file raises an exception (True)
                         or just report errors and continue on (False). [default: False]
+
+    Returns:
+        the final config dict that was used.
     """
     logger = LoggerWrapper(logger)
     import pprint
