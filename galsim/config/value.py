@@ -21,6 +21,8 @@ from past.builtins import basestring
 import sys
 import galsim
 
+from .process import PropagateIndexKeyRNGNum
+
 # This file handles the parsing of values given in the config dict.  It includes the basic
 # parsing functionality along with generators for most of the simple value types.
 # Additional value types are defined in value_random.py, value_eval.py, input.py,
@@ -140,11 +142,11 @@ def ParseValue(config, key, base, value_type):
         if isinstance(param, basestring):
             if param[0] == '$':
                 config[key] = { 'type': 'Eval', 'str': str(param[1:]) }
-                if 'index_key' in config: config[key]['index_key'] = config['index_key']
+                PropagateIndexKeyRNGNum(config, key=key)
                 return ParseValue(config, key, base, value_type)
             if param[0] == '@':
                 config[key] = { 'type': 'Current', 'key': str(param[1:]) }
-                if 'index_key' in config: config[key]['index_key'] = config['index_key']
+                PropagateIndexKeyRNGNum(config, key=key)
                 return ParseValue(config, key, base, value_type)
 
         # See if it's already the right kind of object, in which case we can just return it.
@@ -155,6 +157,7 @@ def ParseValue(config, key, base, value_type):
         # Convert lists to dicts with type=List
         if isinstance(param, list) and value_type is not list:
             config[key] = { 'type': 'List', 'items': param }
+            PropagateIndexKeyRNGNum(config, key=key)
             return ParseValue(config, key, base, value_type)
 
         # The rest of these are special processing options for specific value_types:
