@@ -14,12 +14,16 @@ API Changes
 
 - Removed functionality to store and re-load WFIRST PSFs, and to obtain multiple WFIRST
   PSFs simultaneously. (#919)
+
+Changes to Shared Files
+-----------------------
+
 - The RealGalaxy COSMOS catalog is now hosted at `Zenodo <https://zenodo.org/record/3242143>`_,
   which seems to have solved some flakiness in the previous hosting at the University of
   Manchester. (#1033)
 
-Documentaion Updates
---------------------
+Documentation Updates
+---------------------
 
 - The documentation is now rendered in Sphinx, rather than Doxygen, which looks much nicer.  The
   new docs are accessible at http://galsim-developers.github.io/GalSim/.  (#160)
