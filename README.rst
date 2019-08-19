@@ -25,7 +25,7 @@ development.  For details of algorithms and code validation, please see
     http://adsabs.harvard.edu/abs/2015A%26C....10..121R
 
 
-Baisc Installation
+Basic Installation
 ==================
 
 Normally, to install GalSim, you should just need to run::
