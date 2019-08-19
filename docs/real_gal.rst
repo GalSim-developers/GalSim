@@ -87,6 +87,21 @@ to choose between the two::
 
     Note: The unpacked files total almost 6 GB in size!
 
+.. note::
+
+    The ``galsim_download_cosmos`` program will put the downloaded files into a subdirectory
+    of the ``galsim.meta_data.share_dir`` directory.  (cf. `Shared Data`)
+    This is normally convenient for access, since classes such as `RealGalaxyCatalog` and
+    `COSMOSCatalog` will look in this directory automatically for you.  However, if you
+    reinstall GalSim, everything in this directory will be removed and overwritten.
+    Therefore, we normally recommend using the ``-d DIR`` option to place the downloaded
+    files into another location.  E.g.::
+
+        galsim_download_cosmos -d ~/share
+
+    It will still be required to rerun this after reinstalling GalSim, but it will notice that
+    you already have the files downloaded and merely update the symbolic link.
+
 A copy of the data is also available on the GREAT3 server at
 
 http://great3.jb.man.ac.uk/leaderboard/data
