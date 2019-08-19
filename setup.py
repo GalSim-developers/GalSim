@@ -79,9 +79,9 @@ copt =  {
                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'clang w/ OpenMP' : ['-O2','-msse2','-std=c++11','-fopenmp',
                          '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ manual OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
-                                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'clang w/ Intel OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
+                                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
+    'clang w/ manual OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'unknown' : [],
 }
@@ -90,8 +90,8 @@ lopt =  {
     'icc' : ['-openmp'],
     'clang' : ['-stdlib=libc++'],
     'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],
-    'clang w/ manual OpenMP' : ['-stdlib=libc++','-lomp'],
     'clang w/ Intel OpenMP' : ['-stdlib=libc++','-liomp5'],
+    'clang w/ manual OpenMP' : ['-stdlib=libc++','-lomp'],
     'unknown' : [],
 }
 
@@ -110,6 +110,8 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
     """
     if debug: output=True
     cc = compiler.compiler_so[0]
+    if cc == 'ccache':
+        cc = compiler.compiler_so[1]
     cmd = [cc,'--version']
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     lines = p.stdout.readlines()
@@ -133,14 +135,14 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
             if output:
                 print("Yay! This version of clang supports OpenMP!")
             return 'clang w/ OpenMP'
-        elif try_openmp(compiler, 'clang w/ manual OpenMP'):
-            if output:
-                print("Yay! This version of clang supports OpenMP!")
-            return 'clang w/ manual OpenMP'
         elif try_openmp(compiler, 'clang w/ Intel OpenMP'):
             if output:
                 print("Yay! This version of clang supports OpenMP!")
             return 'clang w/ Intel OpenMP'
+        elif try_openmp(compiler, 'clang w/ manual OpenMP'):
+            if output:
+                print("Yay! This version of clang supports OpenMP!")
+            return 'clang w/ manual OpenMP'
         else:
             if output:
                 print("\nSorry.  This version of clang doesn't seem to support OpenMP.\n")
@@ -864,6 +866,10 @@ class my_test(test):
         if fftw_libpath != '':
             library_dirs.append(fftw_libpath)
         libraries.append(fftw_libname.split('.')[0][3:])
+        # Check for conda libraries that might host OpenMP
+        env = dict(os.environ)
+        if 'CONDA_PREFIX' in env:
+            library_dirs.append(env['CONDA_PREFIX']+'/lib')
 
         exe_file = os.path.join(builder.build_temp,'cpp_test')
         compiler.link_executable(
@@ -877,7 +883,6 @@ class my_test(test):
                 target_lang='c++')
 
         # Might need extra dirs in LD_LIBRARY_PATH.  Just add them to make sure.
-        env = dict(os.environ)
         for flag in compiler.linker_so:
             if flag.startswith('-L'):
                 library_dirs.append(flag[2:])
