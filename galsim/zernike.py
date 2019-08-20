@@ -486,9 +486,10 @@ class Zernike(object):
                 raise ValueError("Cannot multiply Zernikes with inconsistent R_inner")
             n1, _ = noll_to_zern(len(self.coef)-1)
             n2, _ = noll_to_zern(len(rhs.coef)-1)
-            nTarget = n1+n2
-            jTarget = (nTarget+1)*(nTarget+2)//2
+            nTarget = n1+n2  # Maximum possible radial degree is sum of input radial degrees
+            jTarget = (nTarget+1)*(nTarget+2)//2  # Largest Noll index with above radial degree
 
+            # To multiply, we first convolve in 2D the xy coefficients of each polynomial
             sxy = self._coef_array_xy
             rxy = rhs._coef_array_xy
             shape = (sxy.shape[0]+rxy.shape[0]-1,
@@ -498,24 +499,35 @@ class Zernike(object):
                 sxy, rxy = rxy, sxy
             for (i, j), c in np.ndenumerate(sxy):
                 newXY[i:i+rxy.shape[0], j:j+rxy.shape[1]] += c*rxy
-            obscuration = self.R_inner/self.R_outer
 
+            # Each multiplier has adjustments for R_outer present, leading to the new coefficients
+            # having adjustments for R_outer^2.  So unadjust by 1 factor of R_outer here.
+            adjustedXY = np.array(newXY)
             if self.R_outer != 1.0:
                 n = shape[0]
                 norm = np.power(self.R_outer, np.arange(1, n))
-                newXY[0,1:] *= norm
+                adjustedXY[0,1:] *= norm
                 for i in range(1, n):
-                    newXY[i,0:-i] *= norm[i-1:]
+                    adjustedXY[i,0:-i] *= norm[i-1:]
 
+            # We now have the XY coefficients for the product polynomial in newXY.  What we want,
+            # however, is the contribution from each Zernike term.  We can use lstsq and knowledge
+            # of each individual Zernike term's xy contribution (from _noll_coef_array_xy) to solve
+            # for the appropriate coefficients.
+            obscuration = self.R_inner/self.R_outer
             nca = np.linalg.lstsq(
                 _noll_coef_array_xy(jTarget, obscuration).reshape(-1, jTarget),
-                newXY.ravel(),
+                adjustedXY.ravel(),
                 rcond=-1.
             )[0]
             newCoef = np.empty((len(nca)+1,), dtype=float)
             newCoef[0] = 0.0
             newCoef[1:] = nca
-            return Zernike(newCoef, self.R_outer, self.R_inner)
+            ret = Zernike(newCoef, self.R_outer, self.R_inner)
+            # We've already computed the XY coefficients for the product, so insert those now
+            # instead of waiting on the lazy_property to compute them again.
+            ret._coef_array_xy = newXY
+            return ret
         else:
             raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
 
