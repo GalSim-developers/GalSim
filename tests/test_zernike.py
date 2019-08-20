@@ -585,13 +585,23 @@ def test_laplacian():
             R_inner
         )
 
-    # Do one by hand
-    # Z4 = 2 * sqrt(3) * (x^2 + y^2)
-    # implies laplacian = 4*sqrt(3) + 4*sqrt(3) = 8*sqrt(3)
-    # which is 8*sqrt(3) * Z1
+    # Do a couple by hand
+    # Z4 = 2 sqrt(3) (x^2 + y^2 - 1)
+    # implies laplacian = 4 sqrt(3) + 4 sqrt(3) = 8 sqrt(3)
+    # which is 8 sqrt(3) Z1
     np.testing.assert_allclose(
         galsim.zernike.Zernike([0,0,0,0,1]).laplacian.coef,
         np.array([0,8*np.sqrt(3)])
+    )
+
+    # Z7 = sqrt(8) * (3 * (x^2 + y^2) - 2) * y
+    # implies d^2/dx^2 = 6 sqrt(8) y
+    #         d^2/dy^2 = 12 sqrt(8) y + 6 sqrt(8) y = 18 sqrt(8) y
+    # implies laplacian = 24 sqrt(8) y
+    # which is 12*sqrt(8) * Z3 since Z3 = 2 y
+    np.testing.assert_allclose(
+        galsim.zernike.Zernike([0,0,0,0,0,0,0,1]).laplacian.coef,
+        np.array([0,0,0,12*np.sqrt(8)])
     )
 
 
@@ -627,13 +637,26 @@ def test_hessian():
             R_inner
         )
 
-    # Do one by hand
-    # Z4 = 2 * sqrt(3) * (x^2 + y^2)
-    # implies hessian = 4*sqrt(3) * 4*sqrt(3) - 0*0 = 16*3 = 48
-    # which is 48 * Z1
+    # Do a couple by hand
+    # Z4 = 2 sqrt(3) (x^2 + y^2)
+    # implies hessian = 4 sqrt(3) * 4 sqrt(3) - 0 * 0 = 16*3 = 48
+    # which is 48 Z1
     np.testing.assert_allclose(
         galsim.zernike.Zernike([0,0,0,0,1]).hessian.coef,
         np.array([0,48])
+    )
+
+    # Z7 = sqrt(8) * (3 * (x^2 + y^2) - 2) * y
+    # implies d^2/dx^2 = 6 sqrt(8) y
+    #         d^2/dy^2 = 12 sqrt(8) y + 6 sqrt(8) y = 18 sqrt(8) y
+    #         d^2/dxdy = 6 sqrt(8) x
+    # implies hessian = 6 sqrt(8) y * 18 sqrt(8) y - (6 sqrt(8) x)^2
+    #                 = 108 * 8 * y^2 - 36 * 8 x^2 = 864 y^2 - 288 x^2
+    # That's a little inconvenient to decompose into Zernikes by hand, but we can test against
+    # an array of (x,y) values.
+    np.testing.assert_allclose(
+        galsim.zernike.Zernike([0,0,0,0,0,0,0,1]).hessian(x, y),
+        864*y*y - 288*x*x
     )
 
 
