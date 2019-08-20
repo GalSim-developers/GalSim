@@ -133,6 +133,8 @@ def test_annular_Zernike_limit():
 
 @timer
 def test_noll():
+    """Test that Noll indexing scheme between j <-> (n,m) works as expected.
+    """
     # This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
     # It used to be in zernike.py, but now we use a faster lookup-table implementation.
     # This reference version is still useful as a test.
@@ -352,6 +354,8 @@ def test_fit():
 
 @timer
 def test_gradient():
+    """Test that .gradX and .gradY properties work as expected.
+    """
     # Start with a few that just quote the literature, e.g., Stephenson (2014).
 
     Z11 = galsim.zernike.Zernike([0]*11+[1])
@@ -414,6 +418,175 @@ def test_gradient():
     Z = galsim.zernike.Zernike([0])
     assert Z == Z.gradX == Z.gradX.gradX == Z.gradY == Z.gradY.gradY
 
+
+@timer
+def test_sum():
+    """Test that __add__, __sub__, and __neg__ all work as expected.
+    """
+    u = galsim.UniformDeviate(5)
+    x = np.empty(100, dtype=float)
+    y = np.empty(100, dtype=float)
+    u.generate(x)
+    u.generate(y)
+
+    for _ in range(100):
+        n1 = int(u()*53)+3
+        n2 = int(u()*53)+3
+        R_outer = 1+0.1*u()
+        R_inner = 0.1*u()
+        if n1 > n2:
+            n1, n2 = n2, n1
+        a1 = np.empty(n1, dtype=float)
+        a2 = np.empty(n2, dtype=float)
+        u.generate(a1)
+        u.generate(a2)
+        z1 = galsim.zernike.Zernike(a1, R_outer=R_outer, R_inner=R_inner)
+        z2 = galsim.zernike.Zernike(a2, R_outer=R_outer, R_inner=R_inner)
+
+        c1 = u()
+        c2 = u()
+
+        coefSum = c2*np.array(z2.coef)
+        coefSum[:len(z1.coef)] += c1*z1.coef
+        coefDiff = c2*np.array(z2.coef)
+        coefDiff[:len(z1.coef)] -= c1*z1.coef
+        np.testing.assert_allclose(coefSum, (c1*z1 + c2*z2).coef)
+        np.testing.assert_allclose(coefDiff, -(c1*z1 - c2*z2).coef)
+
+        np.testing.assert_allclose(
+            c1*z1(x, y) + c2*z2(x, y),
+            (c1*z1 + c2*z2)(x, y)
+        )
+        np.testing.assert_allclose(
+            c1*z1(x, y) - c2*z2(x, y),
+            (c1*z1 - c2*z2)(x, y)
+        )
+
+    with np.testing.assert_raises(TypeError):
+        z1 + 3
+    with np.testing.assert_raises(TypeError):
+        z1 - 3
+    with np.testing.assert_raises(ValueError):
+        z1 + galsim.zernike.Zernike([0,1], R_outer=z1.R_outer*2)
+    with np.testing.assert_raises(ValueError):
+        z1 + galsim.zernike.Zernike([0,1], R_outer=z1.R_outer, R_inner=z1.R_inner*2)
+
+    # Commutative with integer coefficients
+    z1 = galsim.zernike.Zernike([0,1,2,3,4])
+    z2 = galsim.zernike.Zernike([1,2,3,4,5,6])
+    assert z1+z2 == z2+z1
+    assert (z2-z1) == z2 + -z1 == -(z1-z2)
+
+
+@timer
+def test_product():
+    """Test that __mul__ and __rmul__ work as expected.
+    """
+    u = galsim.UniformDeviate(57)
+    x = np.empty(100, dtype=float)
+    y = np.empty(100, dtype=float)
+    u.generate(x)
+    u.generate(y)
+
+    for _ in range(100):
+        n1 = int(u()*21)+3
+        n2 = int(u()*21)+3
+        R_outer = 1+0.1*u()
+        R_inner = 0.1*u()
+        a1 = np.empty(n1, dtype=float)
+        a2 = np.empty(n2, dtype=float)
+        u.generate(a1)
+        u.generate(a2)
+        z1 = galsim.zernike.Zernike(a1, R_outer=R_outer, R_inner=R_inner)
+        z2 = galsim.zernike.Zernike(a2, R_outer=R_outer, R_inner=R_inner)
+
+        np.testing.assert_allclose(
+            z1(x, y) * z2(x, y),
+            (z1 * z2)(x, y),
+            rtol=1e-6, atol=1e-6
+        )
+
+        np.testing.assert_allclose(
+            z1(x, y) * z2(x, y),
+            (z2 * z1)(x, y),
+            rtol=1e-6, atol=1e-6
+        )
+
+    with np.testing.assert_raises(TypeError):
+        z1 * galsim.Gaussian(fwhm=1)
+    with np.testing.assert_raises(ValueError):
+        z1 * galsim.zernike.Zernike([0,1], R_outer=z1.R_outer*2)
+    with np.testing.assert_raises(ValueError):
+        z1 * galsim.zernike.Zernike([0,1], R_outer=z1.R_outer, R_inner=z1.R_inner*2)
+
+    # Commutative with integer coefficients
+    z1 = galsim.zernike.Zernike([0,1,2,3,4,5])
+    z2 = galsim.zernike.Zernike([1,2,3,4,5,6])
+    assert z1*z2 == z2*z1
+
+
+@timer
+def test_laplacian():
+    """Test .laplacian property.
+    """
+    u = galsim.UniformDeviate(577)
+    x = np.empty(100, dtype=float)
+    y = np.empty(100, dtype=float)
+    u.generate(x)
+    u.generate(y)
+
+    for _ in range(1000):
+        n = int(u()*21)+3
+        a = np.empty(n, dtype=float)
+        u.generate(a)
+        z = galsim.zernike.Zernike(a)
+
+        np.testing.assert_allclose(
+            z.laplacian(x, y),
+            z.gradX.gradX(x, y) + z.gradY.gradY(x, y)
+        )
+
+    # Do one by hand
+    # Z4 = 2 * sqrt(3) * (x^2 + y^2)
+    # implies laplacian = 4*sqrt(3) + 4*sqrt(3) = 8*sqrt(3)
+    # which is 8*sqrt(3) * Z1
+    np.testing.assert_allclose(
+        galsim.zernike.Zernike([0,0,0,0,1]).laplacian.coef,
+        np.array([0,8*np.sqrt(3)])
+    )
+
+
+@timer
+def test_hessian():
+    """Test .hessian property.
+    """
+    u = galsim.UniformDeviate(5772)
+    x = np.empty(100, dtype=float)
+    y = np.empty(100, dtype=float)
+    u.generate(x)
+    u.generate(y)
+
+    for _ in range(1000):
+        n = int(u()*21)+3
+        a = np.empty(n, dtype=float)
+        u.generate(a)
+        z = galsim.zernike.Zernike(a)
+
+        np.testing.assert_allclose(
+            z.hessian(x, y),
+            z.gradX.gradX(x, y) * z.gradY.gradY(x, y) - z.gradX.gradY(x, y)**2
+        )
+
+    # Do one by hand
+    # Z4 = 2 * sqrt(3) * (x^2 + y^2)
+    # implies hessian = 4*sqrt(3) * 4*sqrt(3) - 0*0 = 16*3 = 48
+    # which is 48 * Z1
+    np.testing.assert_allclose(
+        galsim.zernike.Zernike([0,0,0,0,1]).hessian.coef,
+        np.array([0,48])
+    )
+
+
 if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
@@ -423,3 +596,7 @@ if __name__ == "__main__":
     test_Zernike_basis()
     test_fit()
     test_gradient()
+    test_sum()
+    test_product()
+    test_laplacian()
+    test_hessian()
