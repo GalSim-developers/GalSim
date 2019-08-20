@@ -55,7 +55,7 @@ gal:
         g2: { index_key: image_num, type: Random, min: -0.02, max: 0.02 }
 
 stamp:
-    reject: { type: RandomBinomial, p: 0.2 }
+    reject: { rng_index_key: image_num, type: RandomBinomial, p: 0.2 }
 
 image:
     type: Tiled
