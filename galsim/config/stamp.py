@@ -1199,9 +1199,6 @@ class StampBuilder(object):
             config:         The configuration dict for the stamp field.
             base:           The base configuration dict.
             image:          The current image.
-            skip:           Are we skipping this image? (Usually this is irrelevant, since we
-                            need sky and noise regardless, but user-defined classes might choose
-                            to do something different if skipping this object.)
             current_var:    The current noise variance present in the image already.
             logger:         A logger object to log progress.
 
