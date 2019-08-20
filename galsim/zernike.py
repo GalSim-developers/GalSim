@@ -27,8 +27,7 @@ from .errors import GalSimValueError, GalSimRangeError
 _noll_n = [0,0,1,1,2,2,2,3,3,3,3,4,4,4,4,4]
 _noll_m = [0,0,1,-1,0,-2,2,-1,1,-3,3,0,2,-2,4,-4]
 def noll_to_zern(j):
-    """
-    Convert linear Noll index to tuple of Zernike indices.
+    """Convert linear Noll index to tuple of Zernike indices.
     j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
     index.
 
@@ -437,6 +436,12 @@ class Zernike(object):
          4          sqrt(3) (2 (x^2 + y^2) - 1)
     ==========      ===========================
 
+    A few mathematical convenience operations are additionally available.  Zernikes can be added,
+    subtracted, or multiplied together, or multiplied by scalars.  Note, however, that two
+    Zernikes can only be combined this way if they have matching ``R_outer`` and ``R_inner``
+    attributes.  Zernike gradients, Laplacians and Hessian determinants are also available as
+    properties that return new `Zernike` objects.
+
     Parameters:
         coef:       Zernike series coefficients.  Note that coef[i] corresponds to Z_i under the
                     Noll index convention, and coef[0] is ignored.  (I.e., coef[1] is 'piston',
@@ -450,6 +455,91 @@ class Zernike(object):
             self.coef = np.array([0, 0], dtype=float)
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
+
+    def __add__(self, rhs):
+        if not isinstance(rhs, Zernike):
+            raise TypeError("Cannot add Zernike to type {}".format(type(rhs)))
+        if self.R_outer != rhs.R_outer:
+            raise ValueError("Cannot add Zernikes with inconsistent R_outer")
+        if self.R_inner != rhs.R_inner:
+            raise ValueError("Cannot add Zernikes with inconsistent R_inner")
+        n = max(len(self.coef), len(rhs.coef))
+        newCoef = np.zeros(n, dtype=float)
+        newCoef[:len(self.coef)] = self.coef
+        newCoef[:len(rhs.coef)] += rhs.coef
+        return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
+
+    def __sub__(self, rhs):
+        return self + -rhs
+
+    def __neg__(self):
+        return self * -1
+
+    def __mul__(self, rhs):
+        from numbers import Real
+        if isinstance(rhs, Real):
+            return Zernike(rhs*self.coef, self.R_outer, self.R_inner)
+        elif isinstance(rhs, Zernike):
+            if self.R_outer != rhs.R_outer:
+                raise ValueError("Cannot multiply Zernikes with inconsistent R_outer")
+            if self.R_inner != rhs.R_inner:
+                raise ValueError("Cannot multiply Zernikes with inconsistent R_inner")
+            n1, _ = noll_to_zern(len(self.coef)-1)
+            n2, _ = noll_to_zern(len(rhs.coef)-1)
+            nTarget = n1+n2
+            jTarget = (nTarget+1)*(nTarget+2)//2
+
+            sxy = self._coef_array_xy
+            rxy = rhs._coef_array_xy
+            shape = (sxy.shape[0]+rxy.shape[0]-1,
+                     sxy.shape[1]+rxy.shape[1]-1)
+            newXY = np.zeros(shape, dtype=float)
+            if sxy.shape[0]*sxy.shape[1] > rxy.shape[0]*rxy.shape[1]:
+                sxy, rxy = rxy, sxy
+            for (i, j), c in np.ndenumerate(sxy):
+                newXY[i:i+rxy.shape[0], j:j+rxy.shape[1]] += c*rxy
+            obscuration = self.R_inner/self.R_outer
+
+            if self.R_outer != 1.0:
+                n = shape[0]
+                norm = np.power(self.R_outer, np.arange(1, n))
+                newXY[0,1:] *= norm
+                for i in range(1, n):
+                    newXY[i,0:-i] *= norm[i-1:]
+
+            nca = np.linalg.lstsq(
+                _noll_coef_array_xy(jTarget, obscuration).reshape(-1, jTarget),
+                newXY.ravel(),
+                rcond=-1.
+            )[0]
+            newCoef = np.empty((len(nca)+1,), dtype=float)
+            newCoef[0] = 0.0
+            newCoef[1:] = nca
+            return Zernike(newCoef, self.R_outer, self.R_inner)
+        else:
+            raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
+
+    def __rmul__(self, rhs):
+        return self*rhs
+
+    @lazy_property
+    def hessian(self):
+        """The Hessian determinant of this Zernike polynomial expressed as a new Zernike
+        polynomial.  The Hessian determinant is d^2Z/dx^2 * d^Z/dy^2 - (d^Z/dxdy)^2, and is an
+        expression of the local curvature of the Zernike polynomial.
+        """
+        dxx = self.gradX.gradX
+        dxy = self.gradX.gradY
+        dyy = self.gradY.gradY
+        return dxx*dyy - dxy*dxy
+
+    @lazy_property
+    def laplacian(self):
+        """Return the Laplacian of this Zernike polynomial expressed as a new Zernike polynomial.
+        The Laplacian is d^2Z/dx^2 + d^2Z/dy^2, and is an expression of the local divergence of the
+        Zernike polynomial.
+        """
+        return self.gradX.gradX + self.gradY.gradY
 
     @lazy_property
     def _coef_array_xy(self):
@@ -491,6 +581,18 @@ class Zernike(object):
         newCoef /= self.R_outer
         return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
 
+    def __call__(self, x, y):
+        """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
+        Synonym for `evalCartesian`.
+
+        Parameters:
+            x:    x-coordinate of evaluation points.  Can be list-like.
+            y:    y-coordinate of evaluation points.  Can be list-like.
+        Returns:
+            Series evaluations as numpy array.
+        """
+        return self.evalCartesian(x, y)
+
     def evalCartesian(self, x, y):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
 
@@ -519,6 +621,15 @@ class Zernike(object):
         return self.evalCartesian(x, y)
 
     def evalCartesianGrad(self, x, y):
+        """Evaluate the gradient of this Zernike polynomial series at cartesian coordinates
+        x and y.
+
+        Parameters:
+            x:  x-coordinate of evaluation points.  Can be list-like.
+            y:  y-coordinate of evaluation points.  Can be list-like.
+        Returns:
+            Tuple of arrays for x-gradient and y-gradient.
+        """
         return self.gradX.evalCartesian(x, y), self.gradY.evalCartesian(x, y)
 
     def rotate(self, theta):
@@ -536,7 +647,6 @@ class Zernike(object):
         Returns:
             A new Zernike object.
         """
-
         M = zernikeRotMatrix(len(self.coef)-1, theta)
         return Zernike(M.dot(self.coef), self.R_outer, self.R_inner)
 
