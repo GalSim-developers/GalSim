@@ -425,7 +425,7 @@ def _GetPositionValue(param):
 def _GetBoolValue(param):
     """Convert a string to a bool
     """
-    if isinstance(param,str):
+    if isinstance(param, basestring):
         if param.strip().upper() in ('TRUE', 'YES'):
             return True
         elif param.strip().upper() in ('FALSE', 'NO'):
