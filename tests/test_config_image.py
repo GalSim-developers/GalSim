@@ -201,8 +201,34 @@ def test_positions():
     np.testing.assert_array_equal(im6.array, im1.array)
     assert im6.bounds == im1.bounds
 
-    del config['image']['image_pos']
-    del config['image']['world_pos']
+    # Single is the default image type, so in this case, don't need the image field.
+    config['stamp']['image_pos'] = config['image']['image_pos']
+    del config['image']
+    del config['stamp']['_done']
+    im7, _ = galsim.config.BuildStamp(config, logger=logger)
+    np.testing.assert_array_equal(im7.array, im1.array)
+    assert im7.bounds == im1.bounds
+
+    del config['image']
+    del config['stamp']['_done']
+    im8, _ = galsim.config.BuildStamps(1, config, logger=logger)
+    im8 = im8[0]
+    np.testing.assert_array_equal(im8.array, im1.array)
+    assert im8.bounds == im1.bounds
+
+    del config['image']
+    del config['stamp']['_done']
+    im9 = galsim.config.BuildImage(config, logger=logger)
+    np.testing.assert_array_equal(im9.array, im1.array)
+    assert im9.bounds == im1.bounds
+
+    del config['image']
+    del config['stamp']['_done']
+    im10 = galsim.config.BuildImages(1, config, logger=logger)
+    im10 = im10[0]
+    np.testing.assert_array_equal(im10.array, im1.array)
+    assert im10.bounds == im1.bounds
+
     config['stamp']['world_pos'] = { 'type' : 'Random' }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
