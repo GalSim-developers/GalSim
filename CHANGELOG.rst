@@ -14,6 +14,8 @@ API Changes
 
 - Removed functionality to store and re-load WFIRST PSFs, and to obtain multiple WFIRST
   PSFs simultaneously. (#919)
+- Changed the function signature of StampBuilder.addNoise.  If you have a custom module that
+  uses that, you should remove the ``skip`` parameter (which had always been False). (#1048)
 
 Changes to Shared Files
 -----------------------
