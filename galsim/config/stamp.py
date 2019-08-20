@@ -170,6 +170,8 @@ def SetupConfigObjNum(config, obj_num, logger=None):
         for key in stamp_image_keys:
             if key in image and key not in stamp:
                 stamp[key] = image[key]
+    else:
+        config['image'] = {}
 
     if 'draw_method' not in stamp:
         stamp['draw_method'] = 'auto'
@@ -788,8 +790,7 @@ class StampBuilder(object):
 
         if xsize:
             logger.debug('obj %d: xsize,ysize = %s,%s',base['obj_num'],xsize,ysize)
-        if image_pos:
-            logger.debug('obj %d: image_pos = %s',base['obj_num'],image_pos)
+        logger.debug('obj %d: image_pos = %s',base['obj_num'],image_pos)
         if world_pos:
             logger.debug('obj %d: world_pos = %s',base['obj_num'],world_pos)
         if stamp_center:
