@@ -27,11 +27,12 @@ Changes to Shared Files
 Config Updates
 --------------
 
-- Added some more cumstomization hooks in the StampBuilder class.
-- Added ``quick_skip`` option to skip an object before doing any work.
-- Added ``obj_rng=False`` option to use the same rng for all objects in image.
-- Added ``rng_index_key`` option to use a different rng just for particular values.
-- Fixed ``@`` strings to work with input objects as well as normal variables.
+- Added some more cumstomization hooks in the StampBuilder class. (#1048)
+- Added ``quick_skip`` option to skip an object before doing any work. (#1048)
+- Added ``obj_rng=False`` option to use the same rng for all objects in image. (#1048)
+- Added ``rng_index_key`` option to use a different rng just for particular values. (#1048)
+- Fixed ``@`` strings to work with input objects as well as normal variables. (#1048)
+- Fixed various minor bugs when doing complicated things with index_key and rng_num. (#1048)
 
 Documentation Updates
 ---------------------
