@@ -519,6 +519,17 @@ def test_product():
             (z2 * z1)(x, y),
             rtol=1e-6, atol=1e-6
         )
+        # Check scalar multiplication
+        np.testing.assert_allclose(
+            (2*z1)(x, y),
+            2*(z1(x, y)),
+            rtol=1e-6, atol=1e-6
+        )
+        np.testing.assert_allclose(
+            (z1*3.3)(x, y),
+            3.3*(z1(x, y)),
+            rtol=1e-6, atol=1e-6
+        )
         # Check that R_outer and R_inner are preserved
         np.testing.assert_allclose(
             (z1*z2).R_outer,
