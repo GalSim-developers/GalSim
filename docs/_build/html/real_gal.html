@@ -760,6 +760,21 @@ optional arguments:
 Note: The unpacked files total almost 6 GB in size!
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code> program will put the downloaded files into a subdirectory
+of the <code class="docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code> directory.  (cf. <a class="reference internal" href="shared.html#shared-data"><span class="std std-ref">Shared Data</span></a>)
+This is normally convenient for access, since classes such as <a class="reference internal" href="#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> and
+<a class="reference internal" href="#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> will look in this directory automatically for you.  However, if you
+reinstall GalSim, everything in this directory will be removed and overwritten.
+Therefore, we normally recommend using the <code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">DIR</span></code> option to place the downloaded
+files into another location.  E.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim_download_cosmos</span> <span class="o">-</span><span class="n">d</span> <span class="o">~/</span><span class="n">share</span>
+</pre></div>
+</div>
+<p>It will still be required to rerun this after reinstalling GalSim, but it will notice that
+you already have the files downloaded and merely update the symbolic link.</p>
+</div>
 <p>A copy of the data is also available on the GREAT3 server at</p>
 <p><a class="reference external" href="http://great3.jb.man.ac.uk/leaderboard/data">http://great3.jb.man.ac.uk/leaderboard/data</a></p>
 </div>
