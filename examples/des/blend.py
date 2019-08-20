@@ -83,7 +83,7 @@ class BlendBuilder(galsim.config.StampBuilder):
         # Now farm off to the regular stamp setup function the rest of the work of parsing
         # the size and position of the stamp.
         ignore = ignore + ['n_neighbors', 'min_sep', 'max_sep']
-        return super(self.__class__,self).setup(config, base, xsize, ysize, ignore, logger)
+        return super(BlendBuilder,self).setup(config, base, xsize, ysize, ignore, logger)
 
     def buildProfile(self, config, base, psf, gsparams, logger):
         return BuildBlendProfiles(self, config, base, psf, gsparams, logger)
@@ -119,7 +119,7 @@ class BlendBuilder(galsim.config.StampBuilder):
         Whiten the noise on the stamp according to the existing noise in all the profiles.
         """
         total = galsim.Add(profiles)
-        return super(self.__class__,self).whiten(total, image, config, base, logger)
+        return super(BlendBuilder,self).whiten(total, image, config, base, logger)
 
 
 galsim.config.RegisterStampType('Blend', BlendBuilder())
@@ -149,7 +149,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
         # Now farm off to the regular stamp setup function the rest of the work of parsing
         # the size and position of the stamp.
         ignore = ignore + ['n_neighbors', 'min_sep', 'max_sep']
-        return super(self.__class__, self).setup(config, base, xsize, ysize, ignore, logger)
+        return super(BlendSetBuilder, self).setup(config, base, xsize, ysize, ignore, logger)
 
     def buildProfile(self, config, base, psf, gsparams, logger):
         """
@@ -231,7 +231,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
         if k == 0:
             self.current_var = 0
             for prof, full_im in zip(self.profiles, self.full_images):
-                self.current_var += super(self.__class__,self).whiten(
+                self.current_var += super(BlendSetBuilder,self).whiten(
                         prof, full_im, config, base, logger)
             if self.current_var != 0:
                 # Then we whitened the noise somewhere.  Rebuild the stamp
@@ -242,7 +242,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
         return self.current_var
 
 
-    def addNoise(self, config, base, image, skip, current_var, logger):
+    def addNoise(self, config, base, image, current_var, logger):
         """Add the sky and noise"""
         # We want the noise realization to be the same for all galaxies in the set,
         # so we only generate the noise the first time and save it, pulling out the right cutout
@@ -253,8 +253,8 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             # If we are on the first galaxy, draw the noise.
             self.full_noise_image = self.full_images[0].copy()
             self.full_noise_image.setZero()
-            self.full_noise_image, self.current_var = super(self.__class__,self).addNoise(
-                    config, base, self.full_noise_image, skip, current_var, logger)
+            self.full_noise_image, self.current_var = super(BlendSetBuilder,self).addNoise(
+                    config, base, self.full_noise_image, current_var, logger)
 
         image += self.full_noise_image[self.bounds]
         return image, self.current_var
