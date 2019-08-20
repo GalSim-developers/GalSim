@@ -1697,7 +1697,7 @@ def test_index_key():
                 gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
                 while True:
                     shear_g1 = obj_rng() * 0.04 - 0.02
-                    bd = galsim.BinomialDeviate(obj_rng, N=1, p=0.2)
+                    bd = galsim.BinomialDeviate(image_rng, N=1, p=0.2)
                     if bd() == 0: break;
                 shear = galsim.Shear(g1=shear_g1, g2=shear_g2)
                 gal = gal.shear(ellip).shear(shear)
@@ -1750,9 +1750,14 @@ def test_index_key():
     assert 'current' not in config1['gal']['shear']
 
     # Finally check for invalid index_key
-    config['psf']['index_key'] = 'psf_num'
+    config2 = galsim.config.CopyConfig(config)
+    config2['psf']['index_key'] = 'psf_num'
     with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildFile(config)
+        galsim.config.BuildFile(config2)
+    config3 = galsim.config.CopyConfig(config)
+    config3['gal']['shear']['g1']['rng_index_key'] = 'gal_num'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildFile(config3)
 
 
 @timer
