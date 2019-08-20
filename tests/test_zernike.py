@@ -461,6 +461,15 @@ def test_sum():
             c1*z1(x, y) - c2*z2(x, y),
             (c1*z1 - c2*z2)(x, y)
         )
+        # Check that R_outer and R_inner are preserved
+        np.testing.assert_allclose(
+            (z1+z2).R_outer,
+            R_outer
+        )
+        np.testing.assert_allclose(
+            (z1+z2).R_inner,
+            R_inner
+        )
 
     with np.testing.assert_raises(TypeError):
         z1 + 3
@@ -505,11 +514,19 @@ def test_product():
             (z1 * z2)(x, y),
             rtol=1e-6, atol=1e-6
         )
-
         np.testing.assert_allclose(
             z1(x, y) * z2(x, y),
             (z2 * z1)(x, y),
             rtol=1e-6, atol=1e-6
+        )
+        # Check that R_outer and R_inner are preserved
+        np.testing.assert_allclose(
+            (z1*z2).R_outer,
+            R_outer
+        )
+        np.testing.assert_allclose(
+            (z1*z2).R_inner,
+            R_inner
         )
 
     with np.testing.assert_raises(TypeError):
@@ -535,15 +552,26 @@ def test_laplacian():
     u.generate(x)
     u.generate(y)
 
-    for _ in range(1000):
+    for _ in range(200):
         n = int(u()*21)+3
         a = np.empty(n, dtype=float)
         u.generate(a)
-        z = galsim.zernike.Zernike(a)
+        R_outer = 1+0.1*u()
+        R_inner = 0.1*u()
+        z = galsim.zernike.Zernike(a, R_outer=R_outer, R_inner=R_inner)
 
         np.testing.assert_allclose(
             z.laplacian(x, y),
             z.gradX.gradX(x, y) + z.gradY.gradY(x, y)
+        )
+        # Check that R_outer and R_inner are preserved
+        np.testing.assert_allclose(
+            z.laplacian.R_outer,
+            R_outer
+        )
+        np.testing.assert_allclose(
+            z.laplacian.R_inner,
+            R_inner
         )
 
     # Do one by hand
@@ -566,15 +594,26 @@ def test_hessian():
     u.generate(x)
     u.generate(y)
 
-    for _ in range(1000):
+    for _ in range(200):
         n = int(u()*21)+3
         a = np.empty(n, dtype=float)
         u.generate(a)
-        z = galsim.zernike.Zernike(a)
+        R_outer = 1+0.1*u()
+        R_inner = 0.1*u()
+        z = galsim.zernike.Zernike(a, R_outer=R_outer, R_inner=R_inner)
 
         np.testing.assert_allclose(
             z.hessian(x, y),
             z.gradX.gradX(x, y) * z.gradY.gradY(x, y) - z.gradX.gradY(x, y)**2
+        )
+        # Check that R_outer and R_inner are preserved
+        np.testing.assert_allclose(
+            z.hessian.R_outer,
+            R_outer
+        )
+        np.testing.assert_allclose(
+            z.hessian.R_inner,
+            R_inner
         )
 
     # Do one by hand
