@@ -457,6 +457,10 @@ class Zernike(object):
         self.R_inner = float(R_inner)
 
     def __add__(self, rhs):
+        """Add two Zernikes.
+
+        Requires that each operand's ``R_outer`` and ``R_inner`` attributes are the same.
+        """
         if not isinstance(rhs, Zernike):
             raise TypeError("Cannot add Zernike to type {}".format(type(rhs)))
         if self.R_outer != rhs.R_outer:
@@ -470,12 +474,23 @@ class Zernike(object):
         return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
 
     def __sub__(self, rhs):
+        """Subtract two Zernikes.
+
+        Requires that each operand's ``R_outer`` and ``R_inner`` attributes are the same.
+        """
         return self + -rhs
 
     def __neg__(self):
+        """Negate a Zernike.
+        """
         return self * -1
 
     def __mul__(self, rhs):
+        """Multiply two Zernikes, or multiply a Zernike by a scalar.
+
+        If both operands are Zernikes, then the ``R_outer`` and ``R_inner`` attributes of each must
+        be the same.
+        """
         from numbers import Real
         if isinstance(rhs, Real):
             return Zernike(rhs*self.coef, self.R_outer, self.R_inner)
@@ -532,6 +547,7 @@ class Zernike(object):
             raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
 
     def __rmul__(self, rhs):
+        """Equivalent to obj * rhs.  See `__mul__` for details."""
         return self*rhs
 
     @lazy_property
