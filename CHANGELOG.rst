@@ -40,6 +40,8 @@ New Features
 - Use OpenMP when appropriate in `SiliconSensor.accumulate` (#1008)
 - Added array versions of `BaseWCS.toWorld` and `BaseWCS.toImage`. (#1026)
 - Exposed some methods of `Interpolant` classes that had only been in the C++ layer. (#1038)
+- Added Zernike polynomial +, -, and * operators. (#1047)
+- Added Zernike polynomial properties .laplacian and .hessian. (#1047)
 
 Bug Fixes
 ---------
