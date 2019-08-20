@@ -1,0 +1,6 @@
+# Run this before committing if you've been checking your docs on a normal commit.
+# Only on releases to we want to actually commit the _build directory.
+cd docs
+make clean
+cd ..
+git checkout docs/_build
