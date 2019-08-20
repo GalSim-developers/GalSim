@@ -428,7 +428,7 @@ class GSObject(object):
     # Note: we don't define __iadd__ and similar.  Let python handle this automatically
     # to make obj += obj2 be equivalent to obj = obj + obj2.
     def __add__(self, other):
-        """Add to GSObjects.
+        """Add two GSObjects.
 
         Equivalent to Add(self, other)
         """
@@ -437,7 +437,7 @@ class GSObject(object):
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
-        """Subtract to GSObjects.
+        """Subtract two GSObjects.
 
         Equivalent to Add(self, -1 * other)
         """
