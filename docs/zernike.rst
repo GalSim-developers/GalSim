@@ -9,6 +9,7 @@ Zernike Functions
     .. automethod:: galsim.zernike.Zernike.__neg__
     .. automethod:: galsim.zernike.Zernike.__mul__
     .. automethod:: galsim.zernike.Zernike.__rmul__
+    .. automethod:: galsim.zernike.Zernike.__call__
 
 .. autofunction:: galsim.zernike.noll_to_zern
 .. autofunction:: galsim.zernike.zernikeRotMatrix
