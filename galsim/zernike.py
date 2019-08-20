@@ -439,8 +439,8 @@ class Zernike(object):
     A few mathematical convenience operations are additionally available.  Zernikes can be added,
     subtracted, or multiplied together, or multiplied by scalars.  Note, however, that two
     Zernikes can only be combined this way if they have matching ``R_outer`` and ``R_inner``
-    attributes.  Zernike gradients, Laplacians and Hessian determinants are also available as
-    properties that return new `Zernike` objects.
+    attributes.  Zernike gradients, Laplacians and the determinant of the Hessian matrix are also
+    available as properties that return new `Zernike` objects.
 
     Parameters:
         coef:       Zernike series coefficients.  Note that coef[i] corresponds to Z_i under the
@@ -536,9 +536,10 @@ class Zernike(object):
 
     @lazy_property
     def hessian(self):
-        """The Hessian determinant of this Zernike polynomial expressed as a new Zernike
-        polynomial.  The Hessian determinant is d^2Z/dx^2 * d^Z/dy^2 - (d^Z/dxdy)^2, and is an
-        expression of the local curvature of the Zernike polynomial.
+        """The determinant of the Hessian matrix of this Zernike polynomial expressed as a new
+        Zernike polynomial.  The Hessian matrix is the matrix of second derivatives, to the
+        determinant is d^2Z/dx^2 * d^Z/dy^2 - (d^Z/dxdy)^2, and is an expression of the local
+        curvature of the Zernike polynomial.
         """
         dxx = self.gradX.gradX
         dxy = self.gradX.gradY
@@ -548,8 +549,8 @@ class Zernike(object):
     @lazy_property
     def laplacian(self):
         """The Laplacian of this Zernike polynomial expressed as a new Zernike polynomial. The
-        Laplacian is d^2Z/dx^2 + d^2Z/dy^2, and is an expression of the local divergence of the
-        Zernike polynomial.
+        Laplacian is d^2Z/dx^2 + d^2Z/dy^2 (the trace of the Hessian matrix), and is an expression
+        of the local divergence of the Zernike polynomial.
         """
         return self.gradX.gradX + self.gradY.gradY
 
