@@ -355,8 +355,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 raise galsim.config.gsobject.SkipThisObject('')
 
             # Build the object to draw
-            psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
-                                              logger=logger)[0]
+            psf = builder.buildPSF(stamp, config, gsparams, logger)
             prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
 
             # Make an empty image
@@ -812,6 +811,24 @@ class StampBuilder(object):
         else:
             skip = False
         return skip
+
+    def buildPSF(self, config, base, gsparams, logger):
+        """Build the PSF object.
+
+        For the Basic stamp type, this builds a PSF from the base['psf'] dict, if present,
+        else returns None.
+
+        Parameters:
+            config:     The configuration dict for the stamp field.
+            base:       The base configuration dict.
+            gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this
+                        list by the galaxy object.
+            logger:     A logger object to log progress.
+
+        Returns:
+            the PSF
+        """
+        return galsim.config.BuildGSObject(base, 'psf', gsparams=gsparams, logger=logger)[0]
 
     def buildProfile(self, config, base, psf, gsparams, logger):
         """Build the surface brightness profile (a GSObject) to be drawn.
