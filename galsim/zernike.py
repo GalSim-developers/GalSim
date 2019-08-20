@@ -535,8 +535,8 @@ class Zernike(object):
 
     @lazy_property
     def laplacian(self):
-        """Return the Laplacian of this Zernike polynomial expressed as a new Zernike polynomial.
-        The Laplacian is d^2Z/dx^2 + d^2Z/dy^2, and is an expression of the local divergence of the
+        """The Laplacian of this Zernike polynomial expressed as a new Zernike polynomial. The
+        Laplacian is d^2Z/dx^2 + d^2Z/dy^2, and is an expression of the local divergence of the
         Zernike polynomial.
         """
         return self.gradX.gradX + self.gradY.gradY
