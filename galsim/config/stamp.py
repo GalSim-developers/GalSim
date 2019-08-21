@@ -186,19 +186,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
     """Do further setup of the config dict at the stamp (or object) processing level reflecting
     the stamp size and position in either image or world coordinates.
 
-    Includes:
-
-    - If given, set config['stamp_xsize'] = xsize
-    - If given, set config['stamp_ysize'] = ysize
-    - If only image_pos or world_pos is given, compute the other from config['wcs']
-    - Set config['index_pos'] = image_pos
-    - Set config['world_pos'] = world_pos
-    - Calculate the appropriate value of the center of the stamp, to be used with the
-      command: stamp_image.setCenter(stamp_center).  Save this as config['stamp_center']
-    - Calculate the appropriate offset for the position of the object from the center of
-      the stamp due to just the fractional part of the image position, not including
-      any config['stamp']['offset'] item that may be present in the config dict.
-      Save this as config['stamp_offset']
+    Note: This is now a StampBuilder method.  So this function just calls StampBuilder.locateStamp.
 
     Parameters:
         config:         A configuration dict.
@@ -208,68 +196,11 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
         world_pos:      The position of the stamp in world coordinates. [may be None]
         logger:         If given, a logger object to log progress. [default: None]
     """
-    logger = galsim.config.LoggerWrapper(logger)
+    stamp = config.get('stamp',{})
+    stamp_type = stamp.get('type','Basic')
+    builder = valid_stamp_types[stamp_type]
+    builder.locateStamp(stamp, config, xsize, ysize, image_pos, world_pos, logger)
 
-    # Make sure we have a valid wcs in case image-level processing was skipped.
-    if 'wcs' not in config:
-        config['wcs'] = galsim.config.BuildWCS(config['image'], 'wcs', config, logger)
-
-    if xsize: config['stamp_xsize'] = xsize
-    if ysize: config['stamp_ysize'] = ysize
-
-    if image_pos is not None and world_pos is None:
-        # Calculate and save the position relative to the image center
-        if config['wcs'].isCelestial():
-            # Wherever we use the world position, we expect a Euclidean position, not a
-            # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
-            # image center.
-            world_center = config.get('world_center', config['wcs'].toWorld(config['image_center']))
-            world_pos = config['wcs'].toWorld(image_pos, project_center=world_center,
-                                              projection='gnomonic')
-        else:
-            world_pos = config['wcs'].toWorld(image_pos)
-
-    elif world_pos is not None and image_pos is None:
-        # Calculate and save the position relative to the image center
-        image_pos = config['wcs'].toImage(world_pos)
-
-    # Wherever we use the world position, we expect a Euclidean position, not a
-    # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
-    # image center.
-    if isinstance(world_pos, galsim.CelestialCoord):
-        # Then project this position relative to the image center.
-        world_center = config.get('world_center', config['wcs'].toWorld(config['image_center']))
-        u, v = world_center.project(world_pos, projection='gnomonic')
-        world_pos = galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec)
-
-    if image_pos is not None:
-        # The image_pos refers to the location of the true center of the image, which is
-        # not necessarily the nominal center we need for adding to the final image.  In
-        # particular, even-sized images have their nominal center offset by 1/2 pixel up
-        # and to the right.
-        # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
-        # even sized images.
-        nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
-        nominal_y = image_pos.y        # stored in config['image_pos'].
-        if xsize % 2 == 0: nominal_x += 0.5
-        if ysize % 2 == 0: nominal_y += 0.5
-
-        stamp_center = galsim.PositionI(int(math.floor(nominal_x+0.5)),
-                                        int(math.floor(nominal_y+0.5)))
-        config['stamp_center'] = stamp_center
-        config['stamp_offset'] = galsim.PositionD(nominal_x-stamp_center.x,
-                                                  nominal_y-stamp_center.y)
-        config['image_pos'] = image_pos
-        config['world_pos'] = world_pos
-
-    else:
-        config['stamp_center'] = None
-        config['stamp_offset'] = galsim.PositionD(0.,0.)
-        # Set the image_pos to the image center in case the wcs needs it.  Probably, if
-        # there is no image_pos or world_pos defined, then it is unlikely a
-        # non-trivial wcs will have been set.  So anything would actually be fine.
-        config['image_pos'] = galsim.PositionD( (xsize+1.)/2, (ysize+1.)/2 )
-        config['world_pos'] = world_pos
 
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
