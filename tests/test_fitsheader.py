@@ -153,12 +153,27 @@ def test_read():
     d = { 'AIRMASS' : 1.185 }
     header.update(d)
     assert header.get('AIRMASS') == 1.185
+
+    # Extend is similar, but skip duplicates, and must be a FitsHeader
+    h = galsim.FitsHeader({ 'AIRMASS' : 1.2, 'RA': 123 })
+    header.extend(h)
+    assert header['AIRMASS'] == 1.185  # unchanged
+    assert header['RA'] == 123
+
+    # If replace = true, then update to the new values.
+    h['DEC'] = -22.5
+    header.extend(h, replace=True)
+    assert header['AIRMASS'] == 1.2  # changed
+    assert header['RA'] == 123
+    assert header['DEC'] == -22.5
+
     # We are essentially back to where we started, except the len won't be right.
     # Deleting a key removed an item each time, but setting it overwrote a blank item.
     # But if we add back another few of these, we should be back to the original values.
     header.append('','', useblanks=False)
     header.append('','', useblanks=False)
     header.append('','', useblanks=False)
+    header['AIRMASS'] = 1.185
     check_tpv(header)
     do_pickle(header)
     assert header != orig_header  # It's still not equal, because the AIRMASS item is in a

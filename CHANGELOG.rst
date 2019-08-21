@@ -32,6 +32,8 @@ Documentation Updates
 
 New Features
 ------------
+
+- Added FitsHeader.extend method. (#877)
 - Updated WFIRST WCS and PSF routines to use Cycle 7 specifications for detector configurations,
   pupil planes, and aberrations. In particular, there is now a different
   pupil plane image for shorter- and longer-wavelength bands.  (#919)
