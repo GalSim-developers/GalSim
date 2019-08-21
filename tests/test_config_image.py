@@ -807,7 +807,7 @@ def test_scattered():
     for convention in [ 0, 1 ]:
         for test_stamp_size in [ stamp_size, stamp_size + 1 ]:
             # Deep copy to make sure we don't have any "current" caches present.
-            config = copy.deepcopy(base_config)
+            config = galsim.config.CopyConfig(base_config)
             config['image']['stamp_size'] = test_stamp_size
             config['image']['index_convention'] = convention
 
@@ -836,7 +836,7 @@ def test_scattered():
 
     # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the
     # image count.
-    config = copy.deepcopy(base_config)
+    config = galsim.config.CopyConfig(base_config)
     config['image'] = {
         'type' : 'Scattered',
         'size' : size,
@@ -935,6 +935,74 @@ def test_scattered():
     galsim.config.BuildFile(config)
     image = galsim.fits.read('output/test_scattered.fits')
     np.testing.assert_almost_equal(image.array, image2.array)
+
+@timer
+def test_scattered_noskip():
+    """The default StampBuilder will automatically skip objects whose stamps are fully
+    off the image.  But if someone uses a custom StampBuilder that doesn't do this, then
+    the Scattered ImageBuilder has a guard to handle this appropriately.
+    """
+    class NoSkipStampBuilder(galsim.config.StampBuilder):
+        def quickSkip(self, config, base):
+            return False
+        def getSkip(self, config, base, logger):
+            return False
+        def updateSkip(self, prof, image, method, offset, config, base, logger):
+            return False
+    galsim.config.RegisterStampType('NoSkip', NoSkipStampBuilder())
+
+    config = {
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 1.2,
+            'flux' : 100,
+        },
+        'image' : {
+            'type' : 'Scattered',
+            'size' : 200,
+            'pixel_scale' : 0.2,
+            'stamp_size' : 51,
+            'image_pos' : {
+                # Some will miss the image.
+                'type' : 'XY',
+                'x' : { 'type': 'Random', 'min': -100, 'max': 300 },
+                'y' : { 'type': 'Random', 'min': -100, 'max': 300 },
+            },
+            'nobjects' : 50,
+            'random_seed' : 1234,
+            'obj_rng' : False,
+        },
+        'stamp' : {
+            'type' : 'NoSkip',
+        }
+    }
+    gal = galsim.Gaussian(flux=100, sigma=1.2)
+    image = galsim.Image(200,200, scale=0.2)
+    ud = galsim.UniformDeviate(1234)
+    for i in range(50):
+        x = ud() * 400 - 100
+        y = ud() * 400 - 100
+        ix = int(np.floor(x+0.5))
+        iy = int(np.floor(y+0.5))
+        dx = x-ix
+        dy = y-iy
+        offset = galsim.PositionD(dx, dy)
+        center = galsim.PositionI(ix, iy)
+
+        stamp = gal.drawImage(nx=51, ny=51, offset=offset, scale=0.2)
+        stamp.setCenter(center)
+        print('gal %d: bounds = '%i,stamp.bounds)
+        b = stamp.bounds & image.bounds
+        if b.isDefined():
+            image[b] += stamp[b]
+        else:
+            print('  gal %d is off the image'%i)
+
+    # Repeat with config
+    image2 = galsim.config.BuildImage(config)
+    image.write('junk1.fits')
+    image2.write('junk2.fits')
+    np.testing.assert_equal(image2.array, image.array)
 
 @timer
 def test_scattered_whiten():
@@ -2166,6 +2234,7 @@ if __name__ == "__main__":
     test_snr()
     test_ring()
     test_scattered()
+    test_scattered_noskip()
     test_scattered_whiten()
     test_tiled()
     test_njobs()
