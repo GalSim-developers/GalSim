@@ -1230,10 +1230,7 @@ class FitsHeader(object):
         self.header[key.upper()] = value
 
     def comment(self, key):
-        try:
-            return self.header.comments[key.upper()]
-        except:
-            return None
+        return self.header.comments[key.upper()]
 
     def clear(self):
         self._tag = None
