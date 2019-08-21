@@ -22,7 +22,7 @@
 
 import os
 
-if 'GALSIM_SHARE_DIR' in os.environ:
+if 'GALSIM_SHARE_DIR' in os.environ: # pragma: no cover  (Only tested in a subprocess)
     share_dir = os.environ['GALSIM_SHARE_DIR']
 else:
     galsim_dir = os.path.split(os.path.realpath(__file__))[0]
