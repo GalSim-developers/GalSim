@@ -706,7 +706,7 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
 ##############################################################################################
 
 
-def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
+def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto', read_header=False):
     """Construct an `Image` from a FITS file or HDUList.
 
     The normal usage for this function is to read a fits file and return the image contained
@@ -754,6 +754,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
                           - otherwise None
 
                         [default: 'auto']
+        read_header:    Whether to read the header and store it as image.header.[default: False]
 
     Returns:
         the image as an `Image` instance.
@@ -790,6 +791,9 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
         image.setOrigin(origin)
         image.wcs = wcs
 
+        if read_header:
+            image.header = FitsHeader(hdu.header)
+
     finally:
         # If we opened a file, don't forget to close it.
         if file_name:
@@ -797,7 +801,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     return image
 
-def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
+def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto', read_headers=False):
     """Construct a list of `Image` instances from a FITS file or HDUList.
 
     The normal usage for this function is to read a fits file and return a list of all the images
@@ -838,6 +842,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
                           - otherwise None
 
                         [default: 'auto']
+        read_headers:   Whether to read the headers and store them as image.header.[default: False]
 
     Returns:
         a Python list of `Image` instances.
@@ -869,7 +874,8 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
             if len(hdu_list) < 1:
                 raise OSError('Expecting at least one HDU in galsim.readMulti')
         for hdu in range(first,len(hdu_list)):
-            image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress))
+            image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress,
+                                   read_header=read_headers))
 
     finally:
         # If we opened a file, don't forget to close it.
@@ -1223,6 +1229,12 @@ class FitsHeader(object):
         self._tag = None
         self.header[key.upper()] = value
 
+    def comment(self, key):
+        try:
+            return self.header.comments[key.upper()]
+        except:
+            return None
+
     def clear(self):
         self._tag = None
         self.header.clear()
@@ -1256,7 +1268,7 @@ class FitsHeader(object):
     def values(self):
         return self.header.values()
 
-    def append(self, key, value='', useblanks=True):
+    def append(self, key, value='', comment=None, useblanks=True):
         """Append an item to the end of the header.
 
         This breaks convention a bit by treating the header more like a list than a dict,
@@ -1265,11 +1277,12 @@ class FitsHeader(object):
         Parameters:
             key:            The key of the entry to append
             value:          The value of the entry to append [default: '']
+            comment:        A comment field if desired [default: None]
             useblanks:      If there are blank entries currently at the end, should they be
                             overwritten with the new entry? [default: True]
         """
         self._tag = None
-        self.header.append((key.upper(), value), useblanks=useblanks)
+        self.header.append((key.upper(), value, comment), useblanks=useblanks)
 
     def extend(self, other, replace=False, useblanks=True):
         """Extend this `FitsHeader` with items from another `FitsHeader`.

@@ -33,7 +33,7 @@ Documentation Updates
 New Features
 ------------
 
-- Added FitsHeader.extend method. (#877)
+- Added `FitsHeader.extend` method.  Also, read_header option to `galsim.fits.read`. (#877)
 - Updated WFIRST WCS and PSF routines to use Cycle 7 specifications for detector configurations,
   pupil planes, and aberrations. In particular, there is now a different
   pupil plane image for shorter- and longer-wavelength bands.  (#919)
@@ -52,6 +52,7 @@ Bug Fixes
 ---------
 
 - Fixed a couple places where negative fluxes were not working correctly. (#472)
+- Fixed FITS I/O to write out comments of header items properly. (#877)
 - Fixed error in `PhaseScreenPSF` when aberrations has len=1. (#1006, #1029)
 - Fixed error in `BaseWCS.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
 - Fixed slight error in the realized flux of some profiles when using photon shooting.

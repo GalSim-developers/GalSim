@@ -264,9 +264,39 @@ def test_lowercase():
           'AirMAsS'  : 1.185 }
     check_dict(d)
 
+@timer
+def test_comments():
+    """Test that comments are correctly added to the cards.
+    """
+    # cf. Issue #877
+    # This test is taken directly from Bryan's failing example
+
+    im1 = galsim.Image(1,1,dtype=float)
+    im1.header = galsim.FitsHeader()
+    im1.header["CARD"] = ("value","comment")
+    galsim.fits.write(im1,os.path.join('output','test_comments_im1.fits'))
+
+    im2 = galsim.Image(1,1,dtype=float)
+    im2.header = {}
+    im2.header["CARD"] = ("value","comment")
+    galsim.fits.write(im1,os.path.join('output','test_comments_im2.fits'))
+
+    im3 = galsim.Image(1,1,dtype=float)
+    im3.header = {"CARD": ("value","comment")}
+    galsim.fits.write(im1,os.path.join('output','test_comments_im3.fits'))
+
+    im1 = galsim.fits.read(os.path.join('output','test_comments_im1.fits'), read_header=True)
+    im2 = galsim.fits.read(os.path.join('output','test_comments_im2.fits'), read_header=True)
+    im3 = galsim.fits.read(os.path.join('output','test_comments_im3.fits'), read_header=True)
+
+    for im in [im1, im2, im3]:
+        assert im.header['CARD'] == 'value'
+        assert im.header.comment('CARD') == 'comment'
+
 
 if __name__ == "__main__":
     test_read()
     test_scamp()
     test_dict()
     test_lowercase()
+    test_comments()
