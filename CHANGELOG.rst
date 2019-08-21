@@ -37,6 +37,7 @@ New Features
   within the SCA. (#919)
 - Added WFIRST fermi persistence model. (#992)
 - Added ``r0_500`` argument to VonKarman. (#1005)
+- Improved ability of `AtmosphericScreen` to use shared memory in multiprocessing context. (#1006)
 - Use OpenMP when appropriate in `SiliconSensor.accumulate` (#1008)
 - Added array versions of `BaseWCS.toWorld` and `BaseWCS.toImage`. (#1026)
 - Exposed some methods of `Interpolant` classes that had only been in the C++ layer. (#1038)
@@ -46,6 +47,7 @@ New Features
 Bug Fixes
 ---------
 
+- Fixed error in `PhaseScreenPSF` when aberrations has len=1. (#1006, #1029)
 - Fixed error in `BaseWCS.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
 - Fixed slight error in the realized flux of some profiles when using photon shooting.
   The bug was most apparent for Kolmogorov and VonKarman, where the realized flux
