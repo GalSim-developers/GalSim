@@ -18,7 +18,9 @@ API Changes
 Changes to Shared Files
 -----------------------
 
-- The RealGalaxy COSMOS catalog is now hosted at `Zenodo <https://zenodo.org/record/3242143>`_,
+- Added option to set the `galsim.meta_data.share_dir` via environment variable GALSIM_SHARE_DIR.
+  (#1014)
+- Changed hosting of the RealGalaxy COSMOS catalog to `Zenodo <https://zenodo.org/record/3242143>`_,
   which seems to have solved some flakiness in the previous hosting at the University of
   Manchester. (#1033)
 

@@ -22,6 +22,9 @@
 
 import os
 
-galsim_dir = os.path.split(os.path.realpath(__file__))[0]
-install_dir = os.path.split(galsim_dir)[0]
-share_dir = os.path.join(install_dir, 'galsim', 'share')
+if 'GALSIM_SHARE_DIR' in os.environ:
+    share_dir = os.environ['GALSIM_SHARE_DIR']
+else:
+    galsim_dir = os.path.split(os.path.realpath(__file__))[0]
+    install_dir = os.path.split(galsim_dir)[0]
+    share_dir = os.path.join(install_dir, 'galsim', 'share')

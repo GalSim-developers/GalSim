@@ -19,7 +19,6 @@
 from __future__ import print_function
 import numpy as np
 import os
-import sys
 
 import galsim
 from galsim_test_helpers import *
@@ -918,6 +917,31 @@ def test_crg_noise_pad():
     # may be expected.  More detailed tests of noise in test_crg_noise() show better accuracy.
     np.testing.assert_allclose(obj.noise.getVariance(), edgevar, atol=0, rtol=0.3)
 
+@timer
+def test_sys_share_dir():
+    # Test using GALSIM_SHARE_DIR environment variable to change share_dir at run time.
+    # Note that it gets set on the initial import of galsim, so need to spawn a new process
+    # to get this to trigger.
+    import sys, subprocess
+    from textwrap import dedent
+
+    python = sys.executable
+    script = dedent("""
+        import galsim
+        print(galsim.meta_data.share_dir)
+        """)
+    script_file = os.path.join('scratch_space', 'test_sys.share_dir.py')
+    with open(script_file, 'w') as f:
+        f.write(script)
+    env = os.environ.copy()
+    env['GALSIM_SHARE_DIR'] = 'nonstandard_share_dir'
+    p = subprocess.Popen([python, script_file], stdout=subprocess.PIPE, env=env)
+    lines = p.stdout.readlines()
+    p.communicate()
+    print('returncode = ',p.returncode)
+    print(lines)
+    assert lines[0].strip().decode() == 'nonstandard_share_dir'
+
 
 if __name__ == "__main__":
     test_real_galaxy_catalog()
@@ -933,3 +957,4 @@ if __name__ == "__main__":
     test_crg_noise_draw_transform_commutativity()
     test_crg_noise()
     test_crg_noise_pad()
+    test_sys_share_dir()

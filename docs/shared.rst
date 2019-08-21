@@ -17,11 +17,10 @@ The location of these files are given by the variable
 
     However, if you install into a temporary location and then move the entire galsim directory to
     a different location, this will not have the correct location.  (It will instead be set to the
-    temporary location.)  If you do this, you should edit the ``meta_data.py`` file by hand to point
-    to the correct location of the ``share`` directory.  Alternatively, you can set the value of
-    `galsim.meta_data.share_dir` by hand in your Python programs that might need it.
-
-    See also Issue #1014.
+    temporary location.)  If you do this, you should define an environment variable,
+    GALSIM_SHARE_DIR, to the correct location of the ``share`` directory.  Alternatively, you can
+    set the value of `galsim.meta_data.share_dir` by hand in any Python programs that might need
+    it.
 
 Usually, you do not need to use the `galsim.meta_data.share_dir` variable directly.  Routines
 that open files that might be in the ``share`` directory will automatically prepend this directory
