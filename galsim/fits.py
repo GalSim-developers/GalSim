@@ -448,8 +448,7 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
     if hasattr(image, 'header'):
         # Automatically handle old pyfits versions correctly...
         hdu_header = FitsHeader(hdu.header)
-        for key in image.header.keys():
-            hdu_header[key] = image.header[key]
+        hdu_header.extend(image.header)
     if image.wcs:
         image.wcs.writeToFitsHeader(hdu.header, image.bounds)
 
@@ -1265,12 +1264,29 @@ class FitsHeader(object):
 
         Parameters:
             key:            The key of the entry to append
-            value:          The value of the entry to append
+            value:          The value of the entry to append [default: '']
             useblanks:      If there are blank entries currently at the end, should they be
                             overwritten with the new entry? [default: True]
         """
         self._tag = None
-        self.header.insert(len(self), (key.upper(), value), useblanks=useblanks)
+        self.header.append((key.upper(), value), useblanks=useblanks)
+
+    def extend(self, other, replace=False, useblanks=True):
+        """Extend this `FitsHeader` with items from another `FitsHeader`.
+
+        Equivalent to appending all the other's items to the end of this one with the
+        exception that it ignores items that are already in self.
+        If you want to replace existing values rather than ignore duplicates, use
+        ``replace=True``.
+
+        Parameters:
+            other:          Another FitsHeader object.
+            replace:        Replace duplicate entries rather than ignore them. [default: False]
+            useblanks:      If there are blank entries currently at the end, should they be
+                            overwritten with the new entry? [default: True]
+        """
+        self._tag = None
+        self.header.extend(other.header, unique=not replace, update=replace, useblanks=useblanks)
 
     def __repr__(self):
         if self._tag is None:
