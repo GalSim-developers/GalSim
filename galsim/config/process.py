@@ -436,7 +436,7 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
 
     return seed, rng
 
-def PropagateIndexKeyRNGNum(config, index_key=None, rng_num=None, key=None):
+def PropagateIndexKeyRNGNum(config, index_key=None, rng_num=None, rng_index_key=None, key=None):
     """Propagate any index_key or rng_num specification in a dict to all sub-fields
     """
     if isinstance(config, list):
@@ -456,12 +456,17 @@ def PropagateIndexKeyRNGNum(config, index_key=None, rng_num=None, key=None):
     elif rng_num is not None:
         config['rng_num'] = rng_num
 
+    if 'rng_index_key' in config:
+        rng_index_key = config['rng_index_key']
+    elif rng_index_key is not None:
+        config['rng_index_key'] = rng_index_key
+
     if key is None:
         for key, field in config.items():
             if key[0] == '_': continue
-            PropagateIndexKeyRNGNum(field, index_key, rng_num)
+            PropagateIndexKeyRNGNum(field, index_key, rng_num, rng_index_key)
     else:
-        PropagateIndexKeyRNGNum(config[key], index_key, rng_num)
+        PropagateIndexKeyRNGNum(config[key], index_key, rng_num, rng_index_key)
 
 
 def SetupConfigRNG(config, seed_offset=0, logger=None):

@@ -40,9 +40,9 @@ gal:
         type: List
         items: [0.5, 1, 1.5]
     ellip:
-        index_key: image_num
+        rng_index_key: image_num
         type: E1E2
-        e1: { index_key: file_num, type: Random, min: -0.2, max: 0.2 }
+        e1: { index_key: file_num, type: Random, min: -0.2, max: 0.2, rng_index_key: file_num }
         e2: { type: Random, min: -0.2, max: 0.2 }
     flux:
         type: Sequence

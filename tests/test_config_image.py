@@ -1764,7 +1764,7 @@ def test_index_key():
         psf_shear = galsim.Shear(e=e, beta=beta)
         kolm = kolm.shear(psf_shear)
         airy = galsim.Airy(lam=700, diam=4)
-        psf = galsim.Convolve(kolm, airy)
+        psf = galsim.Convolve(kolm, airy).withFlux(1.0)
         print('fwhm, shear = ',fwhm,psf_shear._g)
         ellip_e1 = file_rng() * 0.4 - 0.2
 
@@ -1775,9 +1775,6 @@ def test_index_key():
                 seed = 12345 + n*n_per_file + i*n_per_image
                 image_rng = galsim.UniformDeviate(seed)
             im = galsim.ImageF(32*3, 32*3, scale=0.3)
-            ellip_e2 = image_rng() * 0.4 - 0.2
-            ellip = galsim.Shear(e1=ellip_e1, e2=ellip_e2)
-            shear_g2 = image_rng() * 0.04 - 0.02
 
             for k in range(nx*ny):
                 seed = 12345 + n*n_per_file + i*n_per_image + k + 1
@@ -1788,15 +1785,25 @@ def test_index_key():
                 stamp = im[b]
                 flux = 100 + k*100
                 hlr = 0.5 + i*0.5
+                ellip_e2 = image_rng() * 0.4 - 0.2
+                if k == 0:
+                    shear_g2 = image_rng() * 0.04 - 0.02
+
                 gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
+
                 while True:
                     shear_g1 = obj_rng() * 0.04 - 0.02
                     bd = galsim.BinomialDeviate(image_rng, N=1, p=0.2)
-                    if bd() == 0: break;
+                    if bd() == 0:
+                        break;
+                    else:
+                        ellip_e2 = image_rng() * 0.4 - 0.2
+
+                ellip = galsim.Shear(e1=ellip_e1, e2=ellip_e2)
                 shear = galsim.Shear(g1=shear_g1, g2=shear_g2)
                 gal = gal.shear(ellip).shear(shear)
                 print(n,i,k,flux,hlr,ellip._g,shear._g)
-                final = galsim.Convolve(psf, gal)
+                final = galsim.Convolve(gal, psf)
                 final.drawImage(stamp)
 
             if __name__ == '__main__':
@@ -1820,13 +1827,17 @@ def test_index_key():
     assert config1['psf']['items'][1]['current'][1]  # Index 1 in current is "safe"
     assert 'current' in config1['gal']
     assert 'current' in config1['gal']['ellip']
+    assert 'current' in config1['gal']['ellip']['e1']
+    assert 'current' in config1['gal']['ellip']['e2']
     assert 'current' in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1, keep_safe=True, index_key='obj_num')
     assert 'current' in config1['psf']
     assert 'current' in config1['psf']['items'][1]
     assert 'current' not in config1['gal']
-    assert 'current' in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['ellip']
+    assert 'current' in config1['gal']['ellip']['e1']
+    assert 'current' not in config1['gal']['ellip']['e2']
     assert 'current' not in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1, keep_safe=True)
@@ -1834,6 +1845,8 @@ def test_index_key():
     assert 'current' in config1['psf']['items'][1]
     assert 'current' not in config1['gal']
     assert 'current' not in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['ellip']['e1']
+    assert 'current' not in config1['gal']['ellip']['e2']
     assert 'current' not in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1)
@@ -1841,6 +1854,8 @@ def test_index_key():
     assert 'current' not in config1['psf']['items'][1]
     assert 'current' not in config1['gal']
     assert 'current' not in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['ellip']['e1']
+    assert 'current' not in config1['gal']['ellip']['e2']
     assert 'current' not in config1['gal']['shear']
 
     # Finally check for invalid index_key
