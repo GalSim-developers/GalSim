@@ -930,7 +930,7 @@ def test_sys_share_dir():
         import galsim
         print(galsim.meta_data.share_dir)
         """)
-    script_file = os.path.join('scratch_space', 'test_sys.share_dir.py')
+    script_file = os.path.join('scratch_space', 'sys_share_dir.py')
     with open(script_file, 'w') as f:
         f.write(script)
     env = os.environ.copy()
