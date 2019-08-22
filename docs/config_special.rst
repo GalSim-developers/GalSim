@@ -132,3 +132,51 @@ See:
 
 for examples of this feature.
 
+Special Specifications
+======================
+
+A few specifications may be used almost anywhere in the config to adjust how the values in those
+fields are processed.  They are automatically propagated to lower levels in the dictionary.
+For instance, if you set ``index_key : image_num`` in the ``psf`` field, then all values
+generated for any aspect of the psf will be constant for a whole image and only change
+when the processing goes on to the next image.
+
+index_key
+---------
+
+This specifies the cadence on which to generate a new value for each non-constant value.
+There are default cadences for each of the major top-level fields, but if you want to specify
+a different cadence for some value or field, then you can override it.
+
+Options are:
+
+    * 'file_num'  Update the values for each new file.  This is the default for items in the ``input`` and ``output`` fields.
+    * 'image_num'  Update the values for each new image.  This is the default for items in the ``image`` field that apply to the full image (i.e. not including ``random_seed``, ``image_pos``, ``world_pos``, etc.).
+    * 'obj_num'  Update the values for each object. This is the default for the other items in ``image``, and also for items in ``stamp``, ``gal``, and ``psf``.
+    * 'obj_num_in_file'  For this purpose, equivalent to 'obj_num'.  (For 'Sequence' value types, there is an important distinction between the two.  See its description in `Config Values` for more details.)
+
+It is also possible for a custom module to add additional valid values here by adding to ``galsim.config.valid_index_keys``, which is a list of strings, which are allowed.
+
+
+rng_index_key
+-------------
+
+Each ``index_key`` has its own random number generator to use for generatinv values that need an rng object.  Normally you want these to match up, but this lets you specify to use the rng for a different key than is used for the actual sequencing.
+
+For instance, if you set ``rng_index_key = 'image_num'`` for a ``gal`` value, then it will use the rng normally used for image_num items, but it will still generate a new value for each obj_num.
+
+rng_num
+-------
+
+Normally you specify a single random number seed, which spawns a sequence of rng objects that
+update according to the above index keys.  So an rng for each object is stored in ``obj_num_rng``,
+one for image_num values is in ``image_num_rng``, etc.
+
+However, you are allowed to specify this seed sequence manually, and in particular, you can
+have it be a list of several different sequences which update at different rates, and may
+repeat.  For instance, this may be useful to have some galaxy properties repeat for several
+exposures, while other properties of the observations are different for each exposure.
+
+You would specify which random number you want to use from such a list using ``rng_num`` in a
+field. See the description of ``random_seed`` in  `Image Field Attributes` for more information.
+
