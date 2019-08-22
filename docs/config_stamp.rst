@@ -30,6 +30,8 @@ Some attributes that are allowed for all stamp types are:
 * ``world_pos`` = *pos_value* or *sky_value* (only one of ``world_pos`` and ``image_pos`` is allowed) The position in world coordinates at which to center the object.  This is often defined in the ``image`` field, but it can be overridden in the ``stamp`` field.
 * ``image_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed) The position on the full image at which to center the object.  This is often defined in the ``image`` field, but it can be overridden in the ``stamp`` field.  Note: the object is always centered as nearly as possible on the postage stamp being drawn (unless an explicit ``offset`` is given), but the ``image_pos`` or ``world_pos`` determines where in the larger image this stamp is placed.
 * ``skip`` = *bool_value* (default=False)  Skip this stamp.
+* ``quick_skip`` = *bool_value* (default=False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)
+* ``obj_rng`` = *bool_value* (default=True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.
 
 Stamp Types
 -----------
