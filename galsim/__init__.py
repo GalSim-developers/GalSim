@@ -149,7 +149,7 @@ from .sum import Add, Sum
 from .convolve import Convolve, Convolution, Deconvolve, Deconvolution
 from .convolve import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .fouriersqrt import FourierSqrt, FourierSqrtProfile
-from .randwalk import RandomKnots
+from .knots import RandomKnots
 from .transform import Transform, Transformation, _Transform
 from .vonkarman import VonKarman
 from .second_kick import SecondKick
