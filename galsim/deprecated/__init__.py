@@ -46,3 +46,6 @@ def depr(f, v, s1, s2=None):
     if s2:
         s += '  ' + s2
     warnings.warn(s, GalSimDeprecationWarning)
+
+from . import correlatednoise
+from . import randwalk

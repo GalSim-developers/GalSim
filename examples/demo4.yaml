@@ -37,7 +37,7 @@
 #
 # - obj type : Moffat (..., trunc)
 # - obj type : DeVaucouleurs (flux, half_light_radius)
-# - obj type : RandomWalk (npoints, half_light_radius, flux)
+# - obj type : RandomKnots (npoints, half_light_radius, flux)
 # - value type : Catalog (col)
 # - obj : shift
 # - shift type : XY (x, y)
@@ -129,7 +129,7 @@ gal :
                     half_light_radius : { type : Catalog , col : 5 }
                     flux : 0.18
                 -  # knots
-                    type : RandomWalk
+                    type : RandomKnots
                     npoints: 10
                     half_light_radius : { type : Catalog , col : 5 }
                     flux : 0.42

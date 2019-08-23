@@ -28,8 +28,6 @@ from . import utilities
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, galsim_warn
 
-from .deprecated.correlatednoise import _BaseCorrelatedNoise
-
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
     """Whiten the noise in the image assuming that the noise currently in the image can be described

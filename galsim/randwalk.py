@@ -31,7 +31,7 @@ from .errors import (
 )
 from .gaussian import Gaussian
 
-class RandomWalk(GSObject):
+class RandomKnots(GSObject):
     """
     A class for generating a set of point sources, following either a `Gaussian` profile or a
     specified input profile.
@@ -39,7 +39,7 @@ class RandomWalk(GSObject):
     Uses of this profile include representing an "irregular" galaxy, or
     adding this profile to an Exponential to represent knots of star formation.
 
-    RandomWalk profiles have "shape noise" that depends on the number of point
+    RandomKnots profiles have "shape noise" that depends on the number of point
     sources used.  For example, using the default Gaussian distribution, with
     100 points, the shape noise is g~0.05, and this will decrease as more
     points are added.  The profile can be sheared to give additional
@@ -71,7 +71,7 @@ class RandomWalk(GSObject):
                             [default: None]
 
     Attributes:
-        npoints:                    The number of points to use
+        npoints:                    The number of points to use as knots
         input_half_light_radius:    The input half_light_radius
         flux:                       The flux
         points:                     The array of x,y offsets used to create the point sources
@@ -226,7 +226,7 @@ class RandomWalk(GSObject):
                 raise GalSimIncompatibleValuesError("profile must be a GSObject")
 
     def __str__(self):
-        rep = 'galsim.RandomWalk(%(npoints)d, profile=%(profile)s)'
+        rep = 'galsim.RandomKnots(%(npoints)d, profile=%(profile)s)'
         rep = rep % dict(
             npoints=self._npoints,
             profile=str(self._profile),
@@ -235,13 +235,13 @@ class RandomWalk(GSObject):
         return rep
 
     def __repr__(self):
-        rep = 'galsim.RandomWalk(%r, profile=%r, rng=%r, gsparams=%r)'%(
+        rep = 'galsim.RandomKnots(%r, profile=%r, rng=%r, gsparams=%r)'%(
                 self._npoints, self._profile, self._orig_rng, self._gsparams)
         return rep
 
     def __eq__(self, other):
         return (self is other or
-                (isinstance(other, RandomWalk) and
+                (isinstance(other, RandomKnots) and
                  self._npoints == other._npoints and
                  self._half_light_radius == other._half_light_radius and
                  self._flux == other._flux and
@@ -250,7 +250,7 @@ class RandomWalk(GSObject):
                  self._gsparams == other._gsparams))
 
     def __hash__(self):
-        return hash(("galsim.RandomWalk", self._npoints, self._half_light_radius, self._flux,
+        return hash(("galsim.RandomKnots", self._npoints, self._half_light_radius, self._flux,
                      self.gsparams))
 
     def __getstate__(self):
@@ -302,50 +302,50 @@ class RandomWalk(GSObject):
     # of applying the transformation to the k-space image.
     @doc_inherit
     def withFlux(self, flux):
-        return RandomWalk(self.npoints, profile=self._profile.withFlux(flux),
-                          rng=self._orig_rng.duplicate(), gsparams=self.gsparams)
+        return RandomKnots(self.npoints, profile=self._profile.withFlux(flux),
+                           rng=self._orig_rng.duplicate(), gsparams=self.gsparams)
 
     @doc_inherit
     def withScaledFlux(self, flux_ratio):
-        return RandomWalk(self._npoints, profile=self._profile.withScaledFlux(flux_ratio),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile.withScaledFlux(flux_ratio),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def expand(self, scale):
-        return RandomWalk(self._npoints, profile=self._profile.expand(scale),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile.expand(scale),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def dilate(self, scale):
-        return RandomWalk(self._npoints, profile=self._profile.dilate(scale),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile.dilate(scale),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def shear(self, *args, **kwargs):
-        return RandomWalk(self._npoints, profile=self._profile.shear(*args, **kwargs),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile.shear(*args, **kwargs),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def _shear(self, shear):
-        return RandomWalk(self._npoints, profile=self._profile._shear(shear),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile._shear(shear),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def rotate(self, theta):
-        return RandomWalk(self._npoints, profile=self._profile.rotate(theta),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile.rotate(theta),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def transform(self, dudx, dudy, dvdx, dvdy):
-        return RandomWalk(self._npoints, profile=self._profile.transform(dudx,dudy,dvdx,dvdy),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile.transform(dudx,dudy,dvdx,dvdy),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def shift(self, *args, **kwargs):
-        return RandomWalk(self._npoints, profile=self._profile.shift(*args, **kwargs),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile.shift(*args, **kwargs),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def _shift(self, offset):
-        return RandomWalk(self._npoints, profile=self._profile._shift(offset),
-                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        return RandomKnots(self._npoints, profile=self._profile._shift(offset),
+                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
