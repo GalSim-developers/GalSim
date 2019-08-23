@@ -44,7 +44,7 @@ class Sim(object):
             half_light_radius=self.hlr,
         )
 
-        obj=galsim.RandomWalk(
+        obj=galsim.RandomKnots(
             self.n_knots,
             profile=profile,
         )
