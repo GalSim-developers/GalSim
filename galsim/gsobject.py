@@ -2028,14 +2028,6 @@ class GSObject(object):
         # Make n_photons an integer.
         iN = int(n_photons + 0.5)
 
-        if iN <= 0:
-            galsim_warn("Automatic n_photons calculation did not end up with positive N. "
-                        "(n_photons = {0})  No photons will be shot.\n"
-                        "  prof = {1}\n  flux = {2}\n  poisson_flux = {3}\n"
-                        "  max_extra_noise = {4}\n  g = {5}".format(
-                                n_photons, self, self.flux, poisson_flux, max_extra_noise, g))
-            return 0, 1.
-
         return iN, g
 
 
