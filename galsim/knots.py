@@ -243,8 +243,6 @@ class RandomKnots(GSObject):
         return (self is other or
                 (isinstance(other, RandomKnots) and
                  self._npoints == other._npoints and
-                 self._half_light_radius == other._half_light_radius and
-                 self._flux == other._flux and
                  self._profile == other._profile and
                  self._orig_rng == other._orig_rng and
                  self._gsparams == other._gsparams))
