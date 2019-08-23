@@ -352,10 +352,68 @@ def test_randwalk_hlr():
             mess="hlr for npoints: %d outside of expected range" % npoints
             assert abs(mn-hlr) < nstd*std_check, mess
 
+@timer
+def test_randwalk_transform():
+    """Test that overridden transformations give equivalent results as the normal methods.
+    """
+    def test_op(rw, op):
+        print(op)
+        rw1 = eval('rw.' + op)
+        rw2 = eval('super(galsim.RandomWalk,rw).' + op)
+
+        # Need to convolve by a psf to get reasonable results for fft drawing.
+        psf = galsim.Moffat(beta=1.5, fwhm=0.9)
+        conv1 = galsim.Convolve(rw1, psf)
+        conv2 = galsim.Convolve(rw2, psf)
+        im1 = conv1.drawImage(nx=16, ny=16, scale=0.3)
+        im2 = conv2.drawImage(nx=16, ny=16, scale=0.3)
+        np.testing.assert_almost_equal(im1.array, im2.array, decimal=3,
+                                       err_msg='RandomWalk with op '+op)
+
+    if __name__ == '__main__':
+        npoints = 20
+    else:
+        npoints = 3  # Not too many, so this test doesn't take forever.
+    hlr = 1.7
+    flux = 1000
+    rng = galsim.BaseDeviate(1234)
+    rw = galsim.RandomWalk(npoints, profile=galsim.Exponential(half_light_radius=hlr, flux=flux),
+                           rng=rng)
+
+    if __name__ == '__main__':
+        # First relatively trivial tests of no ops
+        test_op(rw, 'withScaledFlux(1.0)')
+        test_op(rw, 'expand(1.0)')
+        test_op(rw, 'dilate(1.0)')
+        test_op(rw, 'shear(g1=0, g2=0)')
+        test_op(rw, 'rotate(0 * galsim.degrees)')
+        test_op(rw, 'transform(1., 0., 0., 1.)')
+        test_op(rw, 'shift(0., 0.)')
+        test_op(rw, 'rotate(23 * galsim.degrees)')  # no op, since original is isotropic
+
+    # These are fundamental, since these are the methods we override.  Always test these.
+    test_op(rw, 'withScaledFlux(23)')
+    test_op(rw, 'expand(1.2)')
+    test_op(rw, 'dilate(1.2)')
+    test_op(rw, 'shear(g1=0.1, g2=-0.03)')
+    test_op(rw, '_shear(galsim.Shear(0.03 + 1j*0.09))')
+    test_op(rw.shear(g1=0.05, g2=0), 'rotate(23 * galsim.degrees)')
+    test_op(rw, 'transform(1.2, 0.1, -0.2, 1.1)')
+    test_op(rw, 'shift(0.3, 0.9)')
+    test_op(rw, '_shift(galsim.PositionD(-0.3, 0.2))')
+
+    if __name__ == '__main__':
+        # A few more that are currently not overridden, but call out to the above functions.
+        test_op(rw, 'withFlux(23)')
+        test_op(rw, 'magnify(1.2)')
+        test_op(rw, 'lens(0.03, 0.07, 1.12)')
+
+
 if __name__ == "__main__":
     test_randwalk_defaults()
     test_randwalk_valid_inputs()
     test_randwalk_invalid_inputs()
-    test_randwalk_hlr()
     test_randwalk_repr()
     test_randwalk_config()
+    test_randwalk_hlr()
+    test_randwalk_transform()
