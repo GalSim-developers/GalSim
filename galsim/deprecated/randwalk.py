@@ -16,12 +16,21 @@
 #    and/or other materials provided with the distribution.
 #
 
-from .. import correlatednoise
+import galsim
 
-def _BaseCorrelatedNoise(rng, gsobject, wcs):
+
+def RandomWalk(*args, **kwargs):
     from . import depr
-    from .. import BaseCorrelatedNoise
-    depr('_BaseCorrelatedNoise', 2.2, 'BaseCorrelatedNoise')
-    return BaseCorrelatedNoise(rng, gsobject, wcs)
+    depr('RandomWalk', 2.2, 'RandomKnots')
+    return galsim.RandomKnots(*args, **kwargs)
 
-correlatednoise._BaseCorrelatedNoise = _BaseCorrelatedNoise
+galsim.RandomWalk = RandomWalk
+
+def BuildRandomWalk(config, base, ignore, gsparams, logger):
+    from . import depr
+    depr('RandomWalk', 2.2, 'RandomKnots')
+    return galsim.config.gsobject._BuildSimple(galsim.RandomKnots,
+                                               config, base, ignore, gsparams, logger)
+
+from ..config.gsobject import RegisterObjectType
+RegisterObjectType('RandomWalk', BuildRandomWalk)

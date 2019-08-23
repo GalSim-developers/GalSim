@@ -90,10 +90,10 @@ def test_randwalk_defaults():
 
     # Check negative flux
     rw3 = rw.withFlux(-2.3)
-    assert rw3 == galsim.RandomWalk(npoints, half_light_radius=hlr, rng=galsim.BaseDeviate(1234),
-                                    flux=-2.3)
+    assert rw3 == galsim.RandomKnots(npoints, half_light_radius=hlr, rng=galsim.BaseDeviate(1234),
+                                     flux=-2.3)
     conv = galsim.Convolve(rw3, psf)
-    check_basic(conv, "RandomWalk with negative flux")
+    check_basic(conv, "RandomKnots with negative flux")
 
 
 
@@ -359,7 +359,7 @@ def test_randwalk_transform():
     def test_op(rw, op):
         print(op)
         rw1 = eval('rw.' + op)
-        rw2 = eval('super(galsim.RandomWalk,rw).' + op)
+        rw2 = eval('super(galsim.RandomKnots,rw).' + op)
 
         # Need to convolve by a psf to get reasonable results for fft drawing.
         psf = galsim.Moffat(beta=1.5, fwhm=0.9)

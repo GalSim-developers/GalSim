@@ -37,7 +37,7 @@ New features introduced in this demo:
 - cat = galsim.Catalog(file_name, dir)
 - obj = galsim.Moffat(beta, fwhm, trunc)
 - obj = galsim.DeVaucouleurs(flux, half_light_radius=)
-- obj = galsim.RandomWalk(npoints, half_light_radius=, flux=)
+- obj = galsim.RandomKnots(npoints, half_light_radius=, flux=)
 - obj = galsim.Add([list of objects])
 - obj = obj.shift(dx,dy)
 - galsim.fits.writeMulti([list of images], file_name)
@@ -168,7 +168,7 @@ def main(argv):
 
         smooth_disk = galsim.Exponential(flux=smooth_disk_frac, half_light_radius=disk_hlr)
 
-        knots = galsim.RandomWalk(n_knots, half_light_radius=disk_hlr, flux=knot_frac, rng=rng)
+        knots = galsim.RandomKnots(n_knots, half_light_radius=disk_hlr, flux=knot_frac, rng=rng)
 
         disk = galsim.Add([smooth_disk, knots])
         disk = disk.shear(e1=disk_e1, e2=disk_e2)

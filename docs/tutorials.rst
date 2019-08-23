@@ -152,7 +152,7 @@ We write the images out into a multi-extension fits file.
 - cat = galsim.Catalog(file_name, dir)
 - obj = galsim.Moffat(beta, fwhm, trunc)
 - obj = galsim.DeVaucouleurs(flux, half_light_radius)
-- obj = galsim.RandomWalk(npoints, half_light_radius, flux)
+- obj = galsim.RandomKnots(npoints, half_light_radius, flux)
 - obj = galsim.Add([list of objects])
 - obj = obj.shift(dx,dy)
 - galsim.fits.writeMulti([list of images], file_name)
@@ -161,7 +161,7 @@ We write the images out into a multi-extension fits file.
 
 - obj type : Moffat (..., trunc)
 - obj type : DeVaucouleurs (flux, half_light_radius)
-- obj type : RandomWalk (npoints, half_light_radius, flux)
+- obj type : RandomKnots (npoints, half_light_radius, flux)
 - value type : Catalog (col)
 - obj : shift
 - shift type : XY (x, y)

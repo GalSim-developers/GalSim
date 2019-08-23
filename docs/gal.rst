@@ -47,10 +47,10 @@ Spergel Profile
     :members:
     :show-inheritance:
 
-Knots defined by a "random walk"
---------------------------------
+Knots of Star Formation
+-----------------------
 
-.. autoclass:: galsim.RandomWalk
+.. autoclass:: galsim.RandomKnots
     :members:
     :show-inheritance:
 

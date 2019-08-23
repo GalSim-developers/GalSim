@@ -41,7 +41,7 @@
                     "flux" : 0.18
                 },
                 {
-                    "type" : "RandomWalk",
+                    "type" : "RandomKnots",
                     "npoints": 10,
                     "half_light_radius" : { "type" : "Catalog" , "col" : 5 },
                     "flux" : 0.42
