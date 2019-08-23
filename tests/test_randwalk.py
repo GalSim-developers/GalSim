@@ -56,19 +56,37 @@ def test_randwalk_defaults():
     np.testing.assert_almost_equal(rw.centroid.y, np.mean(pts[:,1]))
 
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
-    rw2 = galsim.RandomWalk(npoints, half_light_radius=hlr, rng=rng, gsparams=gsp)
+    rng2 = galsim.BaseDeviate(1234)
+    rw2 = galsim.RandomWalk(npoints, half_light_radius=hlr, rng=rng2, gsparams=gsp)
     assert rw2 != rw
     assert rw2 == rw.withGSParams(gsp)
 
-    # Run some basic tests of correctness
+    # Check that they produce identical images.
     psf = galsim.Gaussian(sigma=0.8)
-    conv = galsim.Convolve(rw, psf)
-    check_basic(conv, "RandomWalk")
+    conv1 = galsim.Convolve(rw.withGSParams(gsp), psf)
+    conv2 = galsim.Convolve(rw2, psf)
+    im1 = conv1.drawImage()
+    im2 = conv2.drawImage()
+    assert im1 == im2
+
+    # Check that image is not sensitive to use of rng by other objects.
+    rng3 = galsim.BaseDeviate(1234)
+    rw3=galsim.RandomWalk(npoints, half_light_radius=hlr, rng=rng3)
+    rng3.discard(523)
+    conv1 = galsim.Convolve(rw, psf)
+    conv3 = galsim.Convolve(rw3, psf)
+    im1 = conv1.drawImage()
+    im3 = conv2.drawImage()
+    assert im1 == im3
+
+    # Run some basic tests of correctness
+    check_basic(conv1, "RandomWalk")
     im = galsim.ImageD(64,64, scale=0.5)
-    do_shoot(conv, im, "RandomWalk")
-    do_kvalue(conv, im, "RandomWalk")
+    do_shoot(conv1, im, "RandomWalk")
+    do_kvalue(conv1, im, "RandomWalk")
     do_pickle(rw)
-    do_pickle(conv)
+    do_pickle(conv1)
+    do_pickle(conv1, lambda x: x.drawImage(scale=1))
 
     # Check negative flux
     rw3 = rw.withFlux(-2.3)
