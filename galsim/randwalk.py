@@ -33,24 +33,26 @@ from .gaussian import Gaussian
 
 class RandomWalk(GSObject):
     """
-    A class for generating a set of point sources distributed using a random
-    walk of points drawn from a specified distribution.
+    A class for generating a set of point sources, following either a `Gaussian` profile or a
+    specified input profile.
 
     Uses of this profile include representing an "irregular" galaxy, or
     adding this profile to an Exponential to represent knots of star formation.
 
-    Random walk profiles have "shape noise" that depends on the number of point
+    RandomWalk profiles have "shape noise" that depends on the number of point
     sources used.  For example, using the default Gaussian distribution, with
     100 points, the shape noise is g~0.05, and this will decrease as more
     points are added.  The profile can be sheared to give additional
     ellipticity, for example to follow that of an associated disk.
 
-    We use the analytic approximation of an infinite number of steps, which is
-    a good approximation even if the desired number of steps were less than 10.
-
     The requested half light radius (hlr) should be thought of as a rough
     value.  With a finite number point sources the actual realized hlr will be
     noisy.
+
+    .. note::
+
+        If providing an input ``profile`` object, it must be "shoot-able".  Objects that
+        cannot be drawn with ``method='phot'`` cannot be used as the ``profile`` parameter here.
 
     Parameters:
          npoints:           Number of point sources to generate.
@@ -60,30 +62,25 @@ class RandomWalk(GSObject):
                             points.  A single instance will be noisy.  [default None]
          flux:              Optional total flux in all point sources.  This value is used for a
                             Gaussian distribution if an explicit profile is not sent. Defaults to
-                            None if profile is sent, otherwise 1.  [default: 1]
+                            None if profile is sent, otherwise 1.  [default: None]
          profile:           Optional profile to use for drawing points.  If a profile is sent, the
-                            half_light_radius and flux keywords are ignored.  [default: None]
+                            half_light_radius and flux keywords are invalid.  [default: None]
          rng:               Optional random number generator. Can be any `galsim.BaseDeviate`.  If
                             None, the rng is created internally.  [default: None]
          gsparams:          Optional `GSParams` for the objects representing each point source.
                             [default: None]
 
     Attributes:
-        npoints:                    The number of random walk points
+        npoints:                    The number of points to use
         input_half_light_radius:    The input half_light_radius
         flux:                       The flux
         points:                     The array of x,y offsets used to create the point sources
 
     .. note::
 
-        The algorithm is a modified version of that presented in
-        https://arxiv.org/abs/1312.5514v3
-
-        Modifications are:
-
-        - There is no outer cutoff to how far a point can wander
-        - We use the approximation of an infinite number of steps.
-
+        The algorithm was originally a modified version of that presented in
+        https://arxiv.org/abs/1312.5514v3.  However, we now use the GalSim photon shooting
+        mechanism, which allows the knots to trace any profile, not just a `Gaussian`.
     """
     # these allow use in a galsim configuration context
 
