@@ -171,12 +171,6 @@ class RandomWalk(GSObject):
         """
         return self._npoints
 
-    @property
-    def gsparams(self):
-        """The `GSParams` for this object.
-        """
-        return self._gsparams
-
     @lazy_property
     def points(self):
         """A list of the locations (x,y) of the point sources.
@@ -306,7 +300,55 @@ class RandomWalk(GSObject):
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 
+    # For all the transformations methods, apply to the internal profile, and remake points
+    # in the correct locations.  This makes fft drawing much faster than the normal way
+    # of applying the transformation to the k-space image.
     @doc_inherit
     def withFlux(self, flux):
-        return RandomWalk(npoints=self.npoints, profile=self._profile.withFlux(flux),
-                          rng=self._orig_rng, gsparams=self.gsparams)
+        return RandomWalk(self.npoints, profile=self._profile.withFlux(flux),
+                          rng=self._orig_rng.duplicate(), gsparams=self.gsparams)
+
+    @doc_inherit
+    def withScaledFlux(self, flux_ratio):
+        return RandomWalk(self._npoints, profile=self._profile.withScaledFlux(flux_ratio),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def expand(self, scale):
+        return RandomWalk(self._npoints, profile=self._profile.expand(scale),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def dilate(self, scale):
+        return RandomWalk(self._npoints, profile=self._profile.dilate(scale),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def shear(self, *args, **kwargs):
+        return RandomWalk(self._npoints, profile=self._profile.shear(*args, **kwargs),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def _shear(self, shear):
+        return RandomWalk(self._npoints, profile=self._profile._shear(shear),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def rotate(self, theta):
+        return RandomWalk(self._npoints, profile=self._profile.rotate(theta),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def transform(self, dudx, dudy, dvdx, dvdy):
+        return RandomWalk(self._npoints, profile=self._profile.transform(dudx,dudy,dvdx,dvdy),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def shift(self, *args, **kwargs):
+        return RandomWalk(self._npoints, profile=self._profile.shift(*args, **kwargs),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+
+    @doc_inherit
+    def _shift(self, offset):
+        return RandomWalk(self._npoints, profile=self._profile._shift(offset),
+                          rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
