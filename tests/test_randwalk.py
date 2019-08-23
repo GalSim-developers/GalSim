@@ -41,7 +41,7 @@ def test_randwalk_defaults():
     npoints=100
     hlr = 8.0
     rng = galsim.BaseDeviate(1234)
-    rw=galsim.RandomWalk(npoints, half_light_radius=hlr, rng=rng)
+    rw=galsim.RandomKnots(npoints, half_light_radius=hlr, rng=rng)
 
     assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius==hlr,\
@@ -57,7 +57,7 @@ def test_randwalk_defaults():
 
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     rng2 = galsim.BaseDeviate(1234)
-    rw2 = galsim.RandomWalk(npoints, half_light_radius=hlr, rng=rng2, gsparams=gsp)
+    rw2 = galsim.RandomKnots(npoints, half_light_radius=hlr, rng=rng2, gsparams=gsp)
     assert rw2 != rw
     assert rw2 == rw.withGSParams(gsp)
 
@@ -71,7 +71,7 @@ def test_randwalk_defaults():
 
     # Check that image is not sensitive to use of rng by other objects.
     rng3 = galsim.BaseDeviate(1234)
-    rw3=galsim.RandomWalk(npoints, half_light_radius=hlr, rng=rng3)
+    rw3=galsim.RandomKnots(npoints, half_light_radius=hlr, rng=rng3)
     rng3.discard(523)
     conv1 = galsim.Convolve(rw, psf)
     conv3 = galsim.Convolve(rw3, psf)
@@ -80,10 +80,10 @@ def test_randwalk_defaults():
     assert im1 == im3
 
     # Run some basic tests of correctness
-    check_basic(conv1, "RandomWalk")
+    check_basic(conv1, "RandomKnots")
     im = galsim.ImageD(64,64, scale=0.5)
-    do_shoot(conv1, im, "RandomWalk")
-    do_kvalue(conv1, im, "RandomWalk")
+    do_shoot(conv1, im, "RandomKnots")
+    do_kvalue(conv1, im, "RandomKnots")
     do_pickle(rw)
     do_pickle(conv1)
     do_pickle(conv1, lambda x: x.drawImage(scale=1))
@@ -124,7 +124,7 @@ def test_randwalk_valid_inputs():
 
 
     for kw in (kw1, kw2, kw3):
-        rw=galsim.RandomWalk(*args, **kw)
+        rw=galsim.RandomKnots(*args, **kw)
 
         assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
 
@@ -156,51 +156,51 @@ def test_randwalk_invalid_inputs():
 
     # try sending wrong type for npoints
     with assert_raises(GalSimValueError):
-        galsim.RandomWalk('blah', half_light_radius=1, flux=3)
+        galsim.RandomKnots('blah', half_light_radius=1, flux=3)
 
     # try sending neither profile or hlr
     with assert_raises(GalSimIncompatibleValuesError):
-        galsim.RandomWalk(npoints)
+        galsim.RandomKnots(npoints)
 
     # try with rng wrong type
     with assert_raises(TypeError):
-        galsim.RandomWalk(npoints, half_light_radius=hlr, rng=37)
+        galsim.RandomKnots(npoints, half_light_radius=hlr, rng=37)
 
     # wrong type for profile
     with assert_raises(GalSimIncompatibleValuesError):
-        galsim.RandomWalk(npoints, profile=3.5)
+        galsim.RandomKnots(npoints, profile=3.5)
 
     # wrong type for npoints
     npoints_bad=[35]
     with assert_raises(TypeError):
-        galsim.RandomWalk(npoints_bad, half_light_radius=hlr)
+        galsim.RandomKnots(npoints_bad, half_light_radius=hlr)
 
     # wrong type for hlr
     with assert_raises(GalSimRangeError):
-        galsim.RandomWalk(npoints, half_light_radius=-1.5)
+        galsim.RandomKnots(npoints, half_light_radius=-1.5)
 
     # wrong type for flux
     with assert_raises(TypeError):
-        galsim.RandomWalk(npoints, flux=[3.5], half_light_radius=hlr)
+        galsim.RandomKnots(npoints, flux=[3.5], half_light_radius=hlr)
 
     # sending flux with a profile
     prof=galsim.Exponential(half_light_radius=hlr, flux=2.0)
     with assert_raises(GalSimIncompatibleValuesError):
-        galsim.RandomWalk(npoints, flux=flux, profile=prof)
+        galsim.RandomKnots(npoints, flux=flux, profile=prof)
 
     # sending hlr with a profile
     with assert_raises(GalSimIncompatibleValuesError):
-        galsim.RandomWalk(npoints, half_light_radius=3, profile=prof)
+        galsim.RandomKnots(npoints, half_light_radius=3, profile=prof)
 
 
     # bad value for npoints
     npoints_bad=-35
     with assert_raises(GalSimRangeError):
-        galsim.RandomWalk(npoints_bad, half_light_radius=hlr)
+        galsim.RandomKnots(npoints_bad, half_light_radius=hlr)
 
     # bad value for hlr
     with assert_raises(GalSimRangeError):
-        galsim.RandomWalk(npoints, half_light_radius=-1.5)
+        galsim.RandomKnots(npoints, half_light_radius=-1.5)
 
 
 @timer
@@ -213,12 +213,12 @@ def test_randwalk_repr():
     npoints=100
     hlr = 8.0
     flux=1
-    rw1=galsim.RandomWalk(
+    rw1=galsim.RandomKnots(
         npoints,
         half_light_radius=hlr,
         flux=flux,
     )
-    rw2=galsim.RandomWalk(
+    rw2=galsim.RandomKnots(
         npoints,
         profile=galsim.Exponential(half_light_radius=hlr, flux=flux),
     )
@@ -253,13 +253,13 @@ def test_randwalk_config():
     hlr=2.0
     flux=np.pi
     gal_config1 = {
-        'type':'RandomWalk',
+        'type':'RandomKnots',
         'npoints':100,
         'half_light_radius':hlr,
         'flux':flux,
     }
     gal_config2 = {
-        'type':'RandomWalk',
+        'type':'RandomKnots',
         'npoints':150,
         'profile': {
             'type': 'Exponential',
@@ -277,7 +277,7 @@ def test_randwalk_config():
         rwc = galsim.config.BuildGSObject(config, 'gal')[0]
         print(repr(rwc._profile))
 
-        rw = galsim.RandomWalk(
+        rw = galsim.RandomKnots(
             gal_config['npoints'],
             half_light_radius=hlr,
             flux=flux,
@@ -342,8 +342,8 @@ def test_randwalk_hlr():
 
             hlr_calc=np.zeros(ntrial)
             for i in range(ntrial):
-                #rw=galsim.RandomWalk(npoints, hlr)
-                rw=galsim.RandomWalk(npoints, profile=prof)
+                #rw=galsim.RandomKnots(npoints, hlr)
+                rw=galsim.RandomKnots(npoints, profile=prof)
                 hlr_calc[i] = rw.calculateHLR()
 
             mn=hlr_calc.mean()
@@ -368,7 +368,7 @@ def test_randwalk_transform():
         im1 = conv1.drawImage(nx=16, ny=16, scale=0.3)
         im2 = conv2.drawImage(nx=16, ny=16, scale=0.3)
         np.testing.assert_almost_equal(im1.array, im2.array, decimal=3,
-                                       err_msg='RandomWalk with op '+op)
+                                       err_msg='RandomKnots with op '+op)
 
     if __name__ == '__main__':
         npoints = 20
@@ -377,8 +377,8 @@ def test_randwalk_transform():
     hlr = 1.7
     flux = 1000
     rng = galsim.BaseDeviate(1234)
-    rw = galsim.RandomWalk(npoints, profile=galsim.Exponential(half_light_radius=hlr, flux=flux),
-                           rng=rng)
+    rw = galsim.RandomKnots(npoints, profile=galsim.Exponential(half_light_radius=hlr, flux=flux),
+                            rng=rng)
 
     if __name__ == '__main__':
         # First relatively trivial tests of no ops
