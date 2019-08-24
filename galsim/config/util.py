@@ -594,45 +594,6 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
-def ProcessTemplate(config, base, logger=None):
-    """If the config dict has a 'template' item, read in the appropriate file and
-    make any requested updates.
-
-    Parameters:
-        config:         The configuration dict.
-        base:           The base configuration dict.
-        logger:         If given, a logger object to log progress. [default: None]
-    """
-    logger = LoggerWrapper(logger)
-    if 'template' in config:
-        template_string = config.pop('template')
-        logger.debug("Processing template specified as %s",template_string)
-
-        # Parse the template string
-        if ':' in template_string:
-            config_file, field = template_string.split(':')
-        else:
-            config_file, field = template_string, None
-
-        # Read the config file if appropriate
-        if config_file != '':
-            template = ReadConfig(config_file, logger=logger)[0]
-        else:
-            template = base
-
-        # Pull out the specified field, if any
-        if field is not None:
-            template = GetFromConfig(template, field)
-
-        # Copy over the template config into this one.
-        new_params = config.copy()  # N.B. Already popped config['template'].
-        config.clear()
-        config.update(template)
-
-        # Update the config with the requested changes
-        UpdateConfig(config, new_params)
-
-
 def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                  done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
