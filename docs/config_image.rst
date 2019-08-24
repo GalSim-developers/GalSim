@@ -259,6 +259,7 @@ attribute that defines what kind of WCS to use.  The wcs types that are defined 
 
 In addition, all wcs types can define an origin in either image coordinates, world coordinates, or
 both:
+
 * ``origin`` = *pos_value* (default = (0,0))  Optionally set the image coordinates to use as the origin position, if not (x,y) = (0,0).  Special: You can also specify ``origin`` to be 'center', in which case the origin is taken to be the center of the image rather than the corner.
 * ``world_origin`` = *pos_value* (default = (0,0))  Optionally set the world coordinates to use as the origin position, if not (u,v) = (0,0).  (Not available for the celestial WCS types: 'RaDecFunction', 'Fits', and 'Tan'.)
 
