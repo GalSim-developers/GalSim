@@ -70,7 +70,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         the tuple (gsobject, safe), where ``gsobject`` is the built object, and ``safe`` is
         a bool that says whether it is safe to use this object again next time.
     """
-    import galsim  # Need this for eval
+    from .. import __dict__ as galsim_dict
 
     logger = LoggerWrapper(logger)
     if base is None:
@@ -174,8 +174,11 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # See if this type is registered as a valid type.
     if type_name in valid_gsobject_types:
         build_func = valid_gsobject_types[type_name]
-    elif type_name in galsim.__dict__:
-        build_func = eval("galsim."+type_name)
+    elif type_name in galsim_dict:
+        from future.utils import exec_
+        gdict = globals().copy()
+        exec_('import galsim', gdict)
+        build_func = eval("galsim."+type_name, gdict)
     else:
         raise GalSimConfigValueError("Unrecognised gsobject type", type_name)
 

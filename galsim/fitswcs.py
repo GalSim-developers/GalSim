@@ -180,7 +180,6 @@ class AstropyWCS(CelestialWCS):
 
     def _load_from_header(self, header):
         import astropy.wcs
-        from . import fits
         with warnings.catch_warnings():
             # The constructor might emit warnings if it wants to fix the header
             # information (e.g. RADECSYS -> RADESYSa).  We'd rather ignore these
@@ -291,7 +290,6 @@ class AstropyWCS(CelestialWCS):
         return d
 
     def __setstate__(self, d):
-        import galsim
         self.__dict__ = d
         self._wcs = self._load_from_header(self.header)
 
@@ -577,7 +575,6 @@ class PyAstWCS(CelestialWCS):
         return d
 
     def __setstate__(self, d):
-        import galsim
         self.__dict__ = d
         self._wcsinfo = self._load_from_header(self.header)
 
