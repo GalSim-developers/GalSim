@@ -16,6 +16,8 @@ The following functions are relevant to running the whole config script from Pyt
 
 .. autofunction:: galsim.config.ImportModules
 
+.. autofunction:: galsim.config.ProcessTemplate
+
 .. autofunction:: galsim.config.ProcessAllTemplates
 
 .. autofunction:: galsim.config.Process
@@ -121,6 +123,8 @@ a config dict:
 
 .. autofunction:: galsim.config.GetAllParams
 
+.. autofunction:: galsim.config.ParseWorldPos
+
 
 Using Input Fields
 ------------------
@@ -166,6 +170,9 @@ Config Utilities
 The following functions are used internally by the various ``galsim.config`` functions,
 but they might be useful for some users.
 
+.. autoclass:: galsim.config.LoggerWrapper
+    :members:
+
 .. autofunction:: galsim.config.ReadYaml
 
 .. autofunction:: galsim.config.ReadJson
@@ -194,8 +201,6 @@ but they might be useful for some users.
 
 .. autofunction:: galsim.config.UpdateConfig
 
-.. autofunction:: galsim.config.ProcessTemplate
-
 .. autofunction:: galsim.config.MultiProcess
 
 .. autofunction:: galsim.config.GetIndex
@@ -211,8 +216,6 @@ but they might be useful for some users.
 .. autofunction:: galsim.config.MakeImageTasks
 
 .. autofunction:: galsim.config.MakeStampTasks
-
-.. autofunction:: galsim.config.ParseWorldPos
 
 .. autofunction:: galsim.config.RegisterInputConnectedType
 
