@@ -143,6 +143,11 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         assert prof._xValue.__doc__ == galsim.GSObject._xValue.__doc__
         assert prof.__class__._xValue.__doc__ == galsim.GSObject._xValue.__doc__
 
+    # Check negative flux:
+    neg_image = prof.withFlux(-prof.flux).drawImage(method='sb', scale=scale, use_true_center=False)
+    np.testing.assert_almost_equal(neg_image.array/prof.flux, -image.array/prof.flux, 7,
+                                   '%s negative flux drawReal is not negative of +flux image'%name)
+
     # Direct call to drawReal should also work and be equivalent to the above with scale = 1.
     prof.drawImage(image, method='sb', scale=1., use_true_center=False)
     image2 = image.copy()
@@ -195,6 +200,11 @@ def check_basic_k(prof, name):
                 err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
         assert prof._kValue.__doc__ == galsim.GSObject._kValue.__doc__
         assert prof.__class__._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+
+    # Check negative flux:
+    neg_image = prof.withFlux(-prof.flux).drawKImage(kimage.copy())
+    np.testing.assert_almost_equal(neg_image.array/prof.flux, -kimage.array/prof.flux, 7,
+                                   '%s negative flux drawK is not negative of +flux image'%name)
 
     # If supposed to be axisymmetric, make sure it is in the kValues.
     if prof.is_axisymmetric:
