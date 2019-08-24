@@ -16,12 +16,12 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
+from .extra import ExtraOutputBuilder, RegisterExtraOutput
+from ..image import ImageS
 
 # The badpix extra output type is currently just a placeholder for when we eventually add
 # defects, saturation, etc.  Now it always just builds an Image with all 0's.
 
-from .extra import ExtraOutputBuilder
 class BadPixBuilder(ExtraOutputBuilder):
     """This builds a bad pixel mask image to go along with each regular data image.
 
@@ -35,12 +35,12 @@ class BadPixBuilder(ExtraOutputBuilder):
         # Note: This is just a placeholder for now.  Once we implement defects, saturation, etc.,
         # these features should be marked in the badpix mask.  For now though, all pixels = 0.
         if base['do_noise_in_stamps']:
-            badpix_im = galsim.ImageS(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
+            badpix_im = ImageS(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
             self.scratch[obj_num] = badpix_im
 
     # The function to call at the end of building each image
     def processImage(self, index, obj_nums, config, base, logger):
-        image = galsim.ImageS(base['image_bounds'], wcs=base['wcs'], init_value=0)
+        image = ImageS(base['image_bounds'], wcs=base['wcs'], init_value=0)
         if len(self.scratch) > 0.:
             # If we have been accumulating the variance on the stamps, build the total from them.
             # Make sure to only use the stamps for objects in this image.
@@ -61,5 +61,4 @@ class BadPixBuilder(ExtraOutputBuilder):
 
 
 # Register this as a valid extra output
-from .extra import RegisterExtraOutput
 RegisterExtraOutput('badpix', BadPixBuilder())

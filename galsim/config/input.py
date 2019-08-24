@@ -19,8 +19,13 @@
 from __future__ import print_function
 
 import os
-import galsim
 import logging
+
+from .value import RegisterValueType
+from .util import LoggerWrapper, RemoveCurrent, GetRNG
+from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
+from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..catalog import Catalog, Dict
 
 # This file handles processing the input items according to the specifications in config['input'].
 # This file includes the basic functionality, which is often sufficient for simple input types,
@@ -64,7 +69,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                             used by multiple processes if appropriate. [default: False]
     """
     if 'input' in config:
-        logger = galsim.config.LoggerWrapper(logger)
+        logger = LoggerWrapper(logger)
         file_num = config.get('file_num',0)
         logger.debug('file %d: Start ProcessInput',file_num)
 
@@ -94,9 +99,9 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                 'current_nproc' not in config and
                 not file_scope_only and
                 ( ('image' in config and 'nproc' in config['image'] and
-                   galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1) or
+                   ParseValue(config['image'], 'nproc', config, int)[0] != 1) or
                   ('output' in config and 'nproc' in config['output'] and
-                   galsim.config.ParseValue(config['output'], 'nproc', config, int)[0] != 1) ) )
+                   ParseValue(config['output'], 'nproc', config, int)[0] != 1) ) )
 
         if use_manager and '_input_manager' not in config:
             from multiprocessing.managers import BaseManager
@@ -190,7 +195,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                     # TODO: This isn't quite correct if there are multiple versions of this input
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in connected_types[key]:
-                        galsim.config.RemoveCurrent(config, type=value_type)
+                        RemoveCurrent(config, type=value_type)
                         logger.debug('file %d: Cleared current vals for items with type %s',
                                      file_num,value_type)
                     # Also put these in the normal "current" location, so this can be used
@@ -199,7 +204,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
-        galsim.config.CheckAllParams(config['input'], ignore=valid_keys)
+        CheckAllParams(config['input'], ignore=valid_keys)
 
 
 def SetupInput(config, logger=None):
@@ -243,7 +248,7 @@ def ProcessInputNObjects(config, logger=None):
     Returns:
         the number of objects to use.
     """
-    logger = galsim.config.LoggerWrapper(logger)
+    logger = LoggerWrapper(logger)
     if 'input' in config:
         SetupInput(config, logger=logger)
         for key in valid_input_types:
@@ -302,19 +307,18 @@ def GetInputObj(input_type, config, base, param_name):
                     error messages).
     """
     if '_input_objs' not in base or input_type not in base['_input_objs']:
-        raise galsim.GalSimConfigError(
+        raise GalSimConfigError(
             "No input %s available for type = %s"%(input_type,param_name))
 
     if 'num' in config:
-        num = galsim.config.ParseValue(config, 'num', base, int)[0]
+        num = ParseValue(config, 'num', base, int)[0]
     else:
         num = 0
 
     if num < 0:
-        raise galsim.GalSimConfigValueError("Invalid num < 0 supplied for %s."%param_name, num)
+        raise GalSimConfigValueError("Invalid num < 0 supplied for %s."%param_name, num)
     if num >= len(base['_input_objs'][input_type]):
-        raise galsim.GalSimConfigValueError("Invalid num supplied for %s (too large)"%param_name,
-                                            num)
+        raise GalSimConfigValueError("Invalid num supplied for %s (too large)"%param_name, num)
 
     return base['_input_objs'][input_type][num]
 
@@ -389,9 +393,9 @@ class InputLoader(object):
         req = self.init_func._req_params
         opt = self.init_func._opt_params
         single = self.init_func._single_params
-        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
+        kwargs, safe = GetAllParams(config, base, req=req, opt=opt, single=single)
         if self.init_func._takes_rng:  # pragma: no cover  (We don't have any inputs that do this.)
-            rng = galsim.config.GetRNG(config, base, logger, 'input '+self.init_func.__name__)
+            rng = GetRNG(config, base, logger, 'input '+self.init_func.__name__)
             kwargs['rng'] = rng
             safe = False
         return kwargs, safe
@@ -446,7 +450,7 @@ def _GenerateFromCatalog(config, base, value_type):
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
-    galsim.config.SetDefaultIndex(config, input_cat.getNObjects())
+    SetDefaultIndex(config, input_cat.getNObjects())
 
     # Coding note: the and/or bit is equivalent to a C ternary operator:
     #     input_cat.isFits() ? str : int
@@ -454,7 +458,7 @@ def _GenerateFromCatalog(config, base, value_type):
     # middle item evaluates to true).
     req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
     opt = { 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
     col = kwargs['col']
     index = kwargs['index']
 
@@ -465,7 +469,7 @@ def _GenerateFromCatalog(config, base, value_type):
     elif value_type is int:
         val = input_cat.getInt(index, col)
     else:  # value_type is bool
-        val = galsim.config.value._GetBoolValue(input_cat.get(index, col))
+        val = _GetBoolValue(input_cat.get(index, col))
 
     #print(base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val))
     return val, safe
@@ -477,7 +481,7 @@ def _GenerateFromDict(config, base, value_type):
 
     req = { 'key' : str }
     opt = { 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
     key = kwargs['key']
 
     val = input_dict.get(key)
@@ -486,10 +490,9 @@ def _GenerateFromDict(config, base, value_type):
     return val, safe
 
 # Register these as valid value types
-from .value import RegisterValueType
 RegisterValueType('Catalog', _GenerateFromCatalog, [ float, int, bool, str ], input_type='catalog')
-RegisterInputType('catalog', InputLoader(galsim.Catalog, has_nobj=True))
-RegisterInputType('dict', InputLoader(galsim.Dict, file_scope=True))
+RegisterInputType('catalog', InputLoader(Catalog, has_nobj=True))
+RegisterInputType('dict', InputLoader(Dict, file_scope=True))
 RegisterValueType('Dict', _GenerateFromDict, [ float, int, bool, str ], input_type='dict')
 # Note: Doing the above in different orders for catalog and dict is intentional.  It makes sure
 # we test that this works for users no matter which order they do their registering.

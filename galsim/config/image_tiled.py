@@ -16,13 +16,20 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
 import logging
+
+from .image import ImageBuilder, FlattenNoiseVariance, RegisterImageType
+from .util import GetRNG
+from .value import ParseValue, GetAllParams
+from .stamp import BuildStamps
+from .noise import AddSky, AddNoise
+from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..image import ImageF
+from .. import random
 
 # This file adds image type Tiled, which builds a larger image by tiling nx x ny individual
 # postage stamps.
 
-from .image import ImageBuilder
 class TiledImageBuilder(ImageBuilder):
 
     def setup(self, config, base, image_num, obj_num, ignore, logger):
@@ -48,8 +55,7 @@ class TiledImageBuilder(ImageBuilder):
         req = { 'nx_tiles' : int , 'ny_tiles' : int }
         opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
                 'border' : int , 'xborder' : int , 'yborder' : int , 'order' : str }
-        params = galsim.config.GetAllParams(config, base, req=req, opt=opt,
-                                            ignore=ignore+extra_ignore)[0]
+        params = GetAllParams(config, base, req=req, opt=opt, ignore=ignore+extra_ignore)[0]
 
         self.nx_tiles = params['nx_tiles']  # We'll need this again later, so save them in self.
         self.ny_tiles = params['ny_tiles']
@@ -60,7 +66,7 @@ class TiledImageBuilder(ImageBuilder):
         self.stamp_ysize = params.get('stamp_ysize',stamp_size)
 
         if (self.stamp_xsize <= 0) or (self.stamp_ysize <= 0):
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Both image.stamp_xsize and image.stamp_ysize need to be defined and > 0.")
 
         border = params.get("border",0)
@@ -84,7 +90,7 @@ class TiledImageBuilder(ImageBuilder):
         # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
         if ( ('image_force_xsize' in base and full_xsize != base['image_force_xsize']) or
              ('image_force_ysize' in base and full_ysize != base['image_force_ysize']) ):
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Unable to reconcile required image xsize and ysize with provided "
                 "nx_tiles=%d, ny_tiles=%d, xborder=%d, yborder=%d\n"
                 "Calculated full_size = (%d,%d) != required (%d,%d)."%(
@@ -112,7 +118,7 @@ class TiledImageBuilder(ImageBuilder):
         full_ysize = base['image_ysize']
         wcs = base['wcs']
 
-        full_image = galsim.ImageF(full_xsize, full_ysize)
+        full_image = ImageF(full_xsize, full_ysize)
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
@@ -122,7 +128,7 @@ class TiledImageBuilder(ImageBuilder):
 
         # Make a list of ix,iy values according to the specified order:
         if 'order' in config:
-            order = galsim.config.ParseValue(config,'order',base,str)[0].lower()
+            order = ParseValue(config,'order',base,str)[0].lower()
         else:
             order = 'row'
         if order.startswith('row'):
@@ -134,10 +140,10 @@ class TiledImageBuilder(ImageBuilder):
         elif order.startswith('rand'):
             ix_list = [ ix for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
             iy_list = [ iy for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
-            rng = galsim.config.GetRNG(config, base, logger, 'TiledImage, order = '+order)
-            galsim.random.permute(rng, ix_list, iy_list)
+            rng = GetRNG(config, base, logger, 'TiledImage, order = '+order)
+            random.permute(rng, ix_list, iy_list)
         else:
-            raise galsim.GalSimConfigValueError("Invalid order.", order, ('row', 'col', 'random'))
+            raise GalSimConfigValueError("Invalid order.", order, ('row', 'col', 'random'))
 
         # Define a 'image_pos' field so the stamps can set their position appropriately in case
         # we need it for PowerSpectum or NFWHalo.
@@ -155,7 +161,7 @@ class TiledImageBuilder(ImageBuilder):
                   }
         }
 
-        stamps, current_vars = galsim.config.BuildStamps(
+        stamps, current_vars = BuildStamps(
                 nobjects, base, logger=logger, obj_num=obj_num,
                 xsize=self.stamp_xsize, ysize=self.stamp_ysize, do_noise=self.do_noise_in_stamps)
 
@@ -172,7 +178,7 @@ class TiledImageBuilder(ImageBuilder):
         # Save the resulting noise variance as self.current_var.
         current_var = 0
         if not self.do_noise_in_stamps:
-            current_var = galsim.config.FlattenNoiseVariance(
+            current_var = FlattenNoiseVariance(
                     base, full_image, stamps, current_vars, logger)
         return full_image, current_var
 
@@ -209,8 +215,8 @@ class TiledImageBuilder(ImageBuilder):
         if not self.do_noise_in_stamps:
             # Apply the sky and noise to the full image
             base['current_noise_image'] = base['current_image']
-            galsim.config.AddSky(base,image)
-            galsim.config.AddNoise(base,image,current_var,logger)
+            AddSky(base,image)
+            AddNoise(base,image,current_var,logger)
 
     def getNObj(self, config, base, image_num):
         """Get the number of objects that will be built for this image.
@@ -228,13 +234,12 @@ class TiledImageBuilder(ImageBuilder):
         base['image_num'] = image_num
 
         if 'nx_tiles' not in config or 'ny_tiles' not in config:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
-        nx = galsim.config.ParseValue(config,'nx_tiles',base,int)[0]
-        ny = galsim.config.ParseValue(config,'ny_tiles',base,int)[0]
+        nx = ParseValue(config,'nx_tiles',base,int)[0]
+        ny = ParseValue(config,'ny_tiles',base,int)[0]
         base['index_key'] = orig_index_key
         return nx*ny
 
 # Register this as a valid image type
-from .image import RegisterImageType
 RegisterImageType('Tiled', TiledImageBuilder())

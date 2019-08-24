@@ -15,53 +15,59 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import galsim
+
+from .input import InputLoader, GetInputObj, RegisterInputType
+from .util import LoggerWrapper, GetIndex, GetRNG
+from .value import GetAllParams, SetDefaultIndex
+from .gsobject import RegisterObjectType
+from ..gsparams import GSParams
+from ..errors import GalSimConfigError
+from ..real import RealGalaxyCatalog, RealGalaxy
 
 # This file adds input type real_catalog and gsobject types RealGalaxy and RealGalaxyOriginal.
 
 # The RealGalaxyCatalog doesn't need anything special other than registration as a valid
 # input type.
-from .input import RegisterInputType, InputLoader
-RegisterInputType('real_catalog', InputLoader(galsim.RealGalaxyCatalog))
+RegisterInputType('real_catalog', InputLoader(RealGalaxyCatalog))
 
 # There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 
 def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGalaxy'):
     """Build a RealGalaxy from the real_catalog input item.
     """
-    real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
+    real_cat = GetInputObj('real_catalog', config, base, param_name)
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     # But not if they specify 'id' or have 'random=True', which overrides that.
     if 'id' not in config:
         if 'random' not in config:
-            galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+            SetDefaultIndex(config, real_cat.getNObjects())
         else:
             if not config['random']:
-                galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+                SetDefaultIndex(config, real_cat.getNObjects())
                 # Need to do this to avoid being caught by the GetAllParams() call, which will flag
                 # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
                 del config['random']
 
-    kwargs, safe = galsim.config.GetAllParams(config, base,
-        req = galsim.__dict__['RealGalaxy']._req_params,
-        opt = galsim.__dict__['RealGalaxy']._opt_params,
-        single = galsim.__dict__['RealGalaxy']._single_params,
+    kwargs, safe = GetAllParams(config, base,
+        req = RealGalaxy._req_params,
+        opt = RealGalaxy._opt_params,
+        single = RealGalaxy._single_params,
         ignore = ignore + ['num'])
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
-    kwargs['rng'] = galsim.config.GetRNG(config, base, logger, param_name)
+    kwargs['rng'] = GetRNG(config, base, logger, param_name)
 
     if 'index' in kwargs:
         index = kwargs['index']
         if index >= real_cat.getNObjects() or index < 0:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "index=%s has gone past the number of entries in the RealGalaxyCatalog"%index)
 
     kwargs['real_galaxy_catalog'] = real_cat
     logger.debug('obj %d: %s kwargs = %s',base.get('obj_num',0),param_name,kwargs)
 
-    gal = galsim.RealGalaxy(**kwargs)
+    gal = RealGalaxy(**kwargs)
 
     return gal, safe
 
@@ -75,6 +81,5 @@ def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
 
 
 # Register these as valid gsobject types
-from .gsobject import RegisterObjectType
 RegisterObjectType('RealGalaxy', _BuildRealGalaxy, input_type='real_catalog')
 RegisterObjectType('RealGalaxyOriginal', _BuildRealGalaxyOriginal, input_type='real_catalog')

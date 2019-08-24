@@ -16,15 +16,16 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
+from .extra import ExtraOutputBuilder, RegisterExtraOutput
+from .value import ParseValue, GetCurrentValue
+from .noise import AddNoiseVariance
+from ..image import ImageF
 
 # The weight extra output type builds an ImageF of the inverse noise variance in the image.
 # It builds up the variance either from the stamp information if noise is being added then
 # or at the end from the full image if that is when noise is added.  Then at the end of
 # the image processing, it inverts the image to get the appropriate weight map.
 
-
-from .extra import ExtraOutputBuilder
 class WeightBuilder(ExtraOutputBuilder):
     """This builds a weight map image to go along with each regular data image.
 
@@ -39,19 +40,18 @@ class WeightBuilder(ExtraOutputBuilder):
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):
         if base['do_noise_in_stamps']:
-            weight_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0.)
+            weight_im = ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0.)
             if 'include_obj_var' in config:
-                include_obj_var = galsim.config.ParseValue(
-                        config, 'include_obj_var', base, bool)[0]
+                include_obj_var = ParseValue(config, 'include_obj_var', base, bool)[0]
             else:
                 include_obj_var = False
             base['current_noise_image'] = base['current_stamp']
-            galsim.config.AddNoiseVariance(base,weight_im,include_obj_var,logger)
+            AddNoiseVariance(base,weight_im,include_obj_var,logger)
             self.scratch[obj_num] = weight_im
 
     # The function to call at the end of building each image
     def processImage(self, index, obj_nums, config, base, logger):
-        image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
+        image = ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
         if len(self.scratch) > 0.:
             # If we have been accumulating the variance on the stamps, build the total from them.
             for obj_num in obj_nums:
@@ -66,12 +66,11 @@ class WeightBuilder(ExtraOutputBuilder):
         else:
             # Otherwise, build the variance map now.
             if 'include_obj_var' in config:
-                include_obj_var = galsim.config.ParseValue(
-                        config, 'include_obj_var', base, bool)[0]
+                include_obj_var = ParseValue(config, 'include_obj_var', base, bool)[0]
             else:
                 include_obj_var = False
             base['current_noise_image'] = base['current_image']
-            galsim.config.AddNoiseVariance(base,image,include_obj_var,logger)
+            AddNoiseVariance(base,image,include_obj_var,logger)
 
         # Now invert the variance image to get weight map.
         # Note that any zeros present in the image are maintained as zeros after inversion.
@@ -82,5 +81,4 @@ class WeightBuilder(ExtraOutputBuilder):
 
 
 # Register this as a valid extra output
-from .extra import RegisterExtraOutput
 RegisterExtraOutput('weight', WeightBuilder())

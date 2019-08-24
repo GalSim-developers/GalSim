@@ -15,12 +15,17 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import galsim
+
+from .stamp import StampBuilder, RegisterStampType
+from .value import ParseValue, GetAllParams, SetDefaultIndex
+from .gsobject import BuildGSObject, TransformObject
+from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..convolve import Convolve
+from ..angle import Angle, radians
 
 # This file adds stamp type Ring which builds an object once every n times, and then
 # rotates it in a ring for the other n-1 times per per group.
 
-from .stamp import StampBuilder
 class RingBuilder(StampBuilder):
     """This performs the tasks necessary for building a Ring stamp type.
 
@@ -47,26 +52,25 @@ class RingBuilder(StampBuilder):
             xsize, ysize, image_pos, world_pos
         """
         req = { 'num' : int }
-        opt = { 'full_rotation' : galsim.Angle , 'index' : int }
+        opt = { 'full_rotation' : Angle , 'index' : int }
         # Ignore the transformation specifications that are allowed in stamp for Ring types.
         ignore = ignore + [
             'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
             'magnify', 'magnification', 'shear', 'shift' ]
 
-        params = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)[0]
+        params = GetAllParams(config, base, req=req, opt=opt, ignore=ignore)[0]
 
         num = params['num']
         if num <= 0:
-            raise galsim.GalSimConfigValueError("Attribute num for gal.type == Ring must be > 0",
-                                                num)
+            raise GalSimConfigValueError("Attribute num for gal.type == Ring must be > 0", num)
 
         # Setup the indexing sequence if it hasn't been specified using the number of items.
-        galsim.config.SetDefaultIndex(config, num)
+        SetDefaultIndex(config, num)
 
         # Set the default full_rotation to pi radians
         if 'full_rotation' not in params:
             import math
-            config['full_rotation'] = math.pi * galsim.radians
+            config['full_rotation'] = math.pi * radians
 
         # Now go on and do the base class setup.
         ignore = ignore + list(req) + list(opt)
@@ -92,34 +96,34 @@ class RingBuilder(StampBuilder):
             the final profile
         """
         # These have all already been checked to exist in SetupRing.
-        num = galsim.config.ParseValue(config, 'num', base, int)[0]
-        index = galsim.config.ParseValue(config, 'index', base, int)[0]
+        num = ParseValue(config, 'num', base, int)[0]
+        index = ParseValue(config, 'index', base, int)[0]
         if index < 0 or index >= num:
-            raise galsim.GalSimConfigError("index %d out of bounds for Ring"%index)
+            raise GalSimConfigError("index %d out of bounds for Ring"%index)
 
         if index % num == 0:
             # Then we are on the first item in the ring, so make it normally.
-            gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
+            gal = BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
             if gal is None:
-                raise galsim.GalSimConfigError(
+                raise GalSimConfigError(
                     "The gal field must define a valid galaxy for stamp type=Ring.")
             # Save the galaxy profile for next time.
             self.first = gal
         else:
             # Grab the saved first galaxy.
             if not hasattr(self, 'first'):
-                raise galsim.GalSimConfigError(
+                raise GalSimConfigError(
                     "Building Ring after the first item, but no first gal stored.")
             gal = self.first
-            full_rot = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
+            full_rot = ParseValue(config, 'full_rotation', base, Angle)[0]
             dtheta = full_rot / num
             gal = gal.rotate(index*dtheta)
 
         # Apply any transformations that are given in the stamp field.
-        gal = galsim.config.TransformObject(gal, config, base, logger)[0]
+        gal = TransformObject(gal, config, base, logger)[0]
 
         if psf is not None:
-            return galsim.Convolve(gal,psf)
+            return Convolve(gal,psf)
         else:
             return gal
 
@@ -140,7 +144,7 @@ class RingBuilder(StampBuilder):
         Returns:
             whether the galaxy was rejected.
         """
-        index = galsim.config.ParseValue(config, 'index', base, int)[0]
+        index = ParseValue(config, 'index', base, int)[0]
         if index == 0:
             return super(RingBuilder,self).reject(config, base, prof, psf, image, logger)
         else:
@@ -163,14 +167,13 @@ class RingBuilder(StampBuilder):
             a list of tasks
         """
         if 'num' not in config:
-            raise galsim.GalSimConfigError("Attribute num is required for type = Ring")
-        num = galsim.config.ParseValue(config, 'num', base, int)[0]
+            raise GalSimConfigError("Attribute num is required for type = Ring")
+        num = ParseValue(config, 'num', base, int)[0]
         ntot = len(jobs)
         tasks = [ [ (jobs[j], j) for j in range(k,min(k+num,ntot)) ] for k in range(0, ntot, num) ]
         return tasks
 
 
 # Register this as a valid stamp type
-from .stamp import RegisterStampType
 RegisterStampType('Ring', RingBuilder())
 

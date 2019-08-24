@@ -17,7 +17,11 @@
 #
 
 from past.builtins import basestring
-import galsim
+
+from .extra import ExtraOutputBuilder, RegisterExtraOutput
+from .value import ParseValue, GetCurrentValue
+from ..errors import GalSimConfigError
+from ..catalog import OutputCatalog
 
 # The truth extra output type builds an OutputCatalog with truth information about each of the
 # objects being built by the configuration processing.  It stores the appropriate row information
@@ -31,7 +35,6 @@ import galsim
 # in the order specified.  The standard galsim executable reads the config file into an
 # OrderedDict for precisely this reason.
 
-from .extra import ExtraOutputBuilder
 class TruthBuilder(ExtraOutputBuilder):
     """Build an output truth catalog with user-defined columns, typically taken from
     current values of various quantities for each constructed object.
@@ -63,20 +66,20 @@ class TruthBuilder(ExtraOutputBuilder):
                 # Caveat: We don't know the value_type here, so we give None.  This allows
                 # only a limited subset of the parsing.  Usually enough for truth items, but
                 # not fully featured.
-                value = galsim.config.ParseValue(cols,name,base,None)[0]
+                value = ParseValue(cols,name,base,None)[0]
             elif not isinstance(key,basestring):
                 # The item can just be a constant value.
                 value = key
             elif key[0] == '$':
                 # This can also be handled by ParseValue
-                value = galsim.config.ParseValue(cols,name,base,None)[0]
+                value = ParseValue(cols,name,base,None)[0]
             elif key[0] == '@':
                 # Pop off an initial @ if there is one.
-                value = galsim.config.GetCurrentValue(str(key[1:]), base)
+                value = GetCurrentValue(str(key[1:]), base)
             else:
                 # str(key) handles the possibility of unicode.  In particular, this happens with
                 # JSON files.
-                value = galsim.config.GetCurrentValue(str(key), base)
+                value = GetCurrentValue(str(key), base)
             row.append(value)
             types.append(type(value))
         if 'types' not in self.scratch:
@@ -86,7 +89,7 @@ class TruthBuilder(ExtraOutputBuilder):
                          base['obj_num'])
             logger.error("Types for current object = %s",repr(types))
             logger.error("Expecting types = %s",repr(self.scratch['types']))
-            raise galsim.GalSimConfigError("Type mismatch found when building truth catalog.")
+            raise GalSimConfigError("Type mismatch found when building truth catalog.")
         self.scratch[obj_num] = row
 
     # The function to call at the end of building each file to finalize the truth catalog
@@ -96,7 +99,7 @@ class TruthBuilder(ExtraOutputBuilder):
         # Note: Provide a default here, because if all items were skipped it would otherwise
         # lead to a KeyError.
         types = self.scratch.pop('types', [float] * len(cols))
-        self.cat = galsim.OutputCatalog(names=cols.keys(), types=types)
+        self.cat = OutputCatalog(names=cols.keys(), types=types)
 
         # Add all the rows in order to the OutputCatalog
         # Note: types was popped above, so only the obj_num keys are left.
@@ -115,5 +118,4 @@ class TruthBuilder(ExtraOutputBuilder):
         return self.cat.writeFitsHdu()
 
 # Register this as a valid extra output
-from .extra import RegisterExtraOutput
 RegisterExtraOutput('truth', TruthBuilder())

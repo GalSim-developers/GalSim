@@ -17,10 +17,15 @@
 #
 
 import os
-import galsim
 import logging
 
-from .output import OutputBuilder
+from .output import OutputBuilder, RegisterOutputType
+from .util import CopyConfig
+from .image import BuildImages, BuildImage, GetNObjForImage
+from .input import ProcessInputNObjects
+from .value import ParseValue, CheckAllParams
+from ..errors import GalSimConfigError
+from ..fits import writeCube
 
 class DataCubeBuilder(OutputBuilder):
     """Builder class for constructing and writing DataCube output types.
@@ -53,15 +58,15 @@ class DataCubeBuilder(OutputBuilder):
         # invalid parameters in the config dict.
         req = { 'nimages' : int }
         ignore += [ 'file_name', 'dir', 'nfiles' ]
-        galsim.config.CheckAllParams(config, ignore=ignore, req=req)
+        CheckAllParams(config, ignore=ignore, req=req)
 
         # All images need to be the same size for a data cube.
         # Enforce this by building the first image outside the below loop and setting
         # config['image_force_xsize'] and config['image_force_ysize'] to be the size of the first
         # image.
         t1 = time.time()
-        base1 = galsim.config.CopyConfig(base)
-        image0 = galsim.config.BuildImage(base1, image_num, obj_num, logger=logger)
+        base1 = CopyConfig(base)
+        image0 = BuildImage(base1, image_num, obj_num, logger=logger)
         t2 = time.time()
         # Note: numpy shape is y,x
         ys, xs = image0.array.shape
@@ -75,9 +80,9 @@ class DataCubeBuilder(OutputBuilder):
         images = [ image0 ]
 
         if nimages > 1:
-            obj_num += galsim.config.GetNObjForImage(base, image_num)
-            images += galsim.config.BuildImages(nimages-1, base, logger=logger,
-                                                image_num=image_num+1, obj_num=obj_num)
+            obj_num += GetNObjForImage(base, image_num)
+            images += BuildImages(nimages-1, base, logger=logger,
+                                  image_num=image_num+1, obj_num=obj_num)
 
         return images
 
@@ -96,13 +101,13 @@ class DataCubeBuilder(OutputBuilder):
         if ( 'nimages' not in config and
             ( 'image' not in base or 'type' not in base['image'] or
             base['image']['type'] == 'Single' ) ):
-            nimages = galsim.config.ProcessInputNObjects(base)
+            nimages = ProcessInputNObjects(base)
             if nimages:
                 config['nimages'] = nimages
         if 'nimages' not in config:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Attribute output.nimages is required for output.type = MultiFits")
-        return galsim.config.ParseValue(config,'nimages',base,int)[0]
+        return ParseValue(config,'nimages',base,int)[0]
 
     def writeFile(self, data, file_name, config, base, logger):
         """Write the data to a file.
@@ -116,7 +121,7 @@ class DataCubeBuilder(OutputBuilder):
             base:           The base configuration dict.
             logger:         If given, a logger object to log progress.
         """
-        galsim.fits.writeCube(data,file_name)
+        writeCube(data,file_name)
 
     def canAddHdus(self):
         """Returns whether it is permissible to add extra HDUs to the end of the data list.
@@ -127,5 +132,4 @@ class DataCubeBuilder(OutputBuilder):
 
 
 # Register this as a valid output type
-from .output import RegisterOutputType
 RegisterOutputType('DataCube', DataCubeBuilder())

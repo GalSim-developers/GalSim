@@ -18,18 +18,20 @@
 
 from __future__ import print_function
 
-import galsim
+from .input import InputLoader, GetInputObj, RegisterInputType
+from .value import GetAllParams, RegisterValueType
+from ..fits import FitsHeader
 
 # This file adds input type fits_header and value type FitsHeader.
 
 def _GenerateFromFitsHeader(config, base, value_type):
     """Return a value read from a FITS header
     """
-    header = galsim.config.GetInputObj('fits_header', config, base, 'FitsHeader')
+    header = GetInputObj('fits_header', config, base, 'FitsHeader')
 
     req = { 'key' : str }
     opt = { 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
     key = kwargs['key']
 
     val = header.get(key)
@@ -38,13 +40,11 @@ def _GenerateFromFitsHeader(config, base, value_type):
     return val, safe
 
 # Register this as a valid value type
-from .value import RegisterValueType
 RegisterValueType('FitsHeader', _GenerateFromFitsHeader, [ float, int, bool, str ],
                   input_type='fits_header')
 
 # The FitsHeader doesn't need anything special other than registration as a valid input type.
-from .input import RegisterInputType, InputLoader
-RegisterInputType('fits_header', InputLoader(galsim.FitsHeader, file_scope=True))
+RegisterInputType('fits_header', InputLoader(FitsHeader, file_scope=True))
 
 # Registering this after FitsHeader rather than above as I normally would is just a gratuitous
 # test coverage edit to help cover the different branches in the RegisterInputType and

@@ -17,10 +17,14 @@
 #
 
 import os
-import galsim
 import logging
 
-from .output import OutputBuilder
+from .output import OutputBuilder, RegisterOutputType
+from .image import BuildImages
+from .input import ProcessInputNObjects
+from .value import ParseValue, CheckAllParams
+from ..errors import GalSimConfigError
+
 class MultiFitsBuilder(OutputBuilder):
     """Builder class for constructing and writing MultiFits output types.
     """
@@ -47,9 +51,9 @@ class MultiFitsBuilder(OutputBuilder):
         # invalid parameters in the config dict.
         req = { 'nimages' : int }
         ignore += [ 'file_name', 'dir', 'nfiles' ]
-        galsim.config.CheckAllParams(config, ignore=ignore, req=req)
+        CheckAllParams(config, ignore=ignore, req=req)
 
-        return galsim.config.BuildImages(nimages, base, image_num, obj_num, logger=logger)
+        return BuildImages(nimages, base, image_num, obj_num, logger=logger)
 
     def getNImages(self, config, base, file_num):
         """
@@ -67,15 +71,14 @@ class MultiFitsBuilder(OutputBuilder):
         if ( 'nimages' not in config and
             ( 'image' not in base or 'type' not in base['image'] or
             base['image']['type'] == 'Single' ) ):
-            nimages = galsim.config.ProcessInputNObjects(base)
+            nimages = ProcessInputNObjects(base)
             if nimages:
                 config['nimages'] = nimages
         if 'nimages' not in config:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Attribute output.nimages is required for output.type = MultiFits")
-        return galsim.config.ParseValue(config,'nimages',base,int)[0]
+        return ParseValue(config,'nimages',base,int)[0]
 
 
 # Register this as a valid output type
-from .output import RegisterOutputType
 RegisterOutputType('MultiFits', MultiFitsBuilder())
