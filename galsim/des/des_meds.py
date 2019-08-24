@@ -17,10 +17,17 @@
 #
 
 import numpy as np
-import galsim
-import galsim.config
 import sys
 import os
+
+from ..errors import GalSimValueError, GalSimError, GalSimConfigError
+from ..wcs import UniformWCS, AffineTransform
+from ..image import Image, ImageI
+from ..fits import writeFile
+from ..position import PositionD
+from ..config import OutputBuilder, ExtraOutputBuilder, BuildImages, GetFinalExtraOutput
+from ..config import ParseValue, GetAllParams, GetCurrentValue
+from ..config import RegisterOutputType, RegisterExtraOutput
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -71,19 +78,19 @@ class MultiExposureObject(object):
         if not isinstance(images,list):
             raise TypeError('images should be a list')
         if len(images) == 0:
-            raise galsim.GalSimValueError('no cutouts in this object', images)
+            raise GalSimValueError('no cutouts in this object', images)
 
         # Check that the box sizes are valid
         for i in range(len(images)):
             s = images[i].array.shape
             if s[0] != s[1]:
-                raise galsim.GalSimValueError('Array shape %s is invalid.  Must be square'%(str(s)),
-                                              images[i])
+                raise GalSimValueError('Array shape %s is invalid.  Must be square'%(str(s)),
+                                       images[i])
             if s[0] not in BOX_SIZES:
-                raise galsim.GalSimValueError('Array shape %s is invalid.  Size must be in %s'%(
-                                              str(s),str(BOX_SIZES)), images[i])
+                raise GalSimValueError('Array shape %s is invalid.  Size must be in %s'%(
+                                       str(s),str(BOX_SIZES)), images[i])
             if i > 0 and s != images[0].array.shape:
-                raise galsim.GalSimValueError('Images must all be the same shape', images)
+                raise GalSimValueError('Images must all be the same shape', images)
 
         # The others are optional, but if given, make sure they are ok.
         for lst, name, isim in ( (weight, 'weight', True), (badpix, 'badpix', True),
@@ -92,13 +99,13 @@ class MultiExposureObject(object):
                 if not isinstance(lst,list):
                     raise TypeError('%s should be a list'%name)
                 if len(lst) != len(images):
-                    raise galsim.GalSimValueError('%s is the wrong length'%name, lst)
+                    raise GalSimValueError('%s is the wrong length'%name, lst)
                 if isim:
                     for i in range(len(images)):
                         im1 = lst[i]
                         im2 = images[i]
                         if (im1.array.shape != im2.array.shape):
-                            raise galsim.GalSimValueError(
+                            raise GalSimValueError(
                                 "%s[%d] has the wrong shape."%(name, i), im1)
 
         # The PSF images don't have to be the same shape as the main images.
@@ -106,21 +113,21 @@ class MultiExposureObject(object):
         if psf is not None:
             s = psf[i].array.shape
             if s[0] != s[1]:
-                raise galsim.GalSimValueError(
+                raise GalSimValueError(
                     'PSF array shape %s is invalid.  Must be square'%(str(s)), psf[i])
             if s[0] not in BOX_SIZES:
-                raise galsim.GalSimValueError(
+                raise GalSimValueError(
                     'PSF array shape %s is invalid.  Size must be in %s'%(
                         str(s),str(BOX_SIZES)), psf[i])
             if i > 0 and s != psf[0].array.shape:
-                raise galsim.GalSimValueError('PSF images must all be the same shape', psf[i])
+                raise GalSimValueError('PSF images must all be the same shape', psf[i])
 
         # Check that wcs are Uniform and convert them to AffineTransforms in case they aren't.
         if wcs is not None:
             for i in range(len(wcs)):
-                if not isinstance(wcs[i], galsim.wcs.UniformWCS):
-                    raise galsim.GalSimValueError('wcs list should contain UniformWCS objects', wcs)
-                elif not isinstance(wcs[i], galsim.AffineTransform):
+                if not isinstance(wcs[i], UniformWCS):
+                    raise GalSimValueError('wcs list should contain UniformWCS objects', wcs)
+                elif not isinstance(wcs[i], AffineTransform):
                     wcs[i] = wcs[i].affine()
 
         self.id = id
@@ -140,7 +147,7 @@ class MultiExposureObject(object):
         if weight is not None:
             self.weight = weight
         else:
-            self.weight = [galsim.Image(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
+            self.weight = [Image(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
 
         # If badpix is provided, combine it into the weight image.
         if badpix is not None:
@@ -152,7 +159,7 @@ class MultiExposureObject(object):
         if seg is not None:
             self.seg = seg
         else:
-            self.seg = [galsim.ImageI(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
+            self.seg = [ImageI(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
 
         # If wcs is not provided, get it from the images.
         if wcs is not None:
@@ -187,7 +194,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
                     existing files. [default True]
     """
 
-    from galsim._pyfits import pyfits
+    from .._pyfits import pyfits
 
     # initialise the catalog
     cat = {}
@@ -278,7 +285,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:  # pragma: no cover
-                raise galsim.GalSimError(
+                raise GalSimError(
                     "Running out of memory > %1.0fGB - you can increase the limit by changing "
                     "galsim.des_meds.MAX_MEMORY"%(MAX_MEMORY/1.e9))
 
@@ -428,11 +435,11 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         psf_cutouts     = pyfits.ImageHDU( vec['psf'], name='psf')
         hdu_list.append(psf_cutouts)
 
-    galsim.fits.writeFile(file_name, pyfits.HDUList(hdu_list))
+    writeFile(file_name, pyfits.HDUList(hdu_list))
 
 
 # Make the class that will
-class MEDSBuilder(galsim.config.OutputBuilder):
+class MEDSBuilder(OutputBuilder):
     """This class lets you use the `MultiExposureObject` very simply as a special ``output``
     type when using config processing.
 
@@ -461,36 +468,35 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         t1 = time.time()
 
         if base.get('image',{}).get('type', 'Single') != 'Single':
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "MEDS files are not compatible with image type %s."%base['image']['type'])
 
         req = { 'nobjects' : int , 'nstamps_per_object' : int }
         opt  = {'first_id' : int }
         ignore += [ 'file_name', 'dir', 'nfiles' ]
-        params = galsim.config.GetAllParams(config,base,ignore=ignore,req=req, opt=opt)[0]
+        params = GetAllParams(config,base,ignore=ignore,req=req, opt=opt)[0]
         first_id = params.get('first_id', obj_num)
 
         nobjects = params['nobjects']
         nstamps_per_object = params['nstamps_per_object']
         ntot = nobjects * nstamps_per_object
 
-        main_images = galsim.config.BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num,
-                                                logger=logger)
+        main_images = BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num, logger=logger)
 
         # grab list of offsets for cutout_row/cutout_col.
-        offsets = galsim.config.GetFinalExtraOutput('meds_get_offset', base, logger)
+        offsets = GetFinalExtraOutput('meds_get_offset', base, logger)
         # cutout_row/col is the stamp center (**with the center of the first pixel
         # being (0,0)**) + offset
         centers = [0.5*im.array.shape[0]-0.5 for im in main_images]
         cutout_rows = [c+offset.y for c,offset in zip(centers,offsets)]
         cutout_cols = [c+offset.x for c,offset in zip(centers,offsets)]
 
-        weight_images = galsim.config.GetFinalExtraOutput('weight', base, logger)
+        weight_images = GetFinalExtraOutput('weight', base, logger)
         if 'badpix' in config:
-            badpix_images = galsim.config.GetFinalExtraOutput('badpix', base, logger)
+            badpix_images = GetFinalExtraOutput('badpix', base, logger)
         else:
             badpix_images = None
-        psf_images = galsim.config.GetFinalExtraOutput('psf', base, logger)
+        psf_images = GetFinalExtraOutput('psf', base, logger)
 
         obj_list = []
         for i in range(nobjects):
@@ -539,15 +545,15 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         if 'meds_get_offset' not in config:
             config['meds_get_offset']={}
 
-        nobjects = galsim.config.ParseValue(config,'nobjects',base,int)[0]
-        nstamps_per_object = galsim.config.ParseValue(config,'nstamps_per_object',base,int)[0]
+        nobjects = ParseValue(config,'nobjects',base,int)[0]
+        nstamps_per_object = ParseValue(config,'nstamps_per_object',base,int)[0]
 
         ntot = nobjects * nstamps_per_object
         return ntot
 
 # This extra output type simply saves the values of the image offsets when an
 # object is drawn into the stamp.
-class OffsetBuilder(galsim.config.ExtraOutputBuilder):
+class OffsetBuilder(ExtraOutputBuilder):
     """This "extra" output builder saves the stamp offset values for later use.
 
     It is used as a ``meds_get_offset`` field in the ``output`` section.
@@ -558,7 +564,7 @@ class OffsetBuilder(galsim.config.ExtraOutputBuilder):
         offset = base['stamp_offset']
         stamp = base['stamp']
         if 'offset' in stamp:
-            offset += galsim.config.GetCurrentValue('offset', base['stamp'], galsim.PositionD, base)
+            offset += GetCurrentValue('offset', base['stamp'], PositionD, base)
         self.scratch[obj_num] = offset
 
     # The function to call at the end of building each file to finalize the truth catalog
@@ -570,6 +576,6 @@ class OffsetBuilder(galsim.config.ExtraOutputBuilder):
         return offsets_list
 
 # Register these
-galsim.config.RegisterOutputType('MEDS', MEDSBuilder())
-galsim.config.RegisterExtraOutput('meds_get_offset', OffsetBuilder())
+RegisterOutputType('MEDS', MEDSBuilder())
+RegisterExtraOutput('meds_get_offset', OffsetBuilder())
 
