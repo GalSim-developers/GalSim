@@ -19,8 +19,17 @@
 import os
 import numpy as np
 
-import galsim
-import galsim.config
+from ..errors import GalSimIncompatibleValuesError, GalSimConfigError
+from ..fits import FitsHeader
+from ..wcs import readFromFitsHeader, PixelScale
+from ..position import PositionD
+from ..image import Image
+from ..interpolatedimage import InterpolatedImage
+from ..interpolant import Lanczos
+from ..gsparams import GSParams
+from ..config import InputLoader, RegisterInputType, RegisterObjectType
+from ..config import GetAllParams, GetInputObj
+
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
@@ -108,11 +117,11 @@ class DES_PSFEx(object):
         self.file_name = file_name
         if image_file_name:
             if wcs is not None:
-                raise galsim.GalSimIncompatibleValuesError(
+                raise GalSimIncompatibleValuesError(
                     "Cannot provide both image_file_name and wcs",
                     image_file_name=image_file_name, wcs=wcs)
-            header = galsim.FitsHeader(file_name=image_file_name)
-            wcs, origin = galsim.wcs.readFromFitsHeader(header)
+            header = FitsHeader(file_name=image_file_name)
+            wcs, origin = readFromFitsHeader(header)
             self.wcs = wcs
         elif wcs:
             self.wcs = wcs
@@ -121,7 +130,7 @@ class DES_PSFEx(object):
         self.read()
 
     def read(self):
-        from galsim._pyfits import pyfits
+        from .._pyfits import pyfits
         if isinstance(self.file_name, str):
             hdu_list = pyfits.open(self.file_name)
             hdu = hdu_list[1]
@@ -258,11 +267,11 @@ class DES_PSFEx(object):
            the PSF as a `GSObject`
         """
         # Build an image version of the numpy array
-        im = galsim.Image(self.getPSFArray(image_pos))
+        im = Image(self.getPSFArray(image_pos))
 
         # Build the PSF profile in the image coordinate system.
-        psf = galsim.InterpolatedImage(im, scale=self.sample_scale, flux=1,
-                                       x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
+        psf = InterpolatedImage(im, scale=self.sample_scale, flux=1,
+                                x_interpolant=Lanczos(3), gsparams=gsparams)
 
         # This brings if from image coordinates to world coordinates.
         if self.wcs:
@@ -297,25 +306,25 @@ class DES_PSFEx(object):
         return xto
 
 
-class PSFExLoader(galsim.config.InputLoader):
+class PSFExLoader(InputLoader):
     # Allow the user to not provide the image file.  In this case, we'll grab the wcs from the
     # config dict.
     def getKwargs(self, config, base, logger):
         req = { 'file_name' : str }
         opt = { 'dir' : str, 'image_file_name' : str }
-        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+        kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
 
         if 'image_file_name' not in kwargs:
             if 'wcs' in base:
                 kwargs['wcs'] = base['wcs']
             else:
                 # Then we aren't doing normal config processing, so just use pixel scale = 1.
-                kwargs['wcs'] = galsim.PixelScale(1.)
+                kwargs['wcs'] = PixelScale(1.)
 
         return kwargs, safe
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx))
+RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -330,20 +339,20 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
 
     It requires the use of the ``des_psfex`` input field.
     """
-    des_psfex = galsim.config.GetInputObj('des_psfex', config, base, 'DES_PSFEx')
+    des_psfex = GetInputObj('des_psfex', config, base, 'DES_PSFEx')
 
-    opt = { 'flux' : float , 'num' : int, 'image_pos' : galsim.PositionD }
-    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+    opt = { 'flux' : float , 'num' : int, 'image_pos' : PositionD }
+    params, safe = GetAllParams(config, base, opt=opt, ignore=ignore)
 
     if 'image_pos' in params:
         image_pos = params['image_pos']
     elif 'image_pos' in base:
         image_pos = base['image_pos']
     else:
-        raise galsim.GalSimConfigError("DES_PSFEx requested, but no image_pos defined in base.")
+        raise GalSimConfigError("DES_PSFEx requested, but no image_pos defined in base.")
 
     # Convert gsparams from a dict to an actual GSParams object
-    if gsparams: gsparams = galsim.GSParams(**gsparams)
+    if gsparams: gsparams = GSParams(**gsparams)
     else: gsparams = None
 
     #psf = des_psfex.getPSF(image_pos, gsparams=gsparams)
@@ -352,9 +361,9 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     # Also, this is why we have getSampleScale and getLocalWCS.  The multiprocessing.managers
     # stuff only makes available methods of classes that are proxied, not all the attributes.
     # So this is the only way to access these attributes.
-    im = galsim.Image(des_psfex.getPSFArray(image_pos))
-    psf = galsim.InterpolatedImage(im, scale=des_psfex.getSampleScale(), flux=1,
-                                   x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
+    im = Image(des_psfex.getPSFArray(image_pos))
+    psf =InterpolatedImage(im, scale=des_psfex.getSampleScale(), flux=1,
+                           x_interpolant=Lanczos(3), gsparams=gsparams)
     psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
     if 'flux' in params:
@@ -366,4 +375,4 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this builder with the config framework:
-galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
+RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
