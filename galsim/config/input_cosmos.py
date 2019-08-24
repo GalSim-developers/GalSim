@@ -15,15 +15,22 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import galsim
+
 import logging
+
+from .input import InputLoader, GetInputObj, RegisterInputType
+from .gsobject import RegisterObjectType
+from .util import GetRNG
+from .value import GetAllParams, SetDefaultIndex
+from ..errors import GalSimConfigError
+from ..gsparams import GSParams
+from ..scene import COSMOSCatalog
 
 # This file adds input type cosmos_catalog and gsobject typs COSMOSGalaxy.
 
 # The COSMOSCatalog doesn't need anything special other than registration as a valid input type.
 # However, we do make a custom Loader so that we can add a logger line with some information about
 # the number of objects in the catalog that passed the initial cuts and other basic catalog info.
-from .input import RegisterInputType, InputLoader
 class COSMOSLoader(InputLoader):
     def setupImage(self, cosmos_cat, config, base, logger):
         if logger: # pragma: no cover
@@ -55,21 +62,21 @@ class COSMOSLoader(InputLoader):
                 else:
                     logger.log(log_level,"Using real galaxies.")
 
-RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
+RegisterInputType('cosmos_catalog', COSMOSLoader(COSMOSCatalog))
 
 # The gsobject type coupled to this is COSMOSGalaxy.
 
 def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     """Build a COSMOS galaxy using the cosmos_catalog input item.
     """
-    cosmos_cat = galsim.config.GetInputObj('cosmos_catalog', config, base, 'COSMOSGalaxy')
+    cosmos_cat = GetInputObj('cosmos_catalog', config, base, 'COSMOSGalaxy')
 
     ignore = ignore + ['num']
 
     # Special: if galaxies are selected based on index, and index is Sequence or Random, and max
     # isn't set, set it to nobjects-1.
     if 'index' in config:
-        galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
+        SetDefaultIndex(config, cosmos_cat.getNObjects())
 
     opt = { "index" : int,
             "gal_type" : str,
@@ -79,17 +86,17 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
             "n_random": int
     }
 
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    kwargs, safe = GetAllParams(config, base, opt=opt, ignore=ignore)
+    if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
-    rng = galsim.config.GetRNG(config, base, logger, 'COSMOSGalaxy')
+    rng = GetRNG(config, base, logger, 'COSMOSGalaxy')
 
     if 'index' not in kwargs:
         kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndex(1, rng=rng, _n_rng_calls=True)
 
         # Make sure this process gives consistent results regardless of the number of processes
         # being used.
-        if not isinstance(cosmos_cat, galsim.COSMOSCatalog) and rng is not None:
+        if not isinstance(cosmos_cat, COSMOSCatalog) and rng is not None:
             # Then cosmos_cat is really a proxy, which means the rng was pickled, so we need to
             # discard the same number of random calls from the one in the config dict.
             rng.discard(int(n_rng_calls))
@@ -101,7 +108,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     #     SetDefaultIndex.
     index = kwargs['index']
     if index >= cosmos_cat.getNObjects():
-        raise galsim.GalSimConfigError(
+        raise GalSimConfigError(
             "index=%s has gone past the number of entries in the COSMOSCatalog"%index)
 
     logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base.get('obj_num',0),kwargs)
@@ -111,10 +118,9 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     # Use a staticmethod of COSMOSCatalog to avoid pickling the result of makeGalaxy()
     # The RealGalaxy in particular has a large serialization, so it is more efficient to
     # make it in this process, which is what happens here.
-    gal = galsim.COSMOSCatalog._makeGalaxy(**kwargs)
+    gal = COSMOSCatalog._makeGalaxy(**kwargs)
 
     return gal, safe
 
 # Register this as a valid gsobject type
-from .gsobject import RegisterObjectType
 RegisterObjectType('COSMOSGalaxy', _BuildCOSMOSGalaxy, input_type='cosmos_catalog')

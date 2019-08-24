@@ -15,9 +15,20 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import galsim
 import logging
 import inspect
+
+from .util import LoggerWrapper, GetIndex, GetRNG
+from .value import ParseValue, GetCurrentValue, GetAllParams, CheckAllParams, SetDefaultIndex
+from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..position import PositionD
+from ..sum import Add
+from ..convolve import Convolve
+from ..phase_psf import OpticalPSF
+from ..shear import Shear
+from ..angle import Angle
+from ..gsobject import GSObject
+from ..gsparams import GSParams
 
 # This file handles the building of GSObjects in the config['psf'] and config['gal'] fields.
 # This file includes many of the simple object types.  Additional types are defined in
@@ -59,7 +70,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         the tuple (gsobject, safe), where ``gsobject`` is the built object, and ``safe`` is
         a bool that says whether it is safe to use this object again next time.
     """
-    logger = galsim.config.LoggerWrapper(logger)
+    import galsim  # Need this for eval
+
+    logger = LoggerWrapper(logger)
     if base is None:
         base = config
 
@@ -73,22 +86,22 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # Check what index key we want to use for this object.
     # Note: this call will also set base['index_key'] and base['rng'] to the right values
-    index, index_key = galsim.config.GetIndex(param, base)
+    index, index_key = GetIndex(param, base)
 
     # Get the type to be parsed.
     if not 'type' in param:
-        raise galsim.GalSimConfigError("type attribute required in config.%s"%key)
+        raise GalSimConfigError("type attribute required in config.%s"%key)
     type_name = param['type']
 
     # If we are repeating, then we get to use the current object for repeat times.
     if 'repeat' in param:
-        repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
+        repeat = ParseValue(param, 'repeat', base, int)[0]
     else:
         repeat = 1
 
     # Check if we need to skip this object
     if 'skip' in param:
-        skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
+        skip = ParseValue(param, 'skip', base, bool)[0]
         if skip:
             logger.debug('obj %d: Skipping because field skip=True',base.get('obj_num',0))
             raise SkipThisObject()
@@ -136,17 +149,17 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # need to get the PSF's half_light_radius.
     if 'resolution' in param:
         if 'psf' not in base:
-            raise galsim.GalSimConfigError("Cannot use gal.resolution if no psf is set.")
+            raise GalSimConfigError("Cannot use gal.resolution if no psf is set.")
         if 'saved_re' not in base['psf']:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 'Cannot use gal.resolution with psf.type = %s'%base['psf']['type'])
         psf_re = base['psf']['saved_re']
-        resolution = galsim.config.ParseValue(param, 'resolution', base, float)[0]
+        resolution = ParseValue(param, 'resolution', base, float)[0]
         gal_re = resolution * psf_re
         if 're_from_res' not in param:
             # The first time, check that half_light_radius isn't also specified.
             if 'half_light_radius' in param:
-                raise galsim.GalSimConfigError(
+                raise GalSimConfigError(
                     'Cannot specify both gal.resolution and gal.half_light_radius')
             param['re_from_res'] = True
         param['half_light_radius'] = gal_re
@@ -164,9 +177,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     elif type_name in galsim.__dict__:
         build_func = eval("galsim."+type_name)
     else:
-        raise galsim.GalSimConfigValueError("Unrecognised gsobject type", type_name)
+        raise GalSimConfigValueError("Unrecognised gsobject type", type_name)
 
-    if inspect.isclass(build_func) and issubclass(build_func, galsim.GSObject):
+    if inspect.isclass(build_func) and issubclass(build_func, GSObject):
         gsobject, safe = _BuildSimple(build_func, param, base, ignore, gsparams, logger)
     else:
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
@@ -198,8 +211,8 @@ def UpdateGSParams(gsparams, config, base):
     Returns:
         an updated gsparams dict
     """
-    opt = galsim.GSObject._gsparams_opt
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
+    opt = GSObject._gsparams_opt
+    kwargs, safe = GetAllParams(config, base, opt=opt)
     # When we update gsparams, we don't want to corrupt the original, so we need to
     # make a copy first, then update with kwargs.
     ret = {}
@@ -224,13 +237,11 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     req = build_func._req_params if hasattr(build_func,'_req_params') else {}
     opt = build_func._opt_params if hasattr(build_func,'_opt_params') else {}
     single = build_func._single_params if hasattr(build_func,'_single_params') else []
-    kwargs, safe = galsim.config.GetAllParams(config, base,
-                                              req=req, opt=opt, single=single,
-                                              ignore=ignore)
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt, single=single, ignore=ignore)
+    if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
     if build_func._takes_rng:
-        kwargs['rng'] = galsim.config.GetRNG(config, base, logger, type_name)
+        kwargs['rng'] = GetRNG(config, base, logger, type_name)
         safe = False
 
     logger.debug('obj %d: kwargs = %s',base.get('obj_num',0),kwargs)
@@ -251,25 +262,25 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
     req = { 'items' : list }
     opt = { 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
+    CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     gsobjects = []
     items = config['items']
     if not isinstance(items,list):
-        raise galsim.GalSimConfigError("items entry for type=Add is not a list.")
+        raise GalSimConfigError("items entry for type=Add is not a list.")
     safe = True
 
     for i in range(len(items)):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
         # Skip items with flux=0
-        if 'flux' in items[i] and galsim.config.GetCurrentValue('flux',items[i],float,base) == 0.:
+        if 'flux' in items[i] and GetCurrentValue('flux',items[i],float,base) == 0.:
             logger.debug('obj %d: Not including component with flux == 0',base.get('obj_num',0))
             continue
         safe = safe and safe1
         gsobjects.append(gsobject)
 
     if len(gsobjects) == 0:
-        raise galsim.GalSimConfigError("No valid items for type=Add")
+        raise GalSimConfigError("No valid items for type=Add")
     elif len(gsobjects) == 1:
         gsobject = gsobjects[0]
     else:
@@ -278,7 +289,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
         if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
             sum_flux = 0
             for item in items[0:-1]:
-                sum_flux += galsim.config.GetCurrentValue('flux',item,float,base)
+                sum_flux += GetCurrentValue('flux',item,float,base)
             f = 1. - sum_flux
             if (f < 0):
                 logger.warning(
@@ -287,12 +298,12 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
             logger.debug('obj %d: Rescaling final object in sum to have flux = %f',
                          base.get('obj_num',0), f)
             gsobjects[-1] = gsobjects[-1].withFlux(f)
-        if gsparams: gsparams = galsim.GSParams(**gsparams)
+        if gsparams: gsparams = GSParams(**gsparams)
         else: gsparams = None
-        gsobject = galsim.Add(gsobjects,gsparams=gsparams)
+        gsobject = Add(gsobjects,gsparams=gsparams)
 
     if 'flux' in config:
-        flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
+        flux, safe1 = ParseValue(config, 'flux', base, float)
         logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
@@ -305,12 +316,12 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
     req = { 'items' : list }
     opt = { 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
+    CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     gsobjects = []
     items = config['items']
     if not isinstance(items,list):
-        raise galsim.GalSimConfigError("items entry for type=Convolve is not a list.")
+        raise GalSimConfigError("items entry for type=Convolve is not a list.")
     safe = True
     for i in range(len(items)):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
@@ -318,16 +329,16 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
         gsobjects.append(gsobject)
 
     if len(gsobjects) == 0:
-        raise galsim.GalSimConfigError("No valid items for type=Convolve")
+        raise GalSimConfigError("No valid items for type=Convolve")
     elif len(gsobjects) == 1:
         gsobject = gsobjects[0]
     else:
-        if gsparams: gsparams = galsim.GSParams(**gsparams)
+        if gsparams: gsparams = GSParams(**gsparams)
         else: gsparams = None
-        gsobject = galsim.Convolve(gsobjects,gsparams=gsparams)
+        gsobject = Convolve(gsobjects,gsparams=gsparams)
 
     if 'flux' in config:
-        flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
+        flux, safe1 = ParseValue(config, 'flux', base, float)
         logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
@@ -340,23 +351,23 @@ def _BuildList(config, base, ignore, gsparams, logger):
     req = { 'items' : list }
     opt = { 'index' : float , 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
+    CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     items = config['items']
     if not isinstance(items,list):
-        raise galsim.GalSimConfigError("items entry for type=List is not a list.")
+        raise GalSimConfigError("items entry for type=List is not a list.")
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
-    galsim.config.SetDefaultIndex(config, len(items))
-    index, safe = galsim.config.ParseValue(config, 'index', base, int)
+    SetDefaultIndex(config, len(items))
+    index, safe = ParseValue(config, 'index', base, int)
     if index < 0 or index >= len(items):
-        raise galsim.GalSimConfigError("index %d out of bounds for List"%index)
+        raise GalSimConfigError("index %d out of bounds for List"%index)
 
     gsobject, safe1 = BuildGSObject(items, index, base, gsparams, logger)
     safe = safe and safe1
 
     if 'flux' in config:
-        flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
+        flux, safe1 = ParseValue(config, 'flux', base, float)
         logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
@@ -366,26 +377,26 @@ def _BuildList(config, base, ignore, gsparams, logger):
 def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
     """Build an OpticalPSF.
     """
-    kwargs, safe = galsim.config.GetAllParams(config, base,
-        req = galsim.OpticalPSF._req_params,
-        opt = galsim.OpticalPSF._opt_params,
-        single = galsim.OpticalPSF._single_params,
+    kwargs, safe = GetAllParams(config, base,
+        req = OpticalPSF._req_params,
+        opt = OpticalPSF._opt_params,
+        single = OpticalPSF._single_params,
         ignore = [ 'aberrations' ] + ignore)
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
     if 'aberrations' in config:
         aber_list = [0.0] * 4  # Initial 4 values are ignored.
         aberrations = config['aberrations']
         if not isinstance(aberrations,list):
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "aberrations entry for config.OpticalPSF entry is not a list.")
         for i in range(len(aberrations)):
-            value, safe1 = galsim.config.ParseValue(aberrations, i, base, float)
+            value, safe1 = ParseValue(aberrations, i, base, float)
             aber_list.append(value)
             safe = safe and safe1
         kwargs['aberrations'] = aber_list
 
-    return galsim.OpticalPSF(**kwargs), safe
+    return OpticalPSF(**kwargs), safe
 
 
 #
@@ -405,7 +416,7 @@ def TransformObject(gsobject, config, base, logger):
     Returns:
         transformed GSObject.
     """
-    logger = galsim.config.LoggerWrapper(logger)
+    logger = LoggerWrapper(logger)
     # The transformations are applied in the following order:
     _transformation_list = [
         ('dilate', _Dilate),
@@ -428,37 +439,37 @@ def TransformObject(gsobject, config, base, logger):
     return gsobject, safe
 
 def _Shear(gsobject, config, key, base, logger):
-    shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
+    shear, safe = ParseValue(config, key, base, Shear)
     logger.debug('obj %d: shear = %f,%f',base.get('obj_num',0),shear.g1,shear.g2)
     gsobject = gsobject.shear(shear)
     return gsobject, safe
 
 def _Rotate(gsobject, config, key, base, logger):
-    theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
+    theta, safe = ParseValue(config, key, base, Angle)
     logger.debug('obj %d: theta = %f rad',base.get('obj_num',0),theta.rad)
     gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
 def _ScaleFlux(gsobject, config, key, base, logger):
-    flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
+    flux_ratio, safe = ParseValue(config, key, base, float)
     logger.debug('obj %d: flux_ratio  = %f',base.get('obj_num',0),flux_ratio)
     gsobject = gsobject * flux_ratio
     return gsobject, safe
 
 def _Dilate(gsobject, config, key, base, logger):
-    scale, safe = galsim.config.ParseValue(config, key, base, float)
+    scale, safe = ParseValue(config, key, base, float)
     logger.debug('obj %d: scale  = %f',base.get('obj_num',0),scale)
     gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
 def _Magnify(gsobject, config, key, base, logger):
-    mu, safe = galsim.config.ParseValue(config, key, base, float)
+    mu, safe = ParseValue(config, key, base, float)
     logger.debug('obj %d: mu  = %f',base.get('obj_num',0),mu)
     gsobject = gsobject.magnify(mu)
     return gsobject, safe
 
 def _Shift(gsobject, config, key, base, logger):
-    shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
+    shift, safe = ParseValue(config, key, base, PositionD)
     logger.debug('obj %d: shift  = %f,%f',base.get('obj_num',0),shift.x,shift.y)
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe

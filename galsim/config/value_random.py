@@ -17,7 +17,14 @@
 #
 from __future__ import print_function
 
-import galsim
+from .util import GetRNG
+from .value import GetAllParams, CheckAllParams, RegisterValueType
+from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..random import UniformDeviate, GaussianDeviate, PoissonDeviate, BinomialDeviate
+from ..random import WeibullDeviate, GammaDeviate, Chi2Deviate, DistDeviate
+from ..angle import Angle, radians
+from ..position import PositionD
+from ..table import LookupTable
 
 # This file adds extra value types involving random deviates: Random, RandomGaussian,
 # RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, RandomChi2, RandomDistribution,
@@ -26,19 +33,19 @@ import galsim
 def _GenerateFromRandom(config, base, value_type):
     """Return a random value drawn from a uniform distribution
     """
-    rng = galsim.config.GetRNG(config, base)
-    ud = galsim.UniformDeviate(rng)
+    rng = GetRNG(config, base)
+    ud = UniformDeviate(rng)
 
     # Each value_type works a bit differently:
-    if value_type is galsim.Angle:
+    if value_type is Angle:
         import math
-        galsim.config.CheckAllParams(config)
-        val = ud() * 2 * math.pi * galsim.radians
+        CheckAllParams(config)
+        val = ud() * 2 * math.pi * radians
         #print(base['obj_num'],'Random angle = ',val)
         return val, False
     elif value_type is bool:
         opt = { 'p' : float }
-        kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
+        kwargs, safe = GetAllParams(config, base, opt=opt)
         p = kwargs.get('p', 0.5)
         val = ud() < p
         #print(base['obj_num'],'Random bool = ',val)
@@ -46,7 +53,7 @@ def _GenerateFromRandom(config, base, value_type):
     else:
         ignore = [ 'default' ]
         req = { 'min' : value_type , 'max' : value_type }
-        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, ignore=ignore)
+        kwargs, safe = GetAllParams(config, base, req=req, ignore=ignore)
 
         min = kwargs['min']
         max = kwargs['max']
@@ -66,11 +73,11 @@ def _GenerateFromRandom(config, base, value_type):
 def _GenerateFromRandomGaussian(config, base, value_type):
     """Return a random value drawn from a Gaussian distribution
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     req = { 'sigma' : float }
     opt = { 'mean' : float, 'min' : float, 'max' : float }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
 
     sigma = kwargs['sigma']
 
@@ -82,7 +89,7 @@ def _GenerateFromRandomGaussian(config, base, value_type):
         gd = base['gd']
     else:
         # Otherwise, just go ahead and make a new one.
-        gd = galsim.GaussianDeviate(rng,sigma=sigma)
+        gd = GaussianDeviate(rng,sigma=sigma)
         base['gd'] = gd
         base['current_gdsigma'] = sigma
 
@@ -127,14 +134,14 @@ def _GenerateFromRandomGaussian(config, base, value_type):
 def _GenerateFromRandomPoisson(config, base, value_type):
     """Return a random value drawn from a Poisson distribution
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     req = { 'mean' : float }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
 
     mean = kwargs['mean']
 
-    dev = galsim.PoissonDeviate(rng,mean=mean)
+    dev = PoissonDeviate(rng,mean=mean)
     val = dev()
 
     #print(base['obj_num'],'RandomPoisson: ',val)
@@ -143,7 +150,7 @@ def _GenerateFromRandomPoisson(config, base, value_type):
 def _GenerateFromRandomBinomial(config, base, value_type):
     """Return a random value drawn from a Binomial distribution
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     req = {}
     opt = { 'p' : float }
@@ -153,15 +160,15 @@ def _GenerateFromRandomBinomial(config, base, value_type):
         opt['N'] = int
     else:
         req['N'] = int
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
 
     N = kwargs.get('N',1)
     p = kwargs.get('p',0.5)
     if value_type is bool and N != 1:
-        raise galsim.GalSimConfigValueError(
+        raise GalSimConfigValueError(
             "N must = 1 for type = RandomBinomial used in bool context", N)
 
-    dev = galsim.BinomialDeviate(rng,N=N,p=p)
+    dev = BinomialDeviate(rng,N=N,p=p)
     val = dev()
 
     #print(base['obj_num'],'RandomBinomial: ',val)
@@ -171,14 +178,14 @@ def _GenerateFromRandomBinomial(config, base, value_type):
 def _GenerateFromRandomWeibull(config, base, value_type):
     """Return a random value drawn from a Weibull distribution
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     req = { 'a' : float, 'b' : float }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
 
     a = kwargs['a']
     b = kwargs['b']
-    dev = galsim.WeibullDeviate(rng,a=a,b=b)
+    dev = WeibullDeviate(rng,a=a,b=b)
     val = dev()
 
     #print(base['obj_num'],'RandomWeibull: ',val)
@@ -188,14 +195,14 @@ def _GenerateFromRandomWeibull(config, base, value_type):
 def _GenerateFromRandomGamma(config, base, value_type):
     """Return a random value drawn from a Gamma distribution
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     req = { 'k' : float, 'theta' : float }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
 
     k = kwargs['k']
     theta = kwargs['theta']
-    dev = galsim.GammaDeviate(rng,k=k,theta=theta)
+    dev = GammaDeviate(rng,k=k,theta=theta)
     val = dev()
 
     #print(base['obj_num'],'RandomGamma: ',val)
@@ -205,14 +212,14 @@ def _GenerateFromRandomGamma(config, base, value_type):
 def _GenerateFromRandomChi2(config, base, value_type):
     """Return a random value drawn from a Chi^2 distribution
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     req = { 'n' : float }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
 
     n = kwargs['n']
 
-    dev = galsim.Chi2Deviate(rng,n=n)
+    dev = Chi2Deviate(rng,n=n)
     val = dev()
 
     #print(base['obj_num'],'RandomChi2: ',val)
@@ -221,40 +228,40 @@ def _GenerateFromRandomChi2(config, base, value_type):
 def _GenerateFromRandomDistribution(config, base, value_type):
     """Return a random value drawn from a user-defined probability distribution
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     ignore = [ 'x', 'f', 'x_log', 'f_log' ]
     opt = {'function' : str, 'interpolant' : str, 'npoints' : int,
            'x_min' : float, 'x_max' : float }
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+    kwargs, safe = GetAllParams(config, base, opt=opt, ignore=ignore)
 
     # Allow the user to give x,f instead of function to define a LookupTable.
     if 'x' in config or 'f' in config:
         if 'x' not in config or 'f' not in config:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Both x and f must be provided for type=RandomDistribution")
         if 'function' in kwargs:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Cannot provide function with x,f for type=RandomDistribution")
         x = config['x']
         f = config['f']
         x_log = config.get('x_log', False)
         f_log = config.get('f_log', False)
         interpolant = kwargs.pop('interpolant', 'spline')
-        kwargs['function'] = galsim.LookupTable(x=x, f=f, x_log=x_log, f_log=f_log,
-                                                interpolant=interpolant)
+        kwargs['function'] = LookupTable(x=x, f=f, x_log=x_log, f_log=f_log,
+                                         interpolant=interpolant)
     else:
         if 'function' not in kwargs:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "function or x,f  must be provided for type=RandomDistribution")
         if 'x_log' in config or 'f_log' in config:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "x_log, f_log are invalid with function for type=RandomDistribution")
 
     if '_distdev' not in config or config['_distdev_kwargs'] != kwargs:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every
         # time, so first check if we've already made one:
-        distdev=galsim.DistDeviate(rng,**kwargs)
+        distdev = DistDeviate(rng,**kwargs)
         config['_distdev'] = distdev
         config['_distdev_kwargs'] = kwargs
     else:
@@ -273,20 +280,20 @@ def _GenerateFromRandomDistribution(config, base, value_type):
 def _GenerateFromRandomCircle(config, base, value_type):
     """Return a PositionD drawn from a circular top hat distribution.
     """
-    rng = galsim.config.GetRNG(config, base)
+    rng = GetRNG(config, base)
 
     req = { 'radius' : float }
-    opt = { 'inner_radius' : float, 'center' : galsim.PositionD }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    opt = { 'inner_radius' : float, 'center' : PositionD }
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
     radius = kwargs['radius']
     inner_radius = kwargs.get('inner_radius',0)
 
-    ud = galsim.UniformDeviate(rng)
+    ud = UniformDeviate(rng)
     max_rsq = radius**2
     min_rsq = inner_radius**2
 
     if min_rsq >= max_rsq:
-        raise galsim.GalSimConfigValueError(
+        raise GalSimConfigValueError(
             "inner_radius must be less than radius (%f) for type=RandomCircle"%(radius),
             inner_radius)
 
@@ -297,7 +304,7 @@ def _GenerateFromRandomCircle(config, base, value_type):
         rsq = x**2 + y**2
         if rsq >= min_rsq and rsq <= max_rsq: break
 
-    pos = galsim.PositionD(x,y)
+    pos = PositionD(x,y)
     if 'center' in kwargs:
         pos += kwargs['center']
 
@@ -305,8 +312,7 @@ def _GenerateFromRandomCircle(config, base, value_type):
     return pos, False
 
 # Register these as valid value types
-from .value import RegisterValueType
-RegisterValueType('Random', _GenerateFromRandom, [ float, int, bool, galsim.Angle ])
+RegisterValueType('Random', _GenerateFromRandom, [ float, int, bool, Angle ])
 RegisterValueType('RandomGaussian', _GenerateFromRandomGaussian, [ float ])
 RegisterValueType('RandomPoisson', _GenerateFromRandomPoisson, [ float, int ])
 RegisterValueType('RandomBinomial', _GenerateFromRandomBinomial, [ float, int, bool ])
@@ -314,4 +320,4 @@ RegisterValueType('RandomWeibull', _GenerateFromRandomWeibull, [ float ])
 RegisterValueType('RandomGamma', _GenerateFromRandomGamma, [ float ])
 RegisterValueType('RandomChi2', _GenerateFromRandomChi2, [ float ])
 RegisterValueType('RandomDistribution', _GenerateFromRandomDistribution, [ float ])
-RegisterValueType('RandomCircle', _GenerateFromRandomCircle, [ galsim.PositionD ])
+RegisterValueType('RandomCircle', _GenerateFromRandomCircle, [ PositionD ])

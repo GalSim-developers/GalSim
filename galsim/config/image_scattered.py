@@ -16,13 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
 import logging
+
+from .image import ImageBuilder, FlattenNoiseVariance, RegisterImageType
+from .value import ParseValue, GetAllParams
+from .stamp import BuildStamps
+from .noise import AddSky, AddNoise
+from .input import ProcessInputNObjects
+from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..image import ImageF
 
 # This file adds image type Scattered, which places individual stamps at arbitrary
 # locations on a larger image.
 
-from .image import ImageBuilder
 class ScatteredImageBuilder(ImageBuilder):
 
     def setup(self, config, base, image_num, obj_num, ignore, logger):
@@ -52,20 +58,20 @@ class ScatteredImageBuilder(ImageBuilder):
         extra_ignore = [ 'image_pos', 'world_pos', 'stamp_size', 'stamp_xsize', 'stamp_ysize',
                          'nobjects' ]
         opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
-        params = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore+extra_ignore)[0]
+        params = GetAllParams(config, base, opt=opt, ignore=ignore+extra_ignore)[0]
 
         size = params.get('size',0)
         full_xsize = params.get('xsize',size)
         full_ysize = params.get('ysize',size)
 
         if (full_xsize <= 0) or (full_ysize <= 0):
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Both image.xsize and image.ysize need to be defined and > 0.")
 
         # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
         if ( ('image_force_xsize' in base and full_xsize != base['image_force_xsize']) or
              ('image_force_ysize' in base and full_ysize != base['image_force_ysize']) ):
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Unable to reconcile required image xsize and ysize with provided "
                 "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
 
@@ -89,14 +95,14 @@ class ScatteredImageBuilder(ImageBuilder):
         full_ysize = base['image_ysize']
         wcs = base['wcs']
 
-        full_image = galsim.ImageF(full_xsize, full_ysize)
+        full_image = ImageF(full_xsize, full_ysize)
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
         base['current_image'] = full_image
 
         if 'image_pos' in config and 'world_pos' in config:
-            raise galsim.GalSimConfigValueError(
+            raise GalSimConfigValueError(
                 "Both image_pos and world_pos specified for Scattered image.",
                 (config['image_pos'], config['world_pos']))
 
@@ -111,7 +117,7 @@ class ScatteredImageBuilder(ImageBuilder):
                 'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
             }
 
-        stamps, current_vars = galsim.config.BuildStamps(
+        stamps, current_vars = BuildStamps(
                 self.nobjects, base, logger=logger, obj_num=obj_num, do_noise=False)
 
         base['index_key'] = 'image_num'
@@ -134,7 +140,7 @@ class ScatteredImageBuilder(ImageBuilder):
                         full_image.bounds.ymin, full_image.bounds.ymax))
 
         # Bring the image so far up to a flat noise variance
-        current_var = galsim.config.FlattenNoiseVariance(
+        current_var = FlattenNoiseVariance(
                 base, full_image, stamps, current_vars, logger)
 
         return full_image, current_var
@@ -169,8 +175,8 @@ class ScatteredImageBuilder(ImageBuilder):
             logger:         If given, a logger object to log progress.
         """
         base['current_noise_image'] = base['current_image']
-        galsim.config.AddSky(base,image)
-        galsim.config.AddNoise(base,image,current_var,logger)
+        AddSky(base,image)
+        AddNoise(base,image,current_var,logger)
 
 
     def getNObj(self, config, base, image_num):
@@ -190,17 +196,16 @@ class ScatteredImageBuilder(ImageBuilder):
 
         # Allow nobjects to be automatic based on input catalog
         if 'nobjects' not in config:
-            nobj = galsim.config.ProcessInputNObjects(base)
+            nobj = ProcessInputNObjects(base)
             if nobj is None:
-                raise galsim.GalSimConfigError(
+                raise GalSimConfigError(
                     "Attribute nobjects is required for image.type = Scattered")
         else:
-            nobj = galsim.config.ParseValue(config,'nobjects',base,int)[0]
+            nobj = ParseValue(config,'nobjects',base,int)[0]
         base['index_key'] = orig_index_key
         return nobj
 
 # Register this as a valid image type
-from .image import RegisterImageType
 RegisterImageType('Scattered', ScatteredImageBuilder())
 
 

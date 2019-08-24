@@ -17,17 +17,22 @@
 #
 from __future__ import print_function
 
-import galsim
 import numpy as np
 import re
 
-from .process import PropagateIndexKeyRNGNum
+from .util import PropagateIndexKeyRNGNum
+from .value import GetCurrentValue, GetAllParams, RegisterValueType
+from ..errors import GalSimConfigError
+from ..angle import Angle
+from ..position import PositionD
+from ..celestial import CelestialCoord
+from ..shear import Shear
 
 # This file handles the parsing for the special Eval type.
 
 def _type_by_letter(key):
     if len(key) < 2:
-        raise galsim.GalSimConfigError("Invalid user-defined variable %r"%key)
+        raise GalSimConfigError("Invalid user-defined variable %r"%key)
     if key[0] == 'f':
         return float
     elif key[0] == 'i':
@@ -37,17 +42,17 @@ def _type_by_letter(key):
     elif key[0] == 's':
         return str
     elif key[0] == 'a':
-        return galsim.Angle
+        return Angle
     elif key[0] == 'p':
-        return galsim.PositionD
+        return PositionD
     elif key[0] == 'c':
-        return galsim.CelestialCoord
+        return CelestialCoord
     elif key[0] == 'g':
-        return galsim.Shear
+        return Shear
     elif key[0] == 'x':
         return None
     else:
-        raise galsim.GalSimConfigError(
+        raise GalSimConfigError(
             "Invalid Eval variable: %s (starts with an invalid letter)"%key)
 
 eval_base_variables = [ 'image_pos', 'world_pos', 'image_center', 'image_origin', 'image_bounds',
@@ -85,6 +90,7 @@ def _GenerateFromEval(config, base, value_type):
         if 'eval_gdict' not in base:
             gdict = globals().copy()
             # We allow the following modules to be used in the eval string:
+            exec_('import galsim', gdict)
             exec_('import math', gdict)
             exec_('import numpy', gdict)
             exec_('import numpy as np', gdict)
@@ -94,7 +100,7 @@ def _GenerateFromEval(config, base, value_type):
             gdict = base['eval_gdict']
 
         if 'str' not in config:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Attribute str is required for type = %s"%(config['type']))
         string = config['str']
 
@@ -108,7 +114,7 @@ def _GenerateFromEval(config, base, value_type):
             #print('unique @keys = ',keys)
             for key0 in keys:
                 key = key0[1:] # Remove the @ sign.
-                value = galsim.config.GetCurrentValue(key, base)
+                value = GetCurrentValue(key, base)
                 # Give a probably unique name to this value
                 key_name = "temp_variable_" + key.replace('.','_')
                 #print('key_name = ',key_name)
@@ -125,7 +131,7 @@ def _GenerateFromEval(config, base, value_type):
         if 'eval_variables' in base:
             #print('found eval_variables = ',galsim.config.CleanConfig(base['eval_variables']))
             if not isinstance(base['eval_variables'],dict):
-                raise galsim.GalSimConfigError("eval_variables must be a dict")
+                raise GalSimConfigError("eval_variables must be a dict")
             for key in base['eval_variables']:
                 # Only add variables that appear in the string.
                 if _isWordInString(key[1:],string) and key[1:] not in params:
@@ -159,7 +165,7 @@ def _GenerateFromEval(config, base, value_type):
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Unable to evaluate string %r as a %s\n%r"%(string, value_type, e))
 
     # Always need to evaluate any parameters to pass to the function
@@ -168,7 +174,7 @@ def _GenerateFromEval(config, base, value_type):
         if key not in eval_ignore:
             opt[key] = _type_by_letter(key)
     #print('opt = ',opt)
-    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=eval_ignore)
+    params, safe = GetAllParams(config, base, opt=opt, ignore=eval_ignore)
     #print('params = ',params)
 
     # Strip off the first character of the keys
@@ -183,12 +189,10 @@ def _GenerateFromEval(config, base, value_type):
     except KeyboardInterrupt:
         raise
     except Exception as e:
-        raise galsim.GalSimConfigError(
+        raise GalSimConfigError(
             "Unable to evaluate string %r as a %s\n%r"%(config['str'],value_type, e))
 
 
 # Register this as a valid value type
-from .value import RegisterValueType
 RegisterValueType('Eval', _GenerateFromEval,
-                  [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD,
-                    galsim.CelestialCoord, None ])
+                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, None ])

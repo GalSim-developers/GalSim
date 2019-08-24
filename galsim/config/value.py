@@ -15,13 +15,20 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
 from __future__ import print_function
 
 from past.builtins import basestring
 import sys
-import galsim
 
-from .process import PropagateIndexKeyRNGNum
+from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
+
+from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..gsobject import GSObject
+from ..angle import Angle, AngleUnit, radians, degrees
+from ..position import PositionD
+from ..celestial import CelestialCoord
+from ..shear import Shear
 
 # This file handles the parsing of values given in the config dict.  It includes the basic
 # parsing functionality along with generators for most of the simple value types.
@@ -55,9 +62,11 @@ def ParseValue(config, key, base, value_type):
     Returns:
         the tuple (value, safe).
     """
+    from .gsobject import BuildGSObject
+
     # Special: if the "value_type" is GSObject, then switch over to that builder instead.
-    if value_type is galsim.GSObject:
-        return galsim.config.BuildGSObject(config, key, base)
+    if value_type is GSObject:
+        return BuildGSObject(config, key, base)
 
     param = config[key]
     #print('ParseValue for key = ',key,', value_type = ',str(value_type))
@@ -71,7 +80,7 @@ def ParseValue(config, key, base, value_type):
         #print(param['type'], value_type)
 
         # Check what index key we want to use for this value.
-        index, index_key = galsim.config.GetIndex(param, base, is_sequence=(type_name=='Sequence'))
+        index, index_key = GetIndex(param, base, is_sequence=(type_name=='Sequence'))
         #print('index, index_key = ',index,index_key)
 
         if '_gen_fn' in param:
@@ -80,14 +89,14 @@ def ParseValue(config, key, base, value_type):
             if 'current' in param:
                 cval, csafe, cvalue_type, cindex, cindex_key = param['current']
                 if 'repeat' in param:
-                    repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
+                    repeat = ParseValue(param, 'repeat', base, int)[0]
                     use_current = (cindex//repeat == index//repeat)
                 else:
                     use_current = (cindex == index)
                 if use_current:
                     if (value_type is not None and cvalue_type is not None and
                             cvalue_type != value_type):
-                        raise galsim.GalSimConfigError(
+                        raise GalSimConfigError(
                             "Attempt to parse %s multiple times with different value types: "
                             "%s and %s"%(key, value_type, cvalue_type))
                     #print(index,'Using current value of ',key,' = ',param['current'][0])
@@ -95,20 +104,20 @@ def ParseValue(config, key, base, value_type):
         else:
             # Only need to check this the first time.
             if 'type' not in param:
-                raise galsim.GalSimConfigError(
+                raise GalSimConfigError(
                     "%s.type attribute required when providing a dict."%(key))
 
             # Check if the value_type is valid.
             # (See valid_value_types defined at the top of the file.)
             if type_name not in valid_value_types:
-                raise galsim.GalSimConfigValueError("Unrecognized %s.type"%(key), type_name,
-                                                    valid_value_types.keys())
+                raise GalSimConfigValueError("Unrecognized %s.type"%(key), type_name,
+                                             valid_value_types.keys())
 
             # Get the generating function and the list of valid types for it.
             generate_func, valid_types = valid_value_types[type_name]
 
             if value_type not in valid_types:
-                raise galsim.GalSimConfigValueError(
+                raise GalSimConfigValueError(
                     "Invalid value_type specified for parameter %s with type=%s."%(key, type_name),
                     value_type, valid_types)
 
@@ -161,14 +170,14 @@ def ParseValue(config, key, base, value_type):
             return ParseValue(config, key, base, value_type)
 
         # The rest of these are special processing options for specific value_types:
-        if value_type is galsim.Angle:
+        if value_type is Angle:
             # Angle is a special case.  Angles are specified with a final string to
             # declare what unit to use.
             val = _GetAngleValue(param)
         elif value_type is bool:
             # For bool, we allow a few special string conversions
             val = _GetBoolValue(param)
-        elif value_type is galsim.PositionD:
+        elif value_type is PositionD:
             # For PositionD, we allow a string of x,y
             val = _GetPositionValue(param)
         elif value_type is None or param is None:
@@ -183,7 +192,7 @@ def ParseValue(config, key, base, value_type):
             try:
                 val = value_type(param)
             except (ValueError, TypeError):
-                raise galsim.GalSimConfigError("Could not parse %s as a %s"%(param, value_type))
+                raise GalSimConfigError("Could not parse %s as a %s"%(param, value_type))
         #print(key,' = ',val)
 
         # Save the converted type for next time so it will hit the first if statement here
@@ -210,7 +219,7 @@ def GetCurrentValue(key, config, value_type=None, base=None):
         base = config
 
     if '.' in key:
-        config, key = galsim.config.ParseExtendedKey(config, key)
+        config, key = ParseExtendedKey(config, key)
 
     val, safe = EvaluateCurrentValue(key, config, base, value_type)
     return val
@@ -226,9 +235,11 @@ def EvaluateCurrentValue(key, config, base, value_type=None):
         value_type: The value_type expected.  [default: None, which means it won't check
                     that the value is the right type.]
     """
+    from .input import GetInputObj
+
     if config is base.get('input',None):
         # If we are trying to access a current input, then use GetInputObj instead.
-        return galsim.config.GetInputObj(key, base, base, 'Current'), True
+        return GetInputObj(key, base, base, 'Current'), True
     elif not isinstance(config[key], dict):
         if value_type is not None or (isinstance(config[key],str) and config[key][0] in ('@','$')):
             # This will work fine to evaluate the current value, but will also
@@ -326,7 +337,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
         if key in config:
             get[key] = value_type
         else:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Attribute %s is required for type = %s"%(key,config.get('type',None)))
 
     # Check optional items:
@@ -342,12 +353,12 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
             if key in config:
                 count += 1
                 if count > 1:
-                    raise galsim.GalSimConfigError(
+                    raise GalSimConfigError(
                         "Only one of the attributes %s is allowed for type = %s"%(
                             s.keys(),config.get('type',None)))
                 get[key] = value_type
         if count == 0:
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "One of the attributes %s is required for type = %s"%(
                     s.keys(),config.get('type',None)))
 
@@ -357,7 +368,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     for key in config:
         # Generators are allowed to use item names that start with _, which we ignore here.
         if key not in valid_keys and not key.startswith('_'):
-            raise galsim.GalSimConfigError("Unexpected attribute %s found"%(key))
+            raise GalSimConfigError("Unexpected attribute %s found"%(key))
 
     config['_get'] = get
     return get
@@ -399,10 +410,10 @@ def _GetAngleValue(param):
     try :
         value, unit = param.rsplit(None,1)
         value = float(value)
-        unit = galsim.AngleUnit.from_name(unit)
-        return galsim.Angle(value, unit)
+        unit = AngleUnit.from_name(unit)
+        return Angle(value, unit)
     except (ValueError, TypeError, AttributeError) as e:
-        raise galsim.GalSimConfigError("Unable to parse %s as an Angle. Caught %s"%(param,e))
+        raise GalSimConfigError("Unable to parse %s as an Angle. Caught %s"%(param,e))
 
 
 def _GetPositionValue(param):
@@ -417,9 +428,8 @@ def _GetPositionValue(param):
             x = float(x.strip())
             y = float(y.strip())
         except (ValueError, TypeError, AttributeError) as e:
-            raise galsim.GalSimConfigError(
-                "Unable to parse %s as a PositionD. Caught %s"%(param,e))
-    return galsim.PositionD(x,y)
+            raise GalSimConfigError("Unable to parse %s as a PositionD. Caught %s"%(param,e))
+    return PositionD(x,y)
 
 
 def _GetBoolValue(param):
@@ -435,8 +445,7 @@ def _GetBoolValue(param):
                 val = bool(int(param))
                 return val
             except (ValueError, TypeError, AttributeError) as e:
-                raise galsim.GalSimConfigError(
-                    "Unable to parse %s as a bool. Caught %s"%(param,e))
+                raise GalSimConfigError("Unable to parse %s as a bool. Caught %s"%(param,e))
     else:
         # This always works.
         # Everything in Python is convertible to bool.
@@ -453,7 +462,7 @@ def _GenerateFromG1G2(config, base, value_type):
     req = { 'g1' : float, 'g2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from G1G2: kwargs = ',kwargs)
-    return galsim.Shear(**kwargs), safe
+    return Shear(**kwargs), safe
 
 def _GenerateFromE1E2(config, base, value_type):
     """Return a Shear constructed from given (e1, e2)
@@ -461,7 +470,7 @@ def _GenerateFromE1E2(config, base, value_type):
     req = { 'e1' : float, 'e2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from E1E2: kwargs = ',kwargs)
-    return galsim.Shear(**kwargs), safe
+    return Shear(**kwargs), safe
 
 def _GenerateFromEta1Eta2(config, base, value_type):
     """Return a Shear constructed from given (eta1, eta2)
@@ -469,39 +478,39 @@ def _GenerateFromEta1Eta2(config, base, value_type):
     req = { 'eta1' : float, 'eta2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from Eta1Eta2: kwargs = ',kwargs)
-    return galsim.Shear(**kwargs), safe
+    return Shear(**kwargs), safe
 
 def _GenerateFromGBeta(config, base, value_type):
     """Return a Shear constructed from given (g, beta)
     """
-    req = { 'g' : float, 'beta' : galsim.Angle }
+    req = { 'g' : float, 'beta' : Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from GBeta: kwargs = ',kwargs)
-    return galsim.Shear(**kwargs), safe
+    return Shear(**kwargs), safe
 
 def _GenerateFromEBeta(config, base, value_type):
     """Return a Shear constructed from given (e, beta)
     """
-    req = { 'e' : float, 'beta' : galsim.Angle }
+    req = { 'e' : float, 'beta' : Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from EBeta: kwargs = ',kwargs)
-    return galsim.Shear(**kwargs), safe
+    return Shear(**kwargs), safe
 
 def _GenerateFromEtaBeta(config, base, value_type):
     """Return a Shear constructed from given (eta, beta)
     """
-    req = { 'eta' : float, 'beta' : galsim.Angle }
+    req = { 'eta' : float, 'beta' : Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from EtaBeta: kwargs = ',kwargs)
-    return galsim.Shear(**kwargs), safe
+    return Shear(**kwargs), safe
 
 def _GenerateFromQBeta(config, base, value_type):
     """Return a Shear constructed from given (q, beta)
     """
-    req = { 'q' : float, 'beta' : galsim.Angle }
+    req = { 'q' : float, 'beta' : Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from QBeta: kwargs = ',kwargs)
-    return galsim.Shear(**kwargs), safe
+    return Shear(**kwargs), safe
 
 def _GenerateFromXY(config, base, value_type):
     """Return a PositionD constructed from given (x,y)
@@ -509,26 +518,26 @@ def _GenerateFromXY(config, base, value_type):
     req = { 'x' : float, 'y' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from XY: kwargs = ',kwargs)
-    return galsim.PositionD(**kwargs), safe
+    return PositionD(**kwargs), safe
 
 def _GenerateFromRTheta(config, base, value_type):
     """Return a PositionD constructed from given (r,theta)
     """
-    req = { 'r' : float, 'theta' : galsim.Angle }
+    req = { 'r' : float, 'theta' : Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
     r = kwargs['r']
     theta = kwargs['theta']
     import math
     #print(base['obj_num'],'Generate from RTheta: kwargs = ',kwargs)
-    return galsim.PositionD(r*theta.cos(), r*theta.sin()), safe
+    return PositionD(r*theta.cos(), r*theta.sin()), safe
 
 def _GenerateFromRADec(config, base, value_type):
     """Return a CelestialCoord constructed from given (ra,dec)
     """
-    req = { 'ra' : galsim.Angle, 'dec' : galsim.Angle }
+    req = { 'ra' : Angle, 'dec' : Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from RADec: kwargs = ',kwargs)
-    return galsim.CelestialCoord(**kwargs), safe
+    return CelestialCoord(**kwargs), safe
 
 def _GenerateFromRad(config, base, value_type):
     """Return an Angle constructed from given theta in radians
@@ -536,7 +545,7 @@ def _GenerateFromRad(config, base, value_type):
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from Rad: kwargs = ',kwargs)
-    return kwargs['theta'] * galsim.radians, safe
+    return kwargs['theta'] * radians, safe
 
 def _GenerateFromDeg(config, base, value_type):
     """Return an Angle constructed from given theta in degrees
@@ -544,7 +553,7 @@ def _GenerateFromDeg(config, base, value_type):
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
     #print(base['obj_num'],'Generate from Deg: kwargs = ',kwargs)
-    return kwargs['theta'] * galsim.degrees, safe
+    return kwargs['theta'] * degrees, safe
 
 def _GenerateFromSequence(config, base, value_type):
     """Return next in a sequence of integers
@@ -561,13 +570,13 @@ def _GenerateFromSequence(config, base, value_type):
     nitems = kwargs.get('nitems',None)
 
     if repeat <= 0:
-        raise galsim.GalSimConfigValueError(
+        raise GalSimConfigValueError(
             "Invalid repeat for type = Sequence (must be > 0)", repeat)
     if last is not None and nitems is not None:
-        raise galsim.GalSimConfigError(
+        raise GalSimConfigError(
             "At most one of the attributes last and nitems is allowed for type = Sequence")
 
-    index, index_key = galsim.config.GetIndex(kwargs, base, is_sequence=True)
+    index, index_key = GetIndex(kwargs, base, is_sequence=True)
     #print('in GenFromSequence: index = ',index,index_key)
 
     if value_type is bool:
@@ -647,7 +656,7 @@ def _GenerateFromFormattedStr(config, base, value_type):
             continue
         token = token.lstrip('0123456789lLh') # ignore field size, and long/short specification
         if len(token) == 0:
-            raise galsim.GalSimConfigError("Unable to parse %r as a valid format string"%format)
+            raise GalSimConfigError("Unable to parse %r as a valid format string"%format)
         if token[0].lower() in 'diouxX':
             val_types.append(int)
         elif token[0].lower() in 'eEfFgG':
@@ -655,10 +664,10 @@ def _GenerateFromFormattedStr(config, base, value_type):
         elif token[0].lower() in 'rs':
             val_types.append(str)
         else:
-            raise galsim.GalSimConfigError("Unable to parse %r as a valid format string"%format)
+            raise GalSimConfigError("Unable to parse %r as a valid format string"%format)
 
     if len(val_types) != len(items):
-        raise galsim.GalSimConfigError(
+        raise GalSimConfigError(
             "Number of items for FormatStr (%d) does not match number expected from "
             "format string (%d)"%(len(items), len(val_types)))
     vals = []
@@ -683,14 +692,14 @@ def _GenerateFromList(config, base, value_type):
 
     # Any iterable except string.
     if isinstance(items,str) or not hasattr(items, '__iter__'):
-        raise galsim.GalSimConfigError("items entry for type=List is not list-like.")
+        raise GalSimConfigError("items entry for type=List is not list-like.")
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
     SetDefaultIndex(config, len(items))
     index, safe = ParseValue(config, 'index', base, int)
 
     if index < 0 or index >= len(items):
-        raise galsim.GalSimConfigError("index %d out of bounds for type=List"%index)
+        raise GalSimConfigError("index %d out of bounds for type=List"%index)
     val, safe1 = ParseValue(items, index, base, value_type)
     safe = safe and safe1
     #print(base['obj_num'],'List index = %d, val = %s'%(index,val))
@@ -704,7 +713,7 @@ def _GenerateFromSum(config, base, value_type):
     CheckAllParams(config, req=req)
     items = config['items']
     if not isinstance(items,list):
-        raise galsim.GalSimConfigError("items entry for type=List is not a list.")
+        raise GalSimConfigError("items entry for type=List is not a list.")
 
     sum, safe = ParseValue(items, 0, base, value_type)
 
@@ -726,13 +735,13 @@ def _GenerateFromCurrent(config, base, value_type):
         key = params['key']
         #print('GetCurrent %s.  value_type = %s'%(key,value_type))
 
-        d, k = galsim.config.ParseExtendedKey(base, key)
+        d, k = ParseExtendedKey(base, key)
         config['_kd'] = k,d
 
     try:
         return EvaluateCurrentValue(k, d, base, value_type)
     except (TypeError, ValueError) as e:
-        raise galsim.GalSimConfigError("%s\nError generating Current value with key = %s"%(e,k))
+        raise GalSimConfigError("%s\nError generating Current value with key = %s"%(e,k))
 
 
 def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
@@ -780,27 +789,24 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
 
 
 RegisterValueType('List', _GenerateFromList,
-              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD,
-                galsim.CelestialCoord ])
+                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord ])
 RegisterValueType('Current', _GenerateFromCurrent,
-                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD,
-                   galsim.CelestialCoord, None ])
-RegisterValueType('Sum', _GenerateFromSum,
-             [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ])
+                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, None ])
+RegisterValueType('Sum', _GenerateFromSum, [ float, int, Angle, Shear, PositionD ])
 RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
 RegisterValueType('NumberedFile', _GenerateFromNumberedFile, [ str ])
 RegisterValueType('FormattedStr', _GenerateFromFormattedStr, [ str ])
-RegisterValueType('Rad', _GenerateFromRad, [ galsim.Angle ])
-RegisterValueType('Radians', _GenerateFromRad, [ galsim.Angle ])
-RegisterValueType('Deg', _GenerateFromDeg, [ galsim.Angle ])
-RegisterValueType('Degrees', _GenerateFromDeg, [ galsim.Angle ])
-RegisterValueType('E1E2', _GenerateFromE1E2, [ galsim.Shear ])
-RegisterValueType('EBeta', _GenerateFromEBeta, [ galsim.Shear ])
-RegisterValueType('G1G2', _GenerateFromG1G2, [ galsim.Shear ])
-RegisterValueType('GBeta', _GenerateFromGBeta, [ galsim.Shear ])
-RegisterValueType('Eta1Eta2', _GenerateFromEta1Eta2, [ galsim.Shear ])
-RegisterValueType('EtaBeta', _GenerateFromEtaBeta, [ galsim.Shear ])
-RegisterValueType('QBeta', _GenerateFromQBeta, [ galsim.Shear ])
-RegisterValueType('XY', _GenerateFromXY, [ galsim.PositionD ])
-RegisterValueType('RTheta', _GenerateFromRTheta, [ galsim.PositionD ])
-RegisterValueType('RADec', _GenerateFromRADec, [ galsim.CelestialCoord ])
+RegisterValueType('Rad', _GenerateFromRad, [ Angle ])
+RegisterValueType('Radians', _GenerateFromRad, [ Angle ])
+RegisterValueType('Deg', _GenerateFromDeg, [ Angle ])
+RegisterValueType('Degrees', _GenerateFromDeg, [ Angle ])
+RegisterValueType('E1E2', _GenerateFromE1E2, [ Shear ])
+RegisterValueType('EBeta', _GenerateFromEBeta, [ Shear ])
+RegisterValueType('G1G2', _GenerateFromG1G2, [ Shear ])
+RegisterValueType('GBeta', _GenerateFromGBeta, [ Shear ])
+RegisterValueType('Eta1Eta2', _GenerateFromEta1Eta2, [ Shear ])
+RegisterValueType('EtaBeta', _GenerateFromEtaBeta, [ Shear ])
+RegisterValueType('QBeta', _GenerateFromQBeta, [ Shear ])
+RegisterValueType('XY', _GenerateFromXY, [ PositionD ])
+RegisterValueType('RTheta', _GenerateFromRTheta, [ PositionD ])
+RegisterValueType('RADec', _GenerateFromRADec, [ CelestialCoord ])

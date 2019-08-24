@@ -20,6 +20,12 @@ import os
 import logging
 import inspect
 
+from .util import LoggerWrapper, SetDefaultExt, RetryIO
+from .value import ParseValue
+from ..utilities import ensure_dir
+from ..errors import GalSimConfigValueError, GalSimConfigError
+from ..fits import writeMulti
+
 # This file handles the processing of extra output items in addition to the primary output file
 # in config['output']. The ones that are defined natively in GalSim are psf, weight, badpix,
 # and truth.  See extra_*.py for the specific functions for each of these.
@@ -29,9 +35,6 @@ import inspect
 # The keys will be the (string) names of the extra output types, and the values will be
 # builder classes that will perform the different processing functions.
 valid_extra_outputs = {}
-
-import galsim
-
 
 def SetupExtraOutput(config, logger=None):
     """
@@ -43,7 +46,7 @@ def SetupExtraOutput(config, logger=None):
         config:     The configuration dict.
         logger:     If given, a logger object to log progress. [default: None]
     """
-    logger = galsim.config.LoggerWrapper(logger)
+    logger = LoggerWrapper(logger)
     output = config['output']
     file_num = config.get('file_num',0)
 
@@ -55,7 +58,7 @@ def SetupExtraOutput(config, logger=None):
     use_manager = (
             'current_nproc' not in config and
             'image' in config and 'nproc' in config['image'] and
-            galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
+            ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
 
     if use_manager and 'output_manager' not in config:
         from multiprocessing.managers import BaseManager, ListProxy, DictProxy
@@ -186,22 +189,22 @@ def WriteExtraOutputs(config, main_data, logger=None):
         main_data:  The main file data in case it is needed.
         logger:     If given, a logger object to log progress. [default: None]
     """
-    logger = galsim.config.LoggerWrapper(logger)
+    logger = LoggerWrapper(logger)
     output = config['output']
     if 'retry_io' in output:
-        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        ntries = ParseValue(config['output'],'retry_io',config,int)[0]
         # This is how many retries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
     else:
         ntries = 1
 
     if 'dir' in output:
-        default_dir = galsim.config.ParseValue(output,'dir',config,str)[0]
+        default_dir = ParseValue(output,'dir',config,str)[0]
     else:
         default_dir = None
 
     if 'noclobber' in output:
-        noclobber = galsim.config.ParseValue(output,'noclobber',config,bool)[0]
+        noclobber = ParseValue(output,'noclobber',config,bool)[0]
     else:
         noclobber = False
 
@@ -211,20 +214,20 @@ def WriteExtraOutputs(config, main_data, logger=None):
     for key, builder in config['extra_builder'].items():
         field = output[key]
         if 'file_name' in field:
-            galsim.config.SetDefaultExt(field, '.fits')
-            file_name = galsim.config.ParseValue(field,'file_name',config,str)[0]
+            SetDefaultExt(field, '.fits')
+            file_name = ParseValue(field,'file_name',config,str)[0]
         else:  # pragma: no cover  (it is covered, but codecov wrongly thinks it isn't.)
             # If no file_name, then probably writing to hdu
             continue
         if 'dir' in field:
-            dir = galsim.config.ParseValue(field,'dir',config,str)[0]
+            dir = ParseValue(field,'dir',config,str)[0]
         else:
             dir = default_dir
 
         if dir is not None:
             file_name = os.path.join(dir,file_name)
 
-        galsim.config.ensure_dir(file_name)
+        ensure_dir(file_name)
 
         if noclobber and os.path.isfile(file_name):
             logger.warning('Not writing %s file %d = %s because output.noclobber = True '
@@ -244,7 +247,7 @@ def WriteExtraOutputs(config, main_data, logger=None):
         # Call the write function, possibly multiple times to account for IO failures.
         write_func = builder.writeFile
         args = (file_name,field,config,logger)
-        galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
+        RetryIO(write_func, args, ntries, file_name, logger)
         config['extra_last_file'][key] = file_name
         logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
@@ -272,12 +275,12 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     for key, builder in config['extra_builder'].items():
         field = output[key]
         if 'hdu' in field:
-            hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
+            hdu = ParseValue(field,'hdu',config,int)[0]
         else:  # pragma: no cover  (it is covered, but codecov wrongly thinks it isn't.)
             # If no hdu, then probably writing to file
             continue
         if hdu <= 0 or hdu in hdus:
-            raise galsim.GalSimConfigValueError("hdu is invalid or a duplicate.",hdu)
+            raise GalSimConfigValueError("hdu is invalid or a duplicate.",hdu)
 
         # Do any final processing that needs to happen.
         builder.ensureFinalized(field, config, main_data, logger)
@@ -288,7 +291,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     first = len(main_data)
     for h in range(first,len(hdus)+first):
         if h not in hdus:
-            raise galsim.GalSimConfigError("Cannot skip hdus.  No output found for hdu %d"%h)
+            raise GalSimConfigError("Cannot skip hdus.  No output found for hdu %d"%h)
     # Turn hdus into a list (in order)
     hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
     return main_data + hdulist
@@ -304,14 +307,14 @@ def CheckNoExtraOutputHDUs(config, output_type, logger=None):
                         had a problem.
         logger:         If given, a logger object to log progress. [default: None]
     """
-    logger = galsim.config.LoggerWrapper(logger)
+    logger = LoggerWrapper(logger)
     output = config['output']
     for key in config['extra_builder'].keys():
         field = output[key]
         if 'hdu' in field:
-            hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
+            hdu = ParseValue(field,'hdu',config,int)[0]
             logger.error("Extra output %s requesting to write to hdu %d", key, hdu)
-            raise galsim.GalSimConfigError(
+            raise GalSimConfigError(
                 "Output type %s cannot add extra images as HDUs"%output_type)
 
 
@@ -486,7 +489,7 @@ class ExtraOutputBuilder(object):
             base:       The base configuration dict.
             logger:     If given, a logger object to log progress. [default: None]
         """
-        galsim.fits.writeMulti(self.final_data, file_name)
+        writeMulti(self.final_data, file_name)
 
     def writeHdu(self, config, base, logger):
         """Write the data to a FITS HDU with the data for this output object.
@@ -503,7 +506,7 @@ class ExtraOutputBuilder(object):
             an HDU with the output data.
         """
         if len(self.data) != 1:  # pragma: no cover  (Not sure if this is possible.)
-            raise galsim.GalSimError(
+            raise GalSimConfigError(
                     "%d %s images were created. Expecting 1."%(n,self._extra_output_key))
         return self.data[0]
 
