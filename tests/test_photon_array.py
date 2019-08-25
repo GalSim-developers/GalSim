@@ -21,9 +21,12 @@ import unittest
 import numpy as np
 import os
 import sys
+import warnings
 
 try:
-    import astroplan
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        import astroplan
     no_astroplan = False
 except ImportError:
     no_astroplan = True
