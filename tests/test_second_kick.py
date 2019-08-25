@@ -71,6 +71,13 @@ def test_init():
                 t5 = time.time()
                 print(' times = ',t1-t0,t2-t1,t3-t2,t4-t3,t5-t4)
 
+                # Check negative flux
+                sk2 = galsim.SecondKick(flux=-2.2, **kwargs)
+                sk3 = sk.withFlux(-2.2)
+                assert sk2 == sk3
+                obj2 = galsim.Convolve(sk2, galsim.Gaussian(fwhm=0.2))
+                check_basic(obj2, "SecondKick with negative flux")
+
 
 @timer
 def test_structure_function():
