@@ -364,6 +364,10 @@ class Sersic(GSObject):
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 
+    @doc_inherit
+    def withFlux(self, flux):
+        return Sersic(n=self.n, scale_radius=self.scale_radius, trunc=self.trunc, flux=flux,
+                      gsparams=self.gsparams)
 
 class DeVaucouleurs(Sersic):
     r"""A class describing DeVaucouleurs profile objects.
@@ -420,3 +424,8 @@ class DeVaucouleurs(Sersic):
             s += ', flux=%s'%self.flux
         s += ')'
         return s
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return DeVaucouleurs(scale_radius=self.scale_radius, trunc=self.trunc, flux=flux,
+                             gsparams=self.gsparams)

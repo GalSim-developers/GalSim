@@ -226,3 +226,8 @@ class Moffat(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return Moffat(beta=self.beta, scale_radius=self.scale_radius, trunc=self.trunc,
+                      flux=flux, gsparams=self.gsparams)

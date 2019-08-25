@@ -245,3 +245,9 @@ class SecondKick(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return SecondKick(lam=self.lam, r0=self.r0, diam=self.diam, obscuration=self.obscuration,
+                          kcrit=self.kcrit, flux=flux, scale_unit=self.scale_unit,
+                          gsparams=self.gsparams)
