@@ -2010,17 +2010,18 @@ class GSObject(object):
             # We want the variance to be equal to flux, so we need an extra:
             # delta Var = (1 - 4*eta + 4*eta^2) * flux
             #           = (1-2eta)^2 * flux
-            mean = eta_factor*eta_factor * flux
+            absflux = abs(flux)
+            mean = eta_factor*eta_factor * absflux
             pd = PoissonDeviate(rng, mean)
-            pd_val = pd() - mean + flux
-            ratio = pd_val / flux
+            pd_val = pd() - mean + absflux
+            ratio = pd_val / absflux
             g *= ratio
             mod_flux *= ratio
 
         if n_photons == 0.:
-            n_photons = mod_flux
+            n_photons = abs(mod_flux)
             if max_extra_noise > 0.:
-                gfactor = 1. + max_extra_noise / self.max_sb
+                gfactor = 1. + max_extra_noise / abs(self.max_sb)
                 n_photons /= gfactor
                 g *= gfactor
 

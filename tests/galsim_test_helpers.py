@@ -347,6 +347,14 @@ def do_shoot(prof, img, name):
     assert img.array.max() <= prof.max_sb*dx**2 * 1.4, \
             "Photon shooting for %s produced too high max pixel."%name
 
+    # Test negative flux
+    prof = prof.withFlux(-test_flux)
+    prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
+    print('img.sum = ',img.array.sum(dtype=float),'  cf. ',-test_flux)
+    np.testing.assert_allclose(
+            img.array.sum(dtype=float), -test_flux, rtol=rtol, atol=atol,
+            err_msg="Photon shooting normalization for %s disagrees when flux < 0"%name)
+
 
 def do_kvalue(prof, im1, name):
     """Test that the k-space values are consistent with the real-space values by drawing the

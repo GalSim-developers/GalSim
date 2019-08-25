@@ -1074,6 +1074,17 @@ def test_shoot():
         psf = galsim.Gaussian(sigma=3, flux=1.e-5)
         psf.drawImage(method='phot')
 
+    # Check negative flux shooting with poisson_flux=True
+    # The do_shoot test in galsim_test_helpers checks negative flux with a fixed number of photons.
+    # But we also want to check that the automatic number of photons is reaonable when the flux
+    # is negative.
+    obj = obj.withFlux(-1.e5)
+    image3 = galsim.ImageF(64,64)
+    obj.drawImage(image3, method='phot', poisson_flux=True, rng=rng)
+    print('image3.sum = ',image3.array.sum())
+    # Only accurate to about sqrt(1.e5) from Poisson realization
+    np.testing.assert_allclose(image3.array.sum(), obj.flux, rtol=0.01)
+
 
 @timer
 def test_drawImage_area_exptime():
