@@ -82,6 +82,20 @@ def test_OpticalPSF_flux():
         optics_array = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel').array
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2,
                 err_msg="Unaberrated Optical flux not quite unity.")
+
+        if __name__ == '__main__':
+            optics_test = galsim.OpticalPSF(lam_over_diam=lod, flux=177)
+            optics_im = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel')
+            np.testing.assert_almost_equal(optics_im.array.sum(), 1., 2,
+                    err_msg="Unaberrated Optical flux not quite unity.")
+            check_basic(optics_test, "OpticalPSF, flux=177")
+
+            optics_test = galsim.OpticalPSF(lam_over_diam=lod, flux=-17)
+            optics_im = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel')
+            np.testing.assert_almost_equal(optics_im.array.sum(), 1., 2,
+                    err_msg="Unaberrated Optical flux not quite unity.")
+            check_basic(optics_test, "OpticalPSF, flux=-17")
+
     do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics_test)
     do_pickle(optics_test._psf)
