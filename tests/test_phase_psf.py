@@ -465,6 +465,37 @@ def test_scale_unit():
     assert_raises(TypeError, galsim.PhaseScreenPSF, atm, 500.0, aper=aper, theta=(34, 5))
     assert_raises(ValueError, galsim.PhaseScreenPSF, atm, 500.0, aper=aper, exptime=-1)
 
+@timer
+def test_flux():
+    """Test setting the `flux` to non-unity.
+    """
+    aper = galsim.Aperture(diam=1.0)
+    rng = galsim.BaseDeviate(1234)
+    # Test frozen AtmosphericScreen first
+    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
+    for flux in [1.6, 0.02, -17]:
+        psf1 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, flux=flux)
+        im = psf1.drawImage(nx=32, ny=32, scale=0.5)
+        print('flux = ',flux,' image sum = ',np.sum(im.array))
+        np.testing.assert_allclose(np.sum(im.array), flux, rtol=1.e-3)
+        check_basic(psf1, 'PhaseScreenPSF with flux=%f'%flux, approx_maxsb=True)
+
+        psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper).withFlux(flux)
+        assert psf2 == psf1
+
+        psf3 = galsim.OpticalPSF(lam=500.0, diam=0.9, flux=flux)
+        psf3.drawImage(im)
+        print('flux = ',flux,' image sum = ',np.sum(im.array))
+        np.testing.assert_allclose(np.sum(im.array), flux, rtol=1.e-3)
+        check_basic(psf3, 'OpticalPSF with flux=%f'%flux, approx_maxsb=True)
+
+        psf4 = galsim.OpticalPSF(lam=500.0, diam=0.9).withFlux(flux)
+        assert psf4 == psf3
+
+    with assert_raises(galsim.GalSimValueError):
+        psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, flux=0.)
+        im = psf.drawImage(nx=256, ny=256, scale=0.3)
+
 
 @timer
 def test_stepk_maxk():

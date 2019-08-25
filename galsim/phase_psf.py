@@ -1480,7 +1480,7 @@ class PhaseScreenPSF(GSObject):
     @property
     def _negative_flux(self):
         if self._geometric_shooting:
-            return 0
+            return 0.
         else:
             return self._ii.negative_flux
 
@@ -1989,12 +1989,8 @@ class OpticalPSF(GSObject):
     @doc_inherit
     def withFlux(self, flux):
         screen = self._psf.screen_list[0]
-        if any(screen.aberrations):
-            aber = screen.aberrations
-        else:
-            aber = None
         return OpticalPSF(
                 lam=self._lam, diam=self._psf.aper.diam, aper=self._psf.aper,
-                aberrations=aber, annular_zernike=screen.annular_zernike,
+                aberrations=screen.aberrations, annular_zernike=screen.annular_zernike,
                 flux=flux, _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 ii_pad_factor=self._ii_pad_factor)
