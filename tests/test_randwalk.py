@@ -70,6 +70,14 @@ def test_randwalk_defaults():
     do_pickle(rw)
     do_pickle(conv)
 
+    # Check negative flux
+    rw3 = rw.withFlux(-2.3)
+    assert rw3 == galsim.RandomWalk(npoints, half_light_radius=hlr, rng=galsim.BaseDeviate(1234),
+                                    flux=-2.3)
+    conv = galsim.Convolve(rw3, psf)
+    check_basic(conv, "RandomWalk with negative flux")
+
+
 
 @timer
 def test_randwalk_valid_inputs():
@@ -175,10 +183,6 @@ def test_randwalk_invalid_inputs():
     # bad value for hlr
     with assert_raises(GalSimRangeError):
         galsim.RandomWalk(npoints, half_light_radius=-1.5)
-
-    # negative flux
-    with assert_raises(GalSimRangeError):
-        galsim.RandomWalk(npoints, flux=-35.0, half_light_radius=hlr)
 
 
 @timer
