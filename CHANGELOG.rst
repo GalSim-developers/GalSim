@@ -49,6 +49,7 @@ New Features
 Bug Fixes
 ---------
 
+- Fixed a couple places where negative fluxes were not working correctly. (#472)
 - Fixed error in `PhaseScreenPSF` when aberrations has len=1. (#1006, #1029)
 - Fixed error in `BaseWCS.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
 - Fixed slight error in the realized flux of some profiles when using photon shooting.
