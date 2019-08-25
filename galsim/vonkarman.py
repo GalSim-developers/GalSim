@@ -287,3 +287,9 @@ class VonKarman(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return VonKarman(lam=self.lam, r0=self.r0, L0=self.L0, flux=flux,
+                         scale_unit=self.scale_unit, do_delta=self.do_delta,
+                         suppress_warning=self._suppress, gsparams=self.gsparams)

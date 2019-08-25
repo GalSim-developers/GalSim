@@ -340,3 +340,8 @@ class RandomWalk(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return RandomWalk(npoints=self.npoints, profile=self.profile.withFlux(flux),
+                          gsparams=self.gsparams)

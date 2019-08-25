@@ -216,6 +216,12 @@ class InclinedExponential(GSObject):
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 
+    @doc_inherit
+    def withFlux(self, flux):
+        return InclinedExponential(inclination=self.inclination, scale_radius=self.scale_radius,
+                                   scale_height=self.scale_height, flux=flux,
+                                   gsparams=self.gsparams)
+
 
 class InclinedSersic(GSObject):
     r"""A class describing an inclined sersic profile. This class is general, and so for certain
@@ -464,3 +470,9 @@ class InclinedSersic(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return InclinedSersic(n=self.n, inclination=self.inclination,
+                              scale_radius=self.scale_radius, scale_height=self.scale_height,
+                              flux=flux, trunc=self.trunc, gsparams=self.gsparams)

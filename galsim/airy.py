@@ -236,3 +236,8 @@ class Airy(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return Airy(lam_over_diam=self.lam_over_diam, obscuration=self.obscuration,
+                    flux=flux, gsparams=self.gsparams)

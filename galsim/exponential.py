@@ -163,3 +163,7 @@ class Exponential(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return Exponential(scale_radius=self.scale_radius, flux=flux, gsparams=self.gsparams)

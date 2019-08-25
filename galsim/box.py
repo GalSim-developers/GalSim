@@ -135,6 +135,9 @@ class Box(GSObject):
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 
+    @doc_inherit
+    def withFlux(self, flux):
+        return Box(width=self.width, height=self.height, flux=flux, gsparams=self.gsparams)
 
 class Pixel(Box):
     """A class describing a pixel profile.  This is just a 2D square top-hat function.
@@ -173,6 +176,10 @@ class Pixel(Box):
             s += ', flux=%s'%self.flux
         s += ')'
         return s
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return Pixel(scale=self.scale, flux=flux, gsparams=self.gsparams)
 
 
 class TopHat(GSObject):
@@ -276,3 +283,7 @@ class TopHat(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return TopHat(radius=self.radius, flux=flux, gsparams=self.gsparams)

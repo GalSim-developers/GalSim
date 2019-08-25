@@ -119,3 +119,7 @@ class DeltaFunction(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         image.array[:,:] = self.flux
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return DeltaFunction(flux=flux, gsparams=self.gsparams)

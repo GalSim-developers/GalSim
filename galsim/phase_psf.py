@@ -1556,6 +1556,16 @@ class PhaseScreenPSF(GSObject):
         depr('finalized', 2.1, "This functionality has been removed.")
         return self._finalized
 
+    @doc_inherit
+    def withFlux(self, flux):
+        if self._finalized:
+            # Then it's probably not faster to rebuild with a different flux.
+            return self.withScaledFlux(flux / self.flux)
+        else:
+            return PhaseScreenPSF(self._screen_list, lam=self.lam, exptime=self.exptime, flux=flux,
+                                  aper=self.aper, theta=self.theta, interpolant=self.interpolant,
+                                  scale_unit=self.scale_unit, gsparams=self.gsparams)
+
 
 class OpticalPSF(GSObject):
     """A class describing aberrated PSFs due to telescope optics.  Its underlying implementation
@@ -1975,3 +1985,16 @@ class OpticalPSF(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._psf._drawKImage(image)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        screen = self._psf.screen_list[0]
+        if any(screen.aberrations):
+            aber = screen.aberrations
+        else:
+            aber = None
+        return OpticalPSF(
+                lam=self._lam, diam=self._psf.aper.diam, aper=self._psf.aper,
+                aberrations=aber, annular_zernike=screen.annular_zernike,
+                flux=flux, _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
+                ii_pad_factor=self._ii_pad_factor)

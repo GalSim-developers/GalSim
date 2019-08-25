@@ -234,3 +234,8 @@ class Spergel(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
+
+    @doc_inherit
+    def withFlux(self, flux):
+        return Spergel(nu=self.nu, scale_radius=self.scale_radius, flux=flux,
+                       gsparams=self.gsparams)

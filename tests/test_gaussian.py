@@ -258,7 +258,7 @@ def test_gaussian_radii():
     assert_raises(AttributeError, getattr, test_gal_flux1, "half_light_radius")
     assert_raises(AttributeError, getattr, test_gal_flux1, "sigma")
 
-    test_gal_flux2 = test_gal.withFlux(3.)
+    test_gal_flux2 = test_gal.withScaledFlux(3.)
     assert_raises(AttributeError, getattr, test_gal_flux2, "fwhm")
     assert_raises(AttributeError, getattr, test_gal_flux2, "half_light_radius")
     assert_raises(AttributeError, getattr, test_gal_flux2, "sigma")
