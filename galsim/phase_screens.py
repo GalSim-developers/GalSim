@@ -912,8 +912,8 @@ class OpticalScreen(object):
                     coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2,
                     spher=spher, aberrations=aberrations)
             # Aberrations were passed in, so check for right number of entries.
-            if len(aberrations) <= 2:
-                raise GalSimValueError("Aberrations keyword must have length > 2", aberrations)
+            if len(aberrations) < 2:
+                raise GalSimValueError("Aberrations keyword must have length >= 2", aberrations)
             # Check for non-zero value in first two places.  Probably a mistake.
             if aberrations[0] != 0.0:
                 galsim_warn("Detected non-zero value in aberrations[0] -- this value is ignored!")

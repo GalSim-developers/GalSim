@@ -307,9 +307,13 @@ def test_OpticalPSF_aberrations_kwargs():
     # aberrations must be a list or an array
     with assert_raises(TypeError):
         galsim.OpticalPSF(lod, aberrations=0.3)
-    # It must have at least 3 elements
+    # It must have at least 2 elements
     with assert_raises(ValueError):
-        galsim.OpticalPSF(lod, aberrations=[0.0]*2)
+        galsim.OpticalPSF(lod, aberrations=[0.0])
+    with assert_raises(ValueError):
+        galsim.OpticalPSF(lod, aberrations=[])
+    # 2 zeros is equivalent to None
+    assert galsim.OpticalPSF(lod, aberrations=[0, 0]) == galsim.OpticalPSF(lod)
     # The first element must be 0. (Just a warning!)
     with assert_warns(galsim.GalSimWarning):
         galsim.OpticalPSF(lod, aberrations=[0.3]*8)
