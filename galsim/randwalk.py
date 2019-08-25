@@ -128,8 +128,6 @@ class RandomWalk(GSObject):
                 self._flux = 1.0
             else:
                 self._flux=float(kw['flux'])
-                if self._flux < 0.0:
-                    raise GalSimRangeError("flux must be >= 0", self._flux, 0.)
 
             half_light_radius=float(kw['half_light_radius'])
 
@@ -343,5 +341,5 @@ class RandomWalk(GSObject):
 
     @doc_inherit
     def withFlux(self, flux):
-        return RandomWalk(npoints=self.npoints, profile=self.profile.withFlux(flux),
+        return RandomWalk(npoints=self.npoints, profile=self._profile.withFlux(flux),
                           gsparams=self.gsparams)
