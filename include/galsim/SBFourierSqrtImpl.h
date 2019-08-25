@@ -71,7 +71,6 @@ namespace galsim {
 
     private:
         SBProfile _adaptee;
-        double _maxksq;
 
         void doFillKImage(ImageView<std::complex<double> > im,
                           double kx0, double dkx, int izero,

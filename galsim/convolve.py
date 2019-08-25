@@ -621,9 +621,13 @@ class Deconvolution(GSObject):
     @doc_inherit
     def _drawKImage(self, image):
         self.orig_obj._drawKImage(image)
-        do_inverse = image.array > self._min_acc_kvalue
+        do_inverse = np.abs(image.array) > self._min_acc_kvalue
         image.array[do_inverse] = 1./image.array[do_inverse]
         image.array[~do_inverse] = self._inv_min_acc_kvalue
+        kx,ky = image.get_pixel_centers()
+        ksq = (kx**2 + ky**2) * image.scale**2
+        # Set to zero outside of nominal maxk so as not to amplify high frequencies.
+        image.array[ksq > self.maxk**2] = 0.
 
     def __getstate__(self):
         d = self.__dict__.copy()
