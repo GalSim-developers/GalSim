@@ -108,6 +108,14 @@ def test_photon_array():
     np.testing.assert_array_equal(photon_array.dxdz, 0.17)
     np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
+    # Check shooting negative flux
+    obj = galsim.Exponential(flux=-1.7, scale_radius=2.3)
+    rng = galsim.UniformDeviate(1234)
+    neg_photon_array = obj.shoot(nphotons, rng)
+    np.testing.assert_array_equal(neg_photon_array.x, orig_x)
+    np.testing.assert_array_equal(neg_photon_array.y, orig_y)
+    np.testing.assert_array_equal(neg_photon_array.flux, -orig_flux)
+
     # Start over to check that assigning to wavelength leaves dxdz, dydz alone.
     photon_array = obj.shoot(nphotons, rng)
     photon_array.wavelength = 500.
@@ -140,6 +148,10 @@ def test_photon_array():
     np.testing.assert_almost_equal(photon_array.getTotalFlux(), 17*flux)
     photon_array.setTotalFlux(199)
     np.testing.assert_almost_equal(photon_array.getTotalFlux(), 199)
+    photon_array.scaleFlux(-1.7)
+    np.testing.assert_almost_equal(photon_array.getTotalFlux(), -1.7*199)
+    photon_array.setTotalFlux(-199)
+    np.testing.assert_almost_equal(photon_array.getTotalFlux(), -199)
 
     # Check rescaling the positions
     x = photon_array.x.copy()
