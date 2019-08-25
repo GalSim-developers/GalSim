@@ -610,6 +610,37 @@ def test_ne():
         do_pickle(covspec1, irreprable=True)
 
 @timer
+def test_flux():
+    """ Check that setting flux and flux_rescale work properly"""
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    psf = galsim.Gaussian(sigma=1.7)
+
+    rg1 = galsim.RealGalaxy(rgc, index=0)
+    rg2 = galsim.RealGalaxy(rgc, index=0, flux=1.7)
+    rg3 = galsim.RealGalaxy(rgc, index=0, flux=17)
+    rg4 = galsim.RealGalaxy(rgc, index=0, flux=-17)
+    rg5 = galsim.RealGalaxy(rgc, index=0, flux_rescale=1.7)
+    rg6 = galsim.RealGalaxy(rgc, index=0, flux_rescale=-17)
+
+    np.testing.assert_almost_equal(rg2.flux, 1.7)
+    np.testing.assert_almost_equal(rg3.flux, 17)
+    np.testing.assert_almost_equal(rg4.flux, -17)
+    np.testing.assert_almost_equal(rg5.flux, 1.7 * rg1.flux)
+    np.testing.assert_almost_equal(rg6.flux, -17 * rg1.flux)
+
+    check_basic(rg2, "RealGalaxy flux=1.7", approx_maxsb=True)
+    check_basic(rg3, "RealGalaxy flux=17", approx_maxsb=True)
+    check_basic(rg4, "RealGalaxy flux=-17", approx_maxsb=True)
+    check_basic(rg5, "RealGalaxy flux_rescale=1.7", approx_maxsb=True)
+    check_basic(rg6, "RealGalaxy flux_rescale=-17", approx_maxsb=True)
+
+    do_pickle(rg2)
+    do_pickle(rg3)
+    do_pickle(rg4)
+    do_pickle(rg5)
+    do_pickle(rg6)
+
+@timer
 def test_noise():
     """Check consistency of noise-related routines."""
     # The RealGalaxyCatalog.getNoise() routine should be tested to ensure consistency of results
@@ -952,6 +983,7 @@ if __name__ == "__main__":
     test_crg_roundtrip()
     test_crg_roundtrip_larger_target_psf()
     test_ne()
+    test_flux()
     test_noise()
     test_area_norm()
     test_crg_noise_draw_transform_commutativity()

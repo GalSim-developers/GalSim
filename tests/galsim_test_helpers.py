@@ -124,11 +124,11 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
     if approx_maxsb:
         np.testing.assert_array_less(
-                image.array.max(), prof.max_sb * 1.4,
+                np.abs(image.array).max(), np.abs(prof.max_sb) * 1.4,
                 err_msg="%s profile max_sb smaller than maximum pixel value"%name)
     else:
         np.testing.assert_allclose(
-                image.array.max(), prof.max_sb, rtol=1.e-5,
+                np.abs(image.array).max(), np.abs(prof.max_sb), rtol=1.e-5,
                 err_msg="%s profile max_sb did not match maximum pixel value"%name)
     for i,j in ( (2,3), (-4,1), (0,-5), (-3,-3) ):
         x = i*dx
