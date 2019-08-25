@@ -87,6 +87,8 @@ namespace galsim {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedImageImpl methods
 
+#define INVALID -1.e300  // dummy value to indicate that flux or centroid not calculated yet.
+
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<T>& image,
@@ -97,7 +99,7 @@ namespace galsim {
         _init_bounds(init_bounds), _nonzero_bounds(nonzero_bounds),
         _xInterp(xInterp), _kInterp(kInterp),
         _stepk(stepk), _maxk(maxk),
-        _flux(-999.), _xcentroid(-999.), _ycentroid(-999.),
+        _flux(INVALID), _xcentroid(INVALID), _ycentroid(INVALID),
         _readyToShoot(false)
     {
         dbg<<"image bounds = "<<image.getBounds()<<std::endl;
@@ -418,7 +420,7 @@ namespace galsim {
 
     Position<double> SBInterpolatedImage::SBInterpolatedImageImpl::centroid() const
     {
-        if (_xcentroid == -999.) {
+        if (_xcentroid == INVALID) {
             double flux = getFlux();
             if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
 
@@ -444,7 +446,7 @@ namespace galsim {
 
     double SBInterpolatedImage::SBInterpolatedImageImpl::getFlux() const
     {
-        if (_flux == -999.) {
+        if (_flux == INVALID) {
             _flux = 0.;
             ConstImageView<double> image = getNonZeroImage();
             for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy) {
@@ -462,6 +464,7 @@ namespace galsim {
     {
         dbg<<"Start CalculateSizeWithFlux\n";
         dbg<<"Find box that encloses flux = "<<target_flux<<std::endl;
+        double p = target_flux > 0. ? 1 : -1;  // p for "positive" -- Make flux effectively > 0.
 
         const Bounds<int> b = im.getBounds();
         int dmax = std::min((b.getXMax()-b.getXMin())/2, (b.getYMax()-b.getYMin())/2);
@@ -480,7 +483,7 @@ namespace galsim {
                 flux += im(-x,d);  // top
                 flux += im(-d,-x); // left
             }
-            if (flux >= target_flux) break;
+            if (p * flux >= p * target_flux) break;
         }
         dbg<<"Done: flux = "<<flux<<", d = "<<d<<std::endl;
         return d + 0.5;
