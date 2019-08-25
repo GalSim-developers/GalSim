@@ -49,9 +49,7 @@ namespace galsim {
                                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams), _adaptee(adaptee)
     {
-        double maxk = maxK();
-        _maxksq = maxk*maxk;
-        dbg<<"SBFourierSqrt constructor: _maxksq = "<<_maxksq<<std::endl;
+        dbg<<"SBFourierSqrt constructor\n";
     }
 
     // xValue() not implemented for SBFourierSqrt.
@@ -60,7 +58,7 @@ namespace galsim {
 
     std::complex<double> SBFourierSqrt::SBFourierSqrtImpl::kValue(const Position<double>& k) const
     {
-        return (k.x*k.x + k.y*k.y <= _maxksq) ? std::sqrt(_adaptee.kValue(k)) : 0.;
+        return std::sqrt(_adaptee.kValue(k));
     }
 
     template <typename T>
@@ -82,10 +80,9 @@ namespace galsim {
 
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
-            double kysq = ky0*ky0;
             for (int i=0; i<m; ++i,kx+=dkx) {
                 std::complex<T> val = *ptr;
-                *ptr++ = (kx*kx+kysq <= _maxksq) ? std::sqrt(val) : 0.;
+                *ptr++ = std::sqrt(val);
             }
         }
     }
@@ -112,7 +109,7 @@ namespace galsim {
             double ky = ky0;
             for (int i=0; i<m; ++i,kx+=dkx) {
                 std::complex<T> val = *ptr;
-                *ptr++ = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(val) : 0.;
+                *ptr++ = std::sqrt(val);
             }
         }
     }

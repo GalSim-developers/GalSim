@@ -561,6 +561,18 @@ class Image(object):
         """
         return _Image(self.array.copy(), self.bounds, self.wcs)
 
+    def get_pixel_centers(self):
+        """A convenience function to get the x and y values at the centers of the image pixels.
+
+        Returns:
+            (x, y), each of which is a numpy array the same shape as ``self.array``
+        """
+        x,y = np.meshgrid(np.arange(self.array.shape[1], dtype=float),
+                          np.arange(self.array.shape[0], dtype=float))
+        x = x + self.bounds.xmin
+        y = y + self.bounds.ymin
+        return x, y
+
     def _make_empty(self, shape, dtype):
         """Helper function to make an empty numpy array of the given shape, making sure that
         the array is 16-btye aligned so it is usable by FFTW.
@@ -1405,9 +1417,9 @@ class Image(object):
             flux = np.sum(self.array, dtype=float)
 
         # Use radii at centers of pixels as approximation to the radial integral
-        x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
-        x = x - center.x + self.bounds.xmin
-        y = y - center.y + self.bounds.ymin
+        x,y = self.get_pixel_centers()
+        x -= center.x
+        y -= center.y
         rsq = x*x + y*y
 
         # Sort by radius
@@ -1471,9 +1483,9 @@ class Image(object):
             flux = np.sum(self.array, dtype=float)
 
         # Use radii at centers of pixels as approximation to the radial integral
-        x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
-        x = x - center.x + self.bounds.xmin
-        y = y - center.y + self.bounds.ymin
+        x,y = self.get_pixel_centers()
+        x -= center.x
+        y -= center.y
 
         if rtype in ('trace', 'both'):
             # Calculate trace measure:
@@ -1528,9 +1540,9 @@ class Image(object):
         if Imax2 > Imax: Imax = Imax2
 
         # Use radii at centers of pixels.
-        x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
-        x = x - center.x + self.bounds.xmin
-        y = y - center.y + self.bounds.ymin
+        x,y = self.get_pixel_centers()
+        x -= center.x
+        y -= center.y
         rsq = x*x + y*y
 
         # Sort by radius
