@@ -272,10 +272,10 @@ def do_shoot(prof, img, name):
     # uncertainty = sqrt(N_pix) * flux_photon = sqrt(N_tot * flux_pix / flux_tot) * flux_tot / N_tot
     #             = sqrt(flux_pix) * sqrt(flux_tot) / sqrt(N_tot)
     # This is largest for the brightest pixel.  So we use:
-    # N = flux_max * flux_tot / photon_shoot_accuracy^2
-    photon_shoot_accuracy = 2.e-3
-    # The number of decimal places at which to test the photon shooting
-    photon_decimal_test = 2
+    # uncertainty = rtol * flux_max
+    # => N_tot = flux_tot / flux_max / rtol**2
+    # Then we multiply by 10 to get a 3 sigma buffer
+    rtol = 2.e-2
 
     test_flux = 1.8
 
@@ -294,28 +294,9 @@ def do_shoot(prof, img, name):
     print('flux_max = ',flux_max)
     flux_tot = img.array.sum(dtype=float)
     print('flux_tot = ',flux_tot)
-    if flux_max > 1.:
-        # Since the number of photons required for a given accuracy level (in terms of
-        # number of decimal places), we rescale the comparison by the flux of the
-        # brightest pixel.
-        prof /= flux_max
-        img /= flux_max
-        # The formula for number of photons needed is:
-        # nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-        # But since we rescaled the image by 1/flux_max, it becomes
-        nphot = flux_tot / flux_max / photon_shoot_accuracy**2
-    elif flux_max < 0.1:
-        # If the max is very small, at least bring it up to 0.1, so we are testing something.
-        scale = 0.1 / flux_max
-        print('scale = ',scale)
-        prof *= scale
-        img *= scale
-        nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
-    else:
-        nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-    print('prof.flux => ',prof.flux)
-    print('img.sum => ',img.array.sum(dtype=float))
-    print('img.max => ',img.array.max())
+    atol = flux_max * rtol * 3
+
+    nphot = flux_tot / flux_max / rtol**2
     print('nphot = ',nphot)
     img2 = img.copy()
 
@@ -325,9 +306,10 @@ def do_shoot(prof, img, name):
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img2.sum => ',img2.array.sum(dtype=float))
+    print('img2.max = ',img2.array.max())
     printval(img2,img)
-    np.testing.assert_array_almost_equal(
-            img2.array, img.array, photon_decimal_test,
+    np.testing.assert_allclose(
+            img2.array, img.array, rtol=rtol, atol=atol,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
 
     # Test normalization
@@ -344,7 +326,7 @@ def do_shoot(prof, img, name):
     prof = prof.withFlux(test_flux)
     prof.drawImage(img)
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, 4,
+    np.testing.assert_allclose(img.array.sum(dtype=float), test_flux, rtol=1.e-4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
     # max_sb is not always very accurate, but it should be an overestimate if wrong.
     assert img.array.max() <= prof.max_sb*dx**2 * 1.4, "max_sb for %s is too small."%name
@@ -358,7 +340,7 @@ def do_shoot(prof, img, name):
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
     np.testing.assert_allclose(
-            img.array.sum(dtype=float), test_flux, rtol=10**(-photon_decimal_test),
+            img.array.sum(dtype=float), test_flux, rtol=rtol, atol=atol,
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
     print('img.max = ',img.array.max(),'  cf. ',prof.max_sb*dx**2)
     print('ratio = ',img.array.max() / (prof.max_sb*dx**2))
