@@ -1103,8 +1103,7 @@ class GSObject(object):
                 if odd: N += 1
                 image = Image(N, N, dtype=dtype)
                 if center is not None:
-                    image.shift(PositionI(np.floor(center.x+0.5-image.true_center.x),
-                                          np.floor(center.y+0.5-image.true_center.y)))
+                    image.setCenter(PositionI(np.ceil(center.x), np.ceil(center.y)))
 
         return image
 
@@ -1174,8 +1173,7 @@ class GSObject(object):
                 offset += center - new_bounds.center
             else:
                 # Then will be created as even sized image.
-                offset += PositionD(center.x-np.floor(center.x)-1.0,
-                                    center.y-np.floor(center.y)-1.0)
+                offset += PositionD(center.x-np.ceil(center.x), center.y-np.ceil(center.y))
         elif use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
             # pixel just up and right of the real center.  So shift it back to make sure it really
