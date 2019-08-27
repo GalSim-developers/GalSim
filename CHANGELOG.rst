@@ -61,6 +61,7 @@ New Features
 - Exposed some methods of `Interpolant` classes that had only been in the C++ layer. (#1038)
 - Added Zernike polynomial +, -, and * operators. (#1047)
 - Added Zernike polynomial properties .laplacian and .hessian. (#1047)
+- Added ``center`` option to the `GSObject.drawImage` method. (#1053)
 
 Bug Fixes
 ---------

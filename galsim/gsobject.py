@@ -21,7 +21,7 @@ import math
 
 from . import _galsim
 from .gsparams import GSParams
-from .position import PositionD, PositionI
+from .position import PositionD, PositionI, Position
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimFFTSizeError, GalSimNotImplementedError, convert_cpp_errors, galsim_warn
@@ -1046,7 +1046,7 @@ class GSObject(object):
         return new_obj
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False):
+    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, center, odd=False):
         from .image import Image
         from .bounds import _BoundsI
 
@@ -1095,14 +1095,20 @@ class GSObject(object):
                     raise GalSimIncompatibleValuesError(
                         "Must set either both or neither of nx, ny", nx=nx, ny=ny)
                 image = Image(nx, ny, dtype=dtype)
+                if center is not None:
+                    image.shift(PositionI(np.floor(center.x+0.5-image.true_center.x),
+                                          np.floor(center.y+0.5-image.true_center.y)))
             else:
                 N = self.getGoodImageSize(1.0)
                 if odd: N += 1
                 image = Image(N, N, dtype=dtype)
+                if center is not None:
+                    image.shift(PositionI(np.floor(center.x+0.5-image.true_center.x),
+                                          np.floor(center.y+0.5-image.true_center.y)))
 
         return image
 
-    def _local_wcs(self, wcs, image, offset, use_true_center, new_bounds):
+    def _local_wcs(self, wcs, image, offset, center, use_true_center, new_bounds):
         # Get the local WCS at the location of the object.
 
         if wcs.isUniform():
@@ -1115,6 +1121,8 @@ class GSObject(object):
             raise GalSimIncompatibleValuesError(
                 "Cannot provide non-local wcs with automatically sized image",
                 wcs=wcs, image=image, bounds=new_bounds)
+        elif center is not None:
+            obj_cen = center
         elif use_true_center:
             obj_cen = bounds.true_center
         else:
@@ -1128,27 +1136,47 @@ class GSObject(object):
     def _parse_offset(self, offset):
         if offset is None:
             return PositionD(0,0)
+        elif isinstance(offset, Position):
+            return PositionD(offset.x, offset.y)
         else:
-            if isinstance(offset, PositionD) or isinstance(offset, PositionI):
-                return PositionD(offset.x, offset.y)
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                return PositionD(offset[0], offset[1])
+            # Let python raise the appropriate exception if this isn't valid.
+            return PositionD(offset[0], offset[1])
 
-    def _get_new_bounds(self, image, nx, ny, bounds):
+    def _parse_center(self, center):
+        # Almost the same as _parse_offset, except we leave it as None in that case.
+        if center is None:
+            return None
+        elif isinstance(center, Position):
+            return PositionD(center.x, center.y)
+        else:
+            # Let python raise the appropriate exception if this isn't valid.
+            return PositionD(center[0], center[1])
+
+    def _get_new_bounds(self, image, nx, ny, bounds, center):
         from .bounds import BoundsI
         if image is not None and image.bounds.isDefined():
             return image.bounds
         elif nx is not None and ny is not None:
-            return BoundsI(1,nx,1,ny)
+            b = BoundsI(1,nx,1,ny)
+            if center is not None:
+                b = b.shift(PositionI(np.floor(center.x+0.5)-b.center.x,
+                                      np.floor(center.y+0.5)-b.center.y))
+            return b
         elif bounds is not None and bounds.isDefined():
             return bounds
         else:
             return BoundsI()
 
-    def _adjust_offset(self, new_bounds, offset, use_true_center):
+    def _adjust_offset(self, new_bounds, offset, center, use_true_center):
         # Note: this assumes self is in terms of image coordinates.
-        if use_true_center:
+        if center is not None:
+            if new_bounds.isDefined():
+                offset += center - new_bounds.center
+            else:
+                # Then will be created as even sized image.
+                offset += PositionD(center.x-np.floor(center.x)-1.0,
+                                    center.y-np.floor(center.y)-1.0)
+        elif use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
             # pixel just up and right of the real center.  So shift it back to make sure it really
             # draws in the center.
@@ -1192,7 +1220,8 @@ class GSObject(object):
 
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
-                  use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
+                  center=None, use_true_center=True, offset=None,
+                  n_photons=0., rng=None, max_extra_noise=0.,
                   poisson_flux=None, sensor=None, surface_ops=(), n_subsample=3, maxN=None,
                   save_photons=False, setup_only=False):
         """Draws an `Image` of the object.
@@ -1330,12 +1359,17 @@ class GSObject(object):
         image.  There is thus a qualitative difference in the appearance of the rendered profile
         when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this
         maximum will fall in the central pixel of an odd-sized image, but in the corner of the four
-        central pixels of an even-sized image.  There are two parameters that can affect this
-        behavior.  If you want the nominal center to always fall at the center of a pixel, you can
-        use ``use_true_center=False``.  This will put the object's center at the position
-        ``image.center`` which is an integer pixel value, and is not the true center of an
-        even-sized image.  You can also arbitrarily offset the profile from the image center with
-        the ``offset`` parameter to handle any sub-pixel dithering you want.
+        central pixels of an even-sized image.  There are three parameters that can affect this
+        behavior.  First, you can specify any arbitrary pixel position to center the object using
+        the ``center`` parameter.  If this is None, then it will pick one of the two potential
+        "centers" of the image, either ``image.true_center`` or ``image.center``.  The latter is
+        an integer position, which always corresponds to the center of some pixel, which for even
+        sized images won't (cannot) be the actual "true" center of the image.  You can choose which
+        of these two centers you want to use with the ``use_true_center`` parameters, which
+        defaults to False.  You can also arbitrarily offset the profile from the image center with
+        the ``offset`` parameter to handle any aribtrary offset you want from the chosen center.
+        (Typically, one would use only one of ``center`` or ``offset`` but it is permissible to use
+        both.)
 
         Setting the overall normalization:
 
@@ -1468,14 +1502,16 @@ class GSObject(object):
                             anything in the image before drawing.
                             Note: This requires that ``image`` be provided and that it have defined
                             bounds. [default: False]
-            use_true_center: Normally, the profile is drawn to be centered at the true center
-                            of the image (using the property image.true_center).
+            center:         The position on the image at which to place the nominal center of the
+                            object (usually the centroid, but not necessarily).  [default: None]
+            use_true_center: If ``center`` is None, then the object is normally centered at the
+                            true center of the image (using the property image.true_center).
                             If you would rather use the integer center (given by image.center),
                             set this to ``False``.  [default: True]
-            offset:         The location in pixel coordinates at which to center the profile being
-                            drawn relative to the center of the image (either the true center if
-                            ``use_true_center=True`` or nominal center if
-                            ``use_true_center=False``).  [default: None]
+            offset:         The offset in pixel coordinates at which to center the profile being
+                            drawn relative to either ``center`` (if given) or the center of the
+                            image (either the true center or integer center according to the
+                            ``use_true_center`` parameter). [default: None]
             n_photons:      If provided, the number of photons to use for photon shooting.
                             If not provided (i.e. ``n_photons = 0``), use as many photons as
                             necessary to result in an image with the correct Poisson shot
@@ -1604,14 +1640,15 @@ class GSObject(object):
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
 
-        # Make sure offset is a PositionD
+        # Make sure offset and center are PositionD if entered as tuples.
         offset = self._parse_offset(offset)
+        center = self._parse_center(center)
 
         # Determine the bounds of the new image for use below (if it can be known yet)
-        new_bounds = self._get_new_bounds(image, nx, ny, bounds)
+        new_bounds = self._get_new_bounds(image, nx, ny, bounds, center)
 
         # Get the local WCS, accounting for the offset correctly.
-        local_wcs = self._local_wcs(wcs, image, offset, use_true_center, new_bounds)
+        local_wcs = self._local_wcs(wcs, image, offset, center, use_true_center, new_bounds)
 
         # Account for area and exptime.
         flux_scale = area * exptime
@@ -1624,7 +1661,7 @@ class GSObject(object):
             flux_scale /= gain
 
         # Determine the offset, and possibly fix the centering for even-sized images
-        offset = self._adjust_offset(new_bounds, offset, use_true_center)
+        offset = self._adjust_offset(new_bounds, offset, center, use_true_center)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = local_wcs.profileToImage(self, flux_ratio=flux_scale, offset=offset)
@@ -1644,7 +1681,7 @@ class GSObject(object):
                             real_space=real_space, gsparams=self.gsparams)
 
         # Make sure image is setup correctly
-        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype)
+        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, center)
         image.wcs = wcs
 
         if setup_only:
@@ -2296,7 +2333,8 @@ class GSObject(object):
         if image is None or not image.bounds.isDefined():
             real_prof = PixelScale(dx).profileToImage(self)
             dtype = np.complex128 if image is None else image.dtype
-            image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, odd=True)
+            image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
+                                           center=None, odd=True)
         else:
             # Do some checks that setup_image would have done for us
             if bounds is not None:

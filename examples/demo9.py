@@ -294,24 +294,6 @@ def main(argv):
             # stamp on the full image.
             image_pos = wcs.toImage(pos)
 
-            # For even-sized postage stamps, the nominal center (available as stamp.center)
-            # cannot be at the true center (available as stamp.true_center) of the postage stamp,
-            # since the nominal center values have to be integers.  Thus, the nominal center is
-            # 1/2 pixel up and to the right of the true center.
-            # If we used odd-sized postage stamps, we wouldn't need to do this.
-            x_nominal = image_pos.x + 0.5
-            y_nominal = image_pos.y + 0.5
-
-            # Get the integer values of these which will be the actual nominal center of the
-            # postage stamp image.
-            ix_nominal = int(math.floor(x_nominal+0.5))
-            iy_nominal = int(math.floor(y_nominal+0.5))
-
-            # The remainder will be accounted for in an offset when we draw.
-            dx = x_nominal - ix_nominal
-            dy = y_nominal - iy_nominal
-            offset = galsim.PositionD(dx,dy)
-
             # Draw the flux from a power law distribution: N(f) ~ f^-1.5
             # For this, we use the class DistDeviate which can draw deviates from an arbitrary
             # probability distribution.  This distribution can be defined either as a functional
@@ -404,15 +386,13 @@ def main(argv):
             final = galsim.Convolve([gal, psf])
 
             # Draw the stamp image
-            # To draw the image at a position other than the center of the image, you can
-            # use the offset parameter, which applies an offset in pixels relative to the
-            # center of the image.
+            # This will construct an appropriately sized postage-stamp image with the galaxy
+            # drawn near the center of the image.  The bounds of the postage stamp will be set
+            # such that the given center is close the stamp center.  And the galaxy will be drawn
+            # centered at that sub-pixel location on the image.
             # We also need to provide the local wcs at the current position.
             local_wcs = wcs.local(image_pos)
-            stamp = final.drawImage(wcs=local_wcs, offset=offset)
-
-            # Recenter the stamp at the desired position:
-            stamp.setCenter(ix_nominal,iy_nominal)
+            stamp = final.drawImage(wcs=local_wcs, center=image_pos)
 
             # Find overlapping bounds
             bounds = stamp.bounds & full_image.bounds
@@ -425,7 +405,7 @@ def main(argv):
 
             # Also draw the PSF
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf.drawImage(psf_stamp, wcs=local_wcs, offset=offset)
+            psf.drawImage(psf_stamp, wcs=local_wcs, center=image_pos)
             psf_image[bounds] += psf_stamp[bounds]
 
             # Add the truth information for this object to the truth catalog
