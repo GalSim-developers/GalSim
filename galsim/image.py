@@ -569,8 +569,8 @@ class Image(object):
         """
         x,y = np.meshgrid(np.arange(self.array.shape[1], dtype=float),
                           np.arange(self.array.shape[0], dtype=float))
-        x = x + self.bounds.xmin
-        y = y + self.bounds.ymin
+        x += self.bounds.xmin
+        y += self.bounds.ymin
         return x, y
 
     def _make_empty(self, shape, dtype):
