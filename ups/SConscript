@@ -6,7 +6,7 @@ Import('env')
 RunInstall = env['_RunInstall']
 RunUninstall = env['_RunUninstall']
 
-for fname in ['GalSim.table']:
+for fname in ['galsim.table']:
 
     cfile=env.File(fname)
     install_subdir = 'ups'
