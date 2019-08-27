@@ -332,7 +332,7 @@ class InterpolatedImage(GSObject):
         # Figure out the offset to apply based on the original image (not the padded one).
         # We will apply this below in _sbp.
         offset = self._parse_offset(offset)
-        self._offset = self._adjust_offset(self._image.bounds, offset, use_true_center)
+        self._offset = self._adjust_offset(self._image.bounds, offset, None, use_true_center)
 
         im_cen = image.true_center if use_true_center else image.center
         self._wcs = self._image.wcs.local(image_pos=im_cen)
@@ -745,7 +745,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     ret._k_interpolant = k_interpolant.withGSParams(ret._gsparams)
 
     offset = ret._parse_offset(offset)
-    ret._offset = ret._adjust_offset(ret._image.bounds, offset, use_true_center)
+    ret._offset = ret._adjust_offset(ret._image.bounds, offset, None, use_true_center)
     im_cen = ret._image.true_center if use_true_center else ret._image.center
     ret._wcs = ret._image.wcs.local(image_pos = im_cen)
     ret._pad_factor = 1.

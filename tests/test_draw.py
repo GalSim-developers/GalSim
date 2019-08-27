@@ -156,6 +156,20 @@ def test_drawImage():
     np.testing.assert_equal(im7.bounds, galsim.BoundsI(1,68,1,68),
                             "obj.drawImage(dx) produced image with wrong bounds")
 
+    # If also providing center, then same size, but centered near that center.
+    for center in [(3,3), (210.2, 511.9), (10.55, -23.8), (0.5,0.5)]:
+        im8 = obj.drawImage(scale=scale, center=center)
+        np.testing.assert_almost_equal(im8.scale, scale, 9)
+        # Note: it doesn't have to come out 68,68. If the offset is large enough, it tips up to 70.
+        if center == (3,3):
+            np.testing.assert_equal(im8.array.shape, (70, 70))
+        else:
+            np.testing.assert_equal(im8.array.shape, (68, 68))
+        np.testing.assert_almost_equal(im8.array.astype(float).sum(), test_flux, 2)
+        print('center, true = ',center,im8.true_center)
+        assert abs(center[0] - im8.true_center.x) <= 0.5
+        assert abs(center[1] - im8.true_center.y) <= 0.5
+
     # Test if we provide an image with a defined scale.  It should:
     #   - write to the existing image
     #   - use the image's scale
@@ -325,6 +339,27 @@ def test_drawImage():
     np.testing.assert_almost_equal(mom['My'], (ny+1.+1.)/2., 4,
                                    "obj.drawImage(bounds) did not center in y correctly")
 
+    # Test if we provide nx, ny, scale, and center.  It should:
+    #   - create a new image with the right size
+    #   - set the scale
+    #   - set the center to be as close as possible to center
+    for center in [(3,3), (10.2, 11.9), (10.55, -23.8)]:
+        im11 = obj.drawImage(nx=nx, ny=ny, scale=scale, center=center)
+        np.testing.assert_equal(im11.array.shape, (ny, nx))
+        np.testing.assert_almost_equal(im11.scale, scale, 9)
+        np.testing.assert_almost_equal(im11.array.sum(), test_flux, 4)
+        print('center, true = ',center,im8.true_center)
+        assert abs(center[0] - im11.true_center.x) <= 0.5
+        assert abs(center[1] - im11.true_center.y) <= 0.5
+
+        # Repeat with odd nx,ny
+        im11 = obj.drawImage(nx=nx+1, ny=ny+1, scale=scale, center=center)
+        np.testing.assert_equal(im11.array.shape, (ny+1, nx+1))
+        np.testing.assert_almost_equal(im11.scale, scale, 9)
+        np.testing.assert_almost_equal(im11.array.sum(), test_flux, 4)
+        assert abs(center[0] - im11.true_center.x) <= 0.5
+        assert abs(center[1] - im11.true_center.y) <= 0.5
+
     # Combinations that raise errors:
     assert_raises(TypeError, obj.drawImage, image=im10, bounds=bounds)
     assert_raises(TypeError, obj.drawImage, image=im10, dtype=int)
@@ -332,6 +367,8 @@ def test_drawImage():
     assert_raises(TypeError, obj.drawImage, nx=3, ny=4, image=im10)
     assert_raises(TypeError, obj.drawImage, nx=3, ny=4, bounds=bounds)
     assert_raises(TypeError, obj.drawImage, nx=3, ny=4, add_to_image=True)
+    assert_raises(TypeError, obj.drawImage, nx=3, ny=4, center=True)
+    assert_raises(TypeError, obj.drawImage, nx=3, ny=4, center=23)
     assert_raises(TypeError, obj.drawImage, bounds=bounds, add_to_image=True)
     assert_raises(TypeError, obj.drawImage, image=galsim.Image(), add_to_image=True)
     assert_raises(TypeError, obj.drawImage, nx=3)
@@ -914,6 +951,10 @@ def test_offset():
                 mom['My'], ceny, 5,
                 "obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
 
+        # Can also use center to explicitly say we want to use the true_center.
+        im3 = obj.drawImage(im.copy(), method='sb', center=im.true_center)
+        np.testing.assert_almost_equal(im3.array, im.array)
+
         # Test that a few pixel values match xValue.
         # Note: we don't expect the FFT drawn image to match the xValues precisely, since the
         # latter use real-space convolution, so they should just match to our overall accuracy
@@ -997,7 +1038,21 @@ def test_offset():
                         im2(x,y), gal.xValue(galsim.PositionD(u,v)), 6,
                         "im2(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
 
-        # Chcek the image's definition of the nominal center
+            # Test that the center parameter can be used to do the same thing.
+            center = galsim.PositionD(cenx + offx, ceny + offy)
+            im3 = obj.drawImage(im.copy(), method='sb', center=center)
+            np.testing.assert_almost_equal(im3.array, im.array)
+            assert im3.bounds == im.bounds
+            assert im3.wcs == im.wcs
+
+            # Can also use both offset and center
+            im3 = obj.drawImage(im.copy(), method='sb',
+                                center=(cenx-1, ceny+1), offset=(offx+1, offy-1))
+            np.testing.assert_almost_equal(im3.array, im.array)
+            assert im3.bounds == im.bounds
+            assert im3.wcs == im.wcs
+
+        # Check the image's definition of the nominal center
         nom_cenx = (nx+2)//2
         nom_ceny = (ny+2)//2
         nominal_center = im.bounds.center
@@ -1024,6 +1079,10 @@ def test_offset():
         np.testing.assert_array_almost_equal(
                 im.array, im2.array, 6,
                 "obj.drawImage(im, offset=%f,%f) different from use_true_center=False")
+
+        # Can also use center to explicitly say to use the integer center
+        im3 = obj.drawImage(im.copy(), method='sb', center=im.center)
+        np.testing.assert_almost_equal(im3.array, im.array)
 
 def test_shoot():
     """Test drawImage(..., method='phot')

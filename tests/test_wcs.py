@@ -610,6 +610,11 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
                 im1.array, im2.array, digits,
                 'world_profile and image_profile were different when drawn for '+name)
 
+        # Test drawing the profile at a different center
+        world_profile.drawImage(im1, method='no_pixel', center=(30.9,34.1))
+        image_profile.drawImage(im2, method='no_pixel', center=(30.9,34.1))
+        np.testing.assert_array_almost_equal(im1.array, im2.array, digits)
+
 
 def do_jac_decomp(wcs, name):
 
@@ -765,6 +770,12 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
+
+            # Equivalent call using center rather than offset
+            im1b = world_profile.drawImage(im1.copy(), center=(x0,y0), method='no_pixel')
+            np.testing.assert_array_almost_equal(im1b.array, im1.array, digits)
+            im2b = image_profile.drawImage(im2.copy(), center=(x0,y0), method='no_pixel')
+            np.testing.assert_array_almost_equal(im2b.array, im2.array, digits)
 
             try:
                 # The toImage call is not guaranteed to be implemented for world_pos.
@@ -981,6 +992,12 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
+
+            # Equivalent call using center rather than offset
+            im1b = world_profile.drawImage(im1.copy(), center=(x0,y0), method='no_pixel')
+            np.testing.assert_array_almost_equal(im1b.array, im1.array, digits)
+            im2b = image_profile.drawImage(im2.copy(), center=(x0,y0), method='no_pixel')
+            np.testing.assert_array_almost_equal(im2b.array, im2.array, digits)
 
             if test_reverse:
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
