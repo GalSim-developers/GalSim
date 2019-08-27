@@ -160,9 +160,10 @@ def test_drawImage():
     for center in [(3,3), (210.2, 511.9), (10.55, -23.8), (0.5,0.5)]:
         im8 = obj.drawImage(scale=scale, center=center)
         np.testing.assert_almost_equal(im8.scale, scale, 9)
-        # Note: it doesn't have to come out 68,68. If the offset is large enough, it tips up to 70.
+        # Note: it doesn't have to come out 68,68. If the offset is zero from the integer center,
+        #       it drops down to (66, 66)
         if center == (3,3):
-            np.testing.assert_equal(im8.array.shape, (70, 70))
+            np.testing.assert_equal(im8.array.shape, (66, 66))
         else:
             np.testing.assert_equal(im8.array.shape, (68, 68))
         np.testing.assert_almost_equal(im8.array.astype(float).sum(), test_flux, 2)
