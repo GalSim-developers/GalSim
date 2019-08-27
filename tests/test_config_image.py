@@ -448,6 +448,14 @@ def test_reject():
     assert re.search(r"Object 0: Measured flux = 3253.17[0-9]* < 0.95 \* 3457.712670.", cl.output)
     assert re.search(r"Object 0: Measured snr = 60.992[0-9]* > 50.0.", cl.output)
 
+    # 10 is quick skipped, so we don't even get a debug line for it.
+    assert 'Stamp 10' not in cl.output
+    assert 'obj 10' not in cl.output
+    # Others all get at least that:
+    for i in range(10):
+        assert 'Stamp %d'%i in cl.output
+        assert 'obj %d'%i in cl.output
+
     # For test coverage to get all branches, do min_snr and max_snr separately.
     del config['stamp']['max_snr']
     config['stamp']['min_snr'] = 20
