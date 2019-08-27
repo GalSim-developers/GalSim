@@ -1230,19 +1230,52 @@ class FitsHeader(object):
         self.header[key.upper()] = value
 
     def comment(self, key):
+        """Get the comment field for the given key.
+
+        Parameter:
+            key:    The header key for which to get the comment field.
+
+        Returns:
+            the comment field.
+        """
         return self.header.comments[key.upper()]
 
     def clear(self):
+        """Clear all values in the header.  Works like dict.clear.
+        """
         self._tag = None
         self.header.clear()
 
     def get(self, key, default=None):
+        """Get the value of a given key.  Works like dict.get.
+
+        Parameters:
+            key:        The header key for which to get the value
+            default:    Optionally, A value to use if the key is not present. [default: None]
+
+        Returns:
+            the value of the given key
+        """
         return self.header.get(key, default)
 
     def pop(self, key, default=None):
+        """Pop off a value from the header.  Works like dict.pop.
+
+        Parameters:
+            key:        The header key for which to get the value
+            default:    Optionally, A value to use if the key is not present. [default: None]
+
+        Returns:
+            the value of the given key
+        """
         return self.header.pop(key, default)
 
     def items(self):
+        """Get all header items.  Works like dict.items.
+
+        Returns:
+            A list of (key, value) tuples.
+        """
         return self.header.items()
 
     def iteritems(self):
@@ -1255,14 +1288,32 @@ class FitsHeader(object):
         return itervalues(self.header)
 
     def keys(self):
+        """Get all header keys.  Works like dict.keys
+
+        Returns:
+            A list of keys.
+        """
         return self.header.keys()
 
     def update(self, dict2):
+        """Update the header with a dict-like object.  Works like dict.update.
+
+        If there are any items in ``dict2`` that are duplicates of items already in the header,
+        the current items will ber overwritten.
+
+        Parameters:
+            dict2:      Another header or dict-like object with keys and values to update.
+        """
         self._tag = None
         for key, item in dict2.items():
             self.header[key.upper()] = item
 
     def values(self):
+        """Get all header values.  Works like dict.values.
+
+        Returns:
+            A list of values.
+        """
         return self.header.values()
 
     def append(self, key, value='', comment=None, useblanks=True):
