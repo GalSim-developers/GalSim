@@ -500,7 +500,7 @@ def try_cpp(compiler, cflags=[], lflags=[], prepend=None):
         return sum;
     }
     """)
-    return try_compile(cpp_code, compiler, cflags, lflags, prepend=None)
+    return try_compile(cpp_code, compiler, cflags, lflags, prepend=prepend)
 
 def try_cpp11(compiler, cflags=[], lflags=[]):
     """Check if compiling c++11 code with the given compiler works properly.
