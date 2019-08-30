@@ -31,7 +31,7 @@ from galsim_test_helpers import *
 
 
 @timer
-def test_randwalk_defaults():
+def test_knots_defaults():
     """
     Create a random walk galaxy and test that the getters work for
     default inputs
@@ -98,7 +98,7 @@ def test_randwalk_defaults():
 
 
 @timer
-def test_randwalk_valid_inputs():
+def test_knots_valid_inputs():
     """
     Create a random walk galaxy and test that the getters work for
     valid non-default inputs
@@ -144,7 +144,7 @@ def test_randwalk_valid_inputs():
         assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
 
 @timer
-def test_randwalk_invalid_inputs():
+def test_knots_invalid_inputs():
     """
     Create a random walk galaxy and test that the the correct exceptions
     are raised for invalid inputs
@@ -204,7 +204,7 @@ def test_randwalk_invalid_inputs():
 
 
 @timer
-def test_randwalk_repr():
+def test_knots_repr():
     """
     test the repr and str work, and that a new object can be created
     using eval
@@ -244,7 +244,7 @@ def test_randwalk_repr():
             "expected flux=%.16g got %.16g" % (rw.flux,new_rw.flux)
 
 @timer
-def test_randwalk_config():
+def test_knots_config():
     """
     test we get the same object using a configuration and the
     explicit constructor
@@ -300,7 +300,7 @@ def test_randwalk_config():
 
 
 @timer
-def test_randwalk_hlr():
+def test_knots_hlr():
     """
     Create a random walk galaxy and test that the half light radius
     is consistent with the requested value
@@ -353,7 +353,7 @@ def test_randwalk_hlr():
             assert abs(mn-hlr) < nstd*std_check, mess
 
 @timer
-def test_randwalk_transform():
+def test_knots_transform():
     """Test that overridden transformations give equivalent results as the normal methods.
     """
     def test_op(rw, op):
@@ -410,10 +410,10 @@ def test_randwalk_transform():
 
 
 if __name__ == "__main__":
-    test_randwalk_defaults()
-    test_randwalk_valid_inputs()
-    test_randwalk_invalid_inputs()
-    test_randwalk_repr()
-    test_randwalk_config()
-    test_randwalk_hlr()
-    test_randwalk_transform()
+    test_knots_defaults()
+    test_knots_valid_inputs()
+    test_knots_invalid_inputs()
+    test_knots_repr()
+    test_knots_config()
+    test_knots_hlr()
+    test_knots_transform()
