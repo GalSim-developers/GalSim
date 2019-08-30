@@ -392,6 +392,7 @@ def test_randwalk_transform():
         test_op(rw, 'rotate(23 * galsim.degrees)')  # no op, since original is isotropic
 
     # These are fundamental, since these are the methods we override.  Always test these.
+    test_op(rw, 'withFlux(23)')
     test_op(rw, 'withScaledFlux(23)')
     test_op(rw, 'expand(1.2)')
     test_op(rw, 'dilate(1.2)')
@@ -403,8 +404,7 @@ def test_randwalk_transform():
     test_op(rw, '_shift(galsim.PositionD(-0.3, 0.2))')
 
     if __name__ == '__main__':
-        # A few more that are currently not overridden, but call out to the above functions.
-        test_op(rw, 'withFlux(23)')
+        # A couple more that are currently not overridden, but call out to the above functions.
         test_op(rw, 'magnify(1.2)')
         test_op(rw, 'lens(0.03, 0.07, 1.12)')
 
