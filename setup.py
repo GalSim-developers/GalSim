@@ -57,7 +57,7 @@ def all_files_from(dir, ext=''):
     files = []
     for root, dirnames, filenames in os.walk(dir):
         for filename in filenames:
-            if filename.endswith(ext):
+            if filename.endswith(ext) and not filename.startswith( ('.', 'SCons') ):
                 files.append(os.path.join(root, filename))
     return files
 
@@ -1019,7 +1019,6 @@ dist = setup(name="GalSim",
     download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
     packages=find_packages(),
     package_data={'galsim' : shared_data},
-    include_package_data=True,
     libraries=[lib],
     ext_modules=[ext],
     setup_requires=build_dep,
