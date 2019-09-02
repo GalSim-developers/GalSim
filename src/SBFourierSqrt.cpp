@@ -73,14 +73,13 @@ namespace galsim {
 
         // Now sqrt the values
         const int m = im.getNCol();
-        const int n = im.getNRow();
+        int n = im.getNRow();
         std::complex<T>* ptr = im.getData();
-        int skip = im.getNSkip();
+        const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
-        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
-            double kx = kx0;
-            for (int i=0; i<m; ++i,kx+=dkx) {
+        for (; n; --n,ptr+=skip) {
+            for (int i=m; i; --i) {
                 std::complex<T> val = *ptr;
                 *ptr++ = std::sqrt(val);
             }
@@ -99,15 +98,13 @@ namespace galsim {
 
         // Now sqrt the values
         const int m = im.getNCol();
-        const int n = im.getNRow();
+        int n = im.getNRow();
         std::complex<T>* ptr = im.getData();
-        int skip = im.getNSkip();
+        const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
-        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
-            double kx = kx0;
-            double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx) {
+        for (; n; --n,ptr+=skip) {
+            for (int i=m; i; --i) {
                 std::complex<T> val = *ptr;
                 *ptr++ = std::sqrt(val);
             }
