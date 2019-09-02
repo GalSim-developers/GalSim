@@ -388,7 +388,7 @@ def main(argv):
             # Draw the stamp image
             # This will construct an appropriately sized postage-stamp image with the galaxy
             # drawn near the center of the image.  The bounds of the postage stamp will be set
-            # such that the given center is close the stamp center.  And the galaxy will be drawn
+            # such that the given center is close to the stamp center.  And the galaxy will be drawn
             # centered at that sub-pixel location on the image.
             # We also need to provide the local wcs at the current position.
             local_wcs = wcs.local(image_pos)
