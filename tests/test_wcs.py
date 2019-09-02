@@ -2624,7 +2624,7 @@ def test_int_args():
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        wcs = galsim.FitsWCS(file_name, dir=dir)
+        wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
 
         posi = galsim.PositionI(5,6)
         posd = galsim.PositionD(5,6)
