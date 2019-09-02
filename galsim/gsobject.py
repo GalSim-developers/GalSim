@@ -1638,7 +1638,8 @@ class GSObject(object):
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
 
-        # Make sure offset and center are PositionD if entered as tuples.
+        # Make sure offset and center are PositionD, converting from other formats (tuple, array,..)
+        # Note: If None, offset is converted to PositionD(0,0), but center will remain None.
         offset = self._parse_offset(offset)
         center = self._parse_center(center)
 
