@@ -932,11 +932,20 @@ void invertImage(ImageView<T> im)
 
 // The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
 
+// Helper function to set data to all zeros.  (memset doesn't like being called on complex<T>)
+template <typename T>
+void ZeroData(T* data, int n)
+{ memset(data, 0, n * sizeof(T)); }
+
+template <typename T>
+void ZeroData(std::complex<T>* data, int n)
+{ memset(reinterpret_cast<T*>(data), 0, 2 * n * sizeof(T)); }
+
 template <typename T>
 void ImageView<T>::fill(T x)
 {
     if (x == T(0) && this->getNSkip()==0 && this->getStep()==1)
-        memset(this->getData(), 0, this->getNElements() * sizeof(T));
+        ZeroData(this->getData(), this->getNElements());
     else
         transform_pixel(*this, ConstReturn<T>(x));
 }
