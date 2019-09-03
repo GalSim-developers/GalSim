@@ -32,8 +32,8 @@ from ..config import GetAllParams, GetInputObj
 
 
 class DES_PSFEx(object):
-    """Class that handles DES files describing interpolated principal component images
-    of the PSF.  These are usually stored as ``*_psfcat.psf`` files.
+    r"""Class that handles DES files describing interpolated principal component images
+    of the PSF.  These are usually stored as \*_psfcat.psf files.
 
     PSFEx is software written by Emmanuel Bertin.  If you want more detail about PSFEx, please
     check out the web site:

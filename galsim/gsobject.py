@@ -1003,11 +1003,11 @@ class GSObject(object):
         The units are typically arcsec, but we don't enforce that anywhere.  The units here just
         need to be consistent with the units used for any size values used by the `GSObject`.
         The connection of these units to the eventual image pixels is defined by either the
-        ``pixel_scale`` or the ``wcs`` parameter of `drawImage`.
+        ``pixel_scale`` or the ``wcs`` parameter of `GSObject.drawImage`.
 
         Note: if you want to shift the object by a set number (or fraction) of pixels in the
-        drawn image, you probably want to use the ``offset`` parameter of `drawImage` rather than
-        this method.
+        drawn image, you probably want to use the ``offset`` parameter of `GSObject.drawImage`
+        rather than this method.
 
         Parameters:
             dx:         Horizontal shift to apply.
