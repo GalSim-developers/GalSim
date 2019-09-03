@@ -248,10 +248,10 @@ need to set are:
 * ``EXTRA_LIBS``: Additional libraries to send to the linker
 
 * ``EXTRA_INCLUDE_PATH``: Extra paths for header files (separated by : if more
-                        than 1)
+  than 1)
 
 * ``EXTRA_FLAGS``: Extra flags to send to the compiler other than what is
-                 automatically used. (e.g. -m64 to force 64 bit compilation)
+  automatically used. (e.g. -m64 to force 64 bit compilation)
 
 Again, you can see the full list of options using ``scons -h``.
 
@@ -543,169 +543,169 @@ Basic flags about the C++ compilation (default values in parentheses)
 * ``CXX`` (g++) specifies which C++ compiler to use.
 
 * ``FLAGS`` ('') specifies the basic flags to pass to the compiler.  The default
-   behavior is to automatically choose good flags to use according to which
-   kind of compiler you are using. This option overrides that and lets you
-   specify exactly what flags to use.
+  behavior is to automatically choose good flags to use according to which
+  kind of compiler you are using. This option overrides that and lets you
+  specify exactly what flags to use.
 
 * ``EXTRA_FLAGS`` ('') specifies some extra flags that you want to use in addition
-   to the defaults that SCons determines on its own. Unlike the above option,
-   this do not override the defaults, it just adds to them.
+  to the defaults that SCons determines on its own. Unlike the above option,
+  this do not override the defaults, it just adds to them.
 
 * ``LINK_FLAGS`` ('') specifies some extra flags at the linking step to use in
-   addition to the defaults that SCons determines it needs on its own.
+  addition to the defaults that SCons determines it needs on its own.
 
 * ``DEBUG`` (True) specifies whether to keep the debugging assert statements in
-   the compiled library code. They are not much of a performance hit, so it is
-   generally worth keeping them in, but if you need to squeeze out every last
-   bit of performance, you can set this to False.
+  the compiled library code. They are not much of a performance hit, so it is
+  generally worth keeping them in, but if you need to squeeze out every last
+  bit of performance, you can set this to False.
 
 * ``EXTRA_DEBUG`` (False) specifies whether to add a flag to keep the original
-   code information in the compiled library (-g3 for g++ compiler).  This
-   increases the size of the compiled library, but makes debugging with things
-   like gdb easier.  Probably end users will never need to use this.
+  code information in the compiled library (-g3 for g++ compiler).  This
+  increases the size of the compiled library, but makes debugging with things
+  like gdb easier.  Probably end users will never need to use this.
 
 * ``WARN`` (False) specifies whether to add warning compiler flags such as
-   ``-Wall``.
+  ``-Wall``.
 
 * ``COVER`` (False) specifies whether to add unit test coverage of the C++ layer.
 
 * ``PYTHON`` (/usr/bin/env python) specifies which version of Python you are
-   planning to use GalSim with.  If you choose not to use the default here,
-   then you need to remember to use the correct Python version
+  planning to use GalSim with.  If you choose not to use the default here,
+  then you need to remember to use the correct Python version
 
 Flags about where to install the library and modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``PREFIX`` (/usr/local) specifies where to install the library when running
-   ``scons install``.
+  ``scons install``.
 
 * ``PYPREFIX`` ([your python dir]/site-packages) specifies where to install the
-   Python modules when running ``scons install``.
+  Python modules when running ``scons install``.
 
 * ``FINAL_PREFIX`` (``PREFIX``) specifies the final installation prefix if different
-   from PREFIX.  (This is only needed for things like fink, where they install
-   into a staging area first before copying over to the final location.)
+  from PREFIX.  (This is only needed for things like fink, where they install
+  into a staging area first before copying over to the final location.)
 
 * ``WITH_UPS`` (False) specified whether to install the ups directory for use
-   with EUPS.
+  with EUPS.
 
 Flags that specify where to look for external libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``FFTW_DIR`` ('') specifies the root location of FFTW. The header files should
-   be in ``FFTW_DIR/include`` and the library files in ``FFTW_DIR/lib``.
+  be in ``FFTW_DIR/include`` and the library files in ``FFTW_DIR/lib``.
 
 * ``EIGEN_DIR`` ('') specifies the root location of the Eigen header files.
-   The Core include file for Eigen should located at ``EIGEN_DIR/Eigen/Core``.
+  The Core include file for Eigen should located at ``EIGEN_DIR/Eigen/Core``.
 
 * ``USE_TMV`` (False) specifies to use TMV rather than Eigen for the linear
-   algebra code in the C++ layer.
+  algebra code in the C++ layer.
 
 * ``TMV_DIR`` ('') specifies the location of TMV if it is not in a standard
-   location. This should be the same value as you used for PREFIX when
-   installing TMV.
+  location. This should be the same value as you used for PREFIX when
+  installing TMV.
 
 * ``TMV_LINK`` ('') specifies the location of the tmv-link file. Normally, this is
-   in ``TMV_DIR/share``, but if not, you can specify the correct location here.
+  in ``TMV_DIR/share``, but if not, you can specify the correct location here.
 
 * ``USE_BOOST`` (False) specifies whether to use Boost.Python for wrapping the
-   C++ code rather than PyBind11.  If this is set, it will also use your
-   Boost installation for some header files used by the random number
-   generator code. We bundle the boost.random implementation from a specific
-   boost version (1.48) to make sure "random" variable generation is
-   deterministic across machines and over time.  To make it fully self-
-   contained, we edited them slightly to not include many of the complicated
-   workarounds boost has for specific compilers and such.  However, those
-   workarounds can be reenabled by setting USE_BOOST=True if your system needs
-   them.
+  C++ code rather than PyBind11.  If this is set, it will also use your
+  Boost installation for some header files used by the random number
+  generator code. We bundle the boost.random implementation from a specific
+  boost version (1.48) to make sure "random" variable generation is
+  deterministic across machines and over time.  To make it fully self-
+  contained, we edited them slightly to not include many of the complicated
+  workarounds boost has for specific compilers and such.  However, those
+  workarounds can be reenabled by setting USE_BOOST=True if your system needs
+  them.
 
 * ``BOOST_DIR`` ('') specifies the root location of BOOST The header files should
-   be in ``BOOST_DIR/include/boost`` and the library files in ``BOOST_DIR/lib``.
+  be in ``BOOST_DIR/include/boost`` and the library files in ``BOOST_DIR/lib``.
 
 * ``EXTRA_INCLUDE_PATH`` ('') specifies extra directories in which to search for
-   header files in addition to the standard locations such as ``/usr/include`` and
-   ``/usr/local/include`` and the ones derived from the above options.  Sometimes
-   the above options do not quite work, so you may need to specify other
-   locations, which is what this option is for.  These directories are specified
-   as ``-I`` flags to the compiler.  If you are giving multiple directories, they
-   should be separated by colons.
+  header files in addition to the standard locations such as ``/usr/include`` and
+  ``/usr/local/include`` and the ones derived from the above options.  Sometimes
+  the above options do not quite work, so you may need to specify other
+  locations, which is what this option is for.  These directories are specified
+  as ``-I`` flags to the compiler.  If you are giving multiple directories, they
+  should be separated by colons.
 
 * ``EXTRA_LIB_PATH`` ('') specifies extra directories in which to search for
-   libraries in addition to the standard locations such as ``/usr/lib`` and
-   ``/usr/local/lib``.  These directories are specified as ``-L`` flags to the
-   linker. If you are giving multiple directories, they should be separated by
-   colons.  To add the library ``/blah/libfoo.a``, specify
-   ``EXTRA_LIB_PATH=/blah/ EXTRA_LIBS=foo``.
+  libraries in addition to the standard locations such as ``/usr/lib`` and
+  ``/usr/local/lib``.  These directories are specified as ``-L`` flags to the
+  linker. If you are giving multiple directories, they should be separated by
+  colons.  To add the library ``/blah/libfoo.a``, specify
+  ``EXTRA_LIB_PATH=/blah/ EXTRA_LIBS=foo``.
 
 * ``EXTRA_PATH`` ('') specifies directories in which to search for executables
-   (notably the compiler, although you can also just give the full path in the
-   CXX parameter) in addition to the standard locations such as ``/usr/bin`` and
-   ``/usr/local/bin``.  If you are giving multiple directories, they should be
-   separated by colons.
+  (notably the compiler, although you can also just give the full path in the
+  CXX parameter) in addition to the standard locations such as ``/usr/bin`` and
+  ``/usr/local/bin``.  If you are giving multiple directories, they should be
+  separated by colons.
 
 * ``IMPORT_PATHS`` (False) specifies whether to import extra path directories
-   from the environment variables: ``PATH``, ``C_INCLUDE_PATH``, ``LD_LIBRARY_PATH``
-   and ``LIBRARY_PATH``.  If you have a complicated setup in which you use these
-   environment variables to control everything, this can be an easy way to let
-   SCons know about these locations.
+  from the environment variables: ``PATH``, ``C_INCLUDE_PATH``, ``LD_LIBRARY_PATH``
+  and ``LIBRARY_PATH``.  If you have a complicated setup in which you use these
+  environment variables to control everything, this can be an easy way to let
+  SCons know about these locations.
 
 * ``IMPORT_ENV`` (True) specifies whether to import the entire environment from
-   the calling shell.  The default is for SCons to use the same environment as
-   the shell from which it is called.  However, sometimes it can be useful to
-   start with a clean environment and manually add paths for various things, in
-   which case you would want to set this to False.
+  the calling shell.  The default is for SCons to use the same environment as
+  the shell from which it is called.  However, sometimes it can be useful to
+  start with a clean environment and manually add paths for various things, in
+  which case you would want to set this to False.
 
 * ``EXTRA_LIBS`` ('') specifies libraries to use in addition to what SCons finds
-   on its own. This might be useful if you have a non-standard name for one of
-   the external libraries. e.g. If you want to use the Intel MKL library for the
-   FFTW library, SCons will not automatically try that, so you could add those
-   libraries here.  If there is more than one, they should be quoted with spaces
-   between the different libraries. e.g.
-   ``EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"``
+  on its own. This might be useful if you have a non-standard name for one of
+  the external libraries. e.g. If you want to use the Intel MKL library for the
+  FFTW library, SCons will not automatically try that, so you could add those
+  libraries here.  If there is more than one, they should be quoted with spaces
+  between the different libraries. e.g.
+  ``EXTRA_LIBS="mkl_intel mkl_intel_thread mkl_core"``
 
 * ``IMPORT_PREFIX`` (True) specifies whether to include the directories
-   ``PREFIX/include``, ``PREFIX/lib`` and ``PREFIX/bin`` as part of the standard
-   path lists.  Normally, you install everything in the same place, so it is
-   useful to search those locations for some of the prerequisite packages, so
-   the default is True.  But occasionally, this might be inconvenient, so you
-   can turn this feature off.
+  ``PREFIX/include``, ``PREFIX/lib`` and ``PREFIX/bin`` as part of the standard
+  path lists.  Normally, you install everything in the same place, so it is
+  useful to search those locations for some of the prerequisite packages, so
+  the default is True.  But occasionally, this might be inconvenient, so you
+  can turn this feature off.
 
 * ``DYLD_LIBRARY_PATH`` ('') Set the DYLD_LIBRARY_PATH inside of SCons.
-   Particularly useful on El Capitan (and later), since Apple strips out
-   DYLD_LIBRARY_PATH from the environment that SCons sees, so if you need it,
-   this option enables SCons to set it back in for you by doing
-   ``scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH``.
+  Particularly useful on El Capitan (and later), since Apple strips out
+  DYLD_LIBRARY_PATH from the environment that SCons sees, so if you need it,
+  this option enables SCons to set it back in for you by doing
+  ``scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH``.
 
 * ``DYLD_FALLBACK_LIBRARY_PATH`` ('') Set the DYLD_FALLBACK_LIBRARY_PATH inside
-   of SCons.  cf. DYLD_LIBRARY_PATH for why this may be useful.
+  of SCons.  cf. DYLD_LIBRARY_PATH for why this may be useful.
 
 * ``LD_LIBRARY_PATH`` ('') Set the LD_LIBRARY_PATH inside of SCons.
-   cf. DYLD_LIBRARY_PATH for why this may be useful.
+  cf. DYLD_LIBRARY_PATH for why this may be useful.
 
 Miscellaneous flags
 ^^^^^^^^^^^^^^^^^^^
 
 * ``PYTEST`` (pytest) specifies which version of pytest you want to use
-   for running the unit tests.  If you specified a non-default Python, then
-   there is a possibility that the standard pytest executable in your path
-   will not work (since it might be for a different version of Python).  In
-   that case, specify the correct pytest here.
+  for running the unit tests.  If you specified a non-default Python, then
+  there is a possibility that the standard pytest executable in your path
+  will not work (since it might be for a different version of Python).  In
+  that case, specify the correct pytest here.
 
 * ``CACHE_LIB`` (True) specifies whether to cache the results of the library
-   checks.  While you are working one getting the prerequisites installed
-   properly, it can be useful to set this to False to force SCons to redo all of
-   its library checks each time. Once you have a successful build, you should
-   set it back to True so that later builds can skip those checks.
+  checks.  While you are working one getting the prerequisites installed
+  properly, it can be useful to set this to False to force SCons to redo all of
+  its library checks each time. Once you have a successful build, you should
+  set it back to True so that later builds can skip those checks.
 
 * ``WITH_PROF`` (False) specifies whether to use the compiler flag ``-pg`` to
-   include profiling info for ``gprof``.
+  include profiling info for ``gprof``.
 
 * ``MEM_TEST`` (False) specifies whether to test the code for memory leaks.
 
 * ``TMV_DEBUG`` (False) specifies whether to turn on extra (slower) debugging
-   statements within the TMV library.
+  statements within the TMV library.
 
 * ``USE_UNKNOWN_VARS`` (False) specifies whether to accept scons parameters other
-   than the ones listed here.  Normally, another name would indicate a typo, so
-   we catch it and let you know.  But if you want to use other scons options
-   that we did not list here, you would want to also set this to True.
+  than the ones listed here.  Normally, another name would indicate a typo, so
+  we catch it and let you know.  But if you want to use other scons options
+  that we did not list here, you would want to also set this to True.
